@@ -3610,7 +3610,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x2e ./system/src/aprs/raw.o
  .debug_macro   0x0000000000000000       0x58 ./system/src/aprs/raw.o
  .debug_macro   0x0000000000000000       0x46 ./system/src/aprs/raw.o
- .debug_line    0x0000000000000000      0x3c9 ./system/src/aprs/raw.o
+ .debug_line    0x0000000000000000      0x39a ./system/src/aprs/raw.o
  .debug_str     0x0000000000000000    0x4f3fe ./system/src/aprs/raw.o
  .comment       0x0000000000000000       0x6f ./system/src/aprs/raw.o
  .debug_frame   0x0000000000000000       0x48 ./system/src/aprs/raw.o
@@ -3780,7 +3780,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x58 ./system/src/aprs/wx.o
  .debug_macro   0x0000000000000000       0x46 ./system/src/aprs/wx.o
  .debug_macro   0x0000000000000000       0x70 ./system/src/aprs/wx.o
- .debug_line    0x0000000000000000      0x420 ./system/src/aprs/wx.o
+ .debug_line    0x0000000000000000      0x3da ./system/src/aprs/wx.o
  .debug_str     0x0000000000000000    0x4f6d7 ./system/src/aprs/wx.o
  .comment       0x0000000000000000       0x6f ./system/src/aprs/wx.o
  .debug_frame   0x0000000000000000       0x3c ./system/src/aprs/wx.o
@@ -5208,54 +5208,53 @@ END GROUP
  .text.SendOwnBeacon
                 0x0000000008001e70       0x94 ./system/src/aprs/beacon.o
                 0x0000000008001e70                SendOwnBeacon
- .text.DA_Init  0x0000000008001f04       0x58 ./system/src/aprs/dac.o
+ .text.DA_Init  0x0000000008001f04       0x5c ./system/src/aprs/dac.o
                 0x0000000008001f04                DA_Init
  .text.DA_Start
-                0x0000000008001f5c       0x30 ./system/src/aprs/dac.o
-                0x0000000008001f5c                DA_Start
- .text.DA_Stop  0x0000000008001f8c       0x30 ./system/src/aprs/dac.o
-                0x0000000008001f8c                DA_Stop
- .text.Digi     0x0000000008001fbc      0x250 ./system/src/aprs/digi.o
-                0x0000000008001fbc                Digi
+                0x0000000008001f60       0x30 ./system/src/aprs/dac.o
+                0x0000000008001f60                DA_Start
+ .text.DA_Stop  0x0000000008001f90       0x30 ./system/src/aprs/dac.o
+                0x0000000008001f90                DA_Stop
+ .text.Digi     0x0000000008001fc0      0x250 ./system/src/aprs/digi.o
+                0x0000000008001fc0                Digi
  .text.SendSimpleTelemetry
-                0x000000000800220c      0x1fc ./system/src/aprs/telemetry.o
-                0x000000000800220c                SendSimpleTelemetry
+                0x0000000008002210      0x1fc ./system/src/aprs/telemetry.o
+                0x0000000008002210                SendSimpleTelemetry
  .text.SendKISSToHost
-                0x0000000008002408       0x60 ./src/KissCommunication.o
-                0x0000000008002408                SendKISSToHost
+                0x000000000800240c       0x60 ./src/KissCommunication.o
+                0x000000000800240c                SendKISSToHost
  .text.ParseReceivedKISS
-                0x0000000008002468       0xb0 ./src/KissCommunication.o
-                0x0000000008002468                ParseReceivedKISS
+                0x000000000800246c       0xb0 ./src/KissCommunication.o
+                0x000000000800246c                ParseReceivedKISS
  .text.LedConfig
-                0x0000000008002518       0x64 ./src/LedConfig.o
-                0x0000000008002518                LedConfig
+                0x000000000800251c       0x64 ./src/LedConfig.o
+                0x000000000800251c                LedConfig
  .text.ConfigPath
-                0x000000000800257c       0x40 ./src/PathConfig.o
-                0x000000000800257c                ConfigPath
+                0x0000000008002580       0x40 ./src/PathConfig.o
+                0x0000000008002580                ConfigPath
  .text.TIM2Delay
-                0x00000000080025bc       0x78 ./src/TimerConfig.o
-                0x00000000080025bc                TIM2Delay
+                0x00000000080025c0       0x78 ./src/TimerConfig.o
+                0x00000000080025c0                TIM2Delay
  .text.TIM2DelayDeConfig
-                0x0000000008002634       0x14 ./src/TimerConfig.o
-                0x0000000008002634                TIM2DelayDeConfig
+                0x0000000008002638       0x14 ./src/TimerConfig.o
+                0x0000000008002638                TIM2DelayDeConfig
  .text.TimerConfig
-                0x0000000008002648      0x104 ./src/TimerConfig.o
-                0x0000000008002648                TimerConfig
+                0x000000000800264c      0x104 ./src/TimerConfig.o
+                0x000000000800264c                TimerConfig
  .text.TIM2_IRQHandler
-                0x000000000800274c       0x28 ./src/it_handlers.o
-                0x000000000800274c                TIM2_IRQHandler
+                0x0000000008002750       0x28 ./src/it_handlers.o
+                0x0000000008002750                TIM2_IRQHandler
  .text.TIM4_IRQHandler
-                0x0000000008002774       0x54 ./src/it_handlers.o
-                0x0000000008002774                TIM4_IRQHandler
+                0x0000000008002778       0x54 ./src/it_handlers.o
+                0x0000000008002778                TIM4_IRQHandler
  .text.TIM7_IRQHandler
-                0x00000000080027c8       0xb0 ./src/it_handlers.o
-                0x00000000080027c8                TIM7_IRQHandler
+                0x00000000080027cc       0xb0 ./src/it_handlers.o
+                0x00000000080027cc                TIM7_IRQHandler
  .text.TIM3_IRQHandler
-                0x0000000008002878       0xc8 ./src/it_handlers.o
-                0x0000000008002878                TIM3_IRQHandler
+                0x000000000800287c       0xc8 ./src/it_handlers.o
+                0x000000000800287c                TIM3_IRQHandler
  .text._ZL16message_callbackP7AX25Msg
-                0x0000000008002940        0x4 ./src/main.o
- *fill*         0x0000000008002944        0x4 
+                0x0000000008002944        0x4 ./src/main.o
  .text.main     0x0000000008002948      0x1f0 ./src/main.o
                 0x0000000008002948                main
  .text.cos      0x0000000008002b38       0x90 /usr/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7-m/libm.a(lib_a-s_cos.o)
@@ -6222,7 +6221,7 @@ END GROUP
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x0000000000000000     0xc280
+.debug_info     0x0000000000000000     0xc283
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x0000000000000000      0x86b ./system/src/stm32f1-stdperiph/stm32f10x_gpio.o
  .debug_info    0x000000000000086b       0xef ./system/src/newlib/_exit.o
@@ -6246,15 +6245,15 @@ END GROUP
  .debug_info    0x0000000000006c79      0xbd3 ./system/src/aprs/ax25.o
  .debug_info    0x000000000000784c      0x5d7 ./system/src/aprs/beacon.o
  .debug_info    0x0000000000007e23      0x179 ./system/src/aprs/crc.o
- .debug_info    0x0000000000007f9c      0x761 ./system/src/aprs/dac.o
- .debug_info    0x00000000000086fd      0x966 ./system/src/aprs/digi.o
- .debug_info    0x0000000000009063      0x6d3 ./system/src/aprs/telemetry.o
- .debug_info    0x0000000000009736      0x678 ./src/KissCommunication.o
- .debug_info    0x0000000000009dae      0x26d ./src/LedConfig.o
- .debug_info    0x000000000000a01b      0x18d ./src/PathConfig.o
- .debug_info    0x000000000000a1a8      0x9fb ./src/TimerConfig.o
- .debug_info    0x000000000000aba3      0xaf4 ./src/it_handlers.o
- .debug_info    0x000000000000b697      0xbe9 ./src/main.o
+ .debug_info    0x0000000000007f9c      0x764 ./system/src/aprs/dac.o
+ .debug_info    0x0000000000008700      0x966 ./system/src/aprs/digi.o
+ .debug_info    0x0000000000009066      0x6d3 ./system/src/aprs/telemetry.o
+ .debug_info    0x0000000000009739      0x678 ./src/KissCommunication.o
+ .debug_info    0x0000000000009db1      0x26d ./src/LedConfig.o
+ .debug_info    0x000000000000a01e      0x18d ./src/PathConfig.o
+ .debug_info    0x000000000000a1ab      0x9fb ./src/TimerConfig.o
+ .debug_info    0x000000000000aba6      0xaf4 ./src/it_handlers.o
+ .debug_info    0x000000000000b69a      0xbe9 ./src/main.o
 
 .debug_abbrev   0x0000000000000000     0x30ad
  *(.debug_abbrev)
@@ -6290,7 +6289,7 @@ END GROUP
  .debug_abbrev  0x0000000000002cd0      0x1c4 ./src/it_handlers.o
  .debug_abbrev  0x0000000000002e94      0x219 ./src/main.o
 
-.debug_line     0x0000000000000000     0x8c01
+.debug_line     0x0000000000000000     0x88d1
  *(.debug_line)
  .debug_line    0x0000000000000000      0x4c4 ./system/src/stm32f1-stdperiph/stm32f10x_gpio.o
  .debug_line    0x00000000000004c4      0x26c ./system/src/newlib/_exit.o
@@ -6308,21 +6307,21 @@ END GROUP
  .debug_line    0x0000000000003499      0x5fc ./system/src/cortexm/exception_handlers.o
  .debug_line    0x0000000000003a95      0x39a ./system/src/cmsis/system_stm32f10x.o
  .debug_line    0x0000000000003e2f       0xcf ./system/src/cmsis/vectors_stm32f10x.o
- .debug_line    0x0000000000003efe      0x58c ./system/src/aprs/adc.o
- .debug_line    0x000000000000448a      0x717 ./system/src/aprs/afsk.o
- .debug_line    0x0000000000004ba1      0x4f4 ./system/src/aprs/afsk_pr.o
- .debug_line    0x0000000000005095      0x801 ./system/src/aprs/ax25.o
- .debug_line    0x0000000000005896      0x3db ./system/src/aprs/beacon.o
- .debug_line    0x0000000000005c71      0x382 ./system/src/aprs/crc.o
- .debug_line    0x0000000000005ff3      0x3ef ./system/src/aprs/dac.o
- .debug_line    0x00000000000063e2      0x471 ./system/src/aprs/digi.o
- .debug_line    0x0000000000006853      0x45a ./system/src/aprs/telemetry.o
- .debug_line    0x0000000000006cad      0x626 ./src/KissCommunication.o
- .debug_line    0x00000000000072d3      0x30c ./src/LedConfig.o
- .debug_line    0x00000000000075df      0x4f8 ./src/PathConfig.o
- .debug_line    0x0000000000007ad7      0x3b8 ./src/TimerConfig.o
- .debug_line    0x0000000000007e8f      0x649 ./src/it_handlers.o
- .debug_line    0x00000000000084d8      0x729 ./src/main.o
+ .debug_line    0x0000000000003efe      0x55d ./system/src/aprs/adc.o
+ .debug_line    0x000000000000445b      0x6e8 ./system/src/aprs/afsk.o
+ .debug_line    0x0000000000004b43      0x4c5 ./system/src/aprs/afsk_pr.o
+ .debug_line    0x0000000000005008      0x7d2 ./system/src/aprs/ax25.o
+ .debug_line    0x00000000000057da      0x395 ./system/src/aprs/beacon.o
+ .debug_line    0x0000000000005b6f      0x353 ./system/src/aprs/crc.o
+ .debug_line    0x0000000000005ec2      0x3c0 ./system/src/aprs/dac.o
+ .debug_line    0x0000000000006282      0x42b ./system/src/aprs/digi.o
+ .debug_line    0x00000000000066ad      0x414 ./system/src/aprs/telemetry.o
+ .debug_line    0x0000000000006ac1      0x5ca ./src/KissCommunication.o
+ .debug_line    0x000000000000708b      0x30c ./src/LedConfig.o
+ .debug_line    0x0000000000007397      0x4b2 ./src/PathConfig.o
+ .debug_line    0x0000000000007849      0x3b8 ./src/TimerConfig.o
+ .debug_line    0x0000000000007c01      0x603 ./src/it_handlers.o
+ .debug_line    0x0000000000008204      0x6cd ./src/main.o
 
 .debug_frame    0x0000000000000000     0x1c70
  *(.debug_frame)

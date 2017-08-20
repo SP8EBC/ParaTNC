@@ -6,4 +6,22 @@ PA4 - DAC Output - signal from controller to radio
 PC1 - ADC input - signal from radio to controller. Schould be connected via 100nF in series capacitor and 10k-10k voltage
 					divider to apply 1.65V (half od 3.3V) bias on ADC input
 					
- 
+PA10 - UART RX
+PA9 - UART TX	- This UART port of course work in TTL3.3V logic levels so You need MAX3232 or simmilar to connect to PC
+
+PB6 - SCL to i2c pressure sensor
+PB7 - SDA to i2c pressure sensor
+
+PB9 - TX line from TX20 anemometr - brown wire in original cable
+PB8 - DTR line from TX20 aneometr - green wire in original cable but it can be just permanently
+									pulled down do ground via 1k resistor (ground is yellow wire in original cable).
+									tx20 anemometr should be powered from positive 5V voltage 
+									
+
+PC6 - Dallas One Wire pin to DS termometer. Only one termometer can be used and it should be powered via separate +5V line,
+		parasite power is not recommended. 
+		
+LEDS:
+Blue LED - DCD - lights up while controller is receiving APRS packet from radio.
+Green LED - If meteo is enabled this blinks when transmission from TX20 anemometr is correctly received. 
+			In 'non-meteo' mode it works as TX indicator and lights up when controler is transmitting data.
