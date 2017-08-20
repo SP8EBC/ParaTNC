@@ -1,0 +1,11 @@
+Class 7 - Compact WX Station
+
+100 - 0x64 - temperatura akt - celsius - signed_char
+200 - 0xC8 - wilotnosc wzgledna akt - % - signed_char
+300 - 0x12C - absolutne cisnienie -- hPa - unsigned_short
+305 - 0x131 - relatywne cisnienie -- QNH!!! -- hPa - unsigned_short
+
+460 - 0x1CC - srednia predkosc wiatru - m/s - float
+440 - 0x1B8 - maksymalna predkosc wiatru - m/s - float
+
+580 - 0x244 & 560 - 0x230 - sredni kierunek - deg - unsigned_short

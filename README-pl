@@ -1,0 +1,113 @@
+ParaTNC wersja 1.0-19082017
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. WSTĘP
+
+ParaTNC jest oprogramowaniem wbudowanym (firmware) przeznaczonym do pracy na płytce STM32VLDISCOVERY w charakterze
+uniwersalnego radiomodemu/sterownika sieci APRS, wyposażonego w szereg funkcjonalności takich jak:
+
+-> Digipeater retransmitujący pakiety posiadające ustawioną ścieżkę WIDE1-1.
+-> Dwustronna (Radio-PC oraz PC-Radio) komunikacja z komputerem przy użyciu protokołu KISS po łączu szeregowym (TTL-UART).
+-> Stacja pogodowa z obsługą wiatromierza TX20, termometru Dallas DS12B20 oraz czujnika ciśnienia MS5611.
+-> Telemetria umożliwiająca monitorowanie ilości odbieranych, nadawanych i powtarzanych pakietów.
+
+Niewątpliwą zaletą ParaTNC są bardzo niskie koszta. Wynoszące jedynie 60~70pln bruttno na zakup STM32VLDISCOVERY. 
+Ponieważ dekodowanie i generowanie transmisji APRS odbywa się w pełni programowo nie ma konieczności użycia tandetnych
+podróbek modemu TCM, sprzedawanych obecnie na ebay i aliexpress przez dostawców z Chin. Lutowanie ogranicza się wyłącznie
+do wykonania odpowienich kabli połączeniowch. stosowna instrukcja z pinoutami znajduje się w pliku WIRING.
+
+
+
+2. LICENCJA
+Warunki licencjonowania są zawarte w pliku LICENSE. 
+
+
+
+3. KONFIGURACJA
+Na chwilę obecną ParaTNC jest dostarczane w formie kodów źródłowych do samodzielnej kompilacji. Ponieważ dostępne jest 
+source, konfiguracja odbywa się przez edycję pliku ./include/station_config.h . Zawiera on komentarze tłumaczące znaczenie 
+poszczególnych opcji. Oprócz typowych i raczej trywialnych ustawień APRS takich jak znak wywoławczy i temu podobne,
+użytkownik może włączać i wyłączać poszczególne tryby pracy urządzenia. Możliwe są następujące kombinacje
+
+-> KISS
+-> KISS + DIGI
+-> KISS + DIGI + METEO
+
+Włączenie funkcjonalności stacji pogodowej (przez odkomentowanie _METEO) automatycznie włącza digipeater nawet jeżeli
+zakomentowane jest #define _DIGI w pliku konfiguracyjnym. Komunikacja z komputerem odbywa się na prędkości 9600bps, a sam
+protokół KISS działa od samego początku pracy urządzenia i nie musi być w żaden sposób inicjalizowany ze strony PC.
+
+
+
+4. KOMPILACJA
+Do kompilacji oprogramowania ParaTNC na płytkę STM32VLDISCOVERY potrzebny jest zestaw narzędzi GNU ARM Embedded Toolchain 
+w którego skład wchodzi kompilator gcc-none-arm-eabi, debugger gdb, linker, oraz zestaw bibliotek i plików include.
+Dodatkowo niezbędny jest make i binutils znajdujący się w kazdej dystrybucji linuksa. ParaTNC został napisany i jest
+rozwijany na systemie Xubuntu 16.04LTS z toolchainem w wersji 2016q-3, aczkolwiek bez problemu będzie się kompilował na 
+dowolnie nowszej wersji. Kompilacja w systemie Windows czy MacOS nie jest wspierana ale powinna się udać, jeżeli ktoś
+potrafi odpowiednio skonfigurować całe środowisko.
+ 
+W przypadku systemów Debian i ubunto-podobnych zdecydowanie zaleca się instalację toolchain przez aptitude z repozytorium
+internetowego. Jest to szybkie, wygodne i powoduje, że wszystkie komponenty są kopiowane do domyślnych folderów instalacji,
+co pozwala uniknąć serii błędów ze względu na niemożność odnalezienia ścieżki do np. gcc przez make.
+
+Informację na temat GNU ARM Embedded Toolchain, jego źródła, skompilowane wersję dystrybucyjne i dokumentację znajdują się:
+https://launchpad.net/gcc-arm-embedded
+https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
+Instrukcja konfiguracji repo i instalacji pakietu znajduje się tutaj.
+https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa
+
+Binutils i make znajduje się w repozytorium debiana/ubuntu, w przypadku GNU ARM Embedded należy zgodnie z instrukcją z
+powyższego linku dodać odpowiednie repozytorium zewnętrzne.
+
+ 'sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa'
+ 'sudo aptiude update'
+ 'sudo aptitude install make automake binutils gcc-arm-embedded' 
+
+Jeżeli źródła nie zostały jeszcze skonfigurowane należy zainstalować w systemie git i sklonować repozytorium kodu
+na lokalny dysk twardy. W tym celu należy wydać polecenie będąc w katalogu gdzie chcemu aby znalazły się źródła:
+
+ 'git clone https://github.com/sp8ebc/para-tnc' 
+ 
+a następnie skonfigurować plik ./include/station_config.h . Po instalacji wymaganego programowania należy wejść w podkatalog 
+Debug i wydać polecenie 
+
+ 'make'. 
+
+Źródła powinny się skompilować a w tymże katalogu pojawić się plik 'ParaTNC-ARM-Lite.hex' gotowy do wgrania do płytki.
+
+
+
+5. WGRYWANIE PLIKU HEX DO PŁYTKI STM32VLDISCOVERY
+Płytka STM32VLDISCOERY ma wbudowany programator/debugger sprzętowy ST-Link v1. Komunikacja z nim odbywa się przez 
+komendy SCSI passthrough a samo urządzenie wykrywa się w systemie jako pamięć masowa. W domyślnej konfiguracji po 
+podłączeniu płytki prez USB do komputera system (a dokładnie modprobe) automatycznie załaduje dla tego urządzenia sterownik
+mass-storage, co uniemożiwi zaprogramowanie. 
+
+W związku z powyższym należy w jego konfiguracji zablokować taką konfigurację. Robi się to przy pomocy polecenia:
+
+ 'sudo echo "options usb-storage quirks=483:3744:i" >> /etc/modprobe.d/stlink_v1.conf'
+ 
+Po ponownym uruchomieniu komputera warto sprawdzić, czy konfiguracja działa. Po podłączeniu STM32VLDISCOERY żadna dodatkowa
+pamięć masowa (pendrive) nie powinna zostać zamontowana. Po sprawdzeniu przez 'dmesg' na końcu powinno być miej więcej coś 
+takiego:
+
+[90639.895886] usb 2-1.1: new full-speed USB device number 13 using ehci-pci
+[90639.990288] usb 2-1.1: New USB device found, idVendor=0483, idProduct=3744
+[90639.990294] usb 2-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[90639.990296] usb 2-1.1: Product: STM32 STLink
+[90639.990298] usb 2-1.1: Manufacturer: STMicroelectronics
+[90639.990300] usb 2-1.1: SerialNumber: QÿrI\xffffffc2\xffffff86RV%X\xffffffc2\xffffff87
+[90639.990796] usb-storage 2-1.1:1.0: USB Mass Storage device detected
+[90639.992973] usb-storage 2-1.1:1.0: device ignored
+
+W dalszym ciągu należy zainstalować oprogramowanie texane-stlink które służy do obsługi programatora stlink-v1/v2 w 
+systemie linux. 
+
+  'git clone git://github.com/texane/stlink.git'
+  'cd stlink.git'
+  'make'
+  'cd build/Relase'
+  'sudo cp st-* /usr/bin'
+  
+ Na koniec, jeżeli programator działa można wrzucić program do 
