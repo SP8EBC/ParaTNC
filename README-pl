@@ -75,6 +75,21 @@ Debug i wydać polecenie
  'make'. 
 
 Źródła powinny się skompilować a w tymże katalogu pojawić się plik 'ParaTNC-ARM-Lite.hex' gotowy do wgrania do płytki.
+Dowodem na poprawne zakończenie procesu są poniższe komunikaty w konsoli, które powinny pojawić się pod sam koniec procesu
+kompilacji
+
+	Finished building target: ParaTNC-ARM-lite.elf
+	 
+	Invoking: Cross ARM GNU Create Flash Image
+	arm-none-eabi-objcopy -O ihex "ParaTNC-ARM-lite.elf"  "ParaTNC-ARM-lite.hex"
+	Finished building: ParaTNC-ARM-lite.hex
+	 
+	Invoking: Cross ARM GNU Print Size
+	arm-none-eabi-size --format=berkeley "ParaTNC-ARM-lite.elf"
+	   text	   data	    bss	    dec	    hex	filename
+	  36512	    552	   3312	  40376	   9db8	ParaTNC-ARM-lite.elf
+	Finished building: ParaTNC-ARM-lite.siz
+
 
 
 
@@ -110,4 +125,10 @@ systemie linux.
   'cd build/Relase'
   'sudo cp st-* /usr/bin'
   
- Na koniec, jeżeli programator działa można wrzucić program do 
+ Na koniec, jeżeli programator działa można wrzucić program do płytki. Po przejściu do katalogu ./para-tnc/Debug
+ wywołuje się następujące polecenie
+ 
+  'sudo st-flash --format ihex write /dev/sr0 ParaTNC-ARM-lite.hex'
+ 
+ Jeżeli podczas programowania w konsoli wyskoczy błąd -1, lub jakikolwiek inny warto zresetować płytkę przez wyjęcie
+ i ponowne włożenie wtyczki USB (czarny przycisk RST jest podłączony do targetu a nie programatora).
