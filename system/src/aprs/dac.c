@@ -22,7 +22,6 @@ Afsk *dac_afsk;
 void DA_Init(void) {
 /*********************************************************************************************************************/
 
-
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -39,6 +38,13 @@ void DA_Init(void) {
 	GPIOC->BSRR |= GPIO_BSRR_BR3; //// bez sep
 #endif
 
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 
 }

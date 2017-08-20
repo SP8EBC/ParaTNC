@@ -1,0 +1,9 @@
+Supply voltage can be applied either by miniUSB connector or +5V pin in right header. Use both metods are not allowed and
+can lead even to burning controler and/or power supply.
+
+PC3 - PTT (default Open Drain)
+PA4 - DAC Output - signal from controller to radio
+PC1 - ADC input - signal from radio to controller. Schould be connected via 100nF in series capacitor and 10k-10k voltage
+					divider to apply 1.65V (half od 3.3V) bias on ADC input
+					
+ 

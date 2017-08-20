@@ -2,7 +2,6 @@ ParaTNC wersja 1.0-19082017
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. WSTĘP
-
 ParaTNC jest oprogramowaniem wbudowanym (firmware) przeznaczonym do pracy na płytce STM32VLDISCOVERY w charakterze
 uniwersalnego radiomodemu/sterownika sieci APRS, wyposażonego w szereg funkcjonalności takich jak:
 
@@ -19,7 +18,7 @@ do wykonania odpowienich kabli połączeniowch. stosowna instrukcja z pinoutami 
 
 
 2. LICENCJA
-Warunki licencjonowania są zawarte w pliku LICENSE. 
+Warunki licencjonowania są zawarte w pliku LICENSE.   
 
 
 
@@ -36,6 +35,10 @@ użytkownik może włączać i wyłączać poszczególne tryby pracy urządzenia
 Włączenie funkcjonalności stacji pogodowej (przez odkomentowanie _METEO) automatycznie włącza digipeater nawet jeżeli
 zakomentowane jest #define _DIGI w pliku konfiguracyjnym. Komunikacja z komputerem odbywa się na prędkości 9600bps, a sam
 protokół KISS działa od samego początku pracy urządzenia i nie musi być w żaden sposób inicjalizowany ze strony PC.
+
+Sterownik wysyła co 10 minut ramkę telemetryczną zawierającą informację o ilości odebranych, nadanych i powtórzonych
+pakietów APRS przez okres minionych 10 minut. Ilość nadanych ramek jest sumą powtórzonych ramek i ramek własnych 
+wliczając w to ramki telemetrii. Co ok 75 minut nadawane są pełne opisy kanałów.
 
 
 
