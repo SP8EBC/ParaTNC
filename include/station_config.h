@@ -15,6 +15,10 @@
 //#define _METEO
 #define _DIGI		// Comment this do disable WIDE1-1 digipeating
 
+#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
+#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
+					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
+
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
 #define _CALL "NOCALL"
 #define _SSID 12
@@ -41,22 +45,34 @@
 #define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
-#define _BCN_ON_STARTUP
+//#define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 3		// WX packet interval in minutes
+#define _WX_INTERVAL 4		// WX packet interval in minutes
 #define _BCN_INTERVAL 10	// Own beacon interval in minutes
 
 //#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 
 // Transmitting delay
-#define _DELAY_BASE 16	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 16
-#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
+#define _DELAY_BASE 12	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 16
+//#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness
 //After waiting time declared above ParaTNC will check DCD (Data Carrier Detect) flag, which works as some
 //kind of semaphore. If radio channel is not occupied by any other transmission TX will be keyed up immediately,
 //otherwise software will wait for clear conditions.
 
+// Few IMPORTANT hints about setting transmit delay properly.
+//
+// Transmit delay is key parameter to maintain RF network free from packet losses and collisions. If your station will be
+// installed on tall object, without any other digi's close to it, you can set _DELAY_BASE to very low value and disable
+// _RANDOM_DELAY. If you wanna rather auxiliary station, witch should only fill gap in RF coverage in small area, then
+// _DELAY_BASE parameter should be not less than 12 (600msec), the smallest range the higher _DELAY_BASE should be.
+// Additionally for gapfillers (auxiliary stations) _RANDOM_DELAY schould be enabled.
+//
+// This delay will ensure that while other station will be transmitting repeated packets from mobile, Yours will keep
+// always quiet and won't jam RF network. This greatly improve DCD based access to channel. Various controllers uses
+// various lenght of preamble, some of them produce signal which might be impossible to decode by ParaTNC, so DCD
+// is only one part of effective multiaccess to medium.
 
 
 // Do not touch this

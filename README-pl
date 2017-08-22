@@ -6,7 +6,7 @@ ParaTNC jest oprogramowaniem wbudowanym (firmware) przeznaczonym do pracy na pł
 uniwersalnego radiomodemu/sterownika sieci APRS, wyposażonego w szereg funkcjonalności takich jak:
 
 -> Digipeater retransmitujący pakiety posiadające ustawioną ścieżkę WIDE1-1.
--> Dwustronna (Radio-PC oraz PC-Radio) komunikacja z komputerem przy użyciu protokołu KISS po łączu szeregowym (TTL-UART).
+-> Dwustronna komunikacja z komputerem przy użyciu protokołu KISS po łączu szeregowym (TTL-UART).
 -> Stacja pogodowa z obsługą wiatromierza TX20, termometru Dallas DS12B20 oraz czujnika ciśnienia MS5611.
 -> Telemetria umożliwiająca monitorowanie ilości odbieranych, nadawanych i powtarzanych pakietów.
 
@@ -40,11 +40,18 @@ Sterownik wysyła co 10 minut ramkę telemetryczną zawierającą informację o
 pakietów APRS przez okres minionych 10 minut. Ilość nadanych ramek jest sumą powtórzonych ramek i ramek własnych 
 wliczając w to ramki telemetrii. Co ok 75 minut nadawane są pełne opisy kanałów.
 
+Sterownik nie umożliwia bezpośrednie transmitowanie jakichkolwiek danych do internetu (do serwerów APRS-IS) z powodów 
+oczywistych. Uruchomienie funkcjonalności igate wymaga podłączenia przez UART komputera PC, Raspberry-PI lub czegokolwiek
+innego na czym można uruchomić oprogramowanie takie jak APRX, APRSIS32, czy UiView32. Na chwile obecną pakiety własne,
+czyli generowane przez sterownik ramki pozycyjne, pogodowe czy telemetryczne są nadawane wyłącznie na port radiowy.
+W przyszłości pojawi się funkcjonalność polegająca na wysyłaniu przez KISS do komputera nie tylko ramek odebranych drogą
+radiową, ale również tych pochodzenia własnego.
+
 
 
 4. KOMPILACJA
 Do kompilacji oprogramowania ParaTNC na płytkę STM32VLDISCOVERY potrzebny jest zestaw narzędzi GNU ARM Embedded Toolchain 
-w którego skład wchodzi kompilator gcc-none-arm-eabi, debugger gdb, linker, oraz zestaw bibliotek i plików include.
+w którego skład wchodzi kompilator gcc-arm-none-eabi, debugger gdb, linker, oraz zestaw bibliotek i plików include.
 Dodatkowo niezbędny jest make i binutils znajdujący się w kazdej dystrybucji linuksa. ParaTNC został napisany i jest
 rozwijany na systemie Xubuntu 16.04LTS z toolchainem w wersji 2016q-3, aczkolwiek bez problemu będzie się kompilował na 
 dowolnie nowszej wersji. Kompilacja w systemie Windows czy MacOS nie jest wspierana ale powinna się udać, jeżeli ktoś
@@ -100,9 +107,8 @@ kompilacji
 Płytka STM32VLDISCOERY ma wbudowany programator/debugger sprzętowy ST-Link v1. Komunikacja z nim odbywa się przez 
 komendy SCSI passthrough a samo urządzenie wykrywa się w systemie jako pamięć masowa. W domyślnej konfiguracji po 
 podłączeniu płytki prez USB do komputera system (a dokładnie modprobe) automatycznie załaduje dla tego urządzenia sterownik
-mass-storage, co uniemożiwi zaprogramowanie. 
-
-W związku z powyższym należy w jego konfiguracji zablokować taką konfigurację. Robi się to przy pomocy polecenia:
+mass-storage, system zamontuje emulowany przez programator system plików jako pendrive, co uniemożiwi zaprogramowanie. 
+W związku z powyższym należy w jego konfiguracji zablokować takie zachowanie. Robi się to przy pomocy polecenia:
 
  'sudo echo "options usb-storage quirks=483:3744:i" >> /etc/modprobe.d/stlink_v1.conf'
  
