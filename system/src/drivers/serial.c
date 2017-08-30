@@ -38,11 +38,23 @@ void SrlConfig(void) {
 	Configure_GPIO(GPIOB,6,AFPP_OUTPUT_2MHZ);	// TX-remap
 	Configure_GPIO(GPIOB,7,PUD_INPUT);			// RX-remap
 //	AFIO->MAPR |= AFIO_MAPR_USART2_REMAP;
+	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;		// wġṗczanie zegara dla USART
+
+	USART_InitTypeDef USART_InitStructure;
+
+	USART_InitStructure.USART_BaudRate = 2400;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx;
+	USART_Init(PORT, &USART_InitStructure);
+
 	NVIC_EnableIRQ( USART1_IRQn );
 	NVIC_SetPriority(USART1_IRQn, 9);		/// bylo 10
-	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;		// wġṗczanie zegara dla USART
+
  	PORT->CR1 |= USART_CR1_UE;
-	PORT->BRR |= srlBRRegValue;				// ustawianie wartoci preskalera do baudrate
+//	PORT->BRR |= srlBRRegValue;				// ustawianie wartoci preskalera do baudrate
 	srlTXing = 0;
 	srlIdle = 1;
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
