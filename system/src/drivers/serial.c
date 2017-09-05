@@ -5,7 +5,7 @@
 
 #include <stm32f10x.h>
 #include <stm32f10x_usart.h>
-
+#include "station_config.h"
 #include "diag/Trace.h"
 
 
@@ -42,7 +42,7 @@ void SrlConfig(void) {
 
 	USART_InitTypeDef USART_InitStructure;
 
-	USART_InitStructure.USART_BaudRate = 2400;
+	USART_InitStructure.USART_BaudRate = _SERIAL_BAUDRATE;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;

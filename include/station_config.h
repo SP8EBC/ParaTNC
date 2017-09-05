@@ -24,9 +24,9 @@
 #define _SSID 12
 #define _LAT		5000.00
 #define _LATNS		'N'
-#define _LON		02200.00
+#define _LON		02000.00
 #define _LONWE		'E'
-#define _COMMENT	"ParaTNC v1.0-19082017 by Mateusz SP8EBC"
+#define _COMMENT	"ParaTNC v1.0.1-05092017 by Mateusz SP8EBC"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -51,6 +51,7 @@
 #define _BCN_INTERVAL 10	// Own beacon interval in minutes
 
 //#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
+#define _SERIAL_BAUDRATE 9600
 
 // Transmitting delay
 #define _DELAY_BASE 12	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 16
