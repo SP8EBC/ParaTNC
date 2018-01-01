@@ -16,6 +16,8 @@
 
 #include "diag/Trace.h"
 
+#include "station_config.h"
+
 
 
 // TIM2 w dallas
@@ -87,6 +89,7 @@ void TIM3_IRQHandler(void) {
 // wysylanie wlasnej pozycji i danych WX
 	TIM3->SR &= ~(1<<0);
 #ifdef _METEO
+#ifndef _MUTE_OWN
 		if (WXInterval != 0 && WXI >= WXInterval) {
 			trace_printf("Pogoda\r\n");
 
@@ -103,17 +106,20 @@ void TIM3_IRQHandler(void) {
 	else
 		WXI++;
 #endif
-	if (BcnInterval != 0 && BcnI >= BcnInterval) {
+#endif
+		if (BcnInterval != 0 && BcnI >= BcnInterval) {
+#ifndef _MUTE_OWN
 //		while(ax25.afsk->hdlc.raw_dcd == TRUE);
 		trace_printf("Wlasny beacon\r\n");
 		SendOwnBeacon();
 		while (a.sending == 1);
+#endif
 		BcnI = 1;
 	}
 	else
 		BcnI++;
-
 	if (TelemInterval != 0 && TelemI >= TelemInterval) {
+#ifndef _MUTE_OWN
 		trace_printf("Telemetria\r\n");
 //		ch14 = ADCReturnChannel(14);
 //		ch15 = ADCReturnChannel(15);
@@ -124,6 +130,7 @@ void TIM3_IRQHandler(void) {
 		else
 			SendSimpleTelemetry(0);
 		while (a.sending == 1);
+#endif
 		TelemI = 1;
 	}
 	else

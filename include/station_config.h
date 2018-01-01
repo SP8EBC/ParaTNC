@@ -13,7 +13,7 @@
 
 // Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens
 //#define _METEO
-#define _DIGI		// Comment this do disable WIDE1-1 digipeating
+//#define _DIGI		// Comment this do disable WIDE1-1 digipeating
 
 #define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
 #define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
@@ -51,7 +51,7 @@
 #define _BCN_INTERVAL 10	// Own beacon interval in minutes
 
 //#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
-#define _SERIAL_BAUDRATE 9600
+#define _SERIAL_BAUDRATE 19200
 
 // Transmitting delay
 #define _DELAY_BASE 12	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 16
