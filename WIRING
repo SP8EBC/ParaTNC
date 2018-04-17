@@ -20,8 +20,12 @@ PB8 - DTR line from TX20 aneometr - green wire in original cable but it can be j
 
 PC6 - Dallas One Wire pin to DS termometer. Only one termometer can be used and it should be powered via separate +5V line,
 		parasite power is not recommended. 
+
+PC4 - DHT22 pin		
 		
 LEDS:
 Blue LED - DCD - lights up while controller is receiving APRS packet from radio.
 Green LED - If meteo is enabled this blinks when transmission from TX20 anemometr is correctly received. 
 			In 'non-meteo' mode it works as TX indicator and lights up when controler is transmitting data.
+			
+			

@@ -36,6 +36,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
+#include "drivers/_dht22.h"
 #include "aprs/wx.h"
 #endif
 
@@ -73,6 +74,8 @@ float temperature;
 float td;
 double pressure = 0.0;
 
+dht22Values dht;
+
 static void message_callback(struct AX25Msg *msg) {
 
 }
@@ -93,7 +96,8 @@ main(int argc, char* argv[])
   path_len = ConfigPath(path);
 
 #ifdef _METEO
-  i2cConfigure();
+//  DHT22_Init();
+//  i2cConfigure();
 #endif
   LedConfig();
   AFSK_Init(&a);
@@ -102,6 +106,7 @@ main(int argc, char* argv[])
 
   TimerConfig();
 #ifdef _METEO
+  dht22_init();
   DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
   TX20Init();
 #endif
@@ -115,10 +120,11 @@ main(int argc, char* argv[])
   TelemInterval = 10;
 
 #ifdef _METEO
-  SensorReset(0xEC);
+ // volatile uint32_t dht22_status = DHT22_GetReadings();
+//  SensorReset(0xEC);
   td = DallasQuery();
-  SensorReadCalData(0xEC, SensorCalData);
-  SensorStartMeas(0);
+//  SensorReadCalData(0xEC, SensorCalData);
+ // SensorStartMeas(0);
 #endif
 
   aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s\0", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
@@ -137,10 +143,11 @@ main(int argc, char* argv[])
 
 
 #ifdef _METEO
-  temperature = SensorBringTemperature();
+	dht22_comm(&dht);
+//  temperature = SensorBringTemperature();
   td = DallasQuery();
   trace_printf("temperatura DS: %d\r\n", (int)td);
-  pressure = (float)SensorBringPressure();
+//  pressure = (float)SensorBringPressure();
   trace_printf("cisnienie MS: %d\r\n", (int)pressure);
 
 #endif
