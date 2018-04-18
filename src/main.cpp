@@ -112,7 +112,7 @@ main(int argc, char* argv[])
 #endif
   SrlConfig();
 
-  td = 0.0;
+  td = 0.0f;
   temperature = 0.0f;
 
   BcnInterval = _BCN_INTERVAL;
@@ -122,7 +122,7 @@ main(int argc, char* argv[])
 #ifdef _METEO
  // volatile uint32_t dht22_status = DHT22_GetReadings();
 //  SensorReset(0xEC);
-  td = DallasQuery();
+//  td = DallasQuery();
 //  SensorReadCalData(0xEC, SensorCalData);
  // SensorStartMeas(0);
 #endif
@@ -145,10 +145,10 @@ main(int argc, char* argv[])
 #ifdef _METEO
 	dht22_comm(&dht);
 //  temperature = SensorBringTemperature();
-  td = DallasQuery();
-  trace_printf("temperatura DS: %d\r\n", (int)td);
+//  td = DallasQuery();
+ // trace_printf("temperatura DS: %d\r\n", (int)td);
 //  pressure = (float)SensorBringPressure();
-  trace_printf("cisnienie MS: %d\r\n", (int)pressure);
+ // trace_printf("cisnienie MS: %d\r\n", (int)pressure);
 
 #endif
 
@@ -185,6 +185,10 @@ main(int argc, char* argv[])
 		if (srlIdle == 1) {
 			ParseReceivedKISS(srlRXData, &ax25, &a);
 			SrlReceiveData(120, FEND, FEND, 0, 0, 0);
+		}
+
+		if (dht22State == DHT22_STATE_DATA_RDY) {
+			dht22_decode(&dht);
 		}
 
     }

@@ -13,15 +13,19 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint8_t bitsDuration[40];
+uint8_t bitsDuration[41];
 uint8_t currentBit;
+uint8_t bytes[5];
+
+uint8_t dht22State = 0;
 
 GPIO_InitTypeDef PORT_out, PORT_in;
 EXTI_InitTypeDef exti, exti_disable;
 
 
 void dht22_init(void) {
-	memset(bitsDuration, 0x00, 40);
+	memset(bitsDuration, 0x00, 41);
+	memset(bytes, 0x00, 5);
 	currentBit = 0;
 
 	/*
@@ -49,9 +53,13 @@ void dht22_init(void) {
 	exti.EXTI_Mode = EXTI_Mode_Interrupt;
 	exti.EXTI_Trigger = EXTI_Trigger_Falling;
 	exti.EXTI_LineCmd = DISABLE;
+
+	dht22State = DHT22_STATE_IDLE;
 }
 
 void dht22_comm(dht22Values *in) {
+
+	dht22State = DHT22_STATE_COMMS;
 
 	GPIO_Init(DHT22_PIN_PORT,&PORT_out);
 	GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
@@ -73,7 +81,9 @@ void dht22_comm(dht22Values *in) {
 	while (delay_5us != 0);
 	uint8_t sensorResp = GPIO_ReadInputDataBit(DHT22_PIN_PORT, DHT22_PIN_PIN);
 	if (sensorResp == Bit_SET) {
-		in->qf = DHT22_QF_UNAVALIABLE;
+		dht22State = DHT22_STATE_IDLE;
+		if (in != 0x00)
+			in->qf = DHT22_QF_UNAVALIABLE;
 		return;		// if pin is still high it usually means that there is a problem with comm with the sensor
 	}
 	else;
@@ -97,11 +107,46 @@ void dht22_comm(dht22Values *in) {
 
 void EXTI4_IRQHandler(void) {
   EXTI->PR |= EXTI_PR_PR4;
-  bitsDuration[currentBit++] = delay_5us;
+  bitsDuration[currentBit++] = DHT22_INTERRUPT_DURATION - delay_5us;
   delay_5us = DHT22_INTERRUPT_DURATION;
-  if (currentBit >= 40) {
+  if (currentBit >= 41) {
 	  EXTI_Init(&exti_disable);
 	  currentBit = 0;
+	  dht22State = DHT22_STATE_DATA_RDY;
   }
 
+}
+
+void dht22_decode(dht22Values *data) {
+	if (data == 0x00)
+		return;
+
+	for (int i = 0; i < 41; i++) {
+		if (bitsDuration[i] > DHT22_MAX_ZERO_DURATION)
+			bitsDuration[i] = 1;
+		else
+			bitsDuration[i] = 0;
+	}
+	bytes[0] = (bitsDuration[1] << 7) | (bitsDuration[2] << 6) | (bitsDuration[3] << 5) | (bitsDuration[4] << 4) | (bitsDuration[5] << 3) | (bitsDuration[6] << 2) | (bitsDuration[7] << 1) | (bitsDuration[8]);
+	bytes[1] = (bitsDuration[9] << 7) | (bitsDuration[10] << 6) | (bitsDuration[11] << 5) | (bitsDuration[12] << 4) | (bitsDuration[13] << 3) | (bitsDuration[14] << 2) | (bitsDuration[15] << 1) | (bitsDuration[16]);
+	bytes[2] = (bitsDuration[17] << 7) | (bitsDuration[18] << 6) | (bitsDuration[19] << 5) | (bitsDuration[20] << 4) | (bitsDuration[21] << 3) | (bitsDuration[22] << 2) | (bitsDuration[23] << 1) | (bitsDuration[24]);
+	bytes[3] = (bitsDuration[25] << 7) | (bitsDuration[26] << 6) | (bitsDuration[27] << 5) | (bitsDuration[28] << 4) | (bitsDuration[29] << 3) | (bitsDuration[30] << 2) | (bitsDuration[31] << 1) | (bitsDuration[32]);
+	bytes[4] = (bitsDuration[33] << 7) | (bitsDuration[34] << 6) | (bitsDuration[35] << 5) | (bitsDuration[36] << 4) | (bitsDuration[37] << 3) | (bitsDuration[38] << 2) | (bitsDuration[39] << 1) | (bitsDuration[40]);
+
+	uint8_t checksum = 0xFF & (uint32_t)(bytes[0] + bytes[1] + bytes[2] + bytes[3]);
+
+	data->humidity = (bytes[0] << 8 | bytes[1]) / 10;
+	data->scaledTemperature = ((bytes[2] & 0x7F) << 8 | bytes[3]);
+	if ((bytes[2] & 0x80) > 0)
+		data->scaledTemperature *= -1;
+	else;
+
+	if (checksum == bytes[4]) {
+		data->qf = DHT22_QF_FULL;
+		dht22State = DHT22_STATE_DATA_DECD;
+	}
+	else {
+		data->qf = DHT22_QF_DEGRADATED;
+		dht22State = DHT22_STATE_IDLE;
+	}
 }
