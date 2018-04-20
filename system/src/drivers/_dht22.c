@@ -61,6 +61,7 @@ void dht22_init(void) {
 void dht22_comm(dht22Values *in) {
 
 	dht22State = DHT22_STATE_COMMS;
+	currentBit = 0;
 
 	GPIO_Init(DHT22_PIN_PORT,&PORT_out);
 	GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
