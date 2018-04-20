@@ -81,7 +81,7 @@ void dht22_comm(dht22Values *in) {
 	while (delay_5us != 0);
 	uint8_t sensorResp = GPIO_ReadInputDataBit(DHT22_PIN_PORT, DHT22_PIN_PIN);
 	if (sensorResp == Bit_SET) {
-		dht22State = DHT22_STATE_IDLE;
+		dht22State = DHT22_STATE_TIMEOUT;
 		if (in != 0x00)
 			in->qf = DHT22_QF_UNAVALIABLE;
 		return;		// if pin is still high it usually means that there is a problem with comm with the sensor
@@ -113,6 +113,7 @@ void EXTI4_IRQHandler(void) {
 	  EXTI_Init(&exti_disable);
 	  currentBit = 0;
 	  dht22State = DHT22_STATE_DATA_RDY;
+		DallasDeConfigTimer();
   }
 
 }
@@ -148,5 +149,17 @@ void dht22_decode(dht22Values *data) {
 	else {
 		data->qf = DHT22_QF_DEGRADATED;
 		dht22State = DHT22_STATE_IDLE;
+	}
+}
+
+void dht22_timeout_keeper(void) {
+	if (dht22State == DHT22_STATE_COMMS) {
+		if (delay_5us == 0) {
+			dht22State = DHT22_STATE_TIMEOUT;
+			dht22_init();
+			EXTI_Init(&exti_disable);
+			DallasDeConfigTimer();
+
+		}
 	}
 }

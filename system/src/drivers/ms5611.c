@@ -1,5 +1,6 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
+#include "drivers/dallas.h"
 
 // adres do zapisu: 0xEC
 // adres do oczytu: 0xED
@@ -16,12 +17,26 @@ double SensorDT = 0.0;
 
 // resetowanie sensora i pobieranie jego danych kalibracyjnych
 void SensorReset(int addr) {
+	DallasConfigTimer();
+	delay_5us = 5000;
 	int txbuf[] = {0x1E, '\0' };				// komenda 0x1E resetuj�ca czujnik 
-	while(i2cTXing != 0 && i2cRXing !=0);		// je�eli magistala i2c nie jest zaj�ta, tj nie nadaj� i nie odbiera
+	while(i2cTXing != 0 && i2cRXing !=0) {
+		if (delay_5us == 0) {
+			DallasDeConfigTimer();
+			return;
+		}
+	};
 	i2cSendData(0xEC, txbuf, 0);				// wys�anie danych pod adres 0xEC czyli do czujnika
-	while(i2cTXing != 0);						// czekanie na zako�czenie transmisji
+	while(i2cTXing != 0){
+		if (delay_5us == 0) {
+			DallasDeConfigTimer();
+			return;
+		}
+	};						// czekanie na zako�czenie transmisji
 //	Delay10ms();								// oczekiwanie 10ms, tyle miej wi�cej trwa resetowanie czujnika
 //	SensorReadCalData(0xEC, SensorCalData);		// odczytywanie danych kalibracyjnych
+	DallasDeConfigTimer();
+	return;
 }
 
 int SensorReadCalData(int addr, int* cal_data) {
@@ -29,17 +44,35 @@ int SensorReadCalData(int addr, int* cal_data) {
 	int txbuf[2];	
 	int rxbuf[] = {0x00, 0x00};
 	j = 0;
+	DallasConfigTimer();
+	delay_5us = 5000;
 	for (i=0; i<=0xE; i+=2) {
-		while(i2cTXing != 0 && i2cRXing !=0);	// je�eli magistrala nie jest zaj�ta
+		while(i2cTXing != 0 && i2cRXing !=0) {
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		txbuf[0] = 0xA0 + i;					// 0xA0 to adres pierwszej sta�ej kalibracyjnej, ka�da z nich ma 16 bit�w
 		txbuf[1] = '\0'; 
 		i2cSendData(0xEC, txbuf, 0);			// wysy�anie adresu do odczytania
-		while(i2cTXing != 0);					// oczekiwanie na zako�czenie transmisji
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		i2cReceiveData(0xED, rxbuf, 2);			// odbi�r danych z czujnika
-		while(i2cRXing != 0);
+		while(i2cRXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		*(cal_data + j) = ((i2cRXData[0] << 8) | i2cRXData[1]);		// przepisywanie danych z bufor�w do tablicy
 		j++;
 	}
+	DallasDeConfigTimer();
 	if (crc4(cal_data) == 0x08)					// sprawdzanie poprawno�ci odebranych danych
 		return 0;
 	else
@@ -49,13 +82,21 @@ int SensorReadCalData(int addr, int* cal_data) {
 long int SensorStartMeas(int param_to_meas) {
 	int txbuf[] = { 0x00, 0x00};
 	long int output;
+	delay_5us = 5000;
+	DallasConfigTimer();
 	if(param_to_meas == 0x00) {
 		////////////////////////////
 		//// POMIAR TEMPERATURY ////
 		////////////////////////////
 		txbuf[0] = 0x54;						// oversampling 1024
 		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
-		while (i2cTXing != 0);
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
+		DallasDeConfigTimer();
 		return 0;
 	}
 	else if(param_to_meas == 0x01) {					// pomiar D1
@@ -64,17 +105,33 @@ long int SensorStartMeas(int param_to_meas) {
 		////////////////////////////
 		txbuf[0] = 0x00;
 		i2cSendData(0xEC,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
-		while (i2cTXing != 0);
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		i2cReceiveData(0xED, txbuf, 3);
-		while (i2cRXing != 0);
+		while(i2cRXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		output = ((i2cRXData[0] << 16) | (i2cRXData[1] << 8) | i2cRXData[2]); 
 		////////////////////////////
 		//// POMIAR CI�NIENIA   ////
 		////////////////////////////
 		txbuf[0] = 0x44;						// oversampling 1024
 		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
-		while (i2cTXing != 0);
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 //		Delay10ms();							// oczekiwanie na zako�czenie pomiaru
+		DallasDeConfigTimer();
 		return output;
 	}
 	else if(param_to_meas == 0x02) {					// pomiar D2
@@ -83,19 +140,36 @@ long int SensorStartMeas(int param_to_meas) {
 		//////////////////////////
 		txbuf[0] = 0x00;
 		i2cSendData(0xEC,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
-		while (i2cTXing != 0);
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		i2cReceiveData(0xED, txbuf, 3);
-		while (i2cRXing != 0);
+		while(i2cRXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 		output = ((i2cRXData[0] << 16) | (i2cRXData[1] << 8) | i2cRXData[2]);
 		////////////////////////////
 		//// POMIAR TEMPERATURY ////
 		////////////////////////////
 		txbuf[0] = 0x54;						// oversampling 1024
 		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
-		while (i2cTXing != 0);
+		while(i2cTXing != 0){
+			if (delay_5us == 0) {
+				DallasDeConfigTimer();
+				return -2;
+			}
+		};
 //		Delay10ms();							// oczekiwanie na zako�czenie pomiaru
+		DallasDeConfigTimer();
 		return output;
 	}
+	DallasDeConfigTimer();
 	return -1;
 }
 
