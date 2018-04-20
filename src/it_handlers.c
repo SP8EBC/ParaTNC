@@ -9,6 +9,7 @@
 #include "drivers/dallas.h"
 #include "drivers/tx20.h"
 #include "drivers/ms5611.h"
+#include "drivers/_dht22.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
@@ -89,6 +90,18 @@ void TIM3_IRQHandler(void) {
 // wysylanie wlasnej pozycji i danych WX
 	TIM3->SR &= ~(1<<0);
 #ifdef _METEO
+	temperature = SensorBringTemperature();
+	td = DallasQuery();
+#ifdef _DBG_TRACE
+	 trace_printf("temperatura DS: %d\r\n", (int)td);
+#endif
+	 pressure = (float)SensorBringPressure();
+#ifdef _DBG_TRACE
+	 trace_printf("cisnienie MS: %d\r\n", (int)pressure);
+#endif
+	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
+		dht22State = DHT22_STATE_IDLE;
+
 #ifndef _MUTE_OWN
 		if (WXInterval != 0 && WXI >= WXInterval) {
 			trace_printf("Pogoda\r\n");

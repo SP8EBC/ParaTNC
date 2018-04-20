@@ -9,7 +9,7 @@
 #define STATION_CONFIG_H_
 
 // Only for debugging
-//#define _DBG_TRACE
+#define _DBG_TRACE
 
 // Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens
 #define _METEO

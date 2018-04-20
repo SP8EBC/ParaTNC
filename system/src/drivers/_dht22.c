@@ -37,6 +37,7 @@ void dht22_init(void) {
 	PORT_out.GPIO_Pin = DHT22_PIN_PIN;
 	PORT_out.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(DHT22_PIN_PORT,&PORT_out);
+	GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
 
 	PORT_in.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	PORT_in.GPIO_Pin = DHT22_PIN_PIN;
@@ -82,6 +83,7 @@ void dht22_comm(dht22Values *in) {
 	uint8_t sensorResp = GPIO_ReadInputDataBit(DHT22_PIN_PORT, DHT22_PIN_PIN);
 	if (sensorResp == Bit_SET) {
 		dht22State = DHT22_STATE_TIMEOUT;
+		DallasDeConfigTimer();
 		if (in != 0x00)
 			in->qf = DHT22_QF_UNAVALIABLE;
 		return;		// if pin is still high it usually means that there is a problem with comm with the sensor
@@ -111,9 +113,12 @@ void EXTI4_IRQHandler(void) {
   delay_5us = DHT22_INTERRUPT_DURATION;
   if (currentBit >= 41) {
 	  EXTI_Init(&exti_disable);
+	  NVIC_DisableIRQ(EXTI4_IRQn);
 	  currentBit = 0;
+	  GPIO_Init(DHT22_PIN_PORT,&PORT_out);
+	  GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
 	  dht22State = DHT22_STATE_DATA_RDY;
-		DallasDeConfigTimer();
+	  DallasDeConfigTimer();
   }
 
 }

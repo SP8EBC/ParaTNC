@@ -22,6 +22,8 @@
 #define DHT22_STATE_COMMS		11
 #define DHT22_STATE_DATA_RDY	12
 #define DHT22_STATE_DATA_DECD	13
+#define DHT22_STATE_TIMEOUT		14
+#define DHT22_STATE_DONE		15
 
 typedef enum dht22QF {
 	DHT22_QF_FULL,
@@ -43,6 +45,7 @@ extern "C" {
 void dht22_init(void);
 void dht22_comm(dht22Values *data);
 void dht22_decode(dht22Values *data);
+void dht22_timeout_keeper(void);
 #ifdef __cplusplus
 }
 #endif
