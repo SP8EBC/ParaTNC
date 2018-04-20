@@ -24,6 +24,7 @@
 #define DHT22_STATE_DATA_DECD	13
 #define DHT22_STATE_TIMEOUT		14
 #define DHT22_STATE_DONE		15
+#define DHT22_STATE_COMMS_IRQ	16
 
 typedef enum dht22QF {
 	DHT22_QF_FULL,
