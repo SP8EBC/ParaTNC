@@ -143,10 +143,13 @@ main(int argc, char* argv[])
 #ifdef _METEO
   temperature = SensorBringTemperature();
   td = DallasQuery();
+#ifdef _DBG_TRACE
   trace_printf("temperatura DS: %d\r\n", (int)td);
+#endif
   pressure = (float)SensorBringPressure();
+#ifdef _DBG_TRACE
   trace_printf("cisnienie MS: %d\r\n", (int)pressure);
-
+#endif
 #endif
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
@@ -193,6 +196,7 @@ main(int argc, char* argv[])
 				break;
 			case DHT22_STATE_DATA_RDY:
 				dht22_decode(&dht);
+				break;
 			case DHT22_STATE_DATA_DECD:
 				dht_valid = dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
 				dht22State = DHT22_STATE_DONE;
