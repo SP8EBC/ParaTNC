@@ -103,7 +103,7 @@ typedef struct AX25Msg
 	uint8_t pid;   ///< AX25 PID field
 	const uint8_t *info; ///< Pointer to the info field (payload) of the message
 	uint16_t len;    ///< Payload length
-	char raw_data[CONFIG_AX25_FRAME_BUF_LEN];   /// Surowa zawarto�� ramki przekopiowana z Ctx->buff
+	uint8_t raw_data[CONFIG_AX25_FRAME_BUF_LEN];   /// Surowa zawarto�� ramki przekopiowana z Ctx->buff
 	short int raw_msg_len;				// wielkosc surowej ramki
 
 } AX25Msg;

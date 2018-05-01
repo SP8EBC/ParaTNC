@@ -162,8 +162,8 @@ main(int argc, char* argv[])
 	  	}
 
 		if(new_msg_rx == 1) {
-//			memset(srlTXData, 0x00, sizeof(srlTXData));
-//			SrlStartTX(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srlTXData));
+			memset(srlTXData, 0x00, sizeof(srlTXData));
+			SrlStartTX(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srlTXData));
 			ax25.dcd = false;
 #ifdef _DBG_TRACE
 			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", msg.src.call, msg.src.ssid, msg.rpt_lst[0].call, msg.rpt_lst[0].ssid);
