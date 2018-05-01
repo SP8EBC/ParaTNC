@@ -15,16 +15,16 @@
 //#define _METEO
 //#define _DIGI		// Comment this do disable WIDE1-1 digipeating
 
-#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
-#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
+//#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
+//#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "NOCALL"
-#define _SSID 12
-#define _LAT		5000.00
+#define _CALL "SP8EBC"
+#define _SSID 11
+#define _LAT		4948.82
 #define _LATNS		'N'
-#define _LON		02000.00
+#define _LON		01903.50
 #define _LONWE		'E'
 #define _COMMENT	"ParaTNC v1.0.1-05092017 by Mateusz SP8EBC"
 
@@ -45,12 +45,12 @@
 #define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
-//#define _BCN_ON_STARTUP
+#define _BCN_ON_STARTUP
 
 #define _WX_INTERVAL 4		// WX packet interval in minutes
 #define _BCN_INTERVAL 10	// Own beacon interval in minutes
 
-//#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
+#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 #define _SERIAL_BAUDRATE 19200
 
 // Transmitting delay

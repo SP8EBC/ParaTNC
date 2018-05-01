@@ -6,11 +6,11 @@
 #endif
 #include <stdbool.h>
 
-#include <cfifo.h>
-#include <afsk.h>
+#include "cfifo.h"
+#include "afsk.h"
 
-#include <macros.h>
-#include <config.h>
+#include "macros.h"
+#include "config.h"
 
 /**
  * Maximum size of a AX25 frame.

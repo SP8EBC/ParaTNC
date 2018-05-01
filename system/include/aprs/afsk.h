@@ -8,9 +8,9 @@
 
 #include <stdbool.h>
 
-#include <cfifo.h>
-#include <macros.h>
-#include <config.h>
+#include "cfifo.h"
+#include "macros.h"
+#include "config.h"
 
 
 

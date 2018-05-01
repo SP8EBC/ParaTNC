@@ -13,6 +13,7 @@ C_SRCS += \
 
 CPP_SRCS += \
 ../src/BlinkLed.cpp \
+../src/Timer.cpp \
 ../src/main.cpp 
 
 OBJS += \
@@ -20,6 +21,7 @@ OBJS += \
 ./src/KissCommunication.o \
 ./src/LedConfig.o \
 ./src/PathConfig.o \
+./src/Timer.o \
 ./src/TimerConfig.o \
 ./src/_write.o \
 ./src/it_handlers.o \
@@ -35,6 +37,7 @@ C_DEPS += \
 
 CPP_DEPS += \
 ./src/BlinkLed.d \
+./src/Timer.d \
 ./src/main.d 
 
 
