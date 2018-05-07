@@ -22,7 +22,7 @@ uint8_t ConfigPath(AX25Call* p) {
 	return 3;
 #else
 	memcpy(p[1].call, _CALL, 6), p[1].ssid = _SSID;
-	return 1;
+	return 2;
 	#endif
 
 	return 0;
