@@ -1,2 +1,4 @@
 *.d
 *.o
+station_config.h
+Debug/
