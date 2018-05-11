@@ -39,6 +39,10 @@
 #include "aprs/wx.h"
 #endif
 
+#ifdef _DALLAS_AS_TELEM
+#include "drivers/dallas.h"
+#endif
+
 #include "KissCommunication.h"
 
 
@@ -66,7 +70,7 @@ char aprs_msg[128];
 char after_tx_lock;
 
 unsigned char BcnInterval, WXInterval, BcnI = _BCN_INTERVAL - 2, WXI = _WX_INTERVAL - 1, TelemInterval, TelemI = 1;
-unsigned short rx10m = 0, tx10m = 0, digi10m = 0;
+unsigned short rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
 int t = 0;
 
 float temperature;
@@ -105,6 +109,9 @@ main(int argc, char* argv[])
   DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
   TX20Init();
 #endif
+#ifdef _DALLAS_AS_TELEM
+  DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+#endif
   SrlConfig();
 
   td = 0.0;
@@ -139,10 +146,13 @@ main(int argc, char* argv[])
 #ifdef _METEO
   temperature = SensorBringTemperature();
   td = DallasQuery();
+#ifdef _DBG_TRACE
   trace_printf("temperatura DS: %d\r\n", (int)td);
+#endif
   pressure = (float)SensorBringPressure();
+#ifdef _DBG_TRACE
   trace_printf("cisnienie MS: %d\r\n", (int)pressure);
-
+#endif
 #endif
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
@@ -176,7 +186,10 @@ main(int argc, char* argv[])
 		}
 
 		if (srlIdle == 1) {
-			ParseReceivedKISS(srlRXData, &ax25, &a);
+			short res = ParseReceivedKISS(srlRXData, &ax25, &a);
+			if (res == 0)
+				kiss10m++;
+
 			SrlReceiveData(120, FEND, FEND, 0, 0, 0);
 		}
 

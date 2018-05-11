@@ -14,7 +14,7 @@ extern char aprs_msg[128];
 extern char after_tx_lock;
 
 extern unsigned char BcnInterval, WXInterval, BcnI, WXI, TelemInterval, TelemI;
-extern unsigned short rx10m, tx10m, digi10m;
+extern unsigned short rx10m, tx10m, digi10m, kiss10m;
 extern int t;
 
 extern float temperature;

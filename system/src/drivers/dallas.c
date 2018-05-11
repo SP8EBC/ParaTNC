@@ -193,7 +193,7 @@ float __attribute__((optimize("O0"))) DallasQuery(void) {
 			temperature = -1.0f * (128.0f - (float)temp1 - (float)temp2 * 0.0625f);
 	}
 	else {
-		return 0.0f;
+		return -128.0f;
 	}
 	return temperature;
 
