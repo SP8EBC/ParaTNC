@@ -1,4 +1,7 @@
 *.d
 *.o
+*.map
 station_config.h
 Debug/
+*.hex
+*.elf

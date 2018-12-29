@@ -36,6 +36,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
+#include "drivers/_dht22.h"
 #include "aprs/wx.h"
 #endif
 
@@ -77,6 +78,8 @@ float temperature;
 float td;
 double pressure = 0.0;
 
+dht22Values dht, dht_valid;
+
 static void message_callback(struct AX25Msg *msg) {
 
 }
@@ -97,6 +100,7 @@ main(int argc, char* argv[])
   path_len = ConfigPath(path);
 
 #ifdef _METEO
+//  DHT22_Init();
   i2cConfigure();
 #endif
   LedConfig();
@@ -104,8 +108,8 @@ main(int argc, char* argv[])
   ax25_init(&ax25, &a, 0, 0x00);
   DA_Init();
 
-  TimerConfig();
 #ifdef _METEO
+  dht22_init();
   DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
   TX20Init();
 #endif
@@ -114,7 +118,7 @@ main(int argc, char* argv[])
 #endif
   SrlConfig();
 
-  td = 0.0;
+  td = 0.0f;
   temperature = 0.0f;
 
   BcnInterval = _BCN_INTERVAL;
@@ -122,10 +126,10 @@ main(int argc, char* argv[])
   TelemInterval = 10;
 
 #ifdef _METEO
-  SensorReset(0xEC);
-  td = DallasQuery();
-  SensorReadCalData(0xEC, SensorCalData);
-  SensorStartMeas(0);
+ SensorReset(0xEC);
+ td = DallasQuery();
+ SensorReadCalData(0xEC, SensorCalData);
+ SensorStartMeas(0);
 #endif
 
   aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s\0", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
@@ -157,6 +161,8 @@ main(int argc, char* argv[])
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
+  TimerConfig();
+
 #ifdef _BCN_ON_STARTUP
 	SendOwnBeacon();
 #endif
@@ -168,12 +174,13 @@ main(int argc, char* argv[])
 			SendSimpleTelemetry(1);
 	  	}
 	  	else {
-
+	  		;
 	  	}
 
 		if(new_msg_rx == 1) {
 			memset(srlTXData, 0x00, sizeof(srlTXData));
 			SrlStartTX(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srlTXData));
+
 			ax25.dcd = false;
 #ifdef _DBG_TRACE
 			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", msg.src.call, msg.src.ssid, msg.rpt_lst[0].call, msg.rpt_lst[0].ssid);
@@ -191,6 +198,25 @@ main(int argc, char* argv[])
 				kiss10m++;
 
 			SrlReceiveData(120, FEND, FEND, 0, 0, 0);
+		}
+
+		dht22_timeout_keeper();
+
+		switch (dht22State) {
+			case DHT22_STATE_IDLE:
+				dht22_comm(&dht);
+				break;
+			case DHT22_STATE_DATA_RDY:
+				dht22_decode(&dht);
+				break;
+			case DHT22_STATE_DATA_DECD:
+				dht_valid = dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
+				dht22State = DHT22_STATE_DONE;
+#ifdef _DBG_TRACE
+				trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
+#endif
+				break;
+			default: break;
 		}
 
     }

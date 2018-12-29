@@ -35,8 +35,8 @@ void SrlConfig(void) {
 	Configure_GPIO(GPIOA,10,PUD_INPUT);			// RX
 	Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
 	
-	Configure_GPIO(GPIOB,6,AFPP_OUTPUT_2MHZ);	// TX-remap
-	Configure_GPIO(GPIOB,7,PUD_INPUT);			// RX-remap
+//	Configure_GPIO(GPIOB,6,AFPP_OUTPUT_2MHZ);	// TX-remap
+//	Configure_GPIO(GPIOB,7,PUD_INPUT);			// RX-remap
 //	AFIO->MAPR |= AFIO_MAPR_USART2_REMAP;
 	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;		// wġṗczanie zegara dla USART
 
