@@ -22,7 +22,8 @@ extern "C" {
 void SrlConfig(void);
 void SrlSendData(char* data, char mode, short leng);
 void SrlStartTX(short leng);
-void USART1_IRQHandler(void);
+void SrlIrqHandler(void);
+//void USART1_IRQHandler(void);
 void SrlReceiveData(int num, char start, char stop, char echo, char len_addr, char len_modifier);
 
 #ifdef __cplusplus

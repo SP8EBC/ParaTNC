@@ -111,25 +111,7 @@ void dht22_comm(dht22Values *in) {
 
 }
 
-void EXTI4_IRQHandler(void) {
-  EXTI->PR |= EXTI_PR_PR4;
-  if (dht22State == DHT22_STATE_COMMS_IRQ) {
-	  bitsDuration[currentBit++] = DHT22_INTERRUPT_DURATION - delay_5us;
-	  delay_5us = DHT22_INTERRUPT_DURATION;
-	  if (currentBit >= 41) {
-			EXTI->FTSR &= (0xFFFFFFFF ^ (1 << 4));
-			EXTI->IMR &= (0xFFFFFFFF ^ (1 << 4));
 
-		  NVIC_DisableIRQ(EXTI4_IRQn);
-		  currentBit = 0;
-		  GPIO_Init(DHT22_PIN_PORT,&PORT_out);
-		  GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
-		  dht22State = DHT22_STATE_DATA_RDY;
-		  DallasDeConfigTimer();
-	  }
-  }
-
-}
 
 void dht22_decode(dht22Values *data) {
 	if (data == 0x00)
@@ -175,4 +157,23 @@ void dht22_timeout_keeper(void) {
 
 		}
 	}
+}
+
+void dht22_irq_handler(void) {
+	  if (dht22State == DHT22_STATE_COMMS_IRQ) {
+		  bitsDuration[currentBit++] = DHT22_INTERRUPT_DURATION - delay_5us;
+		  delay_5us = DHT22_INTERRUPT_DURATION;
+		  if (currentBit >= 41) {
+				EXTI->FTSR &= (0xFFFFFFFF ^ (1 << 4));
+				EXTI->IMR &= (0xFFFFFFFF ^ (1 << 4));
+
+			  NVIC_DisableIRQ(EXTI4_IRQn);
+			  currentBit = 0;
+			  GPIO_Init(DHT22_PIN_PORT,&PORT_out);
+			  GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
+			  dht22State = DHT22_STATE_DATA_RDY;
+			  DallasDeConfigTimer();
+		  }
+	  }
+
 }

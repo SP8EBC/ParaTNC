@@ -43,10 +43,13 @@ extern uint8_t dht22State;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 void dht22_init(void);
 void dht22_comm(dht22Values *data);
 void dht22_decode(dht22Values *data);
 void dht22_timeout_keeper(void);
+void dht22_irq_handler(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -12,9 +12,12 @@ extern "C" {
 void i2cConfigure(void);
 int i2cSendData(int addr, int* data, int null);
 int i2cReceiveData(int addr, int* data, int num);
-void I2C1_EV_IRQHandler(void);
-void I2C1_ER_IRQHandler(void);
+void i2cIrqHandler(void);
+void i2cErrIrqHandler(void);
 void i2cVariableReset(void);
+
+//void I2C1_EV_IRQHandler(void);
+//void I2C1_ER_IRQHandler(void);
 
 
 extern volatile int i2cRemoteAddr;		

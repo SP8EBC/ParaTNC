@@ -137,7 +137,9 @@ if (srlIdle == 1) {
 }
 }
 
-void USART1_IRQHandler(void) {
+
+
+void SrlIrqHandler(void) {
 	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE && srlTXing == 1) {
 		if(srlTXQueueLen == 1 || srlTRXDataCounter + 1 == srlTXQueueLen) {
 			while((PORT->SR & USART_SR_TC) != USART_SR_TC);
