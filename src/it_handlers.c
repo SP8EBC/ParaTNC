@@ -30,7 +30,7 @@ short int AdcValue;
 
 void USART1_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(USART1_IRQn);
-	SrlIrqHandler();
+	srl_irq_handler();
 }
 
 void I2C1_EV_IRQHandler(void) {

@@ -110,7 +110,7 @@ main(int argc, char* argv[])
 #ifdef _DALLAS_AS_TELEM
   DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
 #endif
-  SrlConfig();
+  srl_init();
 
   td = 0.0f;
   temperature = 0.0f;
@@ -129,7 +129,7 @@ main(int argc, char* argv[])
   aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s\0", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
   aprs_msg[aprs_msg_len] = 0;
   ax25_sendVia(&ax25, path, (sizeof(path) / sizeof(*(path))), aprs_msg, aprs_msg_len);
-  SrlStartTX(SendKISSToHost(0x00, a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srlTXData));
+  srl_start_tx(SendKISSToHost(0x00, a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer));
   while(srlTXing == 1);
   AFSK_Init(&a);
 
@@ -138,7 +138,7 @@ main(int argc, char* argv[])
   AFSK_Init(&a);
   ax25_init(&ax25, &a, 0, message_callback);
 
-	SrlReceiveData(100, FEND, FEND, 0, 0, 0);
+	srl_receive_data(100, FEND, FEND, 0, 0, 0);
 
 
 #ifdef _METEO
@@ -172,8 +172,8 @@ main(int argc, char* argv[])
 	  	}
 
 		if(new_msg_rx == 1) {
-			memset(srlTXData, 0x00, sizeof(srlTXData));
-			SrlStartTX(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srlTXData));
+			memset(srl_tx_buffer, 0x00, sizeof(srl_tx_buffer));
+			srl_start_tx(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srl_tx_buffer));
 
 			ax25.dcd = false;
 #ifdef _DBG_TRACE
@@ -187,11 +187,11 @@ main(int argc, char* argv[])
 		}
 
 		if (srlIdle == 1) {
-			short res = ParseReceivedKISS(srlRXData, &ax25, &a);
+			short res = ParseReceivedKISS(srl_rx_buffer, &ax25, &a);
 			if (res == 0)
 				kiss10m++;
 
-			SrlReceiveData(120, FEND, FEND, 0, 0, 0);
+			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
 
 		dht22_timeout_keeper();
