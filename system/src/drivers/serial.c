@@ -8,6 +8,7 @@
 #include "station_config.h"
 #include "diag/Trace.h"
 
+#include <string.h>
 
 int srlBRRegValue = 0x09C4 ;		// dla symulacji ---- baudrate 9600bps
 //int SrlBRRegValue = 0x0209;		// dla realnego uk��du
@@ -32,22 +33,18 @@ uint16_t srl_tx_bytes_counter = 0;
 uint16_t srl_rx_bytes_req = 0;
 uint16_t srl_tx_bytes_req = 0;
 
+uint8_t srl_triggered_start = 0;
+uint8_t srl_triggered_stop = 0;
+
+uint8_t srl_start_trigger = 0x00;				// znak oznaczaj�cy pocz�tek istotnych danych do odbebrania
+uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danych do odebrania
+
 uint8_t srl_garbage_storage;
 
 srlState srl_state = SRL_NOT_CONFIG;
 
 uint8_t srl_enable_echo = 0;
 
-//int srlTXQueueLen = 0;
-//int srlTRXDataCounter = 0;
-//int srlTXing = 0;
-//int srlRXing = 0;
-//int srlRXBytesNum = 0;			// liczba bajtow do odebrania
-char srlRxDummy;				// zmienna pomocnicza do niepotrzebnych danych
-uint8_t srlStartChar = 0x00;				// znak oznaczaj�cy pocz�tek istotnych danych do odbebrania
-uint8_t srlStopChar = 0x00;				// znak oznaczaj�cy koniec istotnych danych do odebrania
-int srlIdle = 1;
-char srlEchoOn = 0;
 char srlStartStopS;
 char srlLenAddr = 0;
 char srlLenModif = 0;
@@ -94,9 +91,9 @@ void srl_init(void) {
 	srl_state = SRL_IDLE;
 }
 
-void srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
-	if (srl_state != SRL_IDLE)
-		return;
+uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
+	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+		return SRL_BUSY;
 
 	/* Wesja z dnia 04.09.2013
 	
@@ -104,22 +101,36 @@ void srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_
 		char mode - tryb pracy ktory okresla czy ma wysylac okreslona liczbe znakow
 					czy wysylac wszystko do napotkania 0x00
 		short leng - ilosc znakow do wyslania istotna tylko gdy mode = 1
+		internal_external - ustawienie 0 spowoduje skopiowanie do wewnentrznego bufora i wysylanie z niego
+		jedynka spowoduje wysylanie bezposrednio z wewnetrznego
 		 */
 	int i;
 
+	// resetting counter
+	srl_tx_bytes_counter = 0;
+
+	// if an user want to send data using internal buffer
 	if (internal_external == 0) {
+
+		// if data at the input is too long to fit in the buffer
+		if (leng >= TX_BUFFER_LN)
+			return SRL_DATA_TOO_LONG;
 
 		// setting a pointer to transmit buffer to the internal buffer inside the driver
 		srl_tx_buf_pointer = srl_tx_buffer;
 
+		// cleaning the buffer from previous content
+		memset(srl_tx_buf_pointer, 0x00, TX_BUFFER_LN);
+
 		// copying the data from provided pointer to internal buffer
 		if (mode == 0) {
-			// copying everything till the 0x00 is spoted or till the buffer size is reached
+			// copying everything till the 0x00 is spoted or till the buffer border is reached
 			for (i = 0; (i < TX_BUFFER_LN && *(data+i) != '\0'); i++)
 				srl_tx_buf_pointer[i]=data[i];
 			srl_tx_bytes_req = i;
 		}
 		else if (mode == 1) {
+			// we don't need to check against buffer size because this was confirmed already
 			for (i = 0; i<=leng ; i++)
 				srl_tx_buf_pointer[i]=data[i];
 			srl_tx_bytes_req = leng;
@@ -127,67 +138,121 @@ void srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_
 	}
 	else if (internal_external == 1) {
 		srl_tx_buf_pointer = data;
+		srl_tx_bytes_req = leng;
 	}
-	else return;
+	else return SRL_WRONG_BUFFER_PARAM;
 
-		PORT->CR1 |= USART_CR1_TE;
-		PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-		PORT->DR = srl_tx_buf_pointer[0];
-		//srlTXing = 1;
-		srl_state = SRL_TXING;
-		//srlTRXDataCounter = 0;
-//		while ((PORT->SR & USART_SR_TXE) == USART_SR_TXE);
-		PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
-		PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
+	// enabling transmitter
+	PORT->CR1 |= USART_CR1_TE;
+	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+	PORT->DR = srl_tx_buf_pointer[0];
+	srl_state = SRL_TXING;
+	PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
+	PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
 												// je�eli rejestr DR jest nadal pusty
-//	}
+	return SRL_OK;
 
 }
 
-void srl_start_tx(short leng) {
-	if (srlTXing != 1) {
-		srlTXQueueLen = leng;
-		PORT->CR1 |= USART_CR1_TE;
-		PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-		PORT->DR = srl_tx_buf_pointer[0];
-		srlTXing = 1;
-		srlIdle = 0;
-		srlTRXDataCounter = 0;
-//		while ((PORT->SR & USART_SR_TXE) == USART_SR_TXE);
-		PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
-		PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
+/**
+ * This function assumes than
+ */
+uint8_t srl_start_tx(short leng) {
+	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+		return SRL_BUSY;
+
+	// if data at the input is too long to fit in the buffer
+	if (leng >= TX_BUFFER_LN)
+		return SRL_DATA_TOO_LONG;
+
+	srl_tx_bytes_req = leng;
+	srl_tx_bytes_counter = 0;
+
+	// setting a pointer to transmit buffer to the internal buffer inside the driver
+	srl_tx_buf_pointer = srl_tx_buffer;
+
+	PORT->CR1 |= USART_CR1_TE;
+	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+	PORT->DR = srl_tx_buf_pointer[srl_tx_bytes_counter];
+
+	srl_state = SRL_TXING;
+
+	PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
+	PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
 												// je�eli rejestr DR jest nadal pusty
-	}
+
+	return SRL_OK;
 }
 
-void srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier) {
-if (srlIdle == 1) {
-	trace_printf("Serial:SrlReceiveData()\r\n");
+uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier) {
+	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+		return SRL_BUSY;
 
-	memset(srl_rx_buf_pointer, 0x00, rx_buf_ln);
-	srlRXBytesNum = num;
-	srlStartChar = start;
-	srlStopChar = stop;
-	srlTRXDataCounter = -1;
-	PORT->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
-	if (srlStartChar != 0x00 || srlStopChar != 0x00)
-		srlRXing = 0;
-	else
-		srlRXing = 1;
-	srlIdle = 0;
-	srlEchoOn = echo;
-	srlTRXDataCounter = 0;
+	//trace_printf("Serial:SrlReceiveData()\r\n");
+
+	if (num >= RX_BUFFER_LN)
+		return SRL_DATA_TOO_LONG;
+
+	memset(srl_rx_buf_pointer, 0x00, RX_BUFFER_LN);
+
+	// checking if user want
+	if (start != 0x00) {
+		srl_triggered_start = 1;
+		srl_start_trigger = start;
+	}
+	else {
+		srl_triggered_start = 0;
+	}
+
+	if (stop != 0x00) {
+		srl_triggered_stop = 1;
+		srl_stop_trigger = stop;
+	}
+	else {
+		srl_triggered_stop = 0;
+	}
+
+	srl_enable_echo = echo;
+	srl_rx_bytes_counter = 0;
+	srl_rx_bytes_req = num;
+
 	srlLenAddr = len_addr;
 	srlLenModif = len_modifier;
- 	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
+
+	PORT->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
+	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
 // 	PORT->CR1 |= USART_CR1_IDLEIE;			// przerwanie od bezczynno�ci szyny RS przy odbiorze
 												// spowodowanej zako�czeniem transmisji przez urz�dzenie
-}
+ 	return SRL_OK;
 }
 
 
 
 void srl_irq_handler(void) {
+
+	// if any data has been received by the UART controller
+	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
+		switch (srl_state) {
+			default: break;
+		}
+
+	}
+
+	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
+	if ((PORT->SR & USART_SR_ORE) == USART_SR_ORE) {
+		switch (srl_state) {
+			default: break;
+		}
+	}
+
+	// if one byte was successfully transferred from DR to shift register for transmission over USART
+	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE) {
+		switch (srl_state) {
+			default: break;
+		}
+	}
+
+
 	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE && srlTXing == 1) {
 		if(srlTXQueueLen == 1 || srlTRXDataCounter + 1 == srlTXQueueLen) {
 			while((PORT->SR & USART_SR_TC) != USART_SR_TC);
