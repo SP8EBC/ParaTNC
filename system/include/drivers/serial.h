@@ -9,17 +9,6 @@
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
 
-
-//extern int srlTXQueueLen;
-//extern int srlTRXDataCounter;
-//extern int srlTXing;
-//extern int srlRXing;
-//extern int srlRXBytesNum;
-//extern char srlRxDummy;
-//extern uint8_t srlStartChar;
-//extern uint8_t srlStopChar;
-//extern int srlIdle;
-
 typedef enum srlState {
 	SRL_NOT_CONFIG,
 	SRL_IDLE,
@@ -27,13 +16,15 @@ typedef enum srlState {
 	SRL_RXING,
 	SRL_TXING,
 	SRL_RXING_TXING,
-	SRL_RX_DONE
+	SRL_RX_DONE,
+	SRL_ERROR
 }srlState;
 
-#define SRL_OK	0
-#define SRL_DATA_TOO_LONG 1
-#define SRL_BUSY	2
-#define SRL_WRONG_BUFFER_PARAM 3
+#define SRL_OK							0
+#define SRL_DATA_TOO_LONG 				1
+#define SRL_BUSY						2
+#define SRL_WRONG_BUFFER_PARAM 			3
+#define SRL_WRONG_PARAMS_COMBINATION	4
 
 extern srlState srl_state;
 

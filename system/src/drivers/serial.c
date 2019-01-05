@@ -39,15 +39,17 @@ uint8_t srl_triggered_stop = 0;
 uint8_t srl_start_trigger = 0x00;				// znak oznaczaj�cy pocz�tek istotnych danych do odbebrania
 uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danych do odebrania
 
-uint8_t srl_garbage_storage;
+volatile uint8_t srl_garbage_storage;
 
 srlState srl_state = SRL_NOT_CONFIG;
 
 uint8_t srl_enable_echo = 0;
 
-char srlStartStopS;
-char srlLenAddr = 0;
-char srlLenModif = 0;
+uint8_t srl_rx_lenght_param_addres = 0;
+uint8_t srl_rx_lenght_param_modifier = 0;
+
+//char srlLenAddr = 0;
+//char srlLenModif = 0;
 
 void srl_init(void) {
 	#ifdef SEPARATE_TX_BUFF
@@ -119,6 +121,8 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 		// setting a pointer to transmit buffer to the internal buffer inside the driver
 		srl_tx_buf_pointer = srl_tx_buffer;
 
+		srl_tx_buf_ln = TX_BUFFER_LN;
+
 		// cleaning the buffer from previous content
 		memset(srl_tx_buf_pointer, 0x00, TX_BUFFER_LN);
 
@@ -139,6 +143,7 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 	else if (internal_external == 1) {
 		srl_tx_buf_pointer = data;
 		srl_tx_bytes_req = leng;
+		srl_tx_buf_ln = leng;
 	}
 	else return SRL_WRONG_BUFFER_PARAM;
 
@@ -212,12 +217,17 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 		srl_triggered_stop = 0;
 	}
 
+	if (srl_triggered_start == 1 || srl_triggered_stop == 1) {
+		if (num < 3)
+			return SRL_WRONG_PARAMS_COMBINATION;
+	}
+
 	srl_enable_echo = echo;
 	srl_rx_bytes_counter = 0;
 	srl_rx_bytes_req = num;
 
-	srlLenAddr = len_addr;
-	srlLenModif = len_modifier;
+	srl_rx_lenght_param_addres = len_addr;
+	srl_rx_lenght_param_modifier = len_modifier;
 
 	PORT->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
 	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
@@ -230,19 +240,112 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 
 void srl_irq_handler(void) {
 
-	// if any data has been received by the UART controller
-	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
-		switch (srl_state) {
-			default: break;
-		}
+	// local variable for recalculating a stream length (how many bytes the driver should receives)
+	uint16_t len_temp = 0;
 
-	}
+	// set to one if there are conditions to stop receiving
+	uint8_t stop_rxing = 0;
 
 	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
 	if ((PORT->SR & USART_SR_ORE) == USART_SR_ORE) {
 		switch (srl_state) {
+			case SRL_RXING:
+
+				break;
+			default:
+				// if the UART driver is not receiving actually but hardware controler received any data
+				// it is required to read value of DR register to clear the interrupt
+				srl_garbage_storage = (uint8_t)PORT->DR;
+				break;
+		}
+	}
+
+	// if any data has been received by the UART controller
+	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
+		switch (srl_state) {
+			case SRL_RXING:
+
+				// if there is any data remaining to receive
+				if (srl_rx_bytes_counter < srl_rx_bytes_req) {
+
+					// storing received byte into buffer
+					srl_rx_buf_pointer[srl_rx_bytes_counter] = (uint8_t)PORT->DR;
+
+					// checking if this byte in stream holds the protocol information about
+					// how many bytes needs to be received.
+					if (srl_rx_lenght_param_addres == srl_rx_bytes_counter) {
+						len_temp = srl_rx_buf_pointer[srl_rx_bytes_counter];
+
+						// adding (or substracting) a length modifier
+						len_temp += srl_rx_lenght_param_modifier;
+
+						// if the target length is bigger than buffer size switch to error state
+						if (len_temp >= srl_rx_buf_ln) {
+							srl_state = SRL_ERROR;
+							stop_rxing = 1;
+						}
+						else {
+							srl_rx_bytes_req = len_temp;
+						}
+					}
+
+					// moving buffer pointer forward
+					srl_rx_bytes_counter++;
+				}
+
+				// if the user want the driver to stop receiving after certain is received
+				if (srl_triggered_stop == 1) {
+					if (srl_rx_buf_pointer[srl_rx_bytes_counter - 1] == srl_stop_trigger) {
+
+					}
+				}
+
+				// if after incrementing a pointer we reached the end of the buffer
+				if (srl_rx_bytes_counter >= srl_rx_bytes_req) {
+
+					// enabling a flag to disble receiver
+					stop_rxing = 1;
+
+					// setting a state to receive done
+					srl_state = SRL_RX_DONE;
+				}
+
+				if (stop_rxing == 1) {
+					// disabling UART receiver and its interrupt
+					PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
+					PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
+				}
+
+				break;
+
+			// the state when a driver is waiting for start character to appear on serial link
+			case SRL_WAITING_TO_RX:
+
+				// storing the value of DR register into local variable to protect against data races
+				// which may happened if this IT routine will be preempted by another (long) one
+				uint8_t value = (uint8_t)PORT->DR;
+
+				// checking if start character was received
+				if (value == srl_start_trigger) {
+
+					// storing received byte in buffer as firts one
+					srl_rx_buf_pointer[srl_rx_bytes_counter] = value;
+
+					// increasing the counter value
+					srl_rx_bytes_counter++;
+
+					// change state to receiving
+					srl_state = SRL_RXING;
+				}
+				else {
+					// if this is not start byte just store it in garbage buffer to clear interrupt condition
+					srl_garbage_storage = value;
+				}
+				break;
+
 			default: break;
 		}
+
 	}
 
 	// if one byte was successfully transferred from DR to shift register for transmission over USART
