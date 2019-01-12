@@ -246,6 +246,9 @@ void srl_irq_handler(void) {
 	// set to one if there are conditions to stop receiving
 	uint8_t stop_rxing = 0;
 
+	// local variable to store
+	uint8_t value = 0;
+
 	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
 	if ((PORT->SR & USART_SR_ORE) == USART_SR_ORE) {
 		switch (srl_state) {
@@ -263,7 +266,7 @@ void srl_irq_handler(void) {
 	// if any data has been received by the UART controller
 	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
 		switch (srl_state) {
-			case SRL_RXING:
+			case SRL_RXING: {
 
 				// if there is any data remaining to receive
 				if (srl_rx_bytes_counter < srl_rx_bytes_req) {
@@ -317,13 +320,14 @@ void srl_irq_handler(void) {
 				}
 
 				break;
+			}
 
 			// the state when a driver is waiting for start character to appear on serial link
-			case SRL_WAITING_TO_RX:
+			case SRL_WAITING_TO_RX: {
 
 				// storing the value of DR register into local variable to protect against data races
 				// which may happened if this IT routine will be preempted by another (long) one
-				uint8_t value = (uint8_t)PORT->DR;
+				value = (uint8_t)PORT->DR;
 
 				// checking if start character was received
 				if (value == srl_start_trigger) {
@@ -342,7 +346,7 @@ void srl_irq_handler(void) {
 					srl_garbage_storage = value;
 				}
 				break;
-
+			}
 			default: break;
 		}
 
@@ -351,11 +355,24 @@ void srl_irq_handler(void) {
 	// if one byte was successfully transferred from DR to shift register for transmission over USART
 	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE) {
 		switch (srl_state) {
+		case SRL_TXING:
+			if (srl_tx_bytes_counter < srl_tx_bytes_req) {
+				PORT->DR = srl_tx_buf_pointer[srl_tx_bytes_counter++];
+			}
+			else {
+				while((PORT->SR & USART_SR_TC) != USART_SR_TC);
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
+				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+				srl_state = SRL_IDLE;
+			}
+			break;
 			default: break;
 		}
 	}
 
-
+/*
 	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE && srlTXing == 1) {
 		if(srlTXQueueLen == 1 || srlTRXDataCounter + 1 == srlTXQueueLen) {
 			while((PORT->SR & USART_SR_TC) != USART_SR_TC);
@@ -418,4 +435,9 @@ void srl_irq_handler(void) {
 	if ((PORT->SR & USART_SR_IDLE) == USART_SR_IDLE && srlRXing == 1) {
 
 	}
+	*/
+}
+
+uint8_t* srl_get_rx_buffer() {
+	return srl_rx_buf_pointer;
 }

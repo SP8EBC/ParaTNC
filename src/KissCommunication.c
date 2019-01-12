@@ -16,30 +16,35 @@ extern unsigned short tx10m;
 extern volatile int delay_5us;
 
 
-short SendKISSToHost(KissFrame* in, uint8_t* frame, short int frm_len, uint8_t* output) {
+int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len) {
 	#define FEND	(uint8_t)0xC0
 	#define FESC	(uint8_t)0xDB
 	#define TFEND	(uint8_t)0xDC
 	#define TFESC	(uint8_t)0xDD
 	short int i /* Zmienna do poruszania siê po frame */, j /* zmienna do poruszani siê po data*/;
 
+	if (input_frame_len >= output_len)
+		return KISS_TOO_LONG_FRM;
+
 	uint8_t* data;
-	if (output != 0x00)
-		data = output;
-	else
-		data = in->data;
+	data = output;
 
 	data[0] = FEND;
 	data[1] = 0x00;
 //	KissFrm.data[2] = HDLC_FLAG;
-	for (j = 2, i = 0; i < frm_len; j++, i++) {
-		if (*(frame+i) != FEND && *(frame+i) != FESC)
-			data[j] = frame[i];
-		else if (*(frame+i) == FEND) {
+	for (j = 2, i = 0; i < input_frame_len; j++, i++) {
+
+		// if we reach the maximu size of an output buffer
+		if (j >= output_len)
+			return KISS_TOO_LONG_FRM;
+
+		if (*(input_frame+i) != FEND && *(input_frame+i) != FESC)
+			data[j] = input_frame[i];
+		else if (*(input_frame+i) == FEND) {
 			data[j] = FESC;
 			*(data + (j++)) = TFEND;
 		}
-		else if(*(frame+i) == FESC) {
+		else if(*(input_frame+i) == FESC) {
 			data[j] = FESC;
 			*(data + (j++)) = TFESC;
 		}
@@ -49,7 +54,6 @@ short SendKISSToHost(KissFrame* in, uint8_t* frame, short int frm_len, uint8_t* 
 	}
 //	*(KissFrm.data + (j++)) = HDLC_FLAG;
 	*(data + (j++)) = FEND;
-	in->lng = j;
 	return j;
 }
 

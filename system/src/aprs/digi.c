@@ -10,18 +10,28 @@
 #include "TimerConfig.h"
 
 #include "station_config.h"
+#include "config.h"
 
 extern volatile int delay_5us;
 
 char digi_q = 0;
 
+uint8_t digi_msg[CONFIG_AX25_FRAME_BUF_LEN];
+uint16_t digi_msg_len;
+
+
 char Digi(struct AX25Msg *msg) {
 #ifdef _DIGI
+
 	AX25Call digi_path[7];
-	unsigned char digi_msg_len;
-	char digi_msg[255];
 	char call_len;
 	memset(digi_path, sizeof(AX25Call) * 7, 0x00);
+
+	// check if the received message is not too long for the transmit buffers
+	if (msg->len >= (CONFIG_AX25_FRAME_BUF_LEN - sizeof(AX25Call) * 7) ) {
+		return DIGI_PACKET_TOO_LONG;
+	}
+
 	if (a.sending != 1 && after_tx_lock == 0) {
 		/* funkcja wywoływana po odbiorze ramki - tu powinna być obsługa digi */
 		if((msg->rpt_cnt >= 1) /*&& CheckIsOwnPacket(msg) == 0*/) {
@@ -138,6 +148,7 @@ char Digi(struct AX25Msg *msg) {
 //			}
 			else
 				digi_q = 0;
+
 			if (digi_q == 1) {
 #ifdef _DBG_TRACE
 				trace_printf("Digi:call_len=%d\r\n", call_len);

@@ -10,6 +10,8 @@
 
 #include "aprs/ax25.h"
 
+#define DIGI_PACKET_TOO_LONG -1
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -3,8 +3,8 @@
 
 #include "stdint.h"
 
-#define RX_BUFFER_LN 128
-#define TX_BUFFER_LN 128
+#define RX_BUFFER_LN 512
+#define TX_BUFFER_LN 512
 
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
@@ -27,6 +27,7 @@ typedef enum srlState {
 #define SRL_WRONG_PARAMS_COMBINATION	4
 
 extern srlState srl_state;
+extern uint8_t srl_tx_buffer[TX_BUFFER_LN];
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,7 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 uint8_t srl_start_tx(short leng);
 void srl_irq_handler(void);
 uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint8_t* srl_get_rx_buffer();
 
 #ifdef __cplusplus
 }

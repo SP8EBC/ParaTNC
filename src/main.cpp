@@ -40,6 +40,7 @@
 
 #include "KissCommunication.h"
 
+#define SERIAL_TX_TEST_MODE
 
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
@@ -72,7 +73,9 @@ float temperature;
 float td;
 double pressure = 0.0;
 
+#ifdef _METEO
 dht22Values dht, dht_valid;
+#endif
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -84,7 +87,7 @@ main(int argc, char* argv[])
   // Send a greeting to the trace device (skipped on Release).
 //  trace_puts("Hello ARM World!");
 
-  char rsoutput[20];
+	int32_t ln = 0;
 
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
@@ -126,11 +129,38 @@ main(int argc, char* argv[])
  SensorStartMeas(0);
 #endif
 
-  aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s\0", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
+  aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+
+  // terminating the aprs message
   aprs_msg[aprs_msg_len] = 0;
+
+  // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
   ax25_sendVia(&ax25, path, (sizeof(path) / sizeof(*(path))), aprs_msg, aprs_msg_len);
-  srl_start_tx(SendKISSToHost(0x00, a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer));
-  while(srlTXing == 1);
+
+  // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
+  // Here this could be omitted because UART isn't used before but general idea
+  while(srl_state != SRL_IDLE || srl_state != SRL_RX_DONE || srl_state != SRL_ERROR);
+
+  // converting AX25 with beacon to KISS format
+  ln = SendKISSToHost(a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
+
+  // checking if KISS-framing was done correctly
+  if (ln != KISS_TOO_LONG_FRM) {
+#ifdef SERIAL_TX_TEST_MODE
+	  // infinite loop for testing UART transmission
+	  for (;;) {
+#endif
+
+	  srl_start_tx(ln);
+	  while(srl_state != SRL_IDLE);
+
+#ifdef SERIAL_TX_TEST_MODE
+	  }
+#endif
+  }
+
+  // reinitializing AFSK and AX25 driver
   AFSK_Init(&a);
 
   ADCStartConfig();
@@ -138,7 +168,7 @@ main(int argc, char* argv[])
   AFSK_Init(&a);
   ax25_init(&ax25, &a, 0, message_callback);
 
-	srl_receive_data(100, FEND, FEND, 0, 0, 0);
+  srl_receive_data(100, FEND, FEND, 0, 0, 0);
 
 
 #ifdef _METEO
@@ -173,7 +203,7 @@ main(int argc, char* argv[])
 
 		if(new_msg_rx == 1) {
 			memset(srl_tx_buffer, 0x00, sizeof(srl_tx_buffer));
-			srl_start_tx(SendKISSToHost(0x00, msg.raw_data, (msg.raw_msg_len - 2), srl_tx_buffer));
+			srl_start_tx(SendKISSToHost(msg.raw_data, (msg.raw_msg_len - 2), srl_tx_buffer, TX_BUFFER_LN));
 
 			ax25.dcd = false;
 #ifdef _DBG_TRACE
@@ -186,14 +216,14 @@ main(int argc, char* argv[])
 			rx10m++;
 		}
 
-		if (srlIdle == 1) {
-			short res = ParseReceivedKISS(srl_rx_buffer, &ax25, &a);
+		if (srl_state == SRL_RX_DONE) {
+			short res = ParseReceivedKISS(srl_get_rx_buffer(), &ax25, &a);
 			if (res == 0)
 				kiss10m++;
 
 			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
-
+#ifdef _METEO
 		dht22_timeout_keeper();
 
 		switch (dht22State) {
@@ -206,13 +236,14 @@ main(int argc, char* argv[])
 			case DHT22_STATE_DATA_DECD:
 				dht_valid = dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
 				dht22State = DHT22_STATE_DONE;
+
 #ifdef _DBG_TRACE
 				trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
 #endif
 				break;
 			default: break;
 		}
-
+#endif
     }
   // Infinite loop, never return.
 }
