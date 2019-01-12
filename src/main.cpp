@@ -140,7 +140,7 @@ main(int argc, char* argv[])
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
-  while(srl_state != SRL_IDLE || srl_state != SRL_RX_DONE || srl_state != SRL_ERROR);
+  while(srl_state != SRL_IDLE && srl_state != SRL_RX_DONE && srl_state != SRL_ERROR);
 
   // converting AX25 with beacon to KISS format
   ln = SendKISSToHost(a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
