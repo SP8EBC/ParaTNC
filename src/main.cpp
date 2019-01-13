@@ -22,8 +22,8 @@
 #include "aprs/beacon.h"
 
 
-#include "Timer.h"
-#include "BlinkLed.h"
+//#include "Timer.h"
+//#include "BlinkLed.h"
 
 #ifdef _METEO
 #include "drivers/dallas.h"
@@ -55,17 +55,22 @@
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wempty-body"
 
+
+// global variable incremented by the SysTick handler to measure time
+uint32_t master_time = 0;
+
+// global variables represending the AX25/APRS stack
 AX25Ctx ax25;
 Afsk a;
-
-// global variable used to store return value from various functions
-volatile uint8_t retval = 100;
 
 
 AX25Call path[3];
 uint8_t path_len = 0;
 uint8_t aprs_msg_len;
 char aprs_msg[128];
+
+// global variable used to store return value from various functions
+volatile uint8_t retval = 100;
 
 char after_tx_lock;
 
@@ -97,6 +102,12 @@ main(int argc, char* argv[])
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
 
   memset(aprs_msg, 0x00, 128);
+
+  // choosing the signal source for the SysTick timer.
+  SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+
+  // Configuring the SysTick timer to generate interrupt 100x per second (one interrupt = 10ms)
+  SysTick_Config(SystemCoreClock / 100);
 
   path_len = ConfigPath(path);
 

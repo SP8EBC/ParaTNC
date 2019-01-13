@@ -3,6 +3,8 @@
 
 #include "aprs/ax25.h"
 
+extern uint32_t master_time;
+
 extern AX25Ctx ax25;
 extern Afsk a;
 

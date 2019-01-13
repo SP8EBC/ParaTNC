@@ -8,6 +8,8 @@
 #include "station_config.h"
 #include "diag/Trace.h"
 
+#include "main.h" 	// global_time is here
+
 #include <string.h>
 
 int srlBRRegValue = 0x09C4 ;		// dla symulacji ---- baudrate 9600bps
@@ -41,6 +43,10 @@ uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danyc
 
 volatile uint8_t srl_garbage_storage;
 
+uint8_t srl_rx_timeout_enable = 0;
+uint8_t srl_rx_timeout_calc_started = 0;
+uint32_t srl_rx_start_time = 0;
+
 srlRxState srl_rx_state = SRL_RX_NOT_CONFIG;
 srlTxState srl_tx_state = SRL_TX_NOT_CONFIG;
 
@@ -49,8 +55,6 @@ uint8_t srl_enable_echo = 0;
 uint8_t srl_rx_lenght_param_addres = 0;
 uint8_t srl_rx_lenght_param_modifier = 0;
 
-//char srlLenAddr = 0;
-//char srlLenModif = 0;
 
 void srl_init(void) {
 	#ifdef SEPARATE_TX_BUFF
@@ -93,6 +97,38 @@ void srl_init(void) {
 //	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie zgġoszone po odbiorze bajtu gdy bufor nie jest pusty
 	srl_rx_state = SRL_RX_IDLE;
 	srl_tx_state = SRL_TX_IDLE;
+}
+
+// this function shall be called in 10ms periods by some timer to check the timeout
+// during receive. This method works differently depends on what receive mode was initiaded
+//
+// if start & stop characters are in use the timeout will be calculted from the time when
+// start character was received and operation mode has been switched from SRL_WAITING_TO_RX
+// to SRL_RXING
+//
+// if no start & stop character is used by software timeout is calculated from the time when
+// first character was received after calling srl_receive_data
+void srl_keep_timeout() {
+	if (srl_rx_state != SRL_RX_NOT_CONFIG && srl_rx_timeout_enable == 1) {
+
+		// checking if flag to check a timeout is raised
+		if (srl_rx_timeout_calc_started == 1) {
+
+			// check if timeout expired
+			if (master_time - srl_rx_start_time > SRL_RX_TIMEOUT_IN_MS) {
+				// disable the receiving part of UART, disable interrupt and switch to an error state
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
+
+				srl_rx_state = SRL_RX_ERROR;
+
+			}
+		}
+
+	}
+	else {
+		;
+	}
 }
 
 uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
@@ -273,6 +309,9 @@ void srl_irq_handler(void) {
 		switch (srl_rx_state) {
 			case SRL_RXING: {
 
+				// raise a flag to signalize that timeout shall be calulated from now.
+				srl_rx_timeout_calc_started = 1;
+
 				// if there is any data remaining to receive
 				if (srl_rx_bytes_counter < srl_rx_bytes_req) {
 
@@ -320,6 +359,9 @@ void srl_irq_handler(void) {
 				}
 
 				if (stop_rxing == 1) {
+
+					srl_rx_timeout_calc_started = 0;
+
 					// disabling UART receiver and its interrupt
 					PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
 					PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
@@ -378,75 +420,16 @@ void srl_irq_handler(void) {
 		}
 	}
 
-/*
-	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE && srlTXing == 1) {
-		if(srlTXQueueLen == 1 || srlTRXDataCounter + 1 == srlTXQueueLen) {
-			while((PORT->SR & USART_SR_TC) != USART_SR_TC);
-			PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
-			srlTXing = 0;
-			srlIdle = 1;
-			PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
-			PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
-			srlTRXDataCounter = 0;
-			PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-		}
-		else {
-			srlTRXDataCounter++;
-			PORT->DR = srl_tx_buf_pointer[srlTRXDataCounter];		// wczytywanie do DR nastêpnego bajtu do transmisji
-		}
-	}
-	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE && srlIdle == 0) {
-		uint8_t data = ((uint8_t)PORT->DR & 0xFF);
-		if ((data == srlStartChar) && srlRXing == 0)
-			// Jeṡeli zlecono odbiór danych sprawdza czy odebrany bajt jest pierwszym bajtem znaczṗcym
-			srlRXing = 1, srlStartStopS = 1;			// Jeṡeli zostaġ odebrany to ustaw flagê odbioru ṡeby umoṡliwiæ kopiowanie do bufora
-		else if (srlRXing == 0) {
-			srlRxDummy = data;		// jeṡeli bajt nie byġ znaczṗcy to go usuñ
-			if (srlEchoOn == 1) {
-				PORT->CR1 |= USART_CR1_TE;
-				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-				PORT->DR = srlRxDummy;
-			}	
-			else {
-
-			}
-		}
-		else {
-
-		}
-		if (srlRXing == 1) {
-			srl_rx_buf_pointer[srlTRXDataCounter] = data;	// przenoszenie pierwszego odebranego bajtu
-			if (srlEchoOn == 1) {
-				PORT->CR1 |= USART_CR1_TE;
-				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-				PORT->DR = srl_rx_buf_pointer[srlTRXDataCounter];
-			}
-			if ((srlRXBytesNum == srlTRXDataCounter + 1) || (srl_rx_buf_pointer[srlTRXDataCounter] == srlStopChar && srlStartStopS == 0)) {
-				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);			// wyġṗczanie odbiornika po odbiorze ostatniego bajtu
-				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
-//				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_IDLEIE);		// wyġṗczanie przerwañ
-				srlRXing = 0;
-				srlTRXDataCounter++;
-				srl_rx_buf_pointer[srlTRXDataCounter] = '\0';
-				srlTRXDataCounter = 0;
-				srlIdle = 1;
-			}
-			srlTRXDataCounter++;
-		}
-		else {
-
-		}
-		srlStartStopS = 0;
-	}
-	if ((PORT->SR & USART_SR_IDLE) == USART_SR_IDLE && srlRXing == 1) {
-
-	}
-	*/
 }
 
 uint8_t* srl_get_rx_buffer() {
 	return srl_rx_buf_pointer;
 }
 
-void srl_keep_timeout() {
+void srl_switch_timeout(uint8_t disable_enable) {
+	if (disable_enable == 1)
+		srl_rx_timeout_enable = 1;
+	else if (disable_enable == 0)
+		srl_rx_timeout_enable = 0;
+	else;
 }

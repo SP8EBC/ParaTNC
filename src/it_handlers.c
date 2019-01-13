@@ -10,6 +10,7 @@
 #include "drivers/tx20.h"
 #include "drivers/ms5611.h"
 #include "drivers/_dht22.h"
+#include "drivers/serial.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
@@ -27,6 +28,13 @@
 char adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
 short int AdcValue;
+
+// Systick interrupt used for time measurements, checking timeouts andSysTick_Handler
+void SysTick_Handler(void) {
+	master_time++;
+
+	srl_keep_timeout();
+}
 
 void USART1_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(USART1_IRQn);
