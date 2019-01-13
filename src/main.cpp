@@ -40,7 +40,7 @@
 
 #include "KissCommunication.h"
 
-#define SERIAL_TX_TEST_MODE
+//#define SERIAL_TX_TEST_MODE
 
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
@@ -57,6 +57,10 @@
 
 AX25Ctx ax25;
 Afsk a;
+
+// global variable used to store return value from various functions
+volatile uint8_t retval = 100;
+
 
 AX25Call path[3];
 uint8_t path_len = 0;
@@ -87,7 +91,7 @@ main(int argc, char* argv[])
   // Send a greeting to the trace device (skipped on Release).
 //  trace_puts("Hello ARM World!");
 
-	int32_t ln = 0;
+  int32_t ln = 0;
 
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
@@ -140,7 +144,7 @@ main(int argc, char* argv[])
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
-  while(srl_state != SRL_IDLE && srl_state != SRL_RX_DONE && srl_state != SRL_ERROR);
+  while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
 
   // converting AX25 with beacon to KISS format
   ln = SendKISSToHost(a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
@@ -150,12 +154,17 @@ main(int argc, char* argv[])
 #ifdef SERIAL_TX_TEST_MODE
 	  // infinite loop for testing UART transmission
 	  for (;;) {
-#endif
 
-	  srl_start_tx(ln);
-	  while(srl_state != SRL_IDLE);
+		  retval = srl_receive_data(100, FEND, FEND, 0, 0, 0);
+#endif
+		  retval = srl_start_tx(ln);
 
 #ifdef SERIAL_TX_TEST_MODE
+		  while(srl_tx_state != SRL_TX_IDLE);
+
+		  if (srl_rx_state == SRL_RX_DONE) {
+			  retval = 200;
+		  }
 	  }
 #endif
   }
@@ -216,7 +225,7 @@ main(int argc, char* argv[])
 			rx10m++;
 		}
 
-		if (srl_state == SRL_RX_DONE) {
+		if (srl_rx_state == SRL_RX_DONE) {
 			short res = ParseReceivedKISS(srl_get_rx_buffer(), &ax25, &a);
 			if (res == 0)
 				kiss10m++;

@@ -41,7 +41,8 @@ uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danyc
 
 volatile uint8_t srl_garbage_storage;
 
-srlState srl_state = SRL_NOT_CONFIG;
+srlRxState srl_rx_state = SRL_RX_NOT_CONFIG;
+srlTxState srl_tx_state = SRL_TX_NOT_CONFIG;
 
 uint8_t srl_enable_echo = 0;
 
@@ -90,11 +91,12 @@ void srl_init(void) {
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 //	PORT->CR1 |= USART_CR1_IDLEIE;			// zgġaszane kiedy przy odbiorze magistrala przejdzie w idle
 //	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie zgġoszone po odbiorze bajtu gdy bufor nie jest pusty
-	srl_state = SRL_IDLE;
+	srl_rx_state = SRL_RX_IDLE;
+	srl_tx_state = SRL_TX_IDLE;
 }
 
 uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
-	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+	if (srl_tx_state == SRL_TXING)
 		return SRL_BUSY;
 
 	/* Wesja z dnia 04.09.2013
@@ -151,7 +153,7 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 	PORT->CR1 |= USART_CR1_TE;
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 	PORT->DR = srl_tx_buf_pointer[0];
-	srl_state = SRL_TXING;
+	srl_tx_state = SRL_TXING;
 	PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
 	PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
 												// je�eli rejestr DR jest nadal pusty
@@ -163,7 +165,7 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
  * This function assumes than
  */
 uint8_t srl_start_tx(short leng) {
-	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+	if (srl_tx_state == SRL_TXING)
 		return SRL_BUSY;
 
 	// if data at the input is too long to fit in the buffer
@@ -180,7 +182,7 @@ uint8_t srl_start_tx(short leng) {
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 	PORT->DR = srl_tx_buf_pointer[srl_tx_bytes_counter];
 
-	srl_state = SRL_TXING;
+	srl_tx_state = SRL_TXING;
 
 	PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
 	PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
@@ -190,7 +192,7 @@ uint8_t srl_start_tx(short leng) {
 }
 
 uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier) {
-	if (srl_state == SRL_RXING || srl_state == SRL_TXING)
+	if (srl_rx_state == SRL_RXING)
 		return SRL_BUSY;
 
 	//trace_printf("Serial:SrlReceiveData()\r\n");
@@ -220,6 +222,8 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 	if (srl_triggered_start == 1 || srl_triggered_stop == 1) {
 		if (num < 3)
 			return SRL_WRONG_PARAMS_COMBINATION;
+
+		srl_rx_state = SRL_WAITING_TO_RX;
 	}
 
 	srl_enable_echo = echo;
@@ -251,8 +255,9 @@ void srl_irq_handler(void) {
 
 	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
 	if ((PORT->SR & USART_SR_ORE) == USART_SR_ORE) {
-		switch (srl_state) {
+		switch (srl_rx_state) {
 			case SRL_RXING:
+				srl_garbage_storage = (uint8_t)PORT->DR;
 
 				break;
 			default:
@@ -265,7 +270,7 @@ void srl_irq_handler(void) {
 
 	// if any data has been received by the UART controller
 	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
-		switch (srl_state) {
+		switch (srl_rx_state) {
 			case SRL_RXING: {
 
 				// if there is any data remaining to receive
@@ -284,7 +289,7 @@ void srl_irq_handler(void) {
 
 						// if the target length is bigger than buffer size switch to error state
 						if (len_temp >= srl_rx_buf_ln) {
-							srl_state = SRL_ERROR;
+							srl_rx_state = SRL_RX_ERROR;
 							stop_rxing = 1;
 						}
 						else {
@@ -299,7 +304,8 @@ void srl_irq_handler(void) {
 				// if the user want the driver to stop receiving after certain is received
 				if (srl_triggered_stop == 1) {
 					if (srl_rx_buf_pointer[srl_rx_bytes_counter - 1] == srl_stop_trigger) {
-
+						srl_rx_state = SRL_RX_DONE;
+						stop_rxing = 1;
 					}
 				}
 
@@ -310,7 +316,7 @@ void srl_irq_handler(void) {
 					stop_rxing = 1;
 
 					// setting a state to receive done
-					srl_state = SRL_RX_DONE;
+					srl_rx_state = SRL_RX_DONE;
 				}
 
 				if (stop_rxing == 1) {
@@ -339,7 +345,7 @@ void srl_irq_handler(void) {
 					srl_rx_bytes_counter++;
 
 					// change state to receiving
-					srl_state = SRL_RXING;
+					srl_rx_state = SRL_RXING;
 				}
 				else {
 					// if this is not start byte just store it in garbage buffer to clear interrupt condition
@@ -354,7 +360,7 @@ void srl_irq_handler(void) {
 
 	// if one byte was successfully transferred from DR to shift register for transmission over USART
 	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE) {
-		switch (srl_state) {
+		switch (srl_tx_state) {
 		case SRL_TXING:
 			if (srl_tx_bytes_counter < srl_tx_bytes_req) {
 				PORT->DR = srl_tx_buf_pointer[srl_tx_bytes_counter++];
@@ -365,7 +371,7 @@ void srl_irq_handler(void) {
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-				srl_state = SRL_IDLE;
+				srl_tx_state = SRL_TX_IDLE;
 			}
 			break;
 			default: break;
@@ -440,4 +446,7 @@ void srl_irq_handler(void) {
 
 uint8_t* srl_get_rx_buffer() {
 	return srl_rx_buf_pointer;
+}
+
+void srl_keep_timeout() {
 }
