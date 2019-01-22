@@ -9,16 +9,20 @@ int i2cCCRegisterValue = 0x78;
 //int i2cRiseRegisterValue = 0x09;	// w realu 6
 int i2cRiseRegisterValue = 0x06;
 
-volatile int i2cRemoteAddr = 0;			// adres zdalnego urz�dzenia
-volatile int i2cTXData[32] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
-volatile int i2cRXData[32] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
-volatile int i2cRXing = 0;				// ustawiony na 1 kiedy trwa odbi�r danych
-volatile int i2cTXing = 0;				// ustawiony na 1 kiedy trwa wysy�anie danych
-volatile int i2cDone = 0;				// ustawiany na jeden w momencie zako�czenia wysy�ania/odbioru
-volatile int i2cTXQueueLen = 0;			// liczba bajt�w w kolejce do wys�ania
-volatile int i2cTRXDataCounter = 0;		// licznik odebranych/wyslanych danych
-volatile int i2cRXBytesNumber = 0;		// liczba bajtow do odebrania
-volatile int i2cErrorCounter = 0;		// liczbnik b��d�w transmisji
+volatile uint16_t i2cRemoteAddr = 0;			// adres zdalnego urz�dzenia
+volatile uint8_t i2cTXData[32] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
+volatile uint8_t i2cRXData[32] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
+volatile uint8_t i2cRXing = 0;				// ustawiony na 1 kiedy trwa odbi�r danych
+volatile uint8_t i2cTXing = 0;				// ustawiony na 1 kiedy trwa wysy�anie danych
+volatile uint8_t i2cDone = 0;				// ustawiany na jeden w momencie zako�czenia wysy�ania/odbioru
+volatile uint8_t i2cTXQueueLen = 0;			// liczba bajt�w w kolejce do wys�ania
+volatile uint8_t i2cTRXDataCounter = 0;		// licznik odebranych/wyslanych danych
+volatile uint8_t i2cRXBytesNumber = 0;		// liczba bajtow do odebrania
+volatile uint8_t i2cErrorCounter = 0;		// liczbnik b��d�w transmisji
+
+volatile enum i2c_state i2c_state;
+
+#define MAX_I2C_ERRORS_PER_COMM 5
 
 void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	I2C_InitTypeDef I2C_InitStructure;
@@ -73,6 +77,11 @@ int i2cSendData(int addr, int* data, int null) {
 	
 	i2cTXing = 1;
 	i2cErrorCounter = 0;
+	I2C_Cmd(I2C1, ENABLE);
+
+	NVIC_EnableIRQ( I2C1_EV_IRQn );		// w��czenie w kontrolerze przerwan
+	NVIC_EnableIRQ( I2C1_ER_IRQn );
+
 	I2C1->CR1 |= I2C_CR1_START;			// zadanie warunkow startowych
 	return 0;
 }
@@ -82,6 +91,11 @@ int i2cReceiveData(int addr, int* data, int num) {
 	i2cRemoteAddr = addr;
 	i2cTRXDataCounter = 0;
 	i2cRXing = 1;
+	I2C_Cmd(I2C1, ENABLE);
+
+	NVIC_EnableIRQ( I2C1_EV_IRQn );		// w��czenie w kontrolerze przerwan
+	NVIC_EnableIRQ( I2C1_ER_IRQn );
+
 	I2C1->CR1 |= I2C_CR1_START;			// zadanie warunkow startowych
 	return 0;		 
 }
@@ -132,6 +146,8 @@ void i2cIrqHandler(void) {
 			I2C1->CR1 |= I2C_CR1_STOP;
 			while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 
+			I2C_Cmd(I2C1, DISABLE);
+
 			i2cVariableReset();
 		}
 		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2cTXing == 1) {
@@ -155,6 +171,7 @@ void i2cIrqHandler(void) {
 												// nast�puje wys�anie warunk�w STOP na magistrale
 				while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 				i2cRXing = 0;
+				I2C_Cmd(I2C1, DISABLE);
 				*(i2cRXData + i2cTRXDataCounter) = '\0';
 				i2cVariableReset();
 
@@ -165,41 +182,65 @@ void i2cIrqHandler(void) {
 }
 
 void i2cErrIrqHandler(void) {
+
+
 	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2cTRXDataCounter == 0 ) {
 		// slave nie odpowiedzia� ack na sw�j adres
 		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
 		I2C1->CR1 |= I2C_CR1_STOP;		// zadawanie warunkow STOP i przerywanie komunikacji
 		while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 		i2cErrorCounter++;				// zwieksza wartosc licznika b��d�w transmisji
-		if(i2cErrorCounter >= 3) {
-		//je�eli wykryto ju� trzy b��dy to przerwij
-			i2cRXing = 0;
-			i2cTXing = 0;
-			i2cTXQueueLen = 0;
-			i2cTRXDataCounter = 0;
-			i2cRXBytesNumber = 0;
-//			NVIC_DisableIRQ( I2C1_ER_IRQn );
-//			NVIC_DisableIRQ( I2C1_EV_IRQn );
-		}
-		else
-			I2C1->CR1 |= I2C_CR1_START;		// ponawianie komunikacji
+		I2C1->CR1 |= I2C_CR1_START;		// ponawianie komunikacji
 
 	}
 	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2cTRXDataCounter != 0 ) {
 		//jezeli slave nie odpowiedzia� ack na wys�any do niego bajt danych
 		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
 		i2cErrorCounter++;
-		if(i2cErrorCounter >= 3) {
-			i2cRXing = 0;
-			i2cTXing = 0;
-			i2cTXQueueLen = 0;
-			i2cTRXDataCounter = 0;
-			i2cRXBytesNumber = 0;
-//			NVIC_DisableIRQ( I2C1_ER_IRQn );
-//			NVIC_DisableIRQ( I2C1_EV_IRQn );
-		}
-		else
-			i2cTRXDataCounter--;	// zmniejszanie warto�ci licznika danych aby nadac jeszcze raz to samo
+		i2cTRXDataCounter--;	// zmniejszanie warto�ci licznika danych aby nadac jeszcze raz to samo
 
 	}
+
+	if (((I2C1->SR1 & I2C_SR1_ARLO) == I2C_SR1_ARLO) ) {
+
+		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+
+	}
+
+
+	if (((I2C1->SR1 & I2C_SR1_TIMEOUT) == I2C_SR1_TIMEOUT) ) {
+
+		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+
+	}
+
+	if (((I2C1->SR1 & I2C_SR1_OVR) == I2C_SR1_OVR) ) {
+
+		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+
+	}
+
+	if (((I2C1->SR1 & I2C_SR1_BERR) == I2C_SR1_BERR) ) {
+
+		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+
+	}
+
+	// if this seems to be some unknow or unhalted error
+	i2cErrorCounter++;
+
+	if (i2cErrorCounter > MAX_I2C_ERRORS_PER_COMM) {
+		i2cRXing = 0;
+		i2cTXing = 0;
+		i2cTXQueueLen = 0;
+		i2cTRXDataCounter = 0;
+		i2cRXBytesNumber = 0;
+
+		I2C_Cmd(I2C1, DISABLE);
+
+
+		NVIC_DisableIRQ( I2C1_ER_IRQn );
+		NVIC_DisableIRQ( I2C1_EV_IRQn );
+	}
+
 }
