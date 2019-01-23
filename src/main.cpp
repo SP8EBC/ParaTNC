@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stm32f10x_rcc.h>
+#include <stm32f10x.h>
 
 #include "main.h"
 
@@ -56,7 +57,7 @@
 #pragma GCC diagnostic ignored "-Wempty-body"
 
 
-// global variable incremented by the SysTick handler to measure time
+// global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
 // global variables represending the AX25/APRS stack
@@ -266,6 +267,10 @@ main(int argc, char* argv[])
 #endif
     }
   // Infinite loop, never return.
+}
+
+uint16_t main_get_adc_sample(void) {
+	return (uint16_t) ADC1->DR;
 }
 
 #pragma GCC diagnostic pop

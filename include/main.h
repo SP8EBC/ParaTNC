@@ -23,4 +23,8 @@ extern float temperature;
 extern float td;
 extern double pressure;
 
+uint16_t main_get_adc_sample(void);
+
+
+
 #endif

@@ -149,8 +149,15 @@ typedef struct Afsk
 	 */
 	uint16_t trailer_len;
 
+	uint16_t tx_delay_base;
+
+	bool tx_delay_randomize;
+
 
 } Afsk;
+
+extern int16_t afsk_transmit_delay;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -161,6 +168,13 @@ void AFSK_ADC_ISR(Afsk *afsk, int16_t curr_sample);
 /*********************************************************************************************************************/
 
 void afsk_txStart(Afsk *af);
+
+void afsk_delay_tx(Afsk *afsk);
+
+inline void afsk_decrement_delay_counter() {
+	if (afsk_transmit_delay > 0)
+		afsk_transmit_delay -= 10;
+}
 
 /*********************************************************************************************************************/
 uint8_t AFSK_DAC_ISR(Afsk *afsk);

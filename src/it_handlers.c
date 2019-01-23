@@ -11,10 +11,12 @@
 #include "drivers/ms5611.h"
 #include "drivers/_dht22.h"
 #include "drivers/serial.h"
+#include "drivers/i2c.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
 #include "main.h"
+#include "afsk.h"
 
 #include "diag/Trace.h"
 
@@ -31,9 +33,15 @@ short int AdcValue;
 
 // Systick interrupt used for time measurements, checking timeouts andSysTick_Handler
 void SysTick_Handler(void) {
-	master_time++;
+
+	// systick interrupt is generated every 10ms
+	master_time += 10;
 
 	srl_keep_timeout();
+
+	i2cKeepTimeout();
+
+	afsk_decrement_delay_counter();
 }
 
 void USART1_IRQHandler(void) {

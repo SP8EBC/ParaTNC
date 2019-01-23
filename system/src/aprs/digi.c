@@ -157,12 +157,6 @@ char Digi(struct AX25Msg *msg) {
 				digi_msg_len = msg->len+1;
 				snprintf(digi_msg, msg->len+1, "%s", msg->info);
 
-				// delay before transmit
-				TIM2Delay(_DELAY_BASE);
-				while(delay_5us != 0);
-				TIM2DelayDeConfig();
-				// .. end delay
-
 				while(ax25.dcd == true);
 				ax25_sendVia(&ax25, digi_path, call_len, digi_msg, digi_msg_len-1);
 				after_tx_lock = 1;

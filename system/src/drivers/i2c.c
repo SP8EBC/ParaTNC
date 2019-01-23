@@ -2,6 +2,8 @@
 #include "drivers/gpio_conf.h"
 #include <stm32f10x.h>
 
+#include "main.h"
+
 int i2cPinRemap = 0;
 //int i2cClockSpeed = 8;  // w realu tu powinno by� 5 przy moich ustawieniach zegara
 int i2cClockSpeed = 5;
@@ -20,9 +22,12 @@ volatile uint8_t i2cTRXDataCounter = 0;		// licznik odebranych/wyslanych danych
 volatile uint8_t i2cRXBytesNumber = 0;		// liczba bajtow do odebrania
 volatile uint8_t i2cErrorCounter = 0;		// liczbnik b��d�w transmisji
 
-volatile enum i2c_state i2c_state;
+volatile i2c_state_t i2c_state;
+
+volatile uint32_t i2cStartTime;
 
 #define MAX_I2C_ERRORS_PER_COMM 5
+#define I2C_TIMEOUT 100
 
 void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	I2C_InitTypeDef I2C_InitStructure;
@@ -77,10 +82,12 @@ int i2cSendData(int addr, int* data, int null) {
 	
 	i2cTXing = 1;
 	i2cErrorCounter = 0;
-	I2C_Cmd(I2C1, ENABLE);
 
-	NVIC_EnableIRQ( I2C1_EV_IRQn );		// w��czenie w kontrolerze przerwan
-	NVIC_EnableIRQ( I2C1_ER_IRQn );
+	i2cStartTime = master_time;
+
+	i2c_state = I2C_TXING;
+
+	i2cStart();
 
 	I2C1->CR1 |= I2C_CR1_START;			// zadanie warunkow startowych
 	return 0;
@@ -91,10 +98,12 @@ int i2cReceiveData(int addr, int* data, int num) {
 	i2cRemoteAddr = addr;
 	i2cTRXDataCounter = 0;
 	i2cRXing = 1;
-	I2C_Cmd(I2C1, ENABLE);
 
-	NVIC_EnableIRQ( I2C1_EV_IRQn );		// w��czenie w kontrolerze przerwan
-	NVIC_EnableIRQ( I2C1_ER_IRQn );
+	i2cStartTime = master_time;
+
+	i2c_state = I2C_RXING;
+
+	i2cStart();
 
 	I2C1->CR1 |= I2C_CR1_START;			// zadanie warunkow startowych
 	return 0;		 
@@ -146,9 +155,9 @@ void i2cIrqHandler(void) {
 			I2C1->CR1 |= I2C_CR1_STOP;
 			while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 
-			I2C_Cmd(I2C1, DISABLE);
+			//I2C_Cmd(I2C1, DISABLE);
 
-			i2cVariableReset();
+			i2cStop();
 		}
 		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2cTXing == 1) {
 		// EV_8
@@ -171,9 +180,9 @@ void i2cIrqHandler(void) {
 												// nast�puje wys�anie warunk�w STOP na magistrale
 				while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 				i2cRXing = 0;
-				I2C_Cmd(I2C1, DISABLE);
+				//I2C_Cmd(I2C1, DISABLE);
 				*(i2cRXData + i2cTRXDataCounter) = '\0';
-				i2cVariableReset();
+				i2cStop();
 
 			}
 
@@ -230,17 +239,42 @@ void i2cErrIrqHandler(void) {
 	i2cErrorCounter++;
 
 	if (i2cErrorCounter > MAX_I2C_ERRORS_PER_COMM) {
-		i2cRXing = 0;
-		i2cTXing = 0;
-		i2cTXQueueLen = 0;
-		i2cTRXDataCounter = 0;
-		i2cRXBytesNumber = 0;
-
-		I2C_Cmd(I2C1, DISABLE);
-
-
-		NVIC_DisableIRQ( I2C1_ER_IRQn );
-		NVIC_DisableIRQ( I2C1_EV_IRQn );
+		i2cStop();
 	}
 
+}
+
+void i2cStop(void) {
+	i2cRXing = 0;
+	i2cTXing = 0;
+	i2cTXQueueLen = 0;
+	i2cTRXDataCounter = 0;
+	i2cRXBytesNumber = 0;
+
+	I2C_Cmd(I2C1, DISABLE);
+
+	i2c_state = I2C_IDLE;
+
+
+	NVIC_DisableIRQ( I2C1_ER_IRQn );
+	NVIC_DisableIRQ( I2C1_EV_IRQn );
+}
+
+void i2cStart(void) {
+
+	I2C_Cmd(I2C1, ENABLE);
+
+
+	NVIC_EnableIRQ( I2C1_ER_IRQn );
+	NVIC_EnableIRQ( I2C1_EV_IRQn );
+
+}
+
+void i2cKeepTimeout(void) {
+	if (i2c_state == I2C_RXING || i2c_state == I2C_TXING) {
+		if (i2cStartTime > I2C_TIMEOUT) {
+			i2cStop();
+			i2c_state = I2C_ERROR;
+		}
+	}
 }

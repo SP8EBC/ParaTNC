@@ -20,6 +20,7 @@ extern volatile int delay_5us;
 
 
 void SendSimpleTelemetry(char num) {
+
 	float temperature = 0.0f;
 	uint8_t scaledTemperature = 0;
 #ifdef _DALLAS_AS_TELEM
