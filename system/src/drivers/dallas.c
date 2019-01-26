@@ -155,7 +155,7 @@ char __attribute__((optimize("O0"))) DallasReceiveByte(void) {
 	return data;
 }
 
-float __attribute__((optimize("O0"))) DallasQuery(void) {
+float __attribute__((optimize("O0"))) DallasQuery(DallasQF *qf) {
 	unsigned char data[9];
 	int crc;
 	char temp1, temp2, sign, i;
@@ -193,8 +193,15 @@ float __attribute__((optimize("O0"))) DallasQuery(void) {
 			temperature = -1.0f * (128.0f - (float)temp1 - (float)temp2 * 0.0625f);
 	}
 	else {
+		*qf = DALLAS_QF_NOT_AVALIABLE;
 		return -128.0f;
 	}
+
+	if (temperature < -25.0f || temperature > 38.75f)
+		*qf = DALLAS_QF_DEGRADATED;
+	else
+		*qf = DALLAS_QF_FULL;
+
 	return temperature;
 
 }

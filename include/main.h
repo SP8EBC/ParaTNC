@@ -5,6 +5,8 @@
 
 extern uint32_t master_time;
 
+extern uint32_t wx_sensors_pool_timer;
+
 extern AX25Ctx ax25;
 extern Afsk a;
 
@@ -24,6 +26,7 @@ extern float td;
 extern double pressure;
 
 uint16_t main_get_adc_sample(void);
+void main_wx_decremenet_counter(void);
 
 
 

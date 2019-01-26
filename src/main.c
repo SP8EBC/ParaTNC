@@ -6,6 +6,7 @@
 #include <stm32f10x.h>
 
 #include "main.h"
+#include "delay.h"
 
 #include "station_config.h"
 
@@ -27,12 +28,13 @@
 //#include "BlinkLed.h"
 
 #ifdef _METEO
+#include "wx_handler.h"
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
-#include "drivers/_dht22.h"
 #include "aprs/wx.h"
+#include "rte_wx.h"
 #endif
 
 #ifdef _DALLAS_AS_TELEM
@@ -60,6 +62,9 @@
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
+// global variable used as a timer to trigger meteo sensors mesurements
+uint32_t wx_sensors_pool_timer = 65500;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx ax25;
 Afsk a;
@@ -79,13 +84,6 @@ unsigned char BcnInterval, WXInterval, BcnI = _BCN_INTERVAL - 2, WXI = _WX_INTER
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
 int t = 0;
 
-float temperature;
-float td;
-double pressure = 0.0;
-
-#ifdef _METEO
-dht22Values dht, dht_valid;
-#endif
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -110,10 +108,18 @@ main(int argc, char* argv[])
   // Configuring the SysTick timer to generate interrupt 100x per second (one interrupt = 10ms)
   SysTick_Config(SystemCoreClock / 100);
 
+#if defined _RANDOM_DELAY
+  // configuring a default delay value
+  delay_set(_DELAY_BASE, 1);
+#elif !defined _RANDOM_DELAY
+  delay_set(_DELAY_BASE, 0);
+
+#endif
+
+  // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   path_len = ConfigPath(path);
 
 #ifdef _METEO
-//  DHT22_Init();
   i2cConfigure();
 #endif
   LedConfig();
@@ -131,18 +137,14 @@ main(int argc, char* argv[])
 #endif
   srl_init();
 
-  td = 0.0f;
-  temperature = 0.0f;
-
   BcnInterval = _BCN_INTERVAL;
   WXInterval = _WX_INTERVAL;
   TelemInterval = 10;
 
 #ifdef _METEO
- SensorReset(0xEC);
- td = DallasQuery();
- SensorReadCalData(0xEC, SensorCalData);
- SensorStartMeas(0);
+ ms5611_reset(&rte_wx_ms5611_qf);
+ ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
+ ms5611_trigger_measure(0, 0);
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART
@@ -189,20 +191,10 @@ main(int argc, char* argv[])
   AFSK_Init(&a);
   ax25_init(&ax25, &a, 0, message_callback);
 
+  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
+  wx_get_all_measurements();
+
   srl_receive_data(100, FEND, FEND, 0, 0, 0);
-
-
-#ifdef _METEO
-  temperature = SensorBringTemperature();
-  td = DallasQuery();
-#ifdef _DBG_TRACE
-  trace_printf("temperatura DS: %d\r\n", (int)td);
-#endif
-  pressure = (float)SensorBringPressure();
-#ifdef _DBG_TRACE
-  trace_printf("cisnienie MS: %d\r\n", (int)pressure);
-#endif
-#endif
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
@@ -245,25 +237,15 @@ main(int argc, char* argv[])
 			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
 #ifdef _METEO
-		dht22_timeout_keeper();
+		if (wx_sensors_pool_timer < 10) {
 
-		switch (dht22State) {
-			case DHT22_STATE_IDLE:
-				dht22_comm(&dht);
-				break;
-			case DHT22_STATE_DATA_RDY:
-				dht22_decode(&dht);
-				break;
-			case DHT22_STATE_DATA_DECD:
-				dht_valid = dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
-				dht22State = DHT22_STATE_DONE;
+			wx_get_all_measurements();
 
-#ifdef _DBG_TRACE
-				trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
-#endif
-				break;
-			default: break;
+			wx_sensors_pool_timer = 65500;
 		}
+
+		// dht22 sensor communication pooling
+		wx_pool_dht22();
 #endif
     }
   // Infinite loop, never return.
@@ -271,6 +253,11 @@ main(int argc, char* argv[])
 
 uint16_t main_get_adc_sample(void) {
 	return (uint16_t) ADC1->DR;
+}
+
+void main_wx_decremenet_counter(void) {
+	if (wx_sensors_pool_timer > 0)
+		wx_sensors_pool_timer -= 10;
 }
 
 #pragma GCC diagnostic pop

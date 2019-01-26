@@ -16,7 +16,8 @@
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
 #include "main.h"
-#include "afsk.h"
+//#include "afsk.h"
+#include "delay.h"
 
 #include "diag/Trace.h"
 
@@ -31,17 +32,21 @@ char adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
 short int AdcValue;
 
-// Systick interrupt used for time measurements, checking timeouts andSysTick_Handler
+// Systick interrupt used for time measurements, checking timeouts and SysTick_Handler
 void SysTick_Handler(void) {
 
 	// systick interrupt is generated every 10ms
 	master_time += 10;
 
+	// decrementing a timer to trigger meteo measuremenets
+	main_wx_decremenet_counter();
+
 	srl_keep_timeout();
 
 	i2cKeepTimeout();
 
-	afsk_decrement_delay_counter();
+	delay_decrement_counter();
+
 }
 
 void USART1_IRQHandler(void) {
@@ -75,6 +80,7 @@ void TIM2_IRQHandler( void ) {
 void TIM3_IRQHandler(void) {
 // wysylanie wlasnej pozycji i danych WX
 	TIM3->SR &= ~(1<<0);
+/*
 #ifdef _METEO
 	temperature = SensorBringTemperature();
 	td = DallasQuery();
@@ -87,13 +93,14 @@ void TIM3_IRQHandler(void) {
 #endif
 	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
 		dht22State = DHT22_STATE_IDLE;
-
+*/
+	/*
 #ifndef _MUTE_OWN
 		if (WXInterval != 0 && WXI >= WXInterval) {
 			trace_printf("Pogoda\r\n");
 
 			  temperature = SensorBringTemperature();
-			  td = DallasQuery();
+//			  td = DallasQuery();
 			  trace_printf("temperatura DS: %d\r\n", (int)td);
 			  pressure = (float)SensorBringPressure();
 			  trace_printf("cisnienie MS: %d\r\n", (int)pressure);
@@ -105,7 +112,7 @@ void TIM3_IRQHandler(void) {
 	else
 		WXI++;
 #endif
-#endif
+*/
 		if (BcnInterval != 0 && BcnI >= BcnInterval) {
 #ifndef _MUTE_OWN
 //		while(ax25.afsk->hdlc.raw_dcd == TRUE);

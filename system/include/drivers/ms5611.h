@@ -3,22 +3,34 @@
 
 #include <math.h>
 
+#include "stdint.h"
+
 /* C++ detection */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define MS5611_WRONG_PARAM_VALUE	-3
+#define MS5611_TIMEOUT_DURING_MEASURMENT	-2
+#define MS5611_SENSOR_NOT_AVALIABLE -1
+#define MS5611_OK	0
 
-void SensorReset(int addr);
-int SensorReadCalData(int addr, int* cal_data);
+typedef enum ms5611_qf {
+	MS5611_QF_UNKNOWN = 0,
+	MS5611_QF_FULL = 1,
+	MS5611_QF_NOT_AVALIABLE = 2
+}ms5611_qf_t;
+
+int32_t ms5611_reset(ms5611_qf_t *qf);
+int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t* qf);
 unsigned char crc4(int n_prom[]);
-long int SensorStartMeas(int param_to_meas);
-float SensorBringTemperature(void);
-double SensorBringPressure(void);
+int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out);
+int32_t ms5611_get_temperature(float* out, ms5611_qf_t* qf);
+int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf);
 
 
 extern char state;
-extern int SensorCalData[8];
+extern int32_t SensorCalData[8];
 
 
 /* C++ detection */

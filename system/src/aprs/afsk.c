@@ -8,9 +8,6 @@
 #include <dac.h>
 #include <ax25.h>
 
-#include "station_config.h"
-
-
 
 #define 	BIT_DIFFER(bitline1, bitline2) (((bitline1) ^ (bitline2)) & 0x01)
 #define 	EDGE_FOUND(bitline)	BIT_DIFFER((bitline), (bitline) >> 1)
@@ -29,8 +26,6 @@ static uint8_t ptr=0;
 
 char PersistRand;
 char DrawCounter;
-
-int16_t afsk_transmit_delay = 0;
 
 extern unsigned short tx10m;
 
@@ -369,45 +364,7 @@ void AFSK_Init(Afsk *afsk) {
 	}
 
 	afsk->phase_inc = MARK_INC;
-	afsk->tx_delay_base = _DELAY_BASE * 50;
-
-#ifdef _RANDOM_DELAY
-	afsk->tx_delay_randomize = true;
-#else
-	afsk->tx_delay_randomize = false;
-#endif
 
 }
-
-void afsk_delay_tx(Afsk *afsk) {
-	afsk_transmit_delay = afsk->tx_delay_base;
-
-	while (afsk_transmit_delay > 0);
-
-	if (afsk->tx_delay_randomize == true) {
-
-	}
-	else {
-		return;
-	}
-}
-
-///*********************************************************************************************************************/
-//char AFSK_MAC(char PersistValue) {
-///*********************************************************************************************************************/
-//	DrawCounter = 0;	// resetowanie licznika losowan
-//	do {
-//		/* Petla wykonuje sie do puki wartosc wylosowana jest wieksza niz zadany
-//			 parametr Persist. Aby zapobiec czekaniu w nieskonczonosc, jezeli po 3 sekundach
-//			 warunek dalej jest niespelniony to ramka i tak jest nadawana					*/
-//		if(DrawCounter < 30);
-//			/* Zmienna DrawCounter jest licznikiem losowan, ktory jednoczesnie przechowuje informacje
-//			   ile czsu uplynelo od inicjacji transmisji. Co kazde losowanie jest ona zwiekszana o
-//				 wartosc Slottime. Poniewaz ustawienie Slottime rowne 1 oznacza losowanie co 100ms to
-//				 30 bedie oznaczalo 3 sekundy*/
-//		else
-//			break;
-//	}while(PersistRand > PersistValue);
-//}
 
 	

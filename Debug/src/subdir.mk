@@ -9,11 +9,14 @@ C_SRCS += \
 ../src/PathConfig.c \
 ../src/TimerConfig.c \
 ../src/_write.c \
-../src/it_handlers.c 
+../src/delay.c \
+../src/it_handlers.c \
+../src/main.c \
+../src/rte_wx.c \
+../src/wx_handler.c 
 
 CPP_SRCS += \
-../src/BlinkLed.cpp \
-../src/main.cpp 
+../src/BlinkLed.cpp 
 
 OBJS += \
 ./src/BlinkLed.o \
@@ -22,8 +25,11 @@ OBJS += \
 ./src/PathConfig.o \
 ./src/TimerConfig.o \
 ./src/_write.o \
+./src/delay.o \
 ./src/it_handlers.o \
-./src/main.o 
+./src/main.o \
+./src/rte_wx.o \
+./src/wx_handler.o 
 
 C_DEPS += \
 ./src/KissCommunication.d \
@@ -31,11 +37,14 @@ C_DEPS += \
 ./src/PathConfig.d \
 ./src/TimerConfig.d \
 ./src/_write.d \
-./src/it_handlers.d 
+./src/delay.d \
+./src/it_handlers.d \
+./src/main.d \
+./src/rte_wx.d \
+./src/wx_handler.d 
 
 CPP_DEPS += \
-./src/BlinkLed.d \
-./src/main.d 
+./src/BlinkLed.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

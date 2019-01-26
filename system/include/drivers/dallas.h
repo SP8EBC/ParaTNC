@@ -30,14 +30,23 @@ typedef struct DallasStruct {
 	uint8_t shift;
 }DallasStruct;
 
+typedef enum DallasQF {
+	DALLAS_QF_UNKNOWN = 0,
+	DALLAS_QF_FULL,
+	DALLAS_QF_DEGRADATED,
+	DALLAS_QF_NOT_AVALIABLE
+}DallasQF;
+
 void DallasInit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource);
 void DallasConfigTimer(void);
 void DallasDeConfigTimer(void);
 char DallasReset(void);
-float DallasQuery(void);
+float DallasQuery(DallasQF *qf);
 void DallasSendByte(char data);
 char DallasReceiveByte(void);
 uint8_t CalculateCRC8(uint8_t *addr, uint8_t len);
+
+
 
 
 /* C++ detection */

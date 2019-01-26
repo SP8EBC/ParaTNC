@@ -1,0 +1,66 @@
+/*
+ * wx_handler.c
+ *
+ *  Created on: 26.01.2019
+ *      Author: mateusz
+ */
+
+#include "drivers/_dht22.h"
+#include "drivers/ms5611.h"
+#include "rte_wx.h"
+
+void wx_get_all_measurements(void) {
+
+	int32_t return_value = 0;
+
+	// quering dallas DS12B20 thermometer for current temperature
+	rte_wx_temperature_dallas = DallasQuery(&rte_wx_dallas_qf);
+
+	// checking if communication was successfull
+	if (rte_wx_temperature_dallas != -128.0f)
+		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
+
+	// quering MS5611 sensor for temperature
+	return_value = ms5611_get_temperature(&rte_wx_temperature, &rte_wx_ms5611_qf);
+
+	if (return_value == MS5611_OK) {
+		rte_wx_temperature_valid = rte_wx_temperature;
+
+	}
+
+	// quering MS5611 sensor for pressure
+	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
+
+	if (return_value == MS5611_OK) {
+		rte_wx_pressure_valid = rte_wx_pressure;
+	}
+
+	// if humidity sensor is idle trigger the communiction & measuremenets
+	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
+		dht22State = DHT22_STATE_IDLE;
+
+}
+
+void wx_pool_dht22(void) {
+
+	dht22_timeout_keeper();
+
+	switch (dht22State) {
+		case DHT22_STATE_IDLE:
+			dht22_comm(&rte_wx_dht);
+			break;
+		case DHT22_STATE_DATA_RDY:
+			dht22_decode(&rte_wx_dht);
+			break;
+		case DHT22_STATE_DATA_DECD:
+			rte_wx_dht_valid = rte_wx_dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
+			dht22State = DHT22_STATE_DONE;
+
+#ifdef _DBG_TRACE
+			trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
+#endif
+			break;
+		default: break;
+	}
+
+}

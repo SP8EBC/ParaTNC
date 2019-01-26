@@ -30,6 +30,7 @@ void i2cKeepTimeout(void);
 //void I2C1_EV_IRQHandler(void);
 //void I2C1_ER_IRQHandler(void);
 
+extern volatile i2c_state_t i2c_state;
 
 extern volatile uint16_t i2cRemoteAddr;
 extern volatile uint8_t i2cTXData[32];

@@ -67,6 +67,8 @@ void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	I2C1->CR2 |= I2C_CR2_ITBUFEN;
 	I2C1->CR2 |= I2C_CR2_ITERREN;
 
+	i2c_state = I2C_IDLE;
+
 }
 
 int i2cSendData(int addr, int* data, int null) {
@@ -240,6 +242,8 @@ void i2cErrIrqHandler(void) {
 
 	if (i2cErrorCounter > MAX_I2C_ERRORS_PER_COMM) {
 		i2cStop();
+
+		i2c_state = I2C_ERROR;
 	}
 
 }

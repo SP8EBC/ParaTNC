@@ -26,7 +26,7 @@ void SendSimpleTelemetry(char num) {
 #ifdef _DALLAS_AS_TELEM
 	char qf = '1', degr = '0', nav = '0';
 
-	temperature = DallasQuery();
+//	temperature = DallasQuery();
 
 	if (temperature == -128.0f) {
 		qf = '0';
