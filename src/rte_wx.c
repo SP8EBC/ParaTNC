@@ -6,7 +6,7 @@
  */
 
 
-#include "rte_wx.h"
+#include <rte_wx.h>
 
 float rte_wx_temperature_dallas = 0.0f, rte_wx_temperature_dallas_valid = 0.0f;
 float rte_wx_temperature = 0.0f, rte_wx_temperature_valid = 0.0f;

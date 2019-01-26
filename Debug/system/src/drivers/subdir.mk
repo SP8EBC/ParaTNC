@@ -6,7 +6,6 @@
 C_SRCS += \
 ../system/src/drivers/_dht22.c \
 ../system/src/drivers/dallas.c \
-../system/src/drivers/flash.c \
 ../system/src/drivers/gpio_conf.c \
 ../system/src/drivers/i2c.c \
 ../system/src/drivers/ms5611.c \
@@ -17,7 +16,6 @@ C_SRCS += \
 OBJS += \
 ./system/src/drivers/_dht22.o \
 ./system/src/drivers/dallas.o \
-./system/src/drivers/flash.o \
 ./system/src/drivers/gpio_conf.o \
 ./system/src/drivers/i2c.o \
 ./system/src/drivers/ms5611.o \
@@ -28,7 +26,6 @@ OBJS += \
 C_DEPS += \
 ./system/src/drivers/_dht22.d \
 ./system/src/drivers/dallas.d \
-./system/src/drivers/flash.d \
 ./system/src/drivers/gpio_conf.d \
 ./system/src/drivers/i2c.d \
 ./system/src/drivers/ms5611.d \

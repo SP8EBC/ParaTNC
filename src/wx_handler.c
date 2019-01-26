@@ -5,13 +5,17 @@
  *      Author: mateusz
  */
 
+#include <rte_wx.h>
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
-#include "rte_wx.h"
+
+#include "station_config.h"
 
 void wx_get_all_measurements(void) {
 
 	int32_t return_value = 0;
+
+#if defined _METEO || defined _DALLAS_AS_TELEM
 
 	// quering dallas DS12B20 thermometer for current temperature
 	rte_wx_temperature_dallas = DallasQuery(&rte_wx_dallas_qf);
@@ -19,7 +23,9 @@ void wx_get_all_measurements(void) {
 	// checking if communication was successfull
 	if (rte_wx_temperature_dallas != -128.0f)
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
+#endif
 
+#ifdef _METEO
 	// quering MS5611 sensor for temperature
 	return_value = ms5611_get_temperature(&rte_wx_temperature, &rte_wx_ms5611_qf);
 
@@ -39,6 +45,7 @@ void wx_get_all_measurements(void) {
 	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
 		dht22State = DHT22_STATE_IDLE;
 
+#endif
 }
 
 void wx_pool_dht22(void) {

@@ -48,6 +48,8 @@ typedef struct {
 	unsigned char OddEven;
 } Anemometer;
 
+extern Anemometer VNAME;
+
 #ifdef __cplusplus
 extern "C"
 {

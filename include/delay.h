@@ -8,6 +8,8 @@
 #ifndef DELAY_H_
 #define DELAY_H_
 
+#include "stdint.h"
+
 extern uint16_t delay_cnt;
 
 void delay_set(uint16_t delay_in_msecs, uint8_t randomize);

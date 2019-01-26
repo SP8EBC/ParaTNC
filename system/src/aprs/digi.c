@@ -32,7 +32,7 @@ char Digi(struct AX25Msg *msg) {
 		return DIGI_PACKET_TOO_LONG;
 	}
 
-	if (a.sending != 1 && after_tx_lock == 0) {
+	if (main_afsk.sending != 1 && after_tx_lock == 0) {
 		/* funkcja wywoływana po odbiorze ramki - tu powinna być obsługa digi */
 		if((msg->rpt_cnt >= 1) /*&& CheckIsOwnPacket(msg) == 0*/) {
 //			if (msg->rpt_cnt == 1 && strcmp("WIDE2", msg->rpt_lst[0].call) == 0 && (msg->rpt_lst[0].ssid == 1 || msg->rpt_lst[0].ssid == 2)) {
@@ -157,15 +157,19 @@ char Digi(struct AX25Msg *msg) {
 				digi_msg_len = msg->len+1;
 				snprintf(digi_msg, msg->len+1, "%s", msg->info);
 
-				while(ax25.dcd == true);
-				ax25_sendVia(&ax25, digi_path, call_len, digi_msg, digi_msg_len-1);
+				while(main_ax25.dcd == true);
+				ax25_sendVia(&main_ax25, digi_path, call_len, digi_msg, digi_msg_len-1);
 				after_tx_lock = 1;
-				afsk_txStart(&a);
+				afsk_txStart(&main_afsk);
 				return 1;
 			}
-			else;
+			else {
+				;
 			}
-		else;
+			}
+		else {
+			;
+		}
 	}
 	else
 		after_tx_lock = 0;

@@ -1,4 +1,6 @@
 
+#include <delay.h>
+#include <LedConfig.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,8 +8,6 @@
 #include <stm32f10x.h>
 
 #include "main.h"
-#include "delay.h"
-
 #include "station_config.h"
 
 #include "diag/Trace.h"
@@ -15,7 +15,6 @@
 #include "afsk_pr.h"
 #include "drivers/serial.h"
 #include "TimerConfig.h"
-#include "LedConfig.h"
 #include "PathConfig.h"
 
 #include "aprs/digi.h"
@@ -23,18 +22,18 @@
 #include "aprs/dac.h"
 #include "aprs/beacon.h"
 
+#include "rte_wx.h"
 
 //#include "Timer.h"
 //#include "BlinkLed.h"
 
 #ifdef _METEO
-#include "wx_handler.h"
+#include <wx_handler.h>
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
 #include "aprs/wx.h"
-#include "rte_wx.h"
 #endif
 
 #ifdef _DALLAS_AS_TELEM
@@ -63,26 +62,27 @@
 uint32_t master_time = 0;
 
 // global variable used as a timer to trigger meteo sensors mesurements
-uint32_t wx_sensors_pool_timer = 65500;
+uint32_t main_wx_sensors_pool_timer = 65500;
+
+// global variable used as a timer to trigger packet sending
+uint32_t main_packet_rx_pool_timer = 6000;
 
 // global variables represending the AX25/APRS stack
-AX25Ctx ax25;
-Afsk a;
+AX25Ctx main_ax25;
+Afsk main_afsk;
 
 
 AX25Call path[3];
 uint8_t path_len = 0;
 uint8_t aprs_msg_len;
-char aprs_msg[128];
+char main_own_aprs_msg[160];
 
 // global variable used to store return value from various functions
 volatile uint8_t retval = 100;
 
 char after_tx_lock;
 
-unsigned char BcnInterval, WXInterval, BcnI = _BCN_INTERVAL - 2, WXI = _WX_INTERVAL - 1, TelemInterval, TelemI = 1;
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
-int t = 0;
 
 
 static void message_callback(struct AX25Msg *msg) {
@@ -100,7 +100,7 @@ main(int argc, char* argv[])
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
 
-  memset(aprs_msg, 0x00, 128);
+  memset(main_own_aprs_msg, 0x00, 128);
 
   // choosing the signal source for the SysTick timer.
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
@@ -123,8 +123,8 @@ main(int argc, char* argv[])
   i2cConfigure();
 #endif
   LedConfig();
-  AFSK_Init(&a);
-  ax25_init(&ax25, &a, 0, 0x00);
+  AFSK_Init(&main_afsk);
+  ax25_init(&main_ax25, &main_afsk, 0, 0x00);
   DA_Init();
 
 #ifdef _METEO
@@ -135,11 +135,9 @@ main(int argc, char* argv[])
 #ifdef _DALLAS_AS_TELEM
   DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
 #endif
-  srl_init();
 
-  BcnInterval = _BCN_INTERVAL;
-  WXInterval = _WX_INTERVAL;
-  TelemInterval = 10;
+  // initializing UART drvier
+  srl_init();
 
 #ifdef _METEO
  ms5611_reset(&rte_wx_ms5611_qf);
@@ -148,20 +146,20 @@ main(int argc, char* argv[])
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-  aprs_msg_len = sprintf(aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+  aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
 
   // terminating the aprs message
-  aprs_msg[aprs_msg_len] = 0;
+  main_own_aprs_msg[aprs_msg_len] = 0;
 
   // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
-  ax25_sendVia(&ax25, path, (sizeof(path) / sizeof(*(path))), aprs_msg, aprs_msg_len);
+  ax25_sendVia(&main_ax25, path, (sizeof(path) / sizeof(*(path))), main_own_aprs_msg, aprs_msg_len);
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
   while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
 
   // converting AX25 with beacon to KISS format
-  ln = SendKISSToHost(a.tx_buf + 1, a.tx_fifo.tail - a.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
+  ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
 
   // checking if KISS-framing was done correctly
   if (ln != KISS_TOO_LONG_FRM) {
@@ -184,20 +182,22 @@ main(int argc, char* argv[])
   }
 
   // reinitializing AFSK and AX25 driver
-  AFSK_Init(&a);
+  AFSK_Init(&main_afsk);
 
   ADCStartConfig();
   DACStartConfig();
-  AFSK_Init(&a);
-  ax25_init(&ax25, &a, 0, message_callback);
+  AFSK_Init(&main_afsk);
+  ax25_init(&main_ax25, &main_afsk, 0, message_callback);
 
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
   wx_get_all_measurements();
 
+  // switching UART to receive mode to be ready for KISS frames from host
   srl_receive_data(100, FEND, FEND, 0, 0, 0);
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
+  // configuting system timers
   TimerConfig();
 
 #ifdef _BCN_ON_STARTUP
@@ -208,42 +208,53 @@ main(int argc, char* argv[])
   while (1)
     {
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
-			SendSimpleTelemetry(1);
+			telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 	  	}
 	  	else {
 	  		;
 	  	}
 
+	  	// if new packet has been received from radio channel
 		if(new_msg_rx == 1) {
 			memset(srl_tx_buffer, 0x00, sizeof(srl_tx_buffer));
+
+			// convert message to kiss format and send it to host
 			srl_start_tx(SendKISSToHost(msg.raw_data, (msg.raw_msg_len - 2), srl_tx_buffer, TX_BUFFER_LN));
 
-			ax25.dcd = false;
+			main_ax25.dcd = false;
 #ifdef _DBG_TRACE
 			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", msg.src.call, msg.src.ssid, msg.rpt_lst[0].call, msg.rpt_lst[0].ssid);
 #endif
 #ifdef _DIGI
+			// check if this packet needs to be repeated (digipeated) and do it if it is neccessary
 			Digi(&msg);
 #endif
 			new_msg_rx = 0;
 			rx10m++;
 		}
 
+		// if new KISS message has been received from the host
 		if (srl_rx_state == SRL_RX_DONE) {
-			short res = ParseReceivedKISS(srl_get_rx_buffer(), &ax25, &a);
-			if (res == 0)
-				kiss10m++;
 
+			// parse incoming data and then transmit on radio freq
+			short res = ParseReceivedKISS(srl_get_rx_buffer(), &main_ax25, &main_afsk);
+			if (res == 0)
+				kiss10m++;	// increase kiss messages counter
+
+			// restart KISS receiving to be ready for next frame
 			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
-#ifdef _METEO
-		if (wx_sensors_pool_timer < 10) {
+
+		// get all meteo measuremenets each 65 seconds. some values may not be
+		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
+		if (main_wx_sensors_pool_timer < 10) {
 
 			wx_get_all_measurements();
 
-			wx_sensors_pool_timer = 65500;
+			main_wx_sensors_pool_timer = 65500;
 		}
 
+#ifdef _METEO
 		// dht22 sensor communication pooling
 		wx_pool_dht22();
 #endif
@@ -256,8 +267,8 @@ uint16_t main_get_adc_sample(void) {
 }
 
 void main_wx_decremenet_counter(void) {
-	if (wx_sensors_pool_timer > 0)
-		wx_sensors_pool_timer -= 10;
+	if (main_wx_sensors_pool_timer > 0)
+		main_wx_sensors_pool_timer -= 10;
 }
 
 #pragma GCC diagnostic pop

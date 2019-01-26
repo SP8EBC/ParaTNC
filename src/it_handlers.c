@@ -5,6 +5,7 @@
  *      Author: mateusz
  */
 
+#include <delay.h>
 #include <stm32f10x.h>
 #include "drivers/dallas.h"
 #include "drivers/tx20.h"
@@ -17,8 +18,6 @@
 #include "aprs/beacon.h"
 #include "main.h"
 //#include "afsk.h"
-#include "delay.h"
-
 #include "diag/Trace.h"
 
 #include "station_config.h"
@@ -113,41 +112,41 @@ void TIM3_IRQHandler(void) {
 		WXI++;
 #endif
 */
-		if (BcnInterval != 0 && BcnI >= BcnInterval) {
+//		if (BcnInterval != 0 && BcnI >= BcnInterval) {
 #ifndef _MUTE_OWN
 //		while(ax25.afsk->hdlc.raw_dcd == TRUE);
-		trace_printf("Wlasny beacon\r\n");
-		SendOwnBeacon();
-		while (a.sending == 1);
+//		trace_printf("Wlasny beacon\r\n");
+//		SendOwnBeacon();
+//		while (a.sending == 1);
 #endif
-		BcnI = 1;
-	}
-	else
-		BcnI++;
-	if (TelemInterval != 0 && TelemI >= TelemInterval) {
+//		BcnI = 1;
+//	}
+//	else
+//		BcnI++;
+//	if (TelemInterval != 0 && TelemI >= TelemInterval) {
 #ifndef _MUTE_OWN
-		trace_printf("Telemetria\r\n");
+//		trace_printf("Telemetria\r\n");
 //		ch14 = ADCReturnChannel(14);
 //		ch15 = ADCReturnChannel(15);
 //		ADCStartConfig();
 //		while(ax25.afsk->hdlc.raw_dcd == TRUE);
-		if (t % 12 == 0 || t == 0)
-			SendSimpleTelemetry(1);
-		else
-			SendSimpleTelemetry(0);
-		while (a.sending == 1);
+//		if (t % 12 == 0 || t == 0)
+//			SendSimpleTelemetry(1);
+//		else
+//			SendSimpleTelemetry(0);
+//		while (a.sending == 1);
 #endif
-		TelemI = 1;
-	}
-	else
-		TelemI++;
+//		TelemI = 1;
+//	}
+//	else
+//		TelemI++;
 }
 
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
 	TIM4->SR &= ~(1<<0);
 	if (timm == 0) {
-		DAC->DHR8R1 = AFSK_DAC_ISR(&a);
+		DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 		DAC->SWTRIGR |= 1;
 	}
 	else {
@@ -165,8 +164,8 @@ void TIM7_IRQHandler(void) {
 	AdcBuffer[ASC] =  ADC1->DR;
 	if(ASC == 3) {
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
-		AFSK_ADC_ISR(&a, (AdcValue - 4095) );
-		if(ax25.dcd == true) {		// niebieska dioda
+		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
+		if(main_ax25.dcd == true) {		// niebieska dioda
 			GPIOC->BSRR |= GPIO_BSRR_BS8;
 		}
 		else {
@@ -177,7 +176,7 @@ void TIM7_IRQHandler(void) {
 		if (ASC2++ == 2) {
 			// pooling AX25 musi być tu bo jak z przerwania wyskoczy nadawanie WX, BCN, TELEM przy dcd == true
 			// to bedzie wisialo w nieskonczonosc bo ustawiania dcd jest w srodku ax25_poll
-			ax25_poll(&ax25);
+			ax25_poll(&main_ax25);
 			ASC2 = 0;
 		}
 		else {

@@ -1,7 +1,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 //#include "drivers/dallas.h"
-#include "../src/delay.h"
+#include "../include/delay.h"
 
 // adres do zapisu: 0xEC
 // adres do oczytu: 0xED

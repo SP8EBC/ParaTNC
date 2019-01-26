@@ -5,29 +5,27 @@
 
 extern uint32_t master_time;
 
-extern uint32_t wx_sensors_pool_timer;
+extern uint32_t main_wx_sensors_pool_timer;
 
-extern AX25Ctx ax25;
-extern Afsk a;
+extern AX25Ctx main_ax25;
+extern Afsk main_afsk;
 
 extern AX25Call path[3];
 extern uint8_t path_len;
 extern uint8_t aprs_msg_len;
-extern char aprs_msg[128];
+extern char main_own_aprs_msg[160];
 
 extern char after_tx_lock;
 
-extern unsigned char BcnInterval, WXInterval, BcnI, WXI, TelemInterval, TelemI;
 extern unsigned short rx10m, tx10m, digi10m, kiss10m;
-extern int t;
-
-extern float temperature;
-extern float td;
-extern double pressure;
 
 uint16_t main_get_adc_sample(void);
 void main_wx_decremenet_counter(void);
+void main_packets_tx_decremenet_counter(void);
 
+inline void main_wait_for_tx_complete(void) {
+	while(main_afsk.sending == 1);
+}
 
 
 #endif
