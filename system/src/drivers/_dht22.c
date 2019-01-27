@@ -66,7 +66,7 @@ void dht22_comm(dht22Values *in) {
 
 	GPIO_Init(DHT22_PIN_PORT,&PORT_out);
 	GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
-	DallasConfigTimer();
+	dallas_config_timer();
 
 	/*
 	 * Setting pin logic-low to initialize transfer.
@@ -85,7 +85,7 @@ void dht22_comm(dht22Values *in) {
 	uint8_t sensorResp = GPIO_ReadInputDataBit(DHT22_PIN_PORT, DHT22_PIN_PIN);
 	if (sensorResp == Bit_SET) {
 		dht22State = DHT22_STATE_TIMEOUT;
-		DallasDeConfigTimer();
+		dallas_deconfig_timer();
 		if (in != 0x00)
 			in->qf = DHT22_QF_UNAVALIABLE;
 		return;		// if pin is still high it usually means that there is a problem with comm with the sensor
@@ -152,7 +152,7 @@ void dht22_timeout_keeper(void) {
 		if (delay_5us == 0) {
 			dht22_init();
 			EXTI_Init(&exti_disable);
-			DallasDeConfigTimer();
+			dallas_deconfig_timer();
 			dht22State = DHT22_STATE_TIMEOUT;
 		}
 	}
@@ -171,7 +171,7 @@ void dht22_irq_handler(void) {
 			  GPIO_Init(DHT22_PIN_PORT,&PORT_out);
 			  GPIO_SetBits(DHT22_PIN_PORT, DHT22_PIN_PIN);
 			  dht22State = DHT22_STATE_DATA_RDY;
-			  DallasDeConfigTimer();
+			  dallas_deconfig_timer();
 		  }
 	  }
 

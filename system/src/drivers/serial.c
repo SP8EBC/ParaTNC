@@ -86,7 +86,7 @@ void srl_init(void) {
 	USART_Init(PORT, &USART_InitStructure);
 
 	NVIC_EnableIRQ( USART1_IRQn );
-	NVIC_SetPriority(USART1_IRQn, 9);		/// bylo 10
+	//NVIC_SetPriority(USART1_IRQn, 9);		/// bylo 10
 
  	PORT->CR1 |= USART_CR1_UE;
 //	PORT->BRR |= srlBRRegValue;				// ustawianie wartoci preskalera do baudrate

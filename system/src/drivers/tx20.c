@@ -113,8 +113,8 @@ void TX20Batch(void) {
 				else
 					OE++;
 				DCD = 0, BQ = 0, RD = 1, FC = 0, QL = 0, BS = 0;
-				TIMER->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
-				TIMER->CNT = 0;
+				TIMER->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);	// disabling baudrate timer after receiving whole frame
+				TIMER->CNT = 0;		// resetting timer counter back to zero
 			}
 			else
 				FC++;
@@ -225,6 +225,8 @@ void EXTI4_IRQHandler(void) {
 void EXTI9_5_IRQHandler(void) {
   EXTI->PR |= EXTI_PR_PR0 << TX;
 
+  // TIMER is disabled after each complete frame, so it needs to be started once again
+  // when start bit (an endge at the begining of next frame from anemometer) is received
   if ((TIMER->CR1 & TIM_CR1_CEN) == 0 )
   	TIMER->CR1 |= TIM_CR1_CEN;
 //  QL = 0;

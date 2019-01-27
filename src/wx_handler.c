@@ -18,7 +18,7 @@ void wx_get_all_measurements(void) {
 #if defined _METEO || defined _DALLAS_AS_TELEM
 
 	// quering dallas DS12B20 thermometer for current temperature
-	rte_wx_temperature_dallas = DallasQuery(&rte_wx_dallas_qf);
+	rte_wx_temperature_dallas = dallas_query(&rte_wx_dallas_qf);
 
 	// checking if communication was successfull
 	if (rte_wx_temperature_dallas != -128.0f)

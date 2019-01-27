@@ -110,6 +110,9 @@ main(int argc, char* argv[])
   // Configuring the SysTick timer to generate interrupt 100x per second (one interrupt = 10ms)
   SysTick_Config(SystemCoreClock / SYSTICK_TICKS_PER_SECONDS);
 
+  // setting an Systick interrupt priority
+  NVIC_SetPriority(SysTick_IRQn, 5);
+
 #if defined _RANDOM_DELAY
   // configuring a default delay value
   delay_set(_DELAY_BASE, 1);
@@ -131,15 +134,18 @@ main(int argc, char* argv[])
 
 #ifdef _METEO
   dht22_init();
-  DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
   TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
-  DallasInit(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
 #endif
 
   // initializing UART drvier
   srl_init();
+
+  // configuring interrupt priorities
+  it_handlers_set_priorities();
 
 #ifdef _METEO
  ms5611_reset(&rte_wx_ms5611_qf);

@@ -19,7 +19,7 @@ void TimerConfig(void) {
 	///////////////////////////////////////////
 	/// konfiguracja TIM2 -- dallas delay 	///
 	///////////////////////////////////////////
-	NVIC_SetPriority(TIM2_IRQn, 1);
+	//NVIC_SetPriority(TIM2_IRQn, 1);
 	TIM2->PSC = 0;
 	TIM2->ARR = 119;
 	TIM2->CR1 |= TIM_CR1_DIR;
@@ -31,7 +31,7 @@ void TimerConfig(void) {
 	// 	//////////////////////////////
 	// 	////   konfiguracja TIM4 -- dac  ///
 	// 	//////////////////////////////
-		NVIC_SetPriority(TIM4_IRQn, 2);
+		//NVIC_SetPriority(TIM4_IRQn, 2);
 		TIM4->PSC = 0;
 		TIM4->ARR = 2499;
 		TIM4->CR1 |= TIM_CR1_DIR;
@@ -42,7 +42,7 @@ void TimerConfig(void) {
 		///////////////////////////////////////////
 		/// konfiguracja TIM7 --adc 	///
 		///////////////////////////////////////////
-		NVIC_SetPriority(TIM7_IRQn, 3);
+		//NVIC_SetPriority(TIM7_IRQn, 3);
 		TIM7->PSC = 0;
 		TIM7->ARR = 624;			/// 2499
 		TIM7->CR1 |= TIM_CR1_DIR;

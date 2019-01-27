@@ -23,6 +23,22 @@
 #include "station_config.h"
 
 
+/*
+ * INTERRUPT PRIORITIES
+ *
+ *	TIM2_IRQHandler 			- 1 -> Dallas delay (enable only during dallas comm)
+ *	I2C1_EV_IRQHandler 			- 2 -> I2C comm interrupt (active & enable only during communication with i2c sensor)
+ *	TIM4_IRQHandler 			- 3 -> APRS softmodem DAC (enable only during tx)
+ *	TIM7_IRQHandler 			- 4 -> APRS softmodem ADC
+ *	SysTick_Handler 			- 5
+ *	TIM1_UP_TIM16_IRQHandler 	- 6 -> TX20 baudrate timer
+ *	EXTI9_5_IRQHandler 			- 7 -> TX20 anemometer GPIO
+ *	EXTI4_IRQHandler 			- 8 -> DHT22 sensor GPIO interrupt
+ *	USART1_IRQHandler 			- 9 -> uart to comm with KISS host
+ *	I2C1_ER_IRQHandler			- 10 -> I2C error interrupt
+ *
+ */
+
 
 // TIM1 w TX20
 
@@ -30,6 +46,21 @@
 char adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
 short int AdcValue;
+
+// this function will set all iterrupt priorities except systick
+void it_handlers_set_priorities(void) {
+	NVIC_SetPriority(TIM2_IRQn, 1);
+	NVIC_SetPriority(I2C1_EV_IRQn, 2);
+	NVIC_SetPriority(TIM4_IRQn, 3);
+	NVIC_SetPriority(TIM7_IRQn, 4);
+	// systick
+	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);
+	NVIC_SetPriority(EXTI9_5_IRQn, 7);
+	NVIC_SetPriority(EXTI4_IRQn, 8);
+	NVIC_SetPriority(USART1_IRQn, 9);
+	NVIC_SetPriority(I2C1_ER_IRQn, 10);
+
+}
 
 // Systick interrupt used for time measurements, checking timeouts and SysTick_Handler
 void SysTick_Handler(void) {
@@ -75,14 +106,6 @@ void TIM2_IRQHandler( void ) {
 		delay_5us--;
 
 }
-
-/*
-void TIM3_IRQHandler(void) {
-// wysylanie wlasnej pozycji i danych WX
-	TIM3->SR &= ~(1<<0);
-
-}
-*/
 
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
