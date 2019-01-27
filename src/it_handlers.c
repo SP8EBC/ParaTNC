@@ -35,7 +35,7 @@ short int AdcValue;
 void SysTick_Handler(void) {
 
 	// systick interrupt is generated every 10ms
-	master_time += 10;
+	master_time += SYSTICK_TICKS_PERIOD;
 
 	// decrementing a timer to trigger meteo measuremenets
 	main_wx_decremenet_counter();
@@ -66,7 +66,7 @@ void I2C1_ER_IRQHandler(void) {
 
 void EXTI4_IRQHandler(void) {
   EXTI->PR |= EXTI_PR_PR4;
-  dht22_timeout_keeper();
+  dht22_irq_handler();
 }
 
 void TIM2_IRQHandler( void ) {
@@ -76,71 +76,13 @@ void TIM2_IRQHandler( void ) {
 
 }
 
+/*
 void TIM3_IRQHandler(void) {
 // wysylanie wlasnej pozycji i danych WX
 	TIM3->SR &= ~(1<<0);
-/*
-#ifdef _METEO
-	temperature = SensorBringTemperature();
-	td = DallasQuery();
-#ifdef _DBG_TRACE
-	 trace_printf("temperatura DS: %d\r\n", (int)td);
-#endif
-	 pressure = (float)SensorBringPressure();
-#ifdef _DBG_TRACE
-	 trace_printf("cisnienie MS: %d\r\n", (int)pressure);
-#endif
-	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
-		dht22State = DHT22_STATE_IDLE;
-*/
-	/*
-#ifndef _MUTE_OWN
-		if (WXInterval != 0 && WXI >= WXInterval) {
-			trace_printf("Pogoda\r\n");
 
-			  temperature = SensorBringTemperature();
-//			  td = DallasQuery();
-			  trace_printf("temperatura DS: %d\r\n", (int)td);
-			  pressure = (float)SensorBringPressure();
-			  trace_printf("cisnienie MS: %d\r\n", (int)pressure);
-//		while(ax25.afsk->hdlc.raw_dcd == TRUE);
-		SendWXFrame(&VNAME, td, pressure);
-		while (a.sending == 1);
-		WXI = 1;
-		}
-	else
-		WXI++;
-#endif
-*/
-//		if (BcnInterval != 0 && BcnI >= BcnInterval) {
-#ifndef _MUTE_OWN
-//		while(ax25.afsk->hdlc.raw_dcd == TRUE);
-//		trace_printf("Wlasny beacon\r\n");
-//		SendOwnBeacon();
-//		while (a.sending == 1);
-#endif
-//		BcnI = 1;
-//	}
-//	else
-//		BcnI++;
-//	if (TelemInterval != 0 && TelemI >= TelemInterval) {
-#ifndef _MUTE_OWN
-//		trace_printf("Telemetria\r\n");
-//		ch14 = ADCReturnChannel(14);
-//		ch15 = ADCReturnChannel(15);
-//		ADCStartConfig();
-//		while(ax25.afsk->hdlc.raw_dcd == TRUE);
-//		if (t % 12 == 0 || t == 0)
-//			SendSimpleTelemetry(1);
-//		else
-//			SendSimpleTelemetry(0);
-//		while (a.sending == 1);
-#endif
-//		TelemI = 1;
-//	}
-//	else
-//		TelemI++;
 }
+*/
 
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog

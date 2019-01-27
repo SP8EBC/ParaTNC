@@ -61,11 +61,15 @@ void wx_pool_dht22(void) {
 			break;
 		case DHT22_STATE_DATA_DECD:
 			rte_wx_dht_valid = rte_wx_dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
+			//rte_wx_dht_valid.qf = DHT22_QF_FULL;
 			dht22State = DHT22_STATE_DONE;
 
 #ifdef _DBG_TRACE
 			trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
 #endif
+			break;
+		case DHT22_STATE_TIMEOUT:
+			rte_wx_dht_valid.qf = DHT22_QF_UNAVALIABLE;
 			break;
 		default: break;
 	}

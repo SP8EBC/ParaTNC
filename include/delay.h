@@ -9,6 +9,7 @@
 #define DELAY_H_
 
 #include "stdint.h"
+#include "main.h"
 
 extern uint16_t delay_cnt;
 
@@ -19,7 +20,7 @@ void delay_random(void);
 
 inline void delay_decrement_counter(void) {
 	if (delay_cnt > 0)
-		delay_cnt -= 10;
+		delay_cnt -= SYSTICK_TICKS_PERIOD;
 }
 
 

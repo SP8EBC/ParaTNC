@@ -56,7 +56,7 @@ void DallasConfigTimer(void) {
 	TIM2->CR1 |= TIM_CR1_CEN;
 	TIM2->DIER |= 1;
 	NVIC_EnableIRQ( TIM2_IRQn );	// enabling in case that it weren't been enabled earlier
-	timm = 1;
+	//timm = 1;
 }
 
 void DallasDeConfigTimer(void) {
@@ -68,14 +68,14 @@ void DallasDeConfigTimer(void) {
 	NVIC_EnableIRQ( 25 ); // anemometer
 
 	// reverting back to APRS timings
-	NVIC_SetPriority(TIM4_IRQn, 1);
-	TIM4->PSC = 0;
-	TIM4->ARR = 2499;
-	TIM4->CR1 |= TIM_CR1_DIR;
-	TIM4->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
-	TIM4->DIER |= 1;
+	//NVIC_SetPriority(TIM4_IRQn, 1);
+	//TIM4->PSC = 0;
+	//TIM4->ARR = 2499;
+	//TIM4->CR1 |= TIM_CR1_DIR;
+	//TIM4->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
+	//TIM4->DIER |= 1;
 //	NVIC_EnableIRQ( TIM4_IRQn );
-	timm = 0;
+	//timm = 0;
 }
 
 char DallasReset(void) {
@@ -181,6 +181,14 @@ float __attribute__((optimize("O0"))) DallasQuery(DallasQF *qf) {
 	DallasDeConfigTimer();
 
 	crc = CalculateCRC8(data, 8);
+
+	if ((data[0] == 0x00 && data[1] == 0x00 && data[2] == 0x00 && data[3] == 0x00 && data[4] == 0x00 && data[5] == 0x00 && data[6] == 0x00) ||
+			(data[0] == 0xFF && data[1] == 0xFF && data[2] == 0xFF && data[3] == 0xFF && data[4] == 0xFF && data[5] == 0xFF && data[6] == 0xFF))
+	{
+		*qf = DALLAS_QF_NOT_AVALIABLE;
+		return -128.0f;
+	}
+
 	if (crc == data[8]) {
 
 		temp3 = data[0] | (data[1] << 8);		// combined LSB and MSB

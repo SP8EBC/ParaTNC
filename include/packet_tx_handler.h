@@ -8,6 +8,6 @@
 #ifndef PACKET_TX_HANDLER_H_
 #define PACKET_TX_HANDLER_H_
 
-
+void packet_tx_handler(void);
 
 #endif /* PACKET_TX_HANDLER_H_ */

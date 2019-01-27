@@ -16,16 +16,16 @@ void telemetry_send_chns_description(void) {
 	while (main_afsk.sending == 1);
 
 #if (_SSID == 0)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRADA,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL, _SSID);
+main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRADA,DS_QF_NAVBLE,MS_QF_FULL,DHT_QF_FULL,N", _CALL, _SSID);
 #endif
-	main_own_aprs_msg[aprs_msg_len] = 0;
-	ax25_sendVia(&main_ax25, path, path_len, main_own_aprs_msg, aprs_msg_len);
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
 
@@ -34,16 +34,16 @@ aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min
 	delay_fixed(1200);
 
 #if (_SSID == 0)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
 #endif
-	main_own_aprs_msg[aprs_msg_len] = 0;
-	ax25_sendVia(&main_ax25, path, path_len, main_own_aprs_msg, aprs_msg_len);
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
 
@@ -52,16 +52,16 @@ aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min
 	delay_fixed(1200);
 
 #if (_SSID == 0)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-	aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,N", _CALL, _SSID);
 #endif
-	main_own_aprs_msg[aprs_msg_len] = 0;
-	ax25_sendVia(&main_ax25, path, path_len, main_own_aprs_msg, aprs_msg_len);
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
 
@@ -131,15 +131,15 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	}
 
 #ifdef _DALLAS_AS_TELEM
-	aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_full, dht_qf_full);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_full, dht_qf_full);
 #else
-	aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, 0, qf, degr, nav, ms_qf_full, dht_qf_full);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, 0, qf, degr, nav, ms_qf_full, dht_qf_full);
 #endif
 
 	if (telemetry_counter > 999)
 		telemetry_counter = 0;
-	main_own_aprs_msg[aprs_msg_len] = 0;
- 	ax25_sendVia(&main_ax25, path, path_len, main_own_aprs_msg, aprs_msg_len);
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 //	while(ax25.dcd == true);
 

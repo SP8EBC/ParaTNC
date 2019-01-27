@@ -143,18 +143,17 @@ void dht22_decode(dht22Values *data) {
 	}
 	else {
 		data->qf = DHT22_QF_DEGRADATED;
-		dht22State = DHT22_STATE_IDLE;
+		dht22State = DHT22_STATE_DATA_DECD;
 	}
 }
 
 void dht22_timeout_keeper(void) {
-	if (dht22State == DHT22_STATE_COMMS) {
+	if (dht22State == DHT22_STATE_COMMS || dht22State == DHT22_STATE_COMMS_IRQ) {
 		if (delay_5us == 0) {
-			dht22State = DHT22_STATE_TIMEOUT;
 			dht22_init();
 			EXTI_Init(&exti_disable);
 			DallasDeConfigTimer();
-
+			dht22State = DHT22_STATE_TIMEOUT;
 		}
 	}
 }

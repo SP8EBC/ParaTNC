@@ -3,6 +3,9 @@
 
 #include "aprs/ax25.h"
 
+#define SYSTICK_TICKS_PER_SECONDS 100
+#define SYSTICK_TICKS_PERIOD 10
+
 extern uint32_t master_time;
 
 extern uint32_t main_wx_sensors_pool_timer;
@@ -10,9 +13,9 @@ extern uint32_t main_wx_sensors_pool_timer;
 extern AX25Ctx main_ax25;
 extern Afsk main_afsk;
 
-extern AX25Call path[3];
-extern uint8_t path_len;
-extern uint8_t aprs_msg_len;
+extern AX25Call main_own_path[3];
+extern uint8_t main_own_path_ln;
+extern uint8_t main_own_aprs_msg_len;
 extern char main_own_aprs_msg[160];
 
 extern char after_tx_lock;

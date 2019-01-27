@@ -84,11 +84,6 @@ short ParseReceivedKISS(uint8_t* SrlRXData, AX25Ctx* ax25, Afsk* a) {
 	while(ax25->dcd == true);
 	while(a->sending == true);
 
-	// delay before transmit
-	TIM2Delay(_DELAY_BASE);
-	while(delay_5us != 0);
-	TIM2DelayDeConfig();
-	// .. end delay
 
 	ax25_sendRaw(ax25,FrameBuff,j);
  	afsk_txStart(a);

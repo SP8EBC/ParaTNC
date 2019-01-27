@@ -22,8 +22,8 @@
 
 #define DHT22_STATE_IDLE		10
 #define DHT22_STATE_COMMS		11
-#define DHT22_STATE_DATA_RDY	12
-#define DHT22_STATE_DATA_DECD	13
+#define DHT22_STATE_DATA_RDY	12	// data has been rxed from a sensor and it is ready for decoding
+#define DHT22_STATE_DATA_DECD	13	// data has been decoded
 #define DHT22_STATE_TIMEOUT		14
 #define DHT22_STATE_DONE		15
 #define DHT22_STATE_COMMS_IRQ	16

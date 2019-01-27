@@ -72,9 +72,9 @@ AX25Ctx main_ax25;
 Afsk main_afsk;
 
 
-AX25Call path[3];
-uint8_t path_len = 0;
-uint8_t aprs_msg_len;
+AX25Call main_own_path[3];
+uint8_t main_own_path_ln = 0;
+uint8_t main_own_aprs_msg_len;
 char main_own_aprs_msg[160];
 
 // global variable used to store return value from various functions
@@ -102,11 +102,13 @@ main(int argc, char* argv[])
 
   memset(main_own_aprs_msg, 0x00, 128);
 
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
   // choosing the signal source for the SysTick timer.
   SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
 
   // Configuring the SysTick timer to generate interrupt 100x per second (one interrupt = 10ms)
-  SysTick_Config(SystemCoreClock / 100);
+  SysTick_Config(SystemCoreClock / SYSTICK_TICKS_PER_SECONDS);
 
 #if defined _RANDOM_DELAY
   // configuring a default delay value
@@ -117,7 +119,7 @@ main(int argc, char* argv[])
 #endif
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
-  path_len = ConfigPath(path);
+  main_own_path_ln = ConfigPath(main_own_path);
 
 #ifdef _METEO
   i2cConfigure();
@@ -146,13 +148,13 @@ main(int argc, char* argv[])
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-  aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
 
   // terminating the aprs message
-  main_own_aprs_msg[aprs_msg_len] = 0;
+  main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 
   // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
-  ax25_sendVia(&main_ax25, path, (sizeof(path) / sizeof(*(path))), main_own_aprs_msg, aprs_msg_len);
+  ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
@@ -268,7 +270,7 @@ uint16_t main_get_adc_sample(void) {
 
 void main_wx_decremenet_counter(void) {
 	if (main_wx_sensors_pool_timer > 0)
-		main_wx_sensors_pool_timer -= 10;
+		main_wx_sensors_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
 #pragma GCC diagnostic pop
