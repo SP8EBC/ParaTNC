@@ -11,7 +11,7 @@ uint16_t preset_delay_msecs = 0;
 uint8_t preset_use_random = 0;
 
 // counter decrement in Systick handler
-uint16_t delay_cnt = 0;
+volatile uint16_t delay_cnt = 0;
 
 void delay_fixed(uint16_t delay_in_msecs) {
 
@@ -47,7 +47,7 @@ void delay_from_preset(void) {
 
 	delay_cnt = preset_delay_msecs;
 
-	while(delay_cnt > 0);
+	while(delay_cnt > (uint16_t)0);
 
 	if (preset_use_random == 1) {
 		delay_random();

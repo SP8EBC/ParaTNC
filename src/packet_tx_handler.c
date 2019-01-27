@@ -22,7 +22,7 @@ uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
 uint8_t packet_tx_telemetry_descr_interval = 40;
-uint8_t packet_tx_telemetry_descr_counter = 0;
+uint8_t packet_tx_telemetry_descr_counter = 35;
 
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
@@ -85,7 +85,11 @@ void packet_tx_handler(void) {
 
 		main_wait_for_tx_complete();
 
-		packet_tx_telemetry_descr_interval = 0;
+		telemetry_send_status();
+
+		main_wait_for_tx_complete();
+
+		packet_tx_telemetry_descr_counter = 0;
 	}
 
 }

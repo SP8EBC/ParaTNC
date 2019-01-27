@@ -23,6 +23,8 @@ void wx_get_all_measurements(void) {
 	// checking if communication was successfull
 	if (rte_wx_temperature_dallas != -128.0f)
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
+	else
+		rte_wx_temperature_dallas_valid = 0.0f;
 #endif
 
 #ifdef _METEO

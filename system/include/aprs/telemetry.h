@@ -28,6 +28,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							ms5611_qf_t ms_qf,
 							dht22QF ds_qf);
 void telemetry_send_chns_description(void);
+void telemetry_send_status(void);
 
 #ifdef __cplusplus
 }

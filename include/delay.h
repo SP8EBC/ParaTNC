@@ -11,7 +11,7 @@
 #include "stdint.h"
 #include "main.h"
 
-extern uint16_t delay_cnt;
+extern volatile uint16_t delay_cnt;
 
 void delay_set(uint16_t delay_in_msecs, uint8_t randomize);
 void delay_fixed(uint16_t delay_in_msecs);
