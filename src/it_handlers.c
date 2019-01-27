@@ -71,6 +71,8 @@ void SysTick_Handler(void) {
 	// decrementing a timer to trigger meteo measuremenets
 	main_wx_decremenet_counter();
 
+	main_packets_tx_decremenet_counter();
+
 	srl_keep_timeout();
 
 	i2cKeepTimeout();
@@ -110,13 +112,20 @@ void TIM2_IRQHandler( void ) {
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
 	TIM4->SR &= ~(1<<0);
-	if (timm == 0) {
+//	if (timm == 0) {
 		DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 		DAC->SWTRIGR |= 1;
+//	}
+//	else {
+//			if (delay_5us > 0)
+//				delay_5us--;
+//	}
+
+	if (main_afsk.sending) {
+		GPIO_SetBits(GPIOC, GPIO_Pin_9);
 	}
 	else {
-			if (delay_5us > 0)
-				delay_5us--;
+		GPIO_ResetBits(GPIOC, GPIO_Pin_9);
 	}
 
 }

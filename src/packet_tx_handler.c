@@ -21,10 +21,14 @@ uint8_t packet_tx_meteo_counter = 0;
 uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
+uint8_t packet_tx_telemetry_descr_interval = 40;
+uint8_t packet_tx_telemetry_descr_counter = 0;
+
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
 	packet_tx_beacon_counter++;
 	packet_tx_telemetry_counter++;
+	packet_tx_telemetry_descr_counter++;
 #ifdef _METEO
 	packet_tx_meteo_counter++;
 #endif
@@ -73,6 +77,15 @@ void packet_tx_handler(void) {
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
 
+	}
+
+	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
+
+		telemetry_send_chns_description();
+
+		main_wait_for_tx_complete();
+
+		packet_tx_telemetry_descr_interval = 0;
 	}
 
 }

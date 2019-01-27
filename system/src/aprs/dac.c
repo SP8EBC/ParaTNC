@@ -74,6 +74,7 @@ void DA_Start() {
 //	//Timer2 ENABLE
 	TIM4->CR1 |= TIM_CR1_CEN;
 
+
 #if (!defined(_METEO))
 	GPIO_SetBits(GPIOC, GPIO_Pin_9);
 #endif

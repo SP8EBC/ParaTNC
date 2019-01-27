@@ -5,14 +5,15 @@
  *      Author: mateusz
  */
 
+#include <string.h>
+
 #include "aprs/digi.h"
 #include "main.h"
 #include "TimerConfig.h"
+#include "delay.h"
 
 #include "station_config.h"
 #include "config.h"
-
-extern volatile int delay_5us;
 
 char digi_q = 0;
 
@@ -24,7 +25,7 @@ char Digi(struct AX25Msg *msg) {
 #ifdef _DIGI
 
 	AX25Call digi_path[7];
-	char call_len;
+	uint8_t call_len = 0;
 	memset(digi_path, sizeof(AX25Call) * 7, 0x00);
 
 	// check if the received message is not too long for the transmit buffers
@@ -156,6 +157,7 @@ char Digi(struct AX25Msg *msg) {
 				digi10m++;
 				digi_msg_len = msg->len+1;
 				snprintf(digi_msg, msg->len+1, "%s", msg->info);
+				delay_from_preset();
 
 				while(main_ax25.dcd == true);
 				ax25_sendVia(&main_ax25, digi_path, call_len, digi_msg, digi_msg_len-1);

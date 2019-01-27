@@ -8,7 +8,8 @@
 
 extern uint32_t master_time;
 
-extern uint32_t main_wx_sensors_pool_timer;
+extern int32_t main_wx_sensors_pool_timer;
+extern int32_t main_packet_tx_pool_timer;
 
 extern AX25Ctx main_ax25;
 extern Afsk main_afsk;

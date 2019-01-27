@@ -33,7 +33,7 @@ void delay_random(void) {
 }
 
 void delay_set(uint16_t delay_in_msecs, uint8_t randomize) {
-	preset_delay_msecs = delay_in_msecs;
+	preset_delay_msecs = delay_in_msecs * 50;
 
 	if (randomize == 1) {
 		preset_use_random = 1;

@@ -8,6 +8,7 @@
 #include <stm32f10x.h>
 
 #include "main.h"
+#include "packet_tx_handler.h"
 #include "station_config.h"
 
 #include "diag/Trace.h"
@@ -16,6 +17,8 @@
 #include "drivers/serial.h"
 #include "TimerConfig.h"
 #include "PathConfig.h"
+
+#include "it_handlers.h"
 
 #include "aprs/digi.h"
 #include "aprs/telemetry.h"
@@ -62,10 +65,10 @@
 uint32_t master_time = 0;
 
 // global variable used as a timer to trigger meteo sensors mesurements
-uint32_t main_wx_sensors_pool_timer = 65500;
+int32_t main_wx_sensors_pool_timer = 65500;
 
 // global variable used as a timer to trigger packet sending
-uint32_t main_packet_rx_pool_timer = 6000;
+int32_t main_packet_tx_pool_timer = 60000;
 
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
@@ -96,6 +99,8 @@ main(int argc, char* argv[])
 //  trace_puts("Hello ARM World!");
 
   int32_t ln = 0;
+
+  uint8_t button_inhibit = 0;
 
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
@@ -216,10 +221,19 @@ main(int argc, char* argv[])
   while (1)
     {
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
-			telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
+
+	  		if (main_afsk.sending == false && button_inhibit == 0) {
+
+	  			while(main_ax25.dcd == true);
+
+	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
+	  			SendOwnBeacon();
+	  		}
+
+	  		button_inhibit = 1;
 	  	}
 	  	else {
-	  		;
+	  		button_inhibit = 0;
 	  	}
 
 	  	// if new packet has been received from radio channel
@@ -262,6 +276,13 @@ main(int argc, char* argv[])
 			main_wx_sensors_pool_timer = 65500;
 		}
 
+		if (main_packet_tx_pool_timer < 10) {
+
+			packet_tx_handler();
+
+			main_packet_tx_pool_timer = 60000;
+		}
+
 #ifdef _METEO
 		// dht22 sensor communication pooling
 		wx_pool_dht22();
@@ -277,6 +298,11 @@ uint16_t main_get_adc_sample(void) {
 void main_wx_decremenet_counter(void) {
 	if (main_wx_sensors_pool_timer > 0)
 		main_wx_sensors_pool_timer -= SYSTICK_TICKS_PERIOD;
+}
+
+void main_packets_tx_decremenet_counter(void) {
+	if (main_packet_tx_pool_timer > 0)
+		main_packet_tx_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
 #pragma GCC diagnostic pop

@@ -43,7 +43,7 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 
 void dallas_config_timer(void) {
 	// Disabling any time-consuming iterrupts
-	NVIC_DisableIRQ( TIM3_IRQn );			// data transmission initializer
+	//NVIC_DisableIRQ( TIM3_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM4_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM7_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( 25 );	// anemometer
@@ -62,7 +62,7 @@ void dallas_config_timer(void) {
 void dallas_deconfig_timer(void) {
 	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);	// disabling timer
 
-	NVIC_EnableIRQ( TIM3_IRQn );	// adc
+	//NVIC_EnableIRQ( TIM3_IRQn );	// adc
 	NVIC_EnableIRQ( TIM4_IRQn );	// data transmission initializer
 	NVIC_EnableIRQ( TIM7_IRQn );	// data transmission initializer
 	NVIC_EnableIRQ( 25 ); // anemometer
