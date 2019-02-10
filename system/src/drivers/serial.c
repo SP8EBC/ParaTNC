@@ -415,11 +415,26 @@ void srl_irq_handler(void) {
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				srl_tx_state = SRL_TX_IDLE;
 			}
+
+			if (srl_tx_bytes_counter >= TX_BUFFER_LN ||
+					srl_tx_bytes_req >= TX_BUFFER_LN) {
+
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
+				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
+				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+				srl_tx_state = SRL_TX_IDLE;
+			}
+
 			break;
 			default: break;
 		}
 	}
 
+}
+
+uint16_t srl_get_num_bytes_rxed() {
+	return srl_rx_bytes_counter;
 }
 
 uint8_t* srl_get_rx_buffer() {

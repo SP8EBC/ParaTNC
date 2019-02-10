@@ -32,7 +32,7 @@
   #endif
 
   int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len);
-  short ParseReceivedKISS(uint8_t* SrlRXData, AX25Ctx* ax25, Afsk* a);
+  short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a);
 
   #ifdef __cplusplus
   }

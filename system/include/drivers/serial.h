@@ -47,6 +47,7 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 uint8_t srl_start_tx(short leng);
 void srl_irq_handler(void);
 uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint16_t srl_get_num_bytes_rxed();
 uint8_t* srl_get_rx_buffer();
 void srl_keep_timeout(void);
 void srl_switch_timeout(uint8_t disable_enable);

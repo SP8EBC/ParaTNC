@@ -139,11 +139,11 @@ main(int argc, char* argv[])
 
 #ifdef _METEO
   dht22_init();
-  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5);
   TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
-  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5);
 #endif
 
   // initializing UART drvier
@@ -258,12 +258,22 @@ main(int argc, char* argv[])
 		// if new KISS message has been received from the host
 		if (srl_rx_state == SRL_RX_DONE) {
 
+			// because ParseReceivedKISS uses srl_tx_buffer as internal buffer to save a memory
+			// the code need to wait till UART will finish possible transmission. Overwise transmission will be
+			// totally screw up. UART will start to retransmit what were received from HOST.
+			while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
+
 			// parse incoming data and then transmit on radio freq
-			short res = ParseReceivedKISS(srl_get_rx_buffer(), &main_ax25, &main_afsk);
+			short res = ParseReceivedKISS(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &main_ax25, &main_afsk);
 			if (res == 0)
 				kiss10m++;	// increase kiss messages counter
 
 			// restart KISS receiving to be ready for next frame
+			srl_receive_data(120, FEND, FEND, 0, 0, 0);
+		}
+
+		// if there were an error during receiving frame from host, restart rxing once again
+		if (srl_rx_state == SRL_RX_ERROR) {
 			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
 
