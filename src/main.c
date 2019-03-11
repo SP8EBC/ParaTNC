@@ -261,7 +261,7 @@ main(int argc, char* argv[])
 			// because ParseReceivedKISS uses srl_tx_buffer as internal buffer to save a memory
 			// the code need to wait till UART will finish possible transmission. Overwise transmission will be
 			// totally screw up. UART will start to retransmit what were received from HOST.
-			while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
+//			while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
 
 			// parse incoming data and then transmit on radio freq
 			short res = ParseReceivedKISS(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &main_ax25, &main_afsk);

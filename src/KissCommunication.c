@@ -16,6 +16,10 @@
 
 extern unsigned short tx10m;
 
+#define KISS_BUFFER_LN 300
+
+uint8_t kiss_buffer[KISS_BUFFER_LN];
+
 int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len) {
 	#define FEND	(uint8_t)0xC0
 	#define FESC	(uint8_t)0xDB
@@ -62,11 +66,10 @@ short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25
 	int j/* zmienna do poruszania sie po lokalnej tablicy do przepisywania*/;
 //	uint8_t FrameBuff[100];
 
-	// to save some memory utilize the serial port buffer
-	uint8_t *FrameBuff = srl_tx_buffer;
+	uint8_t *FrameBuff = kiss_buffer;
 
 	// check if frame from host is not too long
-	if (input_len >= TX_BUFFER_LN)
+	if (input_len >= KISS_BUFFER_LN)
 		return 1;
 
 	if (*(input_frame_from_host) != FEND)
