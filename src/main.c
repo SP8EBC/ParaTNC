@@ -187,7 +187,11 @@ main(int argc, char* argv[])
 #ifdef SERIAL_TX_TEST_MODE
 		  while(srl_tx_state != SRL_TX_IDLE);
 
+		  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
+
 		  if (srl_rx_state == SRL_RX_DONE) {
+			  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_8);
+
 			  retval = 200;
 		  }
 	  }
