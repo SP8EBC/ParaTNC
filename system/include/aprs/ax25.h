@@ -37,7 +37,7 @@ struct AX25Msg; // fwd declaration
 /**
  * Type for AX25 messages callback.
  */
-typedef void (*ax25_callback_t)(struct AX25Msg *msg);
+typedef void (*ax25_callback_t)(struct AX25Msg *ax25_rxed_frame);
 
 
 typedef struct AX25Ctx
@@ -108,8 +108,8 @@ typedef struct AX25Msg
 
 } AX25Msg;
 
-extern AX25Msg msg;
-extern char new_msg_rx;
+extern AX25Msg ax25_rxed_frame;
+extern char ax25_new_msg_rx_flag;
 
 #ifdef __cplusplus
 extern "C"

@@ -11,8 +11,8 @@
 
 #include "station_config.h"
 
-AX25Msg msg;
-char new_msg_rx;
+AX25Msg ax25_rxed_frame;
+char ax25_new_msg_rx_flag;
 
 /*********************************************************************************************************************/
 static void ax25_decode(AX25Ctx *ctx) {
@@ -23,56 +23,56 @@ static void ax25_decode(AX25Ctx *ctx) {
 	uint8_t *buf = ctx->buf;
 //
 	for (i = 0; i < ctx->frm_len ;i++)
-		*(msg.raw_data + i) = *(ctx->buf + i);
-	*(msg.raw_data + i) = '\0';
+		*(ax25_rxed_frame.raw_data + i) = *(ctx->buf + i);
+	*(ax25_rxed_frame.raw_data + i) = '\0';
 //
-	msg.raw_msg_len = i;
+	ax25_rxed_frame.raw_msg_len = i;
 
-	for (i = 0; i < sizeof(msg.dst.call);i++)
+	for (i = 0; i < sizeof(ax25_rxed_frame.dst.call);i++)
 	{
 		uint8_t c = (*(buf)++ >> 1);
-		(msg.dst.call)[i] = (c == ' ') ? '\x0' : c;
+		(ax25_rxed_frame.dst.call)[i] = (c == ' ') ? '\x0' : c;
 	}
-	msg.dst.ssid = (*buf++ >> 1) & 0x0F;
+	ax25_rxed_frame.dst.ssid = (*buf++ >> 1) & 0x0F;
 
 
-	for (i = 0; i < sizeof(msg.src.call);i++)
+	for (i = 0; i < sizeof(ax25_rxed_frame.src.call);i++)
 	{
 		uint8_t c = (*(buf)++ >> 1);
-		(msg.src.call)[i] = (c == ' ') ? '\x0' : c;
+		(ax25_rxed_frame.src.call)[i] = (c == ' ') ? '\x0' : c;
 	}
-	msg.src.ssid = (*buf >> 1) & 0x0F;
+	ax25_rxed_frame.src.ssid = (*buf >> 1) & 0x0F;
 
 
-	for (msg.rpt_cnt = 0; !(*buf++ & 0x01) && (msg.rpt_cnt < (sizeof(msg.rpt_lst) / sizeof(*(msg.rpt_lst)))); msg.rpt_cnt++)
+	for (ax25_rxed_frame.rpt_cnt = 0; !(*buf++ & 0x01) && (ax25_rxed_frame.rpt_cnt < (sizeof(ax25_rxed_frame.rpt_lst) / sizeof(*(ax25_rxed_frame.rpt_lst)))); ax25_rxed_frame.rpt_cnt++)
 	{
 
-		for (i = 0; i < sizeof(msg.rpt_lst[msg.rpt_cnt].call);i++)
+		for (i = 0; i < sizeof(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call);i++)
 		{
 			uint8_t c = (*(buf)++ >> 1);
-			(msg.rpt_lst[msg.rpt_cnt].call)[i] = (c == ' ') ? '\x0' : c;
+			(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call)[i] = (c == ' ') ? '\x0' : c;
 		}
-		msg.rpt_lst[msg.rpt_cnt].ssid = (*buf >> 1) & 0x0F;
+		ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].ssid = (*buf >> 1) & 0x0F;
 
-		if ((*buf & 0x80)) (&msg)->rpt_flags |= BV(msg.rpt_cnt);
-		else (&msg)->rpt_flags &= ~BV(msg.rpt_cnt);
+		if ((*buf & 0x80)) (&ax25_rxed_frame)->rpt_flags |= BV(ax25_rxed_frame.rpt_cnt);
+		else (&ax25_rxed_frame)->rpt_flags &= ~BV(ax25_rxed_frame.rpt_cnt);
 
 	}
 
-	msg.ctrl = *buf++;
-	if (msg.ctrl != AX25_CTRL_UI) return;
+	ax25_rxed_frame.ctrl = *buf++;
+	if (ax25_rxed_frame.ctrl != AX25_CTRL_UI) return;
 
-	msg.pid = *buf++;
-	if (msg.pid != AX25_PID_NOLAYER3) return;
+	ax25_rxed_frame.pid = *buf++;
+	if (ax25_rxed_frame.pid != AX25_PID_NOLAYER3) return;
 
-	msg.len = ctx->frm_len - 2 - (buf - ctx->buf);
-	msg.info = buf;
+	ax25_rxed_frame.len = ctx->frm_len - 2 - (buf - ctx->buf);
+	ax25_rxed_frame.info = buf;
 
 
 	if (ctx->hook) {
-		new_msg_rx = 1;
+		ax25_new_msg_rx_flag = 1;
 //		ctx->dcd = false;
-	 	ctx->hook(&msg);
+	 	ctx->hook(&ax25_rxed_frame);
 	}
 	/*
 		insert your code here

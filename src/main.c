@@ -241,21 +241,21 @@ main(int argc, char* argv[])
 	  	}
 
 	  	// if new packet has been received from radio channel
-		if(new_msg_rx == 1) {
+		if(ax25_new_msg_rx_flag == 1) {
 			memset(srl_tx_buffer, 0x00, sizeof(srl_tx_buffer));
 
 			// convert message to kiss format and send it to host
-			srl_start_tx(SendKISSToHost(msg.raw_data, (msg.raw_msg_len - 2), srl_tx_buffer, TX_BUFFER_LN));
+			srl_start_tx(SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_tx_buffer, TX_BUFFER_LN));
 
 			main_ax25.dcd = false;
 #ifdef _DBG_TRACE
-			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", msg.src.call, msg.src.ssid, msg.rpt_lst[0].call, msg.rpt_lst[0].ssid);
+			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", ax25_rxed_frame.src.call, ax25_rxed_frame.src.ssid, ax25_rxed_frame.rpt_lst[0].call, ax25_rxed_frame.rpt_lst[0].ssid);
 #endif
 #ifdef _DIGI
 			// check if this packet needs to be repeated (digipeated) and do it if it is neccessary
-			Digi(&msg);
+			Digi(&ax25_rxed_frame);
 #endif
-			new_msg_rx = 0;
+			ax25_new_msg_rx_flag = 0;
 			rx10m++;
 		}
 
