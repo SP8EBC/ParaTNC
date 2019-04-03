@@ -13,6 +13,7 @@ C_SRCS += \
 ../src/it_handlers.c \
 ../src/main.c \
 ../src/packet_tx_handler.c \
+../src/rte_pv.c \
 ../src/rte_wx.c \
 ../src/wx_handler.c 
 
@@ -30,6 +31,7 @@ OBJS += \
 ./src/it_handlers.o \
 ./src/main.o \
 ./src/packet_tx_handler.o \
+./src/rte_pv.o \
 ./src/rte_wx.o \
 ./src/wx_handler.o 
 
@@ -43,6 +45,7 @@ C_DEPS += \
 ./src/it_handlers.d \
 ./src/main.d \
 ./src/packet_tx_handler.d \
+./src/rte_pv.d \
 ./src/rte_wx.d \
 ./src/wx_handler.d 
 

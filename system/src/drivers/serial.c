@@ -45,6 +45,7 @@ volatile uint8_t srl_garbage_storage;
 
 uint8_t srl_rx_timeout_enable = 0;
 uint8_t srl_rx_timeout_calc_started = 0;
+uint32_t srl_rx_timeout_trigger_value_in_msec = 0;
 uint32_t srl_rx_start_time = 0;
 
 srlRxState srl_rx_state = SRL_RX_NOT_CONFIG;
@@ -97,6 +98,8 @@ void srl_init(void) {
 //	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie zgġoszone po odbiorze bajtu gdy bufor nie jest pusty
 	srl_rx_state = SRL_RX_IDLE;
 	srl_tx_state = SRL_TX_IDLE;
+
+	srl_rx_timeout_calc_started = 0;
 }
 
 // this function shall be called in 10ms periods by some timer to check the timeout
@@ -115,7 +118,7 @@ void srl_keep_timeout() {
 		if (srl_rx_timeout_calc_started == 1) {
 
 			// check if timeout expired
-			if (master_time - srl_rx_start_time > SRL_RX_TIMEOUT_IN_MS) {
+			if (master_time - srl_rx_start_time > srl_rx_timeout_trigger_value_in_msec) {
 				// disable the receiving part of UART, disable interrupt and switch to an error state
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
@@ -269,6 +272,8 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 	srl_rx_lenght_param_addres = len_addr;
 	srl_rx_lenght_param_modifier = len_modifier;
 
+	srl_rx_timeout_calc_started = 0;
+
 	PORT->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
 	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
 // 	PORT->CR1 |= USART_CR1_IDLEIE;			// przerwanie od bezczynno�ci szyny RS przy odbiorze
@@ -308,6 +313,8 @@ void srl_irq_handler(void) {
 	if ((PORT->SR & USART_SR_RXNE) == USART_SR_RXNE) {
 		switch (srl_rx_state) {
 			case SRL_RXING: {
+
+				srl_rx_start_time = master_time;
 
 				// raise a flag to signalize that timeout shall be calulated from now.
 				srl_rx_timeout_calc_started = 1;
@@ -441,10 +448,17 @@ uint8_t* srl_get_rx_buffer() {
 	return srl_rx_buf_pointer;
 }
 
-void srl_switch_timeout(uint8_t disable_enable) {
+void srl_switch_timeout(uint8_t disable_enable, uint32_t value) {
 	if (disable_enable == 1)
 		srl_rx_timeout_enable = 1;
 	else if (disable_enable == 0)
 		srl_rx_timeout_enable = 0;
 	else;
+
+	if (value != 0) {
+		srl_rx_timeout_trigger_value_in_msec = value;
+	}
+	else {
+		srl_rx_timeout_trigger_value_in_msec = SRL_DEFAULT_RX_TIMEOUT_IN_MS;
+	}
 }

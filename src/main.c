@@ -1,3 +1,5 @@
+#define _VICTRON
+
 
 #include <delay.h>
 #include <LedConfig.h>
@@ -25,7 +27,12 @@
 #include "aprs/dac.h"
 #include "aprs/beacon.h"
 
+#ifdef _VICTRON
+#include "ve_direct_protocol/parser.h"
+#endif
+
 #include "rte_wx.h"
+#include "rte_pv.h"
 
 //#include "Timer.h"
 //#include "BlinkLed.h"
@@ -82,6 +89,10 @@ char main_own_aprs_msg[160];
 
 // global variable used to store return value from various functions
 volatile uint8_t retval = 100;
+
+uint16_t buffer_len = 0;
+#ifdef _VICTRON
+#endif
 
 char after_tx_lock;
 
@@ -209,8 +220,21 @@ main(int argc, char* argv[])
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
   wx_get_all_measurements();
 
+#ifdef _VICTRON
+  // initializing protocol parser
+  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
+
+  // enabling timeout handling for serial port. This is required because VE protocol frame may vary in lenght
+  // and serial port driver could finish reception only either on stop character or when declared number of bytes
+  // has been received.
+  srl_switch_timeout(1, 100);
+
+  // switching UART to receive mode to be ready for data from charging controller
+  srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+#else
   // switching UART to receive mode to be ready for KISS frames from host
   srl_receive_data(100, FEND, FEND, 0, 0, 0);
+#endif
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
@@ -259,14 +283,34 @@ main(int argc, char* argv[])
 			rx10m++;
 		}
 
+#ifdef _VICTRON
+		// if new KISS message has been received from the host
+		if (srl_rx_state == SRL_RX_DONE || srl_rx_state == SRL_RX_ERROR) {
+
+			// cutting received string to Checksum, everything after will be skipped
+			ve_direct_cut_to_checksum(srl_get_rx_buffer(), RX_BUFFER_LN, &buffer_len);
+
+			// checking if this frame is ok
+			ve_direct_validate_checksum(srl_get_rx_buffer(), buffer_len, &retval);
+
+			if (retval == 1) {
+				// parsing data from input serial buffer to
+				retval = ve_direct_parse_to_raw_struct(srl_get_rx_buffer(), buffer_len, &rte_pv_struct);
+
+				if (retval == 0) {
+					ve_direct_add_to_average(&rte_pv_struct, &rte_pv_average);
+
+					ve_direct_get_averages(&rte_pv_average, &rte_pv_battery_current, &rte_pv_battery_voltage, &rte_pv_cell_voltage, &rte_pv_load_current);
+
+					ve_direct_set_sys_voltage(&rte_pv_struct, &rte_pv_sys_voltage);
+				}
+			}
+
+			srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+		}
+#else
 		// if new KISS message has been received from the host
 		if (srl_rx_state == SRL_RX_DONE) {
-
-			// because ParseReceivedKISS uses srl_tx_buffer as internal buffer to save a memory
-			// the code need to wait till UART will finish possible transmission. Overwise transmission will be
-			// totally screw up. UART will start to retransmit what were received from HOST.
-//			while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
-
 			// parse incoming data and then transmit on radio freq
 			short res = ParseReceivedKISS(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &main_ax25, &main_afsk);
 			if (res == 0)
@@ -280,6 +324,7 @@ main(int argc, char* argv[])
 		if (srl_rx_state == SRL_RX_ERROR) {
 			srl_receive_data(120, FEND, FEND, 0, 0, 0);
 		}
+#endif
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined

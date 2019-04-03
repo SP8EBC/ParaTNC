@@ -21,7 +21,7 @@
 uint8_t key[9];			// the static array to store a key fetched from input file
 uint8_t value[12];
 
-ve_direct_average_struct ve_avg;
+//ve_direct_average_struct ve_avg;
 
 static int copy_till_non_printable_char(uint8_t* input, uint16_t* input_offset, uint16_t input_ln, uint8_t* output, uint16_t output_ln) {
 
@@ -119,10 +119,11 @@ static ve_direct_key_values get_key_value_from_str(uint8_t* input) {
 	return VE_UNKNOWN;
 }
 
-void ve_direct_parser_init(void) {
-	uint16_t size = sizeof(ve_avg);
+void ve_direct_parser_init(ve_direct_raw_struct* raw_struct, ve_direct_average_struct* avg_struct) {
+	//uint16_t size = sizeof(ve_avg);
 
-	memset(&ve_avg, 0x00, size);
+	memset(raw_struct, 0x00, sizeof(ve_direct_raw_struct));
+	memset(avg_struct, 0x00, sizeof(ve_direct_average_struct));
 }
 
 
@@ -150,7 +151,7 @@ void ve_direct_cut_to_checksum(uint8_t* input, uint16_t input_ln,
 void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* valid) {
 	uint8_t sum = 0;
 
-	uint8_t checksum = *(input + input_ln - 1);
+	//uint8_t checksum = *(input + input_ln - 1);
 
 	int i = 0;
 
@@ -306,43 +307,55 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 
 }
 
-void ve_direct_add_to_average(ve_direct_raw_struct* in) {
+void ve_direct_add_to_average(ve_direct_raw_struct* in, ve_direct_average_struct* avg_struct) {
 
-	uint16_t it = ve_avg.current_pointer;
+	uint16_t it = avg_struct->current_pointer;
 
-	ve_avg.battery_current[it] = in->battery_current;
-	ve_avg.battery_voltage[it] = in->battery_voltage;
-	ve_avg.load_current[it] = in->load_current;
-	ve_avg.pv_voltage[it] = in->pv_voltage;
+	avg_struct->battery_current[it] = in->battery_current;
+	avg_struct->battery_voltage[it] = in->battery_voltage;
+	avg_struct->load_current[it] = in->load_current;
+	avg_struct->pv_voltage[it] = in->pv_voltage;
 
 	it++;
 
-	if (it > 31)
+	if (it > VE_DIRECT_AVERAGE_LEN - 1) {
 		it = 0;
+		avg_struct->full_buffer = 1;
+	}
+	else {
+		;
+	}
 
-	ve_avg.current_pointer = it;
+	avg_struct->current_pointer = it;
 
 	return;
 
 }
 
-void ve_direct_get_averages(int16_t* battery_current, uint16_t* battery_voltage,
+void ve_direct_get_averages(ve_direct_average_struct* avg_struct, int16_t* battery_current, uint16_t* battery_voltage,
 		uint16_t* pv_voltage, uint16_t* load_current) {
+
+	if (avg_struct->full_buffer != 1)
+		return;
 
 	int32_t battery_current_avg = 0;
 	uint32_t battery_voltage_avg = 0;
 	uint32_t pv_voltage_avg = 0;
 	uint32_t load_current_avg = 0;
 
-	for (int i = 0; i < 32; i++) {
-		battery_current_avg += ve_avg.battery_current[i];
-		battery_voltage_avg += ve_avg.battery_voltage[i];
-		pv_voltage_avg += ve_avg.pv_voltage[i];
-		load_current_avg += ve_avg.load_current[i];
+	for (int i = 0; i < VE_DIRECT_AVERAGE_LEN; i++) {
+		battery_current_avg += avg_struct->battery_current[i];
+		battery_voltage_avg += avg_struct->battery_voltage[i];
+		pv_voltage_avg += avg_struct->pv_voltage[i];
+		load_current_avg += avg_struct->load_current[i];
 	}
 
-	*battery_current = battery_current_avg / 32;
-	*battery_voltage = battery_voltage_avg / 32;
-	*pv_voltage = pv_voltage_avg / 32;
-	*load_current = load_current_avg / 32;
+	*battery_current = battery_current_avg / VE_DIRECT_AVERAGE_LEN;
+	*battery_voltage = battery_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+	*pv_voltage = pv_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+	*load_current = load_current_avg / VE_DIRECT_AVERAGE_LEN;
+}
+
+void ve_direct_set_sys_voltage(ve_direct_raw_struct* in, uint8_t* sys_voltage) {
+
 }

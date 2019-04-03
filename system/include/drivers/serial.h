@@ -9,7 +9,7 @@
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
 
-#define SRL_RX_TIMEOUT_IN_MS 1000
+#define SRL_DEFAULT_RX_TIMEOUT_IN_MS 400
 
 typedef enum srlRxState {
 	SRL_RX_NOT_CONFIG,
@@ -50,7 +50,7 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 uint16_t srl_get_num_bytes_rxed();
 uint8_t* srl_get_rx_buffer();
 void srl_keep_timeout(void);
-void srl_switch_timeout(uint8_t disable_enable);
+void srl_switch_timeout(uint8_t disable_enable, uint32_t value);
 
 #ifdef __cplusplus
 }
