@@ -1,6 +1,3 @@
-#define _VICTRON
-
-
 #include <delay.h>
 #include <LedConfig.h>
 #include <stdio.h>

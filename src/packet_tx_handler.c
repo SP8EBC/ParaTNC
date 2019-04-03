@@ -1,6 +1,7 @@
 #include "packet_tx_handler.h"
 #include "station_config.h"
 #include "rte_wx.h"
+#include "rte_pv.h"
 
 #include "./aprs/beacon.h"
 #include "./aprs/wx.h"
@@ -59,6 +60,12 @@ void packet_tx_handler(void) {
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
+#ifdef _VICTRON
+//
+		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
+//
+#else
+//
 #if defined _DALLAS_AS_TELEM
 		// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
@@ -70,7 +77,8 @@ void packet_tx_handler(void) {
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 #endif
-
+//
+#endif
 		main_wait_for_tx_complete();
 
 		packet_tx_telemetry_counter = 0;
@@ -80,9 +88,11 @@ void packet_tx_handler(void) {
 	}
 
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
-
+#ifdef _VICTRON
+		telemetry_send_chns_description_pv();
+#else
 		telemetry_send_chns_description();
-
+#endif
 		main_wait_for_tx_complete();
 
 		telemetry_send_status();

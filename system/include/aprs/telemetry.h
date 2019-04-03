@@ -12,6 +12,8 @@
 #include "./drivers/ms5611.h"
 #include "./drivers/_dht22.h"
 
+#include "./station_config.h"
+
 #include "stdint.h"
 
 #ifdef __cplusplus
@@ -19,6 +21,17 @@ extern "C"
 {
 #endif
 
+#ifdef _VICTRON
+void telemetry_send_values_pv (	uint8_t rx_pkts,
+								uint8_t digi_pkts,
+								int16_t raw_battery_current,
+								uint16_t raw_battery_voltage,
+								uint16_t raw_pv_cell_voltage,
+								DallasQF dallas_qf,
+								ms5611_qf_t ms_qf,
+								dht22QF ds_qf);
+void telemetry_send_chns_description_pv(void);
+#else
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
@@ -28,6 +41,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							ms5611_qf_t ms_qf,
 							dht22QF ds_qf);
 void telemetry_send_chns_description(void);
+#endif
 void telemetry_send_status(void);
 
 #ifdef __cplusplus
