@@ -11,6 +11,8 @@ ve_direct_average_struct rte_pv_average;
 uint8_t rte_pv_sys_voltage;
 ve_direct_raw_struct rte_pv_struct;
 
+ve_direct_error_reason rte_pv_last_error;
+
 int16_t rte_pv_battery_current;
 uint16_t rte_pv_battery_voltage;
 uint16_t rte_pv_cell_voltage;

@@ -10,7 +10,10 @@
 #include "station_config.h"
 #include "delay.h"
 
+#include "ve_direct_protocol/parser.h"
+
 #include <main.h>
+#include <stdio.h>
 
 uint16_t telemetry_counter = 0;
 
@@ -93,9 +96,9 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	float phy_battery_voltage = 0.0f;
 	float phy_pvcell_voltage = 0.0f;
 
-	phy_battery_current = raw_battery_current / 100;
-	phy_battery_voltage = raw_battery_voltage / 100;
-	phy_pvcell_voltage = raw_pv_cell_voltage / 100;
+	phy_battery_current = (float)raw_battery_current / 1000.0f;
+	phy_battery_voltage = (float)raw_battery_voltage / 1000.0f;
+	phy_pvcell_voltage = (float)raw_pv_cell_voltage / 1000.0f;
 
 	scaled_battery_current = (uint8_t) roundf((phy_battery_current + 8.0f) * 14.2857f);
 	scaled_battery_voltage = (uint8_t) roundf((phy_battery_voltage - 4.0f) * 14.2857f);
@@ -151,6 +154,21 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	afsk_txStart(&main_afsk);
 
 
+}
+
+void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state) {
+	char string_buff_err[24], string_buff_state[23];
+
+	ve_direct_state_to_string(state, string_buff_state, 23);
+	ve_direct_error_to_string(*last_error, string_buff_err, 24);
+
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), "> FwVersion %s BatAmpsMin %d BatAmpsMax %d %s %s", SW_VER, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	afsk_txStart(&main_afsk);
+
+	avg->max_battery_current = 0;
+	avg->min_battery_current = 0;
+	*last_error = ERR_UNINITIALIZED;
 }
 
 #else
@@ -292,12 +310,14 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	afsk_txStart(&main_afsk);
 }
 
-#endif
-
 void telemetry_send_status(void) {
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
 
 }
+
+#endif
+
+
 

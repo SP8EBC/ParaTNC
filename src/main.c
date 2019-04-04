@@ -300,6 +300,8 @@ main(int argc, char* argv[])
 					ve_direct_get_averages(&rte_pv_average, &rte_pv_battery_current, &rte_pv_battery_voltage, &rte_pv_cell_voltage, &rte_pv_load_current);
 
 					ve_direct_set_sys_voltage(&rte_pv_struct, &rte_pv_sys_voltage);
+
+					ve_direct_store_errors(&rte_pv_struct, &rte_pv_last_error);
 				}
 			}
 

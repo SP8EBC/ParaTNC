@@ -14,6 +14,10 @@
 
 #include "./station_config.h"
 
+#ifdef _VICTRON
+#include "ve_direct_protocol/parser.h"
+#endif
+
 #include "stdint.h"
 
 #ifdef __cplusplus
@@ -31,6 +35,8 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								ms5611_qf_t ms_qf,
 								dht22QF ds_qf);
 void telemetry_send_chns_description_pv(void);
+void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state);
+
 #else
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
@@ -41,8 +47,9 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							ms5611_qf_t ms_qf,
 							dht22QF ds_qf);
 void telemetry_send_chns_description(void);
-#endif
 void telemetry_send_status(void);
+
+#endif
 
 #ifdef __cplusplus
 }

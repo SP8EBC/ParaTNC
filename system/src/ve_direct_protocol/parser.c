@@ -15,11 +15,16 @@
 #define LOWEST_PRINTABLE_CHARACTER 33
 #define HIGHEST_PRINTABLE_CHARACTER 126
 
+#define VE_DIRECT_MESSAGES_TO_SKIP 2
+
 #define is_non_printable_character() (*(input + i) < LOWEST_PRINTABLE_CHARACTER || *(input + i) > HIGHEST_PRINTABLE_CHARACTER)
 #define is_printable_character() (*(input + i) >= LOWEST_PRINTABLE_CHARACTER && *(input + i) <= HIGHEST_PRINTABLE_CHARACTER)
 
 uint8_t key[9];			// the static array to store a key fetched from input file
 uint8_t value[12];
+
+uint8_t skip_counter = 0;	// counter used to skip some of VE.Direct protocol messages to spread an average over longer
+							// period of time
 
 //ve_direct_average_struct ve_avg;
 
@@ -309,6 +314,13 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 
 void ve_direct_add_to_average(ve_direct_raw_struct* in, ve_direct_average_struct* avg_struct) {
 
+	if (skip_counter++ < VE_DIRECT_MESSAGES_TO_SKIP) {
+		return;
+	}
+	else {
+		skip_counter = 0;
+	}
+
 	uint16_t it = avg_struct->current_pointer;
 
 	avg_struct->battery_current[it] = in->battery_current;
@@ -327,6 +339,14 @@ void ve_direct_add_to_average(ve_direct_raw_struct* in, ve_direct_average_struct
 	}
 
 	avg_struct->current_pointer = it;
+
+	if (in->battery_current < avg_struct->min_battery_current) {
+		avg_struct->min_battery_current = in->battery_current;
+	}
+
+	if (in->battery_current > avg_struct->max_battery_current) {
+		avg_struct->max_battery_current = in->battery_current;
+	}
 
 	return;
 
@@ -358,4 +378,51 @@ void ve_direct_get_averages(ve_direct_average_struct* avg_struct, int16_t* batte
 
 void ve_direct_set_sys_voltage(ve_direct_raw_struct* in, uint8_t* sys_voltage) {
 
+}
+
+void ve_direct_store_errors(ve_direct_raw_struct* input, ve_direct_error_reason* err_reason) {
+	if (input->error_reason != ERR_OK) {
+		*err_reason = input->error_reason;
+	}
+	else {
+		if (*err_reason == ERR_UNINITIALIZED || *err_reason == ERR_OK) {
+			*err_reason = ERR_OK;
+		}
+	}
+
+}
+
+void ve_direct_error_to_string(ve_direct_error_reason input, char* output, int8_t output_ln) {
+	memset(output, 0x00, output_ln);
+
+	switch(input) {
+		case ERR_UNINITIALIZED: snprintf(output, output_ln, "ERR_UNINITIALIZED"); break;
+		case ERR_OK: snprintf(output, output_ln, "ERR_OK"); break;
+		case ERR_EXCESIVE_BAT_VOLTAGE: snprintf(output, output_ln, "ERR_EXCESIVE_BAT_VOLTAGE"); break;
+		case ERR_CHGR_TEMP_TOO_HIGH: snprintf(output, output_ln, "ERR_CHGR_TEMP_TOO_HIGH"); break;
+		case ERR_CHGR_EXCESIVE_CURR: snprintf(output, output_ln, "ERR_CHGR_EXCESIVE_CURR"); break;
+		case ERR_CHGR_CURR_REVERSED: snprintf(output, output_ln, "ERR_CHGR_CURR_REVERSED"); break;
+		case ERR_BULK_TIME_EXCEED: snprintf(output, output_ln, "ERR_BULK_TIME_EXCEED"); break;
+		case ERR_CURRENT_SENSE_FAIL: snprintf(output, output_ln, "ERR_CURRENT_SENSE_FAIL"); break;
+		case ERR_EXCESIVE_TERMINAL_TEMP:  snprintf(output, output_ln, "ERR_EXCESIVE_TERMINAL_TEMP"); break;
+		case ERR_EXCESIVE_PV_VOLTAGE: snprintf(output, output_ln, "ERR_EXCESIVE_PV_VOLTAGE"); break;
+		case ERR_EXCESIVE_PV_CURRENT: snprintf(output, output_ln, "ERR_EXCESIVE_PV_CURRENT"); break;
+		case ERR_INPUT_SHUTDOWN: snprintf(output, output_ln, "ERR_INPUT_SHUTDOWN"); break;
+		case ERR_TUNES_LOST: snprintf(output, output_ln, "ERR_TUNES_LOST"); break;
+	}
+}
+
+void ve_direct_state_to_string(ve_direct_system_state input, char* output, int8_t output_ln) {
+	memset(output, 0x00, output_ln);
+
+	switch(input) {
+		case STATE_UNINITIALIZED: snprintf(output, output_ln, "STATE_UNINITIALIZED"); break;
+		case STATE_OFF: snprintf(output, output_ln, "STATE_OFF"); break;
+		case STATE_LOW_PWR: snprintf(output, output_ln, "STATE_LOW_PWR"); break;
+		case STATE_FAULT: snprintf(output, output_ln, "STATE_FAULT"); break;
+		case STATE_BULK: snprintf(output, output_ln, "STATE_BULK"); break;
+		case STATE_ABSORPTION: snprintf(output, output_ln, "STATE_ABSORPTION"); break;
+		case STATE_FLOAT: snprintf(output, output_ln, "STATE_FLOAT"); break;
+		case STATE_INVERTING:  snprintf(output, output_ln, "STATE_INVERTING"); break;
+	}
 }

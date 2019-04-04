@@ -90,14 +90,22 @@ void packet_tx_handler(void) {
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 #ifdef _VICTRON
 		telemetry_send_chns_description_pv();
+
+		main_wait_for_tx_complete();
+
+		telemetry_send_status(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
+
+		main_wait_for_tx_complete();
 #else
 		telemetry_send_chns_description();
-#endif
+
 		main_wait_for_tx_complete();
 
 		telemetry_send_status();
 
 		main_wait_for_tx_complete();
+#endif
+
 
 		packet_tx_telemetry_descr_counter = 0;
 	}

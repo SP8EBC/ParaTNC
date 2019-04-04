@@ -24,6 +24,10 @@ typedef __attribute__ ((aligned(1))) struct ve_direct_average_struct {
 
 	uint8_t full_buffer;
 
+	int16_t min_battery_current;
+
+	int16_t max_battery_current;
+
 } ve_direct_average_struct;
 
 
