@@ -14,6 +14,9 @@
 
 #include "./station_config.h"
 
+#define TELEMETRY_MIN_DALLAS	-25.0f
+#define TELEMETRY_MAX_DALLAS	38.75f
+
 #ifdef _VICTRON
 #include "ve_direct_protocol/parser.h"
 #endif

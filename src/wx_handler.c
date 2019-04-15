@@ -11,6 +11,8 @@
 
 #include "station_config.h"
 
+#include "telemetry.h"
+
 void wx_get_all_measurements(void) {
 
 	int32_t return_value = 0;
@@ -18,13 +20,26 @@ void wx_get_all_measurements(void) {
 #if defined _METEO || defined _DALLAS_AS_TELEM
 
 	// quering dallas DS12B20 thermometer for current temperature
-	rte_wx_temperature_dallas = dallas_query(&rte_wx_dallas_qf);
+	rte_wx_temperature_dallas = dallas_query(&rte_wx_current_dallas_qf);
 
 	// checking if communication was successfull
-	if (rte_wx_temperature_dallas != -128.0f)
+	if (rte_wx_temperature_dallas != -128.0f) {
+
+		// update the current temperature
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
-	else
-		rte_wx_temperature_dallas_valid = 0.0f;
+
+		if (rte_wx_temperature_dallas_valid > TELEMETRY_MIN_DALLAS && rte_wx_temperature_dallas_valid < TELEMETRY_MAX_DALLAS)
+			// and set the quality factor
+			rte_wx_current_dallas_qf = DALLAS_QF_FULL;
+		else
+			rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
+	}
+	else {
+
+		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+	}
+	//else
+	//	rte_wx_temperature_dallas_valid = 0.0f;
 #endif
 
 #ifdef _METEO

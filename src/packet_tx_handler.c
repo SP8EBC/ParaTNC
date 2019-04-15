@@ -27,6 +27,8 @@ uint8_t packet_tx_telemetry_descr_counter = 35;
 
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
+	DallasQF dallas_qf = DALLAS_QF_UNKNOWN;
+
 	packet_tx_beacon_counter++;
 	packet_tx_telemetry_counter++;
 	packet_tx_telemetry_descr_counter++;
@@ -60,22 +62,36 @@ void packet_tx_handler(void) {
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
+		// if there weren't any erros related to DS12B20 from previous function call
+		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
+			dallas_qf = rte_wx_current_dallas_qf;	// ir might be DEGRADATED
+		}
+
+		// if there were any errors
+		else {
+			// set the error reason
+			dallas_qf = rte_wx_error_dallas_qf;
+
+			// and reset the error
+			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
+		}
+
 #ifdef _VICTRON
 //
-		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
+		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
 //
 #else
 //
 #if defined _DALLAS_AS_TELEM
 		// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
 #elif defined _METEO
 		// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 		// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 #else
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 #endif
 //
 #endif
