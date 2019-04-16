@@ -44,12 +44,13 @@ static int copy_till_non_printable_char(uint8_t* input, uint16_t* input_offset, 
 				i++;
 			} while (is_non_printable_character() && i < input_ln);
 
+			// updating an offset to input buffer
+			*input_offset = i;
 
-			if (i >= input_ln)
+			if (i > input_ln) {
 				return VE_DIRECT_STRING_END_REACH_TO_EARLY;
+			}
 			else {
-				// updating an offset to input buffer
-				*input_offset = i;
 
 				// end exit from function
 				return 0;
@@ -206,7 +207,7 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 	uint16_t i = 0;
 
 	// value used to store return value from
-	uint16_t ret_val = 0;
+	int32_t ret_val = 0;
 
 	// local variable for parsing a key value to something easly processed
 	ve_direct_key_values key_enum;
@@ -233,7 +234,7 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 		ret_val = copy_till_non_printable_char(input, &i, input_ln, key, sizeof(key));
 
 		// check if data were copied correctly
-		if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
+ 		if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
 			return VE_DIRECT_INVALID_INP_STR;
 
 		key_enum = get_key_value_from_str(key);

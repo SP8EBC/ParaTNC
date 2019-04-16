@@ -30,6 +30,7 @@
 
 #include "rte_wx.h"
 #include "rte_pv.h"
+#include "rte_main.h"
 
 //#include "Timer.h"
 //#include "BlinkLed.h"
@@ -53,6 +54,13 @@
 
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
+
+// backup registers
+// 2 -> 4bit hard-faults | 4bit boot-counter
+// 3 -> hard fault PC LSB
+// 4 -> hard fault PC MSB
+// 5 -> hard fault LR LSB
+// 6 -> hard fault LR MSB
 
 // ----- main() ---------------------------------------------------------------
 
@@ -125,6 +133,37 @@ main(int argc, char* argv[])
 
   // setting an Systick interrupt priority
   NVIC_SetPriority(SysTick_IRQn, 5);
+
+  // enable access to BKP registers
+  RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
+  PWR->CR |= PWR_CR_DBP;
+
+  // read current number of boot cycles
+  rte_main_boot_cycles = (uint8_t)(BKP->DR2 & 0xFF);
+
+  // read current number of hard faults
+  rte_main_hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 16);
+
+  // increase boot cycles count
+  rte_main_boot_cycles++;
+
+  // erasing old value from backup registers
+  BKP->DR2 &= (0xFFFF ^ 0xFF);
+
+  // storing increased value
+  BKP->DR2 |= rte_main_boot_cycles;
+
+  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
+  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
+
+  BKP->DR3 = 0;
+  BKP->DR4 = 0;
+  BKP->DR5 = 0;
+  BKP->DR6 = 0;
+
+  // disabling access to BKP registers
+  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
+  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
 
 #if defined _RANDOM_DELAY
   // configuring a default delay value
@@ -239,7 +278,7 @@ main(int argc, char* argv[])
   TimerConfig();
 
 #ifdef _BCN_ON_STARTUP
-	SendOwnBeacon();
+	SendStartup();
 #endif
 
   // Infinite loop

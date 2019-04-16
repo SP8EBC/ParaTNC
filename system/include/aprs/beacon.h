@@ -14,6 +14,7 @@ extern "C"
 #endif
 
 void SendOwnBeacon(void);
+void SendStartup(void);
 
 #ifdef __cplusplus
 }
