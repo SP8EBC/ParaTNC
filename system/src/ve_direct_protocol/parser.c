@@ -44,14 +44,16 @@ static int copy_till_non_printable_char(uint8_t* input, uint16_t* input_offset, 
 				i++;
 			} while (is_non_printable_character() && i < input_ln);
 
-			// updating an offset to input buffer
-			*input_offset = i;
 
 			if (i >= input_ln)
 				return VE_DIRECT_STRING_END_REACH_TO_EARLY;
-			else
+			else {
+				// updating an offset to input buffer
+				*input_offset = i;
+
 				// end exit from function
 				return 0;
+			}
 		}
 
 		output[j++] = input[i];
@@ -145,6 +147,11 @@ void ve_direct_cut_to_checksum(uint8_t* input, uint16_t input_ln,
 		}
 	}
 
+	if (i >= input_ln - 1) {
+		*target_ln = 1;
+		return;
+	}
+
 	*target_ln = checksum_start + CHECKSUM_NAME_FIELD_LN_TO_DATA;
 
 	for (i = checksum_start + CHECKSUM_NAME_FIELD_LN_TO_DATA; i < input_ln; i++) {
@@ -156,17 +163,22 @@ void ve_direct_cut_to_checksum(uint8_t* input, uint16_t input_ln,
 void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* valid) {
 	uint8_t sum = 0;
 
-	//uint8_t checksum = *(input + input_ln - 1);
-
 	int i = 0;
+
+	if (input_ln < 10) {
+		*valid = 0;
+		return;
+	}
 
 	// rewind to first printable chcaracter
 	while (is_non_printable_character()) {
 		i++;
 
 		// if we reach an end of the string but no printable character has been spotted
-		if (i >= input_ln)
+		if (i >= input_ln) {
+			*valid = 0;
 			return;
+		}
 	}
 
 	// checksum need to be calculated including newline before first record
@@ -180,6 +192,8 @@ void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* val
 
 	if (sum == 0)
 		*valid = 1;
+	else
+		*valid = 0;
 
 	return;
 }
@@ -190,6 +204,9 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 
 	// local var to iterate throught
 	uint16_t i = 0;
+
+	// value used to store return value from
+	uint16_t ret_val = 0;
 
 	// local variable for parsing a key value to something easly processed
 	ve_direct_key_values key_enum;
@@ -213,7 +230,11 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 		memset(value, 0x00, 12);
 
 		// start copying a key of this entry
-		copy_till_non_printable_char(input, &i, input_ln, key, sizeof(key));
+		ret_val = copy_till_non_printable_char(input, &i, input_ln, key, sizeof(key));
+
+		// check if data were copied correctly
+		if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
+			return VE_DIRECT_INVALID_INP_STR;
 
 		key_enum = get_key_value_from_str(key);
 
@@ -222,9 +243,14 @@ int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_r
 			// the checksum need to be treated separately, because it consist non-printable chracers
 			out->checksum  = *(input + i - 1);
 		}
-		else
+		else {
 			// start copying a value of this entry
-			copy_till_non_printable_char(input, &i, input_ln, value, sizeof(value));
+			ret_val = copy_till_non_printable_char(input, &i, input_ln, value, sizeof(value));
+
+			// in case than value wasn't copiedo correctly
+			if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
+				return VE_DIRECT_INVALID_INP_STR;
+		}
 
 		switch (key_enum) {
 			case VE_CHECKSUM:
