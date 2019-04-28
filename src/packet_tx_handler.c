@@ -62,18 +62,32 @@ void packet_tx_handler(void) {
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
-		// if there weren't any erros related to DS12B20 from previous function call
+		// if there weren't any erros related to communication with DS12B20 from previous function call
 		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
-			dallas_qf = rte_wx_current_dallas_qf;	// ir might be DEGRADATED
+			dallas_qf = rte_wx_current_dallas_qf;	// it might be DEGRADATED so we need to copy a value directly
+
+			// reset current QF to check if there will be at least one successfull readout of temperature
+			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
 		}
 
 		// if there were any errors
 		else {
-			// set the error reason
-			dallas_qf = rte_wx_error_dallas_qf;
+
+			// if we had at least one successfull communication with the sensor
+			if (rte_wx_current_dallas_qf == DALLAS_QF_FULL || rte_wx_current_dallas_qf == DALLAS_QF_DEGRADATED) {
+				// set the error reason
+				dallas_qf = DALLAS_QF_DEGRADATED;
+			}
+			// if they wasn't any successfull comm
+			else {
+				// set that it is totally dead and not avaliable
+				dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+			}
 
 			// and reset the error
 			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
+
+			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
 		}
 
 #ifdef _VICTRON

@@ -205,7 +205,9 @@ float __attribute__((optimize("O0"))) dallas_query(DallasQF *qf) {
 		return -128.0f;
 	}
 
-	if (temperature < -25.0f || temperature > 38.75f)
+	if (temperature < -50.0f || temperature > 120.0f)
+		*qf = DALLAS_QF_NOT_AVALIABLE;
+	else if (temperature < -25.0f || temperature > 38.75f)
 		*qf = DALLAS_QF_DEGRADATED;
 	else
 		*qf = DALLAS_QF_FULL;

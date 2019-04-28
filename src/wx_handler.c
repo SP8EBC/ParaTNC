@@ -28,15 +28,16 @@ void wx_get_all_measurements(void) {
 		// update the current temperature
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
 
-		if (rte_wx_temperature_dallas_valid > TELEMETRY_MIN_DALLAS && rte_wx_temperature_dallas_valid < TELEMETRY_MAX_DALLAS)
-			// and set the quality factor
-			rte_wx_current_dallas_qf = DALLAS_QF_FULL;
-		else
-			rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
+		//if (rte_wx_temperature_dallas_valid > TELEMETRY_MIN_DALLAS && rte_wx_temperature_dallas_valid < TELEMETRY_MAX_DALLAS)
+		//	// and set the quality factor
+		//	rte_wx_current_dallas_qf = DALLAS_QF_FULL;
+		//else
+		//	rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
 	}
 	else {
-
+		// if there were a communication error set the error to unavaliable
 		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+
 	}
 	//else
 	//	rte_wx_temperature_dallas_valid = 0.0f;

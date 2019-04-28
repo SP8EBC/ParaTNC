@@ -13,8 +13,8 @@
 #include "station_config.h"
 
 void SendWXFrame(Anemometer* input, float temperatura, unsigned cisnienie) {
-	float max_wind_speed = 0.0, temp;
-	unsigned char wind_speed_mph, wind_gusts_mph, d;
+	float max_wind_speed = 0.0f, temp = 0.0f;
+	unsigned char wind_speed_mph = 0, wind_gusts_mph = 0, d = 0;
 	for(d = 1; d <= 15 ; d++)
 		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
 				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed * 0.1f;		// Wyszukiwane najwiekszej wartosci
