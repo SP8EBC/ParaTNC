@@ -5,6 +5,8 @@
 #include <math.h>
 #include "diag/Trace.h"
 
+#include "rte_wx.h"
+
 //#include <stm32f10x_md_vl.h>
 
 ///* only for debug */
@@ -72,7 +74,7 @@ void TX20Init(void) {
 	//// inicjalizacja p�l struktury      //
 	////////////////////////////////////////
 	BQ = 0, QL = 0, FC = 0, DCD = 0, RD = 0, MC = 1, OE = 0;
-	for (i = 1; i <= 19; i++) {
+	for (i = 1; i <= TX20_BUFF_LN - 1; i++) {
 		VNAME.HistoryAVG[i].WindSpeed = -1;
 		VNAME.HistoryAVG[i].WindDirX	= -1;
 		VNAME.HistoryAVG[i].WindDirY	= -1;
@@ -128,6 +130,12 @@ float TX20DataAverage(void) {
 	short x = 0,xx = 0,y = 0,yy = 0, out = 0;
 	x = (short)(100.0f * cosf((float)VNAME.Data.WindDirX * PI/180.0f));
 	y = (short)(100.0f * sinf((float)VNAME.Data.WindDirX * PI/180.0f));
+
+	if (abs((int32_t)(VNAME.HistoryAVG[MC].WindSpeed - VNAME.Data.WindSpeed)) > 5) {
+		rte_wx_tx20_excessive_slew_rate = 1;
+		return 0;
+	}
+
 	VNAME.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
 	VNAME.HistoryAVG[MC].WindDirX = x;
 	VNAME.HistoryAVG[MC].WindDirY = y;
@@ -135,7 +143,7 @@ float TX20DataAverage(void) {
 	VNAME.HistoryAVG[0].WindDirY = 0;
 	VNAME.HistoryAVG[0].WindSpeed = 0;
 	x = 0, y = 0;
-	for (i = 1; (i <= 19 && VNAME.HistoryAVG[i].WindSpeed != -1); i++) {
+	for (i = 1; (i <= TX20_BUFF_LN - 1 && VNAME.HistoryAVG[i].WindSpeed != -1); i++) {
 		VNAME.HistoryAVG[0].WindSpeed += VNAME.HistoryAVG[i].WindSpeed;
 		x	+= VNAME.HistoryAVG[i].WindDirX;
 		y	+= VNAME.HistoryAVG[i].WindDirY;
@@ -147,7 +155,7 @@ float TX20DataAverage(void) {
 	if (out < 0)
 		out += 360;
 	VNAME.HistoryAVG[0].WindDirX  = out;
-	if ((MC++) == 20)
+	if ((MC++) == TX20_BUFF_LN)
 		MC = 1;
 	return 0;
 }
