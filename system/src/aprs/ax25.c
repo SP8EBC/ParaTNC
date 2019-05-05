@@ -11,6 +11,8 @@
 
 #include "station_config.h"
 
+#include "KissCommunication.h"
+
 AX25Msg ax25_rxed_frame;
 char ax25_new_msg_rx_flag;
 
@@ -253,6 +255,40 @@ void ax25_sendVia(AX25Ctx *ctx, const AX25Call *path, uint16_t path_len, const v
 
 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
 
+}
+
+uint16_t ax25_sendVia_toBuffer(const AX25Call *path, uint16_t path_len, const void *payload, uint16_t payload_len, uint8_t* output_buf, uint16_t output_size) {
+
+	uint16_t i;
+	uint8_t crcl,crch;
+	uint16_t crc = CRC_CCITT_INIT_VAL;
+	const uint8_t *buf = (const uint8_t *)payload;
+
+	uint16_t return_val = 0;
+
+	kiss_put_char(HDLC_FLAG, output_buf, output_size, &return_val, &crc);
+
+	for (i = 0; i < path_len; i++)
+	{
+		kiss_put_call(&path[i], (i == path_len - 1), output_buf, output_size, &return_val, &crc);
+	}
+
+	kiss_put_char(AX25_CTRL_UI, output_buf, output_size, &return_val, &crc);
+	kiss_put_char(AX25_PID_NOLAYER3, output_buf, output_size, &return_val, &crc);
+
+	while (payload_len--)
+	{
+		kiss_put_char(*buf++, output_buf, output_size, &return_val, &crc);
+	}
+
+	crcl = (crc & 0xff) ^ 0xff;
+	crch = (crc >> 8) ^ 0xff;
+	kiss_put_char(crcl, output_buf, output_size, &return_val, &crc);
+	kiss_put_char(crch, output_buf, output_size, &return_val, &crc);
+
+	kiss_put_char(HDLC_FLAG, output_buf, output_size, &return_val, &crc);
+
+	return return_val;
 }
 
 /*********************************************************************************************************************/

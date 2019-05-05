@@ -340,10 +340,41 @@ HardFault_Handler (void)
   );
 }
 
+uint8_t hard_faults = 0;
+
 void __attribute__ ((section(".after_vectors"),weak,used))
 HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
                      uint32_t lr __attribute__((unused)))
 {
+	  // enable access to BKP registers
+	  RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
+	  PWR->CR |= PWR_CR_DBP;
+
+	  // read current number of hard faults
+	  hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 16);
+
+	  // increase hard faults counter
+	  hard_faults++;
+
+	  // erasing old value from backup registers
+	  BKP->DR2 &= (0xFFFF ^ 0xFF00);
+
+	  // storing increased value
+	  BKP->DR2 |= (hard_faults << 16);
+
+	  // storing trace informations
+	  BKP->DR3 = (uint16_t)(frame->pc & 0xFFFF);
+	  BKP->DR4 = (uint16_t)(frame->pc & 0xFFFF0000) >> 16;
+	  BKP->DR4 = (uint16_t)(frame->lr & 0xFFFF);
+	  BKP->DR5 = (uint16_t)(frame->lr & 0xFFFF0000) >> 16;
+
+	  // disabling access to BKP registers
+	  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
+	  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
+
+	  NVIC_SystemReset();
+
+
 #if defined(TRACE)
   uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
   uint32_t bfar = SCB->BFAR; // Bus Fault Address
@@ -380,36 +411,6 @@ HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
-
-  uint8_t hard_faults = 0;
-
-  // enable access to BKP registers
-  RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
-  PWR->CR |= PWR_CR_DBP;
-
-  // read current number of hard faults
-  hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 16);
-
-  // increase hard faults counter
-  hard_faults++;
-
-  // erasing old value from backup registers
-  BKP->DR2 &= (0xFFFF ^ 0xFF00);
-
-  // storing increased value
-  BKP->DR2 |= (hard_faults << 16);
-
-  // storing trace informations
-  BKP->DR3 = (uint16_t)(frame->pc & 0xFFFF);
-  BKP->DR4 = (uint16_t)(frame->pc & 0xFFFF0000) >> 16;
-  BKP->DR4 = (uint16_t)(frame->lr & 0xFFFF);
-  BKP->DR5 = (uint16_t)(frame->lr & 0xFFFF0000) >> 16;
-
-  // disabling access to BKP registers
-  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
-  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
-
-  NVIC_SystemReset();
 
   while (1)
     {

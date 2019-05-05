@@ -138,6 +138,8 @@ main(int argc, char* argv[])
   RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
   PWR->CR |= PWR_CR_DBP;
 
+  rte_main_reboot_req = 0;
+
   // read current number of boot cycles
   rte_main_boot_cycles = (uint8_t)(BKP->DR2 & 0xFF);
 
@@ -186,11 +188,11 @@ main(int argc, char* argv[])
 
 #ifdef _METEO
   dht22_init();
-  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5);
+  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
   TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
-  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5);
+  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
 #endif
 
   // initializing UART drvier
@@ -212,14 +214,15 @@ main(int argc, char* argv[])
   main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 
   // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
-  ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
+  //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
+  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_tx_buffer, TX_BUFFER_LN);
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
   while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
 
   // converting AX25 with beacon to KISS format
-  ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
+  //ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
 
   // checking if KISS-framing was done correctly
   if (ln != KISS_TOO_LONG_FRM) {
@@ -284,6 +287,9 @@ main(int argc, char* argv[])
   // Infinite loop
   while (1)
     {
+	    if (rte_main_reboot_req == 1)
+	    	NVIC_SystemReset();
+
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
 
 	  		if (main_afsk.sending == false && button_inhibit == 0) {

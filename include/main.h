@@ -3,8 +3,8 @@
 
 #include "aprs/ax25.h"
 
-#define SW_VER "DB06"
-#define SW_DATE "27042019"
+#define SW_VER "DB07"
+#define SW_DATE "03052019"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10

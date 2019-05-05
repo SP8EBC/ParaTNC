@@ -237,15 +237,20 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							float temperature,
 							DallasQF dallas_qf,
 							ms5611_qf_t ms_qf,
-							dht22QF ds_qf) {
+							dht22QF ds_qf,
+							uint8_t tx_slew_exceded) {
 
 
 	// local variables with characters to be inserted to APRS telemetry frame
 	char qf = '0', degr = '0', nav = '0';
 	char ms_qf_navaliable = '0';
 	char dht_qf_navaliable = '0';
+	char tx20_slew = '0';
 
 	uint8_t scaled_temperature = 0;
+
+	if (tx_slew_exceded == 1)
+		tx20_slew = '1';
 
 	if (temperature < -25.0f) {
 		scaled_temperature = (uint8_t)0;
@@ -294,9 +299,9 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	}
 
 #ifdef _DALLAS_AS_TELEM
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c00", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable, tx20_slew);
 #else
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c00", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable, tx20_slew);
 #endif
 
 	if (telemetry_counter > 999)

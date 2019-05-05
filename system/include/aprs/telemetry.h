@@ -48,7 +48,8 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							float temperature,
 							DallasQF dallas_qf,
 							ms5611_qf_t ms_qf,
-							dht22QF ds_qf);
+							dht22QF ds_qf,
+							uint8_t tx_slew_exceded);
 void telemetry_send_chns_description(void);
 void telemetry_send_status(void);
 

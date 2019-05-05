@@ -9,13 +9,14 @@
 #include "aprs/digi.h"
 #include "drivers/tx20.h"
 #include "main.h"
+#include "rte_main.h"
 
 #include "station_config.h"
 
 void SendWXFrame(Anemometer* input, float temperatura, unsigned cisnienie) {
 	float max_wind_speed = 0.0f, temp = 0.0f;
 	unsigned char wind_speed_mph = 0, wind_gusts_mph = 0, d = 0;
-	for(d = 1; d <= 15 ; d++)
+	for(d = 1; d <= TX20_BUFF_LN - 1 ; d++)
 		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
 				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed * 0.1f;		// Wyszukiwane najwiekszej wartosci
 	temp = input->HistoryAVG[0].WindSpeed;
@@ -42,6 +43,9 @@ void SendWXFrame(Anemometer* input, float temperatura, unsigned cisnienie) {
 //		for(jj = 0; jj <= 0x19FFFF; jj++);
 	while(main_ax25.dcd == true);
  	afsk_txStart(&main_afsk);
+
+ 	if (wind_speed_mph > wind_gusts_mph)
+ 		rte_main_reboot_req = 1;
 }
 
 

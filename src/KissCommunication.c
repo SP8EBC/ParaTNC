@@ -14,9 +14,12 @@
 #include "station_config.h"
 #include "TimerConfig.h"
 
+#include <crc.h>
+
+#include <string.h>
+
 extern unsigned short tx10m;
 
-#define KISS_BUFFER_LN 300
 
 uint8_t kiss_buffer[KISS_BUFFER_LN];
 
@@ -102,4 +105,89 @@ short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25
  	afsk_txStart(a);
 	return 0;
 }
+
+void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
+	memset(output, 0x00, sizeof(output_len));
+
+	output[0] = FEND;
+	output[1] = 0x00;
+
+	*current_len = 2;
+}
+
+uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
+
+	uint16_t new_crc = 0;
+
+	if (*current_len >= output_len) {
+		return 1;
+	}
+
+	if (c == HDLC_FLAG || c == HDLC_RESET || c == AX25_ESC)
+	{
+		kiss_put_char(AX25_ESC, output, output_len, current_len, crc);
+	}
+
+	if (c == FEND)
+	{
+		kiss_put_char(FESC, output, output_len, current_len, crc);
+		kiss_put_char(TFEND, output, output_len, current_len, crc);
+	}
+
+	else if (c == FESC)
+	{
+		kiss_put_char(FESC, output, output_len, current_len, crc);
+		kiss_put_char(TFESC, output, output_len, current_len, crc);
+	}
+
+	else {
+		output[*current_len++] = c;
+	}
+
+	if (crc == NULL) {
+		;
+	}
+	else {
+		new_crc = updcrc_ccitt(c, *crc);
+
+		*crc = new_crc;
+	}
+
+	return 0;
+}
+
+void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
+
+	uint16_t i;
+	uint8_t ssid;
+	uint16_t len = MIN(sizeof(addr->call), strlen(addr->call));
+
+
+	for (i = 0; i < len; i++)
+	{
+		uint8_t c = addr->call[i];
+		kiss_put_char(c << 1, output, output_len, current_len, crc);
+	}
+
+	if (len < sizeof(addr->call))
+	{
+		for (i = 0; i < sizeof(addr->call) - len; i++)
+		{
+			kiss_put_char(' ' << 1, output, output_len, current_len, crc);
+		}
+	}
+
+	ssid = 0x60 | (addr->ssid << 1) | (is_last ? 0x01 : 0);
+	kiss_put_char(ssid, output, output_len, current_len, crc);
+
+}
+
+void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
+	output[*current_len++] = FEND;
+}
+
+uint8_t* kiss_get_buff_ptr(void) {
+	return kiss_buffer;
+}
+
 

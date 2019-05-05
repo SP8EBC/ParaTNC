@@ -11,6 +11,8 @@ typedef struct {
 	int CalcChecksum;
 } DecodedData;
 
+#define TX20_BUFF_LN 20
+
 typedef struct {
 	char BitSampler;
 	/* Zmienna przechowuj�ca stan automatu sampluj�cego bity.
@@ -43,7 +45,7 @@ typedef struct {
 	/* Licznik do poruszania si� po tablicy HistoryAVG*/
 	unsigned char MeasCounter;
 	/* Historia odczytow i usredniona wartosc z ostatnich 15 pomiarow  */	
-	DecodedData HistoryAVG[20];
+	DecodedData HistoryAVG[TX20_BUFF_LN];
 	
 	unsigned char OddEven;
 } Anemometer;
