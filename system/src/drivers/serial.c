@@ -230,6 +230,10 @@ uint8_t srl_start_tx(short leng) {
 	return SRL_OK;
 }
 
+void srl_wait_for_tx_completion() {
+	  while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
+}
+
 uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier) {
 	if (srl_rx_state == SRL_RXING)
 		return SRL_BUSY;

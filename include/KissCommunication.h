@@ -33,6 +33,7 @@
 
   void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len);
   uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
+  uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
   void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
   void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len);
 

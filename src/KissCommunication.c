@@ -118,6 +118,7 @@ void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_l
 uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
 
 	uint16_t new_crc = 0;
+	uint16_t curr_ln = *current_len;
 
 	if (*current_len >= output_len) {
 		return 1;
@@ -125,23 +126,23 @@ uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t*
 
 	if (c == HDLC_FLAG || c == HDLC_RESET || c == AX25_ESC)
 	{
-		kiss_put_char(AX25_ESC, output, output_len, current_len, crc);
+		kiss_put_char_nocheck(AX25_ESC, output, output_len, current_len, crc);
 	}
 
 	if (c == FEND)
 	{
-		kiss_put_char(FESC, output, output_len, current_len, crc);
-		kiss_put_char(TFEND, output, output_len, current_len, crc);
+		kiss_put_char_nocheck(FESC, output, output_len, current_len, crc);
+		kiss_put_char_nocheck(TFEND, output, output_len, current_len, crc);
 	}
 
 	else if (c == FESC)
 	{
-		kiss_put_char(FESC, output, output_len, current_len, crc);
-		kiss_put_char(TFESC, output, output_len, current_len, crc);
+		kiss_put_char_nocheck(FESC, output, output_len, current_len, crc);
+		kiss_put_char_nocheck(TFESC, output, output_len, current_len, crc);
 	}
 
 	else {
-		output[*current_len++] = c;
+		output[curr_ln++] = c;
 	}
 
 	if (crc == NULL) {
@@ -152,6 +153,32 @@ uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t*
 
 		*crc = new_crc;
 	}
+
+	*current_len = curr_ln;
+
+	return 0;
+}
+
+uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
+	uint16_t new_crc = 0;
+	uint16_t curr_ln = *current_len;
+
+	if (*current_len >= output_len) {
+		return 1;
+	}
+
+	output[curr_ln++] = c;
+
+	if (crc == NULL) {
+		;
+	}
+	else {
+		new_crc = updcrc_ccitt(c, *crc);
+
+		*crc = new_crc;
+	}
+
+	*current_len = curr_ln;
 
 	return 0;
 }
@@ -183,7 +210,16 @@ void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint1
 }
 
 void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
-	output[*current_len++] = FEND;
+
+	uint16_t ln = *current_len;
+
+	if (*current_len >= output_len) {
+		return;
+	}
+
+	output[ln++] = FEND;
+
+	*current_len = ln;
 }
 
 uint8_t* kiss_get_buff_ptr(void) {

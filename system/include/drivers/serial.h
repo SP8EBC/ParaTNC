@@ -45,6 +45,7 @@ extern "C" {
 void srl_init(void);
 uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
 uint8_t srl_start_tx(short leng);
+void srl_wait_for_tx_completion();
 void srl_irq_handler(void);
 uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier);
 uint16_t srl_get_num_bytes_rxed();

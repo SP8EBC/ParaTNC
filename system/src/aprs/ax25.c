@@ -266,7 +266,7 @@ uint16_t ax25_sendVia_toBuffer(const AX25Call *path, uint16_t path_len, const vo
 
 	uint16_t return_val = 0;
 
-	kiss_put_char(HDLC_FLAG, output_buf, output_size, &return_val, &crc);
+	kiss_reset_buffer(output_buf, output_size, &return_val);
 
 	for (i = 0; i < path_len; i++)
 	{
@@ -281,12 +281,7 @@ uint16_t ax25_sendVia_toBuffer(const AX25Call *path, uint16_t path_len, const vo
 		kiss_put_char(*buf++, output_buf, output_size, &return_val, &crc);
 	}
 
-	crcl = (crc & 0xff) ^ 0xff;
-	crch = (crc >> 8) ^ 0xff;
-	kiss_put_char(crcl, output_buf, output_size, &return_val, &crc);
-	kiss_put_char(crch, output_buf, output_size, &return_val, &crc);
-
-	kiss_put_char(HDLC_FLAG, output_buf, output_size, &return_val, &crc);
+	kiss_finalize_buffer(output_buf, output_size, &return_val);
 
 	return return_val;
 }

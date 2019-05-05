@@ -144,7 +144,7 @@ main(int argc, char* argv[])
   rte_main_boot_cycles = (uint8_t)(BKP->DR2 & 0xFF);
 
   // read current number of hard faults
-  rte_main_hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 16);
+  rte_main_hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 8);
 
   // increase boot cycles count
   rte_main_boot_cycles++;

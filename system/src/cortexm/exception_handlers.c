@@ -342,16 +342,18 @@ HardFault_Handler (void)
 
 uint8_t hard_faults = 0;
 
-void __attribute__ ((section(".after_vectors"),weak,used))
+void __attribute__ ((section(".after_vectors"),weak,used,naked))
 HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
                      uint32_t lr __attribute__((unused)))
 {
+	hard_faults = 0;
+
 	  // enable access to BKP registers
 	  RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
 	  PWR->CR |= PWR_CR_DBP;
 
 	  // read current number of hard faults
-	  hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 16);
+	  hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 8);
 
 	  // increase hard faults counter
 	  hard_faults++;

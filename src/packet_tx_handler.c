@@ -8,6 +8,7 @@
 #include "./aprs/telemetry.h"
 
 #include "./drivers/tx20.h"
+#include "./drivers/serial.h"
 
 #include "main.h"
 
@@ -17,6 +18,9 @@ uint8_t packet_tx_beacon_counter = 0;
 #ifdef _METEO
 uint8_t packet_tx_meteo_interval = _WX_INTERVAL;
 uint8_t packet_tx_meteo_counter = 0;
+
+uint8_t packet_tx_meteo_kiss_interval = 2;
+uint8_t packet_tx_meteo_kiss_counter = 0;
 #endif
 
 uint8_t packet_tx_telemetry_interval = 10;
@@ -29,11 +33,14 @@ uint8_t packet_tx_telemetry_descr_counter = 35;
 void packet_tx_handler(void) {
 	DallasQF dallas_qf = DALLAS_QF_UNKNOWN;
 
+	uint16_t ln = 0;
+
 	packet_tx_beacon_counter++;
 	packet_tx_telemetry_counter++;
 	packet_tx_telemetry_descr_counter++;
 #ifdef _METEO
 	packet_tx_meteo_counter++;
+	packet_tx_meteo_kiss_counter++;
 #endif
 
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval) {
@@ -57,6 +64,18 @@ void packet_tx_handler(void) {
 		main_wait_for_tx_complete();
 
 		packet_tx_meteo_counter = 0;
+	}
+
+	if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval) {
+
+		srl_wait_for_tx_completion();
+
+		SendWXFrameToBuffer(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, srl_tx_buffer, TX_BUFFER_LN, &ln);
+
+		srl_start_tx(ln);
+
+
+		packet_tx_meteo_kiss_counter = 0;
 	}
 #endif
 
