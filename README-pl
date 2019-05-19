@@ -9,6 +9,7 @@ uniwersalnego radiomodemu/sterownika sieci APRS, wyposażonego w szereg funkcjon
 -> Dwustronna komunikacja z komputerem przy użyciu protokołu KISS po łączu szeregowym (TTL-UART).
 -> Stacja pogodowa z obsługą wiatromierza TX20, termometru Dallas DS12B20 oraz czujnika ciśnienia MS5611.
 -> Telemetria umożliwiająca monitorowanie ilości odbieranych, nadawanych i powtarzanych pakietów.
+-> Obsługa protokołu tekstowego VE.Direct używanego przez systemu fotowoltaiki Victron Energy
 
 Niewątpliwą zaletą ParaTNC są bardzo niskie koszta. Wynoszące jedynie 60~70pln bruttno na zakup STM32VLDISCOVERY. 
 Ponieważ dekodowanie i generowanie transmisji APRS odbywa się w pełni programowo nie ma konieczności użycia tandetnych
@@ -20,6 +21,31 @@ do wykonania odpowienich kabli połączeniowch. stosowna instrukcja z pinoutami 
 2. LICENCJA
 Warunki licencjonowania są zawarte w pliku LICENSE.   
 
+3. WSPIERANE FUNKCJONALNOŚCI PROTOKOŁU VE.DIRECT
+Protokół (w wersji tekstowej, nie binarnej) VE.Direct został stworzony przez firme Victron Energy i jest wykorzystywany
+w produkowanych przez nią inwerterów, kontrolerów ładowania i innego sprzętu do instalacji fotowoltaicznych. Służy on do
+przesyłania telemetrii z kontrolera do komputera PC, lub w tym przypadku sterownika ParaTNC. Jest on domyślnie włączony
+w większości urządzeń i w trybie bezczynności, tj. bez komunikacji protokołem binarnym z aplikacją konfiguracyjną 
+urządzenie będzie wysyłało co kilka sekund paczkę danych telemetrycznych.
+
+Komunikacja z urządzeniami Victron Energy odbywa się przez złącze VE.Direct, które jest tak naprawdę zwykłym złączem szeregowym.
+W przypadku regulatorów z serii MPPT (w moim przypadku model MPPT75/15) używane są sygnały na poziome TTL-3.3V, dlatego można
+je podłączyć do sterownika ParaTNC/STM32VLDISCOVERY bezpośrednio, tj. bez użycia konwerterów typu MAX232.
+
+Złącze VE.Direct w regulatorach z serii MPPT znajduje się poniżej bezpiecznika. Patrząc na złącze mając otwory montażowe w obudowie
+zwrócone ku dołowi rozpiska jest taka (od prawej do lewej)
+	-> Masa
+	-> TX, dane z regulatora do hosta (kontrolera)
+	-> RX, dane z hosta do regulatora. Nie wykorzystywany przez protokół tekstowy
+
+VE.Direct wysyła bardzo wiele różnych parametrów i informacji statusowych. Oczywiście ze względu na ograniczenia standardu APRS
+nie ma możliwości wysyłania wszystkiego, dlatego ostatecznie dokonano następującego wyboru
+
+   a) Prąd akumulatora (ładowanie/rozładowywanie), jako trzeci kanał telemetrii
+   b) Napięcie akulatora, jako czwarty kanał telemetrii
+   c) Napięcie fotoogniwa, jako piąty kanał telemetrii
+   d) Status urządzenia (aktualny tryby ładowania, brak ładowania, akumulator bliski rozładowania), jako część statusu
+   e) Kody błędów (zwarcie, zbyt wysokie napięcie aku/panela, przegrzanie, przeciążenie itp), jako część statusu  
 
 
 3. KONFIGURACJA
@@ -31,10 +57,15 @@ użytkownik może włączać i wyłączać poszczególne tryby pracy urządzenia
 -> KISS
 -> KISS + DIGI
 -> KISS + DIGI + METEO
+-> VICTRON + DIGI + METEO
+-> VICTRON + DIGI
 
 Włączenie funkcjonalności stacji pogodowej (przez odkomentowanie _METEO) automatycznie włącza digipeater nawet jeżeli
 zakomentowane jest #define _DIGI w pliku konfiguracyjnym. Komunikacja z komputerem odbywa się na prędkości 9600bps, a sam
 protokół KISS działa od samego początku pracy urządzenia i nie musi być w żaden sposób inicjalizowany ze strony PC.
+
+Włączenie wsparcia dla protokołu VE.Direct odbywa się przez odkomentowanie //#define _VICTRON. 
+UWAGA!! Włączenie VE.Direct wyłącza i uniemożliwia wykorzystanie ParaTNC w trybie modemu KISS. 
 
 Sterownik wysyła co 10 minut ramkę telemetryczną zawierającą informację o ilości odebranych, nadanych i powtórzonych
 pakietów APRS przez okres minionych 10 minut. Ilość nadanych ramek jest sumą powtórzonych ramek i ramek własnych 

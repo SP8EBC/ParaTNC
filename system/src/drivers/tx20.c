@@ -7,6 +7,8 @@
 
 #include "rte_wx.h"
 
+#include "station_config.h"
+
 //#include <stm32f10x_md_vl.h>
 
 ///* only for debug */
@@ -190,7 +192,7 @@ void TX20DataParse(void) {
 		TX20DataAverage();
 	else;
 
-	trace_printf("TX20:Windspeed=%2.2f;Direction=%d\r\n", VNAME.Data.WindSpeed, VNAME.Data.WindDirX);
+//	trace_printf("TX20:Windspeed=%2.2f;Direction=%d\r\n", VNAME.Data.WindSpeed, VNAME.Data.WindDirX);
 
 	/* only for debug */
 //	sprintf(logging_buff, "S: %f D: %d RC: %d CC: %d \n\r\0", VNAME.Data.WindSpeed, VNAME.Data.WindDir, VNAME.Data.Checksum, VNAME.Data.CalcChecksum);
