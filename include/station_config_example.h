@@ -14,6 +14,7 @@
 // Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens
 #define _METEO
 #define _DIGI		// Comment this do disable WIDE1-1 digipeating
+//#define _DIGI_ONLY_789
 
 //#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
 //#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)

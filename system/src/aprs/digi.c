@@ -20,9 +20,17 @@ char digi_q = 0;
 uint8_t digi_msg[CONFIG_AX25_FRAME_BUF_LEN];
 uint16_t digi_msg_len;
 
+uint8_t digi_limit_to_ssid789;
+
 
 char Digi(struct AX25Msg *msg) {
 #ifdef _DIGI
+
+#ifdef _DIGI_ONLY_789
+	digi_limit_to_ssid789 = 1;
+#else
+	digi_limit_to_ssid789 = 0;
+#endif
 
 	AX25Call digi_path[7];
 	uint8_t call_len = 0;
@@ -31,6 +39,10 @@ char Digi(struct AX25Msg *msg) {
 	// check if the received message is not too long for the transmit buffers
 	if (msg->len >= (CONFIG_AX25_FRAME_BUF_LEN - sizeof(AX25Call) * 7) ) {
 		return DIGI_PACKET_TOO_LONG;
+	}
+
+	if ((msg->src.ssid < 7 || msg->src.ssid > 9) && digi_limit_to_ssid789 == 1) {
+		return 0;
 	}
 
 	if (main_afsk.sending != 1 && after_tx_lock == 0) {

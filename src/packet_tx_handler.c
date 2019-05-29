@@ -124,7 +124,7 @@ void packet_tx_handler(void) {
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_tx20_excessive_slew_rate);
 #else
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_tx20_excessive_slew_rate);
 #endif
 //
 #endif
