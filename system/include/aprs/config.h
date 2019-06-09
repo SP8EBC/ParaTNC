@@ -24,7 +24,7 @@
 
 //extern uint8_t kiss_txdelay;
 //#define CONFIG_AFSK_PREAMBLE_LEN (kiss_txdelay*10UL)
-#define CONFIG_AFSK_PREAMBLE_LEN 500UL			/// 300
+#define CONFIG_AFSK_PREAMBLE_LEN 400UL			/// 300
 
 /**
  * AFSK Trailer length in [ms], before stopping transmissions.
