@@ -24,7 +24,8 @@
 #define DCD VNAME.FrameRX
 #define FC VNAME.FrameBitCounter
 #define RD VNAME.ReceiveDone
-#define MC VNAME.MeasCounter	
+#define MC VNAME.MeasCounter
+#define PM VNAME.PrevMeasCounter
 #define OE VNAME.OddEven
 
 Anemometer VNAME;	// Deklaracja zmiennej strukturalnej typu Anemometer
@@ -75,7 +76,7 @@ void TX20Init(void) {
 	////////////////////////////////////////
 	//// inicjalizacja p�l struktury      //
 	////////////////////////////////////////
-	BQ = 0, QL = 0, FC = 0, DCD = 0, RD = 0, MC = 1, OE = 0;
+	BQ = 0, QL = 0, FC = 0, DCD = 0, RD = 0, MC = 1, OE = 0, PM = 1;
 	for (i = 1; i <= TX20_BUFF_LN - 1; i++) {
 		VNAME.HistoryAVG[i].WindSpeed = -1;
 		VNAME.HistoryAVG[i].WindDirX	= -1;
@@ -133,7 +134,11 @@ float TX20DataAverage(void) {
 	x = (short)(100.0f * cosf((float)VNAME.Data.WindDirX * PI/180.0f));
 	y = (short)(100.0f * sinf((float)VNAME.Data.WindDirX * PI/180.0f));
 
-	if (abs((int32_t)(VNAME.HistoryAVG[MC].WindSpeed - VNAME.Data.WindSpeed)) > 5) {
+	if (
+			PM != MC &&
+			abs((int32_t)(VNAME.HistoryAVG[PM].WindSpeed - VNAME.Data.WindSpeed)) > 6
+
+	) {
 		rte_wx_tx20_excessive_slew_rate = 1;
 		return 0;
 	}
@@ -157,6 +162,7 @@ float TX20DataAverage(void) {
 	if (out < 0)
 		out += 360;
 	VNAME.HistoryAVG[0].WindDirX  = out;
+	PM = MC;
 	if ((MC++) == TX20_BUFF_LN)
 		MC = 1;
 	return 0;

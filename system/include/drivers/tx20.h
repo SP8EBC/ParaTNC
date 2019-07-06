@@ -44,6 +44,8 @@ typedef struct {
 	DecodedData Data;
 	/* Licznik do poruszania si� po tablicy HistoryAVG*/
 	unsigned char MeasCounter;
+	/* Indeks poprzednio zapisanych pomiarow*/
+	unsigned char PrevMeasCounter;
 	/* Historia odczytow i usredniona wartosc z ostatnich 15 pomiarow  */	
 	DecodedData HistoryAVG[TX20_BUFF_LN];
 	
