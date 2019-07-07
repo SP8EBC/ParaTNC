@@ -136,7 +136,7 @@ float TX20DataAverage(void) {
 
 	if (
 			PM != MC &&
-			abs((int32_t)(VNAME.HistoryAVG[PM].WindSpeed - VNAME.Data.WindSpeed)) > 6
+			abs((int32_t)(VNAME.HistoryAVG[PM].WindSpeed - VNAME.Data.WindSpeed)) > 9
 
 	) {
 		rte_wx_tx20_excessive_slew_rate = 1;
