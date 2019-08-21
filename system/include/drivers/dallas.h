@@ -14,6 +14,8 @@ extern "C" {
 #endif
 
 #include <stm32f10x_gpio.h>
+#include "station_config.h"
+
 
 
 extern volatile int delay_5us;
@@ -22,6 +24,9 @@ extern volatile char timm;
 typedef struct DallasStruct {
 	GPIO_TypeDef* GPIOx;           /*!< GPIOx port to be used for I/O functions */
 	uint16_t GPIO_Pin;             /*!< GPIO Pin to be used for I/O functions */
+#ifdef _DALLAS_SPLIT_PIN
+	uint16_t GPIO_Pin_input;
+#endif
 	uint32_t GPIO_Cnf;             /*!< GPIO Pin to be used for I/O functions */
 	uint32_t GPIO_Mode;             /*!< GPIO Pin to be used for I/O functions */
 	uint32_t input_term;
