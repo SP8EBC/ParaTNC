@@ -47,6 +47,7 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 	GPIO_output.GPIO_Mode = GPIO_Mode_Out_OD;
 	GPIO_output.GPIO_Pin = GPIO_Pin;
 	GPIO_output.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOx, &GPIO_output);
 	GPIO_SetBits(GPIOx, GPIO_Pin);
 
 	GPIO_input.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -118,7 +119,7 @@ char dallas_reset(void) {
 	while (delay_5us != 0);
 
 	// READING PIN STATE
-	if ((dallas.GPIOx->IDR & dallas.GPIO_Pin) == dallas.GPIO_Pin) {
+	if ((dallas.GPIOx->IDR & dallas.GPIO_Pin_input) == dallas.GPIO_Pin_input) {
 		delay_5us = 100;		// delay 500us
 		while (delay_5us != 0);
 		return -1;
@@ -173,7 +174,7 @@ char __attribute__((optimize("O0"))) dallas_receive_byte(void) {
 		while (delay_5us != 0);
 
 		// SAMPLING PIN
-		data |= (((dallas.GPIOx->IDR & dallas.GPIO_Pin) > 0 ? 1 : 0) << i);
+		data |= (((dallas.GPIOx->IDR & dallas.GPIO_Pin_input) > 0 ? 1 : 0) << i);
 		delay_5us = 11;		// delay 50us for complete slot
 		while (delay_5us != 0);
 
