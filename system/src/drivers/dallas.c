@@ -31,6 +31,7 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 #ifndef _DALLAS_SPLIT_PIN
 	dallas.GPIOx = GPIOx;
 	dallas.GPIO_Pin = GPIO_Pin;
+	dallas.GPIO_Pin_input = GPIO_Pin;
 
 	dallas.GPIO_Mode = (3 << GPIO_PinSource * 4);
 	dallas.GPIO_Cnf = (3 << GPIO_PinSource * 4) + 2;

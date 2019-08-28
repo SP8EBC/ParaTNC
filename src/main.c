@@ -192,7 +192,7 @@ main(int argc, char* argv[])
   TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
-  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5); //
+  dallas_init(GPIOB, GPIO_Pin_5, GPIO_PinSource5); // B5 output, B6 input
 #endif
 
   // initializing UART drvier
