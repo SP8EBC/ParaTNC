@@ -206,15 +206,15 @@ int32_t ms5611_get_temperature(float* out, ms5611_qf_t *qf) {
 	int32_t return_val = 0;
 
 	if (ms5611_sensor_avaliable == 0) {
-		return_val = ms5611_reset(qf);
+		//return_val = ms5611_reset(qf);
 
-		if (return_val == MS5611_OK)
-			ms5611_sensor_avaliable = 1;
-		else {
+		//if (return_val == MS5611_OK)
+		//	ms5611_sensor_avaliable = 1;
+		//else {
 			*qf = MS5611_QF_NOT_AVALIABLE;
 
 			return MS5611_SENSOR_NOT_AVALIABLE;
-		}
+		//}
 	}
 
 	return_val = ms5611_trigger_measure(0x01, &raw);
@@ -234,11 +234,17 @@ int32_t ms5611_get_temperature(float* out, ms5611_qf_t *qf) {
 	output /= 100;
 	SensorDT = dt;
 
-	*qf = MS5611_QF_FULL;
-
 	*out = output;
 
-	return MS5611_OK;
+	if (output > MS5611_MIN_TEMPERATURE_OK && output < MS5611_MAX_TEMPERATURE_OK) {
+		*qf = MS5611_QF_FULL;
+		return MS5611_OK;
+	}
+	else {
+		*qf = MS5611_QF_DEGRADATED;
+		return MS5611_SENSOR_NOT_AVALIABLE;
+	}
+
 
 
 }
@@ -253,15 +259,15 @@ int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf) {
 	float output_p;
 
 	if (ms5611_sensor_avaliable == 0) {
-		return_val = ms5611_reset(qf);
+		//return_val = ms5611_reset(qf);
 
-		if (return_val == MS5611_OK)
-			ms5611_sensor_avaliable = 1;
-		else {
+		//if (return_val == MS5611_OK)
+		//	ms5611_sensor_avaliable = 1;
+		//else {
 			*qf = MS5611_QF_NOT_AVALIABLE;
 
 			return MS5611_SENSOR_NOT_AVALIABLE;
-		}
+		//}
 	}
 
 	return_val = ms5611_trigger_measure(0x02, &raw);
@@ -281,11 +287,18 @@ int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf) {
 	output_p = (double)p;
 	output_p /= 100;
 
-	*qf = MS5611_QF_FULL;
-
 	*out = output_p;
 
-	return MS5611_OK;
+	if (output_p > MS5611_MIN_PRESSURE_OK && output_p < MS5611_MAX_PRESSURE_OK) {
+		*qf = MS5611_QF_FULL;
+		return MS5611_OK;
+	}
+	else {
+		*qf = MS5611_QF_DEGRADATED;
+		return MS5611_SENSOR_NOT_AVALIABLE;
+	}
+
+
 }
 
 // funkcja obliczaj�ca sum� kontroln� CRC4 z wsp�czynnik�w kalibracyjncyh
