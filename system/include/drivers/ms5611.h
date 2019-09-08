@@ -28,6 +28,8 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out);
 int32_t ms5611_get_temperature(float* out, ms5611_qf_t* qf);
 int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf);
 
+float CalcQNHFromQFE(float qfe, float alti, float temp);
+
 
 extern char state;
 extern int32_t SensorCalData[8];

@@ -1,7 +1,8 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
-//#include "drivers/dallas.h"
 #include "../include/delay.h"
+
+#include "rte_wx.h"
 
 // adres do zapisu: 0xEC
 // adres do oczytu: 0xED
@@ -12,24 +13,26 @@ char state;	// zmienna sygnalizuj�ca przebieg pomiaru..
 			// 2: odczytaj ci�nienie i zmierz temperature
 			// sekwencja stan�w 0 -> 1 -> 2 -> 1 -> 2 -> 1 (...)
 
+#define TX_ADDR 0xEE
+#define RX_ADDR 0xEF
 
 int32_t SensorCalData[8];
 double SensorDT = 0.0;
 
-uint8_t sensor_avaliable = 0;
+uint8_t ms5611_sensor_avaliable = 0;
 
 // resetowanie sensora i pobieranie jego danych kalibracyjnych
 int32_t ms5611_reset(ms5611_qf_t *qf) {
 
 	int txbuf[] = {0x1E, '\0' };				// komenda 0x1E resetuj�ca czujnik 
 
-	i2cSendData(0xEC, txbuf, 0);				// wys�anie danych pod adres 0xEC czyli do czujnika
+	i2cSendData(TX_ADDR, txbuf, 0);				// wys�anie danych pod adres 0xEC czyli do czujnika
 
 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
 	// if reset was successfull enable a driver
 	if (i2c_state == I2C_IDLE) {
-		sensor_avaliable = 1;
+		ms5611_sensor_avaliable = 1;
 
 		// wait for sensor reset
 		delay_fixed(50);
@@ -46,7 +49,7 @@ int32_t ms5611_reset(ms5611_qf_t *qf) {
 
 int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 
-	if (sensor_avaliable == 0) {
+	if (ms5611_sensor_avaliable == 0) {
 		*out = MS5611_QF_NOT_AVALIABLE;
 
 		return MS5611_SENSOR_NOT_AVALIABLE;
@@ -62,7 +65,7 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 
 		txbuf[0] = 0xA0 + i;					// 0xA0 to adres pierwszej sta�ej kalibracyjnej, ka�da z nich ma 16 bit�w
 		txbuf[1] = '\0'; 
-		i2cSendData(0xEC, txbuf, 0);			// wysy�anie adresu do odczytania
+		i2cSendData(TX_ADDR, txbuf, 0);			// wysy�anie adresu do odczytania
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -72,7 +75,7 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		i2cReceiveData(0xED, rxbuf, 2);			// odbi�r danych z czujnika
+		i2cReceiveData(RX_ADDR, rxbuf, 2);			// odbi�r danych z czujnika
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -85,7 +88,11 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 		*(cal_data + j) = ((i2cRXData[0] << 8) | i2cRXData[1]);		// przepisywanie danych z bufor�w do tablicy
 		j++;
 	}
-	if (crc4(cal_data) == 0x08)					// sprawdzanie poprawno�ci odebranych danych
+
+	uint8_t rxed_crc = cal_data[7] & 0xF;
+	uint8_t calculated_crc = crc4(cal_data);
+
+	if (rxed_crc == calculated_crc)					// sprawdzanie poprawno�ci odebranych danych
 		return 0;
 	else
 		return -1;
@@ -95,7 +102,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 	int txbuf[] = { 0x00, 0x00};
 	long int output;
 
-	if (sensor_avaliable == 0) {
+	if (ms5611_sensor_avaliable == 0) {
 		return MS5611_SENSOR_NOT_AVALIABLE;
 	}
 
@@ -104,7 +111,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// POMIAR TEMPERATURY ////
 		////////////////////////////
 		txbuf[0] = 0x54;						// oversampling 1024
-		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+		i2cSendData(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -118,7 +125,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// ODCZYT TEMPERATURY ////
 		////////////////////////////
 		txbuf[0] = 0x00;
-		i2cSendData(0xEC,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
+		i2cSendData(TX_ADDR,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -126,7 +133,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		i2cReceiveData(0xED, txbuf, 3);
+		i2cReceiveData(RX_ADDR, txbuf, 3);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -139,7 +146,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// POMIAR CI�NIENIA   ////
 		////////////////////////////
 		txbuf[0] = 0x44;						// oversampling 1024
-		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+		i2cSendData(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -154,7 +161,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// ODCZYT CI�NIENIA ////
 		//////////////////////////
 		txbuf[0] = 0x00;
-		i2cSendData(0xEC,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
+		i2cSendData(TX_ADDR,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -162,7 +169,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		i2cReceiveData(0xED, txbuf, 3);
+		i2cReceiveData(RX_ADDR, txbuf, 3);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -175,7 +182,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// POMIAR TEMPERATURY ////
 		////////////////////////////
 		txbuf[0] = 0x54;						// oversampling 1024
-		i2cSendData(0xEC,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+		i2cSendData(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -191,18 +198,33 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 
 // pomiar temperatury
 int32_t ms5611_get_temperature(float* out, ms5611_qf_t *qf) {
-	int32_t raw;
+	int32_t raw = 0;
 
 	double raw_temp, dt, temp;
 	float output;
 
-	if (sensor_avaliable == 0) {
-		*qf = MS5611_QF_NOT_AVALIABLE;
+	int32_t return_val = 0;
 
-		return MS5611_SENSOR_NOT_AVALIABLE;
+	if (ms5611_sensor_avaliable == 0) {
+		return_val = ms5611_reset(qf);
+
+		if (return_val == MS5611_OK)
+			ms5611_sensor_avaliable = 1;
+		else {
+			*qf = MS5611_QF_NOT_AVALIABLE;
+
+			return MS5611_SENSOR_NOT_AVALIABLE;
+		}
 	}
 
-	ms5611_trigger_measure(0x01, &raw);
+	return_val = ms5611_trigger_measure(0x01, &raw);
+
+	if (return_val != MS5611_OK) {
+		*qf = MS5611_QF_NOT_AVALIABLE;
+		//ms5611_sensor_avaliable = 0;
+
+		return MS5611_TIMEOUT_DURING_MEASURMENT;
+	}
 
 	raw_temp = raw;
 
@@ -223,18 +245,33 @@ int32_t ms5611_get_temperature(float* out, ms5611_qf_t *qf) {
 
 // pomiar ci�nienia
 int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf) {
-	int32_t raw;
+	int32_t raw = 0;
+
+	int32_t return_val = 0;
 
 	long long int raw_p, off, sens, p;	// int64_t
 	float output_p;
 
-	if (sensor_avaliable == 0) {
-		*qf = MS5611_QF_NOT_AVALIABLE;
+	if (ms5611_sensor_avaliable == 0) {
+		return_val = ms5611_reset(qf);
 
-		return MS5611_SENSOR_NOT_AVALIABLE;
+		if (return_val == MS5611_OK)
+			ms5611_sensor_avaliable = 1;
+		else {
+			*qf = MS5611_QF_NOT_AVALIABLE;
+
+			return MS5611_SENSOR_NOT_AVALIABLE;
+		}
 	}
 
-	 ms5611_trigger_measure(0x02, &raw);
+	return_val = ms5611_trigger_measure(0x02, &raw);
+
+	if (return_val != MS5611_OK) {
+		*qf = MS5611_QF_NOT_AVALIABLE;
+		//ms5611_sensor_avaliable = 0;
+
+		return MS5611_TIMEOUT_DURING_MEASURMENT;
+	}
 
 	 raw_p = raw;
 
@@ -280,4 +317,31 @@ n_rem = (n_rem << 1);
 n_rem= (0x000F & (n_rem >> 12)); // final 4-bit reminder is CRC code
 n_prom[7]=crc_read; // restore the crc_read to its original place
 return (n_rem ^ 0x0);
+}
+
+
+float CalcQNHFromQFE(float qfe, float alti, float temp) {
+//	float qfe = 1001.9f;
+//	float alti = 114.0f;
+//	float temp = 26.6f;
+
+	float hprim = 8000 * ( (1 + 0.004f * temp) / qfe);
+//	printf("hprim: %f\r\n", hprim);
+	double p = qfe + (alti/hprim);
+//	printf("p: %f\r\n", p);
+
+
+	float psr = (qfe + p) * 0.5f;
+//	printf("psr: %f\r\n", psr);
+	float tpm = temp + (0.6f * alti) / 100.0f;
+//	printf("tpm: %f\r\n", tpm);
+
+	float tsr = (temp + tpm)/2.0f;
+//	printf("tsr: %f\r\n", tsr);
+	hprim = 8000 * ((1 + 0.004f * tsr) / psr);
+//	printf("new hprim: %f\r\n", hprim);
+	float qnh = qfe + (alti/hprim);
+//	float qnh = (845.58f / pow (2.7182818d, (-0.000127605011d * 1500) ));
+
+	return qnh;
 }

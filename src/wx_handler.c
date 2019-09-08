@@ -17,6 +17,17 @@ void wx_get_all_measurements(void) {
 
 	int32_t return_value = 0;
 
+#ifdef _METEO
+	// quering MS5611 sensor for temperature
+	return_value = ms5611_get_temperature(&rte_wx_temperature, &rte_wx_ms5611_qf);
+
+	if (return_value == MS5611_OK) {
+		rte_wx_temperature_valid = rte_wx_temperature;
+
+	}
+
+#endif
+
 #if defined _METEO || defined _DALLAS_AS_TELEM
 
 	// quering dallas DS12B20 thermometer for current temperature
@@ -44,14 +55,6 @@ void wx_get_all_measurements(void) {
 #endif
 
 #ifdef _METEO
-	// quering MS5611 sensor for temperature
-	return_value = ms5611_get_temperature(&rte_wx_temperature, &rte_wx_ms5611_qf);
-
-	if (return_value == MS5611_OK) {
-		rte_wx_temperature_valid = rte_wx_temperature;
-
-	}
-
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 

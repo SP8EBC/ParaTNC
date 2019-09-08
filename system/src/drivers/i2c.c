@@ -45,7 +45,6 @@ void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 		Configure_GPIO(GPIOB,8,AFOD_OUTPUT_2MHZ);
 		Configure_GPIO(GPIOB,9,AFOD_OUTPUT_2MHZ);				
 	}
-//	NVIC->IP[31] = 0x55;
 	NVIC_SetPriority(I2C1_EV_IRQn, 1);
 
 	I2C_StructInit(&I2C_InitStructure);
@@ -69,6 +68,32 @@ void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 
 	i2c_state = I2C_IDLE;
 
+}
+
+int i2cReinit() {
+	I2C_InitTypeDef I2C_InitStructure;
+
+	I2C1->CR1 |= I2C_CR1_SWRST;
+	I2C1->CR1 &= (0xFFFFFFFF ^ I2C_CR1_SWRST);
+
+	I2C_StructInit(&I2C_InitStructure);
+
+	/* Konfiguracja I2C */
+	I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
+	I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
+	I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
+	I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+	I2C_InitStructure.I2C_ClockSpeed = 50000;
+
+	/* Potwierdzamy konfigurację przed włączeniem I2C */
+	I2C_Init(I2C1, &I2C_InitStructure);
+
+	I2C1->CR2 |= I2C_CR2_ITEVTEN;		// w��czenie generowanie przerwania od zdarzen i2c
+	I2C1->CR2 |= I2C_CR2_ITBUFEN;
+	I2C1->CR2 |= I2C_CR2_ITERREN;
+
+
+	return 0;
 }
 
 int i2cSendData(int addr, int* data, int null) {
@@ -241,6 +266,7 @@ void i2cErrIrqHandler(void) {
 	i2cErrorCounter++;
 
 	if (i2cErrorCounter > MAX_I2C_ERRORS_PER_COMM) {
+		i2cReinit();
 		i2cStop();
 
 		i2c_state = I2C_ERROR;
@@ -276,7 +302,8 @@ void i2cStart(void) {
 
 void i2cKeepTimeout(void) {
 	if (i2c_state == I2C_RXING || i2c_state == I2C_TXING) {
-		if (i2cStartTime > I2C_TIMEOUT) {
+		if (master_time - i2cStartTime > I2C_TIMEOUT) {
+			i2cReinit();
 			i2cStop();
 			i2c_state = I2C_ERROR;
 		}

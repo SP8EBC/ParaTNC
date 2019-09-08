@@ -188,7 +188,7 @@ main(int argc, char* argv[])
 
 #ifdef _METEO
   dht22_init();
-  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
   TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
