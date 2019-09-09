@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#define MS5611_MIN_PRESSURE_OK	700.0f
+#define MS5611_MIN_PRESSURE_OK	600.0f
 #define MS5611_MAX_PRESSURE_OK	1100.0f
 
 #define MS5611_MIN_TEMPERATURE_OK	-40.0f
