@@ -1,0 +1,113 @@
+ParaTNC version DE00, September 10th 2019
+-----------------------------------------
+
+1. INTRODUCTION
+ParaTNC is a software (hardware design coming) intended to work on STM32F100RB microcontroler and cheap STM32VLDISCOVERY 
+evaluation board as an multi function APRS controler. It supports key elements of what good APRS device should have:
+   -> Two directional KISS TNC (no init strings required).
+   -> WIDE1-1 digipeater, with an option to limit digipeating only to SSIDs 7, 8 and 9.
+   -> Weather station with support for various meteo sensors like: DS18B20 for temperature, MS5611 for pressure, LaCrosse TX20 for wind and DHT22 for humidity.
+   -> Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
+   -> Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
+
+2. LICENSING
+ParaTNC software and hardware are licensed under terms included to the source code in 'LICENSE' file
+
+3. SUPPORTED FEATURES OD VE.Direct PROTOCOL
+Most of Victron devices have a support both for binary and text serial protocol. By default the text procol (VE.Direct) is 
+always enabled and a device will send from its own telegrams each couple of seconds. The communication via VE.Direct is 
+avaliable through dedicated socket on the charging controller which is just 3.3V TTL levels UART, so no external ICs is 
+required to connect the PV controller to an evaluation board. In the MPPT series the comm socket is located on the bottom 
+side of the chargin controller below the fuse holder.
+
+Exact pinout of the VE.Direct comm socket is as follows, assuming that terminal screws are facing down:
+ -> Ground
+ -> TX, data from host to the PV controller
+ -> RX, data from PV controller to the host
+
+The controller sends a lot of different data which cannot be completely transmitted through APRS network due to radioprotocol 
+limitations. Only these parameters are transmitted:
+ -> Battery Current (charging as positive, discharging as negative) in third channel of telemetry.
+ -> Battery Voltage as fourth telemetry channel.
+ -> PV cell Voltage as fifth telemetry channel.
+ -> Charging Controller status (like current charging mode) and minimum/maximum battery current in last 10 minutes.   
+ -> Error Codes if any (short circuit, overheat, overvoltage on PV or battery input)
+
+4. CONFIGURATION
+At this point ParaTNC is delivered in form of source code which needs to be manually compiled by the user. Most options are 
+configured by #define in './include/station_config.h' and then hard-coded by C preprocessor during compilation. An example file
+consist a lot of comments which explains what is what, bugt generally an user can choose there what mode should be enabled:
+	-> KISS TNC
+	-> KISS TNC + DIGI
+	-> KISS TNC + DIGI + METEO
+	-> VICTRON + DIGI + METEO
+	-> VICTRON + DIGI
+
+As You see there is no option to use a KISS modem and VE.Direct protocol in the same moment as the software support only
+one UART from the micro. The KISS modem runs on default speed of 9600 bps. Telemetry is enabled by default and it will
+trasmit channels values each 10 minutes and full channel descriptions each 70 minutes.
+
+ 
+5. TOOLCHAIN AND COMPILATION
+To build ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler,
+gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS using 2016q-3
+version. It shoud work fine in any newer version of the toolchain. The easies way to get everything installed
+and configured is to use a packet manager, like aptitude in ubuntu/debian. 
+
+Information about the toolchain, installation instructions etc can be found here:
+https://launchpad.net/gcc-arm-embedded
+https://developer.arm.com/open-source/gnu-toolchain/gnu-rm
+https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa
+
+When everything is installed the reporistory can be cloned to local harddrive by using a command
+ 'git clone https://github.com/sp8ebc/ParaTNC'
+
+The example config file is named 'station_config_example.h' and should be edited and then renamed to 
+'station_config.h'. When everything is configured it is a time to go to 'Debug' directory and invoke
+command 'make' there. The source should be automatically compiled and new hex file 'ParaTNC.hex'
+should appear in the same directory. 
+
+	Finished building target: ParaTNC.elf
+ 
+	Invoking: Cross ARM GNU Create Flash Image
+	arm-none-eabi-objcopy -O ihex "ParaTNC.elf"  "ParaTNC.hex"
+	Finished building: ParaTNC.hex
+ 
+	Invoking: Cross ARM GNU Print Size
+	arm-none-eabi-size --format=berkeley "ParaTNC.elf"
+	   text	   data	    bss	    dec	    hex	filename
+	  50542	    576	   5544	  56662	   dd56	ParaTNC.elf
+	Finished building: ParaTNC.siz
+ 
+
+	22:29:38 Build Finished (took 13s.231ms)
+
+6. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
+The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
+This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
+in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration
+of modprobe daemon should be changed to ignore the ST-Link and not load any driver for it.
+
+This is done by invoking a command:
+ 'sudo echo "options usb-storage quirks=483:3744:i" >> /etc/modprobe.d/stlink_v1.conf'
+What will create a new file called 'stlink_v1.conf' in modprobe directory. After the system reboot changes should
+be applied and the programmer should be free to go. The kernel log should looks somehow like this below
+	[90639.895886] usb 2-1.1: new full-speed USB device number 13 using ehci-pci
+	[90639.990288] usb 2-1.1: New USB device found, idVendor=0483, idProduct=3744
+	[90639.990294] usb 2-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+	[90639.990296] usb 2-1.1: Product: STM32 STLink
+	[90639.990298] usb 2-1.1: Manufacturer: STMicroelectronics
+	[90639.990300] usb 2-1.1: SerialNumber: Qÿr\xffffff86RV%X\xffffffc2\xffffff87
+	[90639.990796] usb-storage 2-1.1:1.0: USB Mass Storage device detected
+	[90639.992973] usb-storage 2-1.1:1.0: device ignored
+
+The next step is to install texane-stlink which supports the ST-Link/V1 programmer and can be used to read an write
+the flash memory. Installation is quite straight forward
+  'git clone git://github.com/texane/stlink.git'
+  'cd stlink.git'
+  'make'
+  'cd build/Relase'
+  'sudo cp st-* /usr/bin'
+
+At the end the HEX file can be loaded into the microcontroler by typing a command
+  'sudo st-flash --format ihex write /dev/sr0 ParaTNC.hex' 
