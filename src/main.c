@@ -188,11 +188,19 @@ main(int argc, char* argv[])
 
 #ifdef _METEO
   dht22_init();
-  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
-  TX20Init();
+	#ifndef _DALLAS_SPLIT_PIN
+	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+	#else
+	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
+	#endif
+	TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
-  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11); // B5 output, B6 input
+	#ifndef _DALLAS_SPLIT_PIN
+	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+	#else
+	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
+	#endif
 #endif
 
   // initializing UART drvier
