@@ -304,8 +304,12 @@ main(int argc, char* argv[])
 
 	  			while(main_ax25.dcd == true);
 
+#ifndef _METEO
 	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 	  			SendOwnBeacon();
+#else
+	  			SendWXFrame(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
+#endif
 	  		}
 
 	  		button_inhibit = 1;
