@@ -33,7 +33,36 @@ limitations. Only these parameters are transmitted:
  -> Charging Controller status (like current charging mode) and minimum/maximum battery current in last 10 minutes.   
  -> Error Codes if any (short circuit, overheat, overvoltage on PV or battery input)
 
-4. CONFIGURATION
+4. TELEMETRY
+If the VE.Direct protocol suppot is disabled the ParaTNC uses telemetry packets to send internal statistics and
+general information about communication with sensors. Telemetry works in 10 minutes cycle, which means that packets are sent
+every 10 minutes and they represents a state for the time between one and another. 
+
+Analog channels:
+1st Channel: Number of packets received in 10 minutes.
+2nd Channel: Number of packets transmitted in 10 minutes (digi-ed + generated internally by the controller)
+3rd Channel: Number of digipeated packets in 10 minutes.
+4th Channel: Number of packet received from Host by KISS protocol
+5th Channel: Optional temperature from Dalls One Wire sensor.
+
+Digital Channels:
+DS_QF_FULL	- Quality Factor for One Wire temperature sensor is FULL
+DS_QF_DEGRAD	- Quality Factor for One Wire temperature sensor is DEGRADATED
+DS_QF_NAVBLE	- Quality Factor for One Wire temperature sensor is NOT AVALIABLE
+MS_QF_NAVBLE	- Quality Factor for MS5611 pressure sensor ins NOT AVALIABLE
+DHT_QF_NAVBLE	- Quality Factor for DHT22 humidity & temperature is NOT AVALIABLE
+TX20_SLEW	- LaCrosse TX20 anemometer driver dropped at least one measuremenet due to excesive slew rate.
+
+Explantion of Quality Factors: Each measuremenets signal is kept along with the Quality Factor which represents the sensor condition
+and value validity. If the QF is set to FULL it means that no communication problems happened between one telemetry cycle and another
+DEGRADATED is set if at least once the communication problem happened (CRC calculation fail, timeout etc). NOT AVALIABLE is set
+if all communication atempts failed and no valid measuremenet value is avaliable. By default each Quality Factor is set to 
+NOT AVALIABLE after the telemetry packets are sent.  
+
+The TX20 anemometer driver has a Slew Rate Limiter which keeps out all 'spikes' in values mostly due to RF interference. if the
+difference between two consecutive measuremenets excedes hardcoded limit (9m/s) the software drops the value.
+
+5. CONFIGURATION
 At this point ParaTNC is delivered in form of source code which needs to be manually compiled by the user. Most options are 
 configured by #define in './include/station_config.h' and then hard-coded by the C preprocessor during compilation. An example file
 consist a lot of comments which explains what is what, but generally an user can choose there which mode should be enabled:
@@ -48,7 +77,7 @@ one UART in the micro. The KISS modem runs on default speed of 9600 bps. Telemet
 trasmit channels values each 10 minutes and full channel descriptions each 70 minutes.
 
  
-5. TOOLCHAIN AND COMPILATION
+6. TOOLCHAIN AND COMPILATION
 To build ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler,
 gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS using 2016q-3
 version. It shoud work fine in any newer version of the toolchain. The easies way to get everything installed
@@ -82,7 +111,7 @@ should appear in the same directory.
 
 	22:29:38 Build Finished (took 13s.231ms)
 
-6. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
+7. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
 The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
 This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
 in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration

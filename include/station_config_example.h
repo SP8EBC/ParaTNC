@@ -11,10 +11,18 @@
 // Only for debugging
 //#define _DBG_TRACE
 
-// Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens
-#define _METEO
+
+#define _METEO			// Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens  
+//#define _DALLAS_AS_TELEM	// Uncomment this to enable temperture measuremenets as a fifth telem channel if _METEO is disabled
+//#define _DALLAS_SPLIT_PIN	// Uncomment this to change One Wire bus driver to work on separate pins for transmit and receive
+				// this is useful if the ground separation circuitry is used
+
+
 #define _DIGI		// Comment this do disable WIDE1-1 digipeating
-//#define _DIGI_ONLY_789
+//#define _DIGI_ONLY_789	// Uncomment this to limit the digipeater only to SSIDs 7, 8 and 9 which corresponds
+				// mostly to mobile stations. This may be used to limit power consuption or tx activity
+
+//#define _VICTRON	// Uncomment this to enable VE.Direct protocol
 
 //#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
 //#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
