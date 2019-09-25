@@ -23,6 +23,7 @@ long experience with many different stations
  -> Separate watchdog IC.
  -> Optional Radiometrix BiM1H 500mW VHF transceiver tuned on 144.800MHz.
  -> The PCB mechanical design which fits into standard Mikrotik RB411 case. 
+ -> Supplied from single +12V...14V5 DC source using standard DC barrel jack.
 
 The main problem observed during long experience with meteo stations is RF
 feedback. Most sensors (like temperature, wind and humidity) needs to be 
@@ -86,7 +87,16 @@ The connector itself repeats the Tapr (Muel) TNC-2 pinout which goes as below:
 	Pin 5 - AF from TNC to Radio
 	Pin 7 - AGND
 
-7. JUMPERS (Sketch not to scale!)
+7. Adjusting audio levels
+The ParaTNC controller has two trimpots mounted on PCB which may be used to
+tune the level of audio coming from/to the radio.
+
+The trimpot located close to the microcontroller is used to set the output signal
+level. The another one which is near right isolation transformer changes the
+input level and it is hooked up between the primary winding and DC-blocking
+electrolytic
+
+8. JUMPERS (Sketch not to scale!)
 -------------------------------------------------------------------------------
 |									      |
 |	  JP1				  MS5611 sensor			      |
@@ -132,7 +142,7 @@ DHT22 - .1' connector for DHT22 humidity sensor
 			==========
 
 
-8. CHOOSING BETWEEN RS485 AND RS232
+9. CHOOSING BETWEEN RS485 AND RS232
 ParaTNC controller has connectors for both 485 and 232 variant of RS standard.
 This doesn't automatically means that ParaTNC has two separate serial ports,
 this is still the same serial port from the microcontroller which just may
