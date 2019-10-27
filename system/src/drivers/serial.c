@@ -74,6 +74,13 @@ void srl_init(void) {
 	Configure_GPIO(GPIOA,10,PUD_INPUT);			// RX
 	Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
 	
+#ifndef _KOZIA_GORA
+
+#else
+	Configure_GPIO(GPIOD,2,GPPP_OUTPUT_2MHZ);	// re/te
+	GPIO_ResetBits(GPIOD, GPIO_Pin_2);
+#endif
+
 	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;		// wġṗczanie zegara dla USART
 
 	USART_InitTypeDef USART_InitStructure;
@@ -94,8 +101,6 @@ void srl_init(void) {
 	//srlTXing = 0;
 	//srlIdle = 1;
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-//	PORT->CR1 |= USART_CR1_IDLEIE;			// zgġaszane kiedy przy odbiorze magistrala przejdzie w idle
-//	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie zgġoszone po odbiorze bajtu gdy bufor nie jest pusty
 	srl_rx_state = SRL_RX_IDLE;
 	srl_tx_state = SRL_TX_IDLE;
 
@@ -149,8 +154,8 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 		 */
 	int i;
 
-	// resetting counter
-	srl_tx_bytes_counter = 0;
+	// the bytes counter needs to be set to 1 as the first byte is sent in this function
+	srl_tx_bytes_counter = 1;
 
 	// if an user want to send data using internal buffer
 	if (internal_external == 0) {
@@ -188,6 +193,11 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 	}
 	else return SRL_WRONG_BUFFER_PARAM;
 
+#ifndef _KOZIA_GORA
+#else
+	GPIO_SetBits(GPIOD, GPIO_Pin_2);
+#endif
+
 	// enabling transmitter
 	PORT->CR1 |= USART_CR1_TE;
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
@@ -212,14 +222,21 @@ uint8_t srl_start_tx(short leng) {
 		return SRL_DATA_TOO_LONG;
 
 	srl_tx_bytes_req = leng;
-	srl_tx_bytes_counter = 0;
+
+	// the bytes counter needs to be set to 1 as the first byte is sent in this function
+	srl_tx_bytes_counter = 1;
 
 	// setting a pointer to transmit buffer to the internal buffer inside the driver
 	srl_tx_buf_pointer = srl_tx_buffer;
 
+#ifndef _KOZIA_GORA
+#else
+	GPIO_SetBits(GPIOD, GPIO_Pin_2);
+#endif
+
 	PORT->CR1 |= USART_CR1_TE;
 	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-	PORT->DR = srl_tx_buf_pointer[srl_tx_bytes_counter];
+	PORT->DR = srl_tx_buf_pointer[0];
 
 	srl_tx_state = SRL_TXING;
 
@@ -425,6 +442,10 @@ void srl_irq_handler(void) {
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				srl_tx_state = SRL_TX_IDLE;
+#ifndef _KOZIA_GORA
+#else
+				GPIO_ResetBits(GPIOD, GPIO_Pin_2);
+#endif
 			}
 
 			if (srl_tx_bytes_counter >= TX_BUFFER_LN ||
@@ -435,6 +456,10 @@ void srl_irq_handler(void) {
 				PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				srl_tx_state = SRL_TX_IDLE;
+#ifndef _KOZIA_GORA
+#else
+				GPIO_ResetBits(GPIOD, GPIO_Pin_2);
+#endif
 			}
 
 			break;

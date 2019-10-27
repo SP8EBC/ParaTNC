@@ -121,7 +121,7 @@ void packet_tx_handler(void) {
 #elif defined _METEO
 		// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 		// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_tx20_excessive_slew_rate);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_tx20_excessive_slew_rate);
 #else
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_tx20_excessive_slew_rate);

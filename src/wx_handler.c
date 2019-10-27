@@ -19,10 +19,10 @@ void wx_get_all_measurements(void) {
 
 #ifdef _METEO
 	// quering MS5611 sensor for temperature
-	return_value = ms5611_get_temperature(&rte_wx_temperature, &rte_wx_ms5611_qf);
+	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
 
 	if (return_value == MS5611_OK) {
-		rte_wx_temperature_valid = rte_wx_temperature;
+		rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
 
 	}
 
@@ -36,14 +36,20 @@ void wx_get_all_measurements(void) {
 	// checking if communication was successfull
 	if (rte_wx_temperature_dallas != -128.0f) {
 
-		// update the current temperature
+		// store current value
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
 
-		//if (rte_wx_temperature_dallas_valid > TELEMETRY_MIN_DALLAS && rte_wx_temperature_dallas_valid < TELEMETRY_MAX_DALLAS)
-		//	// and set the quality factor
-		//	rte_wx_current_dallas_qf = DALLAS_QF_FULL;
-		//else
-		//	rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
+		// include current temperature into the average
+		dallas_average(rte_wx_temperature_dallas, &rte_wx_dallas_average);
+
+		// update the current temperature with current average
+		rte_wx_temperature_average_dallas_valid = dallas_get_average(&rte_wx_dallas_average);
+
+		// update current minimal temperature
+		rte_wx_temperature_min_dallas_valid = dallas_get_min(&rte_wx_dallas_average);
+
+		// and update maximum also
+		rte_wx_temperature_max_dallas_valid = dallas_get_max(&rte_wx_dallas_average);
 	}
 	else {
 		// if there were a communication error set the error to unavaliable

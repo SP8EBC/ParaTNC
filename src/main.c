@@ -189,17 +189,17 @@ main(int argc, char* argv[])
 #ifdef _METEO
   dht22_init();
 	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
 	#else
-	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
+	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 	#endif
 	TX20Init();
 #endif
 #ifdef _DALLAS_AS_TELEM
 	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6);
+	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
 	#else
-	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11);
+	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 	#endif
 #endif
 
