@@ -59,7 +59,7 @@ void packet_tx_handler(void) {
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
 		SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
 #else
-		SendWXFrame(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
+		SendWXFrame(&VNAME, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid);
 #endif
 		main_wait_for_tx_complete();
 
