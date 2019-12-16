@@ -6,6 +6,8 @@
 #include "diag/Trace.h"
 
 #include "rte_wx.h"
+#include "main.h"
+#include "wx_handler.h"
 
 #include "station_config.h"
 
@@ -52,14 +54,6 @@ void TX20Init(void) {
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-#ifdef _METEO
-
-	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-#endif
 
 	TIMER->PSC = 191;
 	TIMER->ARR = 75;
@@ -198,11 +192,7 @@ void TX20DataParse(void) {
 		TX20DataAverage();
 	else;
 
-//	trace_printf("TX20:Windspeed=%2.2f;Direction=%d\r\n", VNAME.Data.WindSpeed, VNAME.Data.WindDirX);
-
-	/* only for debug */
-//	sprintf(logging_buff, "S: %f D: %d RC: %d CC: %d \n\r\0", VNAME.Data.WindSpeed, VNAME.Data.WindDir, VNAME.Data.Checksum, VNAME.Data.CalcChecksum);
-//	SrlSendData(logging_buff, 0, 0);
+	wx_last_good_wind_time = master_time;
 }
 
 // Przerwania EXTI do synchronizacji

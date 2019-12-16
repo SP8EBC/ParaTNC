@@ -5,13 +5,25 @@
  *      Author: mateusz
  */
 
+#include "wx_handler.h"
+
 #include <rte_wx.h>
+#include <stm32f10x.h>
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
 
 #include "station_config.h"
 
+#include "delay.h"
 #include "telemetry.h"
+#include "main.h"
+
+#define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
+#define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
+
+uint32_t wx_last_good_temperature_time = 0;
+uint32_t wx_last_good_wind_time = 0;
+wx_pwr_state_t wx_pwr_state;
 
 void wx_get_all_measurements(void) {
 
@@ -50,6 +62,9 @@ void wx_get_all_measurements(void) {
 
 		// and update maximum also
 		rte_wx_temperature_max_dallas_valid = dallas_get_max(&rte_wx_dallas_average);
+
+		// updating last good measurement time
+		wx_last_good_temperature_time = master_time;
 	}
 	else {
 		// if there were a communication error set the error to unavaliable
@@ -101,4 +116,60 @@ void wx_pool_dht22(void) {
 		default: break;
 	}
 
+}
+
+void wx_pwr_init(void) {
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+	wx_pwr_state = WX_PWR_OFF;
+
+	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+}
+
+void wx_pwr_periodic_handle(void) {
+	// check when last measuremenets was sent by wind or temperature sensor
+	if (	(master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD ||
+			 master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD) &&
+			 wx_pwr_state == WX_PWR_ON) {
+
+		// if timeout watchod expired there is a time to reset the supply voltage
+		wx_pwr_state = WX_PWR_UNDER_RESET;
+
+		// pulling the output down to switch the relay
+		GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+		// setting the last_good timers to current value to prevent reset loop
+		wx_last_good_temperature_time = master_time;
+		wx_last_good_wind_time = master_time;
+
+		return;
+	}
+
+	// service actual supply state
+	switch (wx_pwr_state) {
+	case WX_PWR_OFF:
+
+		// one second delay
+		delay_fixed(2000);
+
+		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+
+		// power is off after power-up and needs to be powered on
+		wx_pwr_state = WX_PWR_ON;
+		break;
+	case WX_PWR_ON:
+		break;
+	case WX_PWR_UNDER_RESET:
+
+		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+
+		wx_pwr_state = WX_PWR_ON;
+
+		break;
+	}
 }

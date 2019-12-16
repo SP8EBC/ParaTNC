@@ -82,6 +82,9 @@ int32_t main_wx_sensors_pool_timer = 65500;
 // global variable used as a timer to trigger packet sending
 int32_t main_packet_tx_pool_timer = 60000;
 
+// two second pool interval
+int32_t main_two_second_pool_timer = 2000;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
@@ -187,6 +190,13 @@ main(int argc, char* argv[])
   DA_Init();
 
 #ifdef _METEO
+  // initialize sensor power control and switch off supply voltage
+  wx_pwr_init();
+
+  // call periodic handle to wait for 1 second and then switch on voltage
+  wx_pwr_periodic_handle();
+
+  // initialize humidity sensor
   dht22_init();
 	#ifndef _DALLAS_SPLIT_PIN
 	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
@@ -398,6 +408,13 @@ main(int argc, char* argv[])
 			main_packet_tx_pool_timer = 60000;
 		}
 
+		if (main_two_second_pool_timer < 10) {
+
+			wx_pwr_periodic_handle();
+
+			main_two_second_pool_timer = 2000;
+		}
+
 #ifdef _METEO
 		// dht22 sensor communication pooling
 		wx_pool_dht22();
@@ -418,6 +435,11 @@ void main_wx_decremenet_counter(void) {
 void main_packets_tx_decremenet_counter(void) {
 	if (main_packet_tx_pool_timer > 0)
 		main_packet_tx_pool_timer -= SYSTICK_TICKS_PERIOD;
+}
+
+void main_two_second_pool_decrement_counter(void) {
+	if (main_two_second_pool_timer > 0)
+		main_two_second_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
 #pragma GCC diagnostic pop

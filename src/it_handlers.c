@@ -73,6 +73,8 @@ void SysTick_Handler(void) {
 
 	main_packets_tx_decremenet_counter();
 
+	main_two_second_pool_decrement_counter();
+
 	srl_keep_timeout();
 
 	i2cKeepTimeout();
