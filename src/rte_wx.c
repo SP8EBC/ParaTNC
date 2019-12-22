@@ -9,6 +9,7 @@
 #include <rte_wx.h>
 
 float rte_wx_temperature_dallas = 0.0f, rte_wx_temperature_dallas_valid = 0.0f;
+float rte_wx_temperature_dalls_slew_rate = 0.0f;
 float rte_wx_temperature_average_dallas_valid = 0.0f;
 float rte_wx_temperature_min_dallas_valid = 0.0f, rte_wx_temperature_max_dallas_valid = 0.0f;
 float rte_wx_temperature_ms = 0.0f, rte_wx_temperature_ms_valid = 0.0f;

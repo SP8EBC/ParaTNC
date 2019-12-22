@@ -21,9 +21,12 @@
 #define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
 #define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
 
+#define WX_MAX_TEMPERATURE_SLEW_RATE 4.0f
+
 uint32_t wx_last_good_temperature_time = 0;
 uint32_t wx_last_good_wind_time = 0;
 wx_pwr_state_t wx_pwr_state;
+uint8_t wx_inhibit_slew_rate_check = 1;
 
 void wx_get_all_measurements(void) {
 
@@ -48,6 +51,31 @@ void wx_get_all_measurements(void) {
 	// checking if communication was successfull
 	if (rte_wx_temperature_dallas != -128.0f) {
 
+		// calculate the slew rate
+		rte_wx_temperature_dalls_slew_rate = rte_wx_temperature_dallas - rte_wx_temperature_dallas_valid;
+
+		// chcecking the positive (ascending) slew rate of the temperature measuremenets
+		if (rte_wx_temperature_dalls_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
+
+			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
+			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+
+			// and increase the temperature only by 1.0f to decrease slew rate
+			rte_wx_temperature_dallas += 1.0f;
+
+		}
+
+		// chcecking the negaive (descending) slew rate of the temperature measuremenets
+		if (rte_wx_temperature_dalls_slew_rate < -WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
+
+			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
+			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+
+			// and decrease the temperature only by 1.0f to decrease slew rate
+			rte_wx_temperature_dallas -= 1.0f;
+
+		}
+
 		// store current value
 		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
 
@@ -71,8 +99,9 @@ void wx_get_all_measurements(void) {
 		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 
 	}
-	//else
-	//	rte_wx_temperature_dallas_valid = 0.0f;
+
+	// enabling slew rate checking after first power up
+	wx_inhibit_slew_rate_check = 0;
 #endif
 
 #ifdef _METEO
