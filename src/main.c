@@ -41,6 +41,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
+#include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 #endif
 
@@ -203,7 +204,14 @@ main(int argc, char* argv[])
 	#else
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 	#endif
-	TX20Init();
+
+	#ifdef  _ANEMOMETER_TX20
+	  TX20Init();
+	#endif
+	#ifdef _ANEMOMETER_ANALOGUE
+	  analog_anemometer_init(0, 0, 0, 0);
+	#endif
+
 #endif
 #ifdef _DALLAS_AS_TELEM
 	#ifndef _DALLAS_SPLIT_PIN

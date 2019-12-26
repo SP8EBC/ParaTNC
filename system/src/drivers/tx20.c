@@ -11,15 +11,6 @@
 
 #include "station_config.h"
 
-//#include <stm32f10x_md_vl.h>
-
-///* only for debug */
-//#define __SERIAL
-//#include "drivers/serial.h"
-//char logging_buff[40];
-//#include <stdlib.h>
-//#include <stdio.h>
-
 #define BS VNAME.BitSampler
 #define BQ VNAME.BitQueue
 #define QL VNAME.QueueLenght
@@ -195,6 +186,7 @@ void TX20DataParse(void) {
 	wx_last_good_wind_time = master_time;
 }
 
+#ifdef _ANEMOMETER_TX20
 // Przerwania EXTI do synchronizacji
 
 #if TX == 0
@@ -300,5 +292,7 @@ void TIM4_IRQHandler( void ) {
 	TX20Batch();
 }
 #else
+#endif
+
 #endif
 

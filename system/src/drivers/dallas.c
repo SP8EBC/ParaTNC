@@ -195,7 +195,8 @@ char __attribute__((optimize("O0"))) dallas_receive_byte(void) {
 float __attribute__((optimize("O0"))) dallas_query(DallasQF *qf) {
 	unsigned char data[9];
 	int crc;
-	char temp1, temp2, sign, i;
+	int i;
+	char temp1, temp2, sign;
 	unsigned temp3;
 	float temperature = 0.0f;
 

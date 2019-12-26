@@ -50,18 +50,5 @@ void TimerConfig(void) {
 		TIM7->CR1 |= TIM_CR1_CEN;
 		TIM7->DIER |= 1;
 		NVIC_EnableIRQ( TIM7_IRQn );
-/*
-		///////////////////////////////////////////
-		/// konfiguracja TIM3 -- wysylanie wlasnej pozycji i danych WX  ///
-		///////////////////////////////////////////
-		NVIC_SetPriority(TIM3_IRQn, 4);
-		TIM3->PSC = 65534;
-		TIM3->ARR = 21960;
-		TIM3->CR1 |= TIM_CR1_DIR;
-		TIM3->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
-		TIM3->CR1 |= TIM_CR1_CEN;
-		TIM3->DIER |= 1;
-		NVIC_EnableIRQ( TIM3_IRQn );
-*/
 
 }

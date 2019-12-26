@@ -13,6 +13,7 @@
 #include "drivers/_dht22.h"
 #include "drivers/serial.h"
 #include "drivers/i2c.h"
+#include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
@@ -43,20 +44,20 @@
 // TIM1 w TX20
 
 /* Zmienne używane do oversamplingu */
-char adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
+int adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
 short int AdcValue;
 
 // this function will set all iterrupt priorities except systick
 void it_handlers_set_priorities(void) {
-	NVIC_SetPriority(TIM2_IRQn, 1);
+	NVIC_SetPriority(TIM2_IRQn, 1);				// one-wire delay
 	NVIC_SetPriority(I2C1_EV_IRQn, 2);
-	NVIC_SetPriority(TIM4_IRQn, 3);
-	NVIC_SetPriority(TIM7_IRQn, 4);
+	NVIC_SetPriority(TIM4_IRQn, 3);				// DAC
+	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
 	// systick
-	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);
-	NVIC_SetPriority(EXTI9_5_IRQn, 7);
-	NVIC_SetPriority(EXTI4_IRQn, 8);
+	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
+	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
+	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
 	NVIC_SetPriority(USART1_IRQn, 9);
 	NVIC_SetPriority(I2C1_ER_IRQn, 10);
 
@@ -111,17 +112,25 @@ void TIM2_IRQHandler( void ) {
 
 }
 
+void TIM1_TRG_COM_TIM17_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(TIM1_TRG_COM_TIM17_IRQn);
+	TIM17->SR &= ~(1<<0);
+
+	analog_anemometer_timer_irq();
+}
+
+void DMA1_Channel7_IRQHandler() {
+	NVIC_ClearPendingIRQ(DMA1_Channel7_IRQn);
+
+	analog_anemometer_dma_irq();
+
+}
+
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
 	TIM4->SR &= ~(1<<0);
-//	if (timm == 0) {
-		DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
-		DAC->SWTRIGR |= 1;
-//	}
-//	else {
-//			if (delay_5us > 0)
-//				delay_5us--;
-//	}
+	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
+	DAC->SWTRIGR |= 1;
 
 	if (main_afsk.sending) {
 		GPIO_SetBits(GPIOC, GPIO_Pin_9);

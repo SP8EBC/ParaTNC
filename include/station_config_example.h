@@ -8,34 +8,48 @@
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
-// Only for debugging
-//#define _DBG_TRACE
+/*  ------------------ */
+/* 	MODES OF OPERATION */
 
+#define _METEO				// Enable meteo station
+#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+//#define _VICTRON			// Enable support for Victron VE.Direct protocol
 
-#define _METEO			// Uncomment to enable all meteo functionality. TX20 anemometer, dallas termometer, MS5611 pressure sens  
-//#define _DALLAS_AS_TELEM	// Uncomment this to enable temperture measuremenets as a fifth telem channel if _METEO is disabled
-//#define _DALLAS_SPLIT_PIN	// Uncomment this to change One Wire bus driver to work on separate pins for transmit and receive
-				// this is useful if the ground separation circuitry is used
+/* 	MODES OF OPERATION */
+/*  ------------------ */
 
+#define PARATNC_HWREV_A
+//#define PARATNC_HWREV_B
 
-#define _DIGI		// Comment this do disable WIDE1-1 digipeating
-//#define _DIGI_ONLY_789	// Uncomment this to limit the digipeater only to SSIDs 7, 8 and 9 which corresponds
-				// mostly to mobile stations. This may be used to limit power consuption or tx activity
+/* ---------------------------- */
+/* 	WEATHER/METEO CONFIGURATION */
 
-//#define _VICTRON	// Uncomment this to enable VE.Direct protocol
+//#define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
+							// May be used even if _METEO is not enabled
+#define _DALLAS_SPLIT_PIN
+#define _ANEMOMETER_TX20
+//#define _ANEMOMETER_ANALOGUE
+#define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
+#define _ANEMOMETER_DIRECTION_ASCENDING_WITH_VOLTAGE
+#define _ANEMOMETER_VOLTAGE_FOR_1DEG_DIRECTION
+#define _ANEMOMETER_VOLTAGE_FOR_359DEG_DIRECTION
+
+/* 	WEATHER/METEO CONFIGURATION */
+/* ---------------------------- */
 
 //#define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all data transmission
 //#define _MUTE_OWN	// TODO: Not yet implemented - This will disable all self-generated packets (wx, telemetry, beacon)
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "NOCALL"
-#define _SSID 0
-#define _LAT		4900.00
+#define _CALL "N9CALL"
+#define _SSID 1
+#define _LAT		4950.00
 #define _LATNS		'N'
 #define _LON		01900.00
 #define _LONWE		'E'
-#define _COMMENT	"Modify this file to fit Your needs and rename it to station_config.h"
+#define _COMMENT	"please set a configuration!"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -56,14 +70,14 @@
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 //#define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 4		// WX packet interval in minutes
-#define _BCN_INTERVAL 15	// Own beacon interval in minutes
+#define _WX_INTERVAL 6		// WX packet interval in minutes
+#define _BCN_INTERVAL 5	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 #define _SERIAL_BAUDRATE 9600
 
 // Transmitting delay
-#define _DELAY_BASE 20	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 2	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 //#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness
@@ -116,6 +130,20 @@
 #define _DIGI
 #endif
 
+#if defined(PARATNC_HWREV_A) && (defined (_METEO) || defined (_DALLAS_AS_TELEM)) && !defined(_DALLAS_SPLIT_PIN)
+#define _DALLAS_SPLIT_PIN
+#endif
 
+#if defined(PARATNC_HWREV_B) && (defined (_METEO) || defined (_DALLAS_AS_TELEM)) && !defined(_DALLAS_SPLIT_PIN)
+#define _DALLAS_SPLIT_PIN
+#endif
+
+#if defined(_ANEMOMETER_TX20) && defined(_ANEMOMETER_ANALOGUE)
+#error "You cannot use two anemometers at once!!!"
+#endif
+
+#if !defined(_ANEMOMETER_TX20) && !defined(_ANEMOMETER_ANALOGUE) && defined(_METEO)
+#define _ANEMOMETER_TX20
+#endif
 
 #endif /* STATION_CONFIG_H_ */

@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../system/src/drivers/_dht22.c \
+../system/src/drivers/analog_anemometer.c \
 ../system/src/drivers/dallas.c \
 ../system/src/drivers/gpio_conf.c \
 ../system/src/drivers/i2c.c \
@@ -15,6 +16,7 @@ C_SRCS += \
 
 OBJS += \
 ./system/src/drivers/_dht22.o \
+./system/src/drivers/analog_anemometer.o \
 ./system/src/drivers/dallas.o \
 ./system/src/drivers/gpio_conf.o \
 ./system/src/drivers/i2c.o \
@@ -25,6 +27,7 @@ OBJS += \
 
 C_DEPS += \
 ./system/src/drivers/_dht22.d \
+./system/src/drivers/analog_anemometer.d \
 ./system/src/drivers/dallas.d \
 ./system/src/drivers/gpio_conf.d \
 ./system/src/drivers/i2c.d \
