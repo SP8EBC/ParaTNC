@@ -20,6 +20,8 @@ extern float rte_wx_temperature_min_dallas_valid, rte_wx_temperature_max_dallas_
 extern float rte_wx_temperature_ms, rte_wx_temperature_ms_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
 
+extern uint16_t rte_wx_windspeed_pulses;
+
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
 extern dht22Values rte_wx_dht, rte_wx_dht_valid;

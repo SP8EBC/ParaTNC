@@ -121,6 +121,7 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void) {
 
 void DMA1_Channel7_IRQHandler() {
 	NVIC_ClearPendingIRQ(DMA1_Channel7_IRQn);
+	DMA_ClearITPendingBit(DMA1_IT_GL7);
 
 	analog_anemometer_dma_irq();
 

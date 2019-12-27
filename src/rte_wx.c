@@ -15,6 +15,8 @@ float rte_wx_temperature_min_dallas_valid = 0.0f, rte_wx_temperature_max_dallas_
 float rte_wx_temperature_ms = 0.0f, rte_wx_temperature_ms_valid = 0.0f;
 float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
 
+uint16_t rte_wx_windspeed_pulses = 0;
+
 uint8_t rte_wx_tx20_excessive_slew_rate = 0;
 
 dht22Values rte_wx_dht, rte_wx_dht_valid;		// quality factor inside this structure
