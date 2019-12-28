@@ -12,6 +12,7 @@
 #include <stm32f10x_tim.h>
 #include <stm32f10x_dma.h>
 #include "drivers/gpio_conf.h"
+#include "drivers/dma_helper_functions.h"
 #include "rte_wx.h"
 
 #define MINUM_PULSE_LN 15
@@ -20,12 +21,18 @@
 // an array where DMA will store values of the timer latched by compare-capture input
 uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
+// an array with calculated pulses durations
 uint16_t analog_anemometer_pulses_durations[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
 // a static copy of impulse-meters/second contact
 uint16_t analog_anemometer_pulses_per_ms_constant = 0;
 
+// a flag which will be raised if not enought pulses has been copied by a DMA before a timer overflows
 uint8_t analog_anemometer_timer_has_been_fired = 0;
+
+uint8_t analog_anemometer_slew_limit_fired = 0;
+
+uint8_t analog_anemometer_deboucing_fired = 0;
 
 DMA_InitTypeDef DMA_InitStruct;
 
@@ -90,9 +97,7 @@ void analog_anemometer_init(uint16_t pulses_per_ms, uint16_t mvolts_for_1deg,
 	DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
 	DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 
-	DMA_Init(DMA1_Channel7, &DMA_InitStruct);
-	DMA1_Channel7->CCR |= DMA_CCR7_EN;
-	DMA1_Channel7->CCR |= DMA_CCR7_TCIE;
+	dma_helper_start_ch7(&DMA_InitStruct);
 
 	NVIC_EnableIRQ( DMA1_Channel7_IRQn );
 
@@ -111,6 +116,10 @@ void analog_anemometer_dma_irq(void) {
 	uint16_t minimum_pulse_ln = 60000;
 	uint16_t maximum_pulse_ln = 0;
 
+	// resetting flags
+	analog_anemometer_slew_limit_fired = 0;
+	analog_anemometer_deboucing_fired = 0;
+
 	// checking if timer overflowed (raised an iterrupt)
 	if (analog_anemometer_timer_has_been_fired == 1) {
 		rte_wx_windspeed_pulses = 1;
@@ -119,9 +128,8 @@ void analog_anemometer_dma_irq(void) {
 		for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++)
 			analog_anemometer_windspeed_pulses_time[i] = 0;
 
-		DMA_Init(DMA1_Channel7, &DMA_InitStruct);
-		DMA1_Channel7->CCR |= DMA_CCR7_EN;
-		DMA1_Channel7->CCR |= DMA_CCR7_TCIE;
+		// restarting the DMA channel
+		dma_helper_start_ch7(&DMA_InitStruct);
 
 		return;
 	}
@@ -134,10 +142,12 @@ void analog_anemometer_dma_irq(void) {
 		analog_anemometer_pulses_durations[i] = pulse_ln;
 	}
 
-	// debouncing captured times
+	// debouncing captured pulse times
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++) {
-		if (analog_anemometer_pulses_durations[i] < MINUM_PULSE_LN)
+		if (analog_anemometer_pulses_durations[i] < MINUM_PULSE_LN) {
 			analog_anemometer_pulses_durations[i] = 0;
+			analog_anemometer_deboucing_fired = 1;
+		}
 	}
 
 	// limiting slew rate
@@ -155,10 +165,16 @@ void analog_anemometer_dma_irq(void) {
 		// if current pulse is much longer than previous
 		if ( diff > MAXIMUM_PULSE_SLEW_RATE ) {
 			analog_anemometer_pulses_durations[i] = previous_pulse_ln + MAXIMUM_PULSE_SLEW_RATE;
+			analog_anemometer_slew_limit_fired = 1;
 		}
 		// if previous pulse is much longer than current
-		else {
+		else if (diff < -MAXIMUM_PULSE_SLEW_RATE){
 			analog_anemometer_pulses_durations[i - 1] = pulse_ln + MAXIMUM_PULSE_SLEW_RATE;
+			analog_anemometer_slew_limit_fired = 1;
+		}
+		// if this pulse time is ok do nothing.
+		else {
+			;
 		}
 	}
 
@@ -192,9 +208,7 @@ void analog_anemometer_dma_irq(void) {
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++)
 		analog_anemometer_pulses_durations[i] = 0;
 
-	DMA_Init(DMA1_Channel7, &DMA_InitStruct);
-	DMA1_Channel7->CCR |= DMA_CCR7_EN;
-	DMA1_Channel7->CCR |= DMA_CCR7_TCIE;
+	dma_helper_start_ch7(&DMA_InitStruct);
 
 	return;
 }

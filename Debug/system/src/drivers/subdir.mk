@@ -7,6 +7,7 @@ C_SRCS += \
 ../system/src/drivers/_dht22.c \
 ../system/src/drivers/analog_anemometer.c \
 ../system/src/drivers/dallas.c \
+../system/src/drivers/dma_helper_functions.c \
 ../system/src/drivers/gpio_conf.c \
 ../system/src/drivers/i2c.c \
 ../system/src/drivers/ms5611.c \
@@ -18,6 +19,7 @@ OBJS += \
 ./system/src/drivers/_dht22.o \
 ./system/src/drivers/analog_anemometer.o \
 ./system/src/drivers/dallas.o \
+./system/src/drivers/dma_helper_functions.o \
 ./system/src/drivers/gpio_conf.o \
 ./system/src/drivers/i2c.o \
 ./system/src/drivers/ms5611.o \
@@ -29,6 +31,7 @@ C_DEPS += \
 ./system/src/drivers/_dht22.d \
 ./system/src/drivers/analog_anemometer.d \
 ./system/src/drivers/dallas.d \
+./system/src/drivers/dma_helper_functions.d \
 ./system/src/drivers/gpio_conf.d \
 ./system/src/drivers/i2c.d \
 ./system/src/drivers/ms5611.d \
