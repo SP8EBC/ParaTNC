@@ -21,11 +21,11 @@
 // an array where DMA will store values of the timer latched by compare-capture input
 uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
-// an array with calculated pulses durations
-uint16_t analog_anemometer_pulses_durations[ANALOG_ANEMOMETER_SPEED_PULSES_N];
+// an array with calculated times between pulses
+uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
 // a static copy of impulse-meters/second contact
-uint16_t analog_anemometer_pulses_per_ms_constant = 0;
+uint16_t analog_anemometer_pulses_per_m_s_constant = 0;
 
 // a flag which will be raised if not enought pulses has been copied by a DMA before a timer overflows
 uint8_t analog_anemometer_timer_has_been_fired = 0;
@@ -36,16 +36,16 @@ uint8_t analog_anemometer_deboucing_fired = 0;
 
 DMA_InitTypeDef DMA_InitStruct;
 
-void analog_anemometer_init(uint16_t pulses_per_ms, uint16_t mvolts_for_1deg,
+void analog_anemometer_init(uint16_t pulses_per_meter_second, uint16_t mvolts_for_1deg,
 		uint16_t mvolts_for_359deg, uint8_t reversed) {
 
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
 
-	analog_anemometer_pulses_per_ms_constant = pulses_per_ms;
+	analog_anemometer_pulses_per_m_s_constant = pulses_per_meter_second;
 
 	// initializing arrays;
 	memset(analog_anemometer_windspeed_pulses_time, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
-	memset(analog_anemometer_pulses_durations, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
+	memset(analog_anemometer_time_between_pulses, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
 
 	// enabling the clock for TIM17
 	RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
@@ -134,26 +134,26 @@ void analog_anemometer_dma_irq(void) {
 		return;
 	}
 
-	// calculating pulses duration time
+	// calculating time between pulses
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N - 1; i++) {
 		pulse_ln = analog_anemometer_windspeed_pulses_time[i + 1] -
 				analog_anemometer_windspeed_pulses_time[i];
 
-		analog_anemometer_pulses_durations[i] = pulse_ln;
+		analog_anemometer_time_between_pulses[i] = pulse_ln;
 	}
 
 	// debouncing captured pulse times
-	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++) {
-		if (analog_anemometer_pulses_durations[i] < MINUM_PULSE_LN) {
-			analog_anemometer_pulses_durations[i] = 0;
+	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N - 1; i++) {
+		if (analog_anemometer_time_between_pulses[i] < MINUM_PULSE_LN) {
+			analog_anemometer_time_between_pulses[i] = 0;
 			analog_anemometer_deboucing_fired = 1;
 		}
 	}
 
 	// limiting slew rate
 	for (i = 1; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++) {
-		previous_pulse_ln = analog_anemometer_pulses_durations[i - 1];
-		pulse_ln = analog_anemometer_pulses_durations[i];
+		previous_pulse_ln = analog_anemometer_time_between_pulses[i - 1];
+		pulse_ln = analog_anemometer_time_between_pulses[i];
 
 		// skipping pulses erased by debouncing
 		if (pulse_ln == 0 || previous_pulse_ln == 0) {
@@ -162,14 +162,14 @@ void analog_anemometer_dma_irq(void) {
 
 		int32_t diff = pulse_ln - previous_pulse_ln;
 
-		// if current pulse is much longer than previous
+		// if current inter-pulse time is much longer than previous (some pulse is missing?)
 		if ( diff > MAXIMUM_PULSE_SLEW_RATE ) {
-			analog_anemometer_pulses_durations[i] = previous_pulse_ln + MAXIMUM_PULSE_SLEW_RATE;
+			analog_anemometer_time_between_pulses[i] = previous_pulse_ln + ((uint32_t)MAXIMUM_PULSE_SLEW_RATE >> 3);
 			analog_anemometer_slew_limit_fired = 1;
 		}
-		// if previous pulse is much longer than current
+		// if previous inter-pulse time is much longer than current
 		else if (diff < -MAXIMUM_PULSE_SLEW_RATE){
-			analog_anemometer_pulses_durations[i - 1] = pulse_ln + MAXIMUM_PULSE_SLEW_RATE;
+			analog_anemometer_time_between_pulses[i - 1] = pulse_ln + ((uint32_t)MAXIMUM_PULSE_SLEW_RATE >> 3);
 			analog_anemometer_slew_limit_fired = 1;
 		}
 		// if this pulse time is ok do nothing.
@@ -178,10 +178,10 @@ void analog_anemometer_dma_irq(void) {
 		}
 	}
 
-	// find maximum and minimum values within pulses duration
+	// find maximum and minimum values within inter-pulses times
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++) {
 
-		pulse_ln = analog_anemometer_pulses_durations[i];
+		pulse_ln = analog_anemometer_time_between_pulses[i];
 
 		// skipping pulses erased by debouncing
 		if (pulse_ln == 0)
@@ -196,7 +196,7 @@ void analog_anemometer_dma_irq(void) {
 
 	}
 
-	// calculating the target pulse duration
+	// calculating the target inter-pulse duration
 	rte_wx_windspeed_pulses = (uint16_t)((maximum_pulse_ln + minimum_pulse_ln) / 2);
 
 	// resetting the timer
@@ -206,9 +206,18 @@ void analog_anemometer_dma_irq(void) {
 		analog_anemometer_windspeed_pulses_time[i] = 0;
 
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++)
-		analog_anemometer_pulses_durations[i] = 0;
+		analog_anemometer_time_between_pulses[i] = 0;
 
 	dma_helper_start_ch7(&DMA_InitStruct);
 
 	return;
+}
+
+uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
+	uint32_t output = 0;
+
+	uint32_t scaled_pulses_frequency = 1000000 / (inter_pulse_time * 10);
+	output = scaled_pulses_frequency / (analog_anemometer_pulses_per_m_s_constant);
+
+	return output;
 }
