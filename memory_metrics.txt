@@ -1,0 +1,116 @@
+
+#define SW_VER "DE06"
+#define SW_DATE "05012020"
+
+---
+
+MEMORY USAGE METRICS:
+
+14:11:23 **** Incremental Build of configuration Debug for project ParaTNC ****
+make all 
+Invoking: Cross ARM GNU Print Size
+arm-none-eabi-size --format=berkeley "ParaTNC.elf"
+   text	   data	    bss	    dec	    hex	filename
+  52110	    588	   5440	  58138	   e31a	ParaTNC.elf
+Finished building: ParaTNC.siz
+ 
+
+14:11:24 Build Finished (took 422ms)
+
+---
+
+CONFIGURATION USED DURING COMPILATION:
+
+#ifndef STATION_CONFIG_H_
+#define STATION_CONFIG_H_
+
+/*  ------------------ */
+/* 	MODES OF OPERATION */
+
+#define _METEO				// Enable meteo station
+#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+//#define _VICTRON			// Enable support for Victron VE.Direct protocol
+
+/* 	MODES OF OPERATION */
+/*  ------------------ */
+
+#define PARATNC_HWREV_A
+//#define PARATNC_HWREV_B
+
+/* ---------------------------- */
+/* 	WEATHER/METEO CONFIGURATION */
+
+//#define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
+							// May be used even if _METEO is not enabled
+#define _DALLAS_SPLIT_PIN
+//#define _ANEMOMETER_TX20
+#define _ANEMOMETER_ANALOGUE
+#define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
+#define _ANEMOMETER_DIRECTION_ASCENDING_WITH_VOLTAGE
+#define _ANEMOMETER_VOLTAGE_FOR_1DEG_DIRECTION
+#define _ANEMOMETER_VOLTAGE_FOR_359DEG_DIRECTION
+
+/* 	WEATHER/METEO CONFIGURATION */
+/* ---------------------------- */
+
+
+======================================================================
+
+#define SW_VER "DE06"
+#define SW_DATE "05012020"
+
+---
+
+MEMORY USAGE METRICS:
+
+Invoking: Cross ARM GNU Create Flash Image
+arm-none-eabi-objcopy -O ihex "ParaTNC.elf"  "ParaTNC.hex"
+Finished building: ParaTNC.hex
+ 
+Invoking: Cross ARM GNU Print Size
+arm-none-eabi-size --format=berkeley "ParaTNC.elf"
+   text	   data	    bss	    dec	    hex	filename
+  51574	    588	   5796	  57958	   e266	ParaTNC.elf
+Finished building: ParaTNC.siz
+ 
+
+12:15:35 Build Finished (took 8s.439ms)
+
+---
+
+CONFIGURATION USED DURING COMPILATION:
+
+#ifndef STATION_CONFIG_H_
+#define STATION_CONFIG_H_
+
+/*  ------------------ */
+/* 	MODES OF OPERATION */
+
+#define _METEO				// Enable meteo station
+#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+//#define _VICTRON			// Enable support for Victron VE.Direct protocol
+
+/* 	MODES OF OPERATION */
+/*  ------------------ */
+
+#define PARATNC_HWREV_A
+//#define PARATNC_HWREV_B
+
+/* ---------------------------- */
+/* 	WEATHER/METEO CONFIGURATION */
+
+//#define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
+							// May be used even if _METEO is not enabled
+#define _DALLAS_SPLIT_PIN
+#define _ANEMOMETER_TX20
+//#define _ANEMOMETER_ANALOGUE
+#define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
+#define _ANEMOMETER_DIRECTION_ASCENDING_WITH_VOLTAGE
+#define _ANEMOMETER_VOLTAGE_FOR_1DEG_DIRECTION
+#define _ANEMOMETER_VOLTAGE_FOR_359DEG_DIRECTION
+
+/* 	WEATHER/METEO CONFIGURATION */
+/* ---------------------------- */
+

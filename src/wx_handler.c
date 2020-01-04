@@ -9,8 +9,10 @@
 
 #include <rte_wx.h>
 #include <stm32f10x.h>
+#include <math.h>
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
+#include "drivers/analog_anemometer.h"
 
 #include "station_config.h"
 
@@ -145,6 +147,73 @@ void wx_pool_dht22(void) {
 		default: break;
 	}
 
+}
+
+void wx_pool_analog_anemometer(void) {
+
+	// locals
+	uint32_t average_windspeed = 0;
+	uint32_t wind_direction_x_avg = 0;
+	uint32_t wind_direction_y_avg = 0;
+	uint16_t wind_direction_x = 0;
+	uint16_t wind_direction_y = 0;
+	short i = 0;
+
+	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
+	uint16_t scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+
+	// putting the wind speed into circular buffer
+	rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;
+
+	// increasing the iterator to the windspeed buffer
+	rte_wx_windspeed_it++;
+
+	// checking if iterator reached an end of the buffer
+	if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN)
+		rte_wx_windspeed_it = 0;
+
+	// calculating the average windspeed
+	for (i = 0; i < WIND_AVERAGE_LEN; i++)
+		average_windspeed += rte_wx_windspeed[i];
+
+	average_windspeed /= WIND_AVERAGE_LEN;
+
+	// store the value in rte
+	rte_wx_average_windspeed = average_windspeed;
+
+	// reuse the local variable to find maximum value
+	average_windspeed = 0;
+
+	// looking for gusts
+	for (i = 0; i < WIND_AVERAGE_LEN; i++) {
+		if (average_windspeed < rte_wx_windspeed[i])
+			average_windspeed = rte_wx_windspeed[i];
+	}
+
+	// storing wind gusts value in rte
+	rte_wx_max_windspeed = average_windspeed;
+
+	// calculating average wind direction
+	for (i = 0; i < WIND_AVERAGE_LEN; i++) {
+		// split the wind direction into x and y component
+		wind_direction_x = (uint16_t)(100.0f * cosf((float)rte_wx_winddirection[i] * M_PI/180.0f));
+		wind_direction_y = (uint16_t)(100.0f * sinf((float)rte_wx_winddirection[i] * M_PI/180.0f));
+
+		// adding components to calculate average
+		wind_direction_x_avg += wind_direction_x;
+		wind_direction_y_avg += wind_direction_y;
+
+	}
+
+	// dividing to get average of x and y componen
+	wind_direction_x_avg /= WIND_AVERAGE_LEN;
+	wind_direction_y_avg /= WIND_AVERAGE_LEN;
+
+	// converting x & y component of wind direction back to an angle
+	rte_wx_average_winddirection = (uint16_t)(atan2f(wind_direction_y_avg , wind_direction_x_avg) * 180.0f/M_PI);
+
+	if (rte_wx_average_winddirection < 0)
+		rte_wx_average_winddirection += 360;
 }
 
 void wx_pwr_init(void) {

@@ -8,7 +8,7 @@
 #include <stm32f10x.h>
 
 
-void LedConfig(void) {
+void led_init(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;

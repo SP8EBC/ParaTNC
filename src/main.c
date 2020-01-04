@@ -86,6 +86,9 @@ int32_t main_packet_tx_pool_timer = 60000;
 // two second pool interval
 int32_t main_two_second_pool_timer = 2000;
 
+// ten second pool interval
+int32_t main_ten_second_pool_timer = 10000;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
@@ -183,12 +186,21 @@ main(int argc, char* argv[])
   main_own_path_ln = ConfigPath(main_own_path);
 
 #ifdef _METEO
+
+  // initialize i2c controller
   i2cConfigure();
 #endif
-  LedConfig();
+
+  // initialize GPIO pins leds are connecting to
+  led_init();
+
+  // initialize AX25 & APRS stuff
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, 0x00);
   DA_Init();
+
+  // initialize variables & arrays in rte_wx
+  rte_wx_init();
 
 #ifdef _METEO
   // initialize sensor power control and switch off supply voltage
@@ -326,8 +338,14 @@ main(int argc, char* argv[])
 	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 	  			SendOwnBeacon();
 #else
+		#ifdef _ANEMOMETER_TX20
+
 	  			SendWXFrame(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
-#endif
+		#else
+	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
+
+		#endif // #ifdef _ANEMOMETER_TX20
+#endif // #ifndef _METEO
 	  		}
 
 	  		button_inhibit = 1;
@@ -423,6 +441,13 @@ main(int argc, char* argv[])
 			main_two_second_pool_timer = 2000;
 		}
 
+		if (main_ten_second_pool_timer < 10) {
+
+			wx_pool_analog_anemometer();
+
+			main_ten_second_pool_timer = 10000;
+		}
+
 #ifdef _METEO
 		// dht22 sensor communication pooling
 		wx_pool_dht22();
@@ -435,20 +460,7 @@ uint16_t main_get_adc_sample(void) {
 	return (uint16_t) ADC1->DR;
 }
 
-void main_wx_decremenet_counter(void) {
-	if (main_wx_sensors_pool_timer > 0)
-		main_wx_sensors_pool_timer -= SYSTICK_TICKS_PERIOD;
-}
 
-void main_packets_tx_decremenet_counter(void) {
-	if (main_packet_tx_pool_timer > 0)
-		main_packet_tx_pool_timer -= SYSTICK_TICKS_PERIOD;
-}
-
-void main_two_second_pool_decrement_counter(void) {
-	if (main_two_second_pool_timer > 0)
-		main_two_second_pool_timer -= SYSTICK_TICKS_PERIOD;
-}
 
 #pragma GCC diagnostic pop
 

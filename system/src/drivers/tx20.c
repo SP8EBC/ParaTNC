@@ -1,4 +1,7 @@
 #include "drivers/tx20.h"
+
+#ifdef _ANEMOMETER_TX20
+
 #include <stdlib.h>
 //#define STM32F10X_MD_VL
 #include <stm32f10x.h>
@@ -8,8 +11,6 @@
 #include "rte_wx.h"
 #include "main.h"
 #include "wx_handler.h"
-
-#include "station_config.h"
 
 #define BS VNAME.BitSampler
 #define BQ VNAME.BitQueue
@@ -38,7 +39,7 @@ void inline TX20BlinkLed(void) {
 #endif
 
 void TX20Init(void) {
-	char i;
+	int i;
 
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
@@ -295,4 +296,6 @@ void TIM4_IRQHandler( void ) {
 #endif
 
 #endif
+
+#endif	// #define _ANEMOMETER_TX20
 

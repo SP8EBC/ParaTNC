@@ -1,6 +1,10 @@
 #ifndef __TX20_H
 #define __TX20_H
 
+#include "station_config.h"
+
+#ifdef _ANEMOMETER_TX20
+
 #define VNAME TX20	// nazwa tworzonej zmiennej strukturalnej
 
 typedef struct {
@@ -71,4 +75,6 @@ void TX20DataParse(void);
 
 extern Anemometer VNAME;
 
-#endif
+#endif // #ifdef _ANEMOMETER_TX20
+
+#endif // #ifndef __TX20_H
