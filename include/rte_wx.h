@@ -36,7 +36,7 @@ extern uint8_t rte_wx_tx20_excessive_slew_rate;
 extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 
 extern DallasQF rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
-DallasAverage_t rte_wx_dallas_average;
+extern DallasAverage_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
 
 #ifdef __cplusplus

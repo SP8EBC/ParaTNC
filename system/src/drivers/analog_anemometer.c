@@ -18,6 +18,8 @@
 #define MINUM_PULSE_LN 15
 #define MAXIMUM_PULSE_SLEW_RATE 4000
 
+#define UF_MAXIMUM_FREQUENCY 32767
+
 // an array where DMA will store values of the timer latched by compare-capture input
 uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
@@ -35,6 +37,16 @@ uint8_t analog_anemometer_slew_limit_fired = 0;
 uint8_t analog_anemometer_deboucing_fired = 0;
 
 DMA_InitTypeDef DMA_InitStruct;
+
+// direction recalculated from v/f
+uint16_t analog_anemometer_direction = 0;
+
+// scaling value which sets the upper value in percents of the frequency in relation to 32767 Hz
+// translating this to a voltage at an input of the U/f converter this sets a maximum ratio of the
+// potentiometer inside the direction
+uint8_t analog_anemometer_upper_scaling = 100;
+
+uint16_t analog_anemometer_last_direction_cnt = 0;
 
 void analog_anemometer_init(uint16_t pulses_per_meter_second, uint16_t mvolts_for_1deg,
 		uint16_t mvolts_for_359deg, uint8_t reversed) {
@@ -101,6 +113,25 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint16_t mvolts_fo
 
 	NVIC_EnableIRQ( DMA1_Channel7_IRQn );
 
+	// Initializing direction
+
+	// Configuring PD2 as an input for TIM3_ETR
+	Configure_GPIO(GPIOD,2,FLOATING_INPUT);
+
+	// initializing structure with default values
+	TIM_TimeBaseStructInit(&TIM_TimeBaseInitStruct);
+
+	// using default values of InitStruct
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
+
+	// enabling an external trigger to the TIM3
+	TIM_ETRClockMode2Config(TIM3, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_Inverted, 0);
+
+	// Starting timer
+	TIM_Cmd(TIM3, ENABLE);
+
+	// disable an interrupt from TIMER3
+	NVIC_DisableIRQ(TIM3_IRQn);
 
 	return;
 }
@@ -213,6 +244,11 @@ void analog_anemometer_dma_irq(void) {
 	return;
 }
 
+/**
+ * This functions takes the average time between two pulses expressed as
+ * a multiplicity of one millisecond (2500 equals two and half of a second)
+ * and converts it to the windspeed in 0.1 m/s incremenets (4 equals to .4m/s, 18 equals to 1.8m/s)
+ */
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
 	uint32_t output = 0;
 
@@ -220,4 +256,40 @@ uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
 	output = scaled_pulses_frequency / (analog_anemometer_pulses_per_m_s_constant);
 
 	return output;
+}
+
+int16_t analog_anemometer_direction_handler(void) {
+
+	// geting current counter value
+	uint16_t current_value = TIM_GetCounter(TIM3);
+
+	// checking if current counter value is lesser or equals to previous one
+	if (current_value <= analog_anemometer_last_direction_cnt) {
+
+		// raise an error and reset the counter to the initial value
+		TIM_SetCounter(TIM3, 0);
+
+		// reset the previous value of the counter
+		analog_anemometer_last_direction_cnt = 0;
+
+		return -1;
+	}
+
+	// upscaling by factor of 1000 to omit usage of the floating point arithmetics
+	uint32_t upscaled_frequecy = current_value * 1000;
+
+	// calculating the ratio between the current input frequency and the maximum one
+	uint16_t ratio_of_upscaled_frequency = upscaled_frequecy / UF_MAXIMUM_FREQUENCY;
+
+	// converting the upscaled ratio into the upscaled angle
+	uint32_t upscaled_angle = ratio_of_upscaled_frequency * 360;
+
+	uint32_t angle_adjusted_to_real_max_freq = upscaled_angle * analog_anemometer_upper_scaling;
+
+	// downscaling the
+	uint16_t downscaled_angle = angle_adjusted_to_real_max_freq / 100000;
+
+	analog_anemometer_last_direction_cnt = 0;
+
+	return downscaled_angle;
 }

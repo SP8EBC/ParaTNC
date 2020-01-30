@@ -27,5 +27,6 @@ void analog_anemometer_init(	uint16_t pulses_per_meter_second,
 void analog_anemometer_timer_irq(void);
 void analog_anemometer_dma_irq(void);
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time);
+int16_t analog_anemometer_direction_handler(void);
 
 #endif /* INCLUDE_DRIVERS_ANALOG_ANEMOMETER_H_ */
