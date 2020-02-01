@@ -46,6 +46,11 @@ uint16_t analog_anemometer_direction = 0;
 // potentiometer inside the direction
 uint8_t analog_anemometer_upper_scaling = 100;
 
+uint8_t analog_anemometer_lower_scaling = 10;
+
+// this controls if the direction increases (1) od decreaes (-1) with the frequency
+int8_t analog_anemometer_direction_pol = 1;
+
 uint16_t analog_anemometer_last_direction_cnt = 0;
 
 void analog_anemometer_init(uint16_t pulses_per_meter_second, uint16_t mvolts_for_1deg,
@@ -260,19 +265,18 @@ uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
 
 int16_t analog_anemometer_direction_handler(void) {
 
+	TIM_Cmd(TIM3, DISABLE);
+
 	// geting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);
 
-	// checking if current counter value is lesser or equals to previous one
-	if (current_value <= analog_anemometer_last_direction_cnt) {
+	// if the value is greater than maximum one just ignore
+	if (current_value > UF_MAXIMUM_FREQUENCY) {
 
-		// raise an error and reset the counter to the initial value
-		TIM_SetCounter(TIM3, 0);
+		// and reinitialize the timer before returning from the function
+		analog_anemometer_direction_reset();
 
-		// reset the previous value of the counter
-		analog_anemometer_last_direction_cnt = 0;
-
-		return -1;
+		return rte_wx_winddirection_last;
 	}
 
 	// upscaling by factor of 1000 to omit usage of the floating point arithmetics
@@ -286,10 +290,31 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	uint32_t angle_adjusted_to_real_max_freq = upscaled_angle * analog_anemometer_upper_scaling;
 
-	// downscaling the
+	// downscaling the angle
 	uint16_t downscaled_angle = angle_adjusted_to_real_max_freq / 100000;
+
+	// adjusting to polarity of the signal
+	downscaled_angle *= analog_anemometer_direction_pol;
 
 	analog_anemometer_last_direction_cnt = 0;
 
+	rte_wx_winddirection_last = downscaled_angle;
+
+	TIM_SetCounter(TIM3, 0);
+
+	TIM_Cmd(TIM3, ENABLE);
+
 	return downscaled_angle;
+}
+
+void analog_anemometer_direction_reset(void) {
+
+	// stopping the timer
+	TIM_Cmd(TIM3, DISABLE);
+
+	// resetting it
+	TIM_SetCounter(TIM3, 0);
+
+	// end then restarting once again
+	TIM_Cmd(TIM3, ENABLE);
 }

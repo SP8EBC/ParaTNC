@@ -13,6 +13,7 @@ extern uint32_t master_time;
 
 extern int32_t main_wx_sensors_pool_timer;
 extern int32_t main_packet_tx_pool_timer;
+extern int32_t main_one_second_pool_timer;
 extern int32_t main_two_second_pool_timer;
 extern int32_t main_ten_second_pool_timer;
 
@@ -47,8 +48,12 @@ inline void main_packets_tx_decremenet_counter(void) {
 		main_packet_tx_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
+inline void main_one_second_pool_decremenet_counter(void) {
+	if (main_one_second_pool_timer > 0)
+		main_one_second_pool_timer -= SYSTICK_TICKS_PERIOD;
+}
+
 inline void main_two_second_pool_decrement_counter(void) {
-	if (main_two_second_pool_timer > 0)
 		main_two_second_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 

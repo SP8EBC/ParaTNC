@@ -83,6 +83,9 @@ int32_t main_wx_sensors_pool_timer = 65500;
 // global variable used as a timer to trigger packet sending
 int32_t main_packet_tx_pool_timer = 60000;
 
+// one second pool interval
+int32_t main_one_second_pool_timer = 1000;
+
 // two second pool interval
 int32_t main_two_second_pool_timer = 2000;
 
@@ -432,6 +435,19 @@ main(int argc, char* argv[])
 			packet_tx_handler();
 
 			main_packet_tx_pool_timer = 60000;
+		}
+
+		if (main_one_second_pool_timer < 10) {
+
+			analog_anemometer_direction_handler();
+
+			main_one_second_pool_timer = 1000;
+		}
+		else if (main_one_second_pool_timer < -10) {
+
+			analog_anemometer_direction_reset();
+
+			main_one_second_pool_timer = 1000;
 		}
 
 		if (main_two_second_pool_timer < 10) {

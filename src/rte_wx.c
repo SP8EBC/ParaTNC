@@ -20,6 +20,7 @@ uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
 uint8_t rte_wx_windspeed_it = 0;
 uint16_t rte_wx_winddirection[WIND_AVERAGE_LEN];
 uint8_t rte_wx_winddirection_it = 0;
+uint16_t rte_wx_winddirection_last = 0;
 uint16_t rte_wx_average_windspeed = 0;
 uint16_t rte_wx_max_windspeed = 0;
 int16_t rte_wx_average_winddirection = 0;

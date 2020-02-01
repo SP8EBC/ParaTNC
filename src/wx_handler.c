@@ -30,6 +30,8 @@ uint32_t wx_last_good_wind_time = 0;
 wx_pwr_state_t wx_pwr_state;
 uint8_t wx_inhibit_slew_rate_check = 1;
 
+static const float direction_constant = M_PI/180.0f;
+
 void wx_get_all_measurements(void) {
 
 	int32_t return_value = 0;
@@ -153,10 +155,12 @@ void wx_pool_analog_anemometer(void) {
 
 	// locals
 	uint32_t average_windspeed = 0;
-	uint32_t wind_direction_x_avg = 0;
-	uint32_t wind_direction_y_avg = 0;
-	uint16_t wind_direction_x = 0;
-	uint16_t wind_direction_y = 0;
+	int32_t wind_direction_x_avg = 0;
+	int32_t wind_direction_y_avg = 0;
+	int16_t wind_direction_x = 0;
+	int16_t wind_direction_y = 0;
+	volatile float dir_temp = 0;
+	volatile float arctan_value = 0.0f;
 	short i = 0;
 
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
@@ -193,11 +197,20 @@ void wx_pool_analog_anemometer(void) {
 	// storing wind gusts value in rte
 	rte_wx_max_windspeed = average_windspeed;
 
+	// adding last wind direction to the buffers
+	if (rte_wx_winddirection_it >= WIND_AVERAGE_LEN)
+		rte_wx_winddirection_it = 0;
+
+	rte_wx_winddirection[rte_wx_winddirection_it++] = rte_wx_winddirection_last;
+
 	// calculating average wind direction
 	for (i = 0; i < WIND_AVERAGE_LEN; i++) {
+
+		dir_temp = (float)rte_wx_winddirection[i];
+
 		// split the wind direction into x and y component
-		wind_direction_x = (uint16_t)(100.0f * cosf((float)rte_wx_winddirection[i] * M_PI/180.0f));
-		wind_direction_y = (uint16_t)(100.0f * sinf((float)rte_wx_winddirection[i] * M_PI/180.0f));
+		wind_direction_x = (int16_t)(100.0f * cosf(dir_temp * direction_constant));
+		wind_direction_y = (int16_t)(100.0f * sinf(dir_temp * direction_constant));
 
 		// adding components to calculate average
 		wind_direction_x_avg += wind_direction_x;
@@ -210,7 +223,9 @@ void wx_pool_analog_anemometer(void) {
 	wind_direction_y_avg /= WIND_AVERAGE_LEN;
 
 	// converting x & y component of wind direction back to an angle
-	rte_wx_average_winddirection = (uint16_t)(atan2f(wind_direction_y_avg , wind_direction_x_avg) * 180.0f/M_PI);
+	arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);
+
+	rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f/M_PI));
 
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;

@@ -27,6 +27,7 @@ extern uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
 extern uint8_t rte_wx_windspeed_it;
 extern uint16_t rte_wx_winddirection[WIND_AVERAGE_LEN];
 extern uint8_t rte_wx_winddirection_it;
+extern uint16_t rte_wx_winddirection_last;
 extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
 extern int16_t rte_wx_average_winddirection;
