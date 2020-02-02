@@ -44,21 +44,26 @@ uint16_t analog_anemometer_direction = 0;
 // scaling value which sets the upper value in percents of the frequency in relation to 32767 Hz
 // translating this to a voltage at an input of the U/f converter this sets a maximum ratio of the
 // potentiometer inside the direction
-uint8_t analog_anemometer_upper_scaling = 100;
+uint8_t analog_anemometer_b_coeff = 100;
 
-uint8_t analog_anemometer_lower_scaling = 10;
+uint8_t analog_anemometer_a_coeff = 10;
 
 // this controls if the direction increases (1) od decreaes (-1) with the frequency
 int8_t analog_anemometer_direction_pol = 1;
 
 uint16_t analog_anemometer_last_direction_cnt = 0;
 
-void analog_anemometer_init(uint16_t pulses_per_meter_second, uint16_t mvolts_for_1deg,
-		uint16_t mvolts_for_359deg, uint8_t reversed) {
+void analog_anemometer_init(uint16_t pulses_per_meter_second, float anemometer_lower_boundary,
+		float anemometer_upper_boundary, uint8_t direction_polarity) {
 
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
+	volatile float a = 0.0f, b = 0.0f;
 
 	analog_anemometer_pulses_per_m_s_constant = pulses_per_meter_second;
+	a = -360 / (360 * anemometer_lower_boundary - 360 * anemometer_upper_boundary);
+	b = (360 * anemometer_lower_boundary * 360) / (anemometer_lower_boundary * 360 - anemometer_upper_boundary * 360);
+	//analog_anemometer_b_coeff = (uint8_t)(anemometer_upper_boundary / 100);
+	analog_anemometer_direction_pol = direction_polarity;
 
 	// initializing arrays;
 	memset(analog_anemometer_windspeed_pulses_time, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
@@ -267,7 +272,7 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	TIM_Cmd(TIM3, DISABLE);
 
-	// geting current counter value
+	// getting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);
 
 	// if the value is greater than maximum one just ignore
@@ -288,10 +293,11 @@ int16_t analog_anemometer_direction_handler(void) {
 	// converting the upscaled ratio into the upscaled angle
 	uint32_t upscaled_angle = ratio_of_upscaled_frequency * 360;
 
-	uint32_t angle_adjusted_to_real_max_freq = upscaled_angle * analog_anemometer_upper_scaling;
+	uint32_t angle_adjusted_to_real_freq_borders = analog_anemometer_a_coeff +
+											upscaled_angle * analog_anemometer_b_coeff;
 
 	// downscaling the angle
-	uint16_t downscaled_angle = angle_adjusted_to_real_max_freq / 100000;
+	uint16_t downscaled_angle = angle_adjusted_to_real_freq_borders / 100000;
 
 	// adjusting to polarity of the signal
 	downscaled_angle *= analog_anemometer_direction_pol;

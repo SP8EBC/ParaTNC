@@ -13,20 +13,9 @@
 volatile int delay_5us = 0;
 volatile char timm = 0;
 
-//GPIO_InitTypeDef GPIO_input;
-//GPIO_InitTypeDef GPIO_output;
-
 DallasStruct dallas;
 
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, DallasAverage_t* average) {
-//	GPIO_output.GPIO_Mode = GPIO_Mode_Out_OD;
-//	GPIO_output.GPIO_Pin = GPIO_Pin;
-//	GPIO_output.GPIO_Speed = GPIO_Speed_50MHz;
-
-//	GPIO_input.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-//	GPIO_input.GPIO_Pin = GPIO_Pin;
-//	GPIO_input.GPIO_Speed = GPIO_Speed_50MHz;
-//	GPIO_Init(GPIOx, &GPIO_input);
 
 #ifndef _DALLAS_SPLIT_PIN
 	dallas.GPIOx = GPIOx;
