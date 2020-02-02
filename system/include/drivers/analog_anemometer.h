@@ -20,8 +20,8 @@ extern uint8_t analog_anemometer_slew_limit_fired;
 extern uint8_t analog_anemometer_deboucing_fired;
 
 void analog_anemometer_init(	uint16_t pulses_per_meter_second,
-								float anemometer_lower_boundary,
-								float anemometer_upper_boundary,
+								uint8_t anemometer_lower_boundary,
+								uint8_t anemometer_upper_boundary,
 								uint8_t direction_polarity);
 
 void analog_anemometer_timer_irq(void);
