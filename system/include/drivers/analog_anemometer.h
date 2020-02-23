@@ -12,6 +12,9 @@
 
 #include <stdint.h>
 
+#ifdef _ANEMOMETER_ANALOGUE
+
+
 extern uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 extern uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 extern uint16_t analog_anemometer_pulses_per_m_s_constant;
@@ -29,5 +32,7 @@ void analog_anemometer_dma_irq(void);
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time);
 int16_t analog_anemometer_direction_handler(void);
 void analog_anemometer_direction_reset(void);
+
+#endif
 
 #endif /* INCLUDE_DRIVERS_ANALOG_ANEMOMETER_H_ */

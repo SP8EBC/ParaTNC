@@ -35,5 +35,6 @@ system/src/diag \
 system/src/drivers \
 system/src/newlib \
 system/src/stm32f1-stdperiph \
+system/src/umb_client \
 system/src/ve_direct_protocol \
 

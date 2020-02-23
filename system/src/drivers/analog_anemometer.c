@@ -5,6 +5,10 @@
  *      Author: mateusz
  */
 
+#include "station_config.h"
+
+#ifdef _ANEMOMETER_ANALOGUE
+
 #include "drivers/analog_anemometer.h"
 
 #include <stdint.h>
@@ -337,3 +341,5 @@ void analog_anemometer_direction_reset(void) {
 	// end then restarting once again
 	TIM_Cmd(TIM3, ENABLE);
 }
+
+#endif

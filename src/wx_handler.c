@@ -163,8 +163,12 @@ void wx_pool_analog_anemometer(void) {
 	volatile float arctan_value = 0.0f;
 	short i = 0;
 
+	#ifdef _ANEMOMETER_ANALOGUE
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
 	uint16_t scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+	#else
+	uint16_t scaled_windspeed = 0;
+	#endif
 
 	// putting the wind speed into circular buffer
 	rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;

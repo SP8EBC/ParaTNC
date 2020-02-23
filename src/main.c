@@ -439,13 +439,17 @@ main(int argc, char* argv[])
 
 		if (main_one_second_pool_timer < 10) {
 
+			#ifdef _ANEMOMETER_ANALOGUE
 			analog_anemometer_direction_handler();
+			#endif
 
 			main_one_second_pool_timer = 1000;
 		}
 		else if (main_one_second_pool_timer < -10) {
 
+			#ifdef _ANEMOMETER_ANALOGUE
 			analog_anemometer_direction_reset();
+			#endif
 
 			main_one_second_pool_timer = 1000;
 		}
