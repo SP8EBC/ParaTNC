@@ -32,9 +32,6 @@
 #include "rte_pv.h"
 #include "rte_main.h"
 
-//#include "Timer.h"
-//#include "BlinkLed.h"
-
 #ifdef _METEO
 #include <wx_handler.h>
 #include "drivers/dallas.h"
@@ -50,6 +47,8 @@
 #endif
 
 #include "KissCommunication.h"
+
+#define SOH 0x01
 
 //#define SERIAL_TX_TEST_MODE
 
@@ -107,6 +106,11 @@ volatile uint8_t retval = 100;
 
 uint16_t buffer_len = 0;
 #ifdef _VICTRON
+#endif
+
+#ifdef _UMB_MASTER
+// return value from UMB related functions
+umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 #endif
 
 char after_tx_lock;
@@ -220,6 +224,15 @@ main(int argc, char* argv[])
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 	#endif
 
+	#if defined(_UMB_MASTER)
+	  	// UMB client cannot be used in the same time with TX20 or analogue anemometer
+		#undef _ANEMOMETER_TX20
+		#undef _ANEMOMETER_ANALOGUE
+
+	  // client initialization
+	  umb_master_init();
+	#endif
+
 	#ifdef  _ANEMOMETER_TX20
 	  TX20Init();
 	#endif
@@ -300,7 +313,7 @@ main(int argc, char* argv[])
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
   wx_get_all_measurements();
 
-#ifdef _VICTRON
+#if defined _VICTRON && !defined _UMB_MASTER
   // initializing protocol parser
   ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
 
@@ -311,7 +324,13 @@ main(int argc, char* argv[])
 
   // switching UART to receive mode to be ready for data from charging controller
   srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
-#else
+
+#elif !defined _VICTRON && defined _UMB_MASTER
+
+  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+
+
+#elif ! defined _VICTRON && !defined _UMB_MASTER
   // switching UART to receive mode to be ready for KISS frames from host
   srl_receive_data(100, FEND, FEND, 0, 0, 0);
 #endif
@@ -376,7 +395,7 @@ main(int argc, char* argv[])
 			rx10m++;
 		}
 
-#ifdef _VICTRON
+#if defined _VICTRON
 		// if new KISS message has been received from the host
 		if (srl_rx_state == SRL_RX_DONE || srl_rx_state == SRL_RX_ERROR) {
 
@@ -402,6 +421,22 @@ main(int argc, char* argv[])
 			}
 
 			srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+		}
+#elif defined _UMB_MASTER
+		// if some UMB data have been received
+		if (srl_rx_state == SRL_RX_DONE) {
+			main_umb_retval = umb_parse_serial_buffer_to_frame(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &rte_wx_umb);
+
+			if (main_umb_retval != UMB_OK) {
+				umb_master_callback(&rte_wx_umb);
+			}
+
+			srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+		}
+
+		// if there were an error during receiving frame from host, restart rxing once again
+		if (srl_rx_state == SRL_RX_ERROR) {
+			  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 		}
 #else
 		// if new KISS message has been received from the host

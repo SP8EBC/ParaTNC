@@ -5,11 +5,11 @@
  *      Author: mateusz
  */
 
-#include "../umb_client/umb_client.h"
-
 #include <string.h>
+#include <umb_master/umb_0x26_status.h>
+#include <umb_master/umb_master.h>
 
-#ifdef _UMB_CLIENT
+#ifdef _UMB_MASTER
 
 #define SOH 0x01
 #define STX 0x02
@@ -21,8 +21,11 @@
 #define MASTER_ID 0x01
 #define MASTER_CLASS 0xF0
 
-void umb_client_init() {
+umb_context_t umb_context;
 
+void umb_master_init() {
+	umb_context.current_routine = -1;
+	umb_context.state = UMB_STATUS_IDLE;
 }
 
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame) {
@@ -38,7 +41,7 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 
 	frame->slave_class 		= serial_buffer[4];
 	frame->slave_id 		= serial_buffer[5];
-	frame->lenght 			= serial_buffer[6];
+	frame->lenght 			= serial_buffer[6] - 2;
 
 	if (serial_buffer[8] != STX)
 		return UMB_NOT_VALID_FRAME;
@@ -51,7 +54,7 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 		return UMB_RECV_FRAME_TOO_LONG;
 
 	// Copying payload of the frame from a serial buffer
-	for (int i = 0; i < frame->lenght - 2; i++) {
+	for (int i = 0; (i < frame->lenght && i < buffer_ln); i++) {
 		frame->payload[i] = serial_buffer[10 + i];
 	}
 
@@ -59,18 +62,18 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	crc_from_frame = serial_buffer[frame->lenght + 9] | (serial_buffer[frame->lenght + 10] << 8);
 
 	// recalculating crc from frame content
-	for (int j = 0; j < frame->lenght + 8; j++) {
+	for (int j = 0; j < frame->lenght + 8 + 2; j++) {
 		crc = umb_calc_crc(crc, serial_buffer[j]);
 	}
 
-	frame->checksum_lsb = crc & 0xFF;
-	frame->checksum_msb = (crc & 0xFF00) >> 8;
+	frame->calculated_checksum_lsb = crc & 0xFF;
+	frame->calculated_checksum_msb = (crc & 0xFF00) >> 8;
 
-	if (	serial_buffer[frame->lenght + 9] != frame->checksum_lsb ||
-			serial_buffer[frame->lenght + 10] != frame->checksum_msb)
+	if (	serial_buffer[frame->lenght + 9 + 2] != frame->calculated_checksum_lsb ||
+			serial_buffer[frame->lenght + 10 + 2] != frame->calculated_checksum_msb)
 		return UMB_WRONG_CRC;
 
-	return 0;
+	return UMB_OK;
 }
 
 umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame) {
@@ -89,12 +92,12 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 	serial_buffer[i++] = _UMB_SLAVE_CLASS;
 	serial_buffer[i++] = MASTER_ID;
 	serial_buffer[i++] = MASTER_CLASS;
-	serial_buffer[i++] = frame->lenght;
+	serial_buffer[i++] = frame->lenght + 2;
 	serial_buffer[i++] = STX;
 	serial_buffer[i++] = frame->command_id;
 	serial_buffer[i++] = V10;
 
-	for (int j = 0; j < frame->lenght - 2; j++) {
+	for (int j = 0; j < frame->lenght; j++) {
 		serial_buffer[i++] = frame->payload[j];
 	}
 
@@ -108,7 +111,7 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 	serial_buffer[i++] = (uint8_t) (crc & 0xFF00) >> 8;
 	serial_buffer[i++] = EOT;
 
-	return 0;
+	return UMB_OK;
 }
 
 uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
@@ -129,6 +132,22 @@ uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
 		input = input >> 1;
 	}
 	return (crc_buff);
+}
+
+/**
+ * This function is called globally after receiving
+ */
+umb_retval_t umb_master_callback(umb_frame_t* frame) {
+
+	// looking for a callback to this response
+	switch (frame->command_id) {
+		case 0x26: {
+			umb_0x26_status_callback(frame);
+			break;
+		}
+	}
+
+	return UMB_OK;
 }
 
 #endif

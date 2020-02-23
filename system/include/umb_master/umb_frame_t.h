@@ -5,8 +5,8 @@
  *      Author: mateusz
  */
 
-#ifndef INCLUDE_UMB_CLIENT_UMB_FRAME_T_H_
-#define INCLUDE_UMB_CLIENT_UMB_FRAME_T_H_
+#ifndef INCLUDE_UMB_MASTER_UMB_FRAME_T_H_
+#define INCLUDE_UMB_MASTER_UMB_FRAME_T_H_
 
 #define UMB_FRAME_MAX_PAYLOAD_LN 40
 
@@ -26,10 +26,10 @@ typedef struct umb_frame_t {
 
 	uint8_t payload[UMB_FRAME_MAX_PAYLOAD_LN];
 
-	uint8_t checksum_lsb;
+	uint8_t calculated_checksum_lsb;
 
-	uint8_t checksum_msb;
+	uint8_t calculated_checksum_msb;
 
 } umb_frame_t;
 
-#endif /* INCLUDE_UMB_CLIENT_UMB_FRAME_T_H_ */
+#endif /* INCLUDE_UMB_MASTER_UMB_FRAME_T_H_ */

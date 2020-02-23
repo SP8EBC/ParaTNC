@@ -5,20 +5,24 @@
  *      Author: mateusz
  */
 
-#ifndef INCLUDE_UMB_CLIENT_UMB_CLIENT_H_
-#define INCLUDE_UMB_CLIENT_UMB_CLIENT_H_
+#ifndef INCLUDE_UMB_MASTER_UMB_MASTER_H_
+#define INCLUDE_UMB_MASTER_UMB_MASTER_H_
 
+#include <umb_master/umb_frame_t.h>
+#include <umb_master/umb_retval_t.h>
+#include <umb_master/umb_context_t.h>
 #include "station_config.h"
-#include "umb_frame_t.h"
-#include "umb_retval_t.h"
 
-#ifdef _UMB_CLIENT
+#ifdef _UMB_MASTER
 
-void umb_client_init();
+extern umb_context_t umb_context;
+
+void umb_master_init();
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);
 umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);
 uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input);
+umb_retval_t umb_master_callback(umb_frame_t* frame);
 
 #endif
 
-#endif /* INCLUDE_UMB_CLIENT_UMB_CLIENT_H_ */
+#endif /* INCLUDE_UMB_MASTER_UMB_MASTER_H_ */

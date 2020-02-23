@@ -32,8 +32,9 @@ DallasQF rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
 DallasAverage_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf;
 
-#ifdef _UMB_CLIENT
+#ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;
+uint8_t rte_wx_last_status = 0;
 #endif
 
 void rte_wx_init(void) {

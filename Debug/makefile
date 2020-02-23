@@ -9,7 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include system/src/ve_direct_protocol/subdir.mk
--include system/src/umb_client/subdir.mk
+-include system/src/umb_master/subdir.mk
 -include system/src/stm32f1-stdperiph/subdir.mk
 -include system/src/newlib/subdir.mk
 -include system/src/drivers/subdir.mk

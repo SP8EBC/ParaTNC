@@ -8,7 +8,7 @@
 #include "drivers/_dht22.h"
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
-#include "../umb_client/umb_client.h"
+#include "../umb_master/umb_master.h"
 
 
 #ifndef RTE_WX_H_
@@ -41,8 +41,11 @@ extern DallasQF rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern DallasAverage_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
 
-#ifdef _UMB_CLIENT
+#ifdef _UMB_MASTER
+
 extern umb_frame_t rte_wx_umb;
+extern uint8_t rte_wx_last_status;
+
 #endif
 
 #ifdef __cplusplus
