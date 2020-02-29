@@ -33,7 +33,10 @@ uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_
 // an array with calculated times between pulses
 uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 
-// a static copy of impulse-meters/second contact
+// a static copy of impulse-meters/second constant. This value expresses
+// how many pulses in 10 seconds measurement time gives 1 m/s.
+// Value of ten means that if within 10 second period 10 pulses were detected it gives
+// 1m/s
 uint16_t analog_anemometer_pulses_per_m_s_constant = 0;
 
 // a flag which will be raised if not enought pulses has been copied by a DMA before a timer overflows
@@ -156,6 +159,8 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	// disable an interrupt from TIMER3
 	NVIC_DisableIRQ(TIM3_IRQn);
 
+	analog_anemometer_timer_has_been_fired = 0;
+
 	return;
 }
 
@@ -177,6 +182,8 @@ void analog_anemometer_dma_irq(void) {
 	// checking if timer overflowed (raised an iterrupt)
 	if (analog_anemometer_timer_has_been_fired == 1) {
 		rte_wx_windspeed_pulses = 1;
+
+		analog_anemometer_timer_has_been_fired = 0;
 
 		// reseting array to default values
 		for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++)
@@ -275,8 +282,12 @@ void analog_anemometer_dma_irq(void) {
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
 	uint32_t output = 0;
 
-	uint32_t scaled_pulses_frequency = 1000000 / (inter_pulse_time * 10);
-	output = scaled_pulses_frequency / (analog_anemometer_pulses_per_m_s_constant);
+	uint32_t scaled_pulses_frequency = 1000000 / (inter_pulse_time * 10);		// *100 from real value
+
+	if (inter_pulse_time > 5)
+		output = scaled_pulses_frequency / (analog_anemometer_pulses_per_m_s_constant);
+	else
+		output = 0;
 
 	return output;
 }

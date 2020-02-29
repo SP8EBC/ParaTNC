@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "umb_state_t.h"
+#include "../drivers/serial.h"
 
 typedef struct umb_context_t {
 

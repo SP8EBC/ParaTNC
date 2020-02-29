@@ -135,7 +135,32 @@ uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
 }
 
 /**
- * This function is called globally after receiving
+ * This function is called in main 'for' loop to check if there
+ * is anything to do regarding UMB
+ */
+umb_retval_t umb_pooling_handler(umb_context_t* ctx) {
+
+	switch(ctx->state) {
+	case UMB_STATUS_IDLE:
+
+	// when routine request generator created the frame which now waits to be send
+	case UMB_STATUS_SENDING_REQUEST_TO_SLAVE: {
+
+		if (srl_tx_state != SRL_TX_IDLE) {
+			return UMB_BUSY;
+		}
+		break;
+	}
+	case UMB_STATUS_WAITING_FOR_RESPONSE:
+	case UMB_STATUS_RESPONSE_AVALIABLE:
+	case UMB_STATUS_ERROR:
+	}
+
+	return UMB_OK;
+}
+
+/**
+ * This function is called globally after receiving any UMB data
  */
 umb_retval_t umb_master_callback(umb_frame_t* frame) {
 

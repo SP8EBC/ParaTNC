@@ -29,6 +29,7 @@ uint32_t wx_last_good_temperature_time = 0;
 uint32_t wx_last_good_wind_time = 0;
 wx_pwr_state_t wx_pwr_state;
 uint8_t wx_inhibit_slew_rate_check = 1;
+uint32_t wx_wind_pool_call_counter = 0;
 
 static const float direction_constant = M_PI/180.0f;
 
@@ -162,6 +163,9 @@ void wx_pool_analog_anemometer(void) {
 	volatile float dir_temp = 0;
 	volatile float arctan_value = 0.0f;
 	short i = 0;
+	uint8_t average_ln;
+
+	wx_wind_pool_call_counter++;
 
 	#ifdef _ANEMOMETER_ANALOGUE
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
@@ -170,6 +174,16 @@ void wx_pool_analog_anemometer(void) {
 	uint16_t scaled_windspeed = 0;
 	#endif
 
+	// check how many times before the pool function was called
+	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
+		// if it was called less time than a length of buffers, the average length
+		// needs to be shortened to handle the underrun properly
+		average_ln = (uint8_t)wx_wind_pool_call_counter;
+	}
+	else {
+		average_ln = WIND_AVERAGE_LEN;
+	}
+
 	// putting the wind speed into circular buffer
 	rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;
 
@@ -177,14 +191,15 @@ void wx_pool_analog_anemometer(void) {
 	rte_wx_windspeed_it++;
 
 	// checking if iterator reached an end of the buffer
-	if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN)
+	if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN) {
 		rte_wx_windspeed_it = 0;
+	}
 
 	// calculating the average windspeed
-	for (i = 0; i < WIND_AVERAGE_LEN; i++)
+	for (i = 0; i < average_ln; i++)
 		average_windspeed += rte_wx_windspeed[i];
 
-	average_windspeed /= WIND_AVERAGE_LEN;
+	average_windspeed /= average_ln;
 
 	// store the value in rte
 	rte_wx_average_windspeed = average_windspeed;
@@ -193,7 +208,7 @@ void wx_pool_analog_anemometer(void) {
 	average_windspeed = 0;
 
 	// looking for gusts
-	for (i = 0; i < WIND_AVERAGE_LEN; i++) {
+	for (i = 0; i < average_ln; i++) {
 		if (average_windspeed < rte_wx_windspeed[i])
 			average_windspeed = rte_wx_windspeed[i];
 	}
@@ -208,7 +223,7 @@ void wx_pool_analog_anemometer(void) {
 	rte_wx_winddirection[rte_wx_winddirection_it++] = rte_wx_winddirection_last;
 
 	// calculating average wind direction
-	for (i = 0; i < WIND_AVERAGE_LEN; i++) {
+	for (i = 0; i < average_ln; i++) {
 
 		dir_temp = (float)rte_wx_winddirection[i];
 
@@ -223,8 +238,8 @@ void wx_pool_analog_anemometer(void) {
 	}
 
 	// dividing to get average of x and y componen
-	wind_direction_x_avg /= WIND_AVERAGE_LEN;
-	wind_direction_y_avg /= WIND_AVERAGE_LEN;
+	wind_direction_x_avg /= average_ln;
+	wind_direction_y_avg /= average_ln;
 
 	// converting x & y component of wind direction back to an angle
 	arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);

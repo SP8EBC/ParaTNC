@@ -10,6 +10,7 @@
 
 
 void dma_helper_start_ch7(DMA_InitTypeDef* DMA_InitStruct) {
+	DMA_DeInit(DMA1_Channel7);
 	DMA_Init(DMA1_Channel7, DMA_InitStruct);
 	DMA1_Channel7->CCR |= DMA_CCR7_EN;
 	DMA1_Channel7->CCR |= DMA_CCR7_TCIE;
