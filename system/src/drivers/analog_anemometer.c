@@ -172,8 +172,12 @@ void analog_anemometer_dma_irq(void) {
 	int i = 0;
 	uint16_t pulse_ln = 0;
 	uint16_t previous_pulse_ln = 0;
-	uint16_t minimum_pulse_ln = 60000;
-	uint16_t maximum_pulse_ln = 0;
+	uint16_t shorter_pulse = 0;
+	volatile uint16_t minimum_pulse_ln = 60000;
+	volatile uint16_t previous_minimum_pulse_ln = 60000;	// first value bigger than minimal one
+	volatile uint16_t maximum_pulse_ln = 0;
+	volatile uint16_t previous_maximum_pulse_ln = 0;		//
+	volatile uint16_t slew_rate_limit = 60000;
 
 	// resetting flags
 	analog_anemometer_slew_limit_fired = 0;
@@ -216,6 +220,26 @@ void analog_anemometer_dma_irq(void) {
 		previous_pulse_ln = analog_anemometer_time_between_pulses[i - 1];
 		pulse_ln = analog_anemometer_time_between_pulses[i];
 
+		// checking which inter-pulse time is shorter
+		if (previous_pulse_ln < pulse_ln)
+			shorter_pulse = previous_pulse_ln;
+		else
+			shorter_pulse = pulse_ln;
+
+		// calculating maximum slew rate basing on current inter pulse ln
+		if (shorter_pulse >= 1000) {
+			// 1 meter per second
+			slew_rate_limit = shorter_pulse;
+		}
+		else if (shorter_pulse >= 200 && shorter_pulse < 1000) {
+			// from 1 to 5 meters per second
+			slew_rate_limit = shorter_pulse >> 1;
+		}
+		else {
+			// more than 5 meters per second
+			slew_rate_limit = shorter_pulse >> 2;
+		}
+
 		// skipping pulses erased by debouncing
 		if (pulse_ln == 0 || previous_pulse_ln == 0) {
 			continue;
@@ -224,13 +248,13 @@ void analog_anemometer_dma_irq(void) {
 		int32_t diff = pulse_ln - previous_pulse_ln;
 
 		// if current inter-pulse time is much longer than previous (some pulse is missing?)
-		if ( diff > MAXIMUM_PULSE_SLEW_RATE ) {
-			analog_anemometer_time_between_pulses[i] = previous_pulse_ln + ((uint32_t)MAXIMUM_PULSE_SLEW_RATE >> 3);
+		if ( diff > slew_rate_limit ) {
+			analog_anemometer_time_between_pulses[i] = previous_pulse_ln + ((uint32_t)slew_rate_limit);
 			analog_anemometer_slew_limit_fired = 1;
 		}
 		// if previous inter-pulse time is much longer than current
-		else if (diff < -MAXIMUM_PULSE_SLEW_RATE){
-			analog_anemometer_time_between_pulses[i - 1] = pulse_ln + ((uint32_t)MAXIMUM_PULSE_SLEW_RATE >> 3);
+		else if (diff < -slew_rate_limit){
+			analog_anemometer_time_between_pulses[i - 1] = pulse_ln + ((uint32_t)slew_rate_limit);
 			analog_anemometer_slew_limit_fired = 1;
 		}
 		// if this pulse time is ok do nothing.
@@ -238,6 +262,12 @@ void analog_anemometer_dma_irq(void) {
 			;
 		}
 	}
+
+	minimum_pulse_ln = 60000;
+	previous_minimum_pulse_ln = 60000;
+
+	maximum_pulse_ln = 0;
+	previous_maximum_pulse_ln = 0;
 
 	// find maximum and minimum values within inter-pulses times
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N; i++) {
@@ -249,16 +279,39 @@ void analog_anemometer_dma_irq(void) {
 			continue;
 
 		// find maximum and minimum values within pulses duration
-		if (pulse_ln < minimum_pulse_ln)
-			minimum_pulse_ln = pulse_ln;
+		if (pulse_ln < minimum_pulse_ln) {
 
-		if (pulse_ln > maximum_pulse_ln)
+			// check if 'previous' has a default value of 60k
+			if (previous_minimum_pulse_ln == 60000) {
+				// if yes store the current value to handle a situation than whole
+				// circular buffer conssit the same value
+				previous_minimum_pulse_ln = pulse_ln;
+			}
+			else {
+				// copying previous minimal value
+				previous_minimum_pulse_ln = minimum_pulse_ln;
+			}
+
+			// setting current minimal value
+			minimum_pulse_ln = pulse_ln;
+		}
+
+		if (pulse_ln > maximum_pulse_ln) {
+
+			if (previous_maximum_pulse_ln == 0) {
+				previous_maximum_pulse_ln = pulse_ln;
+			}
+			else {
+				previous_maximum_pulse_ln = maximum_pulse_ln;
+			}
+
 			maximum_pulse_ln = pulse_ln;
+		}
 
 	}
 
 	// calculating the target inter-pulse duration
-	rte_wx_windspeed_pulses = (uint16_t)((maximum_pulse_ln + minimum_pulse_ln) / 2);
+	rte_wx_windspeed_pulses = (uint16_t)((previous_maximum_pulse_ln + previous_minimum_pulse_ln) / 2);
 
 	// resetting the timer
 	analog_anemometer_timer_has_been_fired = 0;
@@ -270,6 +323,15 @@ void analog_anemometer_dma_irq(void) {
 		analog_anemometer_time_between_pulses[i] = 0;
 
 	dma_helper_start_ch7(&DMA_InitStruct);
+
+	// Stopping timer
+	TIM_Cmd(TIM17, DISABLE);
+
+	// Resetting the counter
+	TIM_SetCounter(TIM17, 0);
+
+	// Enabling counter once again
+	TIM_Cmd(TIM17, ENABLE);
 
 	return;
 }
