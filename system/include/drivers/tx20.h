@@ -2,6 +2,7 @@
 #define __TX20_H
 
 #include "station_config.h"
+#include <stdint.h>
 
 #ifdef _ANEMOMETER_TX20
 
@@ -17,7 +18,7 @@ typedef struct {
 
 #define TX20_BUFF_LN 20
 
-typedef struct {
+typedef struct Anemometer {
 	char BitSampler;
 	/* Zmienna przechowuj�ca stan automatu sampluj�cego bity.
 	Jest konieczna poniewa� sa one samplowane 2x czesciej niz wynosi faktyczna
@@ -67,6 +68,7 @@ void TX20Batch(void);
 void TX20Init(void);
 float TX20DataAverage(void);
 void TX20DataParse(void);
+uint16_t TX20GetScaledWindspeed(void);
 
 #ifdef __cplusplus
 }

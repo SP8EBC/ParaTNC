@@ -2,8 +2,9 @@
 
 #ifdef _ANEMOMETER_TX20
 
+#include "../drivers/tx20.h"
+
 #include <stdlib.h>
-//#define STM32F10X_MD_VL
 #include <stm32f10x.h>
 #include <math.h>
 #include "diag/Trace.h"
@@ -12,17 +13,19 @@
 #include "main.h"
 #include "wx_handler.h"
 
-#define BS VNAME.BitSampler
-#define BQ VNAME.BitQueue
-#define QL VNAME.QueueLenght
-#define DCD VNAME.FrameRX
-#define FC VNAME.FrameBitCounter
-#define RD VNAME.ReceiveDone
-#define MC VNAME.MeasCounter
-#define PM VNAME.PrevMeasCounter
-#define OE VNAME.OddEven
+#define BS TX20.BitSampler
+#define BQ TX20.BitQueue
+#define QL TX20.QueueLenght
+#define DCD TX20.FrameRX
+#define FC TX20.FrameBitCounter
+#define RD TX20.ReceiveDone
+#define MC TX20.MeasCounter
+#define PM TX20.PrevMeasCounter
+#define OE TX20.OddEven
 
-Anemometer VNAME;	// Deklaracja zmiennej strukturalnej typu Anemometer
+Anemometer TX20;	// Deklaracja zmiennej strukturalnej typu Anemometer
+float tx20_current_windspeed;
+uint16_t tx20_current_direction;
 
 #define PI 3.14159265
 
@@ -109,45 +112,52 @@ void TX20Batch(void) {
 			}
 			else
 				FC++;
-		else;
+		else {
+			;
+		}
 	}
-	else;
+	else {
+		;
+	}
 }
 
 float TX20DataAverage(void) {
-	char i;
+	int i;
 	short x = 0,xx = 0,y = 0,yy = 0, out = 0;
-	x = (short)(100.0f * cosf((float)VNAME.Data.WindDirX * PI/180.0f));
-	y = (short)(100.0f * sinf((float)VNAME.Data.WindDirX * PI/180.0f));
+	x = (short)(100.0f * cosf((float)TX20.Data.WindDirX * PI/180.0f));
+	y = (short)(100.0f * sinf((float)TX20.Data.WindDirX * PI/180.0f));
 
 	if (
 			PM != MC &&
-			abs((int32_t)(VNAME.HistoryAVG[PM].WindSpeed - VNAME.Data.WindSpeed)) > 9
+			abs((int32_t)(TX20.HistoryAVG[PM].WindSpeed - TX20.Data.WindSpeed)) > 9
 
 	) {
 		rte_wx_tx20_excessive_slew_rate = 1;
 		return 0;
 	}
 
-	VNAME.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
-	VNAME.HistoryAVG[MC].WindDirX = x;
-	VNAME.HistoryAVG[MC].WindDirY = y;
-	VNAME.HistoryAVG[0].WindDirX = 0;
-	VNAME.HistoryAVG[0].WindDirY = 0;
-	VNAME.HistoryAVG[0].WindSpeed = 0;
+	tx20_current_windspeed = VNAME.Data.WindSpeed;
+	tx20_current_direction = TX20.Data.WindDirX;
+
+	TX20.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
+	TX20.HistoryAVG[MC].WindDirX = x;
+	TX20.HistoryAVG[MC].WindDirY = y;
+	TX20.HistoryAVG[0].WindDirX = 0;
+	TX20.HistoryAVG[0].WindDirY = 0;
+	TX20.HistoryAVG[0].WindSpeed = 0;
 	x = 0, y = 0;
-	for (i = 1; (i <= TX20_BUFF_LN - 1 && VNAME.HistoryAVG[i].WindSpeed != -1); i++) {
-		VNAME.HistoryAVG[0].WindSpeed += VNAME.HistoryAVG[i].WindSpeed;
-		x	+= VNAME.HistoryAVG[i].WindDirX;
-		y	+= VNAME.HistoryAVG[i].WindDirY;
+	for (i = 1; (i <= TX20_BUFF_LN - 1 && TX20.HistoryAVG[i].WindSpeed != -1); i++) {
+		TX20.HistoryAVG[0].WindSpeed += TX20.HistoryAVG[i].WindSpeed;
+		x	+= TX20.HistoryAVG[i].WindDirX;
+		y	+= TX20.HistoryAVG[i].WindDirY;
 	}
-	VNAME.HistoryAVG[0].WindSpeed /= (i - 1);
+	TX20.HistoryAVG[0].WindSpeed /= (i - 1);
 	xx = x / (i - 1);
 	yy = y / (i - 1);
 	out = (short)(atan2f(yy , xx) * 180.0f/PI);
 	if (out < 0)
 		out += 360;
-	VNAME.HistoryAVG[0].WindDirX  = out;
+	TX20.HistoryAVG[0].WindDirX  = out;
 	PM = MC;
 	if ((MC++) == TX20_BUFF_LN)
 		MC = 1;
@@ -163,28 +173,34 @@ void TX20DataParse(void) {
 	temp = ~temp;
 	temp &= 0xF;
 	temp = ((temp & 0x8) >> 3) | ((temp & 0x4) >> 1) | ((temp & 0x2) << 1) | ((temp & 0x1) << 3);
-	VNAME.Data.WindDirX = (short)(temp * 22.5);
-	VNAME.Data.CalcChecksum = temp;
+	TX20.Data.WindDirX = (short)(temp * 22.5);
+	TX20.Data.CalcChecksum = temp;
 	// predkosc wiatru
 	temp = (raw_frame & 0xFFF00000) >> 20;
 	temp = ~temp;	   	// inwetsja bit�w
 	temp &= 0xFFF;
 	temp = ((temp & (1 << 11)) >> 11) | ((temp & (1 << 10)) >> 9) | ((temp & (1 << 9)) >> 7) | ((temp & (1 << 8)) >> 5) | ((temp & (1 << 7)) >> 3) | ((temp & (1 << 6)) >> 1) | ((temp & (1 << 5)) << 1) | ((temp & (1 << 4)) << 3) | ((temp & (1 << 3)) << 5) | ((temp & (1 << 2)) << 7) | ((temp & (1 << 1)) << 9) | ((temp & (1 << 1)) << 9) | ((temp & 1) << 11); 
-	VNAME.Data.CalcChecksum += ((temp & 0xF) + ((temp & 0xF0) >> 4) + ((temp & 0xF00) >> 8));
-	VNAME.Data.CalcChecksum &= 0xF;
+	TX20.Data.CalcChecksum += ((temp & 0xF) + ((temp & 0xF0) >> 4) + ((temp & 0xF00) >> 8));
+	TX20.Data.CalcChecksum &= 0xF;
 //	temp = __rev(temp);	// endian-swapping
-	VNAME.Data.WindSpeed = (float)temp*0.1;
+	TX20.Data.WindSpeed = (float)temp*0.1;
 	// suma kontrolna
 	temp = (raw_frame & 0xF0000) >> 16; 
 	temp = ~temp;
 	temp &= 0xF;
 	temp = ((temp & 0x8) >> 3) | ((temp & 0x4) >> 1) | ((temp & 0x2) << 1) | ((temp & 0x1) << 3);
-	VNAME.Data.Checksum = temp;
-	if (VNAME.Data.Checksum == VNAME.Data.CalcChecksum)
+	TX20.Data.Checksum = temp;
+	if (TX20.Data.Checksum == TX20.Data.CalcChecksum)
 		TX20DataAverage();
 	else;
 
 	wx_last_good_wind_time = master_time;
+}
+
+uint16_t TX20GetScaledWindspeed(void) {
+	float out = tx20_current_windspeed;
+
+	return (uint16_t) (out * 10);
 }
 
 #ifdef _ANEMOMETER_TX20

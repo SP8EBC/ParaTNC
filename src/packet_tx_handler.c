@@ -59,12 +59,8 @@ void packet_tx_handler(void) {
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
 		SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
 #else
-	#ifdef _ANEMOMETER_TX20
-
-			SendWXFrame(&VNAME, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid);
-	#else
 			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
-	#endif // #ifdef _ANEMOMETER_TX20
+
 
 #endif
 
@@ -77,11 +73,7 @@ void packet_tx_handler(void) {
 
 		srl_wait_for_tx_completion();
 
-	#ifdef _ANEMOMETER_TX20
-		SendWXFrameToBuffer(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, srl_tx_buffer, TX_BUFFER_LN, &ln);
-	#else
 		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, srl_tx_buffer, TX_BUFFER_LN, &ln);
-	#endif
 
 		srl_start_tx(ln);
 

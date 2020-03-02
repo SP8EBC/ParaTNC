@@ -360,13 +360,9 @@ main(int argc, char* argv[])
 	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
 	  			SendOwnBeacon();
 #else
-		#ifdef _ANEMOMETER_TX20
 
-	  			SendWXFrame(&VNAME, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
-		#else
 	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
 
-		#endif // #ifdef _ANEMOMETER_TX20
 #endif // #ifndef _METEO
 	  		}
 

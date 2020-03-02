@@ -13,11 +13,8 @@
 
 #include "station_config.h"
 
-#ifdef _ANEMOMETER_TX20
-void SendWXFrame(Anemometer* input, float temperatura, float cisnienie) {
-#else
+
 void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie) {
-#endif
 
 	float max_wind_speed = 0.0f, temp = 0.0f;
 	uint8_t wind_speed_mph = 0, wind_gusts_mph = 0, d = 0;
@@ -27,10 +24,10 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 
 #ifdef _ANEMOMETER_TX20
 
-	for(d = 1; d <= TX20_BUFF_LN - 1 ; d++)
-		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
-				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed;		// Wyszukiwane najwiekszej wartosci
-	temp = input->HistoryAVG[0].WindSpeed;
+//	for(d = 1; d <= TX20_BUFF_LN - 1 ; d++)
+//		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
+//				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed;		// Wyszukiwane najwiekszej wartosci
+//	temp = input->HistoryAVG[0].WindSpeed;
 #else
 
 #endif
@@ -67,11 +64,8 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 
 }
 
-#ifdef _ANEMOMETER_TX20
-void SendWXFrameToBuffer(Anemometer* input, float temperatura, float cisnienie, uint8_t* buffer, uint16_t buffer_ln, uint16_t* output_ln) {
-#else
+
 void SendWXFrameToBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie, uint8_t* buffer, uint16_t buffer_ln, uint16_t* output_ln) {
-#endif
 
 	uint16_t output_frame_ln = 0;
 
@@ -83,10 +77,10 @@ void SendWXFrameToBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t winddi
 
 #ifdef _ANEMOMETER_TX20
 
-	for(d = 1; d <= TX20_BUFF_LN - 1 ; d++)
-		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
-				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed;		// Wyszukiwane najwiekszej wartosci
-	temp = input->HistoryAVG[0].WindSpeed;
+//	for(d = 1; d <= TX20_BUFF_LN - 1 ; d++)
+//		if (VNAME.HistoryAVG[d].WindSpeed > max_wind_speed)
+//				max_wind_speed = VNAME.HistoryAVG[d].WindSpeed;		// Wyszukiwane najwiekszej wartosci
+//	temp = input->HistoryAVG[0].WindSpeed;
 #else
 
 #endif

@@ -13,6 +13,7 @@
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
 #include "drivers/analog_anemometer.h"
+#include "drivers/tx20.h"
 
 #include "station_config.h"
 
@@ -171,7 +172,7 @@ void wx_pool_analog_anemometer(void) {
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
 	uint16_t scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 	#else
-	uint16_t scaled_windspeed = 0;
+	uint16_t scaled_windspeed = TX20GetScaledWindspeed();
 	#endif
 
 	// check how many times before the pool function was called
