@@ -41,7 +41,7 @@ void inline TX20BlinkLed(void) {
 }
 #endif
 
-void TX20Init(void) {
+void tx20_init(void) {
 	int i;
 
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -66,11 +66,11 @@ void TX20Init(void) {
 	//// inicjalizacja p�l struktury      //
 	////////////////////////////////////////
 	BQ = 0, QL = 0, FC = 0, DCD = 0, RD = 0, MC = 1, OE = 0, PM = 1;
-	for (i = 1; i <= TX20_BUFF_LN - 1; i++) {
-		VNAME.HistoryAVG[i].WindSpeed = -1;
-		VNAME.HistoryAVG[i].WindDirX	= -1;
-		VNAME.HistoryAVG[i].WindDirY	= -1;
-	}
+//	for (i = 1; i <= TX20_BUFF_LN - 1; i++) {
+//		VNAME.HistoryAVG[i].WindSpeed = -1;
+//		VNAME.HistoryAVG[i].WindDirX	= -1;
+//		VNAME.HistoryAVG[i].WindDirY	= -1;
+//	}
 	AFIO->EXTICR[(TX/4)] |= PORTNUM << (TX % 4) * 4;
 	EXTI->RTSR |= 1 << TX;
 	EXTI->IMR |= 1 << TX;
@@ -82,7 +82,7 @@ void TX20Init(void) {
 		NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-void TX20Batch(void) {
+void tx20_batch(void) {
 	/* Funkcja wyzwalana w przerwaniu 1666 razy na sekund� */
 	if (BS++,BS %= 2,BS == 1) {
 		BQ <<= 1;		// przesuwanie zawarto�ci kolejki o jedn� pozycje
@@ -101,7 +101,7 @@ void TX20Batch(void) {
 				TX20BlinkLed();
 #endif
 				if (OE >= 3) {
-					TX20DataParse();
+					tx20_data_parse();
 					OE = 0;
 				}
 				else
@@ -121,50 +121,50 @@ void TX20Batch(void) {
 	}
 }
 
-float TX20DataAverage(void) {
+float tx20_data_average(void) {
 	int i;
 	short x = 0,xx = 0,y = 0,yy = 0, out = 0;
 	x = (short)(100.0f * cosf((float)TX20.Data.WindDirX * PI/180.0f));
 	y = (short)(100.0f * sinf((float)TX20.Data.WindDirX * PI/180.0f));
 
-	if (
-			PM != MC &&
-			abs((int32_t)(TX20.HistoryAVG[PM].WindSpeed - TX20.Data.WindSpeed)) > 9
-
-	) {
-		rte_wx_tx20_excessive_slew_rate = 1;
-		return 0;
-	}
+//	if (
+//			PM != MC &&
+//			abs((int32_t)(TX20.HistoryAVG[PM].WindSpeed - TX20.Data.WindSpeed)) > 9
+//
+//	) {
+//		rte_wx_tx20_excessive_slew_rate = 1;
+//		return 0;
+//	}
 
 	tx20_current_windspeed = VNAME.Data.WindSpeed;
 	tx20_current_direction = TX20.Data.WindDirX;
 
-	TX20.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
-	TX20.HistoryAVG[MC].WindDirX = x;
-	TX20.HistoryAVG[MC].WindDirY = y;
-	TX20.HistoryAVG[0].WindDirX = 0;
-	TX20.HistoryAVG[0].WindDirY = 0;
-	TX20.HistoryAVG[0].WindSpeed = 0;
-	x = 0, y = 0;
-	for (i = 1; (i <= TX20_BUFF_LN - 1 && TX20.HistoryAVG[i].WindSpeed != -1); i++) {
-		TX20.HistoryAVG[0].WindSpeed += TX20.HistoryAVG[i].WindSpeed;
-		x	+= TX20.HistoryAVG[i].WindDirX;
-		y	+= TX20.HistoryAVG[i].WindDirY;
-	}
-	TX20.HistoryAVG[0].WindSpeed /= (i - 1);
-	xx = x / (i - 1);
-	yy = y / (i - 1);
-	out = (short)(atan2f(yy , xx) * 180.0f/PI);
-	if (out < 0)
-		out += 360;
-	TX20.HistoryAVG[0].WindDirX  = out;
-	PM = MC;
-	if ((MC++) == TX20_BUFF_LN)
-		MC = 1;
+//	TX20.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
+//	TX20.HistoryAVG[MC].WindDirX = x;
+//	TX20.HistoryAVG[MC].WindDirY = y;
+//	TX20.HistoryAVG[0].WindDirX = 0;
+//	TX20.HistoryAVG[0].WindDirY = 0;
+//	TX20.HistoryAVG[0].WindSpeed = 0;
+//	x = 0, y = 0;
+//	for (i = 1; (i <= TX20_BUFF_LN - 1 && TX20.HistoryAVG[i].WindSpeed != -1); i++) {
+//		TX20.HistoryAVG[0].WindSpeed += TX20.HistoryAVG[i].WindSpeed;
+//		x	+= TX20.HistoryAVG[i].WindDirX;
+//		y	+= TX20.HistoryAVG[i].WindDirY;
+//	}
+//	TX20.HistoryAVG[0].WindSpeed /= (i - 1);
+//	xx = x / (i - 1);
+//	yy = y / (i - 1);
+//	out = (short)(atan2f(yy , xx) * 180.0f/PI);
+//	if (out < 0)
+//		out += 360;
+//	TX20.HistoryAVG[0].WindDirX  = out;
+//	PM = MC;
+//	if ((MC++) == TX20_BUFF_LN)
+//		MC = 1;
 	return 0;
 }
 
-void TX20DataParse(void) {
+void tx20_data_parse(void) {
 	int temp;
 	unsigned long long int raw_frame;
 	raw_frame = BQ & 0x3FFFFFFFFFF;
@@ -191,16 +191,20 @@ void TX20DataParse(void) {
 	temp = ((temp & 0x8) >> 3) | ((temp & 0x4) >> 1) | ((temp & 0x2) << 1) | ((temp & 0x1) << 3);
 	TX20.Data.Checksum = temp;
 	if (TX20.Data.Checksum == TX20.Data.CalcChecksum)
-		TX20DataAverage();
+		tx20_data_average();
 	else;
 
 	wx_last_good_wind_time = master_time;
 }
 
-uint16_t TX20GetScaledWindspeed(void) {
+uint16_t tx20_get_scaled_windspeed(void) {
 	float out = tx20_current_windspeed;
 
 	return (uint16_t) (out * 10);
+}
+
+uint16_t tx20_get_wind_direction(void) {
+	return tx20_current_direction;
 }
 
 #ifdef _ANEMOMETER_TX20
@@ -265,7 +269,7 @@ void EXTI15_10_IRQHandler(void) {
 void TIM1_UP_TIM16_IRQHandler( void ) {
 
 	TIM1->SR &= ~(1<<0);
-	TX20Batch();
+	tx20_batch();
 }
 #elif TIMNUMBER == 2
 void TIM2_IRQHandler( void ) {
@@ -278,7 +282,7 @@ void TIM2_IRQHandler( void ) {
 	}
 
 	TIM2->SR &= ~(1<<0);
-	TX20Batch();
+	tx20_batch();
 }
 
 #elif TIMNUMBER == 3
@@ -292,7 +296,7 @@ void TIM3_IRQHandler( void ) {
 	}
 
 	TIM3->SR &= ~(1<<0);
-	TX20Batch();
+	tx20_batch();
 }
 
 #elif TIMNUMBER == 4
@@ -306,7 +310,7 @@ void TIM4_IRQHandler( void ) {
 	}
 
 	TIM3->SR &= ~(1<<0);
-	TX20Batch();
+	tx20_batch();
 }
 #else
 #endif

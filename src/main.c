@@ -234,7 +234,7 @@ main(int argc, char* argv[])
 	#endif
 
 	#ifdef  _ANEMOMETER_TX20
-	  TX20Init();
+	  tx20_init();
 	#endif
 	#ifdef _ANEMOMETER_ANALOGUE
 	  analog_anemometer_init(10, 10, 100, 1);

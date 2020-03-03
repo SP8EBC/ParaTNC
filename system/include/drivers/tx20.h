@@ -52,7 +52,7 @@ typedef struct Anemometer {
 	/* Indeks poprzednio zapisanych pomiarow*/
 	unsigned char PrevMeasCounter;
 	/* Historia odczytow i usredniona wartosc z ostatnich 15 pomiarow  */	
-	DecodedData HistoryAVG[TX20_BUFF_LN];
+//	DecodedData HistoryAVG[TX20_BUFF_LN];
 	
 	unsigned char OddEven;
 } Anemometer;
@@ -64,11 +64,12 @@ extern "C"
 {
 #endif
 
-void TX20Batch(void);
-void TX20Init(void);
-float TX20DataAverage(void);
-void TX20DataParse(void);
-uint16_t TX20GetScaledWindspeed(void);
+void tx20_batch(void);
+void tx20_init(void);
+float tx20_data_average(void);
+void tx20_data_parse(void);
+uint16_t tx20_get_scaled_windspeed(void);
+uint16_t tx20_get_wind_direction(void);
 
 #ifdef __cplusplus
 }
