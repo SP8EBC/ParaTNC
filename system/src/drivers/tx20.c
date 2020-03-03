@@ -198,9 +198,9 @@ void tx20_data_parse(void) {
 }
 
 uint16_t tx20_get_scaled_windspeed(void) {
-	float out = tx20_current_windspeed;
+	float out = tx20_current_windspeed * 10.0f;
 
-	return (uint16_t) (out * 10);
+	return (uint16_t) (out);
 }
 
 uint16_t tx20_get_wind_direction(void) {

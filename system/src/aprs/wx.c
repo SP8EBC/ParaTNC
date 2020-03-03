@@ -23,8 +23,8 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 	uint16_t direction = winddirection;
 
 	// windspeed is stored as an increment of 0.1 meters per second in 16bit unsigned integer
-	temp =  (float) (windspeed * 10.0f);
-	max_wind_speed = (float) (windgusts * 10.0f);
+	temp =   ((float)windspeed / 10.0f);
+	max_wind_speed =  ((float)windgusts / 10.0f);
 
 	temp /= 0.45;																						// Konwersja na mile na godzine
 	max_wind_speed /= 0.45;
