@@ -36,7 +36,10 @@ static const float direction_constant = M_PI/180.0f;
 
 void wx_get_all_measurements(void) {
 
+	int8_t j = 0;
+	int32_t i = 0;
 	int32_t return_value = 0;
+	float pressure_average_sum = 0.0f;
 
 #ifdef _METEO
 	// quering MS5611 sensor for temperature
@@ -115,7 +118,33 @@ void wx_get_all_measurements(void) {
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 
 	if (return_value == MS5611_OK) {
-		rte_wx_pressure_valid = rte_wx_pressure;
+		// add the current pressure into buffer
+		rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+
+		// reseting the average length iterator
+		j = 0;
+
+		// check if and end of the buffer was reached
+		if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+			rte_wx_pressure_it = 0;
+		}
+
+		// calculating the average of pressure measuremenets
+		for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+
+			// skip empty slots in the history to provide proper value even for first wx packet
+			if (rte_wx_pressure_history[i] < 10.0f) {
+				continue;
+			}
+
+			// add to the average
+			pressure_average_sum += rte_wx_pressure_history[i];
+
+			// increase the average lenght iterator
+			j++;
+		}
+
+		rte_wx_pressure_valid = pressure_average_sum / (float)j;
 	}
 
 	// if humidity sensor is idle trigger the communiction & measuremenets

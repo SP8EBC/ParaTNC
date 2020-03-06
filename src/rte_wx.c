@@ -14,6 +14,8 @@ float rte_wx_temperature_average_dallas_valid = 0.0f;
 float rte_wx_temperature_min_dallas_valid = 0.0f, rte_wx_temperature_max_dallas_valid = 0.0f;
 float rte_wx_temperature_ms = 0.0f, rte_wx_temperature_ms_valid = 0.0f;
 float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
+float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
+uint8_t rte_wx_pressure_it;
 
 uint16_t rte_wx_windspeed_pulses = 0;
 uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
@@ -43,5 +45,11 @@ void rte_wx_init(void) {
 	for (; i < WIND_AVERAGE_LEN; i++) {
 		rte_wx_windspeed[i] = 0;
 		rte_wx_winddirection[i] = 0;
+	}
+
+	rte_wx_pressure_it = 0;
+
+	for (i = 0; i < 4; i++) {
+		rte_wx_pressure_history[i] = 0.0f;
 	}
 }

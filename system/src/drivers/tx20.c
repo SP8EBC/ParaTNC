@@ -23,7 +23,14 @@
 #define PM TX20.PrevMeasCounter
 #define OE TX20.OddEven
 
+#define MAX_SLEW_RATE 		9
+#define HALF_MAX_SLEW_RATE	4.5f
+
 Anemometer TX20;	// Deklaracja zmiennej strukturalnej typu Anemometer
+
+float tx20_previous_windspeed;
+uint16_t tx20_previous_direction;
+
 float tx20_current_windspeed;
 uint16_t tx20_current_direction;
 
@@ -66,11 +73,6 @@ void tx20_init(void) {
 	//// inicjalizacja p�l struktury      //
 	////////////////////////////////////////
 	BQ = 0, QL = 0, FC = 0, DCD = 0, RD = 0, MC = 1, OE = 0, PM = 1;
-//	for (i = 1; i <= TX20_BUFF_LN - 1; i++) {
-//		VNAME.HistoryAVG[i].WindSpeed = -1;
-//		VNAME.HistoryAVG[i].WindDirX	= -1;
-//		VNAME.HistoryAVG[i].WindDirY	= -1;
-//	}
 	AFIO->EXTICR[(TX/4)] |= PORTNUM << (TX % 4) * 4;
 	EXTI->RTSR |= 1 << TX;
 	EXTI->IMR |= 1 << TX;
@@ -122,45 +124,31 @@ void tx20_batch(void) {
 }
 
 float tx20_data_average(void) {
-	int i;
-	short x = 0,xx = 0,y = 0,yy = 0, out = 0;
-	x = (short)(100.0f * cosf((float)TX20.Data.WindDirX * PI/180.0f));
-	y = (short)(100.0f * sinf((float)TX20.Data.WindDirX * PI/180.0f));
 
-//	if (
-//			PM != MC &&
-//			abs((int32_t)(TX20.HistoryAVG[PM].WindSpeed - TX20.Data.WindSpeed)) > 9
-//
-//	) {
-//		rte_wx_tx20_excessive_slew_rate = 1;
-//		return 0;
-//	}
+	// copy values from previous function call
+	tx20_previous_direction = tx20_current_direction;
+	tx20_previous_windspeed = tx20_current_windspeed;
 
-	tx20_current_windspeed = VNAME.Data.WindSpeed;
+	// fetch current measuremeents
 	tx20_current_direction = TX20.Data.WindDirX;
+	tx20_current_windspeed = TX20.Data.WindSpeed;
 
-//	TX20.HistoryAVG[MC].WindSpeed = VNAME.Data.WindSpeed;
-//	TX20.HistoryAVG[MC].WindDirX = x;
-//	TX20.HistoryAVG[MC].WindDirY = y;
-//	TX20.HistoryAVG[0].WindDirX = 0;
-//	TX20.HistoryAVG[0].WindDirY = 0;
-//	TX20.HistoryAVG[0].WindSpeed = 0;
-//	x = 0, y = 0;
-//	for (i = 1; (i <= TX20_BUFF_LN - 1 && TX20.HistoryAVG[i].WindSpeed != -1); i++) {
-//		TX20.HistoryAVG[0].WindSpeed += TX20.HistoryAVG[i].WindSpeed;
-//		x	+= TX20.HistoryAVG[i].WindDirX;
-//		y	+= TX20.HistoryAVG[i].WindDirY;
-//	}
-//	TX20.HistoryAVG[0].WindSpeed /= (i - 1);
-//	xx = x / (i - 1);
-//	yy = y / (i - 1);
-//	out = (short)(atan2f(yy , xx) * 180.0f/PI);
-//	if (out < 0)
-//		out += 360;
-//	TX20.HistoryAVG[0].WindDirX  = out;
-//	PM = MC;
-//	if ((MC++) == TX20_BUFF_LN)
-//		MC = 1;
+	// calculate the difference between current and previous
+	int abs_windspeed_diff = ((int32_t)tx20_current_windspeed - (int32_t)tx20_previous_windspeed);
+	//int abs_direction_diff = ((int16_t)tx20_current_direction - (int16_t)tx20_previous_direction);
+
+	// check if current measurement is too big in comparison with the previous one
+	if (abs_windspeed_diff > MAX_SLEW_RATE) {
+		tx20_current_windspeed = tx20_previous_windspeed + (float)HALF_MAX_SLEW_RATE;
+	}
+	// check if current measuremenet is too small in comparision with the previous one
+	else if (abs_windspeed_diff < -MAX_SLEW_RATE) {
+		tx20_current_windspeed = tx20_previous_windspeed - (float)HALF_MAX_SLEW_RATE;
+	}
+	else {
+		;
+	}
+
 	return 0;
 }
 
@@ -192,7 +180,9 @@ void tx20_data_parse(void) {
 	TX20.Data.Checksum = temp;
 	if (TX20.Data.Checksum == TX20.Data.CalcChecksum)
 		tx20_data_average();
-	else;
+	else {
+		;
+	}
 
 	wx_last_good_wind_time = master_time;
 }

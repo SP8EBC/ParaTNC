@@ -16,12 +16,16 @@
 
 #define WIND_AVERAGE_LEN 18
 
+#define PRESSURE_AVERAGE_LN 4
+
 extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
 extern float rte_wx_temperature_dalls_slew_rate;
 extern float rte_wx_temperature_average_dallas_valid;
 extern float rte_wx_temperature_min_dallas_valid, rte_wx_temperature_max_dallas_valid;
 extern float rte_wx_temperature_ms, rte_wx_temperature_ms_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
+extern float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
+extern uint8_t rte_wx_pressure_it;
 
 extern uint16_t rte_wx_windspeed_pulses;
 extern uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
