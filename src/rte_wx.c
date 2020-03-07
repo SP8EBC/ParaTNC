@@ -36,6 +36,7 @@ ms5611_qf_t rte_wx_ms5611_qf;
 
 #ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;
+umb_context_t rte_wx_umb_context;
 uint8_t rte_wx_last_status = 0;
 #endif
 

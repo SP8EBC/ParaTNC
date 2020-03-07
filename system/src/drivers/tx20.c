@@ -140,10 +140,12 @@ float tx20_data_average(void) {
 	// check if current measurement is too big in comparison with the previous one
 	if (abs_windspeed_diff > MAX_SLEW_RATE) {
 		tx20_current_windspeed = tx20_previous_windspeed + (float)HALF_MAX_SLEW_RATE;
+		rte_wx_tx20_excessive_slew_rate = 1;
 	}
 	// check if current measuremenet is too small in comparision with the previous one
 	else if (abs_windspeed_diff < -MAX_SLEW_RATE) {
 		tx20_current_windspeed = tx20_previous_windspeed - (float)HALF_MAX_SLEW_RATE;
+		rte_wx_tx20_excessive_slew_rate = 1;
 	}
 	else {
 		;

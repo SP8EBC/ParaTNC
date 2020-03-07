@@ -421,18 +421,25 @@ main(int argc, char* argv[])
 #elif defined _UMB_MASTER
 		// if some UMB data have been received
 		if (srl_rx_state == SRL_RX_DONE) {
-			main_umb_retval = umb_parse_serial_buffer_to_frame(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &rte_wx_umb);
+			// decode the UMB frame from a content of serial buffer
+			//main_umb_retval = umb_parse_serial_buffer_to_frame(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &rte_wx_umb);
 
-			if (main_umb_retval != UMB_OK) {
-				umb_master_callback(&rte_wx_umb);
-			}
-
-			srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+			// if data was decoded successfully
+			//if (main_umb_retval != UMB_OK) {
+				// call a master callback to look what was received
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE);
 		}
+
+			//srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 
 		// if there were an error during receiving frame from host, restart rxing once again
 		if (srl_rx_state == SRL_RX_ERROR) {
-			  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR);
+			  //srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+		}
+
+		if (srl_rx_state == SRL_TX_IDLE) {
+			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE);
 		}
 #else
 		// if new KISS message has been received from the host

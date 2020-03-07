@@ -197,11 +197,15 @@ void wx_pool_analog_anemometer(void) {
 
 	wx_wind_pool_call_counter++;
 
+	uint16_t scaled_windspeed = 0;
+
 	#ifdef _ANEMOMETER_ANALOGUE
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
-	uint16_t scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
-	#else
-	uint16_t scaled_windspeed = tx20_get_scaled_windspeed();
+	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+	#endif
+
+	#ifdef _ANEMOMETER_TX20
+	scaled_windspeed = tx20_get_scaled_windspeed();
 	rte_wx_winddirection_last = tx20_get_wind_direction();
 	#endif
 

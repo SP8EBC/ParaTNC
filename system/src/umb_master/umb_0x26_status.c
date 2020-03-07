@@ -26,7 +26,7 @@ umb_retval_t umb_0x26_status_request(umb_frame_t* frame, umb_context_t* ctx) {
 
 	memset(frame->payload, 0x00, UMB_FRAME_MAX_PAYLOAD_LN);
 
-	ctx->state = UMB_STATUS_SENDING_REQUEST_TO_SLAVE;
+	ctx->state = UMB_STATUS_READY_TO_SEND;
 
 	return UMB_OK;
 

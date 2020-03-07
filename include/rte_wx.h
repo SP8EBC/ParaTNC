@@ -48,6 +48,7 @@ extern ms5611_qf_t rte_wx_ms5611_qf;
 #ifdef _UMB_MASTER
 
 extern umb_frame_t rte_wx_umb;
+extern umb_context_t rte_wx_umb_context;
 extern uint8_t rte_wx_last_status;
 
 #endif
