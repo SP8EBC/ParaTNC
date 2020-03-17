@@ -75,7 +75,8 @@ void srl_init(void) {
 	Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
 	
 #ifndef _KOZIA_GORA
-
+	Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
+	GPIO_ResetBits(GPIOA, GPIO_Pin_7);
 #else
 	Configure_GPIO(GPIOD,2,GPPP_OUTPUT_2MHZ);	// re/te
 	GPIO_ResetBits(GPIOD, GPIO_Pin_2);
@@ -194,6 +195,8 @@ uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t intern
 	else return SRL_WRONG_BUFFER_PARAM;
 
 #ifndef _KOZIA_GORA
+	GPIO_SetBits(GPIOA, GPIO_Pin_7);
+
 #else
 	GPIO_SetBits(GPIOD, GPIO_Pin_2);
 #endif
@@ -230,6 +233,8 @@ uint8_t srl_start_tx(short leng) {
 	srl_tx_buf_pointer = srl_tx_buffer;
 
 #ifndef _KOZIA_GORA
+	GPIO_SetBits(GPIOA, GPIO_Pin_7);
+
 #else
 	GPIO_SetBits(GPIOD, GPIO_Pin_2);
 #endif
@@ -443,6 +448,8 @@ void srl_irq_handler(void) {
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				srl_tx_state = SRL_TX_IDLE;
 #ifndef _KOZIA_GORA
+				GPIO_ResetBits(GPIOA, GPIO_Pin_7);
+
 #else
 				GPIO_ResetBits(GPIOD, GPIO_Pin_2);
 #endif
@@ -457,6 +464,8 @@ void srl_irq_handler(void) {
 				PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				srl_tx_state = SRL_TX_IDLE;
 #ifndef _KOZIA_GORA
+				GPIO_ResetBits(GPIOA, GPIO_Pin_7);
+
 #else
 				GPIO_ResetBits(GPIOD, GPIO_Pin_2);
 #endif

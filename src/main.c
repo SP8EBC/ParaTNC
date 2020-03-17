@@ -50,7 +50,7 @@
 
 #define SOH 0x01
 
-//#define SERIAL_TX_TEST_MODE
+#define SERIAL_TX_TEST_MODE
 
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
@@ -290,6 +290,7 @@ main(int argc, char* argv[])
 
 #ifdef SERIAL_TX_TEST_MODE
 		  while(srl_tx_state != SRL_TX_IDLE);
+//		  while(srl_rx_state != SRL_RX_DONE);
 
 		  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
 
@@ -343,6 +344,8 @@ main(int argc, char* argv[])
 #ifdef _BCN_ON_STARTUP
 	SendStartup();
 #endif
+
+	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
 
   // Infinite loop
   while (1)
@@ -438,7 +441,7 @@ main(int argc, char* argv[])
 			  //srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 		}
 
-		if (srl_rx_state == SRL_TX_IDLE) {
+		if (srl_tx_state == SRL_TX_IDLE) {
 			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE);
 		}
 #else
