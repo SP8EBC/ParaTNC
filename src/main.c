@@ -50,7 +50,7 @@
 
 #define SOH 0x01
 
-#define SERIAL_TX_TEST_MODE
+//#define SERIAL_TX_TEST_MODE
 
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
@@ -230,7 +230,7 @@ main(int argc, char* argv[])
 		#undef _ANEMOMETER_ANALOGUE
 
 	  // client initialization
-	  umb_master_init();
+	  umb_master_init(&rte_wx_umb_context);
 	#endif
 
 	#ifdef  _ANEMOMETER_TX20
@@ -328,7 +328,7 @@ main(int argc, char* argv[])
 
 #elif !defined _VICTRON && defined _UMB_MASTER
 
-  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+//  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 
 
 #elif ! defined _VICTRON && !defined _UMB_MASTER
@@ -424,21 +424,12 @@ main(int argc, char* argv[])
 #elif defined _UMB_MASTER
 		// if some UMB data have been received
 		if (srl_rx_state == SRL_RX_DONE) {
-			// decode the UMB frame from a content of serial buffer
-			//main_umb_retval = umb_parse_serial_buffer_to_frame(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &rte_wx_umb);
-
-			// if data was decoded successfully
-			//if (main_umb_retval != UMB_OK) {
-				// call a master callback to look what was received
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE);
+			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE);
 		}
-
-			//srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 
 		// if there were an error during receiving frame from host, restart rxing once again
 		if (srl_rx_state == SRL_RX_ERROR) {
 			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR);
-			  //srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 		}
 
 		if (srl_tx_state == SRL_TX_IDLE) {

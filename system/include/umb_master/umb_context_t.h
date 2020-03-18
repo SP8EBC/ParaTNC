@@ -12,9 +12,17 @@
 #include "umb_state_t.h"
 #include "../drivers/serial.h"
 
+#define UMB_CONTEXT_ERR_HISTORY_LN 4
+
 typedef struct umb_context_t {
 
 	int16_t current_routine;
+
+	uint8_t nok_error_codes[UMB_CONTEXT_ERR_HISTORY_LN];
+
+	uint8_t nok_error_it;
+
+	uint32_t time_of_last_nok;
 
 	umb_state_t state;
 

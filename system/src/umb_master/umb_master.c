@@ -23,11 +23,15 @@
 #define MASTER_ID 0x01
 #define MASTER_CLASS 0xF0
 
-umb_context_t umb_context;
+void umb_master_init(umb_context_t* ctx) {
+	ctx->current_routine = -1;
+	ctx->state = UMB_STATUS_IDLE;
+	ctx->nok_error_it = 0;
 
-void umb_master_init() {
-	umb_context.current_routine = -1;
-	umb_context.state = UMB_STATUS_IDLE;
+	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
+		ctx->nok_error_codes[i] = 0;
+	}
+
 }
 
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame) {
@@ -38,14 +42,14 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	if (serial_buffer[0] != SOH && serial_buffer[1] != V10)
 		return UMB_NOT_VALID_FRAME;
 
-	if (serial_buffer[2] != MASTER_CLASS && serial_buffer[3] != MASTER_ID)
+	if (serial_buffer[3] != (MASTER_CLASS >> 4) && serial_buffer[2] != MASTER_ID)
 		return UMB_TO_ANOTHER_MASTER;
 
-	frame->slave_class 		= serial_buffer[4];
-	frame->slave_id 		= serial_buffer[5];
+	frame->slave_class 		= serial_buffer[5] >> 4;
+	frame->slave_id 		= serial_buffer[4];
 	frame->lenght 			= serial_buffer[6] - 2;
 
-	if (serial_buffer[8] != STX)
+	if (serial_buffer[7] != STX)
 		return UMB_NOT_VALID_FRAME;
 
 	frame->command_id		= serial_buffer[8];
@@ -64,7 +68,7 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	crc_from_frame = serial_buffer[frame->lenght + 9] | (serial_buffer[frame->lenght + 10] << 8);
 
 	// recalculating crc from frame content
-	for (int j = 0; j < frame->lenght + 8 + 2; j++) {
+	for (int j = 0; j <= frame->lenght + 8 + 2; j++) {
 		crc = umb_calc_crc(crc, serial_buffer[j]);
 	}
 
@@ -91,7 +95,7 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 	serial_buffer[i++] = SOH;
 	serial_buffer[i++] = V10;
 	serial_buffer[i++] = _UMB_SLAVE_ID;
-	serial_buffer[i++] = _UMB_SLAVE_CLASS;
+	serial_buffer[i++] = _UMB_SLAVE_CLASS << 4;
 	serial_buffer[i++] = MASTER_ID;
 	serial_buffer[i++] = MASTER_CLASS;
 	serial_buffer[i++] = frame->lenght + 2;
@@ -110,7 +114,7 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 	}
 
 	serial_buffer[i++] = (uint8_t) crc & 0xFF;
-	serial_buffer[i++] = (uint8_t) (crc & 0xFF00) >> 8;
+	serial_buffer[i++] = (uint8_t) ((crc & 0xFF00) >> 8);
 	serial_buffer[i++] = EOT;
 
 	*target_ln = (uint16_t)i;
@@ -211,6 +215,9 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
 		case UMB_STATUS_ERROR: {
 			break;
 		}
+		case UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE: {
+			break;
+		}
 	}
 
 	return UMB_OK;
@@ -220,6 +227,13 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
  * This function is called globally after receiving any UMB data
  */
 umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
+
+	// check if this is a response to routine which was queried recently
+	if (frame->command_id != ctx->current_routine) {
+		ctx->state = UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE;
+
+		return UMB_GENERAL_ERROR;
+	}
 
 	// looking for a callback to this response
 	switch (frame->command_id) {
