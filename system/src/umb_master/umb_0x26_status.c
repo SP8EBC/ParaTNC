@@ -8,6 +8,7 @@
 #include "../umb_master/umb_master.h"
 #include "../umb_master/umb_0x26_status.h"
 #include "station_config.h"
+#include "main.h"
 
 #include <string.h>
 
@@ -58,6 +59,9 @@ umb_retval_t umb_0x26_status_callback(umb_frame_t* frame, umb_context_t* ctx) {
 			// move the iterator through the buffer
 			ctx->nok_error_it = (ctx->nok_error_it++) % UMB_CONTEXT_ERR_HISTORY_LN;
 		}
+
+		// storing the time when last error code will be stored
+		ctx->time_of_last_nok = master_time;
 	}
 
 	ctx->state = UMB_STATUS_IDLE;

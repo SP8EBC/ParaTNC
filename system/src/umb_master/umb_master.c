@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include <umb_master/umb_0x26_status.h>
+#include <umb_master/umb_0x23_offline_data.h>
 #include <umb_master/umb_master.h>
 #include <drivers/serial.h>
 #include <rte_wx.h>
@@ -27,6 +28,7 @@ void umb_master_init(umb_context_t* ctx) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
 	ctx->nok_error_it = 0;
+	ctx->time_of_last_nok = 0xFFFFFFFFu;
 
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
 		ctx->nok_error_codes[i] = 0;
@@ -237,6 +239,10 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 	// looking for a callback to this response
 	switch (frame->command_id) {
+		case 0x23: {
+			umb_0x23_offline_data_callback(frame, ctx);
+			break;
+		}
 		case 0x26: {
 			umb_0x26_status_callback(frame, ctx);
 			break;

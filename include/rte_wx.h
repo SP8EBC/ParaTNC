@@ -17,6 +17,7 @@
 #define WIND_AVERAGE_LEN 18
 
 #define PRESSURE_AVERAGE_LN 4
+#define UMB_CHANNELS_STORAGE_CAPAC 6
 
 extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
 extern float rte_wx_temperature_dalls_slew_rate;
@@ -49,7 +50,8 @@ extern ms5611_qf_t rte_wx_ms5611_qf;
 
 extern umb_frame_t rte_wx_umb;
 extern umb_context_t rte_wx_umb_context;
-extern uint8_t rte_wx_last_status;
+extern uint8_t rte_wx_umb_last_status;
+extern int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];
 
 #endif
 

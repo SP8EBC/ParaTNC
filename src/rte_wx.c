@@ -37,7 +37,9 @@ ms5611_qf_t rte_wx_ms5611_qf;
 #ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;
 umb_context_t rte_wx_umb_context;
-uint8_t rte_wx_last_status = 0;
+uint8_t rte_wx_umb_last_status = 0;
+int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];	// first dimension stores the channel number and the second one
+																// stores the value in 0.1 incremenets
 #endif
 
 void rte_wx_init(void) {
