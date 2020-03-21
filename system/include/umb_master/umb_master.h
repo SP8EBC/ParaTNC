@@ -14,6 +14,7 @@
 #include <umb_master/umb_call_reason.h>
 #include "station_config.h"
 
+
 #ifdef _UMB_MASTER
 
 extern umb_context_t umb_context;

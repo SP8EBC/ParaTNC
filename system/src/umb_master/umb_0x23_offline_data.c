@@ -65,6 +65,9 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 	// signed value to be written in RTE
 	int32_t value_for_rte = 0;
 
+	// temporary float point buffer to handle this type
+	float temp = 0.0f;
+
 	// check if status is OK
 	if (status == 0x00) {
 		// fetch the channel number
@@ -124,7 +127,8 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 				break;
 			}
 			case FLOAT: {
-				value_for_rte = (int32_t)((float)raw_value * 10.0f);
+				temp = *(float*)&raw_value;
+				value_for_rte = (int32_t)(temp * 10.0f);
 				break;
 			}
 			// there is no default case here as if a type was any different from supported the function would
@@ -145,9 +149,13 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 
 		for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
 			// look for free slot in channel values storage
-			if(rte_wx_umb_channel_values[i][0] == (int16_t)0xFFFF) {
+			if(	rte_wx_umb_channel_values[i][0] == (int16_t)0xFFFF ||
+				rte_wx_umb_channel_values[i][0] == (int16_t)channel	)
+			{
+				// if found store the value and then break the loop execution
 				rte_wx_umb_channel_values[i][0] = channel;
 				rte_wx_umb_channel_values[i][1] = (int16_t)value_for_rte;
+				break;
 			}
 		}
 

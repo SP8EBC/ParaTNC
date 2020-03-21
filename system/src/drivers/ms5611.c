@@ -110,7 +110,7 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 		}
 
 		// Storing calibration coefficient into target array
-		*(cal_data + j) = ((i2cRXData[0] << 8) | i2cRXData[1]);
+		*(cal_data + j) = ((i2c_rx_data[0] << 8) | i2c_rx_data[1]);
 
 		// increase an iterator used to walk through target array
 		j++;
@@ -172,7 +172,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		*out = ((i2cRXData[0] << 16) | (i2cRXData[1] << 8) | i2cRXData[2]);
+		*out = ((i2c_rx_data[0] << 16) | (i2c_rx_data[1] << 8) | i2c_rx_data[2]);
 		////////////////////////////////////////////
 		//// TRIGGERING PRESSURE MEASUREMENET   ////
 		////////////////////////////////////////////
@@ -208,7 +208,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		*out = ((i2cRXData[0] << 16) | (i2cRXData[1] << 8) | i2cRXData[2]);
+		*out = ((i2c_rx_data[0] << 16) | (i2c_rx_data[1] << 8) | i2c_rx_data[2]);
 		/////////////////////////////////////////////
 		//// TRIGGERING TEMPERATURE MEASUREMENET ////
 		/////////////////////////////////////////////

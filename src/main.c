@@ -40,6 +40,13 @@
 #include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
+
+#ifdef _UMB_MASTER
+#include "umb_master/umb_master.h"
+#include "umb_master/umb_channel_pool.h"
+#include "umb_master/umb_0x26_status.h"
+#endif
+
 #endif
 
 #ifdef _DALLAS_AS_TELEM
@@ -345,7 +352,9 @@ main(int argc, char* argv[])
 	SendStartup();
 #endif
 
+#if defined(_UMB_MASTER)
 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+#endif
 
   // Infinite loop
   while (1)
@@ -494,6 +503,10 @@ main(int argc, char* argv[])
 		}
 
 		if (main_ten_second_pool_timer < 10) {
+
+			#if defined(_UMB_MASTER)
+			umb_channel_pool(&rte_wx_umb, &umb_context);
+			#endif
 
 			wx_pool_analog_anemometer();
 

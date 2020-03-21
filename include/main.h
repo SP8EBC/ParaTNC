@@ -4,7 +4,7 @@
 #include "aprs/ax25.h"
 
 #define SW_VER "DE07"
-#define SW_DATE "06032020"
+#define SW_DATE "21032020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10

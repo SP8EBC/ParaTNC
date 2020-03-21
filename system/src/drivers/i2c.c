@@ -11,16 +11,16 @@ int i2cCCRegisterValue = 0x78;
 //int i2cRiseRegisterValue = 0x09;	// w realu 6
 int i2cRiseRegisterValue = 0x06;
 
-volatile uint16_t i2cRemoteAddr = 0;			// adres zdalnego urz�dzenia
-volatile uint8_t i2cTXData[32] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
-volatile uint8_t i2cRXData[32] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
-volatile uint8_t i2cRXing = 0;				// ustawiony na 1 kiedy trwa odbi�r danych
-volatile uint8_t i2cTXing = 0;				// ustawiony na 1 kiedy trwa wysy�anie danych
-volatile uint8_t i2cDone = 0;				// ustawiany na jeden w momencie zako�czenia wysy�ania/odbioru
-volatile uint8_t i2cTXQueueLen = 0;			// liczba bajt�w w kolejce do wys�ania
-volatile uint8_t i2cTRXDataCounter = 0;		// licznik odebranych/wyslanych danych
-volatile uint8_t i2cRXBytesNumber = 0;		// liczba bajtow do odebrania
-volatile uint8_t i2cErrorCounter = 0;		// liczbnik b��d�w transmisji
+volatile uint16_t i2c_remote_addr = 0;			// adres zdalnego urz�dzenia
+volatile uint8_t i2c_tx_data[32] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
+volatile uint8_t i2c_rx_data[32] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
+volatile uint8_t i2c_rxing = 0;				// ustawiony na 1 kiedy trwa odbi�r danych
+volatile uint8_t i2c_txing = 0;				// ustawiony na 1 kiedy trwa wysy�anie danych
+volatile uint8_t i2c_done = 0;				// ustawiany na jeden w momencie zako�czenia wysy�ania/odbioru
+volatile uint8_t i2c_tx_queue_len = 0;			// liczba bajt�w w kolejce do wys�ania
+volatile uint8_t i2c_trx_data_counter = 0;		// licznik odebranych/wyslanych danych
+volatile uint8_t i2c_rx_bytes_number = 0;		// liczba bajtow do odebrania
+volatile uint8_t i2c_error_counter = 0;		// liczbnik b��d�w transmisji
 
 volatile i2c_state_t i2c_state;
 
@@ -99,16 +99,16 @@ int i2cReinit() {
 int i2cSendData(int addr, int* data, int null) {
 	int i;
 	for (i = 0; (i<32 && *(data+i) != '\0'); i++)
-		i2cTXData[i]=data[i];
+		i2c_tx_data[i]=data[i];
 	if (null == 0x01) {					// je�eli do slave trzeba wys�a� 0x00
-		i2cTXData[0] = 0x00;
+		i2c_tx_data[0] = 0x00;
 		i = 1;
 	}
-	i2cTXQueueLen = i;
-	i2cRemoteAddr = addr;
+	i2c_tx_queue_len = i;
+	i2c_remote_addr = addr;
 	
-	i2cTXing = 1;
-	i2cErrorCounter = 0;
+	i2c_txing = 1;
+	i2c_error_counter = 0;
 
 	i2cStartTime = master_time;
 
@@ -121,10 +121,10 @@ int i2cSendData(int addr, int* data, int null) {
 }
 
 int i2cReceiveData(int addr, int* data, int num) {
-	i2cRXBytesNumber = num;
-	i2cRemoteAddr = addr;
-	i2cTRXDataCounter = 0;
-	i2cRXing = 1;
+	i2c_rx_bytes_number = num;
+	i2c_remote_addr = addr;
+	i2c_trx_data_counter = 0;
+	i2c_rxing = 1;
 
 	i2cStartTime = master_time;
 
@@ -140,25 +140,25 @@ int i2cReceiveData(int addr, int* data, int num) {
 
 void i2cVariableReset(void) {
 	I2C1->DR = 0x00;
-	i2cTRXDataCounter = 0;
-	i2cTXQueueLen = 0;
-	i2cRXBytesNumber = 0;
+	i2c_trx_data_counter = 0;
+	i2c_tx_queue_len = 0;
+	i2c_rx_bytes_number = 0;
 }
 
 void i2cIrqHandler(void) {
 	//	int i;
-		if ((I2C1->SR1 & I2C_SR1_SB) == I2C_SR1_SB && (i2cTXing == 1 || i2cRXing == 1)) {
+		if ((I2C1->SR1 & I2C_SR1_SB) == I2C_SR1_SB && (i2c_txing == 1 || i2c_rxing == 1)) {
 		// After Start conditions have been transmitted.
-			I2C1->DR = i2cRemoteAddr;				// Loading the slave address into data register
+			I2C1->DR = i2c_remote_addr;				// Loading the slave address into data register
 			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_SB);	// clearing 'SB' flag
 
 		}
-		if ((I2C1->SR1 & I2C_SR1_ADDR) == I2C_SR1_ADDR && (i2cTXing == 1 || i2cRXing == 1)) {
+		if ((I2C1->SR1 & I2C_SR1_ADDR) == I2C_SR1_ADDR && (i2c_txing == 1 || i2c_rxing == 1)) {
 		// After transmitting the slave address      EV6
 			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_ADDR);
 			I2C1->SR2 &= (0xFFFFFFFF ^ I2C_SR2_TRA);
 
-			if (i2cRXBytesNumber == 1 && i2cRXing == 1) {
+			if (i2c_rx_bytes_number == 1 && i2c_rxing == 1) {
 				/// EV_6_1
 				// If i2c is on receive mode an only single byte must be received clear the ACK flag
 				// not to set ACK on bus after receiving the byte.
@@ -166,48 +166,48 @@ void i2cIrqHandler(void) {
 				I2C1->CR1 |= I2C_CR1_STOP;
 				}
 
-			if (i2cRXing == 1) // TODO: this is a bug??
+			if (i2c_rxing == 1) // TODO: this is a bug??
 				I2C1->CR1 |= I2C_CR1_ACK;
 		}
-		if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2cTXing == 1) {
+		if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2c_txing == 1) {
 		// If I2C is in transmission mode and the data buffer is busy
 		// put the next in the data register EV_8_1
-			I2C1->DR = i2cTXData[0];		// TODO: This is probably a bug?
-			i2cTRXDataCounter++;
+			I2C1->DR = i2c_tx_data[0];		// TODO: This is probably a bug?
+			i2c_trx_data_counter++;
 		}
-		if (i2cTRXDataCounter == i2cTXQueueLen && i2cTXing == 1) {
+		if (i2c_trx_data_counter == i2c_tx_queue_len && i2c_txing == 1) {
 			// If all data have been transmitted to the slave the stop conditions should be
 			// transmitte over the i2c bus
-			i2cTXing = 0;
+			i2c_txing = 0;
 			I2C1->CR1 |= I2C_CR1_STOP;
 			while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
 
 			// stop the i2c
 			i2cStop();
 		}
-		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2cTXing == 1) {
+		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2c_txing == 1) {
 		// EV_8
-			if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2cTXing == 1 && i2cTRXDataCounter < i2cTXQueueLen) {
-			I2C1->DR = i2cTXData[i2cTRXDataCounter];
-			i2cTRXDataCounter++;
+			if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2c_txing == 1 && i2c_trx_data_counter < i2c_tx_queue_len) {
+			I2C1->DR = i2c_tx_data[i2c_trx_data_counter];
+			i2c_trx_data_counter++;
 			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_BTF);
 			}
 		}
-		if ((I2C1->SR1 & I2C_SR1_RXNE) == I2C_SR1_RXNE && i2cRXing == 1) {
+		if ((I2C1->SR1 & I2C_SR1_RXNE) == I2C_SR1_RXNE && i2c_rxing == 1) {
 		// EV_7
-			*(i2cRXData + i2cTRXDataCounter) = I2C1->DR & I2C_DR_DR;
-			i2cTRXDataCounter++;
-			if (i2cRXBytesNumber-i2cTRXDataCounter == 1) {
+			*(i2c_rx_data + i2c_trx_data_counter) = I2C1->DR & I2C_DR_DR;
+			i2c_trx_data_counter++;
+			if (i2c_rx_bytes_number-i2c_trx_data_counter == 1) {
 				I2C1->CR1 &= (0xFFFFFFFF ^ I2C_CR1_ACK);	//jezeli odebrano przedostatni bajt to trzeba
 															// zgasic bit ACK zeby nastepnie wyslano NACK na koniec
 			}
-			if (i2cRXBytesNumber-i2cTRXDataCounter == 0) {
+			if (i2c_rx_bytes_number-i2c_trx_data_counter == 0) {
 				I2C1->CR1 |= I2C_CR1_STOP;		// po odczytaniu z rejestru DR ostatniego bajtu w sekwencji
 												// nast�puje wys�anie warunk�w STOP na magistrale
 				while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
-				i2cRXing = 0;
+				i2c_rxing = 0;
 				//I2C_Cmd(I2C1, DISABLE);
-				*(i2cRXData + i2cTRXDataCounter) = '\0';
+				*(i2c_rx_data + i2c_trx_data_counter) = '\0';
 				i2cStop();
 
 			}
@@ -219,52 +219,52 @@ void i2cIrqHandler(void) {
 void i2cErrIrqHandler(void) {
 
 
-	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2cTRXDataCounter == 0 ) {
+	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2c_trx_data_counter == 0 ) {
 		// slave nie odpowiedzia� ack na sw�j adres
 		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
 		I2C1->CR1 |= I2C_CR1_STOP;		// zadawanie warunkow STOP i przerywanie komunikacji
 		while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
-		i2cErrorCounter++;				// zwieksza wartosc licznika b��d�w transmisji
+		i2c_error_counter++;				// zwieksza wartosc licznika b��d�w transmisji
 		I2C1->CR1 |= I2C_CR1_START;		// ponawianie komunikacji
 
 	}
-	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2cTRXDataCounter != 0 ) {
+	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2c_trx_data_counter != 0 ) {
 		//jezeli slave nie odpowiedzia� ack na wys�any do niego bajt danych
 		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
-		i2cErrorCounter++;
-		i2cTRXDataCounter--;	// zmniejszanie warto�ci licznika danych aby nadac jeszcze raz to samo
+		i2c_error_counter++;
+		i2c_trx_data_counter--;	// zmniejszanie warto�ci licznika danych aby nadac jeszcze raz to samo
 
 	}
 
 	if (((I2C1->SR1 & I2C_SR1_ARLO) == I2C_SR1_ARLO) ) {
 
-		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
 
 	if (((I2C1->SR1 & I2C_SR1_TIMEOUT) == I2C_SR1_TIMEOUT) ) {
 
-		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
 	if (((I2C1->SR1 & I2C_SR1_OVR) == I2C_SR1_OVR) ) {
 
-		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
 	if (((I2C1->SR1 & I2C_SR1_BERR) == I2C_SR1_BERR) ) {
 
-		i2cErrorCounter = MAX_I2C_ERRORS_PER_COMM + 1;
+		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
 	// if this seems to be some unknow or unhalted error
-	i2cErrorCounter++;
+	i2c_error_counter++;
 
-	if (i2cErrorCounter > MAX_I2C_ERRORS_PER_COMM) {
+	if (i2c_error_counter > MAX_I2C_ERRORS_PER_COMM) {
 		i2cReinit();
 		i2cStop();
 
@@ -274,11 +274,11 @@ void i2cErrIrqHandler(void) {
 }
 
 void i2cStop(void) {
-	i2cRXing = 0;
-	i2cTXing = 0;
-	i2cTXQueueLen = 0;
-	i2cTRXDataCounter = 0;
-	i2cRXBytesNumber = 0;
+	i2c_rxing = 0;
+	i2c_txing = 0;
+	i2c_tx_queue_len = 0;
+	i2c_trx_data_counter = 0;
+	i2c_rx_bytes_number = 0;
 
 	I2C_Cmd(I2C1, DISABLE);
 

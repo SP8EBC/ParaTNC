@@ -9,8 +9,10 @@
 #include <umb_master/umb_0x26_status.h>
 #include <umb_master/umb_0x23_offline_data.h>
 #include <umb_master/umb_master.h>
+#include <umb_master/umb_channel_pool.h>
 #include <drivers/serial.h>
 #include <rte_wx.h>
+#include "station_config.h"
 
 #ifdef _UMB_MASTER
 
@@ -24,6 +26,8 @@
 #define MASTER_ID 0x01
 #define MASTER_CLASS 0xF0
 
+umb_context_t umb_context;
+
 void umb_master_init(umb_context_t* ctx) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
@@ -33,6 +37,29 @@ void umb_master_init(umb_context_t* ctx) {
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
 		ctx->nok_error_codes[i] = 0;
 	}
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++)
+		ctx->channel_numbers[i] = 0xFFFFu;
+
+#ifdef _UMB_CHANNEL_WINDSPEED
+	ctx->channel_numbers[0] = _UMB_CHANNEL_WINDSPEED;
+#endif
+
+#ifdef _UMB_CHANNEL_WINDGUSTS
+	ctx->channel_numbers[1] = _UMB_CHANNEL_WINDGUSTS;
+#endif
+
+#ifdef _UMB_CHANNEL_WINDDIRECTION
+	ctx->channel_numbers[2] = _UMB_CHANNEL_WINDDIRECTION;
+#endif
+
+#ifdef _UMB_CHANNEL_TEMPERATURE
+	ctx->channel_numbers[3] = _UMB_CHANNEL_TEMPERATURE;
+#endif
+
+#ifdef _UMB_CHANNEL_QFE
+	ctx->channel_numbers[4] = _UMB_CHANNEL_QFE;
+#endif
 
 }
 

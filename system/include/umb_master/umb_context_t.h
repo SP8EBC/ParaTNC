@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include "umb_state_t.h"
-#include "../drivers/serial.h"
+#include "umb_defines.h"
 
 #define UMB_CONTEXT_ERR_HISTORY_LN 4
 
@@ -25,6 +25,10 @@ typedef struct umb_context_t {
 	uint32_t time_of_last_nok;
 
 	umb_state_t state;
+
+	uint16_t channel_numbers[UMB_CHANNELS_STORAGE_CAPAC];
+
+	uint8_t current_channel;
 
 } umb_context_t;
 

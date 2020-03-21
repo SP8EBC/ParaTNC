@@ -32,16 +32,16 @@ void i2cKeepTimeout(void);
 
 extern volatile i2c_state_t i2c_state;
 
-extern volatile uint16_t i2cRemoteAddr;
-extern volatile uint8_t i2cTXData[32];
-extern volatile uint8_t i2cRXData[32];
-extern volatile uint8_t i2cRXing;
-extern volatile uint8_t i2cTXing;
-extern volatile uint8_t i2cDone;
-extern volatile uint8_t i2cTXQueueLen;
-extern volatile uint8_t i2cTRXDataCounter;
-extern volatile uint8_t i2cRXBytesNumber;
-extern volatile uint8_t i2cErrorCounter;
+extern volatile uint16_t i2c_remote_addr;
+extern volatile uint8_t i2c_tx_data[32];
+extern volatile uint8_t i2c_rx_data[32];
+extern volatile uint8_t i2c_rxing;
+extern volatile uint8_t i2c_txing;
+extern volatile uint8_t i2c_done;
+extern volatile uint8_t i2c_tx_queue_len;
+extern volatile uint8_t i2c_trx_data_counter;
+extern volatile uint8_t i2c_rx_bytes_number;
+extern volatile uint8_t i2c_error_counter;
 
 /* C++ detection */
 #ifdef __cplusplus

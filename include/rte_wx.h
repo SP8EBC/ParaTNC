@@ -17,7 +17,6 @@
 #define WIND_AVERAGE_LEN 18
 
 #define PRESSURE_AVERAGE_LN 4
-#define UMB_CHANNELS_STORAGE_CAPAC 6
 
 extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
 extern float rte_wx_temperature_dalls_slew_rate;

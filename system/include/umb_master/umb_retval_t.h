@@ -18,7 +18,7 @@ typedef enum umb_retval_t {
 	UMB_WRONG_CRC = -5,
 	UMB_BUSY = -6,
 	UMB_NOK_STATUS_GOT_WITH_RESP = -7,
-	UMB_VALUE_OUT_OF_RANGE = 8,
+	UMB_VALUE_OUT_OF_RANGE = -8,
 	UMB_GENERAL_ERROR = -63
 }umb_retval_t;
 
