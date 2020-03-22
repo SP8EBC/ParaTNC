@@ -1,4 +1,4 @@
-ParaTNC version DE06, January 5th 2020
+ParaTNC version DE07, March 22th 2020
 -----------------------------------------
 
 1. INTRODUCTION
@@ -9,7 +9,7 @@ with costs about 10..12 euro this gives the cheapest possible standalone APRS co
 ParaAPRS supports key elements of what good APRS device should have:
    -> Two directional KISS TNC (no init strings required).
    -> WIDE1-1 digipeater, with an option to limit digipeating only to SSIDs 7, 8 and 9.
-   -> Weather station with support for various meteo sensors like: DS18B20 for temperature, MS5611 for pressure, LaCrosse TX20 for wind and DHT22 for humidity.
+   -> Weather station with support for various meteo sensors. Full list od supported devices in point 5.
    -> Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
    -> Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
 
@@ -26,8 +26,9 @@ few features which are hardly not possible without dedicated PCB
  	-> Wind and temperature sensor
  b) Isolated DC-DC coverter to supply sensors with an option to connect another external power supply itself
  c) A relay used as a watchdog to reset wind & temperature sensor in case that no communication will be received.
- d) RS232 serial port avaliable on Cisco style RJ45 connector
- e) PCB designed to fit into Mikrotik RB411/RB711 enclosure.
+ d) RS232 serial port avaliable on Cisco style RJ45 connector.
+ e) RS485 serial port interchable with RS232 (with HW Revision A) or working fully independly (HW Revision B)
+ f) PCB designed to fit into Mikrotik RB411/RB711 enclosure.
  
 ParaTNC PCB could be manufactured used a set of generber files locates in ./hardware/ directory a long with schematics and 
 layout renders (top and bottom layer).
@@ -35,10 +36,10 @@ layout renders (top and bottom layer).
 3. CURRENT OPEN POINTS AND ISSUES RELATED TO HW & SW
 As usually every design has some flaws, less or more important. In case of ParaTNC they can be divided into two
 parts, separately for software and hardware. Firstly in case of software an end user should USE ALWAYS THE SOURCE CODE
-WITH THE NEWEST TAG marked as non-beta (like DE06). ParaTNC repository is used for daily development, so the last commit
+WITH THE NEWEST TAG marked as non-beta (like DE07). ParaTNC repository is used for daily development, so the last commit
 can even sometimes don't compile at all, or consist some major bugs. 
 
-Hardware workarounds for now are
+Hardware workarounds in HW Revision A, now fixed in Revision B:
 -> Missing resistor in series with base of transistor T2. External 1k must be added in series with TX line
 -> Foortprint location of R7 (RX_LVL) and R8 (TX_LVL) helipots are 'not optimal'. If 'normal' pots are to be used the vertical
    version must be chosen as flat one won't fit due to neighbouring components location. 
@@ -51,7 +52,24 @@ Hardware workarounds for now are
 4. LICENSING
 ParaTNC software and hardware are licensed under terms included to the source code in 'LICENSE' file
 
-5. SUPPORTED FEATURES OD VE.Direct PROTOCOL
+5. SUPPORTED METEO SENSORS
+  a) Wind sensors: 
+     - TX20 (not in production)
+     - Davis 6410 or any another analogue anemometer with resisntance as a direction output and impulses as a windspeed
+         WARNING: Currently support on software testing phase. Not avaliable in Hardware Revision A due to lack of circuitry
+     - Lufft V200A/Ventus or any other UMB compatible device.
+         WARNING: Currently support on software testing phase.
+  b) Pressure Sensors:
+     - MS5611
+     - Any UMB protocol compatible device
+  c) Temperature sensors:
+     - Dallas One wire DS18B20
+     - Any UMB protocol compatible device
+  d) Humidity Sensors:
+     - DHT22
+
+
+6. SUPPORTED FEATURES OD VE.Direct PROTOCOL
 Most of Victron devices have a support both for binary and text serial protocol. By default the text procol (VE.Direct) is 
 always enabled and a device will send from its own telegrams each couple of seconds. The communication via VE.Direct is 
 avaliable through dedicated socket on the charging controller which is just 3.3V TTL levels UART, so no external ICs is 
@@ -71,7 +89,7 @@ limitations. Only these parameters are transmitted:
  -> Charging Controller status (like current charging mode) and minimum/maximum battery current in last 10 minutes.   
  -> Error Codes if any (short circuit, overheat, overvoltage on PV or battery input)
 
-6. TELEMETRY
+7. TELEMETRY
 If the VE.Direct protocol suppot is disabled the ParaTNC uses telemetry packets to send internal statistics and
 general information about communication with sensors. Telemetry works in 10 minutes cycle, which means that packets are sent
 every 10 minutes and they represents a state for the time between one and another. 
@@ -100,7 +118,7 @@ NOT AVALIABLE after the telemetry packets are sent.
 The TX20 anemometer driver has a Slew Rate Limiter which keeps out all 'spikes' in values mostly due to RF interference. if the
 difference between two consecutive measuremenets excedes hardcoded limit (9m/s) the software drops the value.
 
-7. CONFIGURATION
+8. CONFIGURATION
 At this point ParaTNC is delivered in form of source code which needs to be manually compiled by the user. Most options are 
 configured by #define in './include/station_config.h' and then hard-coded by the C preprocessor during compilation. An example file
 consist a lot of comments which explains what is what, but generally an user can choose there which mode should be enabled:
@@ -115,7 +133,7 @@ one UART in the micro. The KISS modem runs on default speed of 9600 bps. Telemet
 trasmit channels values each 10 minutes and full channel descriptions each 70 minutes.
 
  
-8. TOOLCHAIN AND COMPILATION
+9. TOOLCHAIN AND COMPILATION
 To build ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler,
 gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS using 2016q-3
 version. It shoud work fine in any newer version of the toolchain. The easies way to get everything installed
@@ -149,7 +167,7 @@ should appear in the same directory.
 
 	22:29:38 Build Finished (took 13s.231ms)
 
-7. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
+10. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
 The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
 This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
 in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration
