@@ -152,6 +152,13 @@ void wx_get_all_measurements(void) {
 		dht22State = DHT22_STATE_IDLE;
 
 #endif
+
+#if defined(_UMB_MASTER)
+	if (rte_wx_umb_qf == UMB_QF_FULL) {
+		rte_wx_temperature_average_dallas_valid = umb_get_temperature();
+		rte_wx_pressure_valid = umb_get_qfe();
+	}
+#endif
 }
 
 void wx_pool_dht22(void) {
@@ -182,7 +189,7 @@ void wx_pool_dht22(void) {
 
 }
 
-void wx_pool_analog_anemometer(void) {
+void wx_pool_anemometer(void) {
 
 	// locals
 	uint32_t average_windspeed = 0;
@@ -208,6 +215,12 @@ void wx_pool_analog_anemometer(void) {
 	scaled_windspeed = tx20_get_scaled_windspeed();
 	rte_wx_winddirection_last = tx20_get_wind_direction();
 	#endif
+
+	#if defined(_UMB_MASTER)
+	rte_wx_average_winddirection = umb_get_winddirection();
+	rte_wx_average_windspeed = umb_get_windspeed();
+	rte_wx_max_windspeed = umb_get_windgusts();
+	#else
 
 	// check how many times before the pool function was called
 	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
@@ -283,6 +296,8 @@ void wx_pool_analog_anemometer(void) {
 
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;
+
+	#endif
 }
 
 void wx_pwr_init(void) {

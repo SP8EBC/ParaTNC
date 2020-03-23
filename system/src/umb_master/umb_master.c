@@ -26,8 +26,6 @@
 #define MASTER_ID 0x01
 #define MASTER_CLASS 0xF0
 
-umb_context_t umb_context;
-
 void umb_master_init(umb_context_t* ctx) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
@@ -39,7 +37,7 @@ void umb_master_init(umb_context_t* ctx) {
 	}
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++)
-		ctx->channel_numbers[i] = 0xFFFFu;
+		rte_wx_umb_channel_values[i][0] = 0xFFFF;
 
 #ifdef _UMB_CHANNEL_WINDSPEED
 	ctx->channel_numbers[0] = _UMB_CHANNEL_WINDSPEED;
@@ -238,7 +236,9 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
 			break;
 		}
 		case UMB_STATUS_RESPONSE_AVALIABLE: {
-			//umb_master_callback()
+			if (r == REASON_RECEIVE_IDLE) {
+				ctx->state = UMB_STATUS_IDLE;
+			}
 			break;
 		}
 		case UMB_STATUS_ERROR: {
@@ -277,6 +277,82 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 	}
 
 	return UMB_OK;
+}
+
+umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
+
+	if (	ctx->time_of_last_nok == 0xFFFFFFFFu ||
+			(master_time - ctx->time_of_last_nok > (1000 * 60))) {
+		return UMB_QF_FULL;
+	}
+	else
+		return UMB_QF_DEGRADED;
+}
+
+uint16_t umb_get_windspeed(void) {
+
+	uint16_t out = 0;
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)_UMB_CHANNEL_WINDSPEED) {
+			out = (uint16_t)rte_wx_umb_channel_values[i][1];
+			break;
+		}
+	}
+
+	return out;
+}
+
+uint16_t umb_get_windgusts(void) {
+	uint16_t out = 0;
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)_UMB_CHANNEL_WINDGUSTS) {
+			out = (uint16_t)rte_wx_umb_channel_values[i][1];
+			break;
+		}
+	}
+
+	return out;
+}
+
+int16_t umb_get_winddirection(void) {
+	int16_t out = 0;
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)_UMB_CHANNEL_WINDDIRECTION) {
+			out = (int16_t)rte_wx_umb_channel_values[i][1];
+			break;
+		}
+	}
+	out /= 10;
+	return out;
+}
+
+float umb_get_temperature(void) {
+	float out = 0.0f;
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)_UMB_CHANNEL_TEMPERATURE) {
+			out = (float)rte_wx_umb_channel_values[i][1] * 0.1f;
+			break;
+		}
+	}
+
+	return out;
+}
+
+float umb_get_qfe(void) {
+	float out = 0;
+
+	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)_UMB_CHANNEL_QFE) {
+			out = (float)rte_wx_umb_channel_values[i][1] * 0.1f;
+			break;
+		}
+	}
+
+	return out;
 }
 
 #endif

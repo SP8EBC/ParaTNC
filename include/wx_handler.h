@@ -21,7 +21,7 @@ typedef enum wx_pwr_state_t {
 
 void wx_get_all_measurements(void);
 void wx_pool_dht22(void);
-void wx_pool_analog_anemometer(void);
+void wx_pool_anemometer(void);
 void wx_pwr_init(void);
 void wx_pwr_periodic_handle(void);
 

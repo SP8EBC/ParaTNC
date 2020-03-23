@@ -9,7 +9,7 @@
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
 #include "../umb_master/umb_master.h"
-
+#include "../umb_master/umb_qf_t.h"
 
 #ifndef RTE_WX_H_
 #define RTE_WX_H_
@@ -41,8 +41,8 @@ extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
 extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 
-extern DallasQF rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
-extern DallasAverage_t rte_wx_dallas_average;
+extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
+extern dallas_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
 
 #ifdef _UMB_MASTER
@@ -51,7 +51,7 @@ extern umb_frame_t rte_wx_umb;
 extern umb_context_t rte_wx_umb_context;
 extern uint8_t rte_wx_umb_last_status;
 extern int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];
-
+extern umb_qf_t rte_wx_umb_qf;																// stores the value in 0.1 incremenets
 #endif
 
 #ifdef __cplusplus

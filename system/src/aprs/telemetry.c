@@ -79,7 +79,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								int16_t raw_battery_current,
 								uint16_t raw_battery_voltage,
 								uint16_t raw_pv_cell_voltage,
-								DallasQF dallas_qf,
+								dallas_qf_t dallas_qf,
 								ms5611_qf_t ms_qf,
 								dht22QF ds_qf)
 {
@@ -235,7 +235,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t digi_pkts,
 							uint8_t kiss_pkts,
 							float temperature,
-							DallasQF dallas_qf,
+							dallas_qf_t dallas_qf,
 							ms5611_qf_t ms_qf,
 							dht22QF ds_qf,
 							uint8_t tx_slew_exceded) {

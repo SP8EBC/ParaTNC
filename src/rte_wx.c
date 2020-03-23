@@ -30,8 +30,8 @@ int16_t rte_wx_average_winddirection = 0;
 uint8_t rte_wx_tx20_excessive_slew_rate = 0;
 
 dht22Values rte_wx_dht, rte_wx_dht_valid;		// quality factor inside this structure
-DallasQF rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
-DallasAverage_t rte_wx_dallas_average;
+dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
+dallas_average_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf;
 
 #ifdef _UMB_MASTER
@@ -39,7 +39,7 @@ umb_frame_t rte_wx_umb;
 umb_context_t rte_wx_umb_context;
 uint8_t rte_wx_umb_last_status = 0;
 int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];	// first dimension stores the channel number and the second one
-																// stores the value in 0.1 incremenets
+umb_qf_t rte_wx_umb_qf = UMB_QF_UNITIALIZED;																// stores the value in 0.1 incremenets
 #endif
 
 void rte_wx_init(void) {

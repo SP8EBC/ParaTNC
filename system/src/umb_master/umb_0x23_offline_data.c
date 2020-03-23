@@ -42,6 +42,9 @@ umb_retval_t umb_0x23_offline_data_request(umb_frame_t* frame, umb_context_t* ct
 	frame->payload[0] = channel_number & 0xFF;
 	frame->payload[1] = (channel_number & 0xFF00) >> 8;
 
+	ctx->state = UMB_STATUS_READY_TO_SEND;
+	ctx->current_routine = 0x23;
+
 	return UMB_OK;
 }
 

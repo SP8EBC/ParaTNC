@@ -57,7 +57,10 @@ umb_retval_t umb_0x26_status_callback(umb_frame_t* frame, umb_context_t* ctx) {
 			ctx->nok_error_codes[ctx->nok_error_it] = frame->payload[1 + i];
 
 			// move the iterator through the buffer
-			ctx->nok_error_it = (ctx->nok_error_it++) % UMB_CONTEXT_ERR_HISTORY_LN;
+			ctx->nok_error_it++;
+
+			// check if and end of the buffer is reach here
+			ctx->nok_error_it %= UMB_CONTEXT_ERR_HISTORY_LN;
 		}
 
 		// storing the time when last error code will be stored

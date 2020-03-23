@@ -13,9 +13,9 @@
 volatile int delay_5us = 0;
 volatile char timm = 0;
 
-DallasStruct dallas;
+dallas_struct_t dallas;
 
-void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, DallasAverage_t* average) {
+void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average) {
 
 #ifndef _DALLAS_SPLIT_PIN
 	dallas.GPIOx = GPIOx;
@@ -181,7 +181,7 @@ char __attribute__((optimize("O0"))) dallas_receive_byte(void) {
 	return data;
 }
 
-float __attribute__((optimize("O0"))) dallas_query(DallasQF *qf) {
+float __attribute__((optimize("O0"))) dallas_query(dallas_qf_t *qf) {
 	unsigned char data[9];
 	int crc;
 	int i;
@@ -262,7 +262,7 @@ uint8_t dallas_calculate_crc8(uint8_t *addr, uint8_t len) {
 	return crc;
 }
 
-void dallas_average(float in, DallasAverage_t* average) {
+void dallas_average(float in, dallas_average_t* average) {
 	*average->current = in;
 
 	if (average->current == average->end) {
@@ -274,7 +274,7 @@ void dallas_average(float in, DallasAverage_t* average) {
 
 }
 
-float dallas_get_average(const DallasAverage_t* average) {
+float dallas_get_average(const dallas_average_t* average) {
 	float out = 0.0f;
 	uint8_t j = 0;
 
@@ -294,7 +294,7 @@ float dallas_get_average(const DallasAverage_t* average) {
 	}
 }
 
-float dallas_get_min(const DallasAverage_t* average) {
+float dallas_get_min(const dallas_average_t* average) {
 	float out = 128.0f;
 
 	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
@@ -308,7 +308,7 @@ float dallas_get_min(const DallasAverage_t* average) {
 	return out;
 }
 
-float dallas_get_max(const DallasAverage_t* average) {
+float dallas_get_max(const dallas_average_t* average) {
 	float out = -128.0f;
 
 	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {

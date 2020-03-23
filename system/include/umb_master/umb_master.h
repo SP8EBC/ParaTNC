@@ -12,12 +12,11 @@
 #include <umb_master/umb_retval_t.h>
 #include <umb_master/umb_context_t.h>
 #include <umb_master/umb_call_reason.h>
+#include <umb_master/umb_qf_t.h>
 #include "station_config.h"
 
 
 #ifdef _UMB_MASTER
-
-extern umb_context_t umb_context;
 
 void umb_master_init(umb_context_t* ctx);
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);
@@ -25,6 +24,13 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input);
 umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r);
 umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx);
+umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time);
+
+uint16_t umb_get_windspeed(void);
+uint16_t umb_get_windgusts(void);
+int16_t umb_get_winddirection(void);
+float umb_get_temperature(void);
+float umb_get_qfe(void);
 
 #endif
 

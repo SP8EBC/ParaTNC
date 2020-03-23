@@ -31,7 +31,7 @@ uint8_t packet_tx_telemetry_descr_counter = 35;
 
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
-	DallasQF dallas_qf = DALLAS_QF_UNKNOWN;
+	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
 
 	uint16_t ln = 0;
 

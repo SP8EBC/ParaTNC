@@ -505,10 +505,11 @@ main(int argc, char* argv[])
 		if (main_ten_second_pool_timer < 10) {
 
 			#if defined(_UMB_MASTER)
-			umb_channel_pool(&rte_wx_umb, &umb_context);
+			umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
+			rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			#endif
 
-			wx_pool_analog_anemometer();
+			wx_pool_anemometer();
 
 			main_ten_second_pool_timer = 10000;
 		}
