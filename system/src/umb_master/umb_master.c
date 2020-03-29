@@ -312,11 +312,11 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 	if (ctx->time_of_last_nok == 0xFFFFFFFFu) {
 		out = UMB_QF_FULL;
 	}
-	// if the last error status was received more than 10 minutes ago
-	else if (master_time - ctx->time_of_last_nok > TEN_MINUTES) {
+	// if the last error status was received more (sooner) than 10 minutes ago
+	else if (master_time - ctx->time_of_last_nok >= TEN_MINUTES) {
 		out = UMB_QF_FULL;
 	}
-	// if the last error has been received less than 10 minutes ago
+	// if the last error has been received later than 10 minutes ago
 	else {
 		out =  UMB_QF_DEGRADED;
 	}
@@ -325,12 +325,17 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 	if (ctx->time_of_last_comms_timeout == 0xFFFFFFFFu) {
 		;
 	}
-	// if the time of last timeout during communication was less than 10 minutes ago
+	// if the time of last timeout during communication was later than 10 minutes ago
 	else if (master_time - ctx->time_of_last_comms_timeout < TEN_MINUTES) {
-		out =  UMB_QF_DEGRADED;
+//		if (ctx->time_of_last_successful_comms > ctx->time_of_last_comms_timeout) {
+//			;
+//		}
+//		else {
+			out =  UMB_QF_DEGRADED;
+//		}
 	}
 
-	// if the last successfull communication with the sensor was 10 minutes ago or before
+	// if the last successfull communication with the sensor was 10 minutes ago or sooner
 	if (master_time - ctx->time_of_last_successful_comms > TEN_MINUTES) {
 		out = UMB_QF_NOT_AVALIABLE;
 	}
