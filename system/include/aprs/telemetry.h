@@ -11,6 +11,7 @@
 #include "./drivers/dallas.h"
 #include "./drivers/ms5611.h"
 #include "./drivers/_dht22.h"
+#include "./umb_master/umb_qf_t.h"
 
 #include "./station_config.h"
 
@@ -49,7 +50,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							dallas_qf_t dallas_qf,
 							ms5611_qf_t ms_qf,
 							dht22QF ds_qf,
-							uint8_t tx_slew_exceded);
+							umb_qf_t anemometer_qf);
 void telemetry_send_chns_description(void);
 void telemetry_send_status(void);
 

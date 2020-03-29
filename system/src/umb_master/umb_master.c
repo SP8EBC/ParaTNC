@@ -26,11 +26,16 @@
 #define MASTER_ID 0x01
 #define MASTER_CLASS 0xF0
 
+#define TEN_MINUTES (1000 * 600)
+
 void umb_master_init(umb_context_t* ctx) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
 	ctx->nok_error_it = 0;
 	ctx->time_of_last_nok = 0xFFFFFFFFu;
+	ctx->time_of_last_comms_timeout = 0xFFFFFFFFu;
+
+	ctx->time_of_last_successful_comms = 0;
 
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
 		ctx->nok_error_codes[i] = 0;
@@ -173,7 +178,7 @@ uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
  * This function is called in main 'for' loop to check if there
  * is anything to do regarding UMB
  */
-umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
+umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32_t master_time) {
 
 	uint16_t temp = 0;
 	umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
@@ -202,6 +207,10 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
 				// transmission is done and now receive must be triggered
 				srl_receive_data(8, SOH, 0x00, 0, 6, 12);
 
+				// enable timeout in case that sensor won't send any reponse
+				srl_switch_timeout(1, 0);
+				srl_switch_timeout_for_waiting(1);
+
 				ctx->state = UMB_STATUS_WAITING_FOR_RESPONSE;
 			}
 			//else if (srl_tx_state == SRL_TXING) {
@@ -225,12 +234,21 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
 					// call a master callback to look what was received
 					main_umb_retval = umb_master_callback(&rte_wx_umb, ctx);
 
-					if (main_umb_retval == UMB_OK)
+					if (main_umb_retval == UMB_OK) {
+						ctx->time_of_last_successful_comms = master_time;
+
 						ctx->state = UMB_STATUS_RESPONSE_AVALIABLE;
+					}
 					else
 						ctx->state = UMB_STATUS_ERROR;
 				}
 
+
+			}
+			else if (r == REASON_RECEIVE_ERROR) {
+				ctx->state = UMB_STATUS_ERROR;
+
+				ctx->time_of_last_comms_timeout = master_time;
 
 			}
 			break;
@@ -238,13 +256,18 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r) {
 		case UMB_STATUS_RESPONSE_AVALIABLE: {
 			if (r == REASON_RECEIVE_IDLE) {
 				ctx->state = UMB_STATUS_IDLE;
+
 			}
 			break;
 		}
 		case UMB_STATUS_ERROR: {
+			ctx->state = UMB_STATUS_IDLE;
+
 			break;
 		}
 		case UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE: {
+			ctx->state = UMB_STATUS_IDLE;
+
 			break;
 		}
 	}
@@ -278,15 +301,41 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 	return UMB_OK;
 }
-
+//	ctx->time_of_last_nok = 0xFFFFFFFFu;
+//ctx->time_of_last_comms_timeout = 0xFFFFFFFFu;
+//ctx->time_of_last_successful_comms = 0;
 umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 
-	if (	ctx->time_of_last_nok == 0xFFFFFFFFu ||
-			(master_time - ctx->time_of_last_nok > (1000 * 60))) {
-		return UMB_QF_FULL;
+	umb_qf_t out = UMB_QF_UNKNOWN;
+
+	// initialization value - no error has been received from power up
+	if (ctx->time_of_last_nok == 0xFFFFFFFFu) {
+		out = UMB_QF_FULL;
 	}
-	else
-		return UMB_QF_DEGRADED;
+	// if the last error status was received more than 10 minutes ago
+	else if (master_time - ctx->time_of_last_nok > TEN_MINUTES) {
+		out = UMB_QF_FULL;
+	}
+	// if the last error has been received less than 10 minutes ago
+	else {
+		out =  UMB_QF_DEGRADED;
+	}
+
+	// if there were no timeouts so far
+	if (ctx->time_of_last_comms_timeout == 0xFFFFFFFFu) {
+		;
+	}
+	// if the time of last timeout during communication was less than 10 minutes ago
+	else if (master_time - ctx->time_of_last_comms_timeout < TEN_MINUTES) {
+		out =  UMB_QF_DEGRADED;
+	}
+
+	// if the last successfull communication with the sensor was 10 minutes ago or before
+	if (master_time - ctx->time_of_last_successful_comms > TEN_MINUTES) {
+		out = UMB_QF_NOT_AVALIABLE;
+	}
+
+	return out;
 }
 
 uint16_t umb_get_windspeed(void) {

@@ -24,6 +24,10 @@ typedef struct umb_context_t {
 
 	uint32_t time_of_last_nok;
 
+	uint32_t time_of_last_comms_timeout;
+
+	uint32_t time_of_last_successful_comms;
+
 	umb_state_t state;
 
 	uint16_t channel_numbers[UMB_CHANNELS_STORAGE_CAPAC];

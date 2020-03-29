@@ -433,16 +433,16 @@ main(int argc, char* argv[])
 #elif defined _UMB_MASTER
 		// if some UMB data have been received
 		if (srl_rx_state == SRL_RX_DONE) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE);
+			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
 		}
 
 		// if there were an error during receiving frame from host, restart rxing once again
 		if (srl_rx_state == SRL_RX_ERROR) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR);
+			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
 		}
 
 		if (srl_tx_state == SRL_TX_IDLE) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE);
+			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
 		}
 #else
 		// if new KISS message has been received from the host

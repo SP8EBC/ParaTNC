@@ -44,9 +44,12 @@ uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danyc
 volatile uint8_t srl_garbage_storage;
 
 uint8_t srl_rx_timeout_enable = 0;
+uint8_t srl_rx_timeout_waiting_enable = 0;
 uint8_t srl_rx_timeout_calc_started = 0;
+uint8_t srl_rx_timeout_waiting_calc_started = 0;
 uint32_t srl_rx_timeout_trigger_value_in_msec = 0;
 uint32_t srl_rx_start_time = 0;
+uint32_t srl_rx_waiting_start_time = 0;
 
 srlRxState srl_rx_state = SRL_RX_NOT_CONFIG;
 srlTxState srl_tx_state = SRL_TX_NOT_CONFIG;
@@ -137,6 +140,15 @@ void srl_keep_timeout() {
 	}
 	else {
 		;
+	}
+
+	if (srl_rx_state != SRL_RX_NOT_CONFIG && srl_rx_timeout_waiting_enable == 1) {
+		if (master_time - srl_rx_waiting_start_time > srl_rx_timeout_trigger_value_in_msec) {
+			PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
+			PORT->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
+
+			srl_rx_state = SRL_RX_ERROR;
+		}
 	}
 }
 
@@ -289,6 +301,7 @@ uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_add
 			return SRL_WRONG_PARAMS_COMBINATION;
 
 		srl_rx_state = SRL_WAITING_TO_RX;
+		srl_rx_waiting_start_time = master_time;
 	}
 
 	srl_enable_echo = echo;
@@ -421,6 +434,9 @@ void srl_irq_handler(void) {
 
 					// change state to receiving
 					srl_rx_state = SRL_RXING;
+
+					// as receiving is started there is no point to calculate waiting timeout
+					srl_rx_timeout_waiting_enable = 0;
 				}
 				else {
 					// if this is not start byte just store it in garbage buffer to clear interrupt condition
@@ -499,4 +515,16 @@ void srl_switch_timeout(uint8_t disable_enable, uint32_t value) {
 	else {
 		srl_rx_timeout_trigger_value_in_msec = SRL_DEFAULT_RX_TIMEOUT_IN_MS;
 	}
+}
+
+void srl_switch_timeout_for_waiting(uint8_t disable_enable) {
+	if (disable_enable == 1)
+		srl_rx_timeout_waiting_enable = 1;
+	else if (disable_enable == 0)
+		srl_rx_timeout_waiting_enable = 0;
+	else;
+
+	if (srl_rx_timeout_trigger_value_in_msec == 0)
+		srl_rx_timeout_trigger_value_in_msec = SRL_DEFAULT_RX_TIMEOUT_IN_MS;
+
 }
