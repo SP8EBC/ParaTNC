@@ -7,6 +7,8 @@
 
 
 #include <rte_wx.h>
+#include <wx_handler.h>
+#include "main.h"
 
 float rte_wx_temperature_dallas = 0.0f, rte_wx_temperature_dallas_valid = 0.0f;
 float rte_wx_temperature_dalls_slew_rate = 0.0f;
@@ -55,4 +57,12 @@ void rte_wx_init(void) {
 	for (i = 0; i < 4; i++) {
 		rte_wx_pressure_history[i] = 0.0f;
 	}
+}
+
+void rte_wx_update_last_measuremenet_timers(uint16_t parameter_type) {
+	if (parameter_type == RTE_WX_MEASUREMENT_WIND)
+		wx_last_good_wind_time = master_time;
+	else if (parameter_type == RTE_WX_MEASUREMENT_TEMPERATURE)
+		wx_last_good_temperature_time = master_time;
+	else;
 }

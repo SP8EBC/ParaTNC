@@ -71,9 +71,9 @@ void srl_init(void) {
 	srl_tx_buf_ln = TX_BUFFER_LN;
 	#endif
 
-	Configure_GPIO(GPIOA,11,AFPP_OUTPUT_2MHZ);	// CTS
-	Configure_GPIO(GPIOA,12,AFPP_OUTPUT_2MHZ);	// RTS
-	Configure_GPIO(GPIOA,8,AFPP_OUTPUT_2MHZ);	// CLK
+	//Configure_GPIO(GPIOA,11,AFPP_OUTPUT_2MHZ);	// CTS
+	//Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// RTS
+	//Configure_GPIO(GPIOA,8,AFPP_OUTPUT_2MHZ);	// CLK
 	Configure_GPIO(GPIOA,10,PUD_INPUT);			// RX
 	Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
 	

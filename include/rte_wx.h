@@ -18,6 +18,10 @@
 
 #define PRESSURE_AVERAGE_LN 4
 
+#define RTE_WX_MEASUREMENT_WIND 		460
+#define RTE_WX_MEASUREMENT_TEMPERATURE	100
+#define RTE_WX_MEASUREMENT_PRESSUERE	300
+
 extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
 extern float rte_wx_temperature_dalls_slew_rate;
 extern float rte_wx_temperature_average_dallas_valid;
@@ -60,6 +64,7 @@ extern "C"
 #endif
 
 void rte_wx_init(void);
+void rte_wx_update_last_measuremenet_timers(uint16_t measurement_type);
 
 #ifdef __cplusplus
 }

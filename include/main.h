@@ -4,7 +4,7 @@
 #include "aprs/ax25.h"
 
 #define SW_VER "DE07"
-#define SW_DATE "27032020"
+#define SW_DATE "04042020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -30,9 +30,6 @@ extern char after_tx_lock;
 extern unsigned short rx10m, tx10m, digi10m, kiss10m;
 
 uint16_t main_get_adc_sample(void);
-//void main_wx_decremenet_counter(void);
-//void main_packets_tx_decremenet_counter(void);
-//void main_two_second_pool_decrement_counter(void);
 
 inline void main_wait_for_tx_complete(void) {
 	while(main_afsk.sending == 1);

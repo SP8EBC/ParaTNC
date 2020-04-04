@@ -32,7 +32,9 @@ typedef struct umb_context_t {
 
 	uint16_t channel_numbers[UMB_CHANNELS_STORAGE_CAPAC];
 
-	uint8_t current_channel;
+	uint8_t channel_number_it;
+
+	uint16_t current_channel;
 
 } umb_context_t;
 

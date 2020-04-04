@@ -280,6 +280,8 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
  */
 umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
+	umb_retval_t ret_fron_callback = UMB_UNINITIALIZED;
+
 	// check if this is a response to routine which was queried recently
 	if (frame->command_id != ctx->current_routine) {
 		ctx->state = UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE;
@@ -290,11 +292,16 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 	// looking for a callback to this response
 	switch (frame->command_id) {
 		case 0x23: {
-			umb_0x23_offline_data_callback(frame, ctx);
+			ret_fron_callback = umb_0x23_offline_data_callback(frame, ctx);
+
+			if (ret_fron_callback == UMB_OK) {
+				rte_wx_update_last_measuremenet_timers(ctx->current_channel);
+			}
+
 			break;
 		}
 		case 0x26: {
-			umb_0x26_status_callback(frame, ctx);
+			ret_fron_callback = umb_0x26_status_callback(frame, ctx);
 			break;
 		}
 	}

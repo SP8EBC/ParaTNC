@@ -40,6 +40,7 @@
 #include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
+#include "drivers/gpio_conf.h"
 
 #ifdef _UMB_MASTER
 #include "umb_master/umb_master.h"
@@ -200,7 +201,6 @@ main(int argc, char* argv[])
   main_own_path_ln = ConfigPath(main_own_path);
 
 #ifdef _METEO
-
   // initialize i2c controller
   i2cConfigure();
 #endif
@@ -212,6 +212,9 @@ main(int argc, char* argv[])
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, 0x00);
   DA_Init();
+
+  // initialize Watchdog output
+  Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 
   // initialize variables & arrays in rte_wx
   rte_wx_init();
@@ -512,6 +515,8 @@ main(int argc, char* argv[])
 			wx_pool_anemometer();
 
 			main_ten_second_pool_timer = 10000;
+
+			GPIOA->ODR = (GPIOA->ODR ^ GPIO_Pin_12);
 		}
 
 #ifdef _METEO
