@@ -10,6 +10,8 @@
 #include "./drivers/tx20.h"
 #include "./drivers/serial.h"
 
+#include "./umb_master/umb_master.h"
+
 #include "main.h"
 
 uint8_t packet_tx_beacon_interval = _BCN_INTERVAL;
@@ -43,9 +45,21 @@ void packet_tx_handler(void) {
 	packet_tx_meteo_kiss_counter++;
 #endif
 
+#if defined(_UMB_MASTER)
+	umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
+
+	// if there is anything to send
+	if (ln > 0) {
+		beacon_send_from_user_content(sizeof(main_own_aprs_msg), main_own_aprs_msg);
+
+	 	main_wait_for_tx_complete();
+
+	}
+#endif
+
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval) {
 
-		SendOwnBeacon();
+		beacon_send_own();
 
 		main_wait_for_tx_complete();
 

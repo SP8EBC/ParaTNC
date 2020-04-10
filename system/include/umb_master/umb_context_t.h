@@ -36,6 +36,8 @@ typedef struct umb_context_t {
 
 	uint16_t current_channel;
 
+	uint8_t trigger_status_msg;
+
 } umb_context_t;
 
 #endif /* INCLUDE_UMB_MASTER_UMB_CONTEXT_T_H_ */

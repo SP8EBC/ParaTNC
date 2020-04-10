@@ -65,6 +65,9 @@ umb_retval_t umb_0x26_status_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 		// storing the time when last error code will be stored
 		ctx->time_of_last_nok = master_time;
+
+		// trigger the status message with a content of fault store
+		ctx->trigger_status_msg = 1;
 	}
 
 	ctx->state = UMB_STATUS_IDLE;

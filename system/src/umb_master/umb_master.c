@@ -6,6 +6,8 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+
 #include <umb_master/umb_0x26_status.h>
 #include <umb_master/umb_0x23_offline_data.h>
 #include <umb_master/umb_master.h>
@@ -349,6 +351,72 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 
 	return out;
 }
+
+void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buffer_size, uint16_t* status_string_ln, uint32_t master_time) {
+
+	uint32_t string_ln;
+	uint32_t sprintf_out = 0;
+	char local[11];
+
+	// local copy of time_of_last_nok
+	uint32_t local_tln = ctx->time_of_last_nok;
+
+	// local copy of time_of_last_comms_timeput
+	uint32_t local_tlct = ctx->time_of_last_comms_timeout;
+
+	// check if there is a reason to print the status
+	if (ctx->trigger_status_msg == 0) {
+		*status_string_ln = 0;
+
+		return;
+	}
+
+	// clear the flag to omit looping
+	ctx->trigger_status_msg = 0;
+
+	// check if there is enought size in buffer
+	if (buffer_size < 64) {
+		*status_string_ln = 0;
+
+		return;
+	}
+
+	memset(local, 0x00, 11);
+
+	// swap initialization values to zero
+	if (local_tln == 0xFFFFFFFFu)
+		local_tln = 0;
+
+	if (local_tlct == 0xFFFFFFFFu)
+		local_tlct = 0;
+
+	// clearing target buffer
+	for (int i = 0; i < buffer_size; i++)
+		out_buffer[i] = '\0';
+
+	string_ln = snprintf(out_buffer, buffer_size, ">UMB Status: [TIME= 0x%x, TLN= 0x%x, TLCT= 0x%x, ERRS= [",
+																			(int)master_time,
+																			(int)local_tln,
+																			(int)local_tlct);
+	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++ ) {
+		// print the string representation of the error code into the buffer
+		sprintf_out = snprintf(local, 11, "0x%02x, ", ctx->nok_error_codes[i]);
+
+		if (sprintf_out + string_ln < buffer_size) {
+			// rewrite the string value into the main output
+			strcat(out_buffer, local);
+
+			string_ln += sprintf_out;
+		}
+	}
+
+	out_buffer[string_ln - 2] = ']';
+	out_buffer[string_ln - 1] = ']';
+
+	// setting target string lenght
+	*status_string_ln = string_ln;
+}
+
 
 uint16_t umb_get_windspeed(void) {
 

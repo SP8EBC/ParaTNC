@@ -6,6 +6,7 @@
  */
 
 #include <umb_master/umb_channel_pool.h>
+#include <umb_master/umb_0x23_offline_data.h>
 #include "station_config.h"
 
 void umb_channel_pool(umb_frame_t *frame, umb_context_t *ctx) {

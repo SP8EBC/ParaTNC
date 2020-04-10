@@ -55,8 +55,9 @@ extern umb_frame_t rte_wx_umb;
 extern umb_context_t rte_wx_umb_context;
 extern uint8_t rte_wx_umb_last_status;
 extern int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];
-extern umb_qf_t rte_wx_umb_qf;																// stores the value in 0.1 incremenets
+															// stores the value in 0.1 incremenets
 #endif
+extern umb_qf_t rte_wx_umb_qf;
 
 #ifdef __cplusplus
 extern "C"

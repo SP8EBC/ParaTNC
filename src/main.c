@@ -471,6 +471,10 @@ main(int argc, char* argv[])
 
 			wx_get_all_measurements();
 
+			#if defined(_UMB_MASTER)
+			umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+			#endif
+
 			main_wx_sensors_pool_timer = 65500;
 		}
 
@@ -509,6 +513,9 @@ main(int argc, char* argv[])
 
 			#if defined(_UMB_MASTER)
 			umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
+			#endif
+
+			#if defined(_UMB_MASTER)
 			rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			#endif
 
