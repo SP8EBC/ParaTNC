@@ -22,6 +22,8 @@ typedef struct umb_context_t {
 
 	uint8_t nok_error_it;
 
+	uint16_t last_fault_channel;
+
 	uint32_t time_of_last_nok;
 
 	uint32_t time_of_last_comms_timeout;

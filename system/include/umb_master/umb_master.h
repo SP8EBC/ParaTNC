@@ -26,6 +26,7 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx);
 umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time);
 void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buffer_size, uint16_t* status_string_ln, uint32_t master_time);
+void umb_clear_error_history(umb_context_t* ctx);
 
 uint16_t umb_get_windspeed(void);
 uint16_t umb_get_windgusts(void);

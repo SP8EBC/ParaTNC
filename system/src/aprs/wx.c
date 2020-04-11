@@ -13,6 +13,8 @@
 
 #include "station_config.h"
 
+#include <string.h>
+
 
 void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie) {
 

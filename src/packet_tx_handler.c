@@ -17,6 +17,9 @@
 uint8_t packet_tx_beacon_interval = _BCN_INTERVAL;
 uint8_t packet_tx_beacon_counter = 0;
 
+uint8_t packet_tx_error_status_interval = 2;
+uint8_t packet_tx_error_status_counter = 0;
+
 #ifdef _METEO
 uint8_t packet_tx_meteo_interval = _WX_INTERVAL;
 uint8_t packet_tx_meteo_counter = 0;
@@ -38,6 +41,7 @@ void packet_tx_handler(void) {
 	uint16_t ln = 0;
 
 	packet_tx_beacon_counter++;
+	packet_tx_error_status_counter++;
 	packet_tx_telemetry_counter++;
 	packet_tx_telemetry_descr_counter++;
 #ifdef _METEO
@@ -45,17 +49,21 @@ void packet_tx_handler(void) {
 	packet_tx_meteo_kiss_counter++;
 #endif
 
-#if defined(_UMB_MASTER)
-	umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
+	if (packet_tx_error_status_counter >= packet_tx_error_status_interval) {
+	#if defined(_UMB_MASTER)
+		umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
 
-	// if there is anything to send
-	if (ln > 0) {
-		beacon_send_from_user_content(sizeof(main_own_aprs_msg), main_own_aprs_msg);
+		// if there is anything to send
+		if (ln > 0) {
+			beacon_send_from_user_content(ln, main_own_aprs_msg);
 
-	 	main_wait_for_tx_complete();
+			main_wait_for_tx_complete();
 
+		}
+	#endif
+
+		packet_tx_error_status_counter = 0;
 	}
-#endif
 
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval) {
 
@@ -73,7 +81,7 @@ void packet_tx_handler(void) {
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
 		SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
 #else
-			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid);
+		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid);
 
 
 #endif
@@ -174,6 +182,7 @@ void packet_tx_handler(void) {
 		main_wait_for_tx_complete();
 #endif
 
+		umb_clear_error_history(&rte_wx_umb_context);
 
 		packet_tx_telemetry_descr_counter = 0;
 	}

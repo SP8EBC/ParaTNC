@@ -11,13 +11,13 @@
 
 void umb_channel_pool(umb_frame_t *frame, umb_context_t *ctx) {
 #if defined(_UMB_MASTER)
-	if (ctx->channel_number_it >  UMB_CHANNELS_STORAGE_CAPAC)
+	if (ctx->channel_number_it >=  UMB_CHANNELS_STORAGE_CAPAC)
 		ctx->channel_number_it = 0;
 
 	uint16_t curr_chn = ctx->channel_numbers[ctx->channel_number_it];
 	ctx->current_channel = curr_chn;
 
-	if (curr_chn != 0xFFFFu) {
+	if (curr_chn != 0xFFFFu && curr_chn != 0x0u) {
 		umb_0x23_offline_data_request(frame, ctx, curr_chn);
 	}
 

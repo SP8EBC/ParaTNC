@@ -3,5 +3,6 @@
 *.map
 station_config.h
 Debug/
+Release/
 *.hex
 *.elf

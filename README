@@ -1,4 +1,4 @@
-ParaTNC version DE07, March 22th 2020
+ParaTNC version DE07, April 11th 2020
 -----------------------------------------
 
 1. INTRODUCTION
@@ -12,6 +12,7 @@ ParaAPRS supports key elements of what good APRS device should have:
    -> Weather station with support for various meteo sensors. Full list od supported devices in point 5.
    -> Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
    -> Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
+   -> Support for UMB Binary porotocol as a mater.
 
 ParaAPRS can be used as a standalone weather station controller w/o using the radio transmission. The sw
 by default sends the measuremenets values 
@@ -20,10 +21,13 @@ by default sends the measuremenets values
 The ParaTNC software can run on STM32VLDISCOVERY board but it really shows it full potential od it's own
 dedicated hardware. This not only rub out all bodge wires required with prototype board. It gives 
 few features which are hardly not possible without dedicated PCB
- a) Three different grounds separated one from the another
+ a) Two different grounds separated one from the another (HW Revision A and B)
+ 	-> Controller
+ 	-> DB9 connector used to interface with a radio and Wind & Temperature sensor
+ aa) ONLY IN HW REVISION C: Three different grounds separated one from the another
  	-> Controller
  	-> DB9 connector used to interface with a radio
- 	-> Wind and temperature sensor
+ 	-> Wind and temperature sensor including RS485 bus
  b) Isolated DC-DC coverter to supply sensors with an option to connect another external power supply itself
  c) A relay used as a watchdog to reset wind & temperature sensor in case that no communication will be received.
  d) RS232 serial port avaliable on Cisco style RJ45 connector.
@@ -39,7 +43,7 @@ parts, separately for software and hardware. Firstly in case of software an end 
 WITH THE NEWEST TAG marked as non-beta (like DE07). ParaTNC repository is used for daily development, so the last commit
 can even sometimes don't compile at all, or consist some major bugs. 
 
-Hardware workarounds in HW Revision A, now fixed in Revision B:
+Hardware workarounds in HW Revision A:
 -> Missing resistor in series with base of transistor T2. External 1k must be added in series with TX line
 -> Foortprint location of R7 (RX_LVL) and R8 (TX_LVL) helipots are 'not optimal'. If 'normal' pots are to be used the vertical
    version must be chosen as flat one won't fit due to neighbouring components location. 
@@ -49,12 +53,15 @@ Hardware workarounds in HW Revision A, now fixed in Revision B:
    pulse output for windspeed and potentiometer (resistance output) for direction is ongoing and should be 
    avaliable in HW-Revision B and further SW releases.
 
+Hardware workarounds in HW Revision B:
+-> Few missing traces in micro supply. Few bodge wired needs to be added. Please look at hardware-revision-b-errata.jpg in 'hardware'
+
 4. LICENSING
 ParaTNC software and hardware are licensed under terms included to the source code in 'LICENSE' file
 
 5. SUPPORTED METEO SENSORS
   a) Wind sensors: 
-     - TX20 (not in production)
+     - TX20 (not in manufacturing anymore)
      - Davis 6410 or any another analogue anemometer with resisntance as a direction output and impulses as a windspeed
          WARNING: Currently support on software testing phase. Not avaliable in Hardware Revision A due to lack of circuitry
      - Lufft V200A/Ventus or any other UMB compatible device.
@@ -74,7 +81,7 @@ Most of Victron devices have a support both for binary and text serial protocol.
 always enabled and a device will send from its own telegrams each couple of seconds. The communication via VE.Direct is 
 avaliable through dedicated socket on the charging controller which is just 3.3V TTL levels UART, so no external ICs is 
 required to connect the PV controller to an evaluation board. In the MPPT series the comm socket is located on the bottom 
-side of the chargin controller below the fuse holder.
+side of the charging controller below the fuse holder.
 
 Exact pinout of the VE.Direct comm socket is as follows, assuming that terminal screws are facing down:
  -> Ground
@@ -107,7 +114,8 @@ DS_QF_DEGRAD	- Quality Factor for One Wire temperature sensor is DEGRADATED
 DS_QF_NAVBLE	- Quality Factor for One Wire temperature sensor is NOT AVALIABLE
 MS_QF_NAVBLE	- Quality Factor for MS5611 pressure sensor ins NOT AVALIABLE
 DHT_QF_NAVBLE	- Quality Factor for DHT22 humidity & temperature is NOT AVALIABLE
-TX20_SLEW	- LaCrosse TX20 anemometer driver dropped at least one measuremenet due to excesive slew rate.
+WIND_QF_DEGR	- LaCrosse TX20 anemometer driver dropped at least one measuremenet due to excesive slew rate.
+WIND_QF_NAVB	- 
 
 Explantion of Quality Factors: Each measuremenets signal is kept along with the Quality Factor which represents the sensor condition
 and value validity. If the QF is set to FULL it means that no communication problems happened between one telemetry cycle and another
@@ -122,14 +130,27 @@ difference between two consecutive measuremenets excedes hardcoded limit (9m/s) 
 At this point ParaTNC is delivered in form of source code which needs to be manually compiled by the user. Most options are 
 configured by #define in './include/station_config.h' and then hard-coded by the C preprocessor during compilation. An example file
 consist a lot of comments which explains what is what, but generally an user can choose there which mode should be enabled:
+	
+		Hardware Revision A:		
 	-> KISS TNC
 	-> KISS TNC + DIGI
 	-> KISS TNC + DIGI + METEO
 	-> VICTRON + DIGI + METEO
 	-> VICTRON + DIGI
 
-As You see there is no option to use a KISS modem and the VE.Direct protocol in the same time as the software support only
-one UART in the micro. The KISS modem runs on default speed of 9600 bps. Telemetry is enabled by default and it will
+		Hardware Revision B & C:
+	-> KISS TNC
+	-> KISS TNC + DIGI
+	-> KISS TNC + DIGI + METEO
+	-> KISS TNC + VICTRON + DIGI + METEO
+	-> KISS TNC + VICTRON + DIGI
+	-> KISS TNC + UMB-MASTER + DIGI + METEO
+
+In Hardware Revision A there is no option to use a KISS modem and the VE.Direct protocol in the same time as only
+one UART in the micro is used and handled by software. In hardware revisions B and C two UARTS are used and handled by 
+the software. The KISS modem is always enabled and avaliable on RJ45 Cisco style jack. 
+
+The KISS modem runs on default speed of 9600 bps. Telemetry is enabled by default and it will
 trasmit channels values each 10 minutes and full channel descriptions each 70 minutes.
 
  
@@ -150,7 +171,8 @@ When everything is installed the reporistory can be cloned to local harddrive by
 The example config file is named 'station_config_example.h' and should be edited and then renamed to 
 'station_config.h'. When everything is configured it is a time to go to 'Debug' directory and invoke
 command 'make' there. The source should be automatically compiled and new hex file 'ParaTNC.hex'
-should appear in the same directory. 
+should appear in the same directory. Please do not use Release configuration!! It is screwed and produces an
+application which doesn't works exactly as it should because of optimalization configuration.
 
 	Finished building target: ParaTNC.elf
  

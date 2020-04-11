@@ -39,6 +39,8 @@ void umb_master_init(umb_context_t* ctx) {
 
 	ctx->time_of_last_successful_comms = 0;
 
+	ctx->last_fault_channel = 0;
+
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
 		ctx->nok_error_codes[i] = 0;
 	}
@@ -394,10 +396,11 @@ void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buf
 	for (int i = 0; i < buffer_size; i++)
 		out_buffer[i] = '\0';
 
-	string_ln = snprintf(out_buffer, buffer_size, ">UMB Status: [TIME= 0x%x, TLN= 0x%x, TLCT= 0x%x, ERRS= [",
+	string_ln = snprintf(out_buffer, buffer_size, ">UMB Status: [TIME= 0x%x, TLN= 0x%x, TLCT= 0x%x, LFC= %d ERRS= [",
 																			(int)master_time,
 																			(int)local_tln,
-																			(int)local_tlct);
+																			(int)local_tlct,
+																			(int)ctx->last_fault_channel);
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++ ) {
 		// print the string representation of the error code into the buffer
 		sprintf_out = snprintf(local, 11, "0x%02x, ", ctx->nok_error_codes[i]);
@@ -415,6 +418,16 @@ void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buf
 
 	// setting target string lenght
 	*status_string_ln = string_ln;
+}
+
+void umb_clear_error_history(umb_context_t* ctx) {
+	ctx->last_fault_channel = 0;
+
+	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
+		ctx->nok_error_codes[i] = 0;
+	}
+
+	ctx->trigger_status_msg = 0;
 }
 
 

@@ -9,6 +9,7 @@
 #include "../umb_master/umb_0x23_offline_data.h"
 #include "station_config.h"
 #include "rte_wx.h"
+#include "main.h"
 
 #define UNSIGNED_CHAR 	0x10
 #define SIGNED_CHAR		0x11
@@ -72,10 +73,11 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 	// temporary float point buffer to handle this type
 	float temp = 0.0f;
 
+	// fetch the channel number
+	channel = frame->payload[1] | (frame->payload[2] << 8);
+
 	// check if status is OK
 	if (status == 0x00) {
-		// fetch the channel number
-		channel = frame->payload[1] | (frame->payload[2] << 8);
 
 		// fetch the value type
 		type = frame->payload[3];
@@ -167,6 +169,22 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 	else {
 		// if not stop further processing
 		ctx->state = UMB_STATUS_ERROR;
+
+		ctx->last_fault_channel = channel;
+
+		// copy current error code to the buffer
+		ctx->nok_error_codes[ctx->nok_error_it] = status;
+
+		// move the iterator through the buffer
+		ctx->nok_error_it++;
+
+		// check if and end of the buffer is reach here
+		ctx->nok_error_it %= UMB_CONTEXT_ERR_HISTORY_LN;
+
+		// trigger the status frame
+		ctx->trigger_status_msg = 1;
+
+		ctx->time_of_last_nok = main_get_master_time();
 
 		output = UMB_NOK_STATUS_GOT_WITH_RESP;
 	}
