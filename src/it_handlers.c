@@ -80,7 +80,8 @@ void SysTick_Handler(void) {
 
 	main_ten_second_pool_decremenet_counter();
 
-	srl_keep_timeout();
+	srl_keep_timeout(main_kiss_srl_ctx_ptr);
+	srl_keep_timeout(main_wx_srl_ctx_ptr);
 
 	i2cKeepTimeout();
 
@@ -90,7 +91,12 @@ void SysTick_Handler(void) {
 
 void USART1_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(USART1_IRQn);
-	srl_irq_handler();
+	srl_irq_handler(main_kiss_srl_ctx_ptr);
+}
+
+void USART2_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(USART2_IRQn);
+	srl_irq_handler(main_wx_srl_ctx_ptr);
 }
 
 void I2C1_EV_IRQHandler(void) {

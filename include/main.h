@@ -2,8 +2,9 @@
 #define MAIN_H_
 
 #include "aprs/ax25.h"
+#include "drivers/serial.h"
 
-#define SW_VER "DE08"
+#define SW_VER "DF00"
 #define SW_DATE "11042020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
@@ -24,6 +25,9 @@ extern AX25Call main_own_path[3];
 extern uint8_t main_own_path_ln;
 extern uint8_t main_own_aprs_msg_len;
 extern char main_own_aprs_msg[160];
+
+extern srl_context_t* main_kiss_srl_ctx_ptr;
+extern srl_context_t* main_wx_srl_ctx_ptr;
 
 extern char after_tx_lock;
 

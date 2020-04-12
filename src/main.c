@@ -13,7 +13,6 @@
 #include "diag/Trace.h"
 #include "antilib_adc.h"
 #include "afsk_pr.h"
-#include "drivers/serial.h"
 #include "TimerConfig.h"
 #include "PathConfig.h"
 
@@ -98,6 +97,20 @@ int32_t main_two_second_pool_timer = 2000;
 
 // ten second pool interval
 int32_t main_ten_second_pool_timer = 10000;
+
+// serial context for UART used to KISS
+srl_context_t main_kiss_srl_ctx;
+
+#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+// serial context for UART used for comm with wx sensors
+srl_context_t main_wx_srl_ctx;
+#endif
+
+// a pointer to KISS context
+srl_context_t* main_kiss_srl_ctx_ptr;
+
+// a pointer to wx comms context
+srl_context_t* main_wx_srl_ctx_ptr;
 
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
@@ -196,6 +209,41 @@ main(int argc, char* argv[]){
 
 #endif
 
+  // Configure I/O pins for USART1 (Kiss modem)
+  Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
+  Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
+#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+  // Configure I/O pins for USART2 (wx meteo comm)
+  Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
+  Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
+#endif
+
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
+  Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
+  GPIO_ResetBits(GPIOA, GPIO_Pin_7);
+#endif
+#if defined(PARATNC_HWREV_C)
+  Configure_GPIO(GPIOA,8,GPPP_OUTPUT_2MHZ);	// re/te
+  GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+#endif
+
+  // enabling the clock for both USARTs
+  RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+  RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+
+#if defined(PARATNC_HWREV_A)
+  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
+  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
+#endif
+#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
+  main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
+#endif
+
+  // initializing UART drvier
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
+  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN);
+
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path);
 
@@ -239,7 +287,7 @@ main(int argc, char* argv[]){
 		#undef _ANEMOMETER_ANALOGUE
 
 	  // client initialization
-	  umb_master_init(&rte_wx_umb_context);
+	  umb_master_init(main_wx_srl_ctx_ptr, &rte_wx_umb_context);
 	#endif
 
 	#ifdef  _ANEMOMETER_TX20
@@ -258,9 +306,6 @@ main(int argc, char* argv[]){
 	#endif
 #endif
 
-  // initializing UART drvier
-  srl_init();
-
   // configuring interrupt priorities
   it_handlers_set_priorities();
 
@@ -278,11 +323,11 @@ main(int argc, char* argv[]){
 
   // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
   //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
-  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_tx_buffer, TX_BUFFER_LN);
+  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
 
   // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
   // Here this could be omitted because UART isn't used before but general idea
-  while(srl_tx_state != SRL_TX_IDLE && srl_tx_state != SRL_TX_ERROR);
+  while(main_kiss_srl_ctx.srl_tx_state != SRL_TX_IDLE && main_kiss_srl_ctx.srl_tx_state != SRL_TX_ERROR);
 
   // converting AX25 with beacon to KISS format
   //ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
@@ -293,9 +338,9 @@ main(int argc, char* argv[]){
 	  // infinite loop for testing UART transmission
 	  for (;;) {
 
-		  retval = srl_receive_data(100, FEND, FEND, 0, 0, 0);
+		  retval = srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
 #endif
-		  retval = srl_start_tx(ln);
+		  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
 #ifdef SERIAL_TX_TEST_MODE
 		  while(srl_tx_state != SRL_TX_IDLE);
@@ -330,10 +375,10 @@ main(int argc, char* argv[]){
   // enabling timeout handling for serial port. This is required because VE protocol frame may vary in lenght
   // and serial port driver could finish reception only either on stop character or when declared number of bytes
   // has been received.
-  srl_switch_timeout(1, 100);
+  srl_switch_timeout(main_wx_srl_ctx_ptr, 1, 100);
 
   // switching UART to receive mode to be ready for data from charging controller
-  srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+  srl_receive_data(main_wx_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
 
 #elif !defined _VICTRON && defined _UMB_MASTER
 
@@ -342,7 +387,7 @@ main(int argc, char* argv[]){
 
 #elif ! defined _VICTRON && !defined _UMB_MASTER
   // switching UART to receive mode to be ready for KISS frames from host
-  srl_receive_data(100, FEND, FEND, 0, 0, 0);
+  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
 #endif
 
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
@@ -388,10 +433,10 @@ main(int argc, char* argv[]){
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
-			memset(srl_tx_buffer, 0x00, sizeof(srl_tx_buffer));
+			memset(srl_usart1_tx_buffer, 0x00, sizeof(srl_usart1_tx_buffer));
 
 			// convert message to kiss format and send it to host
-			srl_start_tx(SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_tx_buffer, TX_BUFFER_LN));
+			srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_usart1_tx_buffer, TX_BUFFER_1_LN));
 
 			main_ax25.dcd = false;
 #ifdef _DBG_TRACE
@@ -430,20 +475,20 @@ main(int argc, char* argv[]){
 				}
 			}
 
-			srl_receive_data(VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+			srl_receive_data(main_wx_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
 		}
 #elif defined _UMB_MASTER
 		// if some UMB data have been received
-		if (srl_rx_state == SRL_RX_DONE) {
+		if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
 			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
 		}
 
 		// if there were an error during receiving frame from host, restart rxing once again
-		if (srl_rx_state == SRL_RX_ERROR) {
+		if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
 		}
 
-		if (srl_tx_state == SRL_TX_IDLE) {
+		if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
 			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
 		}
 #else

@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include "umb_state_t.h"
 #include "umb_defines.h"
+#include <drivers/serial.h>
+
 
 #define UMB_CONTEXT_ERR_HISTORY_LN 4
 
@@ -39,6 +41,8 @@ typedef struct umb_context_t {
 	uint16_t current_channel;
 
 	uint8_t trigger_status_msg;
+
+	srl_context_t *serial_context;
 
 } umb_context_t;
 

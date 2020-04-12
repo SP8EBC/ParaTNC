@@ -2,9 +2,14 @@
 #define __SERIAL_H
 
 #include "stdint.h"
+#include <stm32f10x.h>
+#include <stm32f10x_usart.h>
 
-#define RX_BUFFER_LN 512
-#define TX_BUFFER_LN 512
+#define RX_BUFFER_1_LN 512
+#define TX_BUFFER_1_LN 512
+
+#define RX_BUFFER_2_LN 96
+#define TX_BUFFER_2_LN 96
 
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
@@ -18,14 +23,58 @@ typedef enum srlRxState {
 	SRL_RXING,
 	SRL_RX_DONE,
 	SRL_RX_ERROR
-}srlRxState;
+}srl_rx_state_t;
 
 typedef enum srlTxState {
 	SRL_TX_NOT_CONFIG,
 	SRL_TX_IDLE,
 	SRL_TXING,
 	SRL_TX_ERROR
-}srlTxState;
+}srl_tx_state_t;
+
+typedef struct srl_context_t {
+	USART_TypeDef *port;
+
+	GPIO_TypeDef* te_port;
+	uint16_t te_pin;
+
+	uint8_t *srl_tx_buf_pointer;
+	uint8_t *srl_rx_buf_pointer;
+
+	uint16_t srl_rx_buf_ln;
+	uint16_t srl_tx_buf_ln;
+
+	uint16_t srl_rx_bytes_counter;
+	uint16_t srl_tx_bytes_counter;
+
+	uint16_t srl_rx_bytes_req;
+	uint16_t srl_tx_bytes_req;
+
+	uint8_t srl_triggered_start;
+	uint8_t srl_triggered_stop;
+
+	uint8_t srl_start_trigger;				// znak oznaczaj�cy pocz�tek istotnych danych do odbebrania
+	uint8_t srl_stop_trigger;				// znak oznaczaj�cy koniec istotnych danych do odebrania
+
+	volatile uint8_t srl_garbage_storage;
+
+	uint8_t srl_rx_timeout_enable;
+	uint8_t srl_rx_timeout_waiting_enable;
+	uint8_t srl_rx_timeout_calc_started;
+	uint8_t srl_rx_timeout_waiting_calc_started;
+	uint32_t srl_rx_timeout_trigger_value_in_msec;
+	uint32_t srl_rx_start_time;
+	uint32_t srl_rx_waiting_start_time;
+
+	srl_rx_state_t srl_rx_state;
+	srl_tx_state_t srl_tx_state;
+
+	uint8_t srl_enable_echo;
+
+	uint8_t srl_rx_lenght_param_addres;
+	uint8_t srl_rx_lenght_param_modifier;
+
+}srl_context_t;
 
 #define SRL_OK							0
 #define SRL_DATA_TOO_LONG 				1
@@ -33,26 +82,42 @@ typedef enum srlTxState {
 #define SRL_WRONG_BUFFER_PARAM 			3
 #define SRL_WRONG_PARAMS_COMBINATION	4
 
-extern srlRxState srl_rx_state;
-extern srlTxState srl_tx_state;
-extern uint8_t srl_tx_buffer[TX_BUFFER_LN];
+//extern srl_rx_state_t srl_rx_state;
+//extern srl_tx_state_t srl_tx_state;
+//extern uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN];
+#ifdef SEPARATE_TX_BUFF
+extern uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN];
+#endif
+
+#ifdef SEPARATE_RX_BUFF
+extern uint8_t srl_usart1_rx_buffer[RX_BUFFER_1_LN];
+#endif
+
+#ifdef SEPARATE_TX_BUFF
+extern uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN];
+#endif
+
+#ifdef SEPARATE_RX_BUFF
+extern uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN];
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-void srl_init(void);
-uint8_t srl_send_data(uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
-uint8_t srl_start_tx(short leng);
-void srl_wait_for_tx_completion();
-void srl_irq_handler(void);
-uint8_t srl_receive_data(int num, char start, char stop, char echo, char len_addr, char len_modifier);
-uint16_t srl_get_num_bytes_rxed();
-uint8_t* srl_get_rx_buffer();
-void srl_keep_timeout(void);
-void srl_switch_timeout(uint8_t disable_enable, uint32_t value);
-void srl_switch_timeout_for_waiting(uint8_t disable_enable);
+void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size);
+uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
+uint8_t srl_start_tx(srl_context_t *ctx, short leng);
+void srl_wait_for_tx_completion(srl_context_t *ctx);
+void srl_irq_handler(srl_context_t *ctx);
+uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);
+uint8_t* srl_get_rx_buffer(srl_context_t *ctx);
+void srl_keep_timeout(srl_context_t *ctx);
+void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value);
+void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable);
 
 #ifdef __cplusplus
 }

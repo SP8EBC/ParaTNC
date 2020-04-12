@@ -12,7 +12,6 @@
 #include <umb_master/umb_0x23_offline_data.h>
 #include <umb_master/umb_master.h>
 #include <umb_master/umb_channel_pool.h>
-#include <drivers/serial.h>
 #include <rte_wx.h>
 #include "station_config.h"
 
@@ -30,7 +29,7 @@
 
 #define TEN_MINUTES (1000 * 600)
 
-void umb_master_init(umb_context_t* ctx) {
+void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
 	ctx->nok_error_it = 0;
@@ -194,10 +193,10 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 			// Check if serial port is idle and can be used in this moment to transmit something
 			if (r == REASON_TRANSMIT_IDLE) {
 				// parsing UMB frame into serial buffer
-				umb_parse_frame_to_serial_buffer(srl_tx_buffer, TX_BUFFER_LN, &rte_wx_umb, &temp);
+				umb_parse_frame_to_serial_buffer(srl_usart1_tx_buffer, TX_BUFFER_1_LN, &rte_wx_umb, &temp);
 
 				// starting data transfer
-				srl_start_tx(temp);
+				srl_start_tx(ctx->serial_context, temp);
 
 				// switching state
 				ctx->state = UMB_STATUS_SENDING_REQUEST_TO_SLAVE;
@@ -209,11 +208,11 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 
 			if (r == REASON_TRANSMIT_IDLE) {
 				// transmission is done and now receive must be triggered
-				srl_receive_data(8, SOH, 0x00, 0, 6, 12);
+				srl_receive_data(ctx->serial_context, 8, SOH, 0x00, 0, 6, 12);
 
 				// enable timeout in case that sensor won't send any reponse
-				srl_switch_timeout(1, 0);
-				srl_switch_timeout_for_waiting(1);
+				srl_switch_timeout(ctx->serial_context, 1, 0);
+				srl_switch_timeout_for_waiting(ctx->serial_context, 1);
 
 				ctx->state = UMB_STATUS_WAITING_FOR_RESPONSE;
 			}
@@ -231,7 +230,10 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 			}
 			else if (r == REASON_RECEIVE_IDLE) {
 				// deprcode the UMB frame from a content of serial buffer
-				main_umb_retval = umb_parse_serial_buffer_to_frame(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &rte_wx_umb);
+				main_umb_retval = umb_parse_serial_buffer_to_frame(
+																	srl_get_rx_buffer(ctx->serial_context),
+																	srl_get_num_bytes_rxed(ctx->serial_context),
+																	&rte_wx_umb);
 
 				// if data was decoded successfully
 				if (main_umb_retval == UMB_OK) {
