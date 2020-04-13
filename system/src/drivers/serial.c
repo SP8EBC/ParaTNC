@@ -1,7 +1,7 @@
 #include "drivers/serial.h"
 #include "drivers/gpio_conf.h"
 
-#define PORT USART1
+//#define PORT USART1
 
 
 #include "station_config.h"
@@ -67,7 +67,15 @@ uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};		// dane odebrane od zdal
 //uint8_t srl_rx_lenght_param_modifier = 0;
 
 
-void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size) {
+void srl_init(
+			srl_context_t *ctx,
+			USART_TypeDef *port,
+			uint8_t *rx_buffer,
+			uint16_t rx_buffer_size,
+			uint8_t *tx_buffer,
+			uint16_t tx_buffer_size,
+			uint32_t baudrate
+			) {
 	if (ctx->srl_rx_state == SRL_RX_IDLE)
 		return;
 
@@ -87,7 +95,7 @@ void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint1
 
 	USART_InitTypeDef USART_InitStructure;
 
-	USART_InitStructure.USART_BaudRate = _SERIAL_BAUDRATE;
+	USART_InitStructure.USART_BaudRate = baudrate;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -205,12 +213,12 @@ uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t 
 		GPIO_SetBits(ctx->te_port, ctx->te_pin);
 
 	// enabling transmitter
-	PORT->CR1 |= USART_CR1_TE;
-	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-	PORT->DR = ctx->srl_tx_buf_pointer[0];
+	ctx->port->CR1 |= USART_CR1_TE;
+	ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+	ctx->port->DR = ctx->srl_tx_buf_pointer[0];
 	ctx->srl_tx_state = SRL_TXING;
-	PORT->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
-	PORT->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
+	ctx->port->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
+	ctx->port->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
 												// je�eli rejestr DR jest nadal pusty
 	return SRL_OK;
 
@@ -238,9 +246,9 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 	if (ctx->te_port != 0)
 		GPIO_SetBits(ctx->te_port, ctx->te_pin);
 
-	PORT->CR1 |= USART_CR1_TE;
-	PORT->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-	PORT->DR = ctx->srl_tx_buf_pointer[0];
+	ctx->port->CR1 |= USART_CR1_TE;
+	ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+	ctx->port->DR = ctx->srl_tx_buf_pointer[0];
 
 	ctx->srl_tx_state = SRL_TXING;
 
@@ -264,7 +272,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 	if (num >= RX_BUFFER_1_LN)
 		return SRL_DATA_TOO_LONG;
 
-	memset(ctx->srl_rx_buf_pointer, 0x00, RX_BUFFER_1_LN);
+	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
 
 	// checking if user want
 	if (start != 0x00) {
@@ -300,8 +308,8 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 
 	ctx->srl_rx_timeout_calc_started = 0;
 
-	PORT->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
-	PORT->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
+	ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
+	ctx->port->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
 // 	PORT->CR1 |= USART_CR1_IDLEIE;			// przerwanie od bezczynno�ci szyny RS przy odbiorze
 												// spowodowanej zako�czeniem transmisji przez urz�dzenie
  	return SRL_OK;
@@ -324,13 +332,13 @@ void srl_irq_handler(srl_context_t *ctx) {
 	if ((ctx->port->SR & USART_SR_ORE) == USART_SR_ORE) {
 		switch (ctx->srl_rx_state) {
 			case SRL_RXING:
-				ctx->srl_garbage_storage = (uint8_t)PORT->DR;
+				ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
 
 				break;
 			default:
 				// if the UART driver is not receiving actually but hardware controler received any data
 				// it is required to read value of DR register to clear the interrupt
-				ctx->srl_garbage_storage = (uint8_t)PORT->DR;
+				ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
 				break;
 		}
 	}
@@ -349,7 +357,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 				if (ctx->srl_rx_bytes_counter < ctx->srl_rx_bytes_req) {
 
 					// storing received byte into buffer
-					ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter] = (uint8_t)PORT->DR;
+					ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter] = (uint8_t)ctx->port->DR;
 
 					// checking if this byte in stream holds the protocol information about
 					// how many bytes needs to be received.
@@ -437,7 +445,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 	}
 
 	// if one byte was successfully transferred from DR to shift register for transmission over USART
-	if ((PORT->SR & USART_SR_TXE) == USART_SR_TXE) {
+	if ((ctx->port->SR & USART_SR_TXE) == USART_SR_TXE) {
 		switch (ctx->srl_tx_state) {
 		case SRL_TXING:
 			if (ctx->srl_tx_bytes_counter < ctx->srl_tx_bytes_req) {
@@ -456,8 +464,8 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 			}
 
-			if (ctx->srl_tx_bytes_counter >= TX_BUFFER_1_LN ||
-					ctx->srl_tx_bytes_req >= TX_BUFFER_1_LN) {
+			if (ctx->srl_tx_bytes_counter >= ctx->srl_tx_buf_ln ||
+					ctx->srl_tx_bytes_req >= ctx->srl_tx_buf_ln) {
 
 				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
 				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);

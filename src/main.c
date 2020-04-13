@@ -112,6 +112,12 @@ srl_context_t* main_kiss_srl_ctx_ptr;
 // a pointer to wx comms context
 srl_context_t* main_wx_srl_ctx_ptr;
 
+// target USART1 (kiss) baudrate
+uint32_t main_target_kiss_baudrate;
+
+// target USART2 (wx) baudrate
+uint32_t main_target_wx_baudrate;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
@@ -234,15 +240,32 @@ main(int argc, char* argv[]){
 #if defined(PARATNC_HWREV_A)
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
+
+  main_target_kiss_baudrate = 9600u;
+#if defined(_UMB_MASTER)
+  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
+#endif
 #endif
 #if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
+
+  main_target_kiss_baudrate = 9600u;
+  main_target_wx_baudrate = _SERIAL_BAUDRATE;
 #endif
 
   // initializing UART drvier
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN);
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate);
+
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
+  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
+  main_wx_srl_ctx_ptr->te_port = GPIOA;
+#endif
+#if defined(PARATNC_HWREV_C)
+  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
+  main_wx_srl_ctx_ptr->te_port = GPIOA;
+#endif
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path);
@@ -287,7 +310,7 @@ main(int argc, char* argv[]){
 		#undef _ANEMOMETER_ANALOGUE
 
 	  // client initialization
-	  umb_master_init(main_wx_srl_ctx_ptr, &rte_wx_umb_context);
+	  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr);
 	#endif
 
 	#ifdef  _ANEMOMETER_TX20
@@ -343,12 +366,12 @@ main(int argc, char* argv[]){
 		  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
 #ifdef SERIAL_TX_TEST_MODE
-		  while(srl_tx_state != SRL_TX_IDLE);
+		  while(main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE);
 //		  while(srl_rx_state != SRL_RX_DONE);
 
 		  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
 
-		  if (srl_rx_state == SRL_RX_DONE) {
+		  if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
 			  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_8);
 
 			  retval = 200;
@@ -493,19 +516,19 @@ main(int argc, char* argv[]){
 		}
 #else
 		// if new KISS message has been received from the host
-		if (srl_rx_state == SRL_RX_DONE) {
+		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
 			// parse incoming data and then transmit on radio freq
-			short res = ParseReceivedKISS(srl_get_rx_buffer(), srl_get_num_bytes_rxed(), &main_ax25, &main_afsk);
+			short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
 			if (res == 0)
 				kiss10m++;	// increase kiss messages counter
 
 			// restart KISS receiving to be ready for next frame
-			srl_receive_data(120, FEND, FEND, 0, 0, 0);
+			srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
 		}
 
 		// if there were an error during receiving frame from host, restart rxing once again
-		if (srl_rx_state == SRL_RX_ERROR) {
-			srl_receive_data(120, FEND, FEND, 0, 0, 0);
+		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+			srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
 		}
 #endif
 

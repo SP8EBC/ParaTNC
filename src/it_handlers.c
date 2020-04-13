@@ -58,8 +58,9 @@ void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
 	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
 	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
-	NVIC_SetPriority(USART1_IRQn, 9);
-	NVIC_SetPriority(I2C1_ER_IRQn, 10);
+	NVIC_SetPriority(USART2_IRQn, 9);			// wx
+	NVIC_SetPriority(USART1_IRQn, 10);			// kiss
+	NVIC_SetPriority(I2C1_ER_IRQn, 11);
 
 }
 

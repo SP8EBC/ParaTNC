@@ -40,6 +40,8 @@ void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx) {
 
 	ctx->last_fault_channel = 0;
 
+	ctx->serial_context = serial_ctx;
+
 	for (int i = 0; i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
 		ctx->nok_error_codes[i] = 0;
 	}

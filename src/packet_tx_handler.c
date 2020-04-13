@@ -181,9 +181,9 @@ void packet_tx_handler(void) {
 
 		main_wait_for_tx_complete();
 #endif
-
+#if defined _UMB_MASTER
 		umb_clear_error_history(&rte_wx_umb_context);
-
+#endif
 		packet_tx_telemetry_descr_counter = 0;
 	}
 
