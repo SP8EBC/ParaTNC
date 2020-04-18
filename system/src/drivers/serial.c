@@ -103,7 +103,12 @@ void srl_init(
 	USART_InitStructure.USART_Mode = USART_Mode_Rx;
 	USART_Init(port, &USART_InitStructure);
 
-	NVIC_EnableIRQ( USART1_IRQn );
+	if (port == USART1) {
+		NVIC_EnableIRQ( USART1_IRQn );
+	}
+	else if (port == USART2) {
+		NVIC_EnableIRQ( USART2_IRQn );
+	}
 
 	port->CR1 |= USART_CR1_UE;
 	port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
