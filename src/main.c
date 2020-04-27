@@ -149,8 +149,7 @@ static void message_callback(struct AX25Msg *msg) {
 
 }
 
-int
-main(int argc, char* argv[]){
+int main(int argc, char* argv[]){
   // Send a greeting to the trace device (skipped on Release).
 //  trace_puts("Hello ARM World!");
 

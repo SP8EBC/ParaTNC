@@ -146,7 +146,13 @@ void i2cVariableReset(void) {
 }
 
 void i2cIrqHandler(void) {
-	//	int i;
+
+		if ((I2C1->SR1 & I2C_SR1_STOPF) == I2C_SR1_STOPF) {
+			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_STOPF);
+			i2cStop();
+
+			i2c_state = I2C_ERROR;
+		}
 		if ((I2C1->SR1 & I2C_SR1_SB) == I2C_SR1_SB && (i2c_txing == 1 || i2c_rxing == 1)) {
 		// After Start conditions have been transmitted.
 			I2C1->DR = i2c_remote_addr;				// Loading the slave address into data register
