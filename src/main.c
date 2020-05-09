@@ -252,6 +252,12 @@ int main(int argc, char* argv[]){
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
 #endif
+#if !defined(PARATNC_HWREV_A) && !defined(PARATNC_HWREV_B) && !defined(PARATNC_HWREV_C)
+  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
+  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
+
+  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
+#endif
 
   // initializing UART drvier
   srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
@@ -316,7 +322,7 @@ int main(int argc, char* argv[]){
 	  tx20_init();
 	#endif
 	#ifdef _ANEMOMETER_ANALOGUE
-	  analog_anemometer_init(10, 10, 100, 1);
+	  analog_anemometer_init(10, 38, 100, 1);
 	#endif
 
 #endif
@@ -444,6 +450,11 @@ int main(int argc, char* argv[]){
 
 	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
 
+	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
+	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+
+	  			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 #endif // #ifndef _METEO
 	  		}
 
