@@ -31,8 +31,8 @@ uint8_t packet_tx_meteo_kiss_counter = 0;
 uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
-uint8_t packet_tx_telemetry_descr_interval = 40;
-uint8_t packet_tx_telemetry_descr_counter = 35;
+uint8_t packet_tx_telemetry_descr_interval = 150;
+uint8_t packet_tx_telemetry_descr_counter = 145;
 
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
