@@ -8,8 +8,8 @@
 #include "wx_handler.h"
 
 #include <rte_wx.h>
-#include <stm32f10x.h>
 #include <math.h>
+#include <stm32f10x.h>
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
 #include "drivers/analog_anemometer.h"
@@ -301,15 +301,33 @@ void wx_pool_anemometer(void) {
 }
 
 void wx_pwr_init(void) {
+	// RELAY_CNTRL
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+#if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+#elif (defined PARATNC_HWREV_C)
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+#else
+#error ("Hardware Revision not chosen.")
+#endif
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+#if (defined PARATNC_HWREV_C)
+	// +12V PWR_CNTRL
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+#endif
 
 	wx_pwr_state = WX_PWR_OFF;
 
 	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+#if (defined PARATNC_HWREV_C)
+	// +12V_SW PWR_CNTRL
+	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+#endif
 
 }
 
@@ -322,7 +340,7 @@ void wx_pwr_periodic_handle(void) {
 		// if timeout watchod expired there is a time to reset the supply voltage
 		wx_pwr_state = WX_PWR_UNDER_RESET;
 
-		// pulling the output down to switch the relay
+		// pulling the output down to switch the relay and disable +5V_ISOL (VDD_SW)
 		GPIO_ResetBits(GPIOB, GPIO_Pin_8);
 
 		// setting the last_good timers to current value to prevent reset loop
@@ -339,6 +357,14 @@ void wx_pwr_periodic_handle(void) {
 		// one second delay
 		delay_fixed(2000);
 
+#if (defined PARATNC_HWREV_C)
+		// Turn on the +12V_SW voltage
+		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+#endif
+
+		delay_fixed(100);
+
+		// Turn on the +5V_ISOL (VDD_SW) voltage
 		GPIO_SetBits(GPIOB, GPIO_Pin_8);
 
 		// power is off after power-up and needs to be powered on
@@ -348,10 +374,54 @@ void wx_pwr_periodic_handle(void) {
 		break;
 	case WX_PWR_UNDER_RESET:
 
+		// Turn on the +5V_ISOL (VDD_SW) voltage
 		GPIO_SetBits(GPIOB, GPIO_Pin_8);
 
 		wx_pwr_state = WX_PWR_ON;
 
 		break;
+	case WX_PWR_DISABLED:
+		break;
 	}
+}
+
+void wx_pwr_disable_12v_sw(void) {
+#if (defined PARATNC_HWREV_C)
+	wx_pwr_state = WX_PWR_DISABLED;
+
+	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+
+#endif
+}
+
+void wx_pwr_disable_5v_isol(void) {
+	wx_pwr_state = WX_PWR_DISABLED;
+
+	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+
+}
+
+void wx_pwr_enable_12v_sw(void) {
+#if (defined PARATNC_HWREV_C)
+	wx_pwr_state = WX_PWR_OFF;
+
+	// setting last good measurements timers to inhibit relay clicking
+	// just after the power is applied
+	wx_last_good_temperature_time =  master_time;
+	wx_last_good_wind_time = master_time;
+
+#endif
+}
+
+void wx_pwr_enable_5v_isol(void) {
+#if (defined PARATNC_HWREV_C)
+	wx_pwr_state = WX_PWR_OFF;
+
+	// setting last good measurements timers to inhibit relay clicking
+	// just after the power is applied
+	wx_last_good_temperature_time =  master_time;
+	wx_last_good_wind_time = master_time;
+
+#endif
 }

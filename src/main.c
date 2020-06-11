@@ -15,6 +15,7 @@
 #include "afsk_pr.h"
 #include "TimerConfig.h"
 #include "PathConfig.h"
+#include "io.h"
 
 #include "it_handlers.h"
 
@@ -214,6 +215,12 @@ int main(int argc, char* argv[]){
 
 #endif
 
+  // initialize sensor power control and switch off supply voltage
+  wx_pwr_init();
+
+  // call periodic handle to wait for 1 second and then switch on voltage
+  wx_pwr_periodic_handle();
+
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
@@ -283,6 +290,9 @@ int main(int argc, char* argv[]){
   // initialize GPIO pins leds are connecting to
   led_init();
 
+  // initalizing separated Open Collector output
+  io_oc_init();
+
   // initialize AX25 & APRS stuff
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, 0x00);
@@ -295,11 +305,6 @@ int main(int argc, char* argv[]){
   rte_wx_init();
 
 #ifdef _METEO
-  // initialize sensor power control and switch off supply voltage
-  wx_pwr_init();
-
-  // call periodic handle to wait for 1 second and then switch on voltage
-  wx_pwr_periodic_handle();
 
   // initialize humidity sensor
   dht22_init();
@@ -418,6 +423,7 @@ int main(int argc, char* argv[]){
   srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
 #endif
 
+  io_oc_output_low();
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
   // configuting system timers

@@ -9,6 +9,8 @@
 
 #ifdef _ANEMOMETER_ANALOGUE
 
+#define WIND_DEBUG
+
 #include "drivers/analog_anemometer.h"
 
 #include <stdint.h>
@@ -32,6 +34,11 @@ uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_
 
 // an array with calculated times between pulses
 uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
+
+#ifdef WIND_DEBUG
+uint16_t analog_anemometer_direction_timer_values[ANALOG_ANEMOMETER_SPEED_PULSES_N];
+uint8_t analog_anemometer_direction_timer_values_it = 0;
+#endif
 
 // a static copy of impulse-meters/second constant. This value expresses
 // how many pulses in 10 seconds measurement time gives 1 m/s.
@@ -84,6 +91,9 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	// initializing arrays;
 	memset(analog_anemometer_windspeed_pulses_time, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
 	memset(analog_anemometer_time_between_pulses, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
+#ifdef WIND_DEBUG
+	memset(analog_anemometer_direction_timer_values, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
+#endif
 
 	// enabling the clock for TIM17
 	RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
@@ -360,6 +370,10 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	// getting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);
+
+#ifdef	WIND_DEBUG
+	analog_anemometer_direction_timer_values[(analog_anemometer_direction_timer_values_it++) % ANALOG_ANEMOMETER_SPEED_PULSES_N] = current_value;
+#endif
 
 	// if the value is greater than maximum one just ignore
 	if (current_value > UF_MAXIMUM_FREQUENCY) {
