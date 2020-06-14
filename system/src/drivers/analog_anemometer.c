@@ -20,6 +20,8 @@
 #include "drivers/gpio_conf.h"
 #include "drivers/dma_helper_functions.h"
 #include "rte_wx.h"
+#include "main.h"
+#include "wx_handler.h"
 
 #define MINUM_PULSE_LN 15
 #define MAXIMUM_PULSE_SLEW_RATE 4000
@@ -370,6 +372,14 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	// getting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);
+
+	// if the counter value is zero it means that probably U/f converter isn't running
+	if (current_value == 0) {
+		return rte_wx_winddirection_last;
+	}
+
+	// update the last
+	wx_last_good_wind_time = main_get_master_time();
 
 #ifdef	WIND_DEBUG
 	analog_anemometer_direction_timer_values[(analog_anemometer_direction_timer_values_it++) % ANALOG_ANEMOMETER_SPEED_PULSES_N] = current_value;

@@ -4,11 +4,14 @@
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 
-#define SW_VER "DF01"
-#define SW_DATE "11062020"
+#define SW_VER "DF02"
+#define SW_DATE "14062020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
+
+#define INTERNAL_WATCHDOG
+#define EXTERNAL_WATCHDOG
 
 extern uint32_t master_time;
 

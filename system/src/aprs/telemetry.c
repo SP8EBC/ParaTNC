@@ -197,13 +197,13 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	delay_fixed(1200);
 
 #if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.25,-25", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
 #endif
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -265,14 +265,14 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		anemometer_navble = '1';
 	}
 
-	if (temperature < -25.0f) {
+	if (temperature < -50.0f) {
 		scaled_temperature = (uint8_t)0;
 	}
-	else if (temperature > 38.75f) {
+	else if (temperature > 70.0f) {
 		scaled_temperature = (uint8_t)255;
 	}
 	else {
-		scaled_temperature = (uint8_t)((temperature + 25.0f) * 4.0f);
+		scaled_temperature = (uint8_t)((temperature + 50.0f) * 2.0f);
 	}
 
 	switch (dallas_qf) {

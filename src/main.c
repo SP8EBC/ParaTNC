@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stm32f10x_rcc.h>
+#include <stm32f10x_iwdg.h>
 #include <stm32f10x.h>
 
 #include "main.h"
@@ -15,6 +16,7 @@
 #include "afsk_pr.h"
 #include "TimerConfig.h"
 #include "PathConfig.h"
+#include "LedConfig.h"
 #include "io.h"
 
 #include "it_handlers.h"
@@ -282,6 +284,26 @@ int main(int argc, char* argv[]){
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path);
 
+#ifdef INTERNAL_WATCHDOG
+  // enable write access to watchdog registers
+  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+
+  // Set watchdog prescaler
+  IWDG_SetPrescaler(IWDG_Prescaler_64);
+
+  // Set the counter value to program watchdog for about 6.5 seconds
+  IWDG_SetReload(0xFFF);
+
+  // enable the watchdog
+  IWDG_Enable();
+
+  // do not disable the watchdog when the core is halted on a breakpoint
+  DBGMCU_Config(DBGMCU_IWDG_STOP, DISABLE);
+
+  // reload watchdog counter
+  IWDG_ReloadCounter();
+#endif
+
 #ifdef _METEO
   // initialize i2c controller
   i2cConfigure();
@@ -437,6 +459,11 @@ int main(int argc, char* argv[]){
 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
 #endif
 
+#ifdef INTERNAL_WATCHDOG
+   // reload watchdog counter
+   IWDG_ReloadCounter();
+#endif
+
   // Infinite loop
   while (1)
     {
@@ -588,6 +615,10 @@ int main(int argc, char* argv[]){
 		if (main_two_second_pool_timer < 10) {
 
 			wx_pwr_periodic_handle();
+
+			#ifdef INTERNAL_WATCHDOG
+			IWDG_ReloadCounter();
+			#endif
 
 			main_two_second_pool_timer = 2000;
 		}
