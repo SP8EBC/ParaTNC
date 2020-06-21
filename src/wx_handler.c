@@ -41,7 +41,7 @@ void wx_get_all_measurements(void) {
 	int32_t return_value = 0;
 	float pressure_average_sum = 0.0f;
 
-#ifdef _METEO
+#if (defined _METEO && defined _SENSOR_MS5611)
 	// quering MS5611 sensor for temperature
 	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
 
@@ -50,6 +50,53 @@ void wx_get_all_measurements(void) {
 
 	}
 
+#endif
+
+#if (defined _METEO && defined _SENSOR_BMA150)
+	// reading raw values
+	return_value = bma150_read_raw_data(bma150_data_buffer, &rte_wx_bma150_qf);
+
+	if (return_value == BMA150_OK) {
+
+		// converting raw values to humidity
+		bma150_get_humidity(&rte_wx_humidity, bma150_data_buffer);
+
+		// converting raw values to temperature
+		bma150_get_temperature(&rte_wx_temperature_ms_valid, bma150_data_buffer);
+
+		// converting raw values to pressure
+		bma150_get_pressure(&rte_wx_pressure, bma150_data_buffer);
+
+		{
+			// add the current pressure into buffer
+			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+
+			// reseting the average length iterator
+			j = 0;
+
+			// check if and end of the buffer was reached
+			if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+				rte_wx_pressure_it = 0;
+			}
+
+			// calculating the average of pressure measuremenets
+			for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+
+				// skip empty slots in the history to provide proper value even for first wx packet
+				if (rte_wx_pressure_history[i] < 10.0f) {
+					continue;
+				}
+
+				// add to the average
+				pressure_average_sum += rte_wx_pressure_history[i];
+
+				// increase the average lenght iterator
+				j++;
+			}
+
+			rte_wx_pressure_valid = pressure_average_sum / (float)j;
+		}
+	}
 #endif
 
 #if defined _METEO || defined _DALLAS_AS_TELEM
@@ -113,7 +160,7 @@ void wx_get_all_measurements(void) {
 	wx_inhibit_slew_rate_check = 0;
 #endif
 
-#ifdef _METEO
+#if (defined _METEO) && (defined _SENSOR_MS5611)
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 
@@ -147,6 +194,9 @@ void wx_get_all_measurements(void) {
 		rte_wx_pressure_valid = pressure_average_sum / (float)j;
 	}
 
+#endif
+
+#ifdef _METEO
 	// if humidity sensor is idle trigger the communiction & measuremenets
 	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
 		dht22State = DHT22_STATE_IDLE;

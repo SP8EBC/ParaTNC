@@ -1,6 +1,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "../include/delay.h"
+#include "station_config.h"
 
 #include "rte_wx.h"
 
@@ -15,6 +16,8 @@ char state;	// zmienna sygnalizuj�ca przebieg pomiaru..
 
 #define TX_ADDR 0xEE
 #define RX_ADDR 0xEF
+
+#ifdef _SENSOR_MS5611
 
 // An array to store Calibration data
 int32_t SensorCalData[8];
@@ -377,3 +380,5 @@ float CalcQNHFromQFE(float qfe, float alti, float temp) {
 
 	return qnh;
 }
+
+#endif

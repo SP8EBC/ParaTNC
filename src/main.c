@@ -37,12 +37,19 @@
 #ifdef _METEO
 #include <wx_handler.h>
 #include "drivers/dallas.h"
-#include "drivers/ms5611.h"
 #include "drivers/i2c.h"
 #include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 #include "drivers/gpio_conf.h"
+
+#ifdef _SENSOR_MS5611
+#include "drivers/ms5611.h"
+#endif
+
+#ifdef _SENSOR_BMA150
+#include "drivers/bma150.h"
+#endif
 
 #ifdef _UMB_MASTER
 #include "umb_master/umb_master.h"
@@ -364,10 +371,16 @@ int main(int argc, char* argv[]){
   // configuring interrupt priorities
   it_handlers_set_priorities();
 
-#ifdef _METEO
+#if (defined _METEO && defined _SENSOR_MS5611)
  ms5611_reset(&rte_wx_ms5611_qf);
  ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
  ms5611_trigger_measure(0, 0);
+#endif
+
+#if (defined _METEO && defined _SENSOR_BMA150)
+ bma150_reset(&rte_wx_bma150_qf);
+ bma150_read_calibration(&bma150_data_buffer, &rte_wx_bma150_qf);
+ bma150_setup();
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART

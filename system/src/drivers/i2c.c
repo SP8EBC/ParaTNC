@@ -96,7 +96,7 @@ int i2cReinit() {
 	return 0;
 }
 
-int i2cSendData(int addr, int* data, int null) {
+int i2c_send_data(int addr, uint8_t* data, int null) {
 	int i;
 	for (i = 0; (i<32 && *(data+i) != '\0'); i++)
 		i2c_tx_data[i]=data[i];
@@ -120,7 +120,7 @@ int i2cSendData(int addr, int* data, int null) {
 	return 0;
 }
 
-int i2cReceiveData(int addr, int* data, int num) {
+int i2c_receive_data(int addr, int num) {
 	i2c_rx_bytes_number = num;
 	i2c_remote_addr = addr;
 	i2c_trx_data_counter = 0;
@@ -178,7 +178,7 @@ void i2cIrqHandler(void) {
 		if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2c_txing == 1) {
 		// If I2C is in transmission mode and the data buffer is busy
 		// put the next in the data register EV_8_1
-			I2C1->DR = i2c_tx_data[0];		// TODO: This is probably a bug?
+			I2C1->DR = i2c_tx_data[i2c_trx_data_counter];
 			i2c_trx_data_counter++;
 		}
 		if (i2c_trx_data_counter == i2c_tx_queue_len && i2c_txing == 1) {

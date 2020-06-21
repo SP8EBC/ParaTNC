@@ -6,6 +6,7 @@
 C_SRCS += \
 ../system/src/drivers/_dht22.c \
 ../system/src/drivers/analog_anemometer.c \
+../system/src/drivers/bma150.c \
 ../system/src/drivers/dallas.c \
 ../system/src/drivers/dma_helper_functions.c \
 ../system/src/drivers/gpio_conf.c \
@@ -18,6 +19,7 @@ C_SRCS += \
 OBJS += \
 ./system/src/drivers/_dht22.o \
 ./system/src/drivers/analog_anemometer.o \
+./system/src/drivers/bma150.o \
 ./system/src/drivers/dallas.o \
 ./system/src/drivers/dma_helper_functions.o \
 ./system/src/drivers/gpio_conf.o \
@@ -30,6 +32,7 @@ OBJS += \
 C_DEPS += \
 ./system/src/drivers/_dht22.d \
 ./system/src/drivers/analog_anemometer.d \
+./system/src/drivers/bma150.d \
 ./system/src/drivers/dallas.d \
 ./system/src/drivers/dma_helper_functions.d \
 ./system/src/drivers/gpio_conf.d \
@@ -44,7 +47,7 @@ C_DEPS += \
 system/src/drivers/%.o: ../system/src/drivers/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross ARM C Compiler'
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -Wall -Wextra  -g3 -DDEBUG -DTRACE -DOS_USE_TRACE_SEMIHOSTING_DEBUG -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -I"../include" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -Wall -Wextra  -g3 -DDEBUG -DTRACE -DOS_USE_TRACE_SEMIHOSTING_DEBUG -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -I"../include" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -Wunused-function -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

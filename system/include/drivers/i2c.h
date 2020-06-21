@@ -16,8 +16,8 @@ typedef enum i2c_state {
 }i2c_state_t;
 
 void i2cConfigure(void);
-int i2cSendData(int addr, int* data, int null);
-int i2cReceiveData(int addr, int* data, int num);
+int i2c_send_data(int addr, uint8_t* data, int null);
+int i2c_receive_data(int addr, int num);
 void i2cIrqHandler(void);
 void i2cErrIrqHandler(void);
 void i2cVariableReset(void);
