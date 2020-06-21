@@ -29,6 +29,9 @@
 #define CONFIG_ADDR			0xF5
 #define RESET_ADDR			0xE0
 
+#define PRESS_MSB_ADDR		0xF7
+#define VALUES_LN			8
+
 #define CALIB00_ADDR		0x88
 #define CALIB00_READ_LN		0x1A
 
@@ -145,7 +148,7 @@ int32_t bma150_read_calibration(uint8_t* calibration, bma150_qf_t* qf) {
 	}
 
 	// clearing receive buffer
-	memset(calibration, 0x00, BMA150_LN_CALIBRATION + 1);
+	memset(calibration, 0x00, BMA150_LN_CALIBRATION);
 
 	// reading first segment of calibration data
 	i2c_receive_data(RX_ADDR, CALIB00_READ_LN);
@@ -213,6 +216,47 @@ int32_t bma150_read_raw_data(uint8_t* raw_data, bma150_qf_t* qf) {
 	if (bma150_sensor_avaliable == 0) {
 		return BMA150_SENSOR_NOT_AVALIABLE;
 	}
+
+	// transmit buffer
+	uint8_t tx_buf[] = {PRESS_MSB_ADDR, 0, 0};
+
+	// Send a data to sensor
+	i2c_send_data(TX_ADDR, tx_buf, 0);
+
+	// Wait until the transmission will finish or fail (due to timeout or any other error)
+	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+
+	// check if transmission was successfull
+	if (i2c_state == I2C_IDLE) {
+		;
+	}
+	else {
+		*qf = BMA150_QF_NOT_AVAILABLE;
+
+		return BMA150_SENSOR_NOT_RESPONDING;
+	}
+
+	// clearing receive buffer
+	memset(raw_data, 0x00, BMA150_LN_RAW_DATA);
+
+	// reading first segment of calibration data
+	i2c_receive_data(RX_ADDR, VALUES_LN);
+
+	// Wait until receiving will finish or fail (due to timeout or any other error)
+	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+
+	// check if receive was successfull
+	if (i2c_state == I2C_IDLE) {
+		;
+	}
+	else {
+		*qf = BMA150_QF_NOT_AVAILABLE;
+
+		return BMA150_SENSOR_NOT_RESPONDING;
+	}
+
+	// copying read data
+	memcpy(raw_data, (uint8_t*)i2c_rx_data, VALUES_LN);
 
 	return out;
 }

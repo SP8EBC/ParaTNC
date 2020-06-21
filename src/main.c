@@ -379,8 +379,8 @@ int main(int argc, char* argv[]){
 
 #if (defined _METEO && defined _SENSOR_BMA150)
  bma150_reset(&rte_wx_bma150_qf);
- bma150_read_calibration(&bma150_data_buffer, &rte_wx_bma150_qf);
  bma150_setup();
+ bma150_read_calibration(&bma150_data_buffer, &rte_wx_bma150_qf);
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART
