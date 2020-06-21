@@ -289,16 +289,16 @@ int main(int argc, char* argv[]){
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 
   // Set watchdog prescaler
-  IWDG_SetPrescaler(IWDG_Prescaler_64);
+  IWDG_SetPrescaler(IWDG_Prescaler_128);
 
-  // Set the counter value to program watchdog for about 6.5 seconds
+  // Set the counter value to program watchdog for about 13 seconds
   IWDG_SetReload(0xFFF);
 
   // enable the watchdog
   IWDG_Enable();
 
   // do not disable the watchdog when the core is halted on a breakpoint
-  DBGMCU_Config(DBGMCU_IWDG_STOP, DISABLE);
+  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE); // TODO
 
   // reload watchdog counter
   IWDG_ReloadCounter();
