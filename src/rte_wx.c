@@ -37,7 +37,7 @@ dht22Values rte_wx_dht, rte_wx_dht_valid;		// quality factor inside this structu
 dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
 dallas_average_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf;
-bma150_qf_t rte_wx_bma150_qf;
+bme280_qf_t rte_wx_bma150_qf;
 
 #ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;

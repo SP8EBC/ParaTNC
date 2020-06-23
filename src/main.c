@@ -48,7 +48,7 @@
 #endif
 
 #ifdef _SENSOR_BMA150
-#include "drivers/bma150.h"
+#include <drivers/bme280.h>
 #endif
 
 #ifdef _UMB_MASTER
@@ -378,9 +378,9 @@ int main(int argc, char* argv[]){
 #endif
 
 #if (defined _METEO && defined _SENSOR_BMA150)
- bma150_reset(&rte_wx_bma150_qf);
- bma150_setup();
- bma150_read_calibration(&bma150_data_buffer, &rte_wx_bma150_qf);
+ bme280_reset(&rte_wx_bma150_qf);
+ bme280_setup();
+ bme280_read_calibration(bme280_calibration_data, &rte_wx_bma150_qf);
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART

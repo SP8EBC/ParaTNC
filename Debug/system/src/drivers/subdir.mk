@@ -6,7 +6,7 @@
 C_SRCS += \
 ../system/src/drivers/_dht22.c \
 ../system/src/drivers/analog_anemometer.c \
-../system/src/drivers/bma150.c \
+../system/src/drivers/bme280.c \
 ../system/src/drivers/dallas.c \
 ../system/src/drivers/dma_helper_functions.c \
 ../system/src/drivers/gpio_conf.c \
@@ -19,7 +19,7 @@ C_SRCS += \
 OBJS += \
 ./system/src/drivers/_dht22.o \
 ./system/src/drivers/analog_anemometer.o \
-./system/src/drivers/bma150.o \
+./system/src/drivers/bme280.o \
 ./system/src/drivers/dallas.o \
 ./system/src/drivers/dma_helper_functions.o \
 ./system/src/drivers/gpio_conf.o \
@@ -32,7 +32,7 @@ OBJS += \
 C_DEPS += \
 ./system/src/drivers/_dht22.d \
 ./system/src/drivers/analog_anemometer.d \
-./system/src/drivers/bma150.d \
+./system/src/drivers/bme280.d \
 ./system/src/drivers/dallas.d \
 ./system/src/drivers/dma_helper_functions.d \
 ./system/src/drivers/gpio_conf.d \

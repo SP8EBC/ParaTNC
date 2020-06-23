@@ -54,18 +54,18 @@ void wx_get_all_measurements(void) {
 
 #if (defined _METEO && defined _SENSOR_BMA150)
 	// reading raw values
-	return_value = bma150_read_raw_data(bma150_data_buffer, &rte_wx_bma150_qf);
+	return_value = bme280_read_raw_data(bme280_data_buffer, &rte_wx_bma150_qf);
 
-	if (return_value == BMA150_OK) {
-
-		// converting raw values to humidity
-		bma150_get_humidity(&rte_wx_humidity, bma150_data_buffer);
+	if (return_value == BME280_OK) {
 
 		// converting raw values to temperature
-		bma150_get_temperature(&rte_wx_temperature_ms_valid, bma150_data_buffer);
+		bme280_get_temperature(&rte_wx_temperature_ms_valid, bme280_get_adc_t());
 
 		// converting raw values to pressure
-		bma150_get_pressure(&rte_wx_pressure, bma150_data_buffer);
+		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p());
+
+		// converting raw values to humidity
+		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h());
 
 		{
 			// add the current pressure into buffer

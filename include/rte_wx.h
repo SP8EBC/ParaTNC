@@ -8,7 +8,7 @@
 #include "drivers/_dht22.h"
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
-#include "drivers/bma150.h"
+#include "drivers/bme280.h"
 #include "../umb_master/umb_master.h"
 #include "../umb_master/umb_qf_t.h"
 
@@ -51,7 +51,7 @@ extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
-extern bma150_qf_t rte_wx_bma150_qf;
+extern bme280_qf_t rte_wx_bma150_qf;
 
 #ifdef _UMB_MASTER
 
