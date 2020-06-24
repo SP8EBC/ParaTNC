@@ -15,12 +15,14 @@
 #define _DIGI				// Enable WIDE1-1 digipeater
 //#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 //#define _VICTRON			// Enable support for Victron VE.Direct protocol
+//#define _UMB_MASTER
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
 
-#define PARATNC_HWREV_A
+//#define PARATNC_HWREV_A
 //#define PARATNC_HWREV_B
+#define PARATNC_HWREV_C
 
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */
@@ -28,12 +30,20 @@
 //#define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
 							// May be used even if _METEO is not enabled
 #define _DALLAS_SPLIT_PIN
-#define _ANEMOMETER_TX20
-//#define _ANEMOMETER_ANALOGUE
+//#define _ANEMOMETER_TX20
+#define _ANEMOMETER_ANALOGUE
 #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
-#define _ANEMOMETER_DIRECTION_ASCENDING_WITH_VOLTAGE
-#define _ANEMOMETER_VOLTAGE_FOR_1DEG_DIRECTION
-#define _ANEMOMETER_VOLTAGE_FOR_359DEG_DIRECTION
+
+//#define _SENSOR_MS5611
+#define _SENSOR_BMA150
+
+#define _UMB_SLAVE_ID 	 		1
+#define _UMB_SLAVE_CLASS 		8
+#define _UMB_CHANNEL_WINDSPEED			460
+#define _UMB_CHANNEL_WINDGUSTS			440
+#define _UMB_CHANNEL_WINDDIRECTION		580
+#define _UMB_CHANNEL_TEMPERATURE		100
+#define _UMB_CHANNEL_QFE				300
 
 /* 	WEATHER/METEO CONFIGURATION */
 /* ---------------------------- */
@@ -43,13 +53,13 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "N9CALL"
+#define _CALL "SP8EBC"
 #define _SSID 1
-#define _LAT		4950.00
+#define _LAT		4948.85
 #define _LATNS		'N'
-#define _LON		01900.00
+#define _LON		01903.68
 #define _LONWE		'E'
-#define _COMMENT	"please set a configuration!"
+#define _COMMENT	"test"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -64,20 +74,20 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-//#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
+#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 //#define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 6		// WX packet interval in minutes
-#define _BCN_INTERVAL 5	// Own beacon interval in minutes
+#define _WX_INTERVAL 3		// WX packet interval in minutes
+#define _BCN_INTERVAL 29	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
-#define _SERIAL_BAUDRATE 9600
+#define _SERIAL_BAUDRATE 19200
 
 // Transmitting delay
-#define _DELAY_BASE 2	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 22	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 //#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness
@@ -142,7 +152,7 @@
 #error "You cannot use two anemometers at once!!!"
 #endif
 
-#if !defined(_ANEMOMETER_TX20) && !defined(_ANEMOMETER_ANALOGUE) && defined(_METEO)
+#if !defined(_ANEMOMETER_TX20) && !defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && defined(_METEO)
 #define _ANEMOMETER_TX20
 #endif
 

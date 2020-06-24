@@ -11,8 +11,8 @@
 #include "station_config.h"
 
 
-#if (_DELAY_BASE > 20)
-#error "Transmit delay shouldn't be longer that 1000msec. Decrease _DELAY_BASE in config below 20"
+#if (_DELAY_BASE > 22)
+#error "Transmit delay shouldn't be longer that 1100msec. Decrease _DELAY_BASE in config below 22"
 #endif
 
 void TimerConfig(void) {
