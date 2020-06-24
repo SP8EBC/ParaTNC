@@ -378,9 +378,9 @@ int main(int argc, char* argv[]){
 #endif
 
 #if (defined _METEO && defined _SENSOR_BMA150)
- bme280_reset(&rte_wx_bma150_qf);
+ bme280_reset(&rte_wx_bme280_qf);
  bme280_setup();
- bme280_read_calibration(bme280_calibration_data, &rte_wx_bma150_qf);
+ bme280_read_calibration(bme280_calibration_data);
 #endif
 
   // preparing initial beacon which will be sent to host PC using KISS protocol via UART
@@ -494,11 +494,11 @@ int main(int argc, char* argv[]){
 	  			SendOwnBeacon();
 #else
 
-	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid);
+	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
 
 	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
 
 	  			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 #endif // #ifndef _METEO

@@ -54,20 +54,28 @@ void wx_get_all_measurements(void) {
 
 #if (defined _METEO && defined _SENSOR_BMA150)
 	// reading raw values
-	return_value = bme280_read_raw_data(bme280_data_buffer, &rte_wx_bma150_qf);
+	return_value = bme280_read_raw_data(bme280_data_buffer);
 
 	if (return_value == BME280_OK) {
 
+		// setting back the Quality Factor to FULL to trace any problems with sensor readouts
+		rte_wx_bme280_qf = BME280_QF_FULL;
+
 		// converting raw values to temperature
-		bme280_get_temperature(&rte_wx_temperature_ms_valid, bme280_get_adc_t());
+		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
 		// converting raw values to pressure
-		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p());
+		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
 
 		// converting raw values to humidity
-		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h());
+		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
 
-		{
+		if (rte_wx_bme280_qf == BME280_QF_FULL) {
+
+			rte_wx_pressure_valid = rte_wx_pressure;
+			rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
+			rte_wx_humidity_valid = rte_wx_humidity;
+
 			// add the current pressure into buffer
 			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
 
@@ -225,8 +233,8 @@ void wx_pool_dht22(void) {
 		case DHT22_STATE_DATA_DECD:
 			rte_wx_dht_valid = rte_wx_dht;			// powrot do stanu DHT22_STATE_IDLE jest w TIM3_IRQHandler
 			//rte_wx_dht_valid.qf = DHT22_QF_FULL;
+			rte_wx_humidity = rte_wx_dht.humidity;
 			dht22State = DHT22_STATE_DONE;
-
 #ifdef _DBG_TRACE
 			trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
 #endif

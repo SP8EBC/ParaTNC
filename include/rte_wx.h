@@ -42,7 +42,7 @@ extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
 extern int16_t rte_wx_average_winddirection;
 
-extern int8_t rte_wx_humidity;
+extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
@@ -51,7 +51,7 @@ extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
-extern bme280_qf_t rte_wx_bma150_qf;
+extern bme280_qf_t rte_wx_bme280_qf;
 
 #ifdef _UMB_MASTER
 

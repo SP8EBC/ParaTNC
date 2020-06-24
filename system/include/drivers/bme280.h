@@ -13,13 +13,18 @@
 #define BME280_OK						0
 #define BME280_SENSOR_NOT_RESPONDING	-1
 #define BME280_SENSOR_NOT_AVALIABLE		-2
+#define BME280_WRONG_PRESSURE_READOUT	-3
+#define BME280_WRONG_HUMIDITY_READOUT	-4
 
 #define BME280_LN_CALIBRATION 	41
 #define BME280_LN_RAW_DATA		8
 
 typedef enum bme280_qf {
-	BMA150_QF_FULL,
-	BMA150_QF_NOT_AVAILABLE
+	BME280_QF_FULL,
+	BME280_QF_NOT_AVAILABLE,
+	BME280_QF_HUMIDITY_DEGRADED,
+	BME280_QF_PRESSURE_DEGRADED,
+	BME280_QF_GEN_DEGRADED
 }bme280_qf_t;
 
 extern uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
@@ -27,12 +32,12 @@ extern uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
 
 int32_t bme280_reset(bme280_qf_t* qf);
 int32_t bme280_setup(void);
-int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf);
-int32_t bme280_read_raw_data(uint8_t* raw_data, bme280_qf_t* qf);
+int32_t bme280_read_calibration(uint8_t* calibration);
+int32_t bme280_read_raw_data(uint8_t* raw_data);
 
-int32_t bme280_get_pressure(float* out, uint32_t raw_data);
-int32_t bme280_get_temperature(float* out, uint32_t raw_data);
-int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data);
+int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf);
+int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf);
+int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf);
 
 //#define BME280_CONCAT_BYTES(msb, lsb)            (((uint16_t)msb << 8) | (uint16_t)lsb)
 

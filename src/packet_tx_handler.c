@@ -38,7 +38,7 @@ uint8_t packet_tx_telemetry_descr_counter = 145;
 void packet_tx_handler(void) {
 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
 
-	uint16_t ln = 0;
+	int ln = 0;
 
 	packet_tx_beacon_counter++;
 	packet_tx_error_status_counter++;
@@ -79,9 +79,10 @@ void packet_tx_handler(void) {
 
 #if defined _DALLAS_AS_TELEM
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
-		SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
+		//SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
+		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_ms, rte_wx_pressure_valid, rte_wx_humidity_valid);
 #else
-		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid);
+		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
 
 #endif
@@ -95,7 +96,7 @@ void packet_tx_handler(void) {
 
 		srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
 
 		srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 

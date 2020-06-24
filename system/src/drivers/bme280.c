@@ -72,7 +72,7 @@ int32_t bme280_reset(bme280_qf_t* qf) {
 	}
 	else {
 		// Set Quality Factor to unavaliable
-		*qf = BMA150_QF_NOT_AVAILABLE;
+		*qf = BME280_QF_NOT_AVAILABLE;
 
 		// Return with keeping 'ms5611_sensor_abaliable' set to zero which will
 		// disable comms
@@ -123,7 +123,7 @@ int32_t bme280_setup(void) {
 	return out;
 }
 
-int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
+int32_t bme280_read_calibration(uint8_t* calibration) {
 	int32_t out = BME280_OK;
 
 	if (bme280_sensor_avaliable == 0) {
@@ -144,7 +144,6 @@ int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
 
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
@@ -163,7 +162,6 @@ int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
 
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
@@ -185,7 +183,6 @@ int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
 
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
@@ -201,7 +198,6 @@ int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
 
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
@@ -212,7 +208,7 @@ int32_t bme280_read_calibration(uint8_t* calibration, bme280_qf_t* qf) {
 	return out;
 }
 
-int32_t bme280_read_raw_data(uint8_t* raw_data, bme280_qf_t* qf) {
+int32_t bme280_read_raw_data(uint8_t* raw_data) {
 	int32_t out = BME280_OK;
 
 	if (bme280_sensor_avaliable == 0) {
@@ -233,7 +229,6 @@ int32_t bme280_read_raw_data(uint8_t* raw_data, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
 
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
@@ -252,8 +247,6 @@ int32_t bme280_read_raw_data(uint8_t* raw_data, bme280_qf_t* qf) {
 		;
 	}
 	else {
-		*qf = BMA150_QF_NOT_AVAILABLE;
-
 		return BME280_SENSOR_NOT_RESPONDING;
 	}
 
@@ -263,7 +256,7 @@ int32_t bme280_read_raw_data(uint8_t* raw_data, bme280_qf_t* qf) {
 	return out;
 }
 
-int32_t bme280_get_pressure(float* out, uint32_t raw_data) {
+int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf) {
 	int32_t ret = BME280_OK;
 
 	int32_t var1, var2;
@@ -279,7 +272,8 @@ int32_t bme280_get_pressure(float* out, uint32_t raw_data) {
 	var1 =((((32768+var1))*((int32_t)bme280_get_dig_P1()))>>15);
 	if (var1 == 0)
 	{
-		return 0; // avoid exception caused by division by zero
+		*qf = BME280_QF_PRESSURE_DEGRADED;
+		return BME280_WRONG_PRESSURE_READOUT; // avoid exception caused by division by zero
 	}
 		p = (((uint32_t)(((int32_t)1048576)-adc_P)-(var2>>12)))*3125;
 	if (p < 0x80000000)
@@ -299,7 +293,7 @@ int32_t bme280_get_pressure(float* out, uint32_t raw_data) {
 	return ret;
 }
 
-int32_t bme280_get_temperature(float* out, uint32_t raw_data) {
+int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf) {
 	int32_t ret = BME280_OK;
 
 	uint32_t adc_T = raw_data;
@@ -316,7 +310,7 @@ int32_t bme280_get_temperature(float* out, uint32_t raw_data) {
 	return ret;
 }
 
-int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data) {
+int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf) {
 	int32_t ret = BME280_OK;
 
 	int32_t v_x1_u32r;
@@ -335,6 +329,11 @@ int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data) {
 	val = (uint32_t)(v_x1_u32r>>12);
 
 	*out = (val / 1024);
+
+	if (*out > 99 || *out < 0) {
+		*qf = BME280_QF_HUMIDITY_DEGRADED;
+		out = BME280_WRONG_HUMIDITY_READOUT;
+	}
 
 	return ret;
 }
