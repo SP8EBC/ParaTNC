@@ -375,6 +375,10 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	// if the counter value is zero it means that probably U/f converter isn't running
 	if (current_value == 0) {
+		TIM_SetCounter(TIM3, 0);
+
+		TIM_Cmd(TIM3, ENABLE);
+
 		return rte_wx_winddirection_last;
 	}
 
