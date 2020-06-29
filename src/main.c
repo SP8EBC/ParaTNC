@@ -47,7 +47,7 @@
 #include "drivers/ms5611.h"
 #endif
 
-#ifdef _SENSOR_BMA150
+#ifdef _SENSOR_BME280
 #include <drivers/bme280.h>
 #endif
 
@@ -377,7 +377,7 @@ int main(int argc, char* argv[]){
  ms5611_trigger_measure(0, 0);
 #endif
 
-#if (defined _METEO && defined _SENSOR_BMA150)
+#if (defined _METEO && defined _SENSOR_BME280)
  bme280_reset(&rte_wx_bme280_qf);
  bme280_setup();
  bme280_read_calibration(bme280_calibration_data);

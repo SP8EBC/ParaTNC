@@ -52,7 +52,7 @@ void wx_get_all_measurements(void) {
 
 #endif
 
-#if (defined _METEO && defined _SENSOR_BMA150)
+#if (defined _METEO && defined _SENSOR_BME280)
 	// reading raw values
 	return_value = bme280_read_raw_data(bme280_data_buffer);
 
