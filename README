@@ -1,4 +1,4 @@
-ParaTNC version DE08, April 11th 2020
+ParaTNC version DF03, June 25th 2020
 -----------------------------------------
 
 1. INTRODUCTION
@@ -63,17 +63,18 @@ ParaTNC software and hardware are licensed under terms included to the source co
   a) Wind sensors: 
      - TX20 (not in manufacturing anymore)
      - Davis 6410 or any another analogue anemometer with resisntance as a direction output and impulses as a windspeed
-         WARNING: Currently support on software testing phase. Not avaliable in Hardware Revision A due to lack of circuitry
+         WARNING: Not avaliable in Hardware Revision A due to lack of circuitry. Fully working only in HW-Rev C
      - Lufft V200A/Ventus or any other UMB compatible device.
-         WARNING: Currently support on software testing phase.
   b) Pressure Sensors:
      - MS5611
+     - Bosh BMP280
      - Any UMB protocol compatible device
   c) Temperature sensors:
      - Dallas One wire DS18B20
      - Any UMB protocol compatible device
   d) Humidity Sensors:
      - DHT22
+     - Bosh BMP280
 
 
 6. SUPPORTED FEATURES OD VE.Direct PROTOCOL
@@ -189,7 +190,25 @@ application which doesn't works exactly as it should because of optimalization c
 
 	22:29:38 Build Finished (took 13s.231ms)
 
-10. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
+10. LOADING THE HEX FILE USING SERIAL BOOTLOADER
+If You don't have a JTAG programmer/debugger or You just not want to or can't use it for any reason, You can choose
+Internal Serial Bootloader provided by STMicroelectronics. It's code is stored in mask ROM within microcontroler
+and can be used anytime, and in scope of ParaTNC it practically cannot be disabled or locked. Please remember that
+this option is avaliable only if You're using ParaTNC PCB as STM32VLDISCOVERY board doesn't have TTL-RS232 converter.
+
+To use serial bootloader You need:
+  - RJ45 to DB9 Cisco style RS232 cable
+  - FlashLoader Demonstrator software provided by STMicroelectronics for free
+  
+The required software can be downloaded from this link: https://www.st.com/en/development-tools/flasher-stm32.html
+It is advised to read the user manual for this tool before proceding further. To jump to the bootloader You shall 
+disconect power to ParaTNC, then use something to short the jumper located at the left of JTAG connector (top-left
+corner of PCB) and with jumper shorted reconnect the power supply. If procedure success You shall NOT hear 
+relay clicking and LEDs blinking for a short while. After the power supply is connected and micro stays in bootloader
+you can disconnect the jumper and start the FlashLoader software to download the HEX file to micro. After process is done
+you should do a cold reset without jumper shorter. 
+
+11. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
 The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
 This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
 in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration
