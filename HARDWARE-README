@@ -173,7 +173,7 @@ electrolytic
 
 JP1 - This is used to jump to the serial bootloader during startup
 JP3 - This is used to apply regulated +5V supply to RS232 connector
-RS232sel - This pair of jumpers is used to choose RS232
+RS232sel - This pair of jumpers is used to choose RS232, present only in HW-RevA
 MS5611 - .1' Connector for GY-63 breakout board with MS5611 pressure sensor
 		=========
 		| empty |
@@ -192,7 +192,7 @@ DHT22 - .1' connector for DHT22 humidity sensor
 			==========
 
 
-9. CHOOSING BETWEEN RS485 AND RS232
+9. CHOOSING BETWEEN RS485 AND RS232 (applies only to HW Revision A)
 ParaTNC controller has connectors for both 485 and 232 variant of RS standard.
 This doesn't automatically means that ParaTNC has two separate serial ports,
 this is still the same serial port from the microcontroller which just may
