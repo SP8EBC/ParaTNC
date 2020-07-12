@@ -13,6 +13,8 @@
 #include "main.h"
 #include "wx_handler.h"
 
+#include "LedConfig.h"
+
 #define BS TX20.BitSampler
 #define BQ TX20.BitQueue
 #define QL TX20.QueueLenght
@@ -38,13 +40,7 @@ uint16_t tx20_current_direction;
 
 #ifdef _METEO
 void inline TX20BlinkLed(void) {
-	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
-	}
-	else {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
-	}
-
+	led_flip_led2_botoom();
 }
 #endif
 
@@ -266,12 +262,8 @@ void TIM1_UP_TIM16_IRQHandler( void ) {
 #elif TIMNUMBER == 2
 void TIM2_IRQHandler( void ) {
 
-	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
-	}
-	else if ((GPIOC->ODR & GPIO_ODR_ODR9)  == 0) {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
-	}
+	led_flip_led2_botoom();
+
 
 	TIM2->SR &= ~(1<<0);
 	tx20_batch();
@@ -280,12 +272,8 @@ void TIM2_IRQHandler( void ) {
 #elif TIMNUMBER == 3
 void TIM3_IRQHandler( void ) {
 
-	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
-	}
-	else if ((GPIOC->ODR & GPIO_ODR_ODR9)  == 0) {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
-	}
+	led_flip_led2_botoom();
+
 
 	TIM3->SR &= ~(1<<0);
 	tx20_batch();
@@ -294,12 +282,8 @@ void TIM3_IRQHandler( void ) {
 #elif TIMNUMBER == 4
 void TIM4_IRQHandler( void ) {
 
-	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
-	}
-	else if ((GPIOC->ODR & GPIO_ODR_ODR9)  == 0) {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
-	}
+	led_flip_led2_botoom();
+
 
 	TIM3->SR &= ~(1<<0);
 	tx20_batch();

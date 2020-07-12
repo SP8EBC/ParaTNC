@@ -22,6 +22,7 @@
 #include "rte_wx.h"
 #include "main.h"
 #include "wx_handler.h"
+#include "LedConfig.h"
 
 #define MINUM_PULSE_LN 15
 #define MAXIMUM_PULSE_SLEW_RATE 4000
@@ -210,6 +211,9 @@ void analog_anemometer_dma_irq(void) {
 
 		return;
 	}
+
+	// blinking the led - led will blink every 10 pulses, so if wind is 1m/s it will blink every 10 seconds
+	led_blink_led2_botoom();
 
 	// calculating time between pulses
 	for (i = 0; i < ANALOG_ANEMOMETER_SPEED_PULSES_N - 1; i++) {
@@ -423,6 +427,14 @@ int16_t analog_anemometer_direction_handler(void) {
 	analog_anemometer_last_direction_cnt = 0;
 
 	rte_wx_winddirection_last = downscaled_angle;
+
+	// set the led state
+	if (rte_wx_winddirection_last > 0 && rte_wx_winddirection_last < 180) {
+		led_control_led2_bottom(true);
+	}
+	else {
+		led_control_led2_bottom(false);
+	}
 
 	TIM_SetCounter(TIM3, 0);
 

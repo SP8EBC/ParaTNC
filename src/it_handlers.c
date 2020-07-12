@@ -18,6 +18,7 @@
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
 #include "main.h"
+#include "LedConfig.h"
 //#include "afsk.h"
 #include "diag/Trace.h"
 
@@ -80,6 +81,8 @@ void SysTick_Handler(void) {
 	main_two_second_pool_decrement_counter();
 
 	main_ten_second_pool_decremenet_counter();
+
+	led_service_blink();
 
 	srl_keep_timeout(main_kiss_srl_ctx_ptr);
 	srl_keep_timeout(main_wx_srl_ctx_ptr);
@@ -147,12 +150,15 @@ void TIM4_IRQHandler( void ) {
 	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 	DAC->SWTRIGR |= 1;
 
-	if (main_afsk.sending) {
-		GPIO_SetBits(GPIOC, GPIO_Pin_9);
-	}
-	else {
-		GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-	}
+#ifndef _METEO
+	led_control_led2_bottom(main_afsk.sending);
+#endif
+//	if (main_afsk.sending) {
+//		GPIO_SetBits(GPIOC, GPIO_Pin_9);
+//	}
+//	else {
+//		GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+//	}
 
 }
 
@@ -165,12 +171,7 @@ void TIM7_IRQHandler(void) {
 	if(ASC == 3) {
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
 		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
-		if(main_ax25.dcd == true) {		// niebieska dioda
-			GPIOC->BSRR |= GPIO_BSRR_BS8;
-		}
-		else {
-			GPIOC->BSRR |= GPIO_BSRR_BR8;
-		}
+		led_control_led1_upper(main_ax25.dcd);
 		ASC = 0;
 
 		if (ASC2++ == 2) {
