@@ -1,6 +1,8 @@
 ParaTNC version DF03, June 25th 2020
 -----------------------------------------
 
+// Please look into 'doc' directory for more documentation and user manuals
+
 1. INTRODUCTION
 ParaTNC is a hardware and a software which offers the functionality of multi function APRS controler. 
 The software itself can also run on cheap STM32VLDISCOVERY board with slightly reduced functionality, but

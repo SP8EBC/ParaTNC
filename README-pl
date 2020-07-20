@@ -1,6 +1,10 @@
 ParaTNC wersja 1.0-19082017
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// W katalogu 'doc' znajduje się większa ilość dokumentacji i instrukcji użytkownika
+// obecnie ten plik jest przestarzay i nie obejmuje najnowszych możliwości oprogramowania i sprzętu
+// ParaTNC. Proszę przeczytać anglojęzyczną wersję w pliku README 
+
 1. WSTĘP
 ParaTNC jest oprogramowaniem wbudowanym (firmware) przeznaczonym do pracy na płytce STM32VLDISCOVERY w charakterze
 uniwersalnego radiomodemu/sterownika sieci APRS, wyposażonego w szereg funkcjonalności takich jak:
