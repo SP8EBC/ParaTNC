@@ -56,6 +56,8 @@ uint8_t analog_anemometer_slew_limit_fired = 0;
 
 uint8_t analog_anemometer_deboucing_fired = 0;
 
+uint8_t analog_anemometer_direction_doesnt_work = 0;
+
 DMA_InitTypeDef DMA_InitStruct;
 
 // direction recalculated from v/f
@@ -383,6 +385,8 @@ int16_t analog_anemometer_direction_handler(void) {
 
 		TIM_Cmd(TIM3, ENABLE);
 
+		analog_anemometer_direction_doesnt_work = 1;
+
 		return rte_wx_winddirection_last;
 	}
 
@@ -453,6 +457,67 @@ void analog_anemometer_direction_reset(void) {
 
 	// end then restarting once again
 	TIM_Cmd(TIM3, ENABLE);
+}
+
+analog_wind_qf_t analog_anemometer_get_qf(void) {
+
+	analog_wind_qf_t out;
+
+	if (
+			analog_anemometer_slew_limit_fired == 0 &&
+			analog_anemometer_deboucing_fired == 0 &&
+			analog_anemometer_direction_doesnt_work == 0
+			)
+	{
+		out = AN_WIND_QF_FULL;
+	}
+	else if (
+			analog_anemometer_slew_limit_fired == 1 &&
+			analog_anemometer_deboucing_fired == 0 &&
+			analog_anemometer_direction_doesnt_work == 0
+			)
+	{
+		out = AN_WIND_QF_DEGRADED_SLEW;
+	}
+	else if (
+			analog_anemometer_slew_limit_fired == 0 &&
+			analog_anemometer_deboucing_fired == 1 &&
+			analog_anemometer_direction_doesnt_work == 0
+			)
+	{
+		out = AN_WIND_QF_DEGRADED_DEBOUNCE;
+
+	}
+	else if (
+			analog_anemometer_slew_limit_fired == 1 &&
+			analog_anemometer_deboucing_fired == 1 &&
+			analog_anemometer_direction_doesnt_work == 0
+			)
+	{
+		out = AN_WIND_QF_DEGRADED;
+
+	}
+	else if (
+			analog_anemometer_slew_limit_fired == 0 &&
+			analog_anemometer_deboucing_fired == 0 &&
+			analog_anemometer_direction_doesnt_work == 1
+			)
+	{
+		out = AN_WIND_QF_NOT_AVALIABLE;
+
+	}
+	else {
+		out = AN_WIND_QF_UNKNOWN;
+
+	}
+
+	// reseting flags
+	analog_anemometer_slew_limit_fired = 0;
+	analog_anemometer_deboucing_fired = 0;
+	analog_anemometer_direction_doesnt_work = 0;
+
+	return out;
+
 }
 
 #endif

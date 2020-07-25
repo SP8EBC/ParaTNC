@@ -36,8 +36,9 @@ uint8_t rte_wx_tx20_excessive_slew_rate = 0;
 dht22Values rte_wx_dht, rte_wx_dht_valid;		// quality factor inside this structure
 dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
 dallas_average_t rte_wx_dallas_average;
-ms5611_qf_t rte_wx_ms5611_qf;
-bme280_qf_t rte_wx_bme280_qf;
+ms5611_qf_t rte_wx_ms5611_qf = MS5611_QF_UNKNOWN;
+bme280_qf_t rte_wx_bme280_qf = BME280_QF_UKNOWN;
+analog_wind_qf_t rte_wx_analog_wind_qf = AN_WIND_QF_UNKNOWN;
 
 #ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;

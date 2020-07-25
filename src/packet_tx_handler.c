@@ -38,6 +38,10 @@ uint8_t packet_tx_telemetry_descr_counter = 145;
 void packet_tx_handler(void) {
 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
 
+	pressure_qf_t pressure_qf = PRESSURE_QF_UNKNOWN;
+	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
+	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+
 	int ln = 0;
 
 	packet_tx_beacon_counter++;
@@ -135,6 +139,65 @@ void packet_tx_handler(void) {
 			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
 		}
 
+		// pressure sensors quality factors
+		if (rte_wx_ms5611_qf == MS5611_QF_UNKNOWN) {
+			// use BME280 is used instead
+			switch (rte_wx_bme280_qf) {
+				case BME280_QF_FULL:
+				case BME280_QF_HUMIDITY_DEGRADED: pressure_qf = PRESSURE_QF_FULL; break;
+				case BME280_QF_UKNOWN:
+				case BME280_QF_NOT_AVAILABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+				case BME280_QF_PRESSURE_DEGRADED:
+				case BME280_QF_GEN_DEGRADED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+			}
+		}
+		else {
+			// if not use MS5611
+			switch (rte_wx_ms5611_qf) {
+				case MS5611_QF_FULL: pressure_qf = PRESSURE_QF_FULL; break;
+				case MS5611_QF_NOT_AVALIABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+				case MS5611_QF_DEGRADATED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+				case MS5611_QF_UNKNOWN: pressure_qf = PRESSURE_QF_UNKNOWN; break;
+			}
+		}
+
+		// humidity sensors quality factors
+		if (rte_wx_bme280_qf == BME280_QF_UKNOWN) {
+			// use DHT22
+			switch(rte_wx_dht_valid.qf) {
+				case DHT22_QF_UNKNOWN: humidity_qf = HUMIDITY_QF_UNKNOWN; break;
+				case DHT22_QF_FULL: humidity_qf = HUMIDITY_QF_FULL; break;
+				case DHT22_QF_DEGRADATED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
+				case DHT22_QF_UNAVALIABLE: humidity_qf = HUMIDITY_QF_NOT_AVALIABLE; break;
+			}
+		}
+		else {
+			// use BME280
+			switch (rte_wx_bme280_qf) {
+				case BME280_QF_FULL:
+				case BME280_QF_PRESSURE_DEGRADED: humidity_qf = HUMIDITY_QF_FULL; break;
+				case BME280_QF_UKNOWN:
+				case BME280_QF_NOT_AVAILABLE: humidity_qf = HUMIDITY_QF_NOT_AVALIABLE; break;
+				case BME280_QF_HUMIDITY_DEGRADED:
+				case BME280_QF_GEN_DEGRADED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
+			}
+		}
+
+		// wind quality factor
+		if (rte_wx_analog_wind_qf == AN_WIND_QF_UNKNOWN) {
+
+		}
+		else {
+			switch (rte_wx_analog_wind_qf) {
+				case AN_WIND_QF_FULL: wind_qf = WIND_QF_FULL; break;
+				case AN_WIND_QF_DEGRADED_DEBOUNCE:
+				case AN_WIND_QF_DEGRADED_SLEW:
+				case AN_WIND_QF_DEGRADED: wind_qf = WIND_QF_DEGRADATED; break;
+				case AN_WIND_QF_NOT_AVALIABLE:
+				case AN_WIND_QF_UNKNOWN: wind_qf = WIND_QF_NOT_AVALIABLE; break;
+			}
+		}
+
 #ifdef _VICTRON
 //
 		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
@@ -147,7 +210,7 @@ void packet_tx_handler(void) {
 #elif defined _METEO
 		// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 		// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_umb_qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 #else
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_umb_qf);

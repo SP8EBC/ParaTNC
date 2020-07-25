@@ -24,6 +24,27 @@
 
 #include "stdint.h"
 
+typedef enum pressure_qf {
+	PRESSURE_QF_UNKNOWN = 0,
+	PRESSURE_QF_FULL = 1,
+	PRESSURE_QF_NOT_AVALIABLE = 2,
+	PRESSURE_QF_DEGRADATED = 3
+}pressure_qf_t;
+
+typedef enum humidity_qf {
+	HUMIDITY_QF_UNKNOWN = 0,
+	HUMIDITY_QF_FULL = 1,
+	HUMIDITY_QF_NOT_AVALIABLE = 2,
+	HUMIDITY_QF_DEGRADATED = 3
+}humidity_qf_t;
+
+typedef enum wind_qf {
+	WIND_QF_UNKNOWN = 0,
+	WIND_QF_FULL = 1,
+	WIND_QF_NOT_AVALIABLE = 2,
+	WIND_QF_DEGRADATED = 3
+}wind_qf_t;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -48,9 +69,9 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t kiss_pkts,
 							float temperature,
 							dallas_qf_t dallas_qf,
-							ms5611_qf_t ms_qf,
-							dht22QF ds_qf,
-							umb_qf_t anemometer_qf);
+							pressure_qf_t press_qf,
+							humidity_qf_t humid_qf,
+							wind_qf_t anemometer_qf);
 void telemetry_send_chns_description(void);
 void telemetry_send_status(void);
 

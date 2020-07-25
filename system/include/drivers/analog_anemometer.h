@@ -14,6 +14,14 @@
 
 #ifdef _ANEMOMETER_ANALOGUE
 
+typedef enum analog_wind_qf {
+	AN_WIND_QF_FULL,
+	AN_WIND_QF_DEGRADED_DEBOUNCE,
+	AN_WIND_QF_DEGRADED_SLEW,
+	AN_WIND_QF_DEGRADED,
+	AN_WIND_QF_NOT_AVALIABLE,
+	AN_WIND_QF_UNKNOWN
+} analog_wind_qf_t;
 
 extern uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 extern uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
@@ -32,6 +40,7 @@ void analog_anemometer_dma_irq(void);
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time);
 int16_t analog_anemometer_direction_handler(void);
 void analog_anemometer_direction_reset(void);
+analog_wind_qf_t analog_anemometer_get_qf(void);
 
 #endif
 

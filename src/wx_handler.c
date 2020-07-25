@@ -105,6 +105,10 @@ void wx_get_all_measurements(void) {
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
 		}
 	}
+	else {
+		// set the quality factor is sensor is not responding on the i2c bus
+		rte_wx_bme280_qf = BME280_QF_NOT_AVAILABLE;
+	}
 #endif
 
 #if defined _METEO || defined _DALLAS_AS_TELEM
@@ -354,6 +358,8 @@ void wx_pool_anemometer(void) {
 
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;
+
+	rte_wx_analog_wind_qf = analog_anemometer_get_qf();
 
 	#endif
 }

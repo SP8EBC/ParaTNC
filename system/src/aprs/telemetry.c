@@ -179,13 +179,13 @@ void telemetry_send_chns_description(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 #if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRADA,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
+main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
 #endif
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -238,29 +238,29 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t kiss_pkts,
 							float temperature,
 							dallas_qf_t dallas_qf,
-							ms5611_qf_t ms_qf,
-							dht22QF ds_qf,
-							umb_qf_t anemometer_qf) {
+							pressure_qf_t press_qf,
+							humidity_qf_t humid_qf,
+							wind_qf_t anemometer_qf) {
 
 
 	// local variables with characters to be inserted to APRS telemetry frame
 	char qf = '0', degr = '0', nav = '0';
-	char ms_qf_navaliable = '0';
-	char dht_qf_navaliable = '0';
+	char pressure_qf_navaliable = '0';
+	char humidity_qf_navaliable = '0';
 	char anemometer_degradated = '0';
 	char anemometer_navble = '0';
 
 	uint8_t scaled_temperature = 0;
 
-	if (anemometer_qf == UMB_QF_DEGRADED) {
+	if (anemometer_qf == WIND_QF_DEGRADATED) {
 		anemometer_degradated = '1';
 		anemometer_navble = '0';
 	}
-	else if (anemometer_qf == UMB_QF_NOT_AVALIABLE) {
+	else if (anemometer_qf == WIND_QF_NOT_AVALIABLE) {
 		anemometer_degradated = '0';
 		anemometer_navble = '1';
 	}
-	else if (anemometer_qf == UMB_QF_UNITIALIZED || anemometer_qf == UMB_QF_UNKNOWN) {
+	else if (anemometer_qf == WIND_QF_UNKNOWN) {
 		anemometer_degradated = '1';
 		anemometer_navble = '1';
 	}
@@ -292,31 +292,31 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		break;
 	}
 
-	switch (ms_qf) {
-	case MS5611_QF_NOT_AVALIABLE:
-	case MS5611_QF_UNKNOWN:
-		 ms_qf_navaliable = '1';
+	switch (press_qf) {
+	case PRESSURE_QF_NOT_AVALIABLE:
+	case PRESSURE_QF_UNKNOWN:
+		 pressure_qf_navaliable = '1';
 		 break;
 	default:
-		ms_qf_navaliable = '0';
+		pressure_qf_navaliable = '0';
 		break;
 	}
 
-	switch (ds_qf) {
-	case DHT22_QF_UNAVALIABLE:
-	case DHT22_QF_UNKNOWN:
-		dht_qf_navaliable = '1';
+	switch (humid_qf) {
+	case HUMIDITY_QF_UNKNOWN:
+	case HUMIDITY_QF_NOT_AVALIABLE:
+		humidity_qf_navaliable = '1';
 		break;
 	default:
-		dht_qf_navaliable = '0';
+		humidity_qf_navaliable = '0';
 	}
 
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 #ifdef _DALLAS_AS_TELEM
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable, anemometer_degradated, anemometer_navble);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 #else
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable, anemometer_degradated, anemometer_navble);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 #endif
 
 	if (telemetry_counter > 999)
