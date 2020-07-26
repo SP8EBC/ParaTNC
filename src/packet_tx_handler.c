@@ -200,7 +200,7 @@ void packet_tx_handler(void) {
 
 #ifdef _VICTRON
 //
-		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf);
+		telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf);
 //
 #else
 //
@@ -213,7 +213,7 @@ void packet_tx_handler(void) {
 		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 #else
 		// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf, rte_wx_umb_qf);
+		telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 #endif
 //
 #endif

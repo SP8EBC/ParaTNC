@@ -494,7 +494,7 @@ int main(int argc, char* argv[]){
 	  			SendOwnBeacon();
 #else
 
-	  			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
+	  			//SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
 
 	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
