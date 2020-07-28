@@ -477,6 +477,13 @@ int main(int argc, char* argv[]){
    IWDG_ReloadCounter();
 #endif
 
+#ifdef EXTERNAL_WATCHDOG
+   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// external watchdog
+
+   GPIOA->ODR ^= GPIO_Pin_12; // Flip the watchdog pin
+
+#endif
+
   // Infinite loop
   while (1)
     {
@@ -649,8 +656,6 @@ int main(int argc, char* argv[]){
 			wx_pool_anemometer();
 
 			main_ten_second_pool_timer = 10000;
-
-			GPIOA->ODR = (GPIOA->ODR ^ GPIO_Pin_12);
 		}
 
 #ifdef _METEO

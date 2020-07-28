@@ -12,8 +12,6 @@
 
 #include <stdint.h>
 
-#ifdef _ANEMOMETER_ANALOGUE
-
 typedef enum analog_wind_qf {
 	AN_WIND_QF_FULL,
 	AN_WIND_QF_DEGRADED_DEBOUNCE,
@@ -22,6 +20,8 @@ typedef enum analog_wind_qf {
 	AN_WIND_QF_NOT_AVALIABLE,
 	AN_WIND_QF_UNKNOWN
 } analog_wind_qf_t;
+
+#ifdef _ANEMOMETER_ANALOGUE
 
 extern uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 extern uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];

@@ -93,6 +93,10 @@ void packet_tx_handler(void) {
 
 		main_wait_for_tx_complete();
 
+#ifdef EXTERNAL_WATCHDOG
+		GPIOA->ODR ^= GPIO_Pin_12;
+#endif
+
 		packet_tx_meteo_counter = 0;
 	}
 
@@ -184,11 +188,11 @@ void packet_tx_handler(void) {
 		}
 
 		// wind quality factor
-		if (rte_wx_analog_wind_qf == AN_WIND_QF_UNKNOWN) {
-
+		if (rte_wx_wind_qf == AN_WIND_QF_UNKNOWN) {
+			;
 		}
 		else {
-			switch (rte_wx_analog_wind_qf) {
+			switch (rte_wx_wind_qf) {
 				case AN_WIND_QF_FULL: wind_qf = WIND_QF_FULL; break;
 				case AN_WIND_QF_DEGRADED_DEBOUNCE:
 				case AN_WIND_QF_DEGRADED_SLEW:

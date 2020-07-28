@@ -38,11 +38,10 @@ uint16_t tx20_current_direction;
 
 #define PI 3.14159265
 
-#ifdef _METEO
-void inline TX20BlinkLed(void) {
-	led_flip_led2_botoom();
-}
-#endif
+//#ifdef _METEO
+//void inline TX20BlinkLed(void) {
+//}
+//#endif
 
 void tx20_init(void) {
 	int i;
@@ -96,7 +95,7 @@ void tx20_batch(void) {
 		if (DCD == 1)
 			if (FC == 0x29) {
 #ifdef _METEO
-				TX20BlinkLed();
+				led_flip_led2_bottom();
 #endif
 				if (OE >= 3) {
 					tx20_data_parse();

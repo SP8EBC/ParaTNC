@@ -359,7 +359,12 @@ void wx_pool_anemometer(void) {
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;
 
-	rte_wx_analog_wind_qf = analog_anemometer_get_qf();
+#ifdef _ANEMOMETER_ANALOGUE
+	rte_wx_wind_qf = analog_anemometer_get_qf();
+#else
+	rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+#endif
+
 
 	#endif
 }
