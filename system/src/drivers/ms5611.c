@@ -35,7 +35,7 @@ int32_t ms5611_reset(ms5611_qf_t *qf) {
 	int txbuf[] = {0x1E, '\0' };
 
 	// Send a data to sensor
-	i2cSendData(TX_ADDR, txbuf, 0);
+	i2c_send_data(TX_ADDR, txbuf, 0);
 
 	// Wait until the transmission will finish or fail (due to timeout or any other error)
 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
@@ -86,7 +86,7 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 		txbuf[1] = '\0'; 
 
 		// Transmitting a command
-		i2cSendData(TX_ADDR, txbuf, 0);
+		i2c_send_data(TX_ADDR, txbuf, 0);
 
 		// Waiting to transmission completion or failure
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
@@ -101,7 +101,7 @@ int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
 		}
 
 		// Receiving the data with calibration coefficient.
-		i2cReceiveData(RX_ADDR, rxbuf, 2);
+		i2c_receive_data(RX_ADDR, 2);
 
 		// Waiting until receiving will be completed
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
@@ -145,7 +145,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// TRIGGERING TEMPERATURE MESUREMENET ////
 		////////////////////////////////////////////
 		txbuf[0] = 0x54;						// oversampling 1024
-		i2cSendData(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+		i2c_send_data(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -159,7 +159,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// READING TEMPERATURE ////
 		/////////////////////////////
 		txbuf[0] = 0x00;
-		i2cSendData(TX_ADDR,txbuf, 0x01);
+		i2c_send_data(TX_ADDR,txbuf, 0x01);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -167,7 +167,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		i2cReceiveData(RX_ADDR, txbuf, 3);
+		i2c_receive_data(RX_ADDR, 3);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -180,7 +180,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// TRIGGERING PRESSURE MEASUREMENET   ////
 		////////////////////////////////////////////
 		txbuf[0] = 0x44;
-		i2cSendData(TX_ADDR,txbuf, 0);
+		i2c_send_data(TX_ADDR,txbuf, 0);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -195,7 +195,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// READING PRESSURE ////
 		//////////////////////////
 		txbuf[0] = 0x00;
-		i2cSendData(TX_ADDR,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
+		i2c_send_data(TX_ADDR,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -203,7 +203,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 			return MS5611_TIMEOUT_DURING_MEASURMENT;
 		}
 
-		i2cReceiveData(RX_ADDR, txbuf, 3);
+		i2c_receive_data(RX_ADDR, 3);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 
@@ -216,7 +216,7 @@ int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
 		//// TRIGGERING TEMPERATURE MEASUREMENET ////
 		/////////////////////////////////////////////
 		txbuf[0] = 0x54;
-		i2cSendData(TX_ADDR,txbuf, 0);
+		i2c_send_data(TX_ADDR,txbuf, 0);
 
 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
 

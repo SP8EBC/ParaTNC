@@ -4,8 +4,8 @@
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 
-#define SW_VER "DF05"
-#define SW_DATE "27072020"
+#define SW_VER "DF06"
+#define SW_DATE "04082020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -34,7 +34,7 @@ extern srl_context_t* main_wx_srl_ctx_ptr;
 
 extern char after_tx_lock;
 
-extern unsigned short rx10m, tx10m, digi10m, kiss10m;
+extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 uint16_t main_get_adc_sample(void);
 

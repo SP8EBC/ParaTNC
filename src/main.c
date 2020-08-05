@@ -152,7 +152,7 @@ umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 
 char after_tx_lock;
 
-unsigned short rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
+unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 
 static void message_callback(struct AX25Msg *msg) {
@@ -529,8 +529,8 @@ int main(int argc, char* argv[]){
 			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", ax25_rxed_frame.src.call, ax25_rxed_frame.src.ssid, ax25_rxed_frame.rpt_lst[0].call, ax25_rxed_frame.rpt_lst[0].ssid);
 #endif
 #ifdef _DIGI
-			// check if this packet needs to be repeated (digipeated) and do it if it is neccessary
-			Digi(&ax25_rxed_frame);
+			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
+			digi_process(&ax25_rxed_frame);
 #endif
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
