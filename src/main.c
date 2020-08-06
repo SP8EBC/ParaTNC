@@ -529,6 +529,8 @@ int main(int argc, char* argv[]){
 			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", ax25_rxed_frame.src.call, ax25_rxed_frame.src.ssid, ax25_rxed_frame.rpt_lst[0].call, ax25_rxed_frame.rpt_lst[0].ssid);
 #endif
 #ifdef _DIGI
+			digi_check_with_viscous(&ax25_rxed_frame);
+
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
 			digi_process(&ax25_rxed_frame);
 #endif
@@ -616,6 +618,8 @@ int main(int argc, char* argv[]){
 		}
 
 		if (main_one_second_pool_timer < 10) {
+
+			digi_pool_viscous();
 
 			#ifdef _ANEMOMETER_ANALOGUE
 			analog_anemometer_direction_handler();
