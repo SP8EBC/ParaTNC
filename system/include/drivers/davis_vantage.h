@@ -12,16 +12,17 @@
 
 #define DAVIS_OK		0
 
-typedef enum davis_loop_query_state {
-	DAVIS_LOOP_IDLE,
-	DAVIS_LOOP_SENDING_QUERY,
-	DAVIS_LOOP_RECEIVING,
-	DAVIS_LOOP_OK,
-	DAVIS_LOOP_ERROR
-}davis_loop_query_state_t;
+typedef enum davis_qf_t {
+	DAVIS_QF_UNINITIALIZED,
+	DAVIS_QF_NOT_AVALIABLE,
+	DAVIS_QF_DEGRADED_COMM_BASE,
+	DAVIS_QF_DEGRADED_COMM_ODU,
+	DAVIS_QF_DEGRADED_BATTERY,
+	DAVIS_QF_FULL
+} davis_qf_t;
 
 uint32_t davis_init(srl_context_t* srl_port);
-uint32_t davis_wake_up(void);
+uint32_t davis_wake_up(uint8_t is_io_blocking);
 uint32_t davis_do_test(void);
 uint32_t davis_query_for_loop_packet(void);
 uint32_t davis_leave_receiving_screen(void);

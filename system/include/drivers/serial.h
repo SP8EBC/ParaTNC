@@ -76,11 +76,13 @@ typedef struct srl_context_t {
 
 }srl_context_t;
 
+#define SRL_UNINITIALIZED				127
 #define SRL_OK							0
 #define SRL_DATA_TOO_LONG 				1
 #define SRL_BUSY						2
 #define SRL_WRONG_BUFFER_PARAM 			3
 #define SRL_WRONG_PARAMS_COMBINATION	4
+#define SRL_TIMEOUT						5
 
 //extern srl_rx_state_t srl_rx_state;
 //extern srl_tx_state_t srl_tx_state;
@@ -111,6 +113,7 @@ void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint1
 uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
 uint8_t srl_start_tx(srl_context_t *ctx, short leng);
 void srl_wait_for_tx_completion(srl_context_t *ctx);
+uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output);
 void srl_irq_handler(srl_context_t *ctx);
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
 uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);

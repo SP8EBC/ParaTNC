@@ -268,6 +268,28 @@ void srl_wait_for_tx_completion(srl_context_t *ctx) {
 	  while(ctx->srl_tx_state != SRL_TX_IDLE && ctx->srl_tx_state != SRL_TX_ERROR);
 }
 
+uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output) {
+
+	output = SRL_UNINITIALIZED;
+
+	// block the execution until the
+	while(ctx->srl_rx_state != SRL_WAITING_TO_RX && ctx->srl_rx_state != SRL_RXING && ctx->srl_rx_state != SRL_RX_ERROR);
+
+	switch (ctx->srl_rx_state) {
+		case SRL_RX_DONE: {
+			output = SRL_OK;
+			break;
+		}
+
+		case SRL_RX_ERROR: {
+			output = SRL_TIMEOUT;
+			break;
+		}
+	}
+
+	return output;
+}
+
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
 	if (ctx->srl_rx_state == SRL_RXING)
 		return SRL_BUSY;
