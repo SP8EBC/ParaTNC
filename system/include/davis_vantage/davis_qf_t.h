@@ -1,0 +1,20 @@
+/*
+ * davis_qf_t.h
+ *
+ *  Created on: 10.08.2020
+ *      Author: mateusz
+ */
+
+#ifndef INCLUDE_DAVIS_VANTAGE_DAVIS_QF_T_H_
+#define INCLUDE_DAVIS_VANTAGE_DAVIS_QF_T_H_
+
+typedef enum davis_qf_t {
+	DAVIS_QF_UNINITIALIZED,
+	DAVIS_QF_NOT_AVALIABLE,
+	DAVIS_QF_DEGRADED_COMM_BASE,
+	DAVIS_QF_DEGRADED_COMM_ODU,
+	DAVIS_QF_DEGRADED_BATTERY,
+	DAVIS_QF_FULL
+} davis_qf_t;
+
+#endif /* INCLUDE_DAVIS_VANTAGE_DAVIS_QF_T_H_ */

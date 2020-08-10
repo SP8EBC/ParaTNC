@@ -270,24 +270,28 @@ void srl_wait_for_tx_completion(srl_context_t *ctx) {
 
 uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output) {
 
-	output = SRL_UNINITIALIZED;
+	*output = SRL_UNINITIALIZED;
 
 	// block the execution until the
 	while(ctx->srl_rx_state != SRL_WAITING_TO_RX && ctx->srl_rx_state != SRL_RXING && ctx->srl_rx_state != SRL_RX_ERROR);
 
 	switch (ctx->srl_rx_state) {
 		case SRL_RX_DONE: {
-			output = SRL_OK;
+			*output = SRL_OK;
 			break;
 		}
 
 		case SRL_RX_ERROR: {
-			output = SRL_TIMEOUT;
+			*output = SRL_TIMEOUT;
+			break;
+		}
+
+		default: {
 			break;
 		}
 	}
 
-	return output;
+	return *output;
 }
 
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
@@ -526,7 +530,9 @@ void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t val
 		ctx->srl_rx_timeout_enable = 1;
 	else if (disable_enable == 0)
 		ctx->srl_rx_timeout_enable = 0;
-	else;
+	else {
+		;
+	}
 
 	if (value != 0) {
 		ctx->srl_rx_timeout_trigger_value_in_msec = value;
@@ -541,7 +547,9 @@ void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable) 
 		ctx->srl_rx_timeout_waiting_enable = 1;
 	else if (disable_enable == 0)
 		ctx->srl_rx_timeout_waiting_enable = 0;
-	else;
+	else {
+		;
+	}
 
 	if (ctx->srl_rx_timeout_trigger_value_in_msec == 0)
 		ctx->srl_rx_timeout_trigger_value_in_msec = SRL_DEFAULT_RX_TIMEOUT_IN_MS;

@@ -10,16 +10,7 @@
 
 #include "drivers/serial.h"
 
-#define DAVIS_OK		0
-
-typedef enum davis_qf_t {
-	DAVIS_QF_UNINITIALIZED,
-	DAVIS_QF_NOT_AVALIABLE,
-	DAVIS_QF_DEGRADED_COMM_BASE,
-	DAVIS_QF_DEGRADED_COMM_ODU,
-	DAVIS_QF_DEGRADED_BATTERY,
-	DAVIS_QF_FULL
-} davis_qf_t;
+#include "davis_retval_def.h"
 
 uint32_t davis_init(srl_context_t* srl_port);
 uint32_t davis_wake_up(uint8_t is_io_blocking);

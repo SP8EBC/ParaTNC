@@ -69,5 +69,7 @@ void rte_wx_update_last_measuremenet_timers(uint16_t parameter_type) {
 		wx_last_good_wind_time = master_time;
 	else if (parameter_type == RTE_WX_MEASUREMENT_TEMPERATURE)
 		wx_last_good_temperature_time = master_time;
-	else;
+	else {
+		;
+	}
 }

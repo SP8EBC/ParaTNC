@@ -14,6 +14,7 @@ RM := rm -rf
 -include system/src/newlib/subdir.mk
 -include system/src/drivers/subdir.mk
 -include system/src/diag/subdir.mk
+-include system/src/davis_vantage/subdir.mk
 -include system/src/cortexm/subdir.mk
 -include system/src/cmsis/subdir.mk
 -include system/src/aprs/subdir.mk

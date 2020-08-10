@@ -85,7 +85,9 @@ short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25
 				FrameBuff[j]=FEND;
 			else if(*(input_frame_from_host+i+1) == TFESC)
 				FrameBuff[j]=FESC;
-			else;
+			else {
+				;
+			}
 			i++;
 		}
 		else

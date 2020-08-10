@@ -31,6 +31,7 @@ src \
 system/src/aprs \
 system/src/cmsis \
 system/src/cortexm \
+system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \
 system/src/newlib \
