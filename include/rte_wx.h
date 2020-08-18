@@ -5,13 +5,22 @@
  *      Author: mateusz
  */
 
+#include "station_config.h"
+
 #include "drivers/_dht22.h"
 #include "drivers/dallas.h"
-#include "drivers/ms5611.h"
-#include "drivers/bme280.h"
 #include "drivers/analog_anemometer.h"
-#include "../umb_master/umb_master.h"
-#include "../umb_master/umb_qf_t.h"
+#include "umb_master/umb_master.h"
+#include "umb_master/umb_qf_t.h"
+
+
+//#ifdef _SENSOR_MS5611
+#include "drivers/ms5611.h"
+//#endif
+
+//#ifdef _SENSOR_BME280
+#include "drivers/bme280.h"
+//#endif
 
 #ifndef RTE_WX_H_
 #define RTE_WX_H_
@@ -51,9 +60,15 @@ extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
-extern ms5611_qf_t rte_wx_ms5611_qf;
-extern bme280_qf_t rte_wx_bme280_qf;
 extern analog_wind_qf_t rte_wx_wind_qf;
+
+//#ifdef _SENSOR_MS5611
+extern ms5611_qf_t rte_wx_ms5611_qf;
+//#endif
+
+#ifdef _SENSOR_BME280
+extern bme280_qf_t rte_wx_bme280_qf;
+#endif
 
 #ifdef _UMB_MASTER
 

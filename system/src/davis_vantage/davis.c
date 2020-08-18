@@ -6,7 +6,9 @@
  */
 
 #include <davis_vantage/davis.h>
+#include <davis_vantage/davis_parsers.h>
 #include <davis_vantage/davis_query_state_t.h>
+#include <davis_vantage/davis_qf_t.h>
 
 #define DAVIS_ACK 0x06
 
@@ -37,6 +39,13 @@ davis_qf_t davis_quality_factor;
  */
 uint8_t davis_avaliable;
 
+/**
+ * Set to one if new loop packet is available for parsing. Cleared
+ * to zero after the 'davis_parsers_loop' is called
+ *
+ */
+uint8_t davis_loop_avaliable;
+
 static const char line_feed[] = "\n";
 static const char line_feed_return[] = {'\n', '\r'};
 static const char loop_command[] = "LOOP 1\n";
@@ -54,6 +63,8 @@ uint32_t davis_init(srl_context_t* srl_port) {
 	davis_wake_up_state = DAVIS_QUERY_IDLE;
 
 	davis_avaliable = 0;
+
+	davis_loop_avaliable = 0;
 
 	// set the timeout according to davis vantage documentation
 	srl_switch_timeout(srl_port, 1, 1200);
@@ -161,7 +172,7 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 
 				if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
 					// check the content of what was received from the davis
-					comparation_result = memcmp(line_feed_return, davis_serial_context->srl_rx_buf_pointer, 2);
+					comparation_result = memcmp(line_feed_return, srl_get_rx_buffer(davis_serial_context), 2);
 
 					if (comparation_result == 0) {
 						// if the base of davis wx station responden with '\r\n' it measn that wake up was sucessfull
@@ -256,16 +267,24 @@ uint32_t davis_query_for_loop_packet(void) {
 				}
 			}
 
-			if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+			else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
 				davis_loop_state = DAVIS_QUERY_ERROR;
 			}
 
 			break;
 		}
 		case DAVIS_QUERY_RECEIVING: {
+			if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
+				davis_loop_avaliable = 0;
+			}
+			else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+				davis_loop_state = DAVIS_QUERY_ERROR;
+			}
+
 			break;
 		}
 		case DAVIS_QUERY_OK: {
+
 			break;
 		}
 		case DAVIS_QUERY_ERROR: {
