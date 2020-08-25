@@ -346,6 +346,61 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
  	return SRL_OK;
 }
 
+uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
+	if (ctx->srl_rx_state == SRL_RXING)
+		return SRL_BUSY;
+
+	//trace_printf("Serial:SrlReceiveData()\r\n");
+
+	if (num >= RX_BUFFER_1_LN)
+		return SRL_DATA_TOO_LONG;
+
+	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+
+	// checking if user want
+	if (start != 0x00) {
+		ctx->srl_triggered_start = 1;
+		ctx->srl_start_trigger = start;
+	}
+	else {
+		ctx->srl_triggered_start = 0;
+	}
+
+	if (stop != 0x00) {
+		ctx->srl_triggered_stop = 1;
+		ctx->srl_stop_trigger = stop;
+	}
+	else {
+		ctx->srl_triggered_stop = 0;
+	}
+
+	if (ctx->srl_triggered_start == 1 || ctx->srl_triggered_stop == 1) {
+		if (num < 3)
+			return SRL_WRONG_PARAMS_COMBINATION;
+
+		ctx->srl_rx_state = SRL_WAITING_TO_RX;
+		ctx->srl_rx_waiting_start_time = master_time;
+	}
+
+	ctx->srl_enable_echo = echo;
+	ctx->srl_rx_bytes_counter = 0;
+	ctx->srl_rx_bytes_req = num;
+
+	ctx->srl_rx_lenght_param_addres = len_addr;
+	ctx->srl_rx_lenght_param_modifier = len_modifier;
+
+	// set current time as receive start time
+	ctx->srl_rx_start_time = master_time;
+
+	ctx->srl_rx_timeout_calc_started = 1;
+
+	ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
+	ctx->port->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
+// 	PORT->CR1 |= USART_CR1_IDLEIE;			// przerwanie od bezczynno�ci szyny RS przy odbiorze
+												// spowodowanej zako�czeniem transmisji przez urz�dzenie
+ 	return SRL_OK;
+}
+
 
 
 void srl_irq_handler(srl_context_t *ctx) {

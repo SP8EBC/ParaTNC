@@ -16,6 +16,9 @@
 
 #define SRL_DEFAULT_RX_TIMEOUT_IN_MS 400
 
+#define SRL_TIMEOUT_ENABLE	1
+#define SRL_TIMEOUT_DISABLE 0
+
 typedef enum srlRxState {
 	SRL_RX_NOT_CONFIG,
 	SRL_RX_IDLE,
@@ -116,6 +119,7 @@ void srl_wait_for_tx_completion(srl_context_t *ctx);
 uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output);
 void srl_irq_handler(srl_context_t *ctx);
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
 uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);
 uint8_t* srl_get_rx_buffer(srl_context_t *ctx);
 void srl_keep_timeout(srl_context_t *ctx);

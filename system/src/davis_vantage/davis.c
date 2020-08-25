@@ -46,7 +46,7 @@ uint8_t davis_avaliable;
  */
 uint8_t davis_loop_avaliable;
 
-static const char line_feed[] = "\n";
+static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
 static const char loop_command[] = "LOOP 1\n";
 
@@ -82,7 +82,7 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 	int comparation_result = -1;
 
 	// sending the new line to wake up the console
-	srl_send_data(davis_serial_context, (uint8_t*)line_feed, 1, 1, 0);
+	srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
 	// check if a user want to have blocking I/O
 	if (is_io_blocking == 1) {
@@ -90,7 +90,7 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 		srl_wait_for_tx_completion(davis_serial_context);
 
 		// start waiting for console response
-		srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+		srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0);
 
 		// wait for station response or for timeout
 		srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
@@ -110,7 +110,7 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 			// send the wake up command one more time
 
 			// sending the new line to wake up the console
-			srl_send_data(davis_serial_context, (uint8_t*)line_feed, 1, 1, 0);
+			srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
 			// if yes wait for transmission completion and then wait for response
 			srl_wait_for_tx_completion(davis_serial_context);
@@ -143,7 +143,7 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 		switch (davis_wake_up_state) {
 			case DAVIS_QUERY_IDLE: {
 				// sending the new line to wake up the console
-				srl_send_data(davis_serial_context, (uint8_t*)line_feed, 1, 1, 0);
+				srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
 				// switching the internal state
 				davis_wake_up_state = DAVIS_QUERY_SENDING_QUERY;

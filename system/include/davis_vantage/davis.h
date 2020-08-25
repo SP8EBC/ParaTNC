@@ -12,6 +12,8 @@
 
 #include "davis_retval_def.h"
 
+#define DAVIS_DEFAULT_BAUDRATE 19200u
+
 uint32_t davis_init(srl_context_t* srl_port);
 uint32_t davis_wake_up(uint8_t is_io_blocking);
 uint32_t davis_do_test(void);
