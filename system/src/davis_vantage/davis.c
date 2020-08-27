@@ -10,6 +10,8 @@
 #include <davis_vantage/davis_query_state_t.h>
 #include <davis_vantage/davis_qf_t.h>
 
+#include <string.h>
+
 #define DAVIS_ACK 0x06
 
 #define LOOP_PACKET_LN 99
@@ -49,6 +51,8 @@ uint8_t davis_loop_avaliable;
 static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
 static const char loop_command[] = "LOOP 1\n";
+static const char lamps_off[] = "LAMPS 0\n";
+static const char lamps_on[] = "LAMPS 1\n";
 
 uint32_t davis_init(srl_context_t* srl_port) {
 
@@ -302,9 +306,39 @@ uint32_t davis_leave_receiving_screen(void) {
 	return retval;
 }
 
+/** This function sends the "LAMPS" commands to the station base unit
+ * which controls the backliht of main LCD screen. Warning! this call
+ * has blocking I/O and waits until the transmission through RS232 port
+ * finish
+ *
+ *
+ */
 uint32_t davis_control_backlight(uint8_t state) {
 
 	uint32_t retval = DAVIS_OK;
+
+	uint8_t serial_result = SRL_UNINITIALIZED;
+
+	// switch over desired backlight state
+	if (state == 0) {
+		serial_result = srl_send_data(davis_serial_context, (uint8_t*)lamps_off, 1, strlen(lamps_off), 0);
+	}
+	else if (state == 1) {
+		serial_result = srl_send_data(davis_serial_context, (uint8_t*)lamps_on, 1, strlen(lamps_on), 0);
+
+	}
+	else {
+		retval = DAVIS_WRONG_PARAMETER;
+	}
+
+	// check the transmission request result
+	if (serial_result == SRL_OK) {
+		// if it was OK wait until the transmission will finish
+		srl_wait_for_tx_completion(davis_serial_context);
+	}
+	else {
+		retval = DAVIS_GEN_FAIL;
+	}
 
 	return retval;
 }

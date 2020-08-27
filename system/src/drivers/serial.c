@@ -1,9 +1,6 @@
 #include "drivers/serial.h"
 #include "drivers/gpio_conf.h"
 
-//#define PORT USART1
-
-
 #include "station_config.h"
 #include "diag/Trace.h"
 
@@ -29,42 +26,6 @@ uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN] = {'\0'};		// dane do wys�ania do
 #ifdef SEPARATE_RX_BUFF
 uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
 #endif
-
-//uint8_t *srl_tx_buf_pointer;
-//uint8_t *srl_rx_buf_pointer;
-//
-//uint16_t srl_rx_buf_ln = 0;
-//uint16_t srl_tx_buf_ln = 0;
-//
-//uint16_t srl_rx_bytes_counter = 0;
-//uint16_t srl_tx_bytes_counter = 0;
-//
-//uint16_t srl_rx_bytes_req = 0;
-//uint16_t srl_tx_bytes_req = 0;
-//
-//uint8_t srl_triggered_start = 0;
-//uint8_t srl_triggered_stop = 0;
-//
-//uint8_t srl_start_trigger = 0x00;				// znak oznaczaj�cy pocz�tek istotnych danych do odbebrania
-//uint8_t srl_stop_trigger = 0x00;				// znak oznaczaj�cy koniec istotnych danych do odebrania
-//
-//volatile uint8_t srl_garbage_storage;
-//
-//uint8_t srl_rx_timeout_enable = 0;
-//uint8_t srl_rx_timeout_waiting_enable = 0;
-//uint8_t srl_rx_timeout_calc_started = 0;
-//uint8_t srl_rx_timeout_waiting_calc_started = 0;
-//uint32_t srl_rx_timeout_trigger_value_in_msec = 0;
-//uint32_t srl_rx_start_time = 0;
-//uint32_t srl_rx_waiting_start_time = 0;
-//
-//srl_rx_state_t srl_rx_state = SRL_RX_NOT_CONFIG;
-//srl_tx_state_t srl_tx_state = SRL_TX_NOT_CONFIG;
-//
-//uint8_t srl_enable_echo = 0;
-//
-//uint8_t srl_rx_lenght_param_addres = 0;
-//uint8_t srl_rx_lenght_param_modifier = 0;
 
 
 void srl_init(
@@ -182,7 +143,7 @@ uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t 
 	if (internal_external == 0) {
 
 		// if data at the input is too long to fit in the buffer
-		if (leng >= TX_BUFFER_1_LN)
+		if (leng >= ctx->srl_rx_buf_ln)
 			return SRL_DATA_TOO_LONG;
 
 		// setting a pointer to transmit buffer to the internal buffer inside the driver
@@ -237,7 +198,7 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 		return SRL_BUSY;
 
 	// if data at the input is too long to fit in the buffer
-	if (leng >= TX_BUFFER_1_LN)
+	if (leng >= ctx->srl_rx_buf_ln)
 		return SRL_DATA_TOO_LONG;
 
 	ctx->srl_tx_bytes_req = leng;
@@ -300,7 +261,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 
 	//trace_printf("Serial:SrlReceiveData()\r\n");
 
-	if (num >= RX_BUFFER_1_LN)
+	if (num >= ctx->srl_rx_buf_ln)
 		return SRL_DATA_TOO_LONG;
 
 	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
@@ -352,7 +313,7 @@ uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char 
 
 	//trace_printf("Serial:SrlReceiveData()\r\n");
 
-	if (num >= RX_BUFFER_1_LN)
+	if (num >= ctx->srl_rx_buf_ln)
 		return SRL_DATA_TOO_LONG;
 
 	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
@@ -401,7 +362,46 @@ uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char 
  	return SRL_OK;
 }
 
+uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_callback_t cbk) {
+	uint8_t retval = SRL_OK;
 
+	if (ctx->srl_rx_state == SRL_RXING) {
+		retval = SRL_BUSY;
+	}
+	else {
+		// check if input pointers were set to something
+		if (cbk == NULL || ctx == NULL) {
+			retval = SRL_WRONG_PARAMS_COMBINATION;
+		}
+		else {
+			// set the callback pointer within the context
+			ctx->srl_rx_term = cbk;
+
+			// set the amount of bytes to be received as the size
+			// of the receive buffer (minus one byte for safety).
+			// it will be up to the callback function to terminate the receiving
+			ctx->srl_rx_bytes_req = ctx->srl_rx_buf_ln - 1;
+
+			// clear the rx buffer
+			memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+
+			ctx->srl_rx_bytes_counter = 0;
+
+			ctx->srl_rx_lenght_param_addres = 0;
+			ctx->srl_rx_lenght_param_modifier = 0;
+
+			ctx->srl_triggered_start = 0;
+			ctx->srl_triggered_stop = 0;
+			ctx->srl_enable_echo = 0;
+
+			ctx->srl_rx_timeout_calc_started = 0;
+
+
+		}
+	}
+
+	return retval;
+}
 
 void srl_irq_handler(srl_context_t *ctx) {
 
@@ -465,6 +465,24 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 					// moving buffer pointer forward
 					ctx->srl_rx_bytes_counter++;
+
+					// check if termination callback pointer has been set
+					if (ctx->srl_rx_term != NULL) {
+						// if yes call it
+						stop_rxing = ctx->srl_rx_term(	ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
+														ctx->srl_rx_buf_pointer,
+														ctx->srl_rx_bytes_counter);
+
+						// and check the return value
+						if (stop_rxing == 1) {
+							// if this was the last byte of transmission switch the state
+							// of receiving part to done
+							ctx->srl_rx_state = SRL_RX_DONE;
+
+							ctx->srl_triggered_stop = 0;
+						}
+
+					}
 				}
 
 				// if the user want the driver to stop receiving after certain is received

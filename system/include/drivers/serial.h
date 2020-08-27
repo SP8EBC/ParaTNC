@@ -19,6 +19,8 @@
 #define SRL_TIMEOUT_ENABLE	1
 #define SRL_TIMEOUT_DISABLE 0
 
+typedef uint8_t(*srl_rx_termination_callback_t)(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
+
 typedef enum srlRxState {
 	SRL_RX_NOT_CONFIG,
 	SRL_RX_IDLE,
@@ -77,7 +79,14 @@ typedef struct srl_context_t {
 	uint8_t srl_rx_lenght_param_addres;
 	uint8_t srl_rx_lenght_param_modifier;
 
+	// this is a pointer to function which could be optionally called
+	// after each byte received by the serial port
+	// the value returned by this function determines if the receiving shall
+	// be continued (if returned 0) or not (if returned 1)
+	srl_rx_termination_callback_t srl_rx_term;
+
 }srl_context_t;
+
 
 #define SRL_UNINITIALIZED				127
 #define SRL_OK							0
@@ -120,6 +129,7 @@ uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* outpu
 void srl_irq_handler(srl_context_t *ctx);
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
 uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_callback_t cbk);
 uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);
 uint8_t* srl_get_rx_buffer(srl_context_t *ctx);
 void srl_keep_timeout(srl_context_t *ctx);
