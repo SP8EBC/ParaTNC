@@ -234,7 +234,7 @@ uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* outpu
 	*output = SRL_UNINITIALIZED;
 
 	// block the execution until the
-	while(ctx->srl_rx_state != SRL_WAITING_TO_RX && ctx->srl_rx_state != SRL_RXING && ctx->srl_rx_state != SRL_RX_ERROR);
+	while(ctx->srl_rx_state != SRL_RX_DONE && ctx->srl_rx_state != SRL_RX_ERROR);
 
 	switch (ctx->srl_rx_state) {
 		case SRL_RX_DONE: {
@@ -290,12 +290,20 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 		ctx->srl_rx_state = SRL_WAITING_TO_RX;
 		ctx->srl_rx_waiting_start_time = master_time;
 	}
+	else {
+		ctx->srl_rx_state = SRL_RXING;
+	}
 
 	ctx->srl_enable_echo = echo;
 	ctx->srl_rx_bytes_counter = 0;
 	ctx->srl_rx_bytes_req = num;
 
-	ctx->srl_rx_lenght_param_addres = len_addr;
+	if (len_addr != 0) {
+		ctx->srl_rx_lenght_param_addres = len_addr;
+	}
+	else {
+		ctx->srl_rx_lenght_param_addres = num + 1;
+	}
 	ctx->srl_rx_lenght_param_modifier = len_modifier;
 
 	ctx->srl_rx_timeout_calc_started = 0;
@@ -342,12 +350,20 @@ uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char 
 		ctx->srl_rx_state = SRL_WAITING_TO_RX;
 		ctx->srl_rx_waiting_start_time = master_time;
 	}
+	else {
+		ctx->srl_rx_state = SRL_RXING;
+	}
 
 	ctx->srl_enable_echo = echo;
 	ctx->srl_rx_bytes_counter = 0;
 	ctx->srl_rx_bytes_req = num;
 
-	ctx->srl_rx_lenght_param_addres = len_addr;
+	if (len_addr != 0) {
+		ctx->srl_rx_lenght_param_addres = len_addr;
+	}
+	else {
+		ctx->srl_rx_lenght_param_addres = num + 1;
+	}
 	ctx->srl_rx_lenght_param_modifier = len_modifier;
 
 	// set current time as receive start time

@@ -293,23 +293,23 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
 
-#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
-  // reinitialize the KISS serial port temporary to davis baudrate
-  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
-
-  // reset RX state to allow reinitialization with changed baudrate
-  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-
-  // reinitializing serial hardware
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
-
-  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 1500);
-
-  davis_init(main_kiss_srl_ctx_ptr);
-
-  davis_wake_up(1);
-
-#endif
+//#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
+//  // reinitialize the KISS serial port temporary to davis baudrate
+//  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
+//
+//  // reset RX state to allow reinitialization with changed baudrate
+//  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+//
+//  // reinitializing serial hardware
+//  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+//
+//  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 1500);
+//
+//  davis_init(main_kiss_srl_ctx_ptr);
+//
+//  davis_wake_up(1);
+//
+//#endif
 
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
