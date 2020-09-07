@@ -96,9 +96,6 @@ typedef struct srl_context_t {
 #define SRL_WRONG_PARAMS_COMBINATION	4
 #define SRL_TIMEOUT						5
 
-//extern srl_rx_state_t srl_rx_state;
-//extern srl_tx_state_t srl_tx_state;
-//extern uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN];
 #ifdef SEPARATE_TX_BUFF
 extern uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN];
 #endif

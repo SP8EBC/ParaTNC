@@ -36,7 +36,7 @@ const uint16_t crc_table [] = {
 	0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
 	0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x8e1, 	0x3882, 0x28a3,
 	0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
-	0x4a75, 0x5a54, 0x6a37, 0x7a16, 0xaf1, 0x1ad0, 	0x2ab3, 0x3a92,
+	0x4a75, 0x5a54, 0x6a37, 0x7a16, 0xaf1,  0x1ad0, 0x2ab3, 0x3a92,
 	0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
 	0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0xcc1,
 	0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
@@ -45,7 +45,7 @@ const uint16_t crc_table [] = {
 
 #define LOOP_PACAKET_LN 99
 
-#define LOOP_CRC_OFFSET 				97
+#define LOOP_CRC_OFFSET 				0x61
 #define LOOP_BAROMETER_OFFSET 			7
 #define LOOP_INSIDE_TEMPERATURE_OFFSET	9
 #define LOOP_OUTSIDE_TEMPERATURE		12
@@ -57,7 +57,7 @@ const uint16_t crc_table [] = {
 
 uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output) {
 
-	uint32_t retval = 0;
+	uint32_t retval = DAVIS_PARSERS_OK;
 
 	// crc stored in the frame
 	uint16_t crc_from_frame = 0;
@@ -72,37 +72,55 @@ uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* out
 		retval = DAVIS_PARSERS_TOO_SHORT_FRAME;
 	}
 	else {
-		// retrieve the CRC value from the frame content
-		crc_from_frame = *(input + LOOP_CRC_OFFSET) | *(input + LOOP_CRC_OFFSET + 1);
-
-		// calculate the CRC locally excluding the last 2 bytes which consists the CRC value
-		calculated_crc = davis_parsers_check_crc(input, LOOP_PACAKET_LN - 2);
-
-		// check if calculated CRC is the same as recevied from the sation
-		if (calculated_crc == crc_from_frame) {
-			// continue only if both CRC matches
-
-			// fetch the pressure
-			output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1);
-
-			output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
-
-			output->outside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
-
-			output->wind_speed = *(input + LOOP_WINDSPEED_OFFSET);
-
-			output->wind_speed_10min_average = *(input + LOOP_TEN_MIN_WINDSPEED_OFFSET);
-
-			output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET);
-
-			output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
-
-			output->day_rain = *(input + LOOP_DAY_RAIN_OFFSET);
-
+		// check if first character in the buffer is ACK (0x06) send for the LOOP packet
+		if (*input == 0x06) {
+			// if yes rewind the buffer to the next character
+			input += 1;
+		}
+		else if (*input == 'L') {
+			retval = DAVIS_PARSERS_OK;
 		}
 		else {
-			// if CRCs differs treat the frame as corrupted and
-			retval = DAVIS_PARSERS_CORRUPTED_CRC;
+			// correct LOOP packet shall start from either 0x06 (if it is glued
+			// to ACK) or 'L'. If it starts from something else it means that
+			retval = DAVIS_PARSERS_WRONG_CONTENT;
+		}
+
+		if (retval == DAVIS_PARSERS_OK) {
+			// retrieve the CRC value from the frame content (sent in MSB, totally opposite from the rest of the frame)
+			crc_from_frame = *(input + LOOP_CRC_OFFSET + 1) | (*(input + LOOP_CRC_OFFSET)) << 8;
+
+			// calculate the CRC locally excluding the last 2 bytes which consists the CRC value.
+			// the another way of performing this calculation is to include the last 2 bytes (CRC itself)
+			// and check if the result equals '0' what indicates that data is not corrupted.
+			calculated_crc = davis_parsers_check_crc(input, LOOP_PACAKET_LN - 2);
+
+			// check if calculated CRC is the same as recevied from the sation
+			if (calculated_crc == crc_from_frame) {
+				// continue only if both CRC matches
+
+				// fetch the pressure
+				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1);
+
+				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
+
+				output->outside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
+
+				output->wind_speed = *(input + LOOP_WINDSPEED_OFFSET);
+
+				output->wind_speed_10min_average = *(input + LOOP_TEN_MIN_WINDSPEED_OFFSET);
+
+				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET);
+
+				output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
+
+				output->day_rain = *(input + LOOP_DAY_RAIN_OFFSET);
+
+			}
+			else {
+				// if CRCs differs treat the frame as corrupted and
+				retval = DAVIS_PARSERS_CORRUPTED_CRC;
+			}
 		}
 	}
 

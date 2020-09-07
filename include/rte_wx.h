@@ -10,17 +10,19 @@
 #include "drivers/_dht22.h"
 #include "drivers/dallas.h"
 #include "drivers/analog_anemometer.h"
+#include "davis_vantage/davis_qf_t.h"
+#include "davis_vantage/davis_loop_t.h"
 #include "umb_master/umb_master.h"
 #include "umb_master/umb_qf_t.h"
 
 
-//#ifdef _SENSOR_MS5611
+#ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
-//#endif
+#endif
 
-//#ifdef _SENSOR_BME280
+#ifdef _SENSOR_BME280
 #include "drivers/bme280.h"
-//#endif
+#endif
 
 #ifndef RTE_WX_H_
 #define RTE_WX_H_
@@ -57,18 +59,16 @@ extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
 extern dht22Values rte_wx_dht, rte_wx_dht_valid;
-
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
-extern analog_wind_qf_t rte_wx_wind_qf;
-
-//#ifdef _SENSOR_MS5611
+#ifdef _SENSOR_MS5611
 extern ms5611_qf_t rte_wx_ms5611_qf;
-//#endif
-
+#endif
 #ifdef _SENSOR_BME280
 extern bme280_qf_t rte_wx_bme280_qf;
 #endif
+extern analog_wind_qf_t rte_wx_wind_qf;
+
 
 #ifdef _UMB_MASTER
 
@@ -79,6 +79,10 @@ extern int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];
 															// stores the value in 0.1 incremenets
 #endif
 extern umb_qf_t rte_wx_umb_qf;
+
+extern uint8_t rte_wx_davis_station_avaliable;
+extern uint8_t rte_wx_davis_loop_packet_avaliable;
+extern davis_loop_t rte_wx_davis_loop_content;
 
 #ifdef __cplusplus
 extern "C"

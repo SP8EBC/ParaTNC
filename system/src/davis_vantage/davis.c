@@ -14,7 +14,7 @@
 
 #define DAVIS_ACK 0x06
 
-#define LOOP_PACKET_LN 99
+#define LOOP_PACKET_LN 100
 
 /**
  * Serial port context to be used for communication
@@ -41,12 +41,6 @@ davis_qf_t davis_quality_factor;
  */
 uint8_t davis_avaliable;
 
-/**
- * Set to one if new loop packet is available for parsing. Cleared
- * to zero after the 'davis_parsers_loop' is called
- *
- */
-uint8_t davis_loop_avaliable;
 
 static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
@@ -67,8 +61,6 @@ uint32_t davis_init(srl_context_t* srl_port) {
 	davis_wake_up_state = DAVIS_QUERY_IDLE;
 
 	davis_avaliable = 0;
-
-	davis_loop_avaliable = 0;
 
 	// set the timeout according to davis vantage documentation
 	srl_switch_timeout(srl_port, 1, 1200);
@@ -138,6 +130,8 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 			else {
 				// if not the station is dead an
 				davis_quality_factor = DAVIS_QF_NOT_AVALIABLE;
+
+				retval = DAVIS_NOT_AVALIABLE;
 			}
 		}
 
@@ -214,7 +208,7 @@ uint32_t davis_do_test(void) {
 	return retval;
 }
 
-uint32_t davis_query_for_loop_packet(void) {
+uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag) {
 
 	uint32_t retval = DAVIS_OK;
 
@@ -232,6 +226,8 @@ uint32_t davis_query_for_loop_packet(void) {
 				// send the LOOP query
 				srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, 7, 0);
 
+				*loop_avaliable_flag = 0;
+
 				davis_loop_state = DAVIS_QUERY_SENDING_QUERY;
 			}
 
@@ -242,10 +238,10 @@ uint32_t davis_query_for_loop_packet(void) {
 			// if transmission was successful
 			if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
 				// trigger the reception of ACK message
-				srl_receive_data(davis_serial_context, 1, 0, 0, 0, 0, 0);
+				srl_receive_data(davis_serial_context, LOOP_PACKET_LN, 0, 0, 0, 0, 0);
 
 				// switching the internal state
-				davis_loop_state = DAVIS_QUERY_RECEIVING_ACK;
+				davis_loop_state = DAVIS_QUERY_RECEIVING;
 			}
 
 			if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
@@ -254,32 +250,10 @@ uint32_t davis_query_for_loop_packet(void) {
 
 			break;
 		}
-		case DAVIS_QUERY_RECEIVING_ACK: {
-
-			if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
-
-				// if the davis station responded with an ACK
-				if (davis_serial_context->srl_rx_buf_pointer[0] == DAVIS_ACK) {
-					// trigger the reception of target LOOP packet
-					srl_receive_data(davis_serial_context, LOOP_PACKET_LN, 0, 0, 0, 0, 0);
-
-					// and switch the state machine
-					davis_loop_state = DAVIS_QUERY_RECEIVING;
-				}
-				else {
-					davis_loop_state = DAVIS_QUERY_ERROR;
-				}
-			}
-
-			else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
-				davis_loop_state = DAVIS_QUERY_ERROR;
-			}
-
-			break;
-		}
 		case DAVIS_QUERY_RECEIVING: {
 			if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
-				davis_loop_avaliable = 0;
+				// parse the loop packet
+				*loop_avaliable_flag = 1;
 			}
 			else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
 				davis_loop_state = DAVIS_QUERY_ERROR;
@@ -292,9 +266,27 @@ uint32_t davis_query_for_loop_packet(void) {
 			break;
 		}
 		case DAVIS_QUERY_ERROR: {
+			// clear data availability flag
+			*loop_avaliable_flag = 0;
 			break;
 		}
+		default: {
+			davis_loop_state = DAVIS_QUERY_ERROR;
+		}
 	}
+
+	return retval;
+}
+
+/** This function will be called from the for(;;) loop in main.c every
+ * ten seconds to trigger the pooler to query for next 'LOOP' packet
+ *
+ */
+uint32_t davis_trigger_loop_packet(void) {
+
+	uint32_t retval = DAVIS_OK;
+
+	davis_loop_state = DAVIS_QUERY_IDLE;
 
 	return retval;
 }

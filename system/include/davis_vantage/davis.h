@@ -10,14 +10,22 @@
 
 #include "drivers/serial.h"
 
-#include "davis_retval_def.h"
+#include <davis_vantage/davis_retval_def.h>
+#include <davis_vantage/davis_qf_t.h>
+
 
 #define DAVIS_DEFAULT_BAUDRATE 19200u
+
+#define DAVIS_BLOCKING_IO	1
+
+extern davis_qf_t davis_quality_factor;
+extern uint8_t davis_avaliable;
 
 uint32_t davis_init(srl_context_t* srl_port);
 uint32_t davis_wake_up(uint8_t is_io_blocking);
 uint32_t davis_do_test(void);
-uint32_t davis_query_for_loop_packet(void);
+uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag);
+uint32_t davis_trigger_loop_packet(void);
 uint32_t davis_leave_receiving_screen(void);
 uint32_t davis_control_backlight(uint8_t state);
 

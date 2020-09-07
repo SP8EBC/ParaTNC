@@ -273,6 +273,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 	}
 	else {
 		ctx->srl_triggered_start = 0;
+		ctx->srl_start_trigger = 0;
 	}
 
 	if (stop != 0x00) {
@@ -281,6 +282,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 	}
 	else {
 		ctx->srl_triggered_stop = 0;
+		ctx->srl_stop_trigger = 0;
 	}
 
 	if (ctx->srl_triggered_start == 1 || ctx->srl_triggered_stop == 1) {

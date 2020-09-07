@@ -1,4 +1,3 @@
-#include "packet_tx_handler.h"
 #include "station_config.h"
 #include "rte_wx.h"
 #include "rte_pv.h"
@@ -143,6 +142,7 @@ void packet_tx_handler(void) {
 			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
 		}
 
+		#if defined(_SENSOR_MS5611)		// some metaprogramming to save RAM
 		// pressure sensors quality factors
 		if (rte_wx_ms5611_qf == MS5611_QF_UNKNOWN) {
 			// use BME280 is used instead
@@ -165,6 +165,7 @@ void packet_tx_handler(void) {
 			}
 		}
 
+		#elif defined(_SENSOR_BME280)
 		// humidity sensors quality factors
 		if (rte_wx_bme280_qf == BME280_QF_UKNOWN) {
 			// use DHT22
@@ -186,6 +187,10 @@ void packet_tx_handler(void) {
 				case BME280_QF_GEN_DEGRADED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
 			}
 		}
+		#else
+			pressure_qf = PRESSURE_QF_NOT_AVALIABLE;
+			humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
+		#endif
 
 		// wind quality factor
 		if (rte_wx_wind_qf == AN_WIND_QF_UNKNOWN) {

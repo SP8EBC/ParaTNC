@@ -62,7 +62,7 @@
 #include "umb_master/umb_0x26_status.h"
 #endif
 
-#endif
+#endif	// _METEO
 
 #ifdef _DALLAS_AS_TELEM
 #include "drivers/dallas.h"
@@ -132,6 +132,12 @@ uint32_t main_target_kiss_baudrate;
 
 // target USART2 (wx) baudrate
 uint32_t main_target_wx_baudrate;
+
+// controls if the KISS modem is enabled
+uint8_t main_kiss_enabled = 1;
+
+// controls if DAVIS serialprotocol client is enabled by the configuration
+uint8_t main_davis_serial_enabled = 0;
 
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
@@ -293,23 +299,54 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
 
-//#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
-//  // reinitialize the KISS serial port temporary to davis baudrate
-//  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
-//
-//  // reset RX state to allow reinitialization with changed baudrate
-//  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-//
-//  // reinitializing serial hardware
-//  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
-//
-//  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 1500);
-//
-//  davis_init(main_kiss_srl_ctx_ptr);
-//
-//  davis_wake_up(1);
-//
-//#endif
+#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
+  // reinitialize the KISS serial port temporary to davis baudrate
+  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
+
+  // reset RX state to allow reinitialization with changed baudrate
+  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+
+  // reinitializing serial hardware to wake up Davis wx station
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+
+  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
+
+  davis_init(main_kiss_srl_ctx_ptr);
+
+  // try to wake up the davis base
+  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
+
+  // if davis weather stations is connected to SERIAL port
+  if (rte_wx_davis_station_avaliable == 1) {
+	  // turn LCD backlight on..
+	  davis_control_backlight(1);
+
+	  // wait for a while
+	  delay_fixed(1000);
+
+	  // and then off to let the user know that communication is working
+	  davis_control_backlight(0);
+
+	  // disable the KISS modem as the UART will be used for DAVIS wx station
+	  main_kiss_enabled = 0;
+
+	  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
+	  // This only controls the callback it doesn't mean that the station itself is responding to
+	  // communication. It stays set to one event if Davis station
+	  main_davis_serial_enabled = 1;
+
+	  davis_trigger_loop_packet();
+
+  }
+  else {
+	  // if not revert back to KISS configuration
+	  main_target_kiss_baudrate = 9600u;
+	  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+
+  }
+
+#endif
 
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
@@ -545,8 +582,10 @@ int main(int argc, char* argv[]){
 		if(ax25_new_msg_rx_flag == 1) {
 			memset(srl_usart1_tx_buffer, 0x00, sizeof(srl_usart1_tx_buffer));
 
-			// convert message to kiss format and send it to host
-			srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_usart1_tx_buffer, TX_BUFFER_1_LN));
+			if (main_kiss_enabled == 1) {
+				// convert message to kiss format and send it to host
+				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_usart1_tx_buffer, TX_BUFFER_1_LN));
+			}
 
 			main_ax25.dcd = false;
 #ifdef _DBG_TRACE
@@ -605,7 +644,7 @@ int main(int argc, char* argv[]){
 		}
 #else
 		// if new KISS message has been received from the host
-		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
 			// parse incoming data and then transmit on radio freq
 			short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
 			if (res == 0)
@@ -616,10 +655,17 @@ int main(int argc, char* argv[]){
 		}
 
 		// if there were an error during receiving frame from host, restart rxing once again
-		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
 			srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
 		}
 #endif
+
+		// if Davis wx station is enabled and it is alive
+		if (main_davis_serial_enabled == 1) {
+
+			// pool the Davis wx station driver for LOOP packet
+			davis_loop_packet_pooler(&rte_wx_davis_loop_packet_avaliable);
+		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
@@ -682,6 +728,17 @@ int main(int argc, char* argv[]){
 			#endif
 
 			wx_pool_anemometer();
+
+			if (main_davis_serial_enabled == 1) {
+
+				// if previous LOOP packet is ready for processing
+				if (rte_wx_davis_loop_packet_avaliable == 1) {
+					davis_parsers_loop(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, main_kiss_srl_ctx_ptr->srl_rx_buf_ln, &rte_wx_davis_loop_content);
+				}
+
+				// trigger consecutive LOOP packet
+				davis_trigger_loop_packet();
+			}
 
 			main_ten_second_pool_timer = 10000;
 		}
