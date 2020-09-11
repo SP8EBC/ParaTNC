@@ -335,7 +335,11 @@ int main(int argc, char* argv[]){
 	  // communication. It stays set to one event if Davis station
 	  main_davis_serial_enabled = 1;
 
-	  davis_trigger_loop_packet();
+	  // leave the receiving screen and clear counters
+	  //davis_leave_receiving_screen();
+	  davis_trigger_rxcheck_packet();
+
+	  //davis_trigger_loop_packet();
 
   }
   else {
@@ -665,6 +669,8 @@ int main(int argc, char* argv[]){
 
 			// pool the Davis wx station driver for LOOP packet
 			davis_loop_packet_pooler(&rte_wx_davis_loop_packet_avaliable);
+
+			davis_rxcheck_packet_pooler();
 		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
@@ -737,7 +743,7 @@ int main(int argc, char* argv[]){
 				}
 
 				// trigger consecutive LOOP packet
-				davis_trigger_loop_packet();
+				//davis_trigger_loop_packet();
 			}
 
 			main_ten_second_pool_timer = 10000;

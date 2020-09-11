@@ -18,6 +18,26 @@
 #define DAVIS_PARSERS_WRONG_CONTENT		-3
 
 uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output);
-uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln);
+uint32_t davis_parsers_rxcheck(uint8_t* input, uint16_t input_ln);
+uint32_t davis_parsers_check_crc(	uint8_t* input,
+									uint16_t input_ln,
+									uint16_t* total_packet_received,
+									uint16_t* resynchronizations,
+									uint16_t* packets_in_the_row,
+									uint16_t* crc_errors);
+
+/*
+ *
+ * uint16_t davis_base_total_packet_received = 0;
+
+uint16_t davis_base_total_packet_missed = 0;
+
+uint16_t davis_base_resynchronizations = 0;
+
+uint16_t davis_base_packets_in_the_row = 0;
+
+uint16_t davis_base_crc_errors = 0;
+ *
+ */
 
 #endif /* INCLUDE_DAVIS_VANTAGE_DAVIS_PARSERS_H_ */

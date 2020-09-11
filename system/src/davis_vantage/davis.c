@@ -8,13 +8,16 @@
 #include <davis_vantage/davis.h>
 #include <davis_vantage/davis_parsers.h>
 #include <davis_vantage/davis_query_state_t.h>
+#include <davis_vantage/davis_global_state_t.h>
 #include <davis_vantage/davis_qf_t.h>
 
 #include <string.h>
 
 #define DAVIS_ACK 0x06
 
-#define LOOP_PACKET_LN 100
+#define LOOP_PACKET_LN 				100
+#define RX_CHECK_LN_WITH_ACK		32
+#define RX_CHECK_MIN_LN_WITH_ACK	16
 
 /**
  * Serial port context to be used for communication
@@ -32,6 +35,16 @@ davis_query_state_t davis_loop_state;
 davis_query_state_t davis_wake_up_state;
 
 /**
+ * Internal state during RXCHECK query
+ */
+davis_query_state_t davis_rx_check_state;
+
+/**
+ * Global state of Davis Vantage communication
+ */
+dallas_global_state_t davis_global_state;
+
+/**
  *
  */
 davis_qf_t davis_quality_factor;
@@ -41,12 +54,23 @@ davis_qf_t davis_quality_factor;
  */
 uint8_t davis_avaliable;
 
+uint16_t davis_base_total_packet_received = 0;
+
+uint16_t davis_base_total_packet_missed = 0;
+
+uint16_t davis_base_resynchronizations = 0;
+
+uint16_t davis_base_packets_in_the_row = 0;
+
+uint16_t davis_base_crc_errors = 0;
 
 static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
 static const char loop_command[] = "LOOP 1\n";
 static const char lamps_off[] = "LAMPS 0\n";
 static const char lamps_on[] = "LAMPS 1\n";
+static const char leave_rx_screen[] = "RXTEST\n";	// it also resets
+static const char rx_check[] = "RXCHECK\n";
 
 uint32_t davis_init(srl_context_t* srl_port) {
 
@@ -59,6 +83,10 @@ uint32_t davis_init(srl_context_t* srl_port) {
 	davis_loop_state = DAVIS_QUERY_IDLE;
 
 	davis_wake_up_state = DAVIS_QUERY_IDLE;
+
+	davis_rx_check_state = DAVIS_QUERY_IDLE;
+
+	davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
 
 	davis_avaliable = 0;
 
@@ -77,48 +105,28 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 
 	int comparation_result = -1;
 
-	// sending the new line to wake up the console
-	srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
+	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_WAKE_UP) {
 
-	// check if a user want to have blocking I/O
-	if (is_io_blocking == 1) {
-		// if yes wait for transmission completion and then wait for response
-		srl_wait_for_tx_completion(davis_serial_context);
+		// switch the internal state
+		davis_global_state = DAVIS_GLOBAL_WAKE_UP;
 
-		// start waiting for console response
-		srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0);
+		// sending the new line to wake up the console
+		srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
-		// wait for station response or for timeout
-		srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
-
-		// if response has been received
-		if (retval == SRL_OK) {
-			//
-			retval = DAVIS_OK;
-
-			// set the quality factor appropriate to signalize that the station
-			// is avaliable
-			davis_quality_factor = DAVIS_QF_FULL;
-
-			davis_avaliable = 1;
-		}
-		else {
-			// send the wake up command one more time
-
-			// sending the new line to wake up the console
-			srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
-
+		// check if a user want to have blocking I/O
+		if (is_io_blocking == 1) {
 			// if yes wait for transmission completion and then wait for response
 			srl_wait_for_tx_completion(davis_serial_context);
 
 			// start waiting for console response
-			srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+			srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0);
 
 			// wait for station response or for timeout
 			srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
 
-			// if second attempt was successful
+			// if response has been received
 			if (retval == SRL_OK) {
+				//
 				retval = DAVIS_OK;
 
 				// set the quality factor appropriate to signalize that the station
@@ -128,82 +136,206 @@ uint32_t davis_wake_up(uint8_t is_io_blocking) {
 				davis_avaliable = 1;
 			}
 			else {
-				// if not the station is dead an
-				davis_quality_factor = DAVIS_QF_NOT_AVALIABLE;
+				// send the wake up command one more time
 
-				retval = DAVIS_NOT_AVALIABLE;
-			}
-		}
-
-	}
-	else {
-		// non blocking input/output
-		switch (davis_wake_up_state) {
-			case DAVIS_QUERY_IDLE: {
 				// sending the new line to wake up the console
 				srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
-				// switching the internal state
-				davis_wake_up_state = DAVIS_QUERY_SENDING_QUERY;
+				// if yes wait for transmission completion and then wait for response
+				srl_wait_for_tx_completion(davis_serial_context);
 
-				break;
+				// start waiting for console response
+				srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+
+				// wait for station response or for timeout
+				srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+
+				// if second attempt was successful
+				if (retval == SRL_OK) {
+					retval = DAVIS_OK;
+
+					// set the quality factor appropriate to signalize that the station
+					// is avaliable
+					davis_quality_factor = DAVIS_QF_FULL;
+
+					davis_avaliable = 1;
+				}
+				else {
+					// if not the station is dead an
+					davis_quality_factor = DAVIS_QF_NOT_AVALIABLE;
+
+					retval = DAVIS_NOT_AVALIABLE;
+				}
+
 			}
-			case DAVIS_QUERY_SENDING_QUERY: {
-				// check if wakeup has been sent
 
-				if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
-					// if transmission was successful trigger the reception
-					srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+			// switch the internal state to release the station
+			davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+
+		}
+		else {
+			// non blocking input/output
+			switch (davis_wake_up_state) {
+				case DAVIS_QUERY_IDLE: {
+					// sending the new line to wake up the console
+					srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
 
 					// switching the internal state
-					davis_wake_up_state = DAVIS_QUERY_RECEIVING;
+					davis_wake_up_state = DAVIS_QUERY_SENDING_QUERY;
+
+					// switch the internal state to block another poolers
+					davis_global_state =  DAVIS_GLOBAL_WAKE_UP;
+
+					break;
 				}
+				case DAVIS_QUERY_SENDING_QUERY: {
+					// check if wakeup has been sent
 
-				if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
-					davis_wake_up_state = DAVIS_QUERY_ERROR;
-				}
+					if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+						// if transmission was successful trigger the reception
+						srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
 
-				break;
-			}
-			case DAVIS_QUERY_RECEIVING: {
-				// check if receive has been successfull
-
-				if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
-					// check the content of what was received from the davis
-					comparation_result = memcmp(line_feed_return, srl_get_rx_buffer(davis_serial_context), 2);
-
-					if (comparation_result == 0) {
-						// if the base of davis wx station responden with '\r\n' it measn that wake up was sucessfull
-						davis_wake_up_state = DAVIS_QUERY_OK;
+						// switching the internal state
+						davis_wake_up_state = DAVIS_QUERY_RECEIVING;
 					}
-					else {
+
+					if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
 						davis_wake_up_state = DAVIS_QUERY_ERROR;
+
+						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
 					}
+
+					break;
 				}
+				case DAVIS_QUERY_RECEIVING: {
+					// check if receive has been successfull
 
-				if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
-					davis_wake_up_state = DAVIS_QUERY_ERROR;
+					if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
+						// check the content of what was received from the davis
+						comparation_result = memcmp(line_feed_return, srl_get_rx_buffer(davis_serial_context), 2);
+
+						if (comparation_result == 0) {
+							// if the base of davis wx station responden with '\r\n' it measn that wake up was sucessfull
+							davis_wake_up_state = DAVIS_QUERY_OK;
+						}
+						else {
+							davis_wake_up_state = DAVIS_QUERY_ERROR;
+						}
+
+						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+					}
+
+					if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+						davis_wake_up_state = DAVIS_QUERY_ERROR;
+
+						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+					}
+
+
+					break;
 				}
-
-
-				break;
-			}
-			case DAVIS_QUERY_OK: {
-				davis_avaliable = 1;
-				break;
-			}
-			case DAVIS_QUERY_ERROR: {
-				davis_avaliable = 0;
-				break;
+				case DAVIS_QUERY_OK: {
+					davis_avaliable = 1;
+					break;
+				}
+				case DAVIS_QUERY_ERROR: {
+					davis_avaliable = 0;
+					break;
+				}
 			}
 		}
+	}
+	else {
+		// if station is currently busy on another transmission return with an error
+		retval = DAVIS_BUSY;
 	}
 
 	return retval;
 }
-uint32_t davis_do_test(void) {
-
+uint32_t davis_rxcheck_packet_pooler(void) {
 	uint32_t retval = DAVIS_OK;
+
+	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_RXCHECK) {
+
+		switch(davis_rx_check_state) {
+			case DAVIS_QUERY_IDLE: {
+
+				// if station isn't avalaible switch to error w/o any further
+				// comms
+				if (davis_avaliable == 0) {
+					davis_loop_state = DAVIS_QUERY_ERROR;
+
+					retval = DAVIS_NOT_AVALIABLE;
+				}
+				else {
+					// send the command
+					srl_send_data(davis_serial_context, (uint8_t*)&rx_check, 1, sizeof(rx_check), 0);
+
+					davis_rx_check_state = DAVIS_QUERY_SENDING_QUERY;
+
+					davis_global_state = DAVIS_GLOBAL_RXCHECK;
+				}
+
+
+				break;
+			}
+			case DAVIS_QUERY_SENDING_QUERY: {
+
+				if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+					// if transmission was successful trigger the reception
+					srl_receive_data(davis_serial_context, RX_CHECK_LN_WITH_ACK, 0, 0, 0, 0, 0);
+
+					// switching the internal state
+					davis_rx_check_state = DAVIS_QUERY_RECEIVING;
+				}
+
+				if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+					davis_rx_check_state = DAVIS_QUERY_ERROR;
+				}
+
+				break;
+			}
+			case DAVIS_QUERY_RECEIVING_ACK: {
+
+				// this state is illegal as the wx station base sends
+				// ACK and command result in one transaction
+				davis_rx_check_state = DAVIS_QUERY_ERROR;
+
+				davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+
+				break;
+			}
+			case DAVIS_QUERY_RECEIVING: {
+
+				// the result of RXCHECK command has variable lenght depends on counters values
+				if (davis_serial_context->srl_rx_state == SRL_RX_DONE || davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+					// so check how many bytes has been received
+					if (davis_serial_context->srl_rx_bytes_counter > RX_CHECK_MIN_LN_WITH_ACK) {
+						// if the base unit transmitted more bytes than minimal length of RXCHECK is
+						// we might assume that the content is somewhat
+
+						davis_rx_check_state = DAVIS_QUERY_OK;
+					}
+					else {
+
+					}
+
+					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+				}
+
+				break;
+			}
+			case DAVIS_QUERY_OK: {
+				break;
+			}
+			case DAVIS_QUERY_ERROR: {
+				break;
+			}
+		}
+	}
+	else {
+		retval = DAVIS_BUSY;
+	}
 
 	return retval;
 }
@@ -212,70 +344,96 @@ uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag) {
 
 	uint32_t retval = DAVIS_OK;
 
-	switch (davis_loop_state) {
-		case DAVIS_QUERY_IDLE: {
+	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_LOOP) {
 
-			// if station isn't avalaible switch to error w/o any further
-			// comms
-			if (davis_avaliable == 0) {
-				davis_loop_state = DAVIS_QUERY_ERROR;
+		switch (davis_loop_state) {
+			case DAVIS_QUERY_IDLE: {
 
-				retval = DAVIS_NOT_AVALIABLE;
+				// if station isn't avalaible switch to error w/o any further
+				// comms
+				if (davis_avaliable == 0) {
+					davis_loop_state = DAVIS_QUERY_ERROR;
+
+					retval = DAVIS_NOT_AVALIABLE;
+				}
+				else {
+					// send the LOOP query
+					srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, 7, 0);
+
+					*loop_avaliable_flag = 0;
+
+					davis_loop_state = DAVIS_QUERY_SENDING_QUERY;
+
+					// set the global state to block another poolers to jam or screw
+					// the transmission in another way
+					davis_global_state = DAVIS_GLOBAL_LOOP;
+				}
+
+				break;
 			}
-			else {
-				// send the LOOP query
-				srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, 7, 0);
+			case DAVIS_QUERY_SENDING_QUERY: {
 
+				// if transmission was successful
+				if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+					// trigger the reception of ACK message
+					srl_receive_data(davis_serial_context, LOOP_PACKET_LN, 0, 0, 0, 0, 0);
+
+					// switching the internal state
+					davis_loop_state = DAVIS_QUERY_RECEIVING;
+				}
+
+				if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+					davis_loop_state = DAVIS_QUERY_ERROR;
+
+					// unlock the global state to free the communication with
+					// the station base
+					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+				}
+
+				break;
+			}
+			case DAVIS_QUERY_RECEIVING: {
+				if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
+					// parse the loop packet
+					*loop_avaliable_flag = 1;
+
+					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+				}
+				else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+					davis_loop_state = DAVIS_QUERY_ERROR;
+
+					// unlock the global state to free the communication with
+					// the station base
+					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+				}
+
+				break;
+			}
+			case DAVIS_QUERY_OK: {
+
+				break;
+			}
+			case DAVIS_QUERY_ERROR: {
+				// clear data availability flag
 				*loop_avaliable_flag = 0;
-
-				davis_loop_state = DAVIS_QUERY_SENDING_QUERY;
+				break;
 			}
-
-			break;
-		}
-		case DAVIS_QUERY_SENDING_QUERY: {
-
-			// if transmission was successful
-			if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
-				// trigger the reception of ACK message
-				srl_receive_data(davis_serial_context, LOOP_PACKET_LN, 0, 0, 0, 0, 0);
-
-				// switching the internal state
-				davis_loop_state = DAVIS_QUERY_RECEIVING;
-			}
-
-			if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+			default: {
 				davis_loop_state = DAVIS_QUERY_ERROR;
 			}
-
-			break;
 		}
-		case DAVIS_QUERY_RECEIVING: {
-			if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
-				// parse the loop packet
-				*loop_avaliable_flag = 1;
-			}
-			else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
-				davis_loop_state = DAVIS_QUERY_ERROR;
-			}
-
-			break;
-		}
-		case DAVIS_QUERY_OK: {
-
-			break;
-		}
-		case DAVIS_QUERY_ERROR: {
-			// clear data availability flag
-			*loop_avaliable_flag = 0;
-			break;
-		}
-		default: {
-			davis_loop_state = DAVIS_QUERY_ERROR;
-		}
+	}
+	else {
+		retval = DAVIS_BUSY;
 	}
 
 	return retval;
+}
+
+uint32_t davis_trigger_rxcheck_packet(void) {
+	davis_rx_check_state = DAVIS_QUERY_IDLE;
+
+	return DAVIS_OK;
 }
 
 /** This function will be called from the for(;;) loop in main.c every
@@ -291,9 +449,29 @@ uint32_t davis_trigger_loop_packet(void) {
 	return retval;
 }
 
+/**
+ * This function will send 'RXTEST' command which resets the counters regarding
+ * communication with Outdoor ODU and also leaves the 'Receiving...' if this is a
+ * state the weather station is when the function is called. This function has blocking
+ * I/O
+ */
 uint32_t davis_leave_receiving_screen(void) {
 
 	uint32_t retval = DAVIS_OK;
+
+	uint8_t transmission_result;
+
+	transmission_result = srl_send_data(davis_serial_context, (uint8_t*)&leave_rx_screen, 1, 1, 0);
+
+	srl_wait_for_tx_completion(davis_serial_context);
+
+	// wait for the response from the wx console only to clear the input buffer
+	transmission_result = srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0);
+
+	if (transmission_result == SRL_OK ) {
+		srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+
+	}
 
 	return retval;
 }

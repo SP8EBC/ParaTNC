@@ -23,8 +23,9 @@ extern uint8_t davis_avaliable;
 
 uint32_t davis_init(srl_context_t* srl_port);
 uint32_t davis_wake_up(uint8_t is_io_blocking);
-uint32_t davis_do_test(void);
+uint32_t davis_rxcheck_packet_pooler(void);
 uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag);
+uint32_t davis_trigger_rxcheck_packet(void);
 uint32_t davis_trigger_loop_packet(void);
 uint32_t davis_leave_receiving_screen(void);
 uint32_t davis_control_backlight(uint8_t state);

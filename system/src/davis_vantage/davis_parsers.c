@@ -44,6 +44,7 @@ const uint16_t crc_table [] = {
 };
 
 #define LOOP_PACAKET_LN 99
+#define RX_CHECK_MIN_LN_WITH_ACK	16
 
 #define LOOP_CRC_OFFSET 				0x61
 #define LOOP_BAROMETER_OFFSET 			7
@@ -138,4 +139,33 @@ uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln) {
 	}
 
 	return crc;
+}
+
+uint32_t davis_parsers_check_crc(	uint8_t* input,
+									uint16_t input_ln,
+									uint16_t* total_packet_received,
+									uint16_t* resynchronizations,
+									uint16_t* packets_in_the_row,
+									uint16_t* crc_errors)
+{
+	// 	Default:0x2000030c <srl_usart1_rx_buffer> "\n\rOK\n\r0 30600 75 0 0\n\r"
+	uint32_t retval = 0;
+
+	// check if a string given as an input begins with a newline
+	if ((*input = '\n') && (*(input + 1) == '\r')) {
+
+		// check the lenght of an input string
+		if (strnlen(input, input_ln) > RX_CHECK_MIN_LN_WITH_ACK) {
+
+		}
+		else {
+			;
+		}
+	}
+	else {
+
+	}
+
+	return retval;
+
 }
