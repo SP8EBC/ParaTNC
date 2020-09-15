@@ -13,6 +13,8 @@
 
 #include <string.h>
 
+#include "main.h"
+
 #define DAVIS_ACK 0x06
 
 #define LOOP_PACKET_LN 				100
@@ -63,6 +65,10 @@ uint16_t davis_base_resynchronizations = 0;
 uint16_t davis_base_packets_in_the_row = 0;
 
 uint16_t davis_base_crc_errors = 0;
+
+uint32_t davis_last_good_loop = 0;
+
+uint32_t davis_last_good_rxcheck = 0;
 
 static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
@@ -312,12 +318,28 @@ uint32_t davis_rxcheck_packet_pooler(void) {
 					// so check how many bytes has been received
 					if (davis_serial_context->srl_rx_bytes_counter > RX_CHECK_MIN_LN_WITH_ACK) {
 						// if the base unit transmitted more bytes than minimal length of RXCHECK is
-						// we might assume that the content is somewhat
+						// we might assume that the content is somewhat correct
 
-						davis_rx_check_state = DAVIS_QUERY_OK;
+						// parse the response
+						retval = davis_parsers_rxcheck(
+								srl_get_rx_buffer(davis_serial_context),
+								davis_serial_context->srl_rx_bytes_counter,
+								&davis_base_total_packet_received,
+								&davis_base_total_packet_missed,
+								&davis_base_resynchronizations,
+								&davis_base_packets_in_the_row,
+								&davis_base_crc_errors);
+
+						if (retval == DAVIS_PARSERS_OK) {
+							davis_rx_check_state = DAVIS_QUERY_OK;
+
+							davis_last_good_rxcheck = main_get_master_time();
+						}
+						else
+							davis_rx_check_state = DAVIS_QUERY_ERROR;
 					}
 					else {
-
+						;
 					}
 
 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
@@ -396,6 +418,8 @@ uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag) {
 				if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
 					// parse the loop packet
 					*loop_avaliable_flag = 1;
+
+					davis_last_good_loop = main_get_master_time();
 
 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
 				}
@@ -513,23 +537,65 @@ uint32_t davis_control_backlight(uint8_t state) {
 	return retval;
 }
 
-uint32_t davis_get_temperature(int32_t* output) {
+uint32_t davis_get_temperature(davis_loop_t* input, float* output) {
+
+	// The value is sent as 10 th of a degree in F. For example, 795 is
+	// returned for 79.5°F.
 
 	uint32_t retval = DAVIS_OK;
+
+	float out = 0.0f;
+
+	out = (float)input->outside_temperature / 10.0f;
+
+	out = 0.56f * (out - 32.0f);
+
+	*output = out;
 
 	return retval;
 }
 
-uint32_t davis_get_pressure(uint32_t* output) {
+uint32_t davis_get_pressure(davis_loop_t* input, float* output) {
+
+	// Current Barometer. Units are (in Hg / 1000). The barometric
+	// value should be between 20 inches and 32.5 inches in Vantage
+	// Pro and between 20 inches and 32.5 inches in both Vantatge Pro
+	// Vantage Pro2. Values outside these ranges will not be logged.
 
 	uint32_t retval = DAVIS_OK;
+
+	float out = 0.0f;
+
+	out = (float)input->barometer * 1000.0f;
+
+	out *= 33.86f;
+
+	*output = out;
 
 	return retval;
 }
 
-uint32_t davis_get_wind(uint16_t* speed, uint16_t* gusts, uint16_t* direction) {
+uint32_t davis_get_wind(davis_loop_t* input, uint16_t* speed, uint16_t* gusts, uint16_t* direction) {
 
 	uint32_t retval = DAVIS_OK;
+
+	// It is a two byte unsigned value from 1 to 360 degrees. (0° is no
+	// wind data, 90° is East, 180° is South, 270° is West and 360° is
+	// north)
+	*direction = input->wind_direction - 1;
+
+	// It is a byte unsigned value in mph. If the wind speed is dashed
+	// because it lost synchronization with the radio or due to some
+	// other reason, the wind speed is forced to be 0.
+
+	// this will give a value in 0.01 m/s incremenets
+	*speed = ((input->wind_speed) * 45);
+
+	// this will truncate the precision to .1 of m/s
+	*speed = (uint16_t)((uint16_t)(*speed) / 10u);
+
+	if (input->wind_direction == 0 || input->wind_direction > 360)
+		retval = DAVIS_NOT_AVALIABLE;
 
 	return retval;
 }

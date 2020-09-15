@@ -12,6 +12,7 @@
 
 #include <davis_vantage/davis_retval_def.h>
 #include <davis_vantage/davis_qf_t.h>
+#include <davis_vantage/davis_loop_t.h>
 
 
 #define DAVIS_DEFAULT_BAUDRATE 19200u
@@ -30,9 +31,9 @@ uint32_t davis_trigger_loop_packet(void);
 uint32_t davis_leave_receiving_screen(void);
 uint32_t davis_control_backlight(uint8_t state);
 
-uint32_t davis_get_temperature(int32_t* output);
-uint32_t davis_get_pressure(uint32_t* output);
-uint32_t davis_get_wind(uint16_t* speed, uint16_t* gusts, uint16_t* direction);
+uint32_t davis_get_temperature(davis_loop_t* input, float* output);
+uint32_t davis_get_pressure(davis_loop_t* input, float* output);
+uint32_t davis_get_wind(davis_loop_t* input, uint16_t* speed, uint16_t* gusts, uint16_t* direction);
 
 
 #endif /* INCLUDE_DRIVERS_DAVIS_VANTAGE_H_ */

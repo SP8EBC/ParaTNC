@@ -17,11 +17,19 @@
 #define DAVIS_PARSERS_CORRUPTED_CRC		-2
 #define DAVIS_PARSERS_WRONG_CONTENT		-3
 
+inline static uint8_t is_digit(char c) {
+	if (c >= 0x30 && c <= 0x39)
+		return 1;
+	else
+		return 0;
+}
+
 uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output);
-uint32_t davis_parsers_rxcheck(uint8_t* input, uint16_t input_ln);
-uint32_t davis_parsers_check_crc(	uint8_t* input,
+uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln);
+uint32_t davis_parsers_rxcheck(		uint8_t* input,
 									uint16_t input_ln,
 									uint16_t* total_packet_received,
+									uint16_t* total_packet_missed,
 									uint16_t* resynchronizations,
 									uint16_t* packets_in_the_row,
 									uint16_t* crc_errors);

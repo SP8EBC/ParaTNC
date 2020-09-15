@@ -7,6 +7,9 @@
 
 #include "davis_vantage/davis_parsers.h"
 
+#include <string.h>
+#include <stdio.h>
+
 const uint16_t crc_table [] = {
 
 	0x0,	0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -49,7 +52,7 @@ const uint16_t crc_table [] = {
 #define LOOP_CRC_OFFSET 				0x61
 #define LOOP_BAROMETER_OFFSET 			7
 #define LOOP_INSIDE_TEMPERATURE_OFFSET	9
-#define LOOP_OUTSIDE_TEMPERATURE		12
+#define LOOP_OUTSIDE_TEMPERATURE_OFFSET		12
 #define LOOP_WINDSPEED_OFFSET			14
 #define LOOP_TEN_MIN_WINDSPEED_OFFSET	15
 #define LOOP_WIND_DIRECTION_OFFSET		16
@@ -101,17 +104,17 @@ uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* out
 				// continue only if both CRC matches
 
 				// fetch the pressure
-				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1);
+				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1) << 8;
 
-				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
+				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1) << 8;
 
-				output->outside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1);
+				output->outside_temperature = *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET + 1) << 8;
 
 				output->wind_speed = *(input + LOOP_WINDSPEED_OFFSET);
 
 				output->wind_speed_10min_average = *(input + LOOP_TEN_MIN_WINDSPEED_OFFSET);
 
-				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET);
+				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET) | *(input + LOOP_WIND_DIRECTION_OFFSET + 1) << 8;
 
 				output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
 
@@ -141,25 +144,93 @@ uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln) {
 	return crc;
 }
 
-uint32_t davis_parsers_check_crc(	uint8_t* input,
+uint32_t davis_parsers_rxcheck(	uint8_t* input,
 									uint16_t input_ln,
 									uint16_t* total_packet_received,
+									uint16_t* total_packet_missed,
 									uint16_t* resynchronizations,
 									uint16_t* packets_in_the_row,
 									uint16_t* crc_errors)
 {
-	// 	Default:0x2000030c <srl_usart1_rx_buffer> "\n\rOK\n\r0 30600 75 0 0\n\r"
-	uint32_t retval = 0;
+	// 	Default:0x2000030c <srl_usart1_rx_buffer> "\n\rOK\n\r0 24840 61 0 0\n\r"
+	uint32_t retval = DAVIS_PARSERS_OK;
+
+	int i = 0;
+
+	int itnermediate_val = 0;
+
+	// return value of sscanf
+	int position = 0;
+
+	volatile char * chr_ptr = 0;
 
 	// check if a string given as an input begins with a newline
 	if ((*input = '\n') && (*(input + 1) == '\r')) {
 
 		// check the lenght of an input string
 		if (strnlen(input, input_ln) > RX_CHECK_MIN_LN_WITH_ACK) {
+			// if it seems that this is valid RX check frame FF it
+			// to the first ASCII digit
+			for (i = 0; i < input_ln; i++) {
+				if (is_digit(*(input +i)) != 0) {
+					break;
+				}
+			}
+
+			// check if the fast forward loop reach the end of an string
+			if (i < input_ln) {
+				// if not try to get all values
+
+				chr_ptr = strtok(input + i, " ");
+
+				// zero the 'i' value which now be used to count elements in input string
+				i = 0;
+
+				// iterate through all subsequent elements
+				while (chr_ptr != 0) {
+
+					// convert from string to integer
+					position = sscanf(chr_ptr, "%d", &itnermediate_val);
+
+					chr_ptr = strtok(0, " ");
+
+					switch (i) {
+						case 0:
+							*total_packet_received = (uint16_t)itnermediate_val;
+							break;
+						case 1:
+							*total_packet_missed = (uint16_t)itnermediate_val;
+							break;
+						case 2:
+							*resynchronizations = (uint16_t)itnermediate_val;
+							break;
+						case 3:
+							*packets_in_the_row = (uint16_t)itnermediate_val;
+							break;
+						case 4:
+							*crc_errors = (uint16_t)itnermediate_val;
+							break;
+						default: break;
+					}
+
+					// increment the elements counter
+					i++;
+
+					// exit if we reach the last element from the string
+					if (i > 4)
+						break;
+
+				}
+
+			}
+			else {
+				// if yes this isn't a valid
+				retval = DAVIS_PARSERS_WRONG_CONTENT;
+			}
 
 		}
 		else {
-			;
+			retval = DAVIS_PARSERS_WRONG_CONTENT;
 		}
 	}
 	else {

@@ -335,11 +335,8 @@ int main(int argc, char* argv[]){
 	  // communication. It stays set to one event if Davis station
 	  main_davis_serial_enabled = 1;
 
-	  // leave the receiving screen and clear counters
-	  //davis_leave_receiving_screen();
+	  // trigger the rxcheck to get all counter values
 	  davis_trigger_rxcheck_packet();
-
-	  //davis_trigger_loop_packet();
 
   }
   else {
@@ -683,6 +680,10 @@ int main(int argc, char* argv[]){
 			umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
 			#endif
 
+			if (main_davis_serial_enabled == 1) {
+				davis_trigger_rxcheck_packet();
+			}
+
 			main_wx_sensors_pool_timer = 65500;
 		}
 
@@ -743,7 +744,7 @@ int main(int argc, char* argv[]){
 				}
 
 				// trigger consecutive LOOP packet
-				//davis_trigger_loop_packet();
+				davis_trigger_loop_packet();
 			}
 
 			main_ten_second_pool_timer = 10000;
