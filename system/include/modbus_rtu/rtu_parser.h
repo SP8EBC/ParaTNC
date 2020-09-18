@@ -8,20 +8,10 @@
 #ifndef INCLUDE_MODBUS_RTU_RTU_PARSER_H_
 #define INCLUDE_MODBUS_RTU_RTU_PARSER_H_
 
+#include <modbus_rtu/rtu_register_data_t.h>
 #include <stdint.h>
 
-inline uint16_t rtu_parser_stream_crc(uint16_t previous_crc, uint8_t current_data) {
-	int i;
 
-	previous_crc ^= (uint16_t)current_data;
-	for (i = 0; i < 8; ++i) {
-		if (previous_crc & 1)
-			previous_crc = (previous_crc) ^ 0xA001;
-		else
-			previous_crc = (previous_crc >> 1);
-	}
-
-	return previous_crc;
-}
+int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_register_data_t* output);
 
 #endif /* INCLUDE_MODBUS_RTU_RTU_PARSER_H_ */
