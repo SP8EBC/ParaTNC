@@ -73,6 +73,9 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 	// zeroing the content of the structure
 	memset(queue, 0x00, sizeof(rtu_pool_queue_t));
 
+
+#ifdef _MODBUS_RTU
+
 #ifdef _RTU_SLAVE_ID_1
 	queue->function_id[0] =_RTU_SLAVE_FUNC_1;
 	queue->function_parameter[0] = &rte_wx_modbus_rtu_f1;
@@ -107,6 +110,8 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 	rte_wx_modbus_rtu_f4.slave_address = _RTU_SLAVE_ID_4;
 	rte_wx_modbus_rtu_f4.base_address = _RTU_SLAVE_ADDR_4;
 	rte_wx_modbus_rtu_f4.number_of_registers = 1;
+#endif
+
 #endif
 
 	return retval;

@@ -21,6 +21,8 @@
 #define RX_CHECK_LN_WITH_ACK		32
 #define RX_CHECK_MIN_LN_WITH_ACK	16
 
+#define DAVIS_QUERY_ABOUT_LOOP2
+
 /**
  * Serial port context to be used for communication
  */
@@ -72,11 +74,16 @@ uint32_t davis_last_good_rxcheck = 0;
 
 static const char line_feed = '\n';
 static const char line_feed_return[] = {'\n', '\r'};
-static const char loop_command[] = "LOOP 1\n";
 static const char lamps_off[] = "LAMPS 0\n";
 static const char lamps_on[] = "LAMPS 1\n";
 static const char leave_rx_screen[] = "RXTEST\n";	// it also resets
 static const char rx_check[] = "RXCHECK\n";
+#ifdef DAVIS_QUERY_ABOUT_LOOP2
+static const char loop_command[] = "LPS 2 1\n";
+#else
+static const char loop_command[] = "LOOP 1\n";
+#endif
+
 
 uint32_t davis_init(srl_context_t* srl_port) {
 
@@ -380,7 +387,7 @@ uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag) {
 				}
 				else {
 					// send the LOOP query
-					srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, 7, 0);
+					srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, strlen(loop_command), 0);
 
 					*loop_avaliable_flag = 0;
 

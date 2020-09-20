@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#define DAVIS_QUERY_ABOUT_LOOP2
+
 const uint16_t crc_table [] = {
 
 	0x0,	0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -59,10 +61,19 @@ const uint16_t crc_table [] = {
 #define LOOP_OUTSIDE_HUMIDITY			33
 #define LOOP_DAY_RAIN_OFFSET			50
 
+#define LOOP2_CRC_OFFSET					0x61
+#define LOOP2_WIND_DIRECTION				16
+#define LOOP2_TEN_MINUTES_AVG_WINDSPEED		18
+#define LOOP2_TWO_MINUTES_AVG_WINDSPEED		20
+#define LOOP2_TEN_MINUTES_GUST				22
+
 uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output) {
 
 	uint32_t retval = DAVIS_PARSERS_OK;
 
+#ifdef DAVIS_QUERY_ABOUT_LOOP2
+	retval = davis_parsers_loop2(input, input_ln, output);
+#else
 	// crc stored in the frame
 	uint16_t crc_from_frame = 0;
 
@@ -127,9 +138,85 @@ uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* out
 			}
 		}
 	}
+#endif
+
+
 
 	return retval;
 }
+
+uint32_t davis_parsers_loop2(uint8_t* input, uint16_t input_ln, davis_loop_t* output) {
+
+	uint32_t retval = DAVIS_PARSERS_OK;
+
+	// crc stored in the frame
+	uint16_t crc_from_frame = 0;
+
+	// calculated crc checksum
+	uint16_t calculated_crc = 0;
+
+	// check if input buffer consist at least as many characters as the LOOP packet has
+	if (input_ln < LOOP_PACAKET_LN) {
+		// return with an error state, don't consider consecutive content of a frame
+		// as it is for sure incorrect
+		retval = DAVIS_PARSERS_TOO_SHORT_FRAME;
+	}
+	else {
+
+		if (*input == 0x06 && *(input + 1) == 'L') {
+			// if yes rewind the buffer to the next character
+			input += 1;
+
+			retval = DAVIS_PARSERS_OK;
+		}
+		else if (*input == 'L') {
+			retval = DAVIS_PARSERS_OK;
+		}
+		else {
+			retval = DAVIS_PARSERS_WRONG_CONTENT;
+		}
+
+		if (retval == DAVIS_PARSERS_OK) {
+
+			// retrieve the CRC value from the frame content (sent in MSB, totally opposite from the rest of the frame)
+			crc_from_frame = *(input + LOOP_CRC_OFFSET + 1) | (*(input + LOOP_CRC_OFFSET)) << 8;
+
+			// calculate the CRC locally excluding the last 2 bytes which consists the CRC value.
+			// the another way of performing this calculation is to include the last 2 bytes (CRC itself)
+			// and check if the result equals '0' what indicates that data is not corrupted.
+			calculated_crc = davis_parsers_check_crc(input, LOOP_PACAKET_LN - 2);
+
+			if (calculated_crc == crc_from_frame) {
+
+				// fetch the pressure
+				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1) << 8;
+
+				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_TEMPERATURE_OFFSET + 1) << 8;
+
+				output->outside_temperature = *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET + 1) << 8;
+
+				output->wind_speed = *(input + LOOP2_TWO_MINUTES_AVG_WINDSPEED) | *(input + LOOP2_TWO_MINUTES_AVG_WINDSPEED + 1) << 8;
+
+				output->wind_speed_10min_average = *(input + LOOP2_TEN_MINUTES_AVG_WINDSPEED) | *(input + LOOP2_TEN_MINUTES_AVG_WINDSPEED + 1) << 8;
+
+				output->wind_gusts_10min = *(input + LOOP2_TEN_MINUTES_GUST) | *(input + LOOP2_TEN_MINUTES_GUST + 1) << 8;
+
+				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET) | *(input + LOOP_WIND_DIRECTION_OFFSET + 1) << 8;
+
+				output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
+
+				output->day_rain = *(input + LOOP_DAY_RAIN_OFFSET);
+			}
+			else {
+				// if CRCs differs treat the frame as corrupted and
+				retval = DAVIS_PARSERS_CORRUPTED_CRC;
+			}
+		}
+	}
+
+	return retval;
+}
+
 
 uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln) {
 

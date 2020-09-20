@@ -693,7 +693,9 @@ int main(int argc, char* argv[]){
 
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
+#ifdef _MODBUS_RTU
 			rtu_serial_pool(&main_rtu_pool_queue, main_wx_srl_ctx_ptr);
+#endif
 		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be

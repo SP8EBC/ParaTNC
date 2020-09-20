@@ -29,12 +29,15 @@ typedef struct davis_loop {
 	uint16_t outside_temperature;
 
 	// wind speed in US land miles per hour. Value od '1' means 1mph
-	uint8_t wind_speed;
+	uint16_t wind_speed;
 
 	// the same scaling as for wind_speed. There is no clear explanation
 	// what are the differences between wind_speed and it's 10 minutes
 	// average. Presumably wind_speed is just a current value
-	uint8_t wind_speed_10min_average;
+	uint16_t wind_speed_10min_average;
+
+	// only in loop2
+	uint16_t wind_gusts_10min;
 
 	// Wind direction in degrees. It is scaled +1 from real value.
 	// Value of 0 means that no data is available

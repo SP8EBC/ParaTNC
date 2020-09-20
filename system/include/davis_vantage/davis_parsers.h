@@ -25,6 +25,7 @@ inline static uint8_t is_digit(char c) {
 }
 
 uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output);
+uint32_t davis_parsers_loop2(uint8_t* input, uint16_t input_ln, davis_loop_t* output);
 uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln);
 uint32_t davis_parsers_rxcheck(		uint8_t* input,
 									uint16_t input_ln,
