@@ -12,7 +12,7 @@
 #include "./modbus_rtu/rtu_return_values.h"
 #include "./modbus_rtu/rtu_crc.h"
 
-int32_t rtu_request_03_04_registers(int8_t input_or_holding, uint8_t* output, uint8_t output_ln, uint8_t slave_address, uint16_t base_register, uint8_t number_of_registers) {
+int32_t rtu_request_03_04_registers(int8_t input_or_holding, uint8_t* output, uint8_t output_ln, uint8_t* output_ln_used, uint8_t slave_address, uint16_t base_register, uint8_t number_of_registers) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 

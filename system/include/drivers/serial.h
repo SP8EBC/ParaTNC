@@ -118,7 +118,7 @@ extern "C" {
 #endif
 
 
-void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t baudrate);
+void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t baudrate, uint8_t stop_bits);
 uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
 uint8_t srl_start_tx(srl_context_t *ctx, short leng);
 void srl_wait_for_tx_completion(srl_context_t *ctx);

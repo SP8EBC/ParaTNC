@@ -5,6 +5,9 @@
  *      Author: mateusz
  */
 
+#ifndef RTE_WX_H_
+#define RTE_WX_H_
+
 #include "station_config.h"
 
 #include "drivers/_dht22.h"
@@ -24,8 +27,10 @@
 #include "drivers/bme280.h"
 #endif
 
-#ifndef RTE_WX_H_
-#define RTE_WX_H_
+#ifdef _MODBUS_RTU
+#include "modbus_rtu/rtu_register_data_t.h"
+#endif
+
 
 #define WIND_AVERAGE_LEN 18
 
@@ -83,6 +88,26 @@ extern umb_qf_t rte_wx_umb_qf;
 extern uint8_t rte_wx_davis_station_avaliable;
 extern uint8_t rte_wx_davis_loop_packet_avaliable;
 extern davis_loop_t rte_wx_davis_loop_content;
+
+#ifdef _MODBUS_RTU
+
+	#if defined(_RTU_SLAVE_ID_1) && (_RTU_SLAVE_FUNC_1 == 0x03 || _RTU_SLAVE_FUNC_1 == 0x04)
+		extern rtu_register_data_t rte_wx_modbus_rtu_f1;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_2) && (_RTU_SLAVE_FUNC_2 == 0x03 || _RTU_SLAVE_FUNC_2 == 0x04)
+		extern rtu_register_data_t rte_wx_modbus_rtu_f2;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_3) && (_RTU_SLAVE_FUNC_3 == 0x03 || _RTU_SLAVE_FUNC_3 == 0x04)
+		extern rtu_register_data_t rte_wx_modbus_rtu_f3;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_4) && (_RTU_SLAVE_FUNC_4 == 0x03 || _RTU_SLAVE_FUNC_4 == 0x04)
+		extern rtu_register_data_t rte_wx_modbus_rtu_f4;
+	#endif
+
+#endif
 
 #ifdef __cplusplus
 extern "C"

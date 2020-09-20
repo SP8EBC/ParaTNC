@@ -43,10 +43,10 @@
 #include "aprs/wx.h"
 #include "drivers/gpio_conf.h"
 
-#ifdef _DAVIS_SERIAL
+#include "../system/include/modbus_rtu/rtu_serial_io.h"
+
 #include "../system/include/davis_vantage/davis.h"
 #include "../system/include/davis_vantage/davis_parsers.h"
-#endif
 
 #ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
@@ -139,6 +139,8 @@ uint8_t main_kiss_enabled = 1;
 // controls if DAVIS serialprotocol client is enabled by the configuration
 uint8_t main_davis_serial_enabled = 0;
 
+uint8_t main_modbus_rtu_master_enabled = 0;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
@@ -161,6 +163,10 @@ uint16_t buffer_len = 0;
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 #endif
 
+#ifdef _MODBUS_RTU
+rtu_pool_queue_t main_rtu_pool_queue;
+#endif
+
 char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
@@ -171,8 +177,6 @@ static void message_callback(struct AX25Msg *msg) {
 }
 
 int main(int argc, char* argv[]){
-  // Send a greeting to the trace device (skipped on Release).
-//  trace_puts("Hello ARM World!");
 
   int32_t ln = 0;
 
@@ -286,19 +290,6 @@ int main(int argc, char* argv[]){
   main_target_kiss_baudrate = _SERIAL_BAUDRATE;
 #endif
 
-  // initializing UART drvier
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate);
-
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
-  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
-  main_wx_srl_ctx_ptr->te_port = GPIOA;
-#endif
-#if defined(PARATNC_HWREV_C)
-  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
-  main_wx_srl_ctx_ptr->te_port = GPIOA;
-#endif
-
 #if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
   // reinitialize the KISS serial port temporary to davis baudrate
   main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
@@ -307,7 +298,7 @@ int main(int argc, char* argv[]){
   main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
 
   // reinitializing serial hardware to wake up Davis wx station
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
 
   srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
 
@@ -343,10 +334,40 @@ int main(int argc, char* argv[]){
 	  // if not revert back to KISS configuration
 	  main_target_kiss_baudrate = 9600u;
 	  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate);
+
+	  // initializing UART drvier
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
 
   }
 
+#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
+
+  rtu_serial_init(&main_rtu_pool_queue);
+
+  main_target_wx_baudrate = _RTU_SLAVE_SPEED;
+
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, _RTU_SLAVE_STOP_BITS);
+
+  main_modbus_rtu_master_enabled = 1;
+
+#else
+  // initializing UART drvier
+  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+
+
+#endif
+
+
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
+  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
+  main_wx_srl_ctx_ptr->te_port = GPIOA;
+#endif
+#if defined(PARATNC_HWREV_C)
+  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
+  main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
 
 
@@ -670,9 +691,18 @@ int main(int argc, char* argv[]){
 			davis_rxcheck_packet_pooler();
 		}
 
+		// if modbus rtu master is enabled
+		if (main_modbus_rtu_master_enabled == 1) {
+			rtu_serial_pool(&main_rtu_pool_queue, main_wx_srl_ctx_ptr);
+		}
+
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
+
+			if (main_modbus_rtu_master_enabled == 1) {
+				rtu_serial_start();
+			}
 
 			wx_get_all_measurements();
 

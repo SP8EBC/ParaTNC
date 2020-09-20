@@ -44,10 +44,6 @@ bme280_qf_t rte_wx_bme280_qf = BME280_QF_UKNOWN;
 #endif
 analog_wind_qf_t rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 
-uint8_t rte_wx_davis_station_avaliable = 0;
-uint8_t rte_wx_davis_loop_packet_avaliable = 0;
-davis_loop_t rte_wx_davis_loop_content;
-
 
 #ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;
@@ -57,6 +53,30 @@ int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];	// first dimen
 															// stores the value in 0.1 incremenets
 #endif
 umb_qf_t rte_wx_umb_qf = UMB_QF_UNITIALIZED;
+
+uint8_t rte_wx_davis_station_avaliable = 0;
+uint8_t rte_wx_davis_loop_packet_avaliable = 0;
+davis_loop_t rte_wx_davis_loop_content;
+
+#ifdef _MODBUS_RTU
+
+	#if defined(_RTU_SLAVE_ID_1) && (_RTU_SLAVE_FUNC_1 == 0x03 || _RTU_SLAVE_FUNC_1 == 0x04)
+		rtu_register_data_t rte_wx_modbus_rtu_f1;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_2) && (_RTU_SLAVE_FUNC_2 == 0x03 || _RTU_SLAVE_FUNC_2 == 0x04)
+		rtu_register_data_t rte_wx_modbus_rtu_f2;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_3) && (_RTU_SLAVE_FUNC_3 == 0x03 || _RTU_SLAVE_FUNC_3 == 0x04)
+		rtu_register_data_t rte_wx_modbus_rtu_f3;
+	#endif
+
+	#if defined(_RTU_SLAVE_ID_4) && (_RTU_SLAVE_FUNC_4 == 0x03 || _RTU_SLAVE_FUNC_4 == 0x04)
+		rtu_register_data_t rte_wx_modbus_rtu_f4;
+	#endif
+
+#endif
 
 void rte_wx_init(void) {
 	int i = 0;
