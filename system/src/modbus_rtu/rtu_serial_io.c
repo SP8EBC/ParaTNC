@@ -39,7 +39,7 @@ uint32_t rtu_time_of_last_receive = 0;
 /**
  * CRC value after the last call to rtu_serial_callback
  */
-uint16_t rtu_serial_previous_crc = 0;
+uint16_t rtu_serial_previous_crc = 0xFFFF;
 
 /**
  * A callback for stream CRC calculation
@@ -142,7 +142,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 
 				// generate request content
 				result = rtu_request_03_04_registers(
-						0,
+						1,
 						serial_context->srl_tx_buf_pointer,
 						serial_context->srl_tx_buf_ln,
 						&output_data_lenght,
@@ -176,6 +176,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			if (result == MODBUS_RET_OK) {
 				// trigger the transmission itself
 				result = srl_start_tx(serial_context, output_data_lenght);
+
+				rtu_serial_previous_crc = 0xFFFF;
 
 				// if serial transmission has been starter
 				if (result == SRL_OK) {
@@ -218,7 +220,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 		case RTU_POOL_RECEIVING: {
 
 			// if data reception still took place
-			if (serial_context->srl_rx_state == SRL_WAITING_TO_RX || serial_context->srl_rx_state == SRL_RXING) {
+			if (serial_context->srl_rx_state == SRL_WAITING_TO_RX || serial_context->srl_rx_state == SRL_RXING || serial_context->srl_rx_state == SRL_RX_IDLE) {
 				// wait
 				;
 			}

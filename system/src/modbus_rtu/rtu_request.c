@@ -49,8 +49,10 @@ int32_t rtu_request_03_04_registers(int8_t input_or_holding, uint8_t* output, ui
 		crc = rtu_crc_buffer(output, 6);
 
 		// append the crc value
-		*(output + 6) = (crc & 0xFF00) >> 8;
-		*(output + 7) = crc & 0xFF;
+		*(output + 7) = (crc & 0xFF00) >> 8;
+		*(output + 6) = crc & 0xFF;
+
+		*output_ln_used = 8;
 
 		retval = MODBUS_RET_OK;
 	}

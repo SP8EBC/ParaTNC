@@ -352,6 +352,8 @@ int main(int argc, char* argv[]){
 
   main_modbus_rtu_master_enabled = 1;
 
+  rtu_serial_start();
+
 #else
   // initializing UART drvier
   srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
