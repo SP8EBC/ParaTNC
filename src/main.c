@@ -349,6 +349,7 @@ int main(int argc, char* argv[]){
 
   srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
   srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, _RTU_SLAVE_STOP_BITS);
+  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
 
   main_modbus_rtu_master_enabled = 1;
 

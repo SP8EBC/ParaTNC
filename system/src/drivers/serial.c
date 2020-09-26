@@ -8,23 +8,21 @@
 
 #include <string.h>
 
-int srlBRRegValue = 0x09C4 ;		// dla symulacji ---- baudrate 9600bps
-//int SrlBRRegValue = 0x0209;		// dla realnego uk��du
 
 #ifdef SEPARATE_TX_BUFF
-uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
+uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN] = {'\0'};
 #endif
 
 #ifdef SEPARATE_RX_BUFF
-uint8_t srl_usart1_rx_buffer[RX_BUFFER_1_LN] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
+uint8_t srl_usart1_rx_buffer[RX_BUFFER_1_LN] = {'\0'};
 #endif
 
 #ifdef SEPARATE_TX_BUFF
-uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN] = {'\0'};		// dane do wys�ania do zdalnego urz�dzenia
+uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN] = {'\0'};
 #endif
 
 #ifdef SEPARATE_RX_BUFF
-uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};		// dane odebrane od zdalnego urz�dzenia
+uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};
 #endif
 
 
@@ -55,6 +53,8 @@ void srl_init(
 	ctx->port = port;
 	ctx->te_port = 0;
 	ctx->te_pin = 0;
+
+	ctx->srl_tx_start_time = 0xFFFFFFFFu;
 
 	USART_InitTypeDef USART_InitStructure;
 
@@ -219,20 +219,27 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 	ctx->srl_tx_bytes_counter = 1;
 
 	// setting a pointer to transmit buffer to the internal buffer inside the driver
-	ctx->srl_tx_buf_pointer = srl_usart1_tx_buffer;
+	//ctx->srl_tx_buf_pointer = srl_usart1_tx_buffer;
 
 	if (ctx->te_port != 0)
 		GPIO_SetBits(ctx->te_port, ctx->te_pin);
 
-	ctx->port->CR1 |= USART_CR1_TE;
-	ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
-	ctx->port->DR = ctx->srl_tx_buf_pointer[0];
+	// check if delay should be applied to transmission
+	if (ctx->srl_tx_start_time == 0xFFFFFFFFu) {
+		ctx->port->CR1 |= USART_CR1_TE;
+		ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+		ctx->port->DR = ctx->srl_tx_buf_pointer[0];
 
-	ctx->srl_tx_state = SRL_TXING;
+		ctx->srl_tx_state = SRL_TXING;
 
-	ctx->port->CR1 |= USART_CR1_TXEIE;				// przerwanie zg�aszane kiedy rejsetr DR jest pusty
-	ctx->port->CR1 |= USART_CR1_TCIE;				// przerwanie zg�aszane po transmisji bajtu
-												// je�eli rejestr DR jest nadal pusty
+		ctx->port->CR1 |= USART_CR1_TXEIE;
+		ctx->port->CR1 |= USART_CR1_TCIE;
+
+	}
+	else {
+		ctx->srl_tx_state = SRL_TX_WAITING;
+		ctx->srl_tx_start_time = main_get_master_time();
+	}
 
 	return SRL_OK;
 }
@@ -479,6 +486,24 @@ void srl_irq_handler(srl_context_t *ctx) {
 					// storing received byte into buffer
 					ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter] = (uint8_t)ctx->port->DR;
 
+					// check if termination callback pointer has been set
+					if (ctx->srl_rx_term != NULL) {
+						// if yes call it
+						stop_rxing = ctx->srl_rx_term(	ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
+														ctx->srl_rx_buf_pointer,
+														ctx->srl_rx_bytes_counter);
+
+						// and check the return value
+						if (stop_rxing == 1) {
+							// if this was the last byte of transmission switch the state
+							// of receiving part to done
+							ctx->srl_rx_state = SRL_RX_DONE;
+
+							ctx->srl_triggered_stop = 0;
+						}
+
+					}
+
 					// checking if this byte in stream holds the protocol information about
 					// how many bytes needs to be received.
 					if (ctx->srl_rx_lenght_param_addres == ctx->srl_rx_bytes_counter) {
@@ -500,23 +525,6 @@ void srl_irq_handler(srl_context_t *ctx) {
 					// moving buffer pointer forward
 					ctx->srl_rx_bytes_counter++;
 
-					// check if termination callback pointer has been set
-					if (ctx->srl_rx_term != NULL) {
-						// if yes call it
-						stop_rxing = ctx->srl_rx_term(	ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
-														ctx->srl_rx_buf_pointer,
-														ctx->srl_rx_bytes_counter);
-
-						// and check the return value
-						if (stop_rxing == 1) {
-							// if this was the last byte of transmission switch the state
-							// of receiving part to done
-							ctx->srl_rx_state = SRL_RX_DONE;
-
-							ctx->srl_triggered_stop = 0;
-						}
-
-					}
 				}
 
 				// if the user want the driver to stop receiving after certain is received
@@ -630,6 +638,46 @@ uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx) {
 
 uint8_t* srl_get_rx_buffer(srl_context_t *ctx) {
 	return ctx->srl_rx_buf_pointer;
+}
+
+void srl_keep_tx_delay(srl_context_t *ctx) {
+	if (ctx != 0) {
+
+		// check if pre tx delay is enabled by an user
+		if (ctx->srl_tx_start_time != 0xFFFFFFFFu) {
+
+			// if it is enabled then check if the serial port is currently set to waiting state
+			if (ctx->srl_tx_state == SRL_TX_WAITING) {
+
+				// check if a delay has expired
+				if (main_get_master_time() - ctx->srl_tx_start_time >= SRL_TX_DELAY_IN_MS) {
+
+					// if yes start the transmission
+					ctx->port->CR1 |= USART_CR1_TE;
+					ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
+					ctx->port->DR = ctx->srl_tx_buf_pointer[0];
+
+					ctx->srl_tx_state = SRL_TXING;
+
+					ctx->port->CR1 |= USART_CR1_TXEIE;
+					ctx->port->CR1 |= USART_CR1_TCIE;
+				}
+			}
+
+		}
+	}
+}
+
+void srl_switch_tx_delay(srl_context_t *ctx, uint8_t disable_enable) {
+	if (ctx != 0) {
+
+		if (disable_enable == 1) {
+			ctx->srl_tx_start_time = 0x0u;
+		}
+		else {
+			ctx->srl_tx_start_time = 0xFFFFFFFFu;
+		}
+	}
 }
 
 void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value) {

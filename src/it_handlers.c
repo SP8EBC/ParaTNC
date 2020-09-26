@@ -87,6 +87,8 @@ void SysTick_Handler(void) {
 	srl_keep_timeout(main_kiss_srl_ctx_ptr);
 	srl_keep_timeout(main_wx_srl_ctx_ptr);
 
+	srl_keep_tx_delay(main_wx_srl_ctx_ptr);
+
 	i2cKeepTimeout();
 
 	delay_decrement_counter();

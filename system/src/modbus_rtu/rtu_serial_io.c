@@ -34,6 +34,9 @@ typedef enum rtu_pool_state {
 
 rtu_pool_state_t rtu_pool = RTU_POOL_STOP;
 
+/**
+ * Timestamp of last received modbus RTU response with good CRC
+ */
 uint32_t rtu_time_of_last_receive = 0;
 
 /**
@@ -42,7 +45,14 @@ uint32_t rtu_time_of_last_receive = 0;
 uint16_t rtu_serial_previous_crc = 0xFFFF;
 
 /**
- * A callback for stream CRC calculation
+ * Cleared by 'rtu_serial_callback' when first byte from range 0x1..0xF7 is received
+ */
+uint8_t rtu_waiting_for_slave_addr = 0x1;
+
+
+
+/**
+ * The callback for stream CRC calculation
  */
 uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
 
@@ -50,17 +60,36 @@ uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffe
 
 	uint16_t new_crc = 0;
 
-	// calculate new crc
-	new_crc = rtu_crc_stream(rtu_serial_previous_crc, current_data);
+	// check if the callback still waits for first 'valid' byte to be received from RTU slave
+	if (rtu_waiting_for_slave_addr == 0x1) {
 
-	// if the new CRC value equals 0x0000 it means that this was MSB
-	// of CRC from correctly received Modbus-RTU frame
-	if (new_crc == 0) {
-		// return '1' to terminate the transmission
-		retval = 1;
+		// check if the byte which was received from the slave is valid address
+		if (current_data >= 0x01 && current_data <= 0xF7) {
+			// clear this flag to start CRC calculation and data receiving
+			rtu_waiting_for_slave_addr = 0;
+		}
+		else {
+			// RTU slave cannot respond with the broadcast address (0x00), also 0xF8..0xFF
+			// are not valid RTU address
+			;
+		}
 	}
-	else {
-		rtu_serial_previous_crc = new_crc;
+
+	// the second 'if' clause checks if the slave response has began
+	if (rtu_waiting_for_slave_addr == 0x0) {
+
+		// calculate new crc
+		new_crc = rtu_crc_stream(rtu_serial_previous_crc, current_data);
+
+		// if the new CRC value equals 0x0000 it means that this was MSB
+		// of CRC from correctly received Modbus-RTU frame
+		if (new_crc == 0) {
+			// return '1' to terminate the transmission
+			retval = 1;
+		}
+		else {
+			rtu_serial_previous_crc = new_crc;
+		}
 	}
 
 	return retval;
@@ -179,6 +208,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 
 				rtu_serial_previous_crc = 0xFFFF;
 
+				rtu_waiting_for_slave_addr = 1;
+
 				// if serial transmission has been starter
 				if (result == SRL_OK) {
 					// proceed to the next state (transmitting)
@@ -200,13 +231,14 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 		case RTU_POOL_TRANSMITTING: {
 
 			// if transmission is still pending
-			if (serial_context->srl_tx_state == SRL_TXING) {
+			if (serial_context->srl_tx_state == SRL_TXING || serial_context->srl_tx_state == SRL_TX_WAITING) {
 				// wait until it will finish
 				;
 			}
 			else {
 				// trigger reception
 				srl_receive_data_with_callback(serial_context, rtu_serial_callback);
+				//srl_receive_data(serial_context, 8, 0, 0, 0, 0, 0);
 
 				// switch the state
 				rtu_pool = RTU_POOL_RECEIVING;
