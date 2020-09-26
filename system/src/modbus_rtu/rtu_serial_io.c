@@ -165,6 +165,13 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 	switch (rtu_pool) {
 		case RTU_POOL_IDLE: {
 
+			// Enabling the timeout for Modbus-RTU.
+			// This timeout starts after first received byte and triggers if
+			// the slave will hang up and stop the transmission before the end of the frame
+			// It doesn't need to be called each time but this is the only function which takes
+			// the pointer to serial context
+			srl_switch_timeout(serial_context, 1, 0);
+
 			// check the function it at current queue position
 			if (queue->function_id[queue->it] == 0x03) {
 				// read holding registers
@@ -239,6 +246,10 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				// trigger reception
 				srl_receive_data_with_callback(serial_context, rtu_serial_callback);
 				//srl_receive_data(serial_context, 8, 0, 0, 0, 0, 0);
+
+				// enable the timeout in case the RTU slave won't respond
+				// at all or there is no slaves connected to RS485 bus
+				srl_switch_timeout_for_waiting(serial_context, 1);
 
 				// switch the state
 				rtu_pool = RTU_POOL_RECEIVING;

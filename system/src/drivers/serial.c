@@ -123,7 +123,7 @@ void srl_keep_timeout(srl_context_t *ctx) {
 		;
 	}
 
-	if (ctx->srl_rx_state != SRL_RX_NOT_CONFIG && ctx->srl_rx_timeout_waiting_enable == 1) {
+	if ((ctx->srl_rx_state == SRL_WAITING_TO_RX || ctx->srl_rx_state == SRL_RXING ) && ctx->srl_rx_timeout_waiting_enable == 1) {
 		if (master_time - ctx->srl_rx_waiting_start_time > ctx->srl_rx_timeout_trigger_value_in_msec) {
 			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
 			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
@@ -336,6 +336,9 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
  	return SRL_OK;
 }
 
+/**
+ * This function start the transfer with
+ */
 uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
 	if (ctx->srl_rx_state == SRL_RXING)
 		return SRL_BUSY;
@@ -479,6 +482,9 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 				// raise a flag to signalize that timeout shall be calulated from now.
 				ctx->srl_rx_timeout_calc_started = 1;
+
+				// disable the waiting timeout
+				ctx->srl_rx_timeout_waiting_enable = 0;
 
 				// if there is any data remaining to receive
 				if (ctx->srl_rx_bytes_counter < ctx->srl_rx_bytes_req) {
@@ -680,6 +686,11 @@ void srl_switch_tx_delay(srl_context_t *ctx, uint8_t disable_enable) {
 	}
 }
 
+/**
+ * This function controls the timeout which is calculated for data reception (when the
+ * state is set to SRL_RXING). The calculation starts after the first byte appears in
+ * data register and protect against stalling in the middle of data transfer
+ */
 void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value) {
 	if (disable_enable == 1)
 		ctx->srl_rx_timeout_enable = 1;
@@ -697,6 +708,13 @@ void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t val
 	}
 }
 
+/**
+ * This function enables the timeout which is calculated for the waiting state for
+ * the data reception to begin (the first byte on serial port). It must be called for
+ * each RX transaction it is required as this timeout is cleared/disabled after the first
+ * byte received by the serial port (when the state changes from SRL_WAITING_TO_RX to
+ * SRL_RXING)
+ */
 void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable) {
 	if (disable_enable == 1)
 		ctx->srl_rx_timeout_waiting_enable = 1;
