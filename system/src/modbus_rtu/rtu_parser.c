@@ -10,7 +10,7 @@
 
 #define MODBUS_RTU_MIN_03_04_RESP_LN 	7	// one register to read
 
-int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_register_data_t* output) {
+int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_register_data_t* output, rtu_exception_t* exception) {
 	uint32_t retval = MODBUS_RET_UNINITIALIZED;
 
 	uint16_t data = 0;
@@ -32,7 +32,7 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 	}
 	else {
 		// fetch slave address
-		data = *input << 8 | *(input + 1);
+		data = *input;
 
 		// store slave address
 		output->slave_address = data;
@@ -40,8 +40,17 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 		// fetch function code
 		data = *(input + 1);
 
+		// if the exception flag is set
+		if ((data & 0x80) > 0) {
+			// parse the exception value
+			*exception = rtu_exception_from_frame_data(data);
+
+			// and set the return value
+			retval = MODBUS_RET_GOT_EXCEPTION;
+		}
+
 		// check if the function code is correct or not
-		if (data == 0x03 || data == 0x04) {
+		else if (data == 0x03 || data == 0x04) {
 			// fetch the function result lenght in bytes
 			data = *(input + 2);
 

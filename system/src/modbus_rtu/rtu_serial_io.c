@@ -23,6 +23,23 @@
 
 #define INTERFRAME_SP	20
 
+
+#ifndef _RTU_SLAVE_LENGHT_1
+	#define _RTU_SLAVE_LENGHT_1 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_2
+	#define _RTU_SLAVE_LENGHT_2 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_3
+	#define _RTU_SLAVE_LENGHT_3 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_4
+	#define _RTU_SLAVE_LENGHT_4 0x1
+#endif
+
 typedef enum rtu_pool_state {
 	RTU_POOL_IDLE,
 	RTU_POOL_TRANSMITTING,
@@ -111,7 +128,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 
 	rte_wx_modbus_rtu_f1.slave_address = _RTU_SLAVE_ID_1;
 	rte_wx_modbus_rtu_f1.base_address = _RTU_SLAVE_ADDR_1;
-	rte_wx_modbus_rtu_f1.number_of_registers = 1;
+	rte_wx_modbus_rtu_f1.number_of_registers = _RTU_SLAVE_LENGHT_1;
 #endif
 
 #ifdef _RTU_SLAVE_ID_2
@@ -120,7 +137,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 
 	rte_wx_modbus_rtu_f2.slave_address = _RTU_SLAVE_ID_2;
 	rte_wx_modbus_rtu_f2.base_address = _RTU_SLAVE_ADDR_2;
-	rte_wx_modbus_rtu_f2.number_of_registers = 1;
+	rte_wx_modbus_rtu_f2.number_of_registers = _RTU_SLAVE_LENGHT_2;
 #endif
 
 #ifdef _RTU_SLAVE_ID_3
@@ -129,7 +146,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 
 	rte_wx_modbus_rtu_f3.slave_address = _RTU_SLAVE_ID_3;
 	rte_wx_modbus_rtu_f3.base_address = _RTU_SLAVE_ADDR_3;
-	rte_wx_modbus_rtu_f3.number_of_registers = 1;
+	rte_wx_modbus_rtu_f3.number_of_registers = _RTU_SLAVE_LENGHT_3;
 #endif
 
 #ifdef _RTU_SLAVE_ID_4
@@ -138,7 +155,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 
 	rte_wx_modbus_rtu_f4.slave_address = _RTU_SLAVE_ID_4;
 	rte_wx_modbus_rtu_f4.base_address = _RTU_SLAVE_ADDR_4;
-	rte_wx_modbus_rtu_f4.number_of_registers = 1;
+	rte_wx_modbus_rtu_f4.number_of_registers = _RTU_SLAVE_LENGHT_4;
 #endif
 
 #endif
@@ -268,12 +285,13 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				;
 			}
 			else if (serial_context->srl_rx_state == SRL_RX_DONE) {
-				// parse the response from RTU slave
+				// parse the response from RTU slave // here there is a problem with changing slave address
 				if (queue->function_id[queue->it] == 0x03 || queue->function_id[queue->it] == 0x04) {
 					result = rtu_parser_03_04_registers(
 							serial_context->srl_rx_buf_pointer,
 							serial_context->srl_rx_bytes_counter,
-							((rtu_register_data_t*)queue->function_parameter[queue->it]));
+							((rtu_register_data_t*)queue->function_parameter[queue->it]),
+							&rte_wx_last_modbus_exception);
 				}
 				else {
 					retval = MODBUS_RET_WRONG_FUNCTION;
@@ -283,6 +301,13 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				if (result == MODBUS_RET_OK) {
 					// store the current time
 					queue->last_call_to_function[queue->it] = main_get_master_time();
+
+					// switch the state to inter-frame silence period
+					rtu_pool = RTU_POOL_WAIT_AFTER_RECEIVE;
+				}
+				else if (result == MODBUS_RET_GOT_EXCEPTION) {
+					// in case of an excetpion store the current timestamp
+					rte_wx_last_modbus_exception_timestamp = main_get_master_time();
 
 					// switch the state to inter-frame silence period
 					rtu_pool = RTU_POOL_WAIT_AFTER_RECEIVE;
@@ -300,6 +325,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			// in case of any error during data reception or the serial driver have fallen into unknown & unexpected
 			// state
 			else {
+				rte_wx_last_modbus_rx_error_timestamp = main_get_master_time();
+
 				rtu_pool = RTU_POOL_RECEIVE_ERROR;
 			}
 			break;

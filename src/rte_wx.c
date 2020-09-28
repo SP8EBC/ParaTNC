@@ -76,6 +76,10 @@ davis_loop_t rte_wx_davis_loop_content;
 		rtu_register_data_t rte_wx_modbus_rtu_f4;
 	#endif
 
+rtu_exception_t rte_wx_last_modbus_exception;
+uint32_t rte_wx_last_modbus_exception_timestamp;
+uint32_t rte_wx_last_modbus_rx_error_timestamp;
+
 #endif
 
 void rte_wx_init(void) {
@@ -91,6 +95,10 @@ void rte_wx_init(void) {
 	for (i = 0; i < 4; i++) {
 		rte_wx_pressure_history[i] = 0.0f;
 	}
+
+	rte_wx_last_modbus_exception_timestamp = 0;
+	rte_wx_last_modbus_rx_error_timestamp = 0;
+	rte_wx_last_modbus_exception = RTU_EXCEPTION_OK;
 }
 
 void rte_wx_update_last_measuremenet_timers(uint16_t parameter_type) {

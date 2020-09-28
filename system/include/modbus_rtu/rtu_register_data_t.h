@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define MODBUS_RTU_MAX_REGISTERS_AT_ONCE	16	// according to RTU standard 125
+#define MODBUS_RTU_MAX_REGISTERS_AT_ONCE	8	// according to RTU standard 125
 
 typedef struct __attribute__((packed)) rtu_register_data {
 

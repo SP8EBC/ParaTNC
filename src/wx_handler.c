@@ -268,6 +268,12 @@ void wx_pool_anemometer(void) {
 
 	uint16_t scaled_windspeed = 0;
 
+	#if defined(_UMB_MASTER)
+	rte_wx_average_winddirection = umb_get_winddirection();
+	rte_wx_average_windspeed = umb_get_windspeed();
+	rte_wx_max_windspeed = umb_get_windgusts();
+	#else
+
 	#ifdef _ANEMOMETER_ANALOGUE
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
 	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
@@ -278,11 +284,9 @@ void wx_pool_anemometer(void) {
 	rte_wx_winddirection_last = tx20_get_wind_direction();
 	#endif
 
-	#if defined(_UMB_MASTER)
-	rte_wx_average_winddirection = umb_get_winddirection();
-	rte_wx_average_windspeed = umb_get_windspeed();
-	rte_wx_max_windspeed = umb_get_windgusts();
-	#else
+#ifdef _MODBUS_RTU
+
+#endif
 
 	// check how many times before the pool function was called
 	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
