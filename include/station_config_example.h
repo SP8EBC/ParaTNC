@@ -15,7 +15,7 @@
 #define _DIGI				// Enable WIDE1-1 digipeater
 //#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 //#define _VICTRON			// Enable support for Victron VE.Direct protocol
-//#define _UMB_MASTER
+
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
@@ -27,15 +27,26 @@
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */
 
+//#define _UMB_MASTER
+//#define _DAVIS_SERIAL
+#define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
+						// (slave ids, registers...) please look into MODBUS RTU CONFIGURATION section of this file
+
+#define _INTERNAL_AS_BACKUP		// if defined ParaTNC will switch to internal sensors in case of
+								// the communication with UMB/Dallas Serial/Modbus external sensors will hang up
+
+
 //#define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
 							// May be used even if _METEO is not enabled
-#define _DALLAS_SPLIT_PIN
-//#define _ANEMOMETER_TX20
-#define _ANEMOMETER_ANALOGUE
+#define _DALLAS_SPLIT_PIN		// Must be enabled for all ParaTNC hardware revisions
+
+
+//#define _ANEMOMETER_TX20	// Use TX20 as an internal anemometer
+#define _ANEMOMETER_ANALOGUE	// Use analogue/mechanical (like Davis 6410) as an internal anemometr
 #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
 
 //#define _SENSOR_MS5611
-#define _SENSOR_BMA150
+#define _SENSOR_BME280
 
 #define _UMB_SLAVE_ID 	 		1
 #define _UMB_SLAVE_CLASS 		8
@@ -53,13 +64,13 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "SP8EBC"
-#define _SSID 1
-#define _LAT		4948.85
+#define _CALL "N0CALL"
+#define _SSID 0
+#define _LAT		4935.92
 #define _LATNS		'N'
-#define _LON		01903.68
+#define _LON		02059.77
 #define _LONWE		'E'
-#define _COMMENT	"test"
+#define _COMMENT	"Please change the callsing configuration"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -74,20 +85,20 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
+//#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 //#define _BCN_ON_STARTUP
 
 #define _WX_INTERVAL 3		// WX packet interval in minutes
-#define _BCN_INTERVAL 29	// Own beacon interval in minutes
+#define _BCN_INTERVAL 34	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
-#define _SERIAL_BAUDRATE 19200
+#define _SERIAL_BAUDRATE 9600
 
 // Transmitting delay
-#define _DELAY_BASE 22	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 14	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 //#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness
@@ -108,6 +119,54 @@
 // various lenght of preamble, some of them produce signal which might be impossible to decode by ParaTNC, so DCD
 // is only one part of effective multiaccess to medium.
 
+/* ---------------------------- */
+/* 	MODBUS RTU CONFIGURATION    */
+
+#define _RTU_SLAVE_SPEED		9600u
+#define _RTU_SLAVE_PARITY		0
+#define _RTU_SLAVE_STOP_BITS	2
+
+#define _RTU_SLAVE_ID_1				0x01
+#define _RTU_SLAVE_FUNC_1			0x03
+#define _RTU_SLAVE_ADDR_1			0x00
+#define _RTU_SLAVE_LENGHT_1			0x05
+#define _RTU_SLAVE_SCALING_A_1
+#define _RTU_SLAVE_SCALING_B_1
+#define _RTU_SLAVE_SCALING_C_1
+
+#define _RTU_SLAVE_ID_2				0x01
+#define _RTU_SLAVE_FUNC_2			0x03
+#define _RTU_SLAVE_ADDR_2			0x01
+//#define _RTU_SLAVE_LENGHT_2			0x01
+#define _RTU_SLAVE_SCALING_A_2
+#define _RTU_SLAVE_SCALING_B_2
+#define _RTU_SLAVE_SCALING_C_2
+
+#define _RTU_SLAVE_ID_3				0x01
+#define _RTU_SLAVE_FUNC_3			0x03
+#define _RTU_SLAVE_ADDR_3			0x02
+//#define _RTU_SLAVE_LENGHT_3			0x01
+#define _RTU_SLAVE_SCALING_A_3
+#define _RTU_SLAVE_SCALING_B_3
+#define _RTU_SLAVE_SCALING_C_3
+
+#define _RTU_SLAVE_ID_4				0x01
+#define _RTU_SLAVE_FUNC_4			0x03
+#define _RTU_SLAVE_ADDR_4			0x03
+//#define _RTU_SLAVE_LENGHT_4			0x01
+#define _RTU_SLAVE_SCALING_A_4
+#define _RTU_SLAVE_SCALING_B_4
+#define _RTU_SLAVE_SCALING_C_4
+
+#define _RTU_SLAVE_TEMPERATURE_SOURCE 		1
+#define _RTU_SLAVE_HUMIDITY_SOURCE			2
+#define _RTU_SLAVE_PRESSURE_SOURCE			3
+#define _RTU_SLAVE_WIND_DIRECTION_SORUCE	4
+#define _RTU_SLAVE_WIND_SPEED_SOURCE		4
+
+
+/* 	MODBUS RTU CONFIGURATION    */
+/* ---------------------------- */
 
 // Do not touch this
 #if defined (_SYMBOL_DIGI) && !defined (_SYMBOL_WIDE1_DIGI) && !defined (_SYMBOL_HOUSE) && !defined (_SYMOL_RXIGATE) &&\
@@ -150,6 +209,10 @@
 
 #if defined(_ANEMOMETER_TX20) && defined(_ANEMOMETER_ANALOGUE)
 #error "You cannot use two anemometers at once!!!"
+#endif
+
+#if defined(_MOBUS_RTU) && defined(_DAVIS_SERIAL)
+#error "You cannot use modbus RTU devices and Davis weather station at once!!!"
 #endif
 
 #if !defined(_ANEMOMETER_TX20) && !defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && defined(_METEO)
