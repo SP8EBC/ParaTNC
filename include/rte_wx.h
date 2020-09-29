@@ -30,6 +30,7 @@
 #ifdef _MODBUS_RTU
 #include "modbus_rtu/rtu_register_data_t.h"
 #include "modbus_rtu/rtu_exception_t.h"
+#include "modbus_rtu/rtu_getters.h"
 #endif
 
 
@@ -93,19 +94,19 @@ extern davis_loop_t rte_wx_davis_loop_content;
 #ifdef _MODBUS_RTU
 
 	#if defined(_RTU_SLAVE_ID_1) && (_RTU_SLAVE_FUNC_1 == 0x03 || _RTU_SLAVE_FUNC_1 == 0x04)
-		extern rtu_register_data_t rte_wx_modbus_rtu_f1;
+		extern rtu_register_data_t RTU_GETTERS_F1_NAME;
 	#endif
 
 	#if defined(_RTU_SLAVE_ID_2) && (_RTU_SLAVE_FUNC_2 == 0x03 || _RTU_SLAVE_FUNC_2 == 0x04)
-		extern rtu_register_data_t rte_wx_modbus_rtu_f2;
+		extern rtu_register_data_t RTU_GETTERS_F2_NAME;
 	#endif
 
 	#if defined(_RTU_SLAVE_ID_3) && (_RTU_SLAVE_FUNC_3 == 0x03 || _RTU_SLAVE_FUNC_3 == 0x04)
-		extern rtu_register_data_t rte_wx_modbus_rtu_f3;
+		extern rtu_register_data_t RTU_GETTERS_F3_NAME;
 	#endif
 
 	#if defined(_RTU_SLAVE_ID_4) && (_RTU_SLAVE_FUNC_4 == 0x03 || _RTU_SLAVE_FUNC_4 == 0x04)
-		extern rtu_register_data_t rte_wx_modbus_rtu_f4;
+		extern rtu_register_data_t RTU_GETTERS_F4_NAME;
 	#endif
 
 extern rtu_exception_t rte_wx_last_modbus_exception;
