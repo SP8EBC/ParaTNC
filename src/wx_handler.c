@@ -17,6 +17,11 @@
 
 #include "station_config.h"
 
+#ifdef _MODBUS_RTU
+#include "modbus_rtu/rtu_getters.h"
+#include "modbus_rtu/rtu_return_values.h"
+#endif
+
 #include "delay.h"
 #include "telemetry.h"
 #include "main.h"
@@ -41,7 +46,18 @@ void wx_get_all_measurements(void) {
 	int32_t return_value = 0;
 	float pressure_average_sum = 0.0f;
 
-#if (defined _METEO && defined _SENSOR_MS5611)
+#if defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)
+	if (rte_wx_umb_qf == UMB_QF_FULL) {
+		rte_wx_temperature_average_dallas_valid = umb_get_temperature();
+		rte_wx_pressure_valid = umb_get_qfe();
+	}
+#endif
+
+#if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
+	// modbus rtu
+#endif
+
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
 	// quering MS5611 sensor for temperature
 	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
 
@@ -52,7 +68,7 @@ void wx_get_all_measurements(void) {
 
 #endif
 
-#if (defined _METEO && defined _SENSOR_BME280)
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280) && defined(_INTERNAL_AS_BACKUP))
 	// reading raw values
 	return_value = bme280_read_raw_data(bme280_data_buffer);
 
@@ -111,8 +127,7 @@ void wx_get_all_measurements(void) {
 	}
 #endif
 
-#if defined _METEO || defined _DALLAS_AS_TELEM
-
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)) || defined(_INTERNAL_AS_BACKUP) || defined (_DALLAS_AS_TELEM)
 	// quering dallas DS12B20 thermometer for current temperature
 	rte_wx_temperature_dallas = dallas_query(&rte_wx_current_dallas_qf);
 
@@ -172,7 +187,7 @@ void wx_get_all_measurements(void) {
 	wx_inhibit_slew_rate_check = 0;
 #endif
 
-#if (defined _METEO) && (defined _SENSOR_MS5611)
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 
@@ -215,12 +230,7 @@ void wx_get_all_measurements(void) {
 
 #endif
 
-#if defined(_UMB_MASTER)
-	if (rte_wx_umb_qf == UMB_QF_FULL) {
-		rte_wx_temperature_average_dallas_valid = umb_get_temperature();
-		rte_wx_pressure_valid = umb_get_qfe();
-	}
-#endif
+
 }
 
 void wx_pool_dht22(void) {
@@ -264,9 +274,24 @@ void wx_pool_anemometer(void) {
 	short i = 0;
 	uint8_t average_ln;
 
+#ifdef _MODBUS_RTU
+	int32_t modbus_retval;
+#endif
+
 	wx_wind_pool_call_counter++;
 
 	uint16_t scaled_windspeed = 0;
+
+	// internal sensors
+	#if defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_ANALOGUE))
+	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
+	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+	#endif
+
+	#ifdef defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_TX20))
+	scaled_windspeed = tx20_get_scaled_windspeed();
+	rte_wx_winddirection_last = tx20_get_wind_direction();
+	#endif
 
 	#if defined(_UMB_MASTER)
 	rte_wx_average_winddirection = umb_get_winddirection();
@@ -274,19 +299,27 @@ void wx_pool_anemometer(void) {
 	rte_wx_max_windspeed = umb_get_windgusts();
 	#else
 
-	#ifdef _ANEMOMETER_ANALOGUE
-	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
-	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+	#ifdef _MODBUS_RTU
+	// get the value from modbus registers
+	modbus_retval = rtu_get_wind_speed(&scaled_windspeed);
+
+	// check if this value has been processed w/o errors
+	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+		// if yes continue to further processing
+		modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last);
+
+	}
+
+	// the second IF to check if the return value was the same for wind direction
+	if (modbus_retval != MODBUS_RET_OK && modbus_retval != MODBUS_RET_DEGRADED) {
+		// if the value is not available (like modbus is not configured as a source
+		// for wind data) get the value from internal sensors..
+		#ifdef _INTERNAL_AS_BACKUP
+			// .. if they are configured
+			scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+		#endif
+	}
 	#endif
-
-	#ifdef _ANEMOMETER_TX20
-	scaled_windspeed = tx20_get_scaled_windspeed();
-	rte_wx_winddirection_last = tx20_get_wind_direction();
-	#endif
-
-#ifdef _MODBUS_RTU
-
-#endif
 
 	// check how many times before the pool function was called
 	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
@@ -363,7 +396,21 @@ void wx_pool_anemometer(void) {
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;
 
-#ifdef _ANEMOMETER_ANALOGUE
+#if defined (_MODBUS_RTU)
+	if (modbus_retval == MODBUS_RET_OK) {
+		rte_wx_wind_qf = AN_WIND_QF_FULL;
+	}
+	else if (modbus_retval == MODBUS_RET_DEGRADED) {
+		rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+	}
+	else {
+		#ifdef _INTERNAL_AS_BACKUP
+			rte_wx_wind_qf = analog_anemometer_get_qf();
+		#else
+			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+		#endif
+	}
+#elif defined(_ANEMOMETER_ANALOGUE)
 	rte_wx_wind_qf = analog_anemometer_get_qf();
 #else
 	rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;

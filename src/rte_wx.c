@@ -80,6 +80,7 @@ davis_loop_t rte_wx_davis_loop_content;
 rtu_exception_t rte_wx_last_modbus_exception;
 uint32_t rte_wx_last_modbus_exception_timestamp;
 uint32_t rte_wx_last_modbus_rx_error_timestamp;
+rtu_pool_queue_t rte_wx_rtu_pool_queue;
 
 #endif
 

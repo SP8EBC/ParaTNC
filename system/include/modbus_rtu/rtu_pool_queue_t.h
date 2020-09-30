@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define RTU_POOL_QUEUE_LENGHT 4
+#include "modbus_rtu/rtu_configuration.h"
 
 /**
  * This type stores the queue of RTU functions to be queued

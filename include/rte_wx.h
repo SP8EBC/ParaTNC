@@ -28,9 +28,11 @@
 #endif
 
 #ifdef _MODBUS_RTU
+#include "modbus_rtu/rtu_configuration.h"
 #include "modbus_rtu/rtu_register_data_t.h"
 #include "modbus_rtu/rtu_exception_t.h"
 #include "modbus_rtu/rtu_getters.h"
+#include "modbus_rtu/rtu_pool_queue_t.h"
 #endif
 
 
@@ -112,6 +114,7 @@ extern davis_loop_t rte_wx_davis_loop_content;
 extern rtu_exception_t rte_wx_last_modbus_exception;
 extern uint32_t rte_wx_last_modbus_rx_error_timestamp;
 extern uint32_t rte_wx_last_modbus_exception_timestamp;
+extern rtu_pool_queue_t rte_wx_rtu_pool_queue;
 
 #endif
 

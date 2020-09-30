@@ -163,9 +163,6 @@ uint16_t buffer_len = 0;
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 #endif
 
-#ifdef _MODBUS_RTU
-rtu_pool_queue_t main_rtu_pool_queue;
-#endif
 
 char after_tx_lock;
 
@@ -343,7 +340,7 @@ int main(int argc, char* argv[]){
 
 #elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
 
-  rtu_serial_init(&main_rtu_pool_queue);
+  rtu_serial_init(&rte_wx_rtu_pool_queue);
 
   main_target_wx_baudrate = _RTU_SLAVE_SPEED;
 
@@ -697,7 +694,7 @@ int main(int argc, char* argv[]){
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
 #ifdef _MODBUS_RTU
-			rtu_serial_pool(&main_rtu_pool_queue, main_wx_srl_ctx_ptr);
+			rtu_serial_pool(&rte_wx_rtu_pool_queue, main_wx_srl_ctx_ptr);
 #endif
 		}
 

@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define RTU_MAXIMUM_DATA_LN 64
+#include "rtu_configuration.h"
 
 typedef struct rtu_frame_t {
 	uint8_t address;

@@ -8,8 +8,14 @@
 
 #include "station_config.h"
 
-#include "rtu_getters.h"
-#include "rtu_return_values.h"
+#include "modbus_rtu/rtu_getters.h"
+#include "modbus_rtu/rtu_return_values.h"
+#include "modbus_rtu/rtu_register_data_t.h"
+
+#include "modbus_rtu/rtu_configuration.h"
+
+#include "rte_wx.h"
+#include "main.h"
 
 int32_t rtu_get_temperature(float* out) {
 
@@ -21,6 +27,9 @@ int32_t rtu_get_temperature(float* out) {
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
 #ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 	#if (_RTU_SLAVE_TEMPERATURE_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -28,24 +37,28 @@ int32_t rtu_get_temperature(float* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -65,7 +78,14 @@ int32_t rtu_get_temperature(float* out) {
 				) /
 				scaling_d;
 
-		retval = MODBUS_RET_OK;
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_DEGRADED;
+		}
+		else {
+			retval = MODBUS_RET_OK;
+		}
+
 	}
 
 	return retval;
@@ -81,6 +101,9 @@ int32_t rtu_get_pressure(float* out) {
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
 #ifdef _RTU_SLAVE_PRESSURE_SOURCE
 	#if (_RTU_SLAVE_PRESSURE_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -88,24 +111,28 @@ int32_t rtu_get_pressure(float* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -125,7 +152,13 @@ int32_t rtu_get_pressure(float* out) {
 				) /
 				scaling_d;
 
-		retval = MODBUS_RET_OK;
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_DEGRADED;
+		}
+		else {
+			retval = MODBUS_RET_OK;
+		}
 	}
 
 	return retval;
@@ -141,6 +174,9 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
 #ifdef _RTU_SLAVE_WIND_DIRECTION_SORUCE
 	#if (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -148,24 +184,28 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -185,7 +225,13 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 				) /
 				scaling_d;
 
-		retval = MODBUS_RET_OK;
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_DEGRADED;
+		}
+		else {
+			retval = MODBUS_RET_OK;
+		}
 	}
 
 	return retval;
@@ -201,6 +247,9 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
 #ifdef _RTU_SLAVE_WIND_SPEED_SOURCE
 	#if (_RTU_SLAVE_WIND_SPEED_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -208,24 +257,28 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -245,7 +298,13 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 				) /
 				scaling_d;
 
-		retval = MODBUS_RET_OK;
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_DEGRADED;
+		}
+		else {
+			retval = MODBUS_RET_OK;
+		}
 	}
 
 	return retval;
@@ -261,6 +320,9 @@ int32_t rtu_get_humidity(int8_t* out) {
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
 #ifdef _RTU_SLAVE_HUMIDITY_SOURCE
 	#if (_RTU_SLAVE_HUMIDITY_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -268,24 +330,28 @@ int32_t rtu_get_humidity(int8_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -305,7 +371,13 @@ int32_t rtu_get_humidity(int8_t* out) {
 				) /
 				scaling_d;
 
-		retval = MODBUS_RET_OK;
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_DEGRADED;
+		}
+		else {
+			retval = MODBUS_RET_OK;
+		}
 	}
 
 	return retval;

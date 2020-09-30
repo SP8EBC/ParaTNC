@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define MODBUS_RTU_MAX_REGISTERS_AT_ONCE	8	// according to RTU standard 125
+#include "modbus_rtu/rtu_configuration.h"
 
 typedef struct __attribute__((packed)) rtu_register_data {
 
@@ -21,6 +21,8 @@ typedef struct __attribute__((packed)) rtu_register_data {
 	uint16_t base_address;
 
 	uint16_t registers_values[MODBUS_RTU_MAX_REGISTERS_AT_ONCE];
+
+	//uint32_t last_update_timestamp;
 
 }rtu_register_data_t;
 
