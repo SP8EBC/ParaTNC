@@ -167,7 +167,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
-
+#ifdef _MODBUS_RTU
 	int32_t result = MODBUS_RET_UNINITIALIZED;
 
 	uint8_t output_data_lenght = 0;
@@ -361,7 +361,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			break;
 		}
 	}
-
+#endif
 	return retval;
 }
 

@@ -97,10 +97,11 @@ void rte_wx_init(void) {
 	for (i = 0; i < 4; i++) {
 		rte_wx_pressure_history[i] = 0.0f;
 	}
-
+#ifdef _MODBUS_RTU
 	rte_wx_last_modbus_exception_timestamp = 0;
 	rte_wx_last_modbus_rx_error_timestamp = 0;
 	rte_wx_last_modbus_exception = RTU_EXCEPTION_OK;
+#endif
 }
 
 void rte_wx_update_last_measuremenet_timers(uint16_t parameter_type) {
