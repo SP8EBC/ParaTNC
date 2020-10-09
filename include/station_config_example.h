@@ -27,6 +27,8 @@
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */
 
+// If none of those three sources are chosen (uncommented) the software will use internal sensors
+
 //#define _UMB_MASTER
 //#define _DAVIS_SERIAL
 #define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
@@ -40,6 +42,8 @@
 							// May be used even if _METEO is not enabled
 #define _DALLAS_SPLIT_PIN		// Must be enabled for all ParaTNC hardware revisions
 
+
+/******** 	INTERNAL SENSORS CONFIGURATION *****************/
 
 //#define _ANEMOMETER_TX20	// Use TX20 as an internal anemometer
 #define _ANEMOMETER_ANALOGUE	// Use analogue/mechanical (like Davis 6410) as an internal anemometr
@@ -56,6 +60,8 @@
 #define _UMB_CHANNEL_TEMPERATURE		100
 #define _UMB_CHANNEL_QFE				300
 
+/******** 	INTERNAL SENSORS CONFIGURATION *****************/
+
 /* 	WEATHER/METEO CONFIGURATION */
 /* ---------------------------- */
 
@@ -66,11 +72,11 @@
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
 #define _CALL "N0CALL"
 #define _SSID 0
-#define _LAT		4935.92
+#define _LAT		4935.00
 #define _LATNS		'N'
-#define _LON		02059.77
+#define _LON		01919.19
 #define _LONWE		'E'
-#define _COMMENT	"Please change the callsing configuration"
+#define _COMMENT	"Set Your configuration in this file and rename to station_config.h"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -85,20 +91,20 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-//#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
+#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 //#define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 3		// WX packet interval in minutes
-#define _BCN_INTERVAL 34	// Own beacon interval in minutes
+#define _WX_INTERVAL 7		// WX packet interval in minutes
+#define _BCN_INTERVAL 45	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 #define _SERIAL_BAUDRATE 9600
 
 // Transmitting delay
-#define _DELAY_BASE 14	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 20	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 //#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness
@@ -122,6 +128,13 @@
 /* ---------------------------- */
 /* 	MODBUS RTU CONFIGURATION    */
 
+// scaling coefficients are used as follows
+//
+// 				 A * x ^ 2 + B * x + C
+// real value = ---------------------------
+//							D
+//
+// because of that D cannot be set to zero
 #define _RTU_SLAVE_SPEED		9600u
 #define _RTU_SLAVE_PARITY		0
 #define _RTU_SLAVE_STOP_BITS	2
@@ -130,33 +143,37 @@
 #define _RTU_SLAVE_FUNC_1			0x03
 #define _RTU_SLAVE_ADDR_1			0x00
 #define _RTU_SLAVE_LENGHT_1			0x05
-#define _RTU_SLAVE_SCALING_A_1
-#define _RTU_SLAVE_SCALING_B_1
-#define _RTU_SLAVE_SCALING_C_1
+#define _RTU_SLAVE_SCALING_A_1	0
+#define _RTU_SLAVE_SCALING_B_1	1
+#define _RTU_SLAVE_SCALING_C_1	0
+#define _RTU_SLAVE_SCALING_D_1  1
 
 #define _RTU_SLAVE_ID_2				0x01
 #define _RTU_SLAVE_FUNC_2			0x03
 #define _RTU_SLAVE_ADDR_2			0x01
 //#define _RTU_SLAVE_LENGHT_2			0x01
-#define _RTU_SLAVE_SCALING_A_2
-#define _RTU_SLAVE_SCALING_B_2
-#define _RTU_SLAVE_SCALING_C_2
+#define _RTU_SLAVE_SCALING_A_2	0
+#define _RTU_SLAVE_SCALING_B_2	1
+#define _RTU_SLAVE_SCALING_C_2	0
+#define _RTU_SLAVE_SCALING_D_2  1
 
 #define _RTU_SLAVE_ID_3				0x01
 #define _RTU_SLAVE_FUNC_3			0x03
 #define _RTU_SLAVE_ADDR_3			0x02
 //#define _RTU_SLAVE_LENGHT_3			0x01
-#define _RTU_SLAVE_SCALING_A_3
-#define _RTU_SLAVE_SCALING_B_3
-#define _RTU_SLAVE_SCALING_C_3
+#define _RTU_SLAVE_SCALING_A_3	0
+#define _RTU_SLAVE_SCALING_B_3	1
+#define _RTU_SLAVE_SCALING_C_3	0
+#define _RTU_SLAVE_SCALING_D_3  1
 
 #define _RTU_SLAVE_ID_4				0x01
 #define _RTU_SLAVE_FUNC_4			0x03
 #define _RTU_SLAVE_ADDR_4			0x03
 //#define _RTU_SLAVE_LENGHT_4			0x01
-#define _RTU_SLAVE_SCALING_A_4
-#define _RTU_SLAVE_SCALING_B_4
-#define _RTU_SLAVE_SCALING_C_4
+#define _RTU_SLAVE_SCALING_A_4	0
+#define _RTU_SLAVE_SCALING_B_4	1
+#define _RTU_SLAVE_SCALING_C_4	0
+#define _RTU_SLAVE_SCALING_D_4  1
 
 #define _RTU_SLAVE_TEMPERATURE_SOURCE 		1
 #define _RTU_SLAVE_HUMIDITY_SOURCE			2

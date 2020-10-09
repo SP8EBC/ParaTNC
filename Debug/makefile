@@ -91,5 +91,6 @@ clean:
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents
+.SECONDARY:
 
 -include ../makefile.targets
