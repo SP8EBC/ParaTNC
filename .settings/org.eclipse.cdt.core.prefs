@@ -1,0 +1,16 @@
+doxygen/doxygen_new_line_after_brief=true
+doxygen/doxygen_use_brief_tag=false
+doxygen/doxygen_use_javadoc_tags=true
+doxygen/doxygen_use_pre_tag=false
+doxygen/doxygen_use_structural_commands=false
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.827603628/PATH/delimiter=\:
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.827603628/PATH/operation=replace
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.827603628/PATH/value=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/usr/games\:/usr/local/games\:/snap/bin\:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin\:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/bin
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.827603628/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.827603628/appendContributed=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1905520139/PATH/delimiter=\:
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1905520139/PATH/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1905520139/PATH/value=${PATH}\:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1905520139/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1905520139/appendContributed=true

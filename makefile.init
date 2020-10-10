@@ -1,0 +1,3 @@
+
+PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/bin
+$(info PATH is set to: $(PATH))
