@@ -157,7 +157,7 @@ The KISS modem runs on default speed of 9600 bps. Telemetry is enabled by defaul
 trasmit channels values each 10 minutes and full channel descriptions each 70 minutes.
 
  
-9. TOOLCHAIN AND COMPILATION
+9. TOOLCHAIN
 To build the ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler,
 gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS and 20.04LTS 
 using toolchain in version 2018q-2. Please take note that You have to use 64-bit version of the operation system
@@ -171,17 +171,33 @@ Alternatively You can use this link: http://pogoda.cc/d/gcc-arm-none-eabi-7-2018
 After download the content of this archive has to be uncompressed into: /usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/
 so the structure should looks like this
 
-mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$ ls -la
-total 24
-drwxrwxr-x 6 mateusz mateusz 4096 paź 10 08:35 .
-drwxr-xr-x 7 root    root    4096 paź 10 18:06 ..
-drwxr-xr-x 6 mateusz mateusz 4096 cze 22  2018 arm-none-eabi
-drwxr-xr-x 2 mateusz mateusz 4096 cze 22  2018 bin
-drwxr-xr-x 3 mateusz mateusz 4096 cze 22  2018 lib
-drwxr-xr-x 4 mateusz mateusz 4096 cze 22  2018 share
-mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$ 
+	mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$ ls -la
+	total 24
+	drwxrwxr-x 6 mateusz mateusz 4096 paź 10 08:35 .
+	drwxr-xr-x 7 root    root    4096 paź 10 18:06 ..
+	drwxr-xr-x 6 mateusz mateusz 4096 cze 22  2018 arm-none-eabi
+	drwxr-xr-x 2 mateusz mateusz 4096 cze 22  2018 bin
+	drwxr-xr-x 3 mateusz mateusz 4096 cze 22  2018 lib
+	drwxr-xr-x 4 mateusz mateusz 4096 cze 22  2018 share
+	mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$ 
 
-Both a makefile and an Eclipse project are configured to look for toolchain in this directory.
+Both a makefile and an Eclipse project are configured to look for toolchain in this directory. In some cases to perform
+a debugging in Elipse You will have to install libncurses5 library which is required to start GDB. To check if
+this is a case try to start the debugger manually by issuing such command in the prompt
+
+ '/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gdb --version'
+
+If such result will be printed in the console, libncurses5 must be installed, prefferably using system package 
+manager like aptitude in Debian/Ubuntu
+
+ 'libraries: libncurses.so.5: cannot open shared object file: No such file or directory'
+
+To start debugging session in Eclipse you must create new 'GDB OpenOCD Debugging' configuration and set paths 
+to OpenOCD and GDB in 'Debugger' tab. OpenOCD usually sits in '/usr/bin/openocd', the path to GDB is shown in
+the paragraph before. Remember to set 'Config Options:' to tell the OpenOCD what JTAG adapter/debugger is used
+in Your setup. If You're using ST-Link/V2 paste '-f interface/stlink-v2.cfg -f target/stm32f1x_stlink.cfg' 
+
+10. DOWNLOADING THE SOURCE CODE AND COMPILING IT
 
 When everything is installed the reporistory can be cloned to local harddrive by using a command
  'git clone https://github.com/sp8ebc/ParaTNC'
@@ -207,7 +223,7 @@ application which doesn't works exactly as it should because of optimalization c
 
 	22:29:38 Build Finished (took 13s.231ms)
 
-10. LOADING THE HEX FILE USING SERIAL BOOTLOADER
+11. LOADING THE HEX FILE USING THE SERIAL BOOTLOADER
 If You don't have a JTAG programmer/debugger or You just not want to or can't use it for any reason, You can choose
 Internal Serial Bootloader provided by STMicroelectronics. It's code is stored in mask ROM within microcontroler
 and can be used anytime, and in scope of ParaTNC it practically cannot be disabled or locked. Please remember that
@@ -225,7 +241,7 @@ relay clicking and LEDs blinking for a short while. After the power supply is co
 you can disconnect the jumper and start the FlashLoader software to download the HEX file to micro. After process is done
 you should do a cold reset without jumper shorter. 
 
-11. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
+12. LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
 The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
 This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
 in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration
