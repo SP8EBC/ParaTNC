@@ -55,6 +55,9 @@ void wx_get_all_measurements(void) {
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
 	// modbus rtu
+	rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
+	rtu_get_humidity(&rte_wx_humidity_valid);
+	rtu_get_pressure(&rte_wx_pressure_valid);
 #endif
 
 #if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
@@ -249,9 +252,6 @@ void wx_pool_dht22(void) {
 			//rte_wx_dht_valid.qf = DHT22_QF_FULL;
 			rte_wx_humidity = rte_wx_dht.humidity;
 			dht22State = DHT22_STATE_DONE;
-#ifdef _DBG_TRACE
-			trace_printf("DHT22: temperature=%d,humi=%d\r\n", dht_valid.scaledTemperature, dht_valid.humidity);
-#endif
 			break;
 		case DHT22_STATE_TIMEOUT:
 			rte_wx_dht_valid.qf = DHT22_QF_UNAVALIABLE;
@@ -288,7 +288,7 @@ void wx_pool_anemometer(void) {
 	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 	#endif
 
-	#ifdef defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_TX20))
+	#if defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_TX20))
 	scaled_windspeed = tx20_get_scaled_windspeed();
 	rte_wx_winddirection_last = tx20_get_wind_direction();
 	#endif

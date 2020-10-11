@@ -197,9 +197,6 @@ uint8_t digi_process(struct AX25Msg *msg) {
 //			}
 
 			if (retval == DIGI_PACKET_DIGIPEATED) {
-#ifdef _DBG_TRACE
-				trace_printf("Digi:call_len=%d\r\n", call_len);
-#endif
 
 				// copying the content
 				digi_msg_len = msg->len+1;

@@ -344,10 +344,12 @@ int main(int argc, char* argv[]){
 
   main_target_wx_baudrate = _RTU_SLAVE_SPEED;
 
+  // initialize serial ports according to RS485 network configuration for Modbus-RTU
   srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
   srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, _RTU_SLAVE_STOP_BITS);
   srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
 
+  // enabling rtu master code
   main_modbus_rtu_master_enabled = 1;
 
   rtu_serial_start();
@@ -413,8 +415,11 @@ int main(int argc, char* argv[]){
   // initialize Watchdog output
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 
-  // initialize variables & arrays in rte_wx
+  // initializing variables & arrays in rte_wx
   rte_wx_init();
+
+  // initializing the digipeater configuration
+  digi_init();
 
 #ifdef _METEO
 
@@ -610,14 +615,14 @@ int main(int argc, char* argv[]){
 			}
 
 			main_ax25.dcd = false;
-#ifdef _DBG_TRACE
-			trace_printf("APRS-RF:RadioPacketFrom=%.6s-%d,FirstPathEl=%.6s-%d\r\n", ax25_rxed_frame.src.call, ax25_rxed_frame.src.ssid, ax25_rxed_frame.rpt_lst[0].call, ax25_rxed_frame.rpt_lst[0].ssid);
-#endif
-#ifdef _DIGI
-			digi_check_with_viscous(&ax25_rxed_frame);
+
+#ifndef _MUTE_OWN
+	#ifdef _DIGI
+			//digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
 			digi_process(&ax25_rxed_frame);
+	#endif
 #endif
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
@@ -721,14 +726,16 @@ int main(int argc, char* argv[]){
 
 		if (main_packet_tx_pool_timer < 10) {
 
+			#ifndef _MUTE_OWN
 			packet_tx_handler();
+			#endif
 
 			main_packet_tx_pool_timer = 60000;
 		}
 
 		if (main_one_second_pool_timer < 10) {
 
-			digi_pool_viscous();
+			//digi_pool_viscous();
 
 			#ifdef _ANEMOMETER_ANALOGUE
 			analog_anemometer_direction_handler();

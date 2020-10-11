@@ -218,12 +218,12 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in degrees C
-		*out = 	(
-				scaling_a * (float)raw_register_value * (float)raw_register_value +
-				scaling_b * (float)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
+		*out = 	(uint16_t)(
+							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+							scaling_b * (uint16_t)raw_register_value +
+							scaling_c
+							) /
+							scaling_d;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
@@ -291,12 +291,12 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in .1m/s incremenets
-		*out = 	10 * (
-				scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-				scaling_b * (uint16_t)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
+		*out = 	(uint16_t) (10 * (
+							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+							scaling_b * (uint16_t)raw_register_value +
+							scaling_c
+							) /
+							scaling_d);
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
@@ -316,7 +316,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 
 	rtu_register_data_t* source = 0;
 
-	uint16_t raw_register_value = 0;
+	volatile uint16_t raw_register_value = 0;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -364,12 +364,12 @@ int32_t rtu_get_humidity(int8_t* out) {
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in percents
-		*out = 	10 * (
-				scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-				scaling_b * (uint16_t)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
+		*out = 	(int8_t) (
+							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+							scaling_b * (uint16_t)raw_register_value +
+							scaling_c
+							/
+							scaling_d);
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
