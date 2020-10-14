@@ -30,6 +30,7 @@ int32_t rtu_get_temperature(float* out) {
 	// the timestamp of last update of the register value
 	uint32_t last_update_timestam = 0;
 
+#ifdef _MODBUS_RTU
 #ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 	#if (_RTU_SLAVE_TEMPERATURE_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -64,6 +65,7 @@ int32_t rtu_get_temperature(float* out) {
 	#endif
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -104,6 +106,7 @@ int32_t rtu_get_pressure(float* out) {
 	// the timestamp of last update of the register value
 	uint32_t last_update_timestam = 0;
 
+#ifdef _MODBUS_RTU
 #ifdef _RTU_SLAVE_PRESSURE_SOURCE
 	#if (_RTU_SLAVE_PRESSURE_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -138,6 +141,7 @@ int32_t rtu_get_pressure(float* out) {
 	#endif
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -177,6 +181,7 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 	// the timestamp of last update of the register value
 	uint32_t last_update_timestam = 0;
 
+#ifdef _MODBUS_RTU
 #ifdef _RTU_SLAVE_WIND_DIRECTION_SORUCE
 	#if (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -211,6 +216,7 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 	#endif
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -250,6 +256,7 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 	// the timestamp of last update of the register value
 	uint32_t last_update_timestam = 0;
 
+#ifdef _MODBUS_RTU
 #ifdef _RTU_SLAVE_WIND_SPEED_SOURCE
 	#if (_RTU_SLAVE_WIND_SPEED_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -284,6 +291,7 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 	#endif
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -323,6 +331,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 	// the timestamp of last update of the register value
 	uint32_t last_update_timestam = 0;
 
+#ifdef _MODBUS_RTU
 #ifdef _RTU_SLAVE_HUMIDITY_SOURCE
 	#if (_RTU_SLAVE_HUMIDITY_SOURCE == 1)
 		source = &RTU_GETTERS_F1_NAME;
@@ -357,6 +366,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 	#endif
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
