@@ -182,6 +182,15 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 	switch (rtu_pool) {
 		case RTU_POOL_IDLE: {
 
+			srl_init(	serial_context,
+						serial_context->port,
+						serial_context->srl_rx_buf_pointer,
+						serial_context->srl_rx_buf_ln,
+						serial_context->srl_tx_buf_pointer,
+						serial_context->srl_tx_buf_ln,
+						serial_context->port_baurate,
+						serial_context->port_stopbits);
+
 			// Enabling the timeout for Modbus-RTU.
 			// This timeout starts after first received byte and triggers if
 			// the slave will hang up and stop the transmission before the end of the frame
@@ -320,6 +329,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				// get current time to start the inter-frame delay
 				rtu_time_of_last_receive = main_get_master_time();
 
+				srl_close(serial_context);
+
 			}
 
 			// in case of any error during data reception or the serial driver have fallen into unknown & unexpected
@@ -328,7 +339,10 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				rte_wx_last_modbus_rx_error_timestamp = main_get_master_time();
 
 				rtu_pool = RTU_POOL_RECEIVE_ERROR;
+
+				srl_close(serial_context);
 			}
+
 			break;
 		}
 		case RTU_POOL_WAIT_AFTER_RECEIVE: {

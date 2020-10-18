@@ -50,9 +50,15 @@ void srl_init(
 	ctx->srl_tx_buf_ln = rx_buffer_size;
 	#endif
 
+	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+	memset(ctx->srl_tx_buf_pointer, 0x00, ctx->srl_tx_buf_ln);
+
 	ctx->port = port;
-	ctx->te_port = 0;
-	ctx->te_pin = 0;
+	ctx->port_baurate = baudrate;
+	ctx->port_stopbits = stop_bits;
+
+	//ctx->te_port = 0;
+	//ctx->te_pin = 0;
 
 	ctx->srl_tx_start_time = 0xFFFFFFFFu;
 
@@ -93,6 +99,23 @@ void srl_init(
 
 	ctx->srl_rx_timeout_calc_started = 0;
 	ctx->srl_rx_idle_counter = 0;
+
+	ctx->srl_rx_start_time = 0;
+	ctx->srl_rx_waiting_start_time = 0;
+
+	ctx->srl_rx_timeout_enable = 0;
+	ctx->srl_rx_timeout_waiting_enable = 0;
+}
+
+void srl_close(srl_context_t *ctx) {
+	USART_DeInit(ctx->port);
+
+	if (ctx->te_port != NULL && ctx->te_pin != 0) {
+		GPIO_ResetBits(ctx->te_port, ctx->te_pin);
+	}
+
+	ctx->srl_rx_state = SRL_RX_NOT_CONFIG;
+	ctx->srl_tx_state = SRL_TX_NOT_CONFIG;
 }
 
 // this function shall be called in 10ms periods by some timer to check the timeout
@@ -446,6 +469,7 @@ uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_ca
 			ctx->srl_rx_state = SRL_RXING;
 			ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
 			ctx->port->CR1 |= USART_CR1_RXNEIE;
+			ctx->port->CR1 |= USART_CR1_IDLEIE;
 
 			ctx->srl_rx_waiting_start_time = master_time;
 			ctx->srl_rx_start_time = master_time;
@@ -467,7 +491,9 @@ void srl_irq_handler(srl_context_t *ctx) {
 	// local variable to store
 	uint8_t value = 0;
 
-	if ((ctx->port->SR & USART_SR_ORE) == USART_SR_IDLE) {
+	if ((ctx->port->SR & USART_SR_IDLE) == USART_SR_IDLE) {
+		ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
+
 		ctx->srl_rx_idle_counter++;
 	}
 
@@ -572,6 +598,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 					// disabling UART receiver and its interrupt
 					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
 					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
+					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_IDLEIE);
 				}
 
 				break;
