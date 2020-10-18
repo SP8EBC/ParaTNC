@@ -14,8 +14,8 @@
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
 
-#define SRL_TX_DELAY_IN_MS	10
-#define SRL_DEFAULT_RX_TIMEOUT_IN_MS 400
+#define SRL_TX_DELAY_IN_MS	30
+#define SRL_DEFAULT_RX_TIMEOUT_IN_MS 1200
 
 #define SRL_TIMEOUT_ENABLE	1
 #define SRL_TIMEOUT_DISABLE 0
@@ -44,6 +44,13 @@ typedef enum srl_timeout_mode {
 	SRL_TIMEOUT_INSTANT,
 	SRL_TIMEOUT_TRIGGERED
 }srl_timeout_mode_t;
+
+typedef enum srl_error_reason {
+	SRL_ERR_NONE,
+	SRL_ERR_TIMEOUT_WAITING,
+	SRL_ERR_TIMEOUT_RECEIVING,
+	SRL_ERR_OVERFLOW
+} srl_error_reason_t;
 
 typedef struct srl_context_t {
 	USART_TypeDef *port;
@@ -92,6 +99,9 @@ typedef struct srl_context_t {
 
 	srl_rx_state_t srl_rx_state;
 	srl_tx_state_t srl_tx_state;
+
+	srl_error_reason_t srl_rx_error_reason;
+	uint8_t srl_rx_idle_counter;
 
 	uint8_t srl_enable_echo;
 

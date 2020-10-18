@@ -89,7 +89,10 @@ void srl_init(
 	ctx->srl_rx_state = SRL_RX_IDLE;
 	ctx->srl_tx_state = SRL_TX_IDLE;
 
+	ctx->srl_rx_error_reason = SRL_ERR_NONE;
+
 	ctx->srl_rx_timeout_calc_started = 0;
+	ctx->srl_rx_idle_counter = 0;
 }
 
 // this function shall be called in 10ms periods by some timer to check the timeout
@@ -115,6 +118,7 @@ void srl_keep_timeout(srl_context_t *ctx) {
 
 				ctx->srl_rx_state = SRL_RX_ERROR;
 
+				ctx->srl_rx_error_reason = SRL_ERR_TIMEOUT_RECEIVING;
 			}
 		}
 
@@ -129,6 +133,8 @@ void srl_keep_timeout(srl_context_t *ctx) {
 			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
 
 			ctx->srl_rx_state = SRL_RX_ERROR;
+
+			ctx->srl_rx_error_reason = SRL_ERR_TIMEOUT_WAITING;
 		}
 	}
 }
@@ -215,9 +221,6 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 
 	ctx->srl_tx_bytes_req = leng;
 
-	// the bytes counter needs to be set to 1 as the first byte is sent in this function
-	ctx->srl_tx_bytes_counter = 1;
-
 	// setting a pointer to transmit buffer to the internal buffer inside the driver
 	//ctx->srl_tx_buf_pointer = srl_usart1_tx_buffer;
 
@@ -226,9 +229,13 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 
 	// check if delay should be applied to transmission
 	if (ctx->srl_tx_start_time == 0xFFFFFFFFu) {
+		// 0xFFFFFFFF is a magic number which disables the pre-tx delay
 		ctx->port->CR1 |= USART_CR1_TE;
 		ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 		ctx->port->DR = ctx->srl_tx_buf_pointer[0];
+
+		// the bytes counter needs to be set to 1 as the first byte is sent in this function
+		ctx->srl_tx_bytes_counter = 1;
 
 		ctx->srl_tx_state = SRL_TXING;
 
@@ -284,6 +291,8 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 		return SRL_DATA_TOO_LONG;
 
 	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+
+	ctx->srl_rx_error_reason = SRL_ERR_NONE;
 
 	// checking if user want
 	if (start != 0x00) {
@@ -342,8 +351,6 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
 	if (ctx->srl_rx_state == SRL_RXING)
 		return SRL_BUSY;
-
-	//trace_printf("Serial:SrlReceiveData()\r\n");
 
 	if (num >= ctx->srl_rx_buf_ln)
 		return SRL_DATA_TOO_LONG;
@@ -440,6 +447,8 @@ uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_ca
 			ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
 			ctx->port->CR1 |= USART_CR1_RXNEIE;
 
+			ctx->srl_rx_waiting_start_time = master_time;
+			ctx->srl_rx_start_time = master_time;
 
 		}
 	}
@@ -457,6 +466,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 	// local variable to store
 	uint8_t value = 0;
+
+	if ((ctx->port->SR & USART_SR_ORE) == USART_SR_IDLE) {
+		ctx->srl_rx_idle_counter++;
+	}
 
 	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
 	if ((ctx->port->SR & USART_SR_ORE) == USART_SR_ORE) {
@@ -520,6 +533,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 						// if the target length is bigger than buffer size switch to error state
 						if (len_temp >= ctx->srl_rx_buf_ln) {
+							ctx->srl_rx_error_reason = SRL_ERR_OVERFLOW;
 							ctx->srl_rx_state = SRL_RX_ERROR;
 							stop_rxing = 1;
 						}
@@ -663,6 +677,8 @@ void srl_keep_tx_delay(srl_context_t *ctx) {
 					ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 					ctx->port->DR = ctx->srl_tx_buf_pointer[0];
 
+					ctx->srl_tx_bytes_counter = 1;
+
 					ctx->srl_tx_state = SRL_TXING;
 
 					ctx->port->CR1 |= USART_CR1_TXEIE;
@@ -688,8 +704,8 @@ void srl_switch_tx_delay(srl_context_t *ctx, uint8_t disable_enable) {
 
 /**
  * This function controls the timeout which is calculated for data reception (when the
- * state is set to SRL_RXING). The calculation starts after the first byte appears in
- * data register and protect against stalling in the middle of data transfer
+ * state is set to SRL_RXING). The time starts ticking after the first byte appears in
+ * data register, so this protect against stalling in the middle of data transfer
  */
 void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value) {
 	if (disable_enable == 1)
