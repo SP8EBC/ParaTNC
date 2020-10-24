@@ -5,6 +5,7 @@
  *      Author: mateusz
  */
 
+#include "modbus_rtu/rtu_configuration.h"
 #include "modbus_rtu/rtu_serial_io.h"
 #include "modbus_rtu/rtu_crc.h"
 #include "modbus_rtu/rtu_parser.h"
@@ -16,6 +17,7 @@
 
 #include "main.h"
 #include "rte_wx.h"
+#include "rte_main.h"
 
 #include "station_config.h"
 
@@ -38,6 +40,14 @@
 
 #ifndef _RTU_SLAVE_LENGHT_4
 	#define _RTU_SLAVE_LENGHT_4 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_5
+	#define _RTU_SLAVE_LENGHT_5 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_6
+	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
 typedef enum rtu_pool_state {
@@ -66,6 +76,10 @@ uint16_t rtu_serial_previous_crc = 0xFFFF;
  */
 uint8_t rtu_waiting_for_slave_addr = 0x1;
 
+/**
+ * This counts the consecutive serial I/O errors to trigger the modbur-rtu status frame
+ */
+uint8_t rtu_number_of_serial_io_errors = 0;
 
 
 /**
@@ -158,6 +172,24 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
 	rte_wx_modbus_rtu_f4.number_of_registers = _RTU_SLAVE_LENGHT_4;
 #endif
 
+#ifdef _RTU_SLAVE_ID_5
+	queue->function_id[4] =_RTU_SLAVE_FUNC_5;
+	queue->function_parameter[4] = &rte_wx_modbus_rtu_f5;
+
+	rte_wx_modbus_rtu_f5.slave_address = _RTU_SLAVE_ID_5;
+	rte_wx_modbus_rtu_f5.base_address = _RTU_SLAVE_ADDR_5;
+	rte_wx_modbus_rtu_f5.number_of_registers = _RTU_SLAVE_LENGHT_5;
+#endif
+
+#ifdef _RTU_SLAVE_ID_6
+	queue->function_id[5] =_RTU_SLAVE_FUNC_6;
+	queue->function_parameter[5] = &rte_wx_modbus_rtu_f6;
+
+	rte_wx_modbus_rtu_f6.slave_address = _RTU_SLAVE_ID_6;
+	rte_wx_modbus_rtu_f6.base_address = _RTU_SLAVE_ADDR_6;
+	rte_wx_modbus_rtu_f6.number_of_registers = _RTU_SLAVE_LENGHT_6;
+#endif
+
 #endif
 
 	return retval;
@@ -171,6 +203,15 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 	int32_t result = MODBUS_RET_UNINITIALIZED;
 
 	uint8_t output_data_lenght = 0;
+
+	// check how many serial I/O erros have been detected so far
+	if (rtu_number_of_serial_io_errors >= RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS) {
+		// set the status trigger
+		rte_main_trigger_modbus_status = 1;
+
+		// reset the counter
+		rtu_number_of_serial_io_errors = 0;
+	}
 
 	if (queue->it >= RTU_POOL_QUEUE_LENGHT) {
 		queue->it = 0;
@@ -360,6 +401,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			// occured switch to the next function in the queue
 			rtu_pool = RTU_POOL_IDLE;
 
+			rtu_number_of_serial_io_errors++;
+
 			// move to the next function queued
 			queue->it++;
 
@@ -384,6 +427,25 @@ int32_t rtu_serial_start(void) {
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 
 	rtu_pool = RTU_POOL_IDLE;
+
+	return retval;
+}
+
+int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint16_t* generated_string_ln) {
+
+	int32_t retval = MODBUS_RET_UNINITIALIZED;
+	int string_ln = 0;
+
+	memset(out, 0x00, out_buffer_ln);
+
+	string_ln = snprintf(out, out_buffer_ln, "MT %d, LRE %d, LR %d, LCF1 %d, LCF2 %d, LCF3 %d, LCF4 %d",
+												main_get_master_time(),
+												rte_wx_last_modbus_rx_error_timestamp,
+												rtu_time_of_last_receive,
+												queue->last_call_to_function[0],
+												queue->last_call_to_function[1],
+												queue->last_call_to_function[2],
+												queue->last_call_to_function[3]);
 
 	return retval;
 }

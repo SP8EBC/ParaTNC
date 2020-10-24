@@ -16,7 +16,7 @@
 extern uint32_t master_time;
 
 extern int32_t main_wx_sensors_pool_timer;
-extern int32_t main_packet_tx_pool_timer;
+extern int32_t main_one_minute_pool_timer;
 extern int32_t main_one_second_pool_timer;
 extern int32_t main_two_second_pool_timer;
 extern int32_t main_ten_second_pool_timer;
@@ -24,10 +24,12 @@ extern int32_t main_ten_second_pool_timer;
 extern AX25Ctx main_ax25;
 extern Afsk main_afsk;
 
+#define MAIN_OWN_APRS_MSG_LN 160
+
 extern AX25Call main_own_path[3];
 extern uint8_t main_own_path_ln;
 extern uint8_t main_own_aprs_msg_len;
-extern char main_own_aprs_msg[160];
+extern char main_own_aprs_msg[MAIN_OWN_APRS_MSG_LN];
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;
@@ -52,8 +54,8 @@ inline void main_wx_decremenet_counter(void) {
 }
 
 inline void main_packets_tx_decremenet_counter(void) {
-	if (main_packet_tx_pool_timer > 0)
-		main_packet_tx_pool_timer -= SYSTICK_TICKS_PERIOD;
+	if (main_one_minute_pool_timer > 0)
+		main_one_minute_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
 inline void main_one_second_pool_decremenet_counter(void) {

@@ -102,7 +102,7 @@ uint32_t master_time = 0;
 int32_t main_wx_sensors_pool_timer = 65500;
 
 // global variable used as a timer to trigger packet sending
-int32_t main_packet_tx_pool_timer = 60000;
+int32_t main_one_minute_pool_timer = 60000;
 
 // one second pool interval
 int32_t main_one_second_pool_timer = 1000;
@@ -721,16 +721,29 @@ int main(int argc, char* argv[]){
 				davis_trigger_rxcheck_packet();
 			}
 
+			if (rte_main_trigger_modbus_status == 1) {
+
+				rtu_serial_get_status_string(&rte_wx_rtu_pool_queue, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
+
+			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+
+			 	afsk_txStart(&main_afsk);
+
+				rte_main_trigger_modbus_status = 0;
+
+
+			}
+
 			main_wx_sensors_pool_timer = 65500;
 		}
 
-		if (main_packet_tx_pool_timer < 10) {
+		if (main_one_minute_pool_timer < 10) {
 
 			#ifndef _MUTE_OWN
 			packet_tx_handler();
 			#endif
 
-			main_packet_tx_pool_timer = 60000;
+			main_one_minute_pool_timer = 60000;
 		}
 
 		if (main_one_second_pool_timer < 10) {
