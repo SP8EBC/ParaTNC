@@ -299,19 +299,19 @@ void wx_pool_anemometer(void) {
 	rte_wx_max_windspeed = umb_get_windgusts();
 	#else
 
-	#ifdef _MODBUS_RTU
+	#if defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_FULL_WIND_DATA)
 	// get the value from modbus registers
 	modbus_retval = rtu_get_wind_speed(&scaled_windspeed);
 
 	// check if this value has been processed w/o errors
-	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+	if (modbus_retval == MODBUS_RET_OK) {
 		// if yes continue to further processing
 		modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last);
 
 	}
 
 	// the second IF to check if the return value was the same for wind direction
-	if (modbus_retval != MODBUS_RET_OK && modbus_retval != MODBUS_RET_DEGRADED) {
+	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
 		// if the value is not available (like modbus is not configured as a source
 		// for wind data) get the value from internal sensors..
 		#ifdef _INTERNAL_AS_BACKUP
@@ -319,8 +319,21 @@ void wx_pool_anemometer(void) {
 			scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 		#endif
 	}
+	#elif defined(_MODBUS_RTU) && defined(_RTU_SLAVE_FULL_WIND_DATA)
+	// get the value from modbus registers
+	modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection);
+
+	// check if this value has been processed w/o errors
+	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+		// if yes continue to further processing
+		modbus_retval = rtu_get_wind_gusts(&rte_wx_max_windspeed);
+		modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last);
+
+	}
 	#endif
 
+
+#ifndef _RTU_SLAVE_FULL_WIND_DATA
 	// check how many times before the pool function was called
 	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
 		// if it was called less time than a length of buffers, the average length
@@ -396,12 +409,17 @@ void wx_pool_anemometer(void) {
 	if (rte_wx_average_winddirection < 0)
 		rte_wx_average_winddirection += 360;
 
+#endif
+
 #if defined (_MODBUS_RTU)
 	if (modbus_retval == MODBUS_RET_OK) {
 		rte_wx_wind_qf = AN_WIND_QF_FULL;
 	}
 	else if (modbus_retval == MODBUS_RET_DEGRADED) {
 		rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+	}
+	else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
+		rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
 	}
 	else {
 		#ifdef _INTERNAL_AS_BACKUP

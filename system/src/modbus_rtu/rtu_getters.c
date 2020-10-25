@@ -86,20 +86,25 @@ int32_t rtu_get_temperature(float* out) {
 		// copy the raw value from modbus register data
 		raw_register_value = source->registers_values[0];
 
-		// rescale the raw value to target value in degrees C
-		*out = 	(
-				scaling_a * (float)raw_register_value * (float)raw_register_value +
-				scaling_b * (float)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
-
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
-			retval = MODBUS_RET_DEGRADED;
+			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			retval = MODBUS_RET_OK;
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in degrees C
+			*out = 	(
+					scaling_a * (float)raw_register_value * (float)raw_register_value +
+					scaling_b * (float)raw_register_value +
+					scaling_c
+					) /
+					scaling_d;
 		}
 
 	}
@@ -176,20 +181,25 @@ int32_t rtu_get_pressure(float* out) {
 		// copy the raw value from modbus register data
 		raw_register_value = source->registers_values[0];
 
-		// rescale the raw value to target value in degrees C
-		*out = 	(
-				scaling_a * (float)raw_register_value * (float)raw_register_value +
-				scaling_b * (float)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
-
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
-			retval = MODBUS_RET_DEGRADED;
+			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			retval = MODBUS_RET_OK;
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in degrees C
+			*out = 	(
+					scaling_a * (float)raw_register_value * (float)raw_register_value +
+					scaling_b * (float)raw_register_value +
+					scaling_c
+					) /
+					scaling_d;
 		}
 	}
 
@@ -265,20 +275,25 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 		// copy the raw value from modbus register data
 		raw_register_value = source->registers_values[0];
 
-		// rescale the raw value to target value in degrees C
-		*out = 	(uint16_t)(
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							) /
-							scaling_d;
-
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
-			retval = MODBUS_RET_DEGRADED;
+			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			retval = MODBUS_RET_OK;
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in degrees C
+			*out = 	(uint16_t)(
+								scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+								scaling_b * (uint16_t)raw_register_value +
+								scaling_c
+								) /
+								scaling_d;
 		}
 	}
 
@@ -354,20 +369,118 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 		// copy the raw value from modbus register data
 		raw_register_value = source->registers_values[0];
 
-		// rescale the raw value to target value in .1m/s incremenets
-		*out = 	(uint16_t) (10 * (
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							) /
-							scaling_d);
+		// check when the value has been updated
+		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
+			retval = MODBUS_RET_NOT_AVALIABLE;
+		}
+		else {
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in .1m/s incremenets
+			*out = 	(uint16_t) (10 * (
+								scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+								scaling_b * (uint16_t)raw_register_value +
+								scaling_c
+								) /
+								scaling_d);
+		}
+	}
+
+	return retval;
+}
+
+int32_t rtu_get_wind_gusts(uint16_t* out) {
+	int32_t retval = MODBUS_RET_UNINITIALIZED;
+
+	rtu_register_data_t* source = 0;
+
+	uint16_t raw_register_value = 0;
+
+	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+
+	// the timestamp of last update of the register value
+	uint32_t last_update_timestam = 0;
+
+#ifdef _MODBUS_RTU
+#ifdef _RTU_SLAVE_WIND_GUSTS_SOURCE
+	#if (_RTU_SLAVE_WIND_GUSTS_SOURCE == 1)
+		source = &RTU_GETTERS_F1_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_1;
+		scaling_b = _RTU_SLAVE_SCALING_B_1;
+		scaling_c = _RTU_SLAVE_SCALING_C_1;
+		scaling_d = _RTU_SLAVE_SCALING_D_1;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[0];
+	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 2)
+		source = &RTU_GETTERS_F2_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_2;
+		scaling_b = _RTU_SLAVE_SCALING_B_2;
+		scaling_c = _RTU_SLAVE_SCALING_C_2;
+		scaling_d = _RTU_SLAVE_SCALING_D_2;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[1];
+	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 3)
+		source = &RTU_GETTERS_F3_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_3;
+		scaling_b = _RTU_SLAVE_SCALING_B_3;
+		scaling_c = _RTU_SLAVE_SCALING_C_3;
+		scaling_d = _RTU_SLAVE_SCALING_D_3;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[2];
+	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 4)
+		source = &RTU_GETTERS_F4_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_4;
+		scaling_b = _RTU_SLAVE_SCALING_B_4;
+		scaling_c = _RTU_SLAVE_SCALING_C_4;
+		scaling_d = _RTU_SLAVE_SCALING_D_4;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[3];
+	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 5)
+		source = &RTU_GETTERS_F5_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_5;
+		scaling_b = _RTU_SLAVE_SCALING_B_5;
+		scaling_c = _RTU_SLAVE_SCALING_C_5;
+		scaling_d = _RTU_SLAVE_SCALING_D_5;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[4];
+	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 6)
+		source = &RTU_GETTERS_F6_NAME;
+		scaling_a = _RTU_SLAVE_SCALING_A_6;
+		scaling_b = _RTU_SLAVE_SCALING_B_6;
+		scaling_c = _RTU_SLAVE_SCALING_C_6;
+		scaling_d = _RTU_SLAVE_SCALING_D_6;
+		last_update_timestam = rte_wx_rtu_pool_queue.last_call_to_function[5];
+	#else
+		#error "Wrong Modbus Configuration"
+	#endif
+#else
+	retval = MODBUS_RET_NOT_AVALIABLE;
+#endif
+#endif
+
+	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+		// copy the raw value from modbus register data
+		raw_register_value = source->registers_values[0];
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
-			retval = MODBUS_RET_DEGRADED;
+			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			retval = MODBUS_RET_OK;
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in .1m/s incremenets
+			*out = 	(uint16_t) (10 * (
+								scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+								scaling_b * (uint16_t)raw_register_value +
+								scaling_c
+								) /
+								scaling_d);
 		}
 	}
 
@@ -429,20 +542,25 @@ int32_t rtu_get_humidity(int8_t* out) {
 		// copy the raw value from modbus register data
 		raw_register_value = source->registers_values[0];
 
-		// rescale the raw value to target value in percents
-		*out = 	(int8_t) (
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							/
-							scaling_d);
-
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE) {
-			retval = MODBUS_RET_DEGRADED;
+			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			retval = MODBUS_RET_OK;
+			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+				retval = MODBUS_RET_DEGRADED;
+			}
+			else {
+				retval = MODBUS_RET_OK;
+			}
+
+			// rescale the raw value to target value in percents
+			*out = 	(int8_t) (
+								scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+								scaling_b * (uint16_t)raw_register_value +
+								scaling_c
+								/
+								scaling_d);
 		}
 	}
 

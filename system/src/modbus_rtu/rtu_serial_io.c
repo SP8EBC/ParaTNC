@@ -216,7 +216,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 	if (queue->it >= RTU_POOL_QUEUE_LENGHT) {
 		queue->it = 0;
 
-		// all queued modbus function has been queued
+		// all queued modbus functions have been serviced
 		rtu_pool = RTU_POOL_STOP;
 	}
 
