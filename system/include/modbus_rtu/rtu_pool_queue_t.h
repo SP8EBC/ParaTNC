@@ -24,8 +24,9 @@ typedef struct __attribute__((packed)) rtu_pool_queue {
 
 	void* function_parameter[RTU_POOL_QUEUE_LENGHT];
 
-	uint32_t last_call_to_function[RTU_POOL_QUEUE_LENGHT];
+	uint32_t last_successfull_call_to_function[RTU_POOL_QUEUE_LENGHT];
 
+	uint16_t number_of_errors[RTU_POOL_QUEUE_LENGHT];
 
 } rtu_pool_queue_t;
 
