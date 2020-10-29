@@ -61,11 +61,9 @@ void digi_init(void) {
 }
 
 uint8_t digi_process(struct AX25Msg *msg) {
-#ifdef _DIGI
-
-
-
 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
+
+#ifdef _DIGI
 
 	// check if the received message is not too long for the transmit buffers
 	if (msg->len >= (CONFIG_AX25_FRAME_BUF_LEN - sizeof(AX25Call) * 7) ) {

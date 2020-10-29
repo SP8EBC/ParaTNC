@@ -80,7 +80,6 @@ int32_t rtu_get_temperature(float* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -108,6 +107,7 @@ int32_t rtu_get_temperature(float* out) {
 		}
 
 	}
+#endif
 
 	return retval;
 }
@@ -175,7 +175,6 @@ int32_t rtu_get_pressure(float* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -202,6 +201,7 @@ int32_t rtu_get_pressure(float* out) {
 					scaling_d;
 		}
 	}
+#endif
 
 	return retval;
 }
@@ -269,7 +269,6 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -296,6 +295,7 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 								scaling_d;
 		}
 	}
+#endif
 
 	return retval;
 }
@@ -363,7 +363,6 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -390,6 +389,7 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 								scaling_d);
 		}
 	}
+#endif
 
 	return retval;
 }
@@ -456,7 +456,6 @@ int32_t rtu_get_wind_gusts(uint16_t* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -483,6 +482,7 @@ int32_t rtu_get_wind_gusts(uint16_t* out) {
 								scaling_d);
 		}
 	}
+#endif
 
 	return retval;
 }
@@ -536,7 +536,6 @@ int32_t rtu_get_humidity(int8_t* out) {
 #else
 	retval = MODBUS_RET_NOT_AVALIABLE;
 #endif
-#endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
@@ -563,6 +562,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 								scaling_d);
 		}
 	}
+#endif
 
 	return retval;
 }

@@ -451,6 +451,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_
 	int string_ln = 0;
 
 	memset(out, 0x00, out_buffer_ln);
+#ifdef _MODBUS_RTU
 
 	string_ln = snprintf(out, out_buffer_ln, "MT %d, LRET %d, LSRT %d, NSE %d, NOE1 %d, NOE2 %d, NOE3 %d, NOE4 %d",
 												main_get_master_time(),
@@ -461,7 +462,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_
 												queue->number_of_errors[1],
 												queue->number_of_errors[2],
 												queue->number_of_errors[3]);
-
+#endif
 	return retval;
 }
 

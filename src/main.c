@@ -6,6 +6,7 @@
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_iwdg.h>
 #include <stm32f10x.h>
+#include "drivers/gpio_conf.h"
 
 #include "main.h"
 #include "packet_tx_handler.h"
@@ -41,7 +42,6 @@
 #include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
-#include "drivers/gpio_conf.h"
 
 #include "../system/include/modbus_rtu/rtu_serial_io.h"
 
@@ -533,8 +533,10 @@ int main(int argc, char* argv[]){
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, message_callback);
 
+ #ifdef _METEO
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
   wx_get_all_measurements();
+#endif
 
 #if defined _VICTRON && !defined _UMB_MASTER
   // initializing protocol parser
@@ -601,7 +603,7 @@ int main(int argc, char* argv[]){
 
 #ifndef _METEO
 	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
-	  			SendOwnBeacon();
+	  			beacon_send_own();
 #else
 
 	  			//SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
@@ -725,8 +727,9 @@ int main(int argc, char* argv[]){
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
 			}
-
+#ifdef _METEO
 			wx_get_all_measurements();
+#endif
 
 			#if defined(_UMB_MASTER)
 			umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
@@ -737,9 +740,9 @@ int main(int argc, char* argv[]){
 			}
 
 			if (rte_main_trigger_modbus_status == 1) {
-
+#ifdef _MODBUS_RTU
 				rtu_serial_get_status_string(&rte_wx_rtu_pool_queue, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
-
+#endif
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 
 			 	afsk_txStart(&main_afsk);
