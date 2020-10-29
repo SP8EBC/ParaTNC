@@ -26,7 +26,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue);
 int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context);
 int32_t rtu_serial_start(void);
 
-int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint16_t* generated_string_ln);
+int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln);
 
 
 #endif /* INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_ */

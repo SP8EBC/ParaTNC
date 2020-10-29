@@ -27,6 +27,7 @@ extern uint8_t led_blinking_led2;
 extern uint8_t led_blinking_led1;
 
 void led_config(void);
+void led_init(void);
 void led_service_blink(void);
 
 inline void led_control_led1_upper(bool _in) {

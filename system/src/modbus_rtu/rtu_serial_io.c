@@ -22,6 +22,7 @@
 #include "station_config.h"
 
 #include <string.h>
+#include <stdio.h>
 
 #define INTERFRAME_SP	20
 
@@ -240,6 +241,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			// the pointer to serial context
 			srl_switch_timeout(serial_context, 1, 0);
 
+			srl_switch_tx_delay(serial_context, 1);
+
 			// check the function it at current queue position
 			if (queue->function_id[queue->it] == 0x03) {
 				// read holding registers
@@ -271,6 +274,9 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				// any other unsupported or wrong function id. It will also stop at the last element
 				// on the last element of the queue
 				rtu_pool = RTU_POOL_STOP;
+
+				// rewind the iterator back to the begining
+				queue->it = 0;
 
 				retval = MODBUS_RET_WRONG_FUNCTION;
 			}
@@ -439,7 +445,7 @@ int32_t rtu_serial_start(void) {
 	return retval;
 }
 
-int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint16_t* generated_string_ln) {
+int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 	int string_ln = 0;

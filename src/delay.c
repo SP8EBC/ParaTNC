@@ -23,6 +23,19 @@ void delay_fixed(uint16_t delay_in_msecs) {
 
 }
 
+uint32_t delay_fixed_with_count(uint16_t delay_in_msecs) {
+
+	uint32_t ret = 0;
+
+	delay_cnt = delay_in_msecs;
+
+	while(delay_cnt > 0) {
+		ret++;
+	}
+
+	return ret;
+}
+
 void delay_random(void) {
 
 	uint16_t sample = main_get_adc_sample();

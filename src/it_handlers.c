@@ -49,6 +49,8 @@ int adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
 short int AdcValue;
 
+uint8_t it_handlers_cpu_load_pool = 0;
+
 // this function will set all iterrupt priorities except systick
 void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM2_IRQn, 1);				// one-wire delay
@@ -70,6 +72,11 @@ void SysTick_Handler(void) {
 
 	// systick interrupt is generated every 10ms
 	master_time += SYSTICK_TICKS_PERIOD;
+
+	if ((it_handlers_cpu_load_pool++) > SYSTICK_TICKS_PER_SECONDS) {
+		main_service_cpu_load_ticks();
+		it_handlers_cpu_load_pool = 0;
+	}
 
 	// decrementing a timer to trigger meteo measuremenets
 	main_wx_decremenet_counter();

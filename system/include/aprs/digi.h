@@ -27,6 +27,7 @@ extern "C"
 {
 #endif
 
+void digi_init(void);
 uint8_t digi_process(struct AX25Msg *msg);
 uint8_t digi_check_with_viscous(struct AX25Msg *msg);
 uint8_t digi_pool_viscous(void);

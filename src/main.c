@@ -98,6 +98,15 @@
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
+// this global variable stores numbers of ticks of idling CPU
+uint32_t main_idle_cpu_ticks = 0;
+
+// current cpu idle ticks
+uint32_t main_current_cpu_idle_ticks = 0;
+
+// approx cpu load in percents
+int8_t main_cpu_load = 0;
+
 // global variable used as a timer to trigger meteo sensors mesurements
 int32_t main_wx_sensors_pool_timer = 65500;
 
@@ -241,6 +250,9 @@ int main(int argc, char* argv[]){
 
   // call periodic handle to wait for 1 second and then switch on voltage
   wx_pwr_periodic_handle();
+
+  // waiting for 1 second to count number of ticks when the CPU is idle
+  main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
@@ -575,6 +587,9 @@ int main(int argc, char* argv[]){
   // Infinite loop
   while (1)
     {
+	  // incrementing current cpu ticks
+	  main_current_cpu_idle_ticks++;
+
 	    if (rte_main_reboot_req == 1)
 	    	NVIC_SystemReset();
 
@@ -814,6 +829,19 @@ uint16_t main_get_adc_sample(void) {
 	return (uint16_t) ADC1->DR;
 }
 
+void main_service_cpu_load_ticks(void) {
+
+	uint32_t cpu_ticks_load = 0;
+
+	// the biggest this result will be the biggest load the CPU is handling
+	cpu_ticks_load = main_idle_cpu_ticks - main_current_cpu_idle_ticks;
+
+	// calculate the cpu load
+	main_cpu_load = (int8_t) ((cpu_ticks_load * 100) / main_idle_cpu_ticks);
+
+	// reset the tick counter back to zero;
+	main_current_cpu_idle_ticks = 0;
+}
 
 
 #pragma GCC diagnostic pop
