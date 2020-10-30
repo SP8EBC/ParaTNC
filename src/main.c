@@ -569,7 +569,7 @@ int main(int argc, char* argv[]){
   TimerConfig();
 
 #ifdef _BCN_ON_STARTUP
-	SendStartup();
+  beacon_send_own();
 #endif
 
 #if defined(_UMB_MASTER)
