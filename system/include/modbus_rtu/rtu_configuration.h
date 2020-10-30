@@ -15,7 +15,7 @@
 #define RTU_GETTERS_F5_NAME rte_wx_modbus_rtu_f5
 #define RTU_GETTERS_F6_NAME rte_wx_modbus_rtu_f6
 
-#define RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS	24
+#define RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS	25
 
 #define RTU_POOL_QUEUE_LENGHT 6
 

@@ -8,6 +8,7 @@
 #include "wx_handler.h"
 
 #include <rte_wx.h>
+#include <rte_rtu.h>
 #include <math.h>
 #include <stm32f10x.h>
 #include "drivers/_dht22.h"
@@ -44,6 +45,8 @@ void wx_get_all_measurements(void) {
 	int8_t j = 0;
 	int32_t i = 0;
 	int32_t return_value = 0;
+	int8_t not_avaliable = 0;
+	int8_t degraded = 0;
 	float pressure_average_sum = 0.0f;
 
 #if defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)
@@ -55,9 +58,9 @@ void wx_get_all_measurements(void) {
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
 	// modbus rtu
-	rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
-	rtu_get_humidity(&rte_wx_humidity_valid);
-	rtu_get_pressure(&rte_wx_pressure_valid);
+	return_value = rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
+	return_value = rtu_get_humidity(&rte_wx_humidity_valid);
+	return_value = rtu_get_pressure(&rte_wx_pressure_valid);
 #endif
 
 #if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))

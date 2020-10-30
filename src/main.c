@@ -34,6 +34,7 @@
 #include "rte_wx.h"
 #include "rte_pv.h"
 #include "rte_main.h"
+#include "rte_rtu.h"
 
 #ifdef _METEO
 #include <wx_handler.h>
@@ -237,6 +238,10 @@ int main(int argc, char* argv[]){
   RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
   PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
 
+  // initializing variables & arrays in rte_wx
+  rte_wx_init();
+  rte_rtu_init();
+
 #if defined _RANDOM_DELAY
   // configuring a default delay value
   delay_set(_DELAY_BASE, 1);
@@ -352,7 +357,7 @@ int main(int argc, char* argv[]){
 
 #elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
 
-  rtu_serial_init(&rte_wx_rtu_pool_queue);
+  rtu_serial_init(&rte_rtu_pool_queue);
 
   main_target_wx_baudrate = _RTU_SLAVE_SPEED;
 
@@ -426,9 +431,6 @@ int main(int argc, char* argv[]){
 
   // initialize Watchdog output
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
-
-  // initializing variables & arrays in rte_wx
-  rte_wx_init();
 
   // initializing the digipeater configuration
   digi_init();
@@ -716,7 +718,7 @@ int main(int argc, char* argv[]){
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
 #ifdef _MODBUS_RTU
-			rtu_serial_pool(&rte_wx_rtu_pool_queue, main_wx_srl_ctx_ptr);
+			rtu_serial_pool(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr);
 #endif
 		}
 
@@ -741,7 +743,7 @@ int main(int argc, char* argv[]){
 
 			if (rte_main_trigger_modbus_status == 1) {
 #ifdef _MODBUS_RTU
-				rtu_serial_get_status_string(&rte_wx_rtu_pool_queue, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
+				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 #endif
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 

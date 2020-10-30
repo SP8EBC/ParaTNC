@@ -18,6 +18,7 @@
 #include "main.h"
 #include "rte_wx.h"
 #include "rte_main.h"
+#include "rte_rtu.h"
 
 #include "station_config.h"
 
@@ -76,12 +77,6 @@ uint16_t rtu_serial_previous_crc = 0xFFFF;
  * Cleared by 'rtu_serial_callback' when first byte from range 0x1..0xF7 is received
  */
 uint8_t rtu_waiting_for_slave_addr = 0x1;
-
-/**
- * This counts the consecutive serial I/O errors to trigger the modbur-rtu status frame
- */
-uint8_t rtu_number_of_serial_io_errors = 0;
-
 
 /**
  * The callback for stream CRC calculation
@@ -205,13 +200,22 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 
 	uint8_t output_data_lenght = 0;
 
-	// check how many serial I/O erros have been detected so far
-	if (rtu_number_of_serial_io_errors >= RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS) {
-		// set the status trigger
-		rte_main_trigger_modbus_status = 1;
+	// if there were any serial I/O error
+	if (rte_rtu_number_of_serial_io_errors > 0) {
 
-		// reset the counter
-		rtu_number_of_serial_io_errors = 0;
+		// check how many serial I/O erros have been detected so far
+		if ((rte_rtu_number_of_serial_io_errors % RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS) == 0) {
+			// set the status trigger
+			rte_main_trigger_modbus_status = 1;
+
+			// increment the error counter artificially to protect sending status in the loop
+			rte_rtu_number_of_serial_io_errors++;
+
+			// stupid workaround. If there is a lot of I/O errors reset the controller
+			if (rte_rtu_number_of_serial_io_errors == (RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS * 4)) {
+				rte_main_reboot_req = 1;
+			}
+		}
 	}
 
 	if (queue->it >= RTU_POOL_QUEUE_LENGHT) {
@@ -348,7 +352,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 							serial_context->srl_rx_buf_pointer,
 							serial_context->srl_rx_bytes_counter,
 							((rtu_register_data_t*)queue->function_parameter[queue->it]),
-							&rte_wx_last_modbus_exception);
+							&rte_rtu_last_modbus_exception);
 				}
 				else {
 					retval = MODBUS_RET_WRONG_FUNCTION;
@@ -364,7 +368,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				}
 				else if (result == MODBUS_RET_GOT_EXCEPTION) {
 					// in case of an excetpion store the current timestamp
-					rte_wx_last_modbus_exception_timestamp = main_get_master_time();
+					rte_rtu_last_modbus_exception_timestamp = main_get_master_time();
 
 					// switch the state to inter-frame silence period
 					rtu_pool = RTU_POOL_WAIT_AFTER_RECEIVE;
@@ -377,6 +381,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				// get current time to start the inter-frame delay
 				rtu_time_of_last_succs_receive = main_get_master_time();
 
+				rte_rtu_number_of_serial_successfull_comm++;
+
 				// Close the serial port. This is a part of the stupid workaround of the problem
 				// with a serial port which leads to receiving a lot of idle frames of unknown origin
 				// and corrupting some part of data at the begining of some Modbus-RTU frames
@@ -387,7 +393,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			// in case of any error during data reception or the serial driver have fallen into unknown & unexpected
 			// state
 			else {
-				rte_wx_last_modbus_rx_error_timestamp = main_get_master_time();
+				rte_rtu_last_modbus_rx_error_timestamp = main_get_master_time();
 
 				rtu_pool = RTU_POOL_RECEIVE_ERROR;
 
@@ -412,7 +418,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			rtu_pool = RTU_POOL_IDLE;
 
 			// increasing the global counter of io errors
-			rtu_number_of_serial_io_errors++;
+			rte_rtu_number_of_serial_io_errors++;
 
 			// icrease the error counter for this queue element
 			queue->number_of_errors[queue->it] = queue->number_of_errors[queue->it] + 1;
@@ -453,15 +459,14 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_
 	memset(out, 0x00, out_buffer_ln);
 #ifdef _MODBUS_RTU
 
-	string_ln = snprintf(out, out_buffer_ln, "MT %d, LRET %d, LSRT %d, NSE %d, NOE1 %d, NOE2 %d, NOE3 %d, NOE4 %d",
+	string_ln = snprintf(out, out_buffer_ln, ">MT %X, LRET %X, LSRT %X, NSSC %X, NSE %X",
 												main_get_master_time(),
-												rte_wx_last_modbus_rx_error_timestamp,
+												rte_rtu_last_modbus_rx_error_timestamp,
 												rtu_time_of_last_succs_receive,
-												rtu_number_of_serial_io_errors,
-												queue->number_of_errors[0],
-												queue->number_of_errors[1],
-												queue->number_of_errors[2],
-												queue->number_of_errors[3]);
+												(int)rte_rtu_number_of_serial_successfull_comm,
+												(int)rte_rtu_number_of_serial_io_errors);
+
+	*generated_string_ln = (uint8_t) string_ln;
 #endif
 	return retval;
 }

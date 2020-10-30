@@ -15,6 +15,7 @@
 #include "modbus_rtu/rtu_configuration.h"
 
 #include "rte_wx.h"
+#include "rte_rtu.h"
 #include "main.h"
 
 int32_t rtu_get_temperature(float* out) {
@@ -38,42 +39,42 @@ int32_t rtu_get_temperature(float* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 5)
 		source = &RTU_GETTERS_F5_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_5;
 		scaling_b = _RTU_SLAVE_SCALING_B_5;
 		scaling_c = _RTU_SLAVE_SCALING_C_5;
 		scaling_d = _RTU_SLAVE_SCALING_D_5;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[4];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
 	#elif (_RTU_SLAVE_TEMPERATURE_SOURCE == 6)
 		source = &RTU_GETTERS_F6_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_6;
 		scaling_b = _RTU_SLAVE_SCALING_B_6;
 		scaling_c = _RTU_SLAVE_SCALING_C_6;
 		scaling_d = _RTU_SLAVE_SCALING_D_6;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[5];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -90,7 +91,7 @@ int32_t rtu_get_temperature(float* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
@@ -133,42 +134,42 @@ int32_t rtu_get_pressure(float* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 5)
 		source = &RTU_GETTERS_F5_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_5;
 		scaling_b = _RTU_SLAVE_SCALING_B_5;
 		scaling_c = _RTU_SLAVE_SCALING_C_5;
 		scaling_d = _RTU_SLAVE_SCALING_D_5;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[4];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
 	#elif (_RTU_SLAVE_PRESSURE_SOURCE == 6)
 		source = &RTU_GETTERS_F6_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_6;
 		scaling_b = _RTU_SLAVE_SCALING_B_6;
 		scaling_c = _RTU_SLAVE_SCALING_C_6;
 		scaling_d = _RTU_SLAVE_SCALING_D_6;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[5];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -185,7 +186,7 @@ int32_t rtu_get_pressure(float* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
@@ -227,42 +228,42 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 5)
 		source = &RTU_GETTERS_F5_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_5;
 		scaling_b = _RTU_SLAVE_SCALING_B_5;
 		scaling_c = _RTU_SLAVE_SCALING_C_5;
 		scaling_d = _RTU_SLAVE_SCALING_D_5;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[4];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
 	#elif (_RTU_SLAVE_WIND_DIRECTION_SORUCE == 6)
 		source = &RTU_GETTERS_F6_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_6;
 		scaling_b = _RTU_SLAVE_SCALING_B_6;
 		scaling_c = _RTU_SLAVE_SCALING_C_6;
 		scaling_d = _RTU_SLAVE_SCALING_D_6;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[5];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -279,7 +280,7 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
@@ -321,42 +322,42 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 5)
 		source = &RTU_GETTERS_F5_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_5;
 		scaling_b = _RTU_SLAVE_SCALING_B_5;
 		scaling_c = _RTU_SLAVE_SCALING_C_5;
 		scaling_d = _RTU_SLAVE_SCALING_D_5;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[4];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
 	#elif (_RTU_SLAVE_WIND_SPEED_SOURCE == 6)
 		source = &RTU_GETTERS_F6_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_6;
 		scaling_b = _RTU_SLAVE_SCALING_B_6;
 		scaling_c = _RTU_SLAVE_SCALING_C_6;
 		scaling_d = _RTU_SLAVE_SCALING_D_6;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[5];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -373,7 +374,7 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
@@ -414,42 +415,42 @@ int32_t rtu_get_wind_gusts(uint16_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 5)
 		source = &RTU_GETTERS_F5_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_5;
 		scaling_b = _RTU_SLAVE_SCALING_B_5;
 		scaling_c = _RTU_SLAVE_SCALING_C_5;
 		scaling_d = _RTU_SLAVE_SCALING_D_5;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[4];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
 	#elif (_RTU_SLAVE_WIND_GUSTS_SOURCE == 6)
 		source = &RTU_GETTERS_F6_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_6;
 		scaling_b = _RTU_SLAVE_SCALING_B_6;
 		scaling_c = _RTU_SLAVE_SCALING_C_6;
 		scaling_d = _RTU_SLAVE_SCALING_D_6;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[5];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -466,7 +467,7 @@ int32_t rtu_get_wind_gusts(uint16_t* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
@@ -508,28 +509,28 @@ int32_t rtu_get_humidity(int8_t* out) {
 		scaling_b = _RTU_SLAVE_SCALING_B_1;
 		scaling_c = _RTU_SLAVE_SCALING_C_1;
 		scaling_d = _RTU_SLAVE_SCALING_D_1;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[0];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 2)
 		source = &RTU_GETTERS_F2_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_2;
 		scaling_b = _RTU_SLAVE_SCALING_B_2;
 		scaling_c = _RTU_SLAVE_SCALING_C_2;
 		scaling_d = _RTU_SLAVE_SCALING_D_2;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[1];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 3)
 		source = &RTU_GETTERS_F3_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_3;
 		scaling_b = _RTU_SLAVE_SCALING_B_3;
 		scaling_c = _RTU_SLAVE_SCALING_C_3;
 		scaling_d = _RTU_SLAVE_SCALING_D_3;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[2];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
 	#elif (_RTU_SLAVE_HUMIDITY_SOURCE == 4)
 		source = &RTU_GETTERS_F4_NAME;
 		scaling_a = _RTU_SLAVE_SCALING_A_4;
 		scaling_b = _RTU_SLAVE_SCALING_B_4;
 		scaling_c = _RTU_SLAVE_SCALING_C_4;
 		scaling_d = _RTU_SLAVE_SCALING_D_4;
-		last_update_timestam = rte_wx_rtu_pool_queue.last_successfull_call_to_function[3];
+		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
 	#else
 		#error "Wrong Modbus Configuration"
 	#endif
@@ -546,7 +547,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {
-			if (main_get_master_time() - rte_wx_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
 				retval = MODBUS_RET_DEGRADED;
 			}
 			else {
