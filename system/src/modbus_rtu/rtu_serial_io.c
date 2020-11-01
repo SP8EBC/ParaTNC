@@ -61,12 +61,17 @@ typedef enum rtu_pool_state {
 	RTU_POOL_STOP
 } rtu_pool_state_t;
 
-rtu_pool_state_t rtu_pool = RTU_POOL_STOP;
+rtu_pool_state_t rtu_pool_state = RTU_POOL_STOP;
+
+/**
+ * Set to one to switch I/O operations to blocking mode
+ */
+uint8_t rtu_blocking_io = 0;
 
 /**
  * Timestamp of last received modbus RTU response with good CRC
  */
-uint32_t rtu_time_of_last_succs_receive = 0;
+uint32_t rtu_time_of_last_successfull_comm = 0;
 
 /**
  * CRC value after the last call to rtu_serial_callback
@@ -122,13 +127,14 @@ uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffe
 	return retval;
 }
 
-int32_t rtu_serial_init(rtu_pool_queue_t* queue) {
+int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 
 	// zeroing the content of the structure
 	memset(queue, 0x00, sizeof(rtu_pool_queue_t));
 
+	rtu_blocking_io = io_mode;
 
 #ifdef _MODBUS_RTU
 
@@ -222,10 +228,10 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 		queue->it = 0;
 
 		// all queued modbus functions have been serviced
-		rtu_pool = RTU_POOL_STOP;
+		rtu_pool_state = RTU_POOL_STOP;
 	}
 
-	switch (rtu_pool) {
+	switch (rtu_pool_state) {
 		case RTU_POOL_IDLE: {
 
 			// initialize the serial port.
@@ -277,7 +283,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			else {
 				// any other unsupported or wrong function id. It will also stop at the last element
 				// on the last element of the queue
-				rtu_pool = RTU_POOL_STOP;
+				rtu_pool_state = RTU_POOL_STOP;
 
 				// rewind the iterator back to the begining
 				queue->it = 0;
@@ -288,24 +294,47 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 
 			// if request has been generated correctly
 			if (result == MODBUS_RET_OK) {
-				// trigger the transmission itself
-				result = srl_start_tx(serial_context, output_data_lenght);
 
-				rtu_serial_previous_crc = 0xFFFF;
+				// check if block I/O mode shall be used for the communication
+				if (rtu_blocking_io) {
+					// call the function which will process the same stuff than
+					// RTU_POOL_IDLE (from transmitting), RTU_POOL_TRANSMITTING
+					// and partially RTU_POOL_RECEIVING
+					result = rtu_serial_blocking_io(serial_context, output_data_lenght);
 
-				rtu_waiting_for_slave_addr = 1;
-
-				// if serial transmission has been starter
-				if (result == SRL_OK) {
-					// proceed to the next state (transmitting)
-					rtu_pool = RTU_POOL_TRANSMITTING;
-
-					retval = MODBUS_RET_OK;
+					if (result == MODBUS_RET_OK) {
+						// if transmission and reception was successful switch to the
+						// receiving state. The 'serial_context->srl_rx_state' will be
+						// alredy set to 'SRL_RX_DONE'
+						rtu_pool_state = RTU_POOL_RECEIVING;
+					}
+					else {
+						rtu_pool_state = RTU_POOL_RECEIVE_ERROR;
+					}
 				}
 				else {
-					// if not do nothing and try in next pooler call
-					;
+					// trigger the transmission itself
+					result = srl_start_tx(serial_context, output_data_lenght);
+
+					// reset the CRC value to default
+					rtu_serial_previous_crc = 0xFFFF;
+
+					rtu_waiting_for_slave_addr = 1;
+
+					// if serial transmission has been starter
+					if (result == SRL_OK) {
+						// proceed to the next state (transmitting)
+						rtu_pool_state = RTU_POOL_TRANSMITTING;
+
+						retval = MODBUS_RET_OK;
+					}
+					else {
+						// if not do nothing and try in next pooler call
+						;
+					}
 				}
+
+
 			}
 			else {
 				retval = MODBUS_RET_REQUEST_GEN_ERR;
@@ -330,7 +359,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 				srl_switch_timeout_for_waiting(serial_context, 1);
 
 				// switch the state
-				rtu_pool = RTU_POOL_RECEIVING;
+				rtu_pool_state = RTU_POOL_RECEIVING;
 
 			}
 
@@ -364,24 +393,24 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 					queue->last_successfull_call_to_function[queue->it] = main_get_master_time();
 
 					// switch the state to inter-frame silence period
-					rtu_pool = RTU_POOL_WAIT_AFTER_RECEIVE;
+					rtu_pool_state = RTU_POOL_WAIT_AFTER_RECEIVE;
 				}
 				else if (result == MODBUS_RET_GOT_EXCEPTION) {
 					// in case of an excetpion store the current timestamp
 					rte_rtu_last_modbus_exception_timestamp = main_get_master_time();
 
 					// switch the state to inter-frame silence period
-					rtu_pool = RTU_POOL_WAIT_AFTER_RECEIVE;
+					rtu_pool_state = RTU_POOL_WAIT_AFTER_RECEIVE;
 				}
 				else {
 					// Receive error state will switch to the next function
-					rtu_pool = RTU_POOL_RECEIVE_ERROR;
+					rtu_pool_state = RTU_POOL_RECEIVE_ERROR;
 				}
 
 				// get current time to start the inter-frame delay
-				rtu_time_of_last_succs_receive = main_get_master_time();
+				rtu_time_of_last_successfull_comm = main_get_master_time();
 
-				rte_rtu_number_of_serial_successfull_comm++;
+				rte_rtu_number_of_successfull_serial_comm++;
 
 				// Close the serial port. This is a part of the stupid workaround of the problem
 				// with a serial port which leads to receiving a lot of idle frames of unknown origin
@@ -395,7 +424,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			else {
 				rte_rtu_last_modbus_rx_error_timestamp = main_get_master_time();
 
-				rtu_pool = RTU_POOL_RECEIVE_ERROR;
+				rtu_pool_state = RTU_POOL_RECEIVE_ERROR;
 
 				srl_close(serial_context);
 			}
@@ -405,8 +434,8 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 		case RTU_POOL_WAIT_AFTER_RECEIVE: {
 
 			// check if required interframe silence period elapsed
-			if (main_get_master_time() - rtu_time_of_last_succs_receive > INTERFRAME_SP) {
-				rtu_pool = RTU_POOL_IDLE;
+			if (main_get_master_time() - rtu_time_of_last_successfull_comm > INTERFRAME_SP) {
+				rtu_pool_state = RTU_POOL_IDLE;
 
 				queue->it++;
 			}
@@ -415,7 +444,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 		case RTU_POOL_RECEIVE_ERROR: {
 			// if the response from the slave was corrupted or any other serial I/O error
 			// occured switch to the next function in the queue
-			rtu_pool = RTU_POOL_IDLE;
+			rtu_pool_state = RTU_POOL_IDLE;
 
 			// increasing the global counter of io errors
 			rte_rtu_number_of_serial_io_errors++;
@@ -434,7 +463,7 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 			break;
 		}
 		default: {
-			rtu_pool = RTU_POOL_STOP;
+			rtu_pool_state = RTU_POOL_STOP;
 			break;
 		}
 	}
@@ -442,16 +471,61 @@ int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context) 
 	return retval;
 }
 
-int32_t rtu_serial_start(void) {
+int32_t rtu_serial_blocking_io(srl_context_t* serial_context, uint8_t query_ln) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 
-	rtu_pool = RTU_POOL_IDLE;
+	uint8_t serial_result = SRL_UNINITIALIZED;
+
+	// reset the CRC value to default
+	rtu_serial_previous_crc = 0xFFFF;
+
+	rtu_waiting_for_slave_addr = 1;
+
+	// sending data
+	serial_result = srl_start_tx(serial_context, query_ln);
+
+	// if tx has been triggered successfully
+	if (serial_result == SRL_OK) {
+
+		// wait for transmission to complete
+		srl_wait_for_tx_completion(serial_context);
+
+		// trigger reception
+		serial_result = srl_receive_data_with_callback(serial_context, rtu_serial_callback);
+
+		if (serial_result == SRL_OK) {
+
+			// enable the timeout in case the RTU slave won't respond
+			// at all or there is no slaves connected to RS485 bus
+			srl_switch_timeout_for_waiting(serial_context, 1);
+
+			// wait for the slave response
+			srl_wait_for_rx_completion_or_timeout(serial_context, &serial_result);
+
+			if (serial_result == SRL_OK) {
+				retval = MODBUS_RET_OK;
+			}
+			else {
+				retval = MODBUS_RET_GOT_EXCEPTION;
+			}
+		}
+
+	}
 
 	return retval;
 }
 
-int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
+int32_t rtu_serial_start(void) {
+
+	int32_t retval = MODBUS_RET_UNINITIALIZED;
+
+	rtu_pool_state = RTU_POOL_IDLE;
+
+	return retval;
+}
+
+int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl_ctx, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 	int string_ln = 0;
@@ -459,12 +533,15 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_
 	memset(out, 0x00, out_buffer_ln);
 #ifdef _MODBUS_RTU
 
-	string_ln = snprintf(out, out_buffer_ln, ">MT %X, LRET %X, LSRT %X, NSSC %X, NSE %X",
+	string_ln = snprintf(out, out_buffer_ln, ">MT %X, LRET %X, LSCT %X, NSSC %X, NSE %X, RXB %X, RXI %X, TXB %X",
 												main_get_master_time(),
 												rte_rtu_last_modbus_rx_error_timestamp,
-												rtu_time_of_last_succs_receive,
-												(int)rte_rtu_number_of_serial_successfull_comm,
-												(int)rte_rtu_number_of_serial_io_errors);
+												rtu_time_of_last_successfull_comm,
+												(int)rte_rtu_number_of_successfull_serial_comm,
+												(int)rte_rtu_number_of_serial_io_errors,
+												srl_ctx->total_rx_bytes,
+												srl_ctx->total_idle_counter,
+												srl_ctx->total_tx_bytes);
 
 	*generated_string_ln = (uint8_t) string_ln;
 #endif

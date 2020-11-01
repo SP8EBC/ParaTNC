@@ -22,11 +22,12 @@ inline void rtu_serial_reset_crc(void) {
 
 uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
-int32_t rtu_serial_init(rtu_pool_queue_t* queue);
+int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode);
 int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context);
+int32_t rtu_serial_blocking_io(srl_context_t* serial_context, uint8_t query_ln);
 int32_t rtu_serial_start(void);
 
-int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln);
+int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl_ctx, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln);
 
 
 #endif /* INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_ */

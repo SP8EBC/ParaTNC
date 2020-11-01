@@ -12,7 +12,7 @@
  */
 uint8_t rte_rtu_number_of_serial_io_errors = 0;
 
-uint16_t rte_rtu_number_of_serial_successfull_comm = 0;
+uint16_t rte_rtu_number_of_successfull_serial_comm = 0;
 
 #ifdef _MODBUS_RTU
 

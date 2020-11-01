@@ -20,7 +20,7 @@
 
 extern uint8_t rte_rtu_number_of_serial_io_errors;
 
-extern uint16_t rte_rtu_number_of_serial_successfull_comm;
+extern uint16_t rte_rtu_number_of_successfull_serial_comm;
 
 #ifdef _MODBUS_RTU
 

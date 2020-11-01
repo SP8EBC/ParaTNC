@@ -104,7 +104,7 @@ typedef struct srl_context_t {
 	srl_tx_state_t srl_tx_state;
 
 	srl_error_reason_t srl_rx_error_reason;
-	uint8_t srl_rx_idle_counter;
+	uint8_t total_idle_counter;
 
 	uint8_t srl_enable_echo;
 
@@ -116,6 +116,11 @@ typedef struct srl_context_t {
 	// the value returned by this function determines if the receiving shall
 	// be continued (if returned 0) or not (if returned 1)
 	srl_rx_termination_callback_t srl_rx_term;
+
+	// counters of how many bytes was received and transmitted. This actually
+	// counts how many times the interrupt has been raised because of TXE or RXNE
+	uint32_t total_rx_bytes;
+	uint32_t total_tx_bytes;
 
 }srl_context_t;
 

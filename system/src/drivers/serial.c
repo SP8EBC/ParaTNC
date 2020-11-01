@@ -98,7 +98,7 @@ void srl_init(
 	ctx->srl_rx_error_reason = SRL_ERR_NONE;
 
 	ctx->srl_rx_timeout_calc_started = 0;
-	ctx->srl_rx_idle_counter = 0;
+	ctx->total_idle_counter = 0;
 
 	ctx->srl_rx_start_time = 0;
 	ctx->srl_rx_waiting_start_time = 0;
@@ -494,7 +494,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 	if ((ctx->port->SR & USART_SR_IDLE) == USART_SR_IDLE) {
 		ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
 
-		ctx->srl_rx_idle_counter++;
+		ctx->total_idle_counter++;
 	}
 
 	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
@@ -514,6 +514,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 	// if any data has been received by the UART controller
 	if ((ctx->port->SR & USART_SR_RXNE) == USART_SR_RXNE) {
+
+		// incremenet the received bytes counter
+		ctx->total_rx_bytes++;
+
 		switch (ctx->srl_rx_state) {
 			case SRL_RXING: {
 
@@ -639,6 +643,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 	// if one byte was successfully transferred from DR to shift register for transmission over USART
 	if ((ctx->port->SR & USART_SR_TXE) == USART_SR_TXE) {
+
+		// increment the transmitted bytes counter
+		ctx->total_tx_bytes++;
+
 		switch (ctx->srl_tx_state) {
 		case SRL_TXING:
 			if (ctx->srl_tx_bytes_counter < ctx->srl_tx_bytes_req) {

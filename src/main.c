@@ -357,7 +357,7 @@ int main(int argc, char* argv[]){
 
 #elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
 
-  rtu_serial_init(&rte_rtu_pool_queue);
+  rtu_serial_init(&rte_rtu_pool_queue, 1);
 
   main_target_wx_baudrate = _RTU_SLAVE_SPEED;
 
@@ -743,7 +743,7 @@ int main(int argc, char* argv[]){
 
 			if (rte_main_trigger_modbus_status == 1) {
 #ifdef _MODBUS_RTU
-				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
+				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 #endif
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 
