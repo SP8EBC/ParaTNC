@@ -12,7 +12,7 @@
 
 #include "modbus_rtu/rtu_configuration.h"
 
-typedef struct __attribute__((packed)) rtu_register_data {
+typedef struct rtu_register_data {
 
 	uint16_t slave_address;
 

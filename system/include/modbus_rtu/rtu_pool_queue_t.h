@@ -16,7 +16,7 @@
  * This type stores the queue of RTU functions to be queued
  * with theirs parameters (if there is any)
  */
-typedef struct __attribute__((packed)) rtu_pool_queue {
+typedef struct rtu_pool_queue {
 
 	int8_t it;
 

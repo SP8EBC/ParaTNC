@@ -26,7 +26,7 @@ inline uint16_t rtu_crc_stream(uint16_t previous_crc, uint8_t current_data) {
 	return previous_crc;
 }
 
-inline uint16_t rtu_crc_buffer(uint8_t* buffer_ptr, uint8_t buffer_ln) {
+inline uint16_t rtu_crc_buffer(const uint8_t* const buffer_ptr, uint8_t buffer_ln) {
 	uint16_t crc = 0xFFFF;
 
 // 		https://ctlsys.com/support/how_to_compute_the_modbus_rtu_message_crc/

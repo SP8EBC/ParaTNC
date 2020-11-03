@@ -22,8 +22,8 @@ inline void rtu_serial_reset_crc(void) {
 
 uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
-int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode);
-int32_t rtu_serial_pool(rtu_pool_queue_t* queue, srl_context_t* serial_context);
+int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t* serial_context);
+int32_t rtu_serial_pool(void);
 int32_t rtu_serial_blocking_io(srl_context_t* serial_context, uint8_t query_ln);
 int32_t rtu_serial_start(void);
 

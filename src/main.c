@@ -357,7 +357,7 @@ int main(int argc, char* argv[]){
 
 #elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
 
-  rtu_serial_init(&rte_rtu_pool_queue, 1);
+  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr);
 
   main_target_wx_baudrate = _RTU_SLAVE_SPEED;
 
@@ -718,7 +718,7 @@ int main(int argc, char* argv[]){
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
 #ifdef _MODBUS_RTU
-			rtu_serial_pool(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr);
+			rtu_serial_pool();
 #endif
 		}
 

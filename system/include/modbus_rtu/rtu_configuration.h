@@ -19,7 +19,7 @@
 
 #define RTU_POOL_QUEUE_LENGHT 6
 
-#define MODBUS_RTU_MAX_REGISTERS_AT_ONCE	4	// according to RTU standard 125
+#define MODBUS_RTU_MAX_REGISTERS_AT_ONCE	2	// according to RTU standard 125
 
 #define RTU_MAXIMUM_DATA_LN 64
 
