@@ -73,6 +73,7 @@
 
 #define SOH 0x01
 
+
 //#define SERIAL_TX_TEST_MODE
 
 // Niebieska dioda -> DCD
@@ -94,7 +95,6 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wempty-body"
-
 
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
@@ -159,7 +159,7 @@ Afsk main_afsk;
 AX25Call main_own_path[3];
 uint8_t main_own_path_ln = 0;
 uint8_t main_own_aprs_msg_len;
-char main_own_aprs_msg[160];
+char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
 // global variable used to store return value from various functions
 volatile uint8_t retval = 100;
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]){
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
 
-  memset(main_own_aprs_msg, 0x00, 128);
+  memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
@@ -743,7 +743,7 @@ int main(int argc, char* argv[]){
 
 			if (rte_main_trigger_modbus_status == 1) {
 #ifdef _MODBUS_RTU
-				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, MAIN_OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
+				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 #endif
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 

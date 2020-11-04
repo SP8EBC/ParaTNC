@@ -5,13 +5,15 @@
 #include "drivers/serial.h"
 
 #define SW_VER "DF09"
-#define SW_DATE "01112020"
+#define SW_DATE "03112020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
 #define INTERNAL_WATCHDOG
 #define EXTERNAL_WATCHDOG
+
+#define OWN_APRS_MSG_LN 	160
 
 extern uint32_t master_time;
 
@@ -24,12 +26,10 @@ extern int32_t main_ten_second_pool_timer;
 extern AX25Ctx main_ax25;
 extern Afsk main_afsk;
 
-#define MAIN_OWN_APRS_MSG_LN 160
-
 extern AX25Call main_own_path[3];
 extern uint8_t main_own_path_ln;
 extern uint8_t main_own_aprs_msg_len;
-extern char main_own_aprs_msg[MAIN_OWN_APRS_MSG_LN];
+extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;

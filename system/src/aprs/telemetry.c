@@ -12,6 +12,8 @@
 
 #include "ve_direct_protocol/parser.h"
 
+#include "modbus_rtu/rtu_getters.h"
+
 #include <main.h>
 #include <stdio.h>
 
@@ -196,6 +198,8 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 
 	delay_fixed(1200);
 
+	while (main_ax25.dcd == 1);
+
 #if (_SSID == 0)
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL);
 #endif
@@ -214,6 +218,8 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 
 	delay_fixed(1200);
 
+	while (main_ax25.dcd == 1);
+
 #if (_SSID == 0)
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL);
 #endif
@@ -228,7 +234,11 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
 
+	while (main_afsk.sending == 1);
+
 	delay_fixed(1200);
+
+	while (main_ax25.dcd == 1);
 
 }
 
@@ -324,10 +334,11 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-//	while(ax25.dcd == true);
 
 
 	afsk_txStart(&main_afsk);
+
+	while (main_afsk.sending == 1);
 }
 
 void telemetry_send_status(void) {
@@ -335,10 +346,23 @@ void telemetry_send_status(void) {
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
+	while (main_afsk.sending == 1);
 
 }
 
 #endif
+
+void telemetry_send_modbus_status(void) {
+#ifdef _MODBUS_RTU
+	uint8_t status_ln = 0;
+
+	rtu_get_raw_values_string(main_own_aprs_msg, OWN_APRS_MSG_LN, &status_ln);
+
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, status_ln);
+	afsk_txStart(&main_afsk);
+	while (main_afsk.sending == 1);
+#endif
+}
 
 
 

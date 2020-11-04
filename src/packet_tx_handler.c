@@ -80,23 +80,30 @@ void packet_tx_handler(void) {
 #ifdef _METEO
 	if (packet_tx_meteo_counter >= packet_tx_meteo_interval) {
 
-#if defined _DALLAS_AS_TELEM
+		#if defined _DALLAS_AS_TELEM
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
 		//SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
 		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_ms, rte_wx_pressure_valid, rte_wx_humidity_valid);
-#else
+		#else
 		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-
-
-#endif
+		#endif
 
 		main_wait_for_tx_complete();
 
-#ifdef EXTERNAL_WATCHDOG
+		#ifdef EXTERNAL_WATCHDOG
 		GPIOA->ODR ^= GPIO_Pin_12;
-#endif
+		#endif
 
 		packet_tx_meteo_counter = 0;
+	}
+#endif
+
+#ifdef _METEO
+	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+			packet_tx_telemetry_descr_counter > _WX_INTERVAL * 10)
+	{
+
+		telemetry_send_modbus_status();
 	}
 
 	if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval) {
@@ -247,8 +254,6 @@ void packet_tx_handler(void) {
 		main_wait_for_tx_complete();
 #else
 		telemetry_send_chns_description();
-
-		main_wait_for_tx_complete();
 
 		telemetry_send_status();
 

@@ -74,6 +74,13 @@ uint8_t rtu_blocking_io = 0;
 uint32_t rtu_time_of_last_successfull_comm = 0;
 
 /**
+ * This variable latches the value of 'rtu_time_of_last_successfull_comm' across
+ * consecutive messages with an error status. If the value is the same as during
+ * previous transmission the controller is restarted
+ */
+uint32_t rtu_time_of_last_succ_comm_at_previous_error_status = 0;
+
+/**
  * CRC value after the last call to rtu_serial_callback
  */
 uint16_t rtu_serial_previous_crc = 0xFFFF;
@@ -234,9 +241,15 @@ int32_t rtu_serial_pool(void) {
 			rte_rtu_number_of_serial_io_errors++;
 
 			// stupid workaround. If there is a lot of I/O errors reset the controller
-			if (rte_rtu_number_of_serial_io_errors >= (RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS * 4)) {
+
+			if (rte_rtu_number_of_serial_io_errors >= (RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS * 7) ||
+					rtu_time_of_last_succ_comm_at_previous_error_status == rtu_time_of_last_successfull_comm)
+			{
 				rte_main_reboot_req = 1;
 			}
+
+			// latch the current value of last successfull communication
+			rtu_time_of_last_succ_comm_at_previous_error_status = rtu_time_of_last_successfull_comm;
 		}
 	}
 

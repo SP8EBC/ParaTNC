@@ -77,6 +77,8 @@ void telemetry_send_status(void);
 
 #endif
 
+void telemetry_send_modbus_status(void);
+
 #ifdef __cplusplus
 }
 #endif

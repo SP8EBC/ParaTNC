@@ -15,6 +15,8 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 
 	uint16_t data = 0;
 
+	uint8_t slave_address_from_frame = 0;
+
 	// iterator through input table and registers table
 	int i = 0, j = 3;
 
@@ -34,8 +36,8 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 		// fetch slave address
 		data = *input;
 
-		// store slave address
-		output->slave_address = data;
+		// TODO: store slave address
+		slave_address_from_frame = data;
 
 		// fetch function code
 		data = *(input + 1);
@@ -51,21 +53,27 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 
 		// check if the function code is correct or not
 		else if (data == 0x03 || data == 0x04) {
-			// fetch the function result lenght in bytes
-			data = *(input + 2);
 
-			// store amount of registers in this response
-			output->number_of_registers = data / 2;
+			// check if this is an answer from the slave we expect
+			if (slave_address_from_frame == output->slave_address) {
+				// fetch the function result lenght in bytes
+				data = *(input + 2);
 
-			// get all registers values
-			for (int i = 0; i < output->number_of_registers && i < MODBUS_RTU_MAX_REGISTERS_AT_ONCE; i++) {
-				output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+				// store amount of registers in this response
+				output->number_of_registers = data / 2;
 
-				// moving to next 16bit word with next register
-				j += 2;
+				// get all registers values
+				for (int i = 0; i < output->number_of_registers && i < MODBUS_RTU_MAX_REGISTERS_AT_ONCE; i++) {
+					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+
+					// moving to next 16bit word with next register
+					j += 2;
+				}
+				retval = MODBUS_RET_OK;
 			}
-
-			retval = MODBUS_RET_OK;
+			else {
+				retval = MODBUS_RET_UNEXP_SLAVE_ADR;
+			}
 
 		}
 		else {

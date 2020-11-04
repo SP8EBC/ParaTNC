@@ -5,6 +5,7 @@
  *      Author: mateusz
  */
 
+#include <stdio.h>
 
 #include "station_config.h"
 
@@ -566,5 +567,51 @@ int32_t rtu_get_humidity(int8_t* out) {
 #endif
 
 	return retval;
+}
+
+void rtu_get_raw_values_string(char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
+
+	uint16_t f1_value = 0;
+	uint16_t f2_value = 0;
+	uint16_t f3_value = 0;
+	uint16_t f4_value = 0;
+	uint16_t f5_value = 0;
+	uint16_t f6_value = 0;
+
+	int string_ln = 0;
+
+#if defined(_RTU_SLAVE_ID_1)
+	f1_value = RTU_GETTERS_F1_NAME.registers_values[0];
+#endif
+
+#if defined(_RTU_SLAVE_ID_2)
+	f2_value = RTU_GETTERS_F2_NAME.registers_values[0];
+#endif
+
+#if defined(_RTU_SLAVE_ID_3)
+	f3_value = RTU_GETTERS_F3_NAME.registers_values[0];
+#endif
+
+#if defined(_RTU_SLAVE_ID_4)
+	f4_value = RTU_GETTERS_F4_NAME.registers_values[0];
+#endif
+
+#if defined(_RTU_SLAVE_ID_5)
+	f5_value = RTU_GETTERS_F5_NAME.registers_values[0];
+#endif
+
+#if defined(_RTU_SLAVE_ID_6)
+	f6_value = RTU_GETTERS_F6_NAME.registers_values[0];
+#endif
+
+	string_ln = snprintf(out, out_buffer_ln, ">F1V %X, F2V %X, F3V %X, F4V %X, F5V %X, F6V %X",
+												(int) f1_value,
+												(int) f2_value,
+												(int) f3_value,
+												(int) f4_value,
+												(int) f5_value,
+												(int) f6_value);
+
+	*generated_string_ln = (uint8_t)string_ln;
 }
 
