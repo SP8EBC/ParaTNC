@@ -80,7 +80,7 @@ int32_t rtu_get_temperature(float* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -175,7 +175,7 @@ int32_t rtu_get_pressure(float* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -269,7 +269,7 @@ int32_t rtu_get_wind_direction(uint16_t* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -363,7 +363,7 @@ int32_t rtu_get_wind_speed(uint16_t* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -456,7 +456,7 @@ int32_t rtu_get_wind_gusts(uint16_t* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
@@ -536,7 +536,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 		#error "Wrong Modbus Configuration"
 	#endif
 #else
-	retval = MODBUS_RET_NOT_AVALIABLE;
+	retval = MODBUS_RET_NOT_CONFIGURED;
 #endif
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {

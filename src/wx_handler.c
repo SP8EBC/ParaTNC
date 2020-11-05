@@ -45,8 +45,7 @@ void wx_get_all_measurements(void) {
 	int8_t j = 0;
 	int32_t i = 0;
 	int32_t return_value = 0;
-	int8_t not_avaliable = 0;
-	int8_t degraded = 0;
+	int8_t modbus_qf = 0;
 	float pressure_average_sum = 0.0f;
 
 #if defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)
@@ -57,10 +56,51 @@ void wx_get_all_measurements(void) {
 #endif
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
-	// modbus rtu
+	// modbus rtu TEMPERATURE
 	return_value = rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
+
+	// if temperature has been uploaded by the modbus sensor correctly
+	if (return_value == MODBUS_RET_OK) {
+		// update the last measurement timestamp to prevent relay clicking
+		rte_wx_update_last_measuremenet_timers(RTE_WX_MEASUREMENT_TEMPERATURE);
+
+		// set the first bit to signalize QF_FULL
+		modbus_qf |= 1;
+	}
+	else if (return_value == MODBUS_RET_DEGRADED) {
+		// update the last measurement timestamp to prevent relay clicking
+		rte_wx_update_last_measuremenet_timers(RTE_WX_MEASUREMENT_TEMPERATURE);
+
+		// set the second bit to signalize QF_DEGRADED
+		modbus_qf |= (1 << 1);
+	}
+	else {
+		// set third bit if there is something wrong (like not avaliable or
+		// not configured
+		modbus_qf |= (1 << 2);
+	}
+
+	// modbus rtu HUMIDITY
 	return_value = rtu_get_humidity(&rte_wx_humidity_valid);
+
+	// do simmilar things but for humidity
+	if (return_value == MODBUS_RET_OK) {
+		modbus_qf |= (1 << 3);
+	}
+	else {
+		modbus_qf |= (1 << 4);
+	}
+
+	// modbus rtu PRESSURE
 	return_value = rtu_get_pressure(&rte_wx_pressure_valid);
+
+	// do simmilar things but for pressure
+	if (return_value == MODBUS_RET_OK) {
+		modbus_qf |= (1 << 5);
+	}
+	else {
+		modbus_qf |= (1 << 6);
+	}
 #endif
 
 #if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
@@ -229,6 +269,48 @@ void wx_get_all_measurements(void) {
 
 #endif
 
+#if defined(_MODBUS_RTU)
+
+	// unify quality factor across Modbus-RTU sensor and embedded
+	// ones.
+
+	// BME280 (or MS5611) has a prioryty over the Modbus-RTU
+	if (rte_wx_bme280_qf == BME280_QF_NOT_AVAILABLE ||
+		rte_wx_bme280_qf == BME280_QF_UKNOWN)
+	{
+		// if an internal sensor is not responding check the result of modbus RTU
+		// this is an a little bit of complicated case as BME280 is a pressure
+		// and humidity sensor at once, so changing this QF will also influence
+		// the pressure one, but at this point we might agree that we won't use
+		// BME280 and external, RTU pressure sensor as it would make no sense to do so
+		if ((modbus_qf & (1 << 3)) > 0) {
+			rte_wx_bme280_qf = BME280_QF_FULL;
+		}
+		else {
+			rte_wx_bme280_qf = BME280_QF_UKNOWN;
+		}
+	}
+
+	// Dallas temperature qualiy factor
+	if (rte_wx_error_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
+
+		// if an internal sensor is not responding check the result of modbus RTU
+		if ((modbus_qf & 1) > 0) {
+			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
+			rte_wx_current_dallas_qf = DALLAS_QF_FULL;
+
+		}
+		else if ((modbus_qf & (1 << 1)) > 0) {
+			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+			rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
+		}
+		else if ((modbus_qf & (1 << 2)) > 0) {
+			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+			rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+		}
+	}
+#endif
+
 #ifdef _METEO
 	// if humidity sensor is idle trigger the communiction & measuremenets
 	if (dht22State == DHT22_STATE_DONE || dht22State == DHT22_STATE_TIMEOUT)
@@ -302,7 +384,7 @@ void wx_pool_anemometer(void) {
 	rte_wx_max_windspeed = umb_get_windgusts();
 	#else
 
-	#if defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_FULL_WIND_DATA)
+	#if defined(_MODBUS_RTU) && defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && !defined(_RTU_SLAVE_FULL_WIND_DATA)
 	// get the value from modbus registers
 	modbus_retval = rtu_get_wind_speed(&scaled_windspeed);
 
@@ -322,7 +404,7 @@ void wx_pool_anemometer(void) {
 			scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 		#endif
 	}
-	#elif defined(_MODBUS_RTU) && defined(_RTU_SLAVE_FULL_WIND_DATA)
+	#elif defined(_MODBUS_RTU) && defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_RTU_SLAVE_FULL_WIND_DATA)
 	// get the value from modbus registers
 	modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection);
 
@@ -333,6 +415,8 @@ void wx_pool_anemometer(void) {
 		modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last);
 
 	}
+	#else
+	rte_wx_reset_last_measuremenet_timers(RTE_WX_MEASUREMENT_WIND);
 	#endif
 
 
@@ -473,22 +557,38 @@ void wx_pwr_init(void) {
 }
 
 void wx_pwr_periodic_handle(void) {
-	// check when last measuremenets was sent by wind or temperature sensor
-	if (	(master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD ||
-			 master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD) &&
-			 wx_pwr_state == WX_PWR_ON) {
 
-		// if timeout watchod expired there is a time to reset the supply voltage
-		wx_pwr_state = WX_PWR_UNDER_RESET;
+	// do a last valid measuremenets timestamps only if power is currently applied
+	if (wx_pwr_state == WX_PWR_ON) {
 
-		// pulling the output down to switch the relay and disable +5V_ISOL (VDD_SW)
-		GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+		// the value of 0xFFFFFFFF is a magic word which disables the check for this parameter
+		if (wx_last_good_temperature_time != 0xFFFFFFFF &&
+			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+		{
+			wx_pwr_state = WX_PWR_UNDER_RESET;
+		}
 
-		// setting the last_good timers to current value to prevent reset loop
-		wx_last_good_temperature_time = master_time;
-		wx_last_good_wind_time = master_time;
+		// as the weather station could be configured not to perform wind measurements at all
+		if (wx_last_good_wind_time != 0xFFFFFFFF &&
+			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+		{
+			wx_pwr_state = WX_PWR_UNDER_RESET;
+		}
 
-		return;
+		if (wx_pwr_state == WX_PWR_UNDER_RESET) {
+			// if timeout watchod expired there is a time to reset the supply voltage
+			wx_pwr_state = WX_PWR_UNDER_RESET;
+
+			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
+			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+			// setting the last_good timers to current value to prevent reset loop
+			wx_last_good_temperature_time = master_time;
+			wx_last_good_wind_time = master_time;
+
+			return;
+		}
+
 	}
 
 	// service actual supply state

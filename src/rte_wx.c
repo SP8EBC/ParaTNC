@@ -84,3 +84,13 @@ void rte_wx_update_last_measuremenet_timers(uint16_t parameter_type) {
 		;
 	}
 }
+
+void rte_wx_reset_last_measuremenet_timers(uint16_t parameter_type) {
+	if (parameter_type == RTE_WX_MEASUREMENT_WIND)
+		wx_last_good_wind_time = 0xFFFFFFFF;
+	else if (parameter_type == RTE_WX_MEASUREMENT_TEMPERATURE)
+		wx_last_good_temperature_time = 0xFFFFFFFF;
+	else {
+		;
+	}
+}
