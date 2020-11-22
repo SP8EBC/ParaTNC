@@ -1,6 +1,7 @@
 #include "station_config.h"
 #include "rte_wx.h"
 #include "rte_pv.h"
+#include "rte_main.h"
 
 #include "./aprs/beacon.h"
 #include "./aprs/wx.h"
@@ -12,6 +13,8 @@
 #include "./umb_master/umb_master.h"
 
 #include "main.h"
+
+#define _TELEM_DESCR_INTERVAL	150
 
 uint8_t packet_tx_beacon_interval = _BCN_INTERVAL;
 uint8_t packet_tx_beacon_counter = 0;
@@ -30,8 +33,11 @@ uint8_t packet_tx_meteo_kiss_counter = 0;
 uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
-uint8_t packet_tx_telemetry_descr_interval = 150;
+uint8_t packet_tx_telemetry_descr_interval = _TELEM_DESCR_INTERVAL;
 uint8_t packet_tx_telemetry_descr_counter = 145;
+
+const uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 28));
+const uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 8));
 
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
@@ -99,13 +105,24 @@ void packet_tx_handler(void) {
 #endif
 
 #ifdef _METEO
+#ifdef _MODBUS_RTU
+	// send the status packet with raw values of all requested modbus-RTU registers
 	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
-			packet_tx_telemetry_descr_counter > _WX_INTERVAL * 10)
+			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
 	{
 
-		telemetry_send_modbus_status();
+		telemetry_send_status_raw_values_modbus();
 	}
 
+	// trigger the status packet with modbus-rtu state like error counters, timestamps etc.
+	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+			packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
+			packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
+	{
+
+		rte_main_trigger_modbus_status = 1;
+	}
+#endif
 	if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval) {
 
 		srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
