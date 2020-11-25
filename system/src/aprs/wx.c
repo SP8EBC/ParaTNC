@@ -53,7 +53,7 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 
  	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%07.2f%c%c%08.2f%c%c%03d/%03dg%03dt%03dr...p...P...b%05dh%03d", _LAT, _LATNS, '/', _LON, _LONWE, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%07.2f%c%c%08.2f%c%c%03d/%03dg%03dt%03dr...p...P...b%05dh%02d", _LAT, _LATNS, '/', _LON, _LONWE, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -96,7 +96,7 @@ void SendWXFrameToBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t winddi
 
  	pressure = (unsigned)(cisnienie * 10);
 
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%07.2f%c%c%08.2f%c%c%03d/%03dg%03dt%03dr...p...P...b%05dh%03d", _LAT, _LATNS, '/', _LON, _LONWE, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%07.2f%c%c%08.2f%c%c%03d/%03dg%03dt%03dr...p...P...b%05dh%02d", _LAT, _LATNS, '/', _LON, _LONWE, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 
 	output_frame_ln = ax25_sendVia_toBuffer(main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len, buffer, buffer_ln);
