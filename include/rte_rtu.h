@@ -18,6 +18,8 @@
 #include "modbus_rtu/rtu_pool_queue_t.h"
 #endif
 
+#include <stdint.h>
+
 extern uint8_t rte_rtu_number_of_serial_io_errors;
 
 extern uint16_t rte_rtu_number_of_successfull_serial_comm;

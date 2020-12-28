@@ -4,8 +4,8 @@
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 
-#define SW_VER "DF09"
-#define SW_DATE "22112020"
+#define SW_VER "DF10"
+#define SW_DATE "28122020"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
