@@ -15,6 +15,7 @@
 #include <stdio.h>
 
 void beacon_send_own(void) {
+	main_wait_for_tx_complete();
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -31,7 +32,7 @@ void beacon_send_on_startup(void) {
 }
 
 void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
-
+	main_wait_for_tx_complete();
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, content_ptr, content_ln);
 	after_tx_lock = 1;
  	afsk_txStart(&main_afsk);

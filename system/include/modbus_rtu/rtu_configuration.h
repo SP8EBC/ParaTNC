@@ -10,7 +10,7 @@
 
 #include "station_config.h"
 
-#ifdef _UMB_MASTER
+#ifdef _MODBUS_RTU
 
 #define RTU_GETTERS_F1_NAME rte_wx_modbus_rtu_f1
 #define RTU_GETTERS_F2_NAME rte_wx_modbus_rtu_f2

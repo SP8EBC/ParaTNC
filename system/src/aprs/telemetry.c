@@ -150,11 +150,9 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-//	while(ax25.dcd == true);
-
+	while(ax25.dcd == true);
 
 	afsk_txStart(&main_afsk);
-
 
 }
 
@@ -168,6 +166,8 @@ void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
 
+	main_wait_for_tx_complete();
+
 	avg->max_battery_current = 0;
 	avg->min_battery_current = 0;
 	*last_error = ERR_UNINITIALIZED;
@@ -175,11 +175,17 @@ void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason
 
 #else
 
+/**
+ * Sends four frames with telemetry description
+ */
 void telemetry_send_chns_description(void) {
-	while (main_afsk.sending == 1);
+	// wait for any RF transmission to finish
+	main_wait_for_tx_complete();
 
+	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
+	// prepare a frame with channel names depending on SSID
 #if (_SSID == 0)
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
 #endif
@@ -189,14 +195,20 @@ void telemetry_send_chns_description(void) {
 #if (_SSID > 9 && _SSID <= 15)
 main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
 #endif
+
+	// place a null terminator at the end
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+
+	// prepare transmission
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
+
+	// key up the transmitter and
 	afsk_txStart(&main_afsk);
 
-	while (main_afsk.sending == 1);
+	main_wait_for_tx_complete();
 
-	delay_fixed(1200);
+	delay_fixed(1500);
 
 	while (main_ax25.dcd == 1);
 
@@ -214,9 +226,9 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
 
-	while (main_afsk.sending == 1);
+	main_wait_for_tx_complete();
 
-	delay_fixed(1200);
+	delay_fixed(1500);
 
 	while (main_ax25.dcd == 1);
 
@@ -233,15 +245,18 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
-
-	while (main_afsk.sending == 1);
-
-	delay_fixed(1200);
-
-	while (main_ax25.dcd == 1);
+//
+//	main_wait_for_tx_complete();
+//
+//	delay_fixed(1500);
+//
+//	while (main_ax25.dcd == 1);
 
 }
 
+/**
+ * This function sends telemetry values in 'typical configuration' when VICTRON VE.direct protocol parser is not enabled.
+ */
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
@@ -260,8 +275,13 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	char anemometer_degradated = '0';
 	char anemometer_navble = '0';
 
+	// temperature scaled to 0x00-0xFF range for fifth telemetry channel.
+	// if _METEO mode is enabled this channel sends the temperaure measure by
+	// internal MS5611 or BME280. If _METEO is not enabled this channel
+	// could send Dallas DS18B20 masurements if this is enabled in station_config.h
 	uint8_t scaled_temperature = 0;
 
+	// get the quality factor for wind measurements
 	if (anemometer_qf == WIND_QF_DEGRADATED) {
 		anemometer_degradated = '1';
 		anemometer_navble = '0';
@@ -275,6 +295,8 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		anemometer_navble = '1';
 	}
 
+	// scale the physical temperature and limit upper and lower boundary if
+	// it is required
 	if (temperature < -50.0f) {
 		scaled_temperature = (uint8_t)0;
 	}
@@ -285,6 +307,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		scaled_temperature = (uint8_t)((temperature + 50.0f) * 2.0f);
 	}
 
+	// set the quality factor for dallas DS18B20
 	switch (dallas_qf) {
 	case DALLAS_QF_FULL:
 		qf = '1', degr = '0', nav = '0';
@@ -302,6 +325,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		break;
 	}
 
+	// set the quality factor for pressure
 	switch (press_qf) {
 	case PRESSURE_QF_NOT_AVALIABLE:
 	case PRESSURE_QF_UNKNOWN:
@@ -321,32 +345,46 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		humidity_qf_navaliable = '0';
 	}
 
+	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
+	// generate the telemetry frame from values
 #ifdef _DALLAS_AS_TELEM
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 #else
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 #endif
 
+	// reset the frame counter if it overflowed
 	if (telemetry_counter > 999)
 		telemetry_counter = 0;
+
+	// put a null terminator at the end of frame (but it should be placed there anyway)
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+
+	// wait for completing any previous transmission (afsk_txStart will exit with failure if the modem is transmitting)
+	main_wait_for_tx_complete();
+
+	// prepare transmission of the frame
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+
+ 	// ??
 	after_tx_lock = 1;
 
+	// check if RF channel is free from other transmissions and wait for the clearance if it is needed
+	while (main_ax25.dcd == 1);
 
+	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
 
-	while (main_afsk.sending == 1);
 }
 
 void telemetry_send_status(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
-	while (main_afsk.sending == 1);
 
 }
 
@@ -359,8 +397,9 @@ void telemetry_send_status_raw_values_modbus(void) {
 	rtu_get_raw_values_string(main_own_aprs_msg, OWN_APRS_MSG_LN, &status_ln);
 
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, status_ln);
+	while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
-	while (main_afsk.sending == 1);
+	main_wait_for_tx_complete();
 #endif
 }
 

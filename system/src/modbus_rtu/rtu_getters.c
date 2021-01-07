@@ -607,7 +607,7 @@ void rtu_get_raw_values_string(char* out, uint16_t out_buffer_ln, uint8_t* gener
 	uint16_t f6_value = 0;
 
 	int string_ln = 0;
-
+#ifdef _MODBUS_RTU
 #if defined(_RTU_SLAVE_ID_1)
 	f1_value = RTU_GETTERS_F1_NAME.registers_values[0];
 #endif
@@ -631,7 +631,7 @@ void rtu_get_raw_values_string(char* out, uint16_t out_buffer_ln, uint8_t* gener
 #if defined(_RTU_SLAVE_ID_6)
 	f6_value = RTU_GETTERS_F6_NAME.registers_values[0];
 #endif
-
+#endif
 	string_ln = snprintf(out, out_buffer_ln, ">F1V %X, F2V %X, F3V %X, F4V %X, F5V %X, F6V %X",
 												(int) f1_value,
 												(int) f2_value,

@@ -13,6 +13,7 @@
 #include "./umb_master/umb_master.h"
 
 #include "main.h"
+#include "delay.h"
 
 #define _TELEM_DESCR_INTERVAL	150
 
@@ -39,6 +40,29 @@ uint8_t packet_tx_telemetry_descr_counter = 145;
 const uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 28));
 const uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 8));
 
+uint8_t packet_tx_more_than_one = 0;
+
+/**
+ * This function is called from the inside of 'packet_rx_handler' to put an extra wait
+ * if more than one packet is sent from the single call to that function. This is required
+ * to protect against jamming own frames when any path is configured.
+ *
+ */
+inline void packet_tx_multi_per_call_handler(void) {
+	// if this consecutive frame sent from one call to this function
+	if (packet_tx_more_than_one > 0) {
+		// wait for previous transmission to complete
+		main_wait_for_tx_complete();
+
+		// wait for any possible retransmission to kick in
+		delay_fixed(1000);
+
+	}
+	else {
+		packet_tx_more_than_one = 1;
+	}
+}
+
 // this shall be called in 60 seconds periods
 void packet_tx_handler(void) {
 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
@@ -48,6 +72,9 @@ void packet_tx_handler(void) {
 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
 
 	int ln = 0;
+
+	// set to one if more than one packet will be send from this function at once (like beacon + telemetry)
+	packet_tx_more_than_one = 0;
 
 	packet_tx_beacon_counter++;
 	packet_tx_error_status_counter++;
@@ -62,13 +89,7 @@ void packet_tx_handler(void) {
 	#if defined(_UMB_MASTER)
 		umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
 
-		// if there is anything to send
-		if (ln > 0) {
-			beacon_send_from_user_content(ln, main_own_aprs_msg);
-
-			main_wait_for_tx_complete();
-
-		}
+		packet_tx_multi_per_call_handler();
 	#endif
 
 		packet_tx_error_status_counter = 0;
@@ -76,15 +97,19 @@ void packet_tx_handler(void) {
 
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval) {
 
+		packet_tx_multi_per_call_handler();
+
 		beacon_send_own();
 
-		main_wait_for_tx_complete();
-
 		packet_tx_beacon_counter = 0;
+
+
 	}
 
 #ifdef _METEO
 	if (packet_tx_meteo_counter >= packet_tx_meteo_interval) {
+
+		packet_tx_multi_per_call_handler();
 
 		#if defined _DALLAS_AS_TELEM
 		// _DALLAS_AS_TELEM wil be set during compilation wx packets will be filled by temperature from MS5611 sensor
@@ -93,8 +118,6 @@ void packet_tx_handler(void) {
 		#else
 		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 		#endif
-
-		main_wait_for_tx_complete();
 
 		#ifdef EXTERNAL_WATCHDOG
 		GPIOA->ODR ^= GPIO_Pin_12;
@@ -111,6 +134,8 @@ void packet_tx_handler(void) {
 			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
 	{
 
+		packet_tx_multi_per_call_handler();
+
 		telemetry_send_status_raw_values_modbus();
 	}
 
@@ -119,6 +144,8 @@ void packet_tx_handler(void) {
 			packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
 			packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
 	{
+
+		packet_tx_multi_per_call_handler();
 
 		rte_main_trigger_modbus_status = 1;
 	}
@@ -131,12 +158,13 @@ void packet_tx_handler(void) {
 
 		srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
-
 		packet_tx_meteo_kiss_counter = 0;
 	}
 #endif // #ifdef _METEO
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
+
+		packet_tx_multi_per_call_handler();
 
 		// if there weren't any erros related to communication with DS12B20 from previous function call
 		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
@@ -250,8 +278,6 @@ void packet_tx_handler(void) {
 #endif
 //
 #endif
-		main_wait_for_tx_complete();
-
 		packet_tx_telemetry_counter = 0;
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
@@ -261,6 +287,8 @@ void packet_tx_handler(void) {
 	}
 
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
+		packet_tx_multi_per_call_handler();
+
 #ifdef _VICTRON
 		telemetry_send_chns_description_pv();
 
@@ -268,13 +296,11 @@ void packet_tx_handler(void) {
 
 		telemetry_send_status(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 
-		main_wait_for_tx_complete();
 #else
 		telemetry_send_chns_description();
 
 		telemetry_send_status();
 
-		main_wait_for_tx_complete();
 #endif
 #if defined _UMB_MASTER
 		umb_clear_error_history(&rte_wx_umb_context);
