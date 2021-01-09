@@ -458,7 +458,10 @@ int main(int argc, char* argv[]){
 	  tx20_init();
 	#endif
 	#ifdef _ANEMOMETER_ANALOGUE
-	  analog_anemometer_init(10, 38, 100, 1);
+	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+	#endif
+	#ifdef _ANEMOMETER_ANALOGUE_SPARKFUN
+	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
 	#endif
 
 #endif
@@ -770,7 +773,7 @@ int main(int argc, char* argv[]){
 
 			//digi_pool_viscous();
 
-			#ifdef _ANEMOMETER_ANALOGUE
+			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 			analog_anemometer_direction_handler();
 			#endif
 
@@ -778,7 +781,7 @@ int main(int argc, char* argv[]){
 		}
 		else if (main_one_second_pool_timer < -10) {
 
-			#ifdef _ANEMOMETER_ANALOGUE
+			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 			analog_anemometer_direction_reset();
 			#endif
 

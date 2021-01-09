@@ -7,7 +7,7 @@
 
 #include "station_config.h"
 
-#ifdef _ANEMOMETER_ANALOGUE
+#if defined(_ANEMOMETER_ANALOGUE_SPARKFUN) || defined(_ANEMOMETER_ANALOGUE)
 
 #define WIND_DEBUG
 
@@ -74,6 +74,34 @@ int16_t analog_anemometer_a_coeff = 10;
 int8_t analog_anemometer_direction_pol = 1;
 
 uint16_t analog_anemometer_last_direction_cnt = 0;
+
+#ifdef _ANEMOMETER_ANALOGUE
+int8_t  analog_anemometer_direction_mode = DIRECTION_REGULAR;
+#endif
+
+#ifdef _ANEMOMETER_ANALOGUE_SPARKFUN
+int8_t  analog_anemometer_direction_mode = DIRECTION_SPARKFUN;
+#endif
+
+// this array consists voltage ranges to calculate
+const int16_t analog_anemometer_direction_sparkfun_ranges[16][3] = {
+		{4018, 4112, 112},
+		{4112, 4182, 67},
+		{4182, 4296, 90},
+		{4296, 4537, 157},
+		{4537, 4840, 135},
+		{4840, 5107, 202},
+		{5107, 5529, 180},
+		{5529, 5982, 22},
+		{5982, 6490, 45},
+		{6490, 6935, 247},
+		{6935, 7201, 225},
+		{7201, 7607, 337},
+		{7607, 7932, 0},
+		{7932, 8349, 292},
+		{8349, 8746, 270},
+		{8746, 9276, 315}
+};
 
 void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer_lower_boundary,
 		uint8_t anemometer_upper_boundary, uint8_t direction_polarity) {
@@ -376,6 +404,8 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	TIM_Cmd(TIM3, DISABLE);
 
+	uint16_t downscaled_angle;
+
 	// getting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);
 
@@ -406,27 +436,35 @@ int16_t analog_anemometer_direction_handler(void) {
 		return rte_wx_winddirection_last;
 	}
 
-	// upscaling by factor of 1000 to omit usage of the floating point arithmetics
-	uint32_t upscaled_frequecy = current_value * 100;
+	if (analog_anemometer_direction_mode == DIRECTION_REGULAR) {
+		// upscaling by factor of 1000 to omit usage of the floating point arithmetics
+		uint32_t upscaled_frequecy = current_value * 100;
 
-	// calculating the ratio between the current input frequency and the maximum one
-	uint16_t ratio_of_upscaled_frequency = upscaled_frequecy / UF_MAXIMUM_FREQUENCY;		// this val is * 100 from physical ratio
+		// calculating the ratio between the current input frequency and the maximum one
+		uint16_t ratio_of_upscaled_frequency = upscaled_frequecy / UF_MAXIMUM_FREQUENCY;		// this val is * 100 from physical ratio
 
-	// converting the upscaled ratio into the upscaled angle
-	uint32_t upscaled_angle = ratio_of_upscaled_frequency * 360;			// this val is * 100 from physical
+		// converting the upscaled ratio into the upscaled angle
+		uint32_t upscaled_angle = ratio_of_upscaled_frequency * 360;			// this val is * 100 from physical
 
-	// rescaling the angle according to lower and higher limit
-	int32_t angle_adjusted_to_real_freq_borders = analog_anemometer_a_coeff *
-											upscaled_angle + 1000 * analog_anemometer_b_coeff;
+		// rescaling the angle according to lower and higher limit
+		int32_t angle_adjusted_to_real_freq_borders = analog_anemometer_a_coeff *
+												upscaled_angle + 1000 * analog_anemometer_b_coeff;
 
-	if (angle_adjusted_to_real_freq_borders < 0)
-		angle_adjusted_to_real_freq_borders = 0;
+		if (angle_adjusted_to_real_freq_borders < 0)
+			angle_adjusted_to_real_freq_borders = 0;
 
-	// downscaling the angle
-	uint16_t downscaled_angle = angle_adjusted_to_real_freq_borders / 10000;
+		// downscaling the angle
+		downscaled_angle = angle_adjusted_to_real_freq_borders / 10000;
 
-	// adjusting to polarity of the signal
-	downscaled_angle *= analog_anemometer_direction_pol;
+		// adjusting to polarity of the signal
+		downscaled_angle *= analog_anemometer_direction_pol;
+	}
+	else if (analog_anemometer_direction_mode == DIRECTION_SPARKFUN) {
+		downscaled_angle = analog_anemometer_direction_sparkfun(current_value);
+	}
+	else {
+		;
+	}
 
 	analog_anemometer_last_direction_cnt = 0;
 
@@ -445,6 +483,26 @@ int16_t analog_anemometer_direction_handler(void) {
 	TIM_Cmd(TIM3, ENABLE);
 
 	return downscaled_angle;
+}
+
+int16_t analog_anemometer_direction_sparkfun(uint32_t timer_value) {
+
+	int16_t out = -1;
+
+	// iterate through table which consist ranges of valid timer counter values
+	// for each wind direction
+	for (int i = 0; i < 16; i++)  {
+		if (timer_value >= analog_anemometer_direction_sparkfun_ranges[i][0] &&
+			timer_value < analog_anemometer_direction_sparkfun_ranges[i][1]	) {
+
+			out = analog_anemometer_direction_sparkfun_ranges[i][2];
+
+			// exit from the loop and then from the function if the angle has been found.
+			break;
+		}
+	}
+
+	return out;
 }
 
 void analog_anemometer_direction_reset(void) {

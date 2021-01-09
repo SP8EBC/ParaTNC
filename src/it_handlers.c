@@ -139,7 +139,7 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(TIM1_TRG_COM_TIM17_IRQn);
 	TIM17->SR &= ~(1<<0);
 
-	#ifdef _ANEMOMETER_ANALOGUE
+	#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 	analog_anemometer_timer_irq();
 	#endif
 }
@@ -148,7 +148,7 @@ void DMA1_Channel7_IRQHandler() {
 	NVIC_ClearPendingIRQ(DMA1_Channel7_IRQn);
 	DMA_ClearITPendingBit(DMA1_IT_GL7);
 
-	#ifdef _ANEMOMETER_ANALOGUE
+	#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 	analog_anemometer_dma_irq();
 	#endif
 }
