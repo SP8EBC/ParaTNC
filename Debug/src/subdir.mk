@@ -9,6 +9,7 @@ C_SRCS += \
 ../src/PathConfig.c \
 ../src/TimerConfig.c \
 ../src/_write.c \
+../src/config_data.c \
 ../src/delay.c \
 ../src/io.c \
 ../src/it_handlers.c \
@@ -26,6 +27,7 @@ OBJS += \
 ./src/PathConfig.o \
 ./src/TimerConfig.o \
 ./src/_write.o \
+./src/config_data.o \
 ./src/delay.o \
 ./src/io.o \
 ./src/it_handlers.o \
@@ -43,6 +45,7 @@ C_DEPS += \
 ./src/PathConfig.d \
 ./src/TimerConfig.d \
 ./src/_write.d \
+./src/config_data.d \
 ./src/delay.d \
 ./src/io.d \
 ./src/it_handlers.d \

@@ -16,6 +16,7 @@
 
 #include <main.h>
 #include <stdio.h>
+#include <string.h>
 
 uint16_t telemetry_counter = 0;
 
@@ -187,13 +188,13 @@ void telemetry_send_chns_description(void) {
 
 	// prepare a frame with channel names depending on SSID
 #if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
+main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL, _SSID);
 #endif
 
 	// place a null terminator at the end
@@ -213,13 +214,13 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	while (main_ax25.dcd == 1);
 
 #if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL, _SSID);
 #endif
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -233,13 +234,13 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Tx10min,
 	while (main_ax25.dcd == 1);
 
 #if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL);
 #endif
 #if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
 #endif
 #if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s-%d:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
 #endif
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);

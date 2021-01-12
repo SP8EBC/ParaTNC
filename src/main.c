@@ -10,7 +10,9 @@
 
 #include "main.h"
 #include "packet_tx_handler.h"
+
 #include "station_config.h"
+#include "config_data.h"
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"
@@ -390,8 +392,11 @@ int main(int argc, char* argv[]){
 #endif
 
 
+  // initialize APRS path with zeros
+  memset (main_own_path, 0x00, sizeof(main_own_path));
+
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
-  main_own_path_ln = ConfigPath(main_own_path);
+  main_own_path_ln = ConfigPath(main_own_path, &config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
   // enable write access to watchdog registers
