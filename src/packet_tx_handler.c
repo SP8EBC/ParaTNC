@@ -1,7 +1,8 @@
-#include "station_config.h"
 #include "rte_wx.h"
 #include "rte_pv.h"
 #include "rte_main.h"
+
+#include "station_config.h"
 
 #include "./aprs/beacon.h"
 #include "./aprs/wx.h"
@@ -197,6 +198,7 @@ void packet_tx_handler(void) {
 		#if defined(_SENSOR_MS5611)		// some metaprogramming to save RAM
 		// pressure sensors quality factors
 		if (rte_wx_ms5611_qf == MS5611_QF_UNKNOWN) {
+			#if defined(_SENSOR_BME280)
 			// use BME280 is used instead
 			switch (rte_wx_bme280_qf) {
 				case BME280_QF_FULL:
@@ -206,6 +208,7 @@ void packet_tx_handler(void) {
 				case BME280_QF_PRESSURE_DEGRADED:
 				case BME280_QF_GEN_DEGRADED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
 			}
+			#endif
 		}
 		else {
 			// if not use MS5611
