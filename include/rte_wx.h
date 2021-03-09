@@ -19,13 +19,13 @@
 #include "umb_master/umb_qf_t.h"
 
 
-#ifdef _SENSOR_MS5611
+//#ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
-#endif
+//#endif
 
-#ifdef _SENSOR_BME280
+//#ifdef _SENSOR_BME280
 #include "drivers/bme280.h"
-#endif
+//#endif
 
 
 #define WIND_AVERAGE_LEN 18
@@ -62,12 +62,8 @@ extern uint8_t rte_wx_tx20_excessive_slew_rate;
 extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
-#ifdef _SENSOR_MS5611
 extern ms5611_qf_t rte_wx_ms5611_qf;
-#endif
-#ifdef _SENSOR_BME280
 extern bme280_qf_t rte_wx_bme280_qf;
-#endif
 extern analog_wind_qf_t rte_wx_wind_qf;
 
 

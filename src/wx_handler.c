@@ -13,6 +13,7 @@
 #include <stm32f10x.h>
 #include "drivers/_dht22.h"
 #include "drivers/ms5611.h"
+#include "drivers/bme280.h"
 #include "drivers/analog_anemometer.h"
 #include "drivers/tx20.h"
 
@@ -57,6 +58,7 @@ void wx_get_all_measurements(void) {
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
 	// modbus rtu TEMPERATURE
+	#ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 	return_value = rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
 
 	// if temperature has been uploaded by the modbus sensor correctly
@@ -79,8 +81,10 @@ void wx_get_all_measurements(void) {
 		// not configured
 		modbus_qf |= (1 << 2);
 	}
+	#endif
 
 	// modbus rtu HUMIDITY
+	#ifdef _RTU_SLAVE_HUMIDITY_SOURCE
 	return_value = rtu_get_humidity(&rte_wx_humidity_valid);
 
 	// do simmilar things but for humidity
@@ -90,8 +94,10 @@ void wx_get_all_measurements(void) {
 	else {
 		modbus_qf |= (1 << 4);
 	}
+	#endif
 
 	// modbus rtu PRESSURE
+	#ifdef _RTU_SLAVE_PRESSURE_SOURCE
 	return_value = rtu_get_pressure(&rte_wx_pressure_valid);
 
 	// do simmilar things but for pressure
@@ -101,9 +107,10 @@ void wx_get_all_measurements(void) {
 	else {
 		modbus_qf |= (1 << 6);
 	}
+	#endif
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
 	// quering MS5611 sensor for temperature
 	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
 
@@ -114,7 +121,7 @@ void wx_get_all_measurements(void) {
 
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280) && defined(_INTERNAL_AS_BACKUP))
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280))
 	// reading raw values
 	return_value = bme280_read_raw_data(bme280_data_buffer);
 
@@ -126,17 +133,26 @@ void wx_get_all_measurements(void) {
 		// converting raw values to temperature
 		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
+		#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
 		// converting raw values to pressure
 		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+		#endif
 
 		// converting raw values to humidity
 		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
 
 		if (rte_wx_bme280_qf == BME280_QF_FULL) {
 
-			rte_wx_pressure_valid = rte_wx_pressure;
+			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_TEMPERATURE_SOURCE))
 			rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
+			#endif
+
+			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_HUMIDITY_SOURCE))
 			rte_wx_humidity_valid = rte_wx_humidity;
+			#endif
+
+			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
+			rte_wx_pressure_valid = rte_wx_pressure;
 
 			// add the current pressure into buffer
 			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
@@ -165,6 +181,8 @@ void wx_get_all_measurements(void) {
 			}
 
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
+			#endif
+
 		}
 	}
 	else {
@@ -368,12 +386,12 @@ void wx_pool_anemometer(void) {
 	uint16_t scaled_windspeed = 0;
 
 	// internal sensors
-	#if defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_ANALOGUE))
+	#if defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (!defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && !defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_ANEMOMETER_ANALOGUE))
 	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
 	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 	#endif
 
-	#if defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (defined(_INTERNAL_AS_BACKUP) && defined(_ANEMOMETER_TX20))
+	#if defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (!defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && !defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_ANEMOMETER_TX20))
 	scaled_windspeed = tx20_get_scaled_windspeed();
 	rte_wx_winddirection_last = tx20_get_wind_direction();
 	#endif
