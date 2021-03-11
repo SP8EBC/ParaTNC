@@ -23,7 +23,11 @@ typedef struct config_data_mode_t {
 
 	uint8_t victron;
 
+	uint8_t digi_viscous;
 
+	uint8_t digi_only_ssids;
+
+	uint8_t digi_viscous_delay_sec;
 
 } config_data_mode_t;
 
@@ -66,5 +70,6 @@ typedef struct config_data_basic_t {
 } config_data_basic_t;
 
 extern const config_data_basic_t config_data_basic;
+extern const config_data_mode_t config_data_mode;
 
 #endif /* CONFIG_DATA_H_ */

@@ -15,6 +15,46 @@
 #include "station_config.h"
 
 
+const config_data_mode_t config_data_mode = {
+#ifdef _DIGI
+		.digi = 1,
+#else
+		.digi = 0,
+#endif
+
+#ifdef _METEO
+		.wx = 1,
+#else
+		.wx = 0,
+#endif
+
+#ifdef _VICTRON
+		.victron = 1,
+#else
+		.victron = 0,
+#endif
+
+
+
+#ifdef _DIGI_ONLY_789
+		.digi_only_ssids = 1,
+#else
+		.digi_only_ssids = 0,
+#endif
+
+#ifdef _DIGI_VISCOUS
+		.digi_viscous = 1,
+#else
+		.digi_viscous = 0,
+#endif
+
+#ifdef _DIGI_VISCOUS_DEALY
+		.digi_viscous_delay_sec = _DIGI_VISCOUS_DEALY
+#else
+		.digi_viscous_delay_sec = 3
+#endif
+};
+
 const config_data_basic_t config_data_basic = {
 		.callsign = _CALL,
 		.ssid = _SSID,

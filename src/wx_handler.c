@@ -41,6 +41,14 @@ uint32_t wx_wind_pool_call_counter = 0;
 
 static const float direction_constant = M_PI/180.0f;
 
+#define MODBUS_QF_TEMPERATURE_FULL		1
+#define MODBUS_QF_TEMPERATURE_DEGR		(1 << 1)
+#define MODBUS_QF_TEMPERATURE_NAVB		(1 << 2)
+#define MODBUS_QF_HUMIDITY_FULL 		(1 << 3)
+#define MODBUS_QF_HUMIDITY_DEGR 		(1 << 4)
+#define MODBUS_QF_PRESSURE_FULL			(1 << 5)
+#define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
+
 void wx_get_all_measurements(void) {
 
 	int8_t j = 0;
@@ -57,7 +65,7 @@ void wx_get_all_measurements(void) {
 #endif
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
-	// modbus rtu TEMPERATURE
+
 	#ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 	return_value = rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
 
@@ -67,19 +75,19 @@ void wx_get_all_measurements(void) {
 		rte_wx_update_last_measuremenet_timers(RTE_WX_MEASUREMENT_TEMPERATURE);
 
 		// set the first bit to signalize QF_FULL
-		modbus_qf |= 1;
+		modbus_qf |= MODBUS_QF_TEMPERATURE_FULL;
 	}
 	else if (return_value == MODBUS_RET_DEGRADED) {
 		// update the last measurement timestamp to prevent relay clicking
 		rte_wx_update_last_measuremenet_timers(RTE_WX_MEASUREMENT_TEMPERATURE);
 
 		// set the second bit to signalize QF_DEGRADED
-		modbus_qf |= (1 << 1);
+		modbus_qf |= MODBUS_QF_TEMPERATURE_DEGR;
 	}
 	else {
 		// set third bit if there is something wrong (like not avaliable or
 		// not configured
-		modbus_qf |= (1 << 2);
+		modbus_qf |= MODBUS_QF_TEMPERATURE_NAVB;
 	}
 	#endif
 
@@ -89,10 +97,13 @@ void wx_get_all_measurements(void) {
 
 	// do simmilar things but for humidity
 	if (return_value == MODBUS_RET_OK) {
-		modbus_qf |= (1 << 3);
+		modbus_qf |= MODBUS_QF_HUMIDITY_FULL;
+	}
+	else if (return_value == MODBUS_RET_DEGRADED) {
+		modbus_qf |= MODBUS_QF_HUMIDITY_DEGR;
 	}
 	else {
-		modbus_qf |= (1 << 4);
+		;
 	}
 	#endif
 
@@ -102,10 +113,13 @@ void wx_get_all_measurements(void) {
 
 	// do simmilar things but for pressure
 	if (return_value == MODBUS_RET_OK) {
-		modbus_qf |= (1 << 5);
+		modbus_qf |= MODBUS_QF_PRESSURE_FULL;
+	}
+	else if (return_value == MODBUS_RET_DEGRADED) {
+		modbus_qf |= MODBUS_QF_PRESSURE_DEGR;
 	}
 	else {
-		modbus_qf |= (1 << 6);
+		;
 	}
 	#endif
 #endif
@@ -121,8 +135,9 @@ void wx_get_all_measurements(void) {
 
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280))
-	// reading raw values
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280) && defined (_MODBUS_RTU))
+
+	// reading raw values from BME280 sensor
 	return_value = bme280_read_raw_data(bme280_data_buffer);
 
 	if (return_value == BME280_OK) {
@@ -133,56 +148,68 @@ void wx_get_all_measurements(void) {
 		// converting raw values to temperature
 		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
-		#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
-		// converting raw values to pressure
-		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
-		#endif
+		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to non FULL
+		if ((modbus_qf & MODBUS_QF_PRESSURE_FULL == 0) && (modbus_qf & MODBUS_QF_PRESSURE_DEGR == 0)) {
+			// converting raw values to pressure
+			bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+		}
+		else {
+			;
+		}
 
-		// converting raw values to humidity
-		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
+		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to non FULL
+		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL == 0) && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR == 0)) {
+			// converting raw values to humidity
+			bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
+		}
+		else {
+			;	// if the RTU-humidity is set to FULL use that value instead of BME280
+		}
 
 		if (rte_wx_bme280_qf == BME280_QF_FULL) {
 
-			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_TEMPERATURE_SOURCE))
+			// always read the temperature as it is used as an internal temperature in 5th telemetry channel
 			rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
-			#endif
 
-			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_HUMIDITY_SOURCE))
-			rte_wx_humidity_valid = rte_wx_humidity;
-			#endif
-
-			#if !defined(_MODBUS_RTU) || (defined(_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
-			rte_wx_pressure_valid = rte_wx_pressure;
-
-			// add the current pressure into buffer
-			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
-
-			// reseting the average length iterator
-			j = 0;
-
-			// check if and end of the buffer was reached
-			if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
-				rte_wx_pressure_it = 0;
+			// if modbus RTU is enabled but the quality factor for RTU-humidity is set to non FULL
+			if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL == 0) && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR == 0)) {
+				rte_wx_humidity_valid = rte_wx_humidity;
+			}
+			else {
+				;	// if humidity was obtained from RTU sensor use that value and do not bother with BME280
 			}
 
-			// calculating the average of pressure measuremenets
-			for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+			if ((modbus_qf & MODBUS_QF_PRESSURE_FULL == 0) && (modbus_qf & MODBUS_QF_PRESSURE_DEGR == 0)) {
+				rte_wx_pressure_valid = rte_wx_pressure;
 
-				// skip empty slots in the history to provide proper value even for first wx packet
-				if (rte_wx_pressure_history[i] < 10.0f) {
-					continue;
+				// add the current pressure into buffer
+				rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+
+				// reseting the average length iterator
+				j = 0;
+
+				// check if and end of the buffer was reached
+				if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+					rte_wx_pressure_it = 0;
 				}
 
-				// add to the average
-				pressure_average_sum += rte_wx_pressure_history[i];
+				// calculating the average of pressure measuremenets
+				for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
 
-				// increase the average lenght iterator
-				j++;
+					// skip empty slots in the history to provide proper value even for first wx packet
+					if (rte_wx_pressure_history[i] < 10.0f) {
+						continue;
+					}
+
+					// add to the average
+					pressure_average_sum += rte_wx_pressure_history[i];
+
+					// increase the average lenght iterator
+					j++;
+				}
+
+				rte_wx_pressure_valid = pressure_average_sum / (float)j;
 			}
-
-			rte_wx_pressure_valid = pressure_average_sum / (float)j;
-			#endif
-
 		}
 	}
 	else {
@@ -191,12 +218,12 @@ void wx_get_all_measurements(void) {
 	}
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)) || defined(_INTERNAL_AS_BACKUP) || defined (_DALLAS_AS_TELEM)
-	// quering dallas DS12B20 thermometer for current temperature
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)) || defined (_DALLAS_AS_TELEM) || defined (_MODBUS_RTU) //&& !defined(_RTU_SLAVE_TEMPERATURE_SOURCE)
+
 	rte_wx_temperature_dallas = dallas_query(&rte_wx_current_dallas_qf);
 
 	// checking if communication was successfull
-	if (rte_wx_temperature_dallas != -128.0f) {
+	if (rte_wx_temperature_dallas != -128.0f && ((modbus_qf & MODBUS_QF_TEMPERATURE_FULL) == 0)) {
 
 		// calculate the slew rate
 		rte_wx_temperature_dalls_slew_rate = rte_wx_temperature_dallas - rte_wx_temperature_dallas_valid;
@@ -251,7 +278,7 @@ void wx_get_all_measurements(void) {
 	wx_inhibit_slew_rate_check = 0;
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined(_INTERNAL_AS_BACKUP))
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 
@@ -296,12 +323,13 @@ void wx_get_all_measurements(void) {
 	if (rte_wx_bme280_qf == BME280_QF_NOT_AVAILABLE ||
 		rte_wx_bme280_qf == BME280_QF_UKNOWN)
 	{
-		// if an internal sensor is not responding check the result of modbus RTU
-		// this is an a little bit of complicated case as BME280 is a pressure
-		// and humidity sensor at once, so changing this QF will also influence
-		// the pressure one, but at this point we might agree that we won't use
-		// BME280 and external, RTU pressure sensor as it would make no sense to do so
-		if ((modbus_qf & (1 << 3)) > 0) {
+		// if an internal sensor is not responding or it is not used at all
+		// check the result of modbus RTU. this is an a little bit of complicated
+		// case as BME280 is a pressure and humidity sensor at once, so changing
+		// this QF will also influence the pressure one, but at this point we might
+		// agree that we won't use BME280 and external, RTU pressure sensor as it
+		// would make no sense to do so
+		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL) > 0) {
 			rte_wx_bme280_qf = BME280_QF_FULL;
 		}
 		else {
@@ -313,16 +341,16 @@ void wx_get_all_measurements(void) {
 	if (rte_wx_error_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
 
 		// if an internal sensor is not responding check the result of modbus RTU
-		if ((modbus_qf & 1) > 0) {
+		if ((modbus_qf & MODBUS_QF_TEMPERATURE_FULL) > 0) {
 			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
 			rte_wx_current_dallas_qf = DALLAS_QF_FULL;
 
 		}
-		else if ((modbus_qf & (1 << 1)) > 0) {
+		else if ((modbus_qf & MODBUS_QF_TEMPERATURE_DEGR) > 0) {
 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
 			rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
 		}
-		else if ((modbus_qf & (1 << 2)) > 0) {
+		else if ((modbus_qf & MODBUS_QF_TEMPERATURE_NAVB) > 0) {
 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
 			rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 		}

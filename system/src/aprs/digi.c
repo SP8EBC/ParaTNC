@@ -28,39 +28,59 @@ uint8_t digi_viscous_delay_sec;
 uint8_t digi_viscous_counter_sec;
 
 
-void digi_init(void) {
+void digi_init(const config_data_mode_t* const config_data_mode) {
 	digi_viscous_counter_sec = 0;
 
 	digi_msg_len = 0;
 
 	digi_mode = DIGI_OFF;
 
-#ifdef _DIGI_VISCOUS
+	if (config_data_mode->digi_viscous == 1) {
 
-	#ifdef _DIGI_ONLY_789
-		digi_mode = DIGI_VISCOUS_SSID_WIDE1;
-	#else
-		digi_mode = DIGI_VISCOUS_ALL_WIDE1;
-	#endif
+		if (config_data_mode->digi_only_ssids == 1) {
+			digi_mode = DIGI_VISCOUS_SSID_WIDE1;
+		}
+		else {
+			digi_mode = DIGI_VISCOUS_ALL_WIDE1;
+		}
+	}
+	else {
+		if (config_data_mode->digi_only_ssids == 1) {
+			digi_mode = DIGI_ON_SSID_WIDE1;
+		}
+		else {
+			digi_mode = DIGI_ON_ALL_WIDE1;
+		}
+	}
 
-#else
+	digi_viscous_delay_sec = config_data_mode->digi_viscous_delay_sec;
 
-	#ifdef _DIGI_ONLY_789
-		digi_mode = DIGI_ON_SSID_WIDE1;
-	#else
-		digi_mode = DIGI_ON_ALL_WIDE1;
-	#endif
+//#ifdef _DIGI_VISCOUS
+//
+//	#ifdef _DIGI_ONLY_789
+//		digi_mode = DIGI_VISCOUS_SSID_WIDE1;
+//	#else
+//		digi_mode = DIGI_VISCOUS_ALL_WIDE1;
+//	#endif
+//
+//#else
+//
+//	#ifdef _DIGI_ONLY_789
+//		digi_mode = DIGI_ON_SSID_WIDE1;
+//	#else
+//		digi_mode = DIGI_ON_ALL_WIDE1;
+//	#endif
+//
+//#endif
 
-#endif
-
-#ifdef _DIGI_VISCOUS_DEALY
-		digi_viscous_delay_sec =_DIGI_VISCOUS_DEALY;
-#else
-		digi_viscous_delay_sec = 3;
-#endif
+//#ifdef _DIGI_VISCOUS_DEALY
+//		digi_viscous_delay_sec =_DIGI_VISCOUS_DEALY;
+//#else
+//		digi_viscous_delay_sec = 3;
+//#endif
 }
 
-uint8_t digi_process(struct AX25Msg *msg) {
+uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const config, const config_data_mode_t* const config_mode) {
 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
 
 #ifdef _DIGI
@@ -103,8 +123,8 @@ uint8_t digi_process(struct AX25Msg *msg) {
 				digi_path[0].ssid = msg->dst.ssid;
 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
 				digi_path[1].ssid = msg->src.ssid;
-				sprintf(digi_path[2].call, "%s", _CALL);	// zamiana WIDE2-2 albo WIDE2-1 na znak digi
-				digi_path[2].ssid = (_SSID | 0x40);
+				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE2-2 albo WIDE2-1 na znak digi
+				digi_path[2].ssid = (config->ssid | 0x40);
 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE2*
 				digi_path[3].ssid = 0x40;			/* 0x40 oznacza jedynkę na 6 bicie (przy numeracji od zera). Po przesunięciu o jedno miejsce
 													   otrzymuje się 0x80 czyli jedynkę na H-bicie */
@@ -118,8 +138,8 @@ uint8_t digi_process(struct AX25Msg *msg) {
 				digi_path[0].ssid = msg->dst.ssid;
 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
 				digi_path[1].ssid = msg->src.ssid;
-				sprintf(digi_path[2].call, "%s", _CALL);	// zamiana WIDE1-1 na własny znak digi
-				digi_path[2].ssid =  (_SSID | 0x40);
+				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE1-1 na własny znak digi
+				digi_path[2].ssid =  (config->ssid | 0x40);
 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1* na końcu
 				digi_path[3].ssid = 0x40;
 				sprintf(digi_path[4].call, "%s", msg->rpt_lst[1].call);	// przepisywanie WIDE2-1
@@ -133,8 +153,8 @@ uint8_t digi_process(struct AX25Msg *msg) {
 				digi_path[0].ssid = msg->dst.ssid;
 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
 				digi_path[1].ssid = msg->src.ssid;
-				sprintf(digi_path[2].call, "%s", _CALL);	// zamiana WIDE1-1 na własny znak digi
-				digi_path[2].ssid = (_SSID | 0x40);
+				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE1-1 na własny znak digi
+				digi_path[2].ssid = (config->ssid | 0x40);
 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1* na końcu
 				digi_path[3].ssid = 0x40;
 				sprintf(digi_path[4].call, "%s", "WIDE2");	// skracanie dalszej czesci do WIDE2-1

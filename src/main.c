@@ -438,7 +438,7 @@ int main(int argc, char* argv[]){
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 
   // initializing the digipeater configuration
-  digi_init();
+  digi_init(&config_data_mode);
 
 #ifdef _METEO
 
@@ -648,7 +648,7 @@ int main(int argc, char* argv[]){
 			//digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-			digi_process(&ax25_rxed_frame);
+			digi_process(&ax25_rxed_frame, &config_data_basic, &config_data_mode);
 	#endif
 #endif
 			ax25_new_msg_rx_flag = 0;
