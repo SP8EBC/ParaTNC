@@ -124,7 +124,7 @@ void wx_get_all_measurements(void) {
 	#endif
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU))
 	// quering MS5611 sensor for temperature
 	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
 
@@ -149,7 +149,7 @@ void wx_get_all_measurements(void) {
 		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
 		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to non FULL
-		if ((modbus_qf & MODBUS_QF_PRESSURE_FULL == 0) && (modbus_qf & MODBUS_QF_PRESSURE_DEGR == 0)) {
+		if ((modbus_qf & MODBUS_QF_PRESSURE_FULL) == 0 && (modbus_qf & MODBUS_QF_PRESSURE_DEGR) == 0) {
 			// converting raw values to pressure
 			bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
 		}
@@ -158,7 +158,7 @@ void wx_get_all_measurements(void) {
 		}
 
 		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to non FULL
-		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL == 0) && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR == 0)) {
+		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL) == 0 && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR) == 0) {
 			// converting raw values to humidity
 			bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
 		}
@@ -172,14 +172,14 @@ void wx_get_all_measurements(void) {
 			rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
 
 			// if modbus RTU is enabled but the quality factor for RTU-humidity is set to non FULL
-			if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL == 0) && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR == 0)) {
+			if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL) == 0 && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR) == 0) {
 				rte_wx_humidity_valid = rte_wx_humidity;
 			}
 			else {
 				;	// if humidity was obtained from RTU sensor use that value and do not bother with BME280
 			}
 
-			if ((modbus_qf & MODBUS_QF_PRESSURE_FULL == 0) && (modbus_qf & MODBUS_QF_PRESSURE_DEGR == 0)) {
+			if ((modbus_qf & MODBUS_QF_PRESSURE_FULL) == 0 && (modbus_qf & MODBUS_QF_PRESSURE_DEGR) == 0) {
 				rte_wx_pressure_valid = rte_wx_pressure;
 
 				// add the current pressure into buffer
@@ -278,11 +278,11 @@ void wx_get_all_measurements(void) {
 	wx_inhibit_slew_rate_check = 0;
 #endif
 
-#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU) && !defined(_RTU_SLAVE_PRESSURE_SOURCE))
+#if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_MS5611)) || (defined (_SENSOR_MS5611) && defined (_MODBUS_RTU))
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
 
-	if (return_value == MS5611_OK) {
+	if (return_value == MS5611_OK && (modbus_qf & MODBUS_QF_PRESSURE_FULL) == 0 && (modbus_qf & MODBUS_QF_PRESSURE_DEGR) == 0) {
 		// add the current pressure into buffer
 		rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
 
