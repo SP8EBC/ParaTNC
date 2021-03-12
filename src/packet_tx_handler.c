@@ -241,6 +241,16 @@ void packet_tx_handler(void) {
 				case BME280_QF_HUMIDITY_DEGRADED:
 				case BME280_QF_GEN_DEGRADED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
 			}
+
+			switch (rte_wx_bme280_qf) {
+				case BME280_QF_FULL:
+				case BME280_QF_HUMIDITY_DEGRADED: pressure_qf = PRESSURE_QF_FULL; break;
+				case BME280_QF_UKNOWN:
+				case BME280_QF_NOT_AVAILABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+				case BME280_QF_PRESSURE_DEGRADED:
+				case BME280_QF_GEN_DEGRADED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+			}
+
 		}
 		#else
 			pressure_qf = PRESSURE_QF_NOT_AVALIABLE;

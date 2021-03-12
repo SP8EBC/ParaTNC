@@ -148,7 +148,7 @@ void wx_get_all_measurements(void) {
 		// converting raw values to temperature
 		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
-		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to non FULL
+		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to NOT_AVALIABLE
 		if ((modbus_qf & MODBUS_QF_PRESSURE_FULL) == 0 && (modbus_qf & MODBUS_QF_PRESSURE_DEGR) == 0) {
 			// converting raw values to pressure
 			bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
@@ -157,7 +157,7 @@ void wx_get_all_measurements(void) {
 			;
 		}
 
-		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to non FULL
+		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to NOT_AVALIABLE
 		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL) == 0 && (modbus_qf & MODBUS_QF_HUMIDITY_DEGR) == 0) {
 			// converting raw values to humidity
 			bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
