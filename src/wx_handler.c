@@ -462,7 +462,7 @@ void wx_pool_anemometer(void) {
 
 	}
 	#else
-	rte_wx_reset_last_measuremenet_timers(RTE_WX_MEASUREMENT_WIND);
+	//rte_wx_reset_last_measuremenet_timers(RTE_WX_MEASUREMENT_WIND);
 	#endif
 
 

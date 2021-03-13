@@ -26,7 +26,7 @@ uint8_t packet_tx_error_status_counter = 0;
 
 #ifdef _METEO
 uint8_t packet_tx_meteo_interval = _WX_INTERVAL;
-uint8_t packet_tx_meteo_counter = 0;
+uint8_t packet_tx_meteo_counter = 2;
 
 uint8_t packet_tx_meteo_kiss_interval = 2;
 uint8_t packet_tx_meteo_kiss_counter = 0;
@@ -36,10 +36,10 @@ uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
 uint8_t packet_tx_telemetry_descr_interval = _TELEM_DESCR_INTERVAL;
-uint8_t packet_tx_telemetry_descr_counter = 145;
+uint8_t packet_tx_telemetry_descr_counter = 10;
 
-const uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 28));
-const uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 8));
+const uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 38));
+const uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 5));
 
 uint8_t packet_tx_more_than_one = 0;
 
