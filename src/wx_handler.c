@@ -544,7 +544,7 @@ void wx_pool_anemometer(void) {
 
 #endif
 
-#if defined (_MODBUS_RTU)
+#if defined (_MODBUS_RTU) && (defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) || defined(_RTU_SLAVE_WIND_SPEED_SOURCE) || defined(_RTU_SLAVE_FULL_WIND_DATA))
 	if (modbus_retval == MODBUS_RET_OK) {
 		rte_wx_wind_qf = AN_WIND_QF_FULL;
 	}
@@ -563,6 +563,8 @@ void wx_pool_anemometer(void) {
 	}
 #elif defined(_ANEMOMETER_ANALOGUE)
 	rte_wx_wind_qf = analog_anemometer_get_qf();
+#elif defined(_ANEMOMETER_TX20)
+	;
 #else
 	rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 #endif
@@ -619,6 +621,8 @@ void wx_pwr_periodic_handle(void) {
 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
 		{
 			wx_pwr_state = WX_PWR_UNDER_RESET;
+
+			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
 		}
 
 		if (wx_pwr_state == WX_PWR_UNDER_RESET) {

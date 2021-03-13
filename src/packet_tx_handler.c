@@ -270,6 +270,8 @@ void packet_tx_handler(void) {
 				case AN_WIND_QF_NOT_AVALIABLE:
 				case AN_WIND_QF_UNKNOWN: wind_qf = WIND_QF_NOT_AVALIABLE; break;
 			}
+
+			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
 #ifdef _VICTRON
