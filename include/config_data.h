@@ -21,6 +21,12 @@ typedef struct config_data_mode_t {
 
 	uint8_t wx;
 
+	uint8_t wx_umb;
+
+	uint8_t wx_modbus;
+
+	uint8_t wx_davis;
+
 	uint8_t victron;
 
 	uint8_t digi_viscous;
@@ -28,6 +34,7 @@ typedef struct config_data_mode_t {
 	uint8_t digi_only_ssids;
 
 	uint8_t digi_viscous_delay_sec;
+
 
 } config_data_mode_t;
 
@@ -69,7 +76,32 @@ typedef struct config_data_basic_t {
 
 } config_data_basic_t;
 
+typedef struct config_data_umb_t {
+
+	uint16_t slave_class;
+
+	uint16_t slave_id;
+
+	uint16_t channel_windspeed;
+
+	uint16_t channel_wingsusts;
+
+	uint16_t channel_winddirection;
+
+	uint16_t channel_temperature;
+
+	uint16_t channel_qfe;
+/**
+ * #define _UMB_CHANNEL_WINDSPEED			460
+#define _UMB_CHANNEL_WINDGUSTS			440
+#define _UMB_CHANNEL_WINDDIRECTION		580
+#define _UMB_CHANNEL_TEMPERATURE		100
+#define _UMB_CHANNEL_QFE
+ */
+} config_data_umb_t;
+
 extern const config_data_basic_t config_data_basic;
 extern const config_data_mode_t config_data_mode;
+extern const config_data_umb_t config_data_umb;
 
 #endif /* CONFIG_DATA_H_ */

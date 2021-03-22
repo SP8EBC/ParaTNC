@@ -50,7 +50,6 @@ extern "C"
 {
 #endif
 
-#ifdef _VICTRON
 void telemetry_send_values_pv (	uint8_t rx_pkts,
 								uint8_t digi_pkts,
 								int16_t raw_battery_current,
@@ -60,9 +59,8 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								ms5611_qf_t ms_qf,
 								dht22QF ds_qf);
 void telemetry_send_chns_description_pv(void);
-void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state);
+void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count);
 
-#else
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
@@ -74,8 +72,6 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							wind_qf_t anemometer_qf);
 void telemetry_send_chns_description(void);
 void telemetry_send_status(void);
-
-#endif
 
 void telemetry_send_status_raw_values_modbus(void);
 

@@ -13,10 +13,6 @@
 #include <umb_master/umb_context_t.h>
 #include <umb_master/umb_call_reason.h>
 #include <umb_master/umb_qf_t.h>
-#include "station_config.h"
-
-
-#ifdef _UMB_MASTER
 
 void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx);
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);
@@ -34,6 +30,5 @@ int16_t umb_get_winddirection(void);
 float umb_get_temperature(void);
 float umb_get_qfe(void);
 
-#endif
 
 #endif /* INCLUDE_UMB_MASTER_UMB_MASTER_H_ */

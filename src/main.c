@@ -29,9 +29,7 @@
 #include "aprs/dac.h"
 #include "aprs/beacon.h"
 
-#ifdef _VICTRON
 #include "ve_direct_protocol/parser.h"
-#endif
 
 #include "rte_wx.h"
 #include "rte_pv.h"
@@ -59,11 +57,9 @@
 #include <drivers/bme280.h>
 #endif
 
-#ifdef _UMB_MASTER
 #include "umb_master/umb_master.h"
 #include "umb_master/umb_channel_pool.h"
 #include "umb_master/umb_0x26_status.h"
-#endif
 
 #endif	// _METEO
 
@@ -167,13 +163,9 @@ char main_own_aprs_msg[OWN_APRS_MSG_LN];
 volatile uint8_t retval = 100;
 
 uint16_t buffer_len = 0;
-#ifdef _VICTRON
-#endif
 
-#ifdef _UMB_MASTER
 // return value from UMB related functions
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
-#endif
 
 
 char after_tx_lock;
@@ -306,6 +298,15 @@ int main(int argc, char* argv[]){
   main_target_kiss_baudrate = _SERIAL_BAUDRATE;
 #endif
 
+  // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
+  if (config_data_mode.victron == 1) {
+    main_target_kiss_baudrate = 19200u;
+
+    // and disable the kiss TNC option as it shares the same port
+    main_kiss_enabled = 0;
+  }
+
+
 #if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
   // reinitialize the KISS serial port temporary to davis baudrate
   main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
@@ -390,7 +391,6 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
-
 
   // initialize APRS path with zeros
   memset (main_own_path, 0x00, sizeof(main_own_path));
@@ -493,47 +493,51 @@ int main(int argc, char* argv[]){
  bme280_read_calibration(bme280_calibration_data);
 #endif
 
-  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+ if (main_kiss_enabled == 1) {
+	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
+	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
 
-  // terminating the aprs message
-  main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	  // terminating the aprs message
+	  main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 
-  // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
-  //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
-  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
+	  // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
+	  //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
+	  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
 
-  // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
-  // Here this could be omitted because UART isn't used before but general idea
-  while(main_kiss_srl_ctx.srl_tx_state != SRL_TX_IDLE && main_kiss_srl_ctx.srl_tx_state != SRL_TX_ERROR);
+	  // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
+	  // Here this could be omitted because UART isn't used before but general idea
+	  while(main_kiss_srl_ctx.srl_tx_state != SRL_TX_IDLE && main_kiss_srl_ctx.srl_tx_state != SRL_TX_ERROR);
 
-  // converting AX25 with beacon to KISS format
-  //ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
+	  // converting AX25 with beacon to KISS format
+	  //ln = SendKISSToHost(main_afsk.tx_buf + 1, main_afsk.tx_fifo.tail - main_afsk.tx_fifo.head - 4, srl_tx_buffer, TX_BUFFER_LN);
 
-  // checking if KISS-framing was done correctly
-  if (ln != KISS_TOO_LONG_FRM) {
-#ifdef SERIAL_TX_TEST_MODE
-	  // infinite loop for testing UART transmission
-	  for (;;) {
 
-		  retval = srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
-#endif
-		  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+	  // checking if KISS-framing was done correctly
+	  if (ln != KISS_TOO_LONG_FRM) {
+	#ifdef SERIAL_TX_TEST_MODE
+		  // infinite loop for testing UART transmission
+		  for (;;) {
 
-#ifdef SERIAL_TX_TEST_MODE
-		  while(main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE);
-//		  while(srl_rx_state != SRL_RX_DONE);
+			  retval = srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+	#endif
+			  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
-		  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
+	#ifdef SERIAL_TX_TEST_MODE
+			  while(main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE);
+	//		  while(srl_rx_state != SRL_RX_DONE);
 
-		  if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-			  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_8);
+			  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
 
-			  retval = 200;
+			  if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+				  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_8);
+
+				  retval = 200;
+			  }
 		  }
+	#endif
 	  }
-#endif
-  }
+
+ }
 
   // reinitializing AFSK and AX25 driver
   AFSK_Init(&main_afsk);
@@ -548,27 +552,23 @@ int main(int argc, char* argv[]){
   wx_get_all_measurements();
 #endif
 
-#if defined _VICTRON && !defined _UMB_MASTER
-  // initializing protocol parser
-  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
+  // start serial port i/o transaction depending on station configuration
+  if (config_data_mode.victron == 1) {
+	  // initializing protocol parser
+	  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
 
-  // enabling timeout handling for serial port. This is required because VE protocol frame may vary in lenght
-  // and serial port driver could finish reception only either on stop character or when declared number of bytes
-  // has been received.
-  srl_switch_timeout(main_wx_srl_ctx_ptr, 1, 100);
+	  // enabling timeout handling for serial port. This is required because VE protocol frame may vary in lenght
+	  // and serial port driver could finish reception only either on stop character or when declared number of bytes
+	  // has been received.
+	  srl_switch_timeout(main_kiss_srl_ctx_ptr, 1, 100);
 
-  // switching UART to receive mode to be ready for data from charging controller
-  srl_receive_data(main_wx_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
-
-#elif !defined _VICTRON && defined _UMB_MASTER
-
-//  srl_receive_data(8, SOH, 0x00, 0, 6, 12);
-
-
-#elif ! defined _VICTRON && !defined _UMB_MASTER
-  // switching UART to receive mode to be ready for KISS frames from host
-  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
-#endif
+	  // switching UART to receive mode to be ready for data from charging controller
+	  srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+  }
+  else {
+	  // switching UART to receive mode to be ready for KISS frames from host
+	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+  }
 
   io_oc_output_low();
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
@@ -580,9 +580,10 @@ int main(int argc, char* argv[]){
   beacon_send_own();
 #endif
 
-#if defined(_UMB_MASTER)
+  // initialize UMB transaction
+  if (config_data_mode.wx_umb == 1) {
 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
-#endif
+  }
 
 #ifdef INTERNAL_WATCHDOG
    // reload watchdog counter
@@ -622,7 +623,9 @@ int main(int argc, char* argv[]){
 
 	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
 
-	  			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+	  			if (main_kiss_enabled == 1) {
+	  				srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+	  			}
 #endif // #ifndef _METEO
 	  		}
 
@@ -655,64 +658,73 @@ int main(int argc, char* argv[]){
 			rx10m++;
 		}
 
-#if defined _VICTRON
-		// if new KISS message has been received from the host
-		if (srl_rx_state == SRL_RX_DONE || srl_rx_state == SRL_RX_ERROR) {
+		// if Victron VE.direct client is enabled
+		if (config_data_mode.victron == 1) {
 
-			// cutting received string to Checksum, everything after will be skipped
-			ve_direct_cut_to_checksum(srl_get_rx_buffer(), RX_BUFFER_LN, &buffer_len);
+			// if new KISS message has been received from the host
+			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 
-			// checking if this frame is ok
-			ve_direct_validate_checksum(srl_get_rx_buffer(), buffer_len, &retval);
+				// cutting received string to Checksum, everything after will be skipped
+				ve_direct_cut_to_checksum(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), TX_BUFFER_1_LN, &buffer_len);
 
-			if (retval == 1) {
-				// parsing data from input serial buffer to
-				retval = ve_direct_parse_to_raw_struct(srl_get_rx_buffer(), buffer_len, &rte_pv_struct);
+				// checking if this frame is ok
+				ve_direct_validate_checksum(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), buffer_len, &retval);
 
-				if (retval == 0) {
-					ve_direct_add_to_average(&rte_pv_struct, &rte_pv_average);
+				if (retval == 1) {
+					// parsing data from input serial buffer to
+					retval = ve_direct_parse_to_raw_struct(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), buffer_len, &rte_pv_struct);
 
-					ve_direct_get_averages(&rte_pv_average, &rte_pv_battery_current, &rte_pv_battery_voltage, &rte_pv_cell_voltage, &rte_pv_load_current);
+					if (retval == 0) {
+						ve_direct_add_to_average(&rte_pv_struct, &rte_pv_average);
 
-					ve_direct_set_sys_voltage(&rte_pv_struct, &rte_pv_sys_voltage);
+						ve_direct_get_averages(&rte_pv_average, &rte_pv_battery_current, &rte_pv_battery_voltage, &rte_pv_cell_voltage, &rte_pv_load_current);
 
-					ve_direct_store_errors(&rte_pv_struct, &rte_pv_last_error);
+						ve_direct_set_sys_voltage(&rte_pv_struct, &rte_pv_sys_voltage);
+
+						ve_direct_store_errors(&rte_pv_struct, &rte_pv_last_error);
+
+						rte_pv_messages_count++;
+					}
 				}
+				else {
+					rte_pv_corrupted_messages_count++;
+				}
+
+				  srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+			}
+		}
+		else if (config_data_mode.wx_umb == 1) {
+			// if some UMB data have been received
+			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
 			}
 
-			srl_receive_data(main_wx_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
-		}
-#elif defined _UMB_MASTER
-		// if some UMB data have been received
-		if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
-		}
+			// if there were an error during receiving frame from host, restart rxing once again
+			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
+			}
 
-		// if there were an error during receiving frame from host, restart rxing once again
-		if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
+			if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
+				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
+			}
 		}
+		else {
+			// if new KISS message has been received from the host
+			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
+				// parse incoming data and then transmit on radio freq
+				short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
+				if (res == 0)
+					kiss10m++;	// increase kiss messages counter
 
-		if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-			umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
-		}
-#else
-		// if new KISS message has been received from the host
-		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
-			// parse incoming data and then transmit on radio freq
-			short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
-			if (res == 0)
-				kiss10m++;	// increase kiss messages counter
+				// restart KISS receiving to be ready for next frame
+				srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+			}
 
-			// restart KISS receiving to be ready for next frame
-			srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+			// if there were an error during receiving frame from host, restart rxing once again
+			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
+				srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+			}
 		}
-
-		// if there were an error during receiving frame from host, restart rxing once again
-		if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
-			srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
-		}
-#endif
 
 		// if Davis wx station is enabled and it is alive
 		if (main_davis_serial_enabled == 1) {
@@ -741,9 +753,11 @@ int main(int argc, char* argv[]){
 			wx_get_all_measurements();
 #endif
 
-			#if defined(_UMB_MASTER)
-			umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
-			#endif
+			//#if defined(_UMB_MASTER)
+			if (config_data_mode.wx_umb == 1) {
+				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+			}
+			//#endif
 
 			if (main_davis_serial_enabled == 1) {
 				davis_trigger_rxcheck_packet();
@@ -806,13 +820,17 @@ int main(int argc, char* argv[]){
 
 		if (main_ten_second_pool_timer < 10) {
 
-			#if defined(_UMB_MASTER)
-			umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
-			#endif
+			//#if defined(_UMB_MASTER)
+			if (config_data_mode.wx_umb == 1) {
+				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
+			}
+			//#endif
 
-			#if defined(_UMB_MASTER)
-			rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
-			#endif
+			//#if defined(_UMB_MASTER)
+			if (config_data_mode.wx_umb == 1) {
+				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
+			}
+			//#endif
 
 			wx_pool_anemometer();
 

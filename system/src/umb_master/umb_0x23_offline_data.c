@@ -7,7 +7,7 @@
 
 #include "../umb_master/umb_master.h"
 #include "../umb_master/umb_0x23_offline_data.h"
-#include "station_config.h"
+#include "config_data.h"
 #include "rte_wx.h"
 #include "main.h"
 
@@ -27,8 +27,6 @@
 #define SIGNED_LONG_LN		4
 #define FLOAT_LN			4
 
-#ifdef _UMB_MASTER
-
 umb_retval_t umb_0x23_offline_data_request(umb_frame_t* frame, umb_context_t* ctx, uint16_t channel_number) {
 
 	if (ctx->state != UMB_STATUS_IDLE && ctx->state != UMB_STATUS_ERROR) {
@@ -36,8 +34,8 @@ umb_retval_t umb_0x23_offline_data_request(umb_frame_t* frame, umb_context_t* ct
 	}
 
 	frame->command_id = 0x23;
-	frame->slave_class = _UMB_SLAVE_CLASS;
-	frame->slave_id = _UMB_SLAVE_ID;
+	frame->slave_class = (uint8_t)(config_data_umb.slave_class & 0xFF);
+	frame->slave_id = (uint8_t)(config_data_umb.slave_id & 0xFF);
 	frame->lenght = 2;
 
 	// channels are little endian 16 bit unsigned integer
@@ -192,5 +190,3 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 	return output;
 
 }
-
-#endif

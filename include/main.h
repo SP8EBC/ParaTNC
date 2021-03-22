@@ -4,8 +4,8 @@
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 
-#define SW_VER "DF13"
-#define SW_DATE "13032021"
+#define SW_VER "DF14"
+#define SW_DATE "22032021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -33,6 +33,8 @@ extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;
+
+extern  uint8_t main_kiss_enabled;
 
 extern char after_tx_lock;
 

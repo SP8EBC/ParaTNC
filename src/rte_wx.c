@@ -42,13 +42,11 @@ bme280_qf_t rte_wx_bme280_qf = BME280_QF_UKNOWN;
 analog_wind_qf_t rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 
 
-#ifdef _UMB_MASTER
 umb_frame_t rte_wx_umb;
 umb_context_t rte_wx_umb_context;
 uint8_t rte_wx_umb_last_status = 0;
 int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];	// first dimension stores the channel number and the second one
 															// stores the value in 0.1 incremenets
-#endif
 umb_qf_t rte_wx_umb_qf = UMB_QF_UNITIALIZED;
 
 uint8_t rte_wx_davis_station_avaliable = 0;

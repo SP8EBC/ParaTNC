@@ -186,10 +186,38 @@ void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* val
 	i -= 2;
 
 	for (; i < input_ln; i++) {
+
+		// workaround of the problem with loosing \n or \r characters
+		// don't ask why and what this crap is all about. i had no time
+		// to debug the connection between the controller and pv charging regulator
+
 		sum += *(input + i);
+
+		if (i > 0) {
+
+			// if \n is the current character check if the previous one was \r
+			if (*(input + i) == '\n' && *(input + i - 1) != '\r') {
+				// if not assume that it was received and add it to the checksum
+				sum += '\r';
+
+				// proceed to next character
+				continue;
+			}
+
+			// if \r is the current character but the next one isn't \n
+			if (*(input + i) == '\r' && *(input + i + 1) != '\n') {
+				// if not assume that it was received and add it to the checksum
+				sum += '\n';
+
+				// proceed to next character
+				continue;
+			}
+
+		}
+
 	}
 
-	sum %= 256;
+	sum %= 0xFF;
 
 	if (sum == 0)
 		*valid = 1;
@@ -453,3 +481,60 @@ void ve_direct_state_to_string(ve_direct_system_state input, char* output, int8_
 		case STATE_INVERTING:  snprintf(output, output_ln, "STATE_INVERTING"); break;
 	}
 }
+
+
+/**
+ *
+ *
+ *
+ *"\r\nPID\t0xA042\r\nFW\t127\r\nSER#\tHQ1723BQTPC\nV\t13780\nI\t190\r\nVPV\t17770\r\nPPV\t3\r\nCS\t5\r\nERR\t0\r\nLOAD\tON\nIL\t0\nH19\t593\r\nH20\t1\r\nH21\t12\r\nH22\t7\r\nH23\t93\r\nHSDS\t167\nChecksum\t8"
+ *
+ *
+ *\r\nPID\t0xA042
+ *\r\nFW\t127
+ *\r\nSER#\tHQ1723BQTPC
+ *\nV\t13780
+ *\nI\t190
+ *\r\nVPV\t17770
+ *\r\nPPV\t3
+ *\r\nCS\t5
+ *\r\nERR\t0
+ *\r\nLOAD\tON
+ *\nIL\t0
+ *\nH19\t593
+ *\r\nH20\t1
+ *\r\nH21\t12
+ *\r\nH22\t7
+ *\r\nH23\t93
+ *\r\nHSDS\t167
+ *\nChecksum\t8"
+ *
+ *   Z:\home\mateusz\Documents\___STM32\VE_DIRECT_3.bin (3/22/2021 7:08:36 PM)
+ *   StartOffset(h): 00000000, EndOffset(h): 0000009B, Length(h): 0000009C
+ *
+ *unsigned char rawData[156] = {
+ *	0x0D, 0x0A, 0x50, 0x49, 0x44, 0x09, 0x30, 0x78, 0x41, 0x30, 0x34, 0x32,
+ *	0x0D, 0x0A, 0x46, 0x57, 0x09, 0x31, 0x32, 0x37, 0x0D, 0x0A, 0x53, 0x45,
+ *	0x52, 0x23, 0x09, 0x48, 0x51, 0x31, 0x37, 0x32, 0x33, 0x42, 0x51, 0x54,
+ *	0x50, 0x43, 0x0A, 0x56, 0x09, 0x31, 0x33, 0x37, 0x38, 0x30, 0x0A, 0x49,
+ *	0x09, 0x31, 0x39, 0x30, 0x0D, 0x0A, 0x56, 0x50, 0x56, 0x09, 0x31, 0x37,
+ *	0x37, 0x37, 0x30, 0x0D, 0x0A, 0x50, 0x50, 0x56, 0x09, 0x33, 0x0D, 0x0A,
+ *	0x43, 0x53, 0x09, 0x35, 0x0D, 0x0A, 0x45, 0x52, 0x52, 0x09, 0x30, 0x0D,
+ *	0x0A, 0x4C, 0x4F, 0x41, 0x44, 0x09, 0x4F, 0x4E, 0x0A, 0x49, 0x4C, 0x09,
+ *	0x30, 0x0A, 0x48, 0x31, 0x39, 0x09, 0x35, 0x39, 0x33, 0x0D, 0x0A, 0x48,
+ *	0x32, 0x30, 0x09, 0x31, 0x0D, 0x0A, 0x48, 0x32, 0x31, 0x09, 0x31, 0x32,
+ *	0x0D, 0x0A, 0x48, 0x32, 0x32, 0x09, 0x37, 0x0D, 0x0A, 0x48, 0x32, 0x33,
+ *	0x09, 0x39, 0x33, 0x0D, 0x0A, 0x48, 0x53, 0x44, 0x53, 0x09, 0x31, 0x36,
+ *	0x37, 0x0A, 0x43, 0x68, 0x65, 0x63, 0x6B, 0x73, 0x75, 0x6D, 0x09, 0x38
+ *};
+ *
+ * 0D 0A 50 49 44 09 30 78 41 30 34 32 0D 0A 46 57 09 31 32 37 0D 0A 53 45 52 23 09 48 51 31 37 32 33 42 51 54 50 43 0A 56 09 31 33 37 38 30 0A 49 09 31 39 30 0D 0A 56 50 56 09 31 37 37 37 30 0D 0A 50 50 56 09 33 0D 0A 43 53 09 35 0D 0A 45 52 52 09 30 0D 0A 4C 4F 41 44 09 4F 4E 0A 49 4C 09 30 0A 48 31 39 09 35 39 33 0D 0A 48 32 30 09 31 0D 0A 48 32 31 09 31 32 0D 0A 48 32 32 09 37 0D 0A 48 32 33 09 39 33 0D 0A 48 53 44 53 09 31 36 37 0A 43 68 65 63 6B 73 75 6D 09 38
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */

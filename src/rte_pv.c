@@ -17,3 +17,6 @@ int16_t rte_pv_battery_current;
 uint16_t rte_pv_battery_voltage;
 uint16_t rte_pv_cell_voltage;
 uint16_t rte_pv_load_current;
+
+uint16_t rte_pv_messages_count = 0;
+uint16_t rte_pv_corrupted_messages_count = 0;

@@ -67,14 +67,12 @@ extern bme280_qf_t rte_wx_bme280_qf;
 extern analog_wind_qf_t rte_wx_wind_qf;
 
 
-#ifdef _UMB_MASTER
 
 extern umb_frame_t rte_wx_umb;
 extern umb_context_t rte_wx_umb_context;
 extern uint8_t rte_wx_umb_last_status;
 extern int16_t rte_wx_umb_channel_values[UMB_CHANNELS_STORAGE_CAPAC][2];
 															// stores the value in 0.1 incremenets
-#endif
 extern umb_qf_t rte_wx_umb_qf;
 
 extern uint8_t rte_wx_davis_station_avaliable;

@@ -19,6 +19,8 @@
 
 #include "station_config.h"
 
+#include "config_data.h"
+
 #ifdef _MODBUS_RTU
 #include "modbus_rtu/rtu_getters.h"
 #include "modbus_rtu/rtu_return_values.h"
@@ -57,12 +59,14 @@ void wx_get_all_measurements(void) {
 	int8_t modbus_qf = 0;
 	float pressure_average_sum = 0.0f;
 
-#if defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)
-	if (rte_wx_umb_qf == UMB_QF_FULL) {
-		rte_wx_temperature_average_dallas_valid = umb_get_temperature();
-		rte_wx_pressure_valid = umb_get_qfe();
+//#if defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU)
+	if (config_data_mode.wx_umb == 1) {
+		if (rte_wx_umb_qf == UMB_QF_FULL) {
+			rte_wx_temperature_average_dallas_valid = umb_get_temperature();
+			rte_wx_pressure_valid = umb_get_qfe();
+		}
 	}
-#endif
+//#endif
 
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
 

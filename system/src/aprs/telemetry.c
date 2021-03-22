@@ -20,7 +20,6 @@
 
 uint16_t telemetry_counter = 0;
 
-#ifdef _VICTRON
 void telemetry_send_chns_description_pv(void) {
 	while (main_afsk.sending == 1);
 
@@ -151,19 +150,19 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-	while(ax25.dcd == true);
+	while (main_ax25.dcd == 1);
 
 	afsk_txStart(&main_afsk);
 
 }
 
-void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state) {
+void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count) {
 	char string_buff_err[24], string_buff_state[23];
 
 	ve_direct_state_to_string(state, string_buff_state, 23);
 	ve_direct_error_to_string(*last_error, string_buff_err, 24);
 
-	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), "> FwVersion %s BatAmpsMin %d BatAmpsMax %d %s %s", SW_VER, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %X, MC %X, CMC %X, IMIN %d, IMAX %d, ST %s, ERR %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
 
@@ -173,8 +172,7 @@ void telemetry_send_status(ve_direct_average_struct* avg, ve_direct_error_reason
 	avg->min_battery_current = 0;
 	*last_error = ERR_UNINITIALIZED;
 }
-
-#else
+////
 
 /**
  * Sends four frames with telemetry description
@@ -397,7 +395,6 @@ void telemetry_send_status(void) {
 
 }
 
-#endif
 
 void telemetry_send_status_raw_values_modbus(void) {
 #ifdef _MODBUS_RTU

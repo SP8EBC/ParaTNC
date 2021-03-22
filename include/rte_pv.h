@@ -23,4 +23,7 @@ extern uint16_t rte_pv_battery_voltage;
 extern uint16_t rte_pv_cell_voltage;
 extern uint16_t rte_pv_load_current;
 
+extern uint16_t rte_pv_messages_count;
+extern uint16_t rte_pv_corrupted_messages_count;
+
 #endif /* RTE_PV_H_ */
