@@ -13,7 +13,6 @@
 
 #include "modbus_rtu/rtu_getters.h"
 
-#include "station_config.h"
 #include "config_data.h"
 
 #include <main.h>

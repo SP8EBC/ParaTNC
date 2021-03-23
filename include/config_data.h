@@ -40,7 +40,7 @@ typedef struct config_data_mode_t {
 
 typedef struct config_data_basic_t {
 
-	char * callsign;
+	char callsign[7];
 
 	uint8_t ssid;
 
@@ -54,7 +54,7 @@ typedef struct config_data_basic_t {
 	// E or W
 	uint8_t zero_to_e_one_to_w;
 
-	char * comment;
+	char comment[128];
 
 	// 0 - _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
 	// 1 - _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
