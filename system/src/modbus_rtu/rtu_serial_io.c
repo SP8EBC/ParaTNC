@@ -157,7 +157,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 
 	rtu_used_serial_context = serial_context;
 
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
 #ifdef _RTU_SLAVE_ID_1
 	queue->function_id[0] =_RTU_SLAVE_FUNC_1;
@@ -213,7 +213,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 	rte_wx_modbus_rtu_f6.number_of_registers = _RTU_SLAVE_LENGHT_6;
 #endif
 
-#endif
+//#endif
 
 	return retval;
 
@@ -222,7 +222,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 int32_t rtu_serial_pool(void) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 	int32_t result = MODBUS_RET_UNINITIALIZED;
 
 	uint8_t output_data_lenght = 0;
@@ -501,7 +501,7 @@ int32_t rtu_serial_pool(void) {
 			break;
 		}
 	}
-#endif
+//#endif
 	return retval;
 }
 
@@ -565,7 +565,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl
 	int string_ln = 0;
 
 	memset(out, 0x00, out_buffer_ln);
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
 	string_ln = snprintf(out, out_buffer_ln, ">MT %X, LRET %X, LSCT %X, NSSC %X, NSE %X, RXB %X, RXI %X, TXB %X",
 												main_get_master_time(),
@@ -578,7 +578,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl
 												srl_ctx->total_tx_bytes);
 
 	*generated_string_ln = (uint8_t) string_ln;
-#endif
+//#endif
 	return retval;
 }
 

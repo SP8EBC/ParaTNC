@@ -164,3 +164,140 @@ const config_data_umb_t config_data_umb = {
 		.channel_qfe = 0xFFFF
 #endif
 };
+
+
+/**
+ *
+ */
+const config_data_rtu_t config_data_rtu = {
+		.slave_speed;
+
+		.slave_parity;
+
+		.slave_stop_bits;
+
+		.use_full_wind_data;
+
+		// sources
+		.temperature_source;
+
+		.humidity_source;
+
+		.pressure_source;
+
+		.wind_direction_source;
+
+		.wind_speed_source;
+
+		// channel 1
+		.slave_1_bus_address;
+
+		.slave_1_function;
+
+		.slave_1_register_address;
+
+		.slave_1_lenght;
+
+		.slave_1_scaling_a;
+
+		.slave_1_scaling_b;
+
+		.slave_1_scaling_c;
+
+		.slave_1_scaling_d;
+
+		.slave_1_unsigned_signed;
+
+		// channel 2
+		.slave_2_bus_address;
+
+		.slave_2_function;
+
+		.slave_2_register_address;
+
+		.slave_2_lenght;
+
+		.slave_2_scaling_a;
+
+		.slave_2_scaling_b;
+
+		.slave_2_scaling_c;
+
+		.slave_2_scaling_d;
+
+		.slave_2_unsigned_signed;
+
+		// channel 3
+		.slave_3_bus_address;
+
+		.slave_3_function;
+
+		.slave_3_register_address;
+
+		.slave_3_lenght;
+
+		.slave_3_scaling_a;
+
+		.slave_3_scaling_b;
+
+		.slave_3_scaling_c;
+
+		.slave_3_scaling_d;
+
+		.slave_3_unsigned_signed;
+
+		// channel 4
+		.slave_4_bus_address;
+
+		.slave_4_function;
+
+		.slave_4_register_address;
+
+		.slave_4_lenght;
+
+		.slave_4_scaling_a;
+
+		.slave_4_scaling_b;
+
+		.slave_4_scaling_c;
+
+		.slave_4_scaling_d;
+
+		.slave_4_unsigned_signed;
+
+		// channel 5
+		.slave_5_bus_address;
+
+		.slave_5_function;
+
+		.slave_5_register_address;
+
+		.slave_5_lenght;
+
+		.slave_5_scaling_a;
+
+		.slave_5_scaling_b;
+
+		.slave_5_scaling_c;
+
+		.slave_5_scaling_d;
+
+		.slave_5_unsigned_signed;
+
+		// channel 6
+		.slave_6_bus_address;
+
+		.slave_6_function;
+
+		.slave_6_register_address;
+
+		.slave_6_lenght;
+
+		.slave_6_scaling_a;
+
+		.slave_6_scaling_b;
+
+		.slave_6_scaling_c;
+
+		.slave_6_scaling_d;
+};
