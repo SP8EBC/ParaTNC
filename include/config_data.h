@@ -27,6 +27,8 @@ typedef struct config_data_mode_t {
 
 	uint8_t wx_davis;
 
+	uint8_t wx_rtu;
+
 	uint8_t victron;
 
 	uint8_t digi_viscous;
@@ -99,6 +101,142 @@ typedef struct config_data_umb_t {
 #define _UMB_CHANNEL_QFE
  */
 } config_data_umb_t;
+
+typedef struct config_data_rtu_t {
+	uint16_t slave_speed;
+
+	uint8_t slave_parity;
+
+	uint8_t slave_stop_bits;
+
+	uint8_t use_full_wind_data;
+
+	// sources
+	uint8_t temperature_source;
+
+	uint8_t humidity_source;
+
+	uint8_t pressure_source;
+
+	uint8_t wind_direction_source;
+
+	uint8_t wind_speed_source;
+
+	// channel 1
+	uint8_t slave_1_bus_address;
+
+	uint8_t slave_1_function;
+
+	uint16_t slave_1_register_address;
+
+	uint16_t slave_1_lenght;
+
+	uint8_t slave_1_scaling_a;
+
+	uint8_t slave_1_scaling_b;
+
+	uint8_t slave_1_scaling_c;
+
+	uint8_t slave_1_scaling_d;
+
+	uint8_t slave_1_unsigned_signed;
+
+	// channel 2
+	uint8_t slave_2_bus_address;
+
+	uint8_t slave_2_function;
+
+	uint16_t slave_2_register_address;
+
+	uint16_t slave_2_lenght;
+
+	uint8_t slave_2_scaling_a;
+
+	uint8_t slave_2_scaling_b;
+
+	uint8_t slave_2_scaling_c;
+
+	uint8_t slave_2_scaling_d;
+
+	uint8_t slave_2_unsigned_signed;
+
+	// channel 3
+	uint8_t slave_3_bus_address;
+
+	uint8_t slave_3_function;
+
+	uint16_t slave_3_register_address;
+
+	uint16_t slave_3_lenght;
+
+	uint8_t slave_3_scaling_a;
+
+	uint8_t slave_3_scaling_b;
+
+	uint8_t slave_3_scaling_c;
+
+	uint8_t slave_3_scaling_d;
+
+	uint8_t slave_3_unsigned_signed;
+
+	// channel 4
+	uint8_t slave_4_bus_address;
+
+	uint8_t slave_4_function;
+
+	uint16_t slave_4_register_address;
+
+	uint16_t slave_4_lenght;
+
+	uint8_t slave_4_scaling_a;
+
+	uint8_t slave_4_scaling_b;
+
+	uint8_t slave_4_scaling_c;
+
+	uint8_t slave_4_scaling_d;
+
+	uint8_t slave_4_unsigned_signed;
+
+	// channel 5
+	uint8_t slave_5_bus_address;
+
+	uint8_t slave_5_function;
+
+	uint16_t slave_5_register_address;
+
+	uint16_t slave_5_lenght;
+
+	uint8_t slave_5_scaling_a;
+
+	uint8_t slave_5_scaling_b;
+
+	uint8_t slave_5_scaling_c;
+
+	uint8_t slave_5_scaling_d;
+
+	uint8_t slave_5_unsigned_signed;
+
+	// channel 6
+	uint8_t slave_6_bus_address;
+
+	uint8_t slave_6_function;
+
+	uint16_t slave_6_register_address;
+
+	uint16_t slave_6_lenght;
+
+	uint8_t slave_6_scaling_a;
+
+	uint8_t slave_6_scaling_b;
+
+	uint8_t slave_6_scaling_c;
+
+	uint8_t slave_6_scaling_d;
+
+
+
+} config_data_rtu_t;
 
 extern const config_data_basic_t config_data_basic;
 extern const config_data_mode_t config_data_mode;
