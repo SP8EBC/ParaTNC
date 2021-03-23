@@ -122,6 +122,8 @@ typedef struct config_data_rtu_t {
 
 	uint8_t wind_speed_source;
 
+	uint8_t wind_gusts_source;
+
 	// channel 1
 	uint8_t slave_1_bus_address;
 
@@ -234,6 +236,7 @@ typedef struct config_data_rtu_t {
 
 	uint8_t slave_6_scaling_d;
 
+	uint8_t slave_6_unsigned_signed;
 
 
 } config_data_rtu_t;

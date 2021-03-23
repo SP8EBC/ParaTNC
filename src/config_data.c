@@ -170,134 +170,166 @@ const config_data_umb_t config_data_umb = {
  *
  */
 const config_data_rtu_t config_data_rtu = {
-		.slave_speed;
+		.slave_speed = _RTU_SLAVE_SPEED,
 
-		.slave_parity;
+		.slave_parity = _RTU_SLAVE_PARITY,
 
-		.slave_stop_bits;
+		.slave_stop_bits = _RTU_SLAVE_STOP_BITS,
 
-		.use_full_wind_data;
+#ifdef _RTU_SLAVE_FULL_WIND_DATA
+		.use_full_wind_data = 1,
+#else
+		.use_full_wind_data = 0,
+#endif
 
 		// sources
-		.temperature_source;
+#ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
+		.temperature_source = _RTU_SLAVE_TEMPERATURE_SOURCE,
+#else
+		.temperature_source = 0,
+#endif
 
-		.humidity_source;
+#ifdef _RTU_SLAVE_HUMIDITY_SOURCE
+		.humidity_source = _RTU_SLAVE_HUMIDITY_SOURCE,
+#else
+		.humidity_source = 0,
+#endif
 
-		.pressure_source;
+#ifdef _RTU_SLAVE_PRESSURE_SOURCE
+		.pressure_source = _RTU_SLAVE_PRESSURE_SOURCE,
+#else
+		.pressure_source = 0,
+#endif
 
-		.wind_direction_source;
+#ifdef _RTU_SLAVE_WIND_DIRECTION_SORUCE
+		.wind_direction_source = _RTU_SLAVE_WIND_DIRECTION_SORUCE,
+#else
+		.wind_direction_source = 0,
+#endif
 
-		.wind_speed_source;
+#ifdef _RTU_SLAVE_WIND_SPEED_SOURCE
+		.wind_speed_source = _RTU_SLAVE_WIND_SPEED_SOURCE,
+#else
+		.wind_speed_source = 0,
+#endif
+
+#ifdef _RTU_SLAVE_WIND_GUSTS_SOURCE
+		.wind_gusts_source = _RTU_SLAVE_WIND_GUSTS_SOURCE,
+#else
+		.wind_gusts_source = 0,
+#endif
 
 		// channel 1
-		.slave_1_bus_address;
+		.slave_1_bus_address = _RTU_SLAVE_ID_1,
 
-		.slave_1_function;
+		.slave_1_function = _RTU_SLAVE_FUNC_1,
 
-		.slave_1_register_address;
+		.slave_1_register_address = _RTU_SLAVE_ADDR_1,
 
-		.slave_1_lenght;
+		.slave_1_lenght = _RTU_SLAVE_LENGHT_1,
 
-		.slave_1_scaling_a;
+		.slave_1_scaling_a = _RTU_SLAVE_SCALING_A_1,
 
-		.slave_1_scaling_b;
+		.slave_1_scaling_b = _RTU_SLAVE_SCALING_B_1,
 
-		.slave_1_scaling_c;
+		.slave_1_scaling_c = _RTU_SLAVE_SCALING_C_1,
 
-		.slave_1_scaling_d;
+		.slave_1_scaling_d = _RTU_SLAVE_SCALING_D_1,
 
-		.slave_1_unsigned_signed;
+		.slave_1_unsigned_signed = 0,		// 0 - unsigned
 
 		// channel 2
-		.slave_2_bus_address;
+		.slave_2_bus_address = _RTU_SLAVE_ID_2,
 
-		.slave_2_function;
+		.slave_2_function = _RTU_SLAVE_FUNC_2,
 
-		.slave_2_register_address;
+		.slave_2_register_address = _RTU_SLAVE_ADDR_2,
 
-		.slave_2_lenght;
+		.slave_2_lenght = _RTU_SLAVE_LENGHT_2,
 
-		.slave_2_scaling_a;
+		.slave_2_scaling_a = _RTU_SLAVE_SCALING_A_2,
 
-		.slave_2_scaling_b;
+		.slave_2_scaling_b = _RTU_SLAVE_SCALING_B_2,
 
-		.slave_2_scaling_c;
+		.slave_2_scaling_c = _RTU_SLAVE_SCALING_C_2,
 
-		.slave_2_scaling_d;
+		.slave_2_scaling_d = _RTU_SLAVE_SCALING_D_2,
 
-		.slave_2_unsigned_signed;
+		.slave_2_unsigned_signed = 0,
 
 		// channel 3
-		.slave_3_bus_address;
+		.slave_3_bus_address = _RTU_SLAVE_ID_3,
 
-		.slave_3_function;
+		.slave_3_function = _RTU_SLAVE_FUNC_3,
 
-		.slave_3_register_address;
+		.slave_3_register_address = _RTU_SLAVE_ADDR_3,
 
-		.slave_3_lenght;
+		.slave_3_lenght = _RTU_SLAVE_LENGHT_3,
 
-		.slave_3_scaling_a;
+		.slave_3_scaling_a = _RTU_SLAVE_SCALING_A_3,
 
-		.slave_3_scaling_b;
+		.slave_3_scaling_b = _RTU_SLAVE_SCALING_B_3,
 
-		.slave_3_scaling_c;
+		.slave_3_scaling_c = _RTU_SLAVE_SCALING_C_3,
 
-		.slave_3_scaling_d;
+		.slave_3_scaling_d = _RTU_SLAVE_SCALING_D_3,
 
-		.slave_3_unsigned_signed;
+		.slave_3_unsigned_signed = 0,
 
 		// channel 4
-		.slave_4_bus_address;
+		.slave_4_bus_address = _RTU_SLAVE_ID_4,
 
-		.slave_4_function;
+		.slave_4_function = _RTU_SLAVE_FUNC_4,
 
-		.slave_4_register_address;
+		.slave_4_register_address = _RTU_SLAVE_ADDR_4,
 
-		.slave_4_lenght;
+		.slave_4_lenght = _RTU_SLAVE_LENGHT_4,
 
-		.slave_4_scaling_a;
+		.slave_4_scaling_a = _RTU_SLAVE_SCALING_A_4,
 
-		.slave_4_scaling_b;
+		.slave_4_scaling_b = _RTU_SLAVE_SCALING_B_4,
 
-		.slave_4_scaling_c;
+		.slave_4_scaling_c = _RTU_SLAVE_SCALING_C_4,
 
-		.slave_4_scaling_d;
+		.slave_4_scaling_d = _RTU_SLAVE_SCALING_D_4,
 
-		.slave_4_unsigned_signed;
+		.slave_4_unsigned_signed = 0,
 
 		// channel 5
-		.slave_5_bus_address;
+		.slave_5_bus_address = _RTU_SLAVE_ID_5,
 
-		.slave_5_function;
+		.slave_5_function = _RTU_SLAVE_FUNC_5,
 
-		.slave_5_register_address;
+		.slave_5_register_address = _RTU_SLAVE_ADDR_5,
 
-		.slave_5_lenght;
+		.slave_5_lenght = _RTU_SLAVE_LENGHT_5,
 
-		.slave_5_scaling_a;
+		.slave_5_scaling_a = _RTU_SLAVE_SCALING_A_5,
 
-		.slave_5_scaling_b;
+		.slave_5_scaling_b = _RTU_SLAVE_SCALING_B_5,
 
-		.slave_5_scaling_c;
+		.slave_5_scaling_c = _RTU_SLAVE_SCALING_C_5,
 
-		.slave_5_scaling_d;
+		.slave_5_scaling_d = _RTU_SLAVE_SCALING_D_5,
 
-		.slave_5_unsigned_signed;
+		.slave_5_unsigned_signed = 0,
 
 		// channel 6
-		.slave_6_bus_address;
+		.slave_6_bus_address = _RTU_SLAVE_ID_6,
 
-		.slave_6_function;
+		.slave_6_function = _RTU_SLAVE_FUNC_6,
 
-		.slave_6_register_address;
+		.slave_6_register_address = _RTU_SLAVE_ADDR_6,
 
-		.slave_6_lenght;
+		.slave_6_lenght = _RTU_SLAVE_LENGHT_6,
 
-		.slave_6_scaling_a;
+		.slave_6_scaling_a = _RTU_SLAVE_SCALING_A_6,
 
-		.slave_6_scaling_b;
+		.slave_6_scaling_b = _RTU_SLAVE_SCALING_B_6,
 
-		.slave_6_scaling_c;
+		.slave_6_scaling_c = _RTU_SLAVE_SCALING_C_6,
 
-		.slave_6_scaling_d;
+		.slave_6_scaling_d = _RTU_SLAVE_SCALING_D_6,
+
+		.slave_6_unsigned_signed = 0
 };

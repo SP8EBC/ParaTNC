@@ -10,7 +10,7 @@
 
 #include "station_config.h"
 
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
 #define RTU_GETTERS_F1_NAME rte_wx_modbus_rtu_f1
 #define RTU_GETTERS_F2_NAME rte_wx_modbus_rtu_f2
@@ -19,7 +19,7 @@
 #define RTU_GETTERS_F5_NAME rte_wx_modbus_rtu_f5
 #define RTU_GETTERS_F6_NAME rte_wx_modbus_rtu_f6
 
-#endif
+//#endif
 
 #define RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS	32
 

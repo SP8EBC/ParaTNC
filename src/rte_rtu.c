@@ -14,7 +14,7 @@ uint8_t rte_rtu_number_of_serial_io_errors = 0;
 
 uint16_t rte_rtu_number_of_successfull_serial_comm = 0;
 
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
 	#if defined(_RTU_SLAVE_ID_1) && (_RTU_SLAVE_FUNC_1 == 0x03 || _RTU_SLAVE_FUNC_1 == 0x04)
 		rtu_register_data_t RTU_GETTERS_F1_NAME;
@@ -45,7 +45,7 @@ uint32_t rte_rtu_last_modbus_exception_timestamp;
 uint32_t rte_rtu_last_modbus_rx_error_timestamp;
 rtu_pool_queue_t rte_rtu_pool_queue;
 
-#endif
+//#endif
 
 void rte_rtu_init(void) {
 #ifdef _MODBUS_RTU
