@@ -357,30 +357,32 @@ int main(int argc, char* argv[]){
 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
 
   }
-
-#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
-
-  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr);
-
-  main_target_wx_baudrate = _RTU_SLAVE_SPEED;
-
-  // initialize serial ports according to RS485 network configuration for Modbus-RTU
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, _RTU_SLAVE_STOP_BITS);
-  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
-
-  // enabling rtu master code
-  main_modbus_rtu_master_enabled = 1;
-
-  rtu_serial_start();
-
-#else
-  // initializing UART drvier
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-
-
 #endif
+//#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
+  if (config_data_mode.wx_modbus == 1) {
+
+	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr);
+
+	  main_target_wx_baudrate = config_data_rtu.slave_speed;
+
+	  // initialize serial ports according to RS485 network configuration for Modbus-RTU
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, config_data_rtu.slave_stop_bits);
+	  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
+
+	  // enabling rtu master code
+	  main_modbus_rtu_master_enabled = 1;
+
+	  rtu_serial_start();
+  }
+  else {
+//#else
+	  // initializing UART drvier
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+  }
+
+//#endif
 
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
@@ -739,9 +741,9 @@ int main(int argc, char* argv[]){
 
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 			rtu_serial_pool();
-#endif
+//#endif
 		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
