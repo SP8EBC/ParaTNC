@@ -7,12 +7,14 @@
 
 #include "aprs/telemetry.h"
 #include "main.h"
-#include "station_config.h"
 #include "delay.h"
 
 #include "ve_direct_protocol/parser.h"
 
 #include "modbus_rtu/rtu_getters.h"
+
+#include "station_config.h"
+#include "config_data.h"
 
 #include <main.h>
 #include <stdio.h>
@@ -21,17 +23,25 @@
 uint16_t telemetry_counter = 0;
 
 void telemetry_send_chns_description_pv(void) {
+
+	// a buffer to assembly the 'call-ssid' string at the begining of the frame
+	char message_prefix_buffer[9];
+
+	memset(message_prefix_buffer, 0x00, 0x09);
+
+	sprintf(message_prefix_buffer, "%s-%d", config_data_basic.callsign, config_data_basic.ssid);
+
 	while (main_afsk.sending == 1);
 
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,TX20_SLEW", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,TX20_SLEW", _CALL, _SSID);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRADA,DS_QF_NAVBLE,MS_QF_NAVBLE,DHT_QF_NAVBLE,TX20_SLEW", _CALL, _SSID);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+	else
+		return;
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -41,15 +51,15 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Digi10mi
 
 	delay_fixed(1200);
 
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", _CALL, _SSID);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", _CALL, _SSID);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", message_prefix_buffer);
+	else
+		return;
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -59,15 +69,15 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:PARM.Rx10min,Digi10mi
 
 	delay_fixed(1200);
 
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%s-%d:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi", _CALL, _SSID);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+	else
+		return;
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -82,13 +92,17 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								uint16_t raw_battery_voltage,
 								uint16_t raw_pv_cell_voltage,
 								dallas_qf_t dallas_qf,
-								ms5611_qf_t ms_qf,
-								dht22QF ds_qf)
+								pressure_qf_t press_qf,
+								humidity_qf_t humid_qf,
+								wind_qf_t anemometer_qf)
 {
 	// local variables with characters to be inserted to APRS telemetry frame
 	char qf = '0', degr = '0', nav = '0';
-	char ms_qf_navaliable = '0';
-	char dht_qf_navaliable = '0';
+
+	char pressure_qf_navaliable = '0';
+	char humidity_qf_navaliable = '0';
+	char anemometer_degradated = '0';
+	char anemometer_navble = '0';
 
 	uint8_t scaled_battery_current = 0;
 	uint8_t scaled_battery_voltage = 0;
@@ -123,26 +137,27 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 		break;
 	}
 
-	switch (ms_qf) {
-	case MS5611_QF_NOT_AVALIABLE:
-	case MS5611_QF_UNKNOWN:
-		 ms_qf_navaliable = '1';
+	// set the quality factor for pressure
+	switch (press_qf) {
+	case PRESSURE_QF_NOT_AVALIABLE:
+	case PRESSURE_QF_UNKNOWN:
+		 pressure_qf_navaliable = '1';
 		 break;
 	default:
-		ms_qf_navaliable = '0';
+		pressure_qf_navaliable = '0';
 		break;
 	}
 
-	switch (ds_qf) {
-	case DHT22_QF_UNAVALIABLE:
-	case DHT22_QF_UNKNOWN:
-		dht_qf_navaliable = '1';
+	switch (humid_qf) {
+	case HUMIDITY_QF_UNKNOWN:
+	case HUMIDITY_QF_NOT_AVALIABLE:
+		humidity_qf_navaliable = '1';
 		break;
 	default:
-		dht_qf_navaliable = '0';
+		humidity_qf_navaliable = '0';
 	}
 
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c000", telemetry_counter++, rx_pkts, digi_pkts, scaled_battery_current, scaled_battery_voltage, scaled_pvcell_volage, qf, degr, nav, ms_qf_navaliable, dht_qf_navaliable);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, digi_pkts, scaled_battery_current, scaled_battery_voltage, scaled_pvcell_volage, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 
 
 	if (telemetry_counter > 999)
@@ -162,7 +177,7 @@ void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_rea
 	ve_direct_state_to_string(state, string_buff_state, 23);
 	ve_direct_error_to_string(*last_error, string_buff_err, 24);
 
-	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %X, MC %X, CMC %X, IMIN %d, IMAX %d, ST %s, ERR %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %X, MC %X, CMC %X, IMIN %d, IMAX %d, %s, %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
 
@@ -184,7 +199,7 @@ void telemetry_send_chns_description(void) {
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", _CALL, _SSID);
+	sprintf(message_prefix_buffer, "%s-%d", config_data_basic.callsign, config_data_basic.ssid);
 
 	// wait for any RF transmission to finish
 	main_wait_for_tx_complete();
@@ -193,15 +208,14 @@ void telemetry_send_chns_description(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 	// prepare a frame with channel names depending on SSID
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+	else
+		return;
 
 	// place a null terminator at the end
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
@@ -219,15 +233,15 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,D
 
 	while (main_ax25.dcd == 1);
 
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
+	else
+		return;
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -239,15 +253,15 @@ main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,D
 
 	while (main_ax25.dcd == 1);
 
-#if (_SSID == 0)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", _CALL);
-#endif
-#if (_SSID > 0 && _SSID <= 9)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
-#endif
-#if (_SSID > 9 && _SSID <= 15)
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
-#endif
+	if (config_data_basic.ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_data_basic.callsign);
+	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+	else
+		return;
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;

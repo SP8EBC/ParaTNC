@@ -294,7 +294,7 @@ void packet_tx_handler(void) {
 //#ifdef _VICTRON
 //
 		if (config_data_mode.victron == 1) {
-			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf);
+			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 		}
 		else {
 //

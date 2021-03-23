@@ -56,8 +56,9 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								uint16_t raw_battery_voltage,
 								uint16_t raw_pv_cell_voltage,
 								dallas_qf_t dallas_qf,
-								ms5611_qf_t ms_qf,
-								dht22QF ds_qf);
+								pressure_qf_t press_qf,
+								humidity_qf_t humid_qf,
+								wind_qf_t anemometer_q);
 void telemetry_send_chns_description_pv(void);
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count);
 
