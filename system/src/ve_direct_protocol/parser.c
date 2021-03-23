@@ -155,10 +155,6 @@ void ve_direct_cut_to_checksum(uint8_t* input, uint16_t input_ln,
 
 	*target_ln = checksum_start + CHECKSUM_NAME_FIELD_LN_TO_DATA;
 
-	for (i = checksum_start + CHECKSUM_NAME_FIELD_LN_TO_DATA; i < input_ln; i++) {
-		*(input + i) = 0x00;
-	}
-
 }
 
 void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* valid) {
@@ -170,20 +166,6 @@ void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* val
 		*valid = 0;
 		return;
 	}
-
-	// rewind to first printable chcaracter
-	while (is_non_printable_character()) {
-		i++;
-
-		// if we reach an end of the string but no printable character has been spotted
-		if (i >= input_ln) {
-			*valid = 0;
-			return;
-		}
-	}
-
-	// checksum need to be calculated including newline before first record
-	i -= 2;
 
 	for (; i < input_ln; i++) {
 
@@ -213,6 +195,13 @@ void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* val
 				continue;
 			}
 
+		}
+		else {
+
+			// the next part of the stupid workaround
+			if ((*input) == '\n') {
+				sum += '\r';
+			}
 		}
 
 	}

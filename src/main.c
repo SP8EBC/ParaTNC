@@ -560,10 +560,10 @@ int main(int argc, char* argv[]){
 	  // enabling timeout handling for serial port. This is required because VE protocol frame may vary in lenght
 	  // and serial port driver could finish reception only either on stop character or when declared number of bytes
 	  // has been received.
-	  srl_switch_timeout(main_kiss_srl_ctx_ptr, 1, 100);
+	  srl_switch_timeout(main_kiss_srl_ctx_ptr, 1, 50);
 
 	  // switching UART to receive mode to be ready for data from charging controller
-	  srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+	  srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
   }
   else {
 	  // switching UART to receive mode to be ready for KISS frames from host
@@ -690,7 +690,9 @@ int main(int argc, char* argv[]){
 					rte_pv_corrupted_messages_count++;
 				}
 
-				  srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0x0D, 0, 0, 0, 0);
+				//memset(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), 0x00, TX_BUFFER_1_LN);
+
+				srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
 			}
 		}
 		else if (config_data_mode.wx_umb == 1) {
