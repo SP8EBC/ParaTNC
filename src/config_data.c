@@ -14,6 +14,32 @@
 
 #include "station_config.h"
 
+
+#ifndef _RTU_SLAVE_LENGHT_1
+	#define _RTU_SLAVE_LENGHT_1 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_2
+	#define _RTU_SLAVE_LENGHT_2 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_3
+	#define _RTU_SLAVE_LENGHT_3 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_4
+	#define _RTU_SLAVE_LENGHT_4 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_5
+	#define _RTU_SLAVE_LENGHT_5 0x1
+#endif
+
+#ifndef _RTU_SLAVE_LENGHT_6
+	#define _RTU_SLAVE_LENGHT_6 0x1
+#endif
+
+
 /**
  *
  */
@@ -132,6 +158,72 @@ const config_data_basic_t config_data_basic = {
 		.beacon_at_bootup = 0
 #endif
 
+};
+
+/**
+ * Data sources for different parameters
+ *
+ */
+const config_data_wx_sources_t config_data_wx_sources = {
+#ifdef _TEMPERATURE_INTERNAL
+		.temperature = WX_SOURCE_INTERNAL,
+#endif
+#ifdef _TEMPERATURE_UMB
+		.temperature = WX_SOURCE_UMB,
+#endif
+#ifdef _TEMPERATURE_RTU
+		.temperature = WX_SOURCE_RTU,
+#endif
+#ifdef _TEMPERATURE_DAVIS
+		.temperature = WX_SOURCE_DAVIS_SERIAL,
+#endif
+
+
+
+#ifdef _PRESSURE_INTERNAL
+		.pressure = WX_SOURCE_INTERNAL,
+#endif
+#ifdef _PRESSURE_UMB
+		.pressure = WX_SOURCE_UMB,
+#endif
+#ifdef _PRESSURE_RTU
+		.pressure = WX_SOURCE_RTU,
+#endif
+#ifdef _PRESSURE_DAVIS
+		.pressure = WX_SOURCE_DAVIS_SERIAL,
+#endif
+
+
+#ifdef _HUMIDITY_INTERNAL
+		.humidity = WX_SOURCE_INTERNAL,
+#endif
+#ifdef _HUMIDITY_UMB
+		.humidity = WX_SOURCE_UMB,
+#endif
+#ifdef _HUMIDITY_RTU
+		.humidity = WX_SOURCE_RTU,
+#endif
+#ifdef _HUMIDITY_DAVIS
+		.humidity = WX_SOURCE_DAVIS_SERIAL,
+#endif
+
+
+
+#ifdef _WIND_INTERNAL
+		.wind = WX_SOURCE_INTERNAL
+#endif
+#ifdef _WIND_UMB
+		.wind = WX_SOURCE_UMB
+#endif
+#ifdef _WIND_RTU
+		.wind = WX_SOURCE_RTU
+#endif
+#ifdef _WIND_FULL_RTU
+		.wind = WX_SOURCE_FULL_RTU
+#endif
+#ifdef _WIND_DAVIS
+		.wind = WX_SOURCE_DAVIS_SERIAL
+#endif
 };
 
 /**

@@ -361,7 +361,7 @@ int main(int argc, char* argv[]){
 //#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
   if (config_data_mode.wx_modbus == 1) {
 
-	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr);
+	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, &config_data_rtu);
 
 	  main_target_wx_baudrate = config_data_rtu.slave_speed;
 

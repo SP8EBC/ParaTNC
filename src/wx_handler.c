@@ -423,11 +423,6 @@ void wx_pool_anemometer(void) {
 	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 	#endif
 
-	#if defined(_ANEMOMETER_TX20) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (!defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && !defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_ANEMOMETER_TX20))
-	scaled_windspeed = tx20_get_scaled_windspeed();
-	rte_wx_winddirection_last = tx20_get_wind_direction();
-	#endif
-
 	#if defined(_UMB_MASTER)
 	rte_wx_average_winddirection = umb_get_winddirection();
 	rte_wx_average_windspeed = umb_get_windspeed();

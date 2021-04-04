@@ -78,6 +78,47 @@ typedef struct config_data_basic_t {
 
 } config_data_basic_t;
 
+typedef struct config_data_wx_sources_t {
+
+	config_data_wx_sources_enum_t temperature;
+	config_data_wx_sources_enum_t pressure;
+	config_data_wx_sources_enum_t humidity;
+	config_data_wx_sources_enum_t wind;
+
+} config_data_wx_sources_t;
+
+typedef enum config_data_wx_sources_enum_t {
+	/**
+	 * Internal sensors are:
+	 * 	- Dallas DS18B20 for temperature
+	 * 	- MS5611 or BME280 for pressure/humidity
+	 * 	- analog/mechanical anemometer for wind
+	 */
+	WX_SOURCE_INTERNAL = 1,
+
+	/**
+	 * Lufft UMB devices
+	 */
+	WX_SOURCE_UMB = 2,
+
+	/**
+	 * RTU can be used for any measuremd parameter, but by default
+	 * it is used for wind in the same way as the mechanic anemometer is.
+	 * The controller asks for the windspeed and treat it as momentary value,
+	 * which then is put into the circular buffer to calculate average and
+	 * max from.
+	 */
+	WX_SOURCE_RTU = 3,
+
+	/**
+	 * This option makes a difference only for wind measurements. With all
+	 * other parameters it works exactly the same as WX_SOURCE_RTU. In this mode
+	 * the controller queries for average and maximum wind speed.
+	 */
+	WX_SOURCE_FULL_RTU = 4,
+	WX_SOURCE_DAVIS_SERIAL = 5
+} config_data_wx_sources_enum_t;
+
 typedef struct config_data_umb_t {
 
 	uint16_t slave_class;
@@ -244,5 +285,6 @@ typedef struct config_data_rtu_t {
 extern const config_data_basic_t config_data_basic;
 extern const config_data_mode_t config_data_mode;
 extern const config_data_umb_t config_data_umb;
+extern const config_data_rtu_t config_data_rtu;
 
 #endif /* CONFIG_DATA_H_ */

@@ -12,6 +12,8 @@
 #include "./drivers/ms5611.h"
 #include "./drivers/_dht22.h"
 #include "./umb_master/umb_qf_t.h"
+#include "./ve_direct_protocol/raw_struct.h"
+#include "./ve_direct_protocol/average_struct.h"
 
 #include "./station_config.h"
 
