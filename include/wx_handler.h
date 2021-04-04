@@ -9,6 +9,7 @@
 #define WX_HANDLER_H_
 
 #include <stdint.h>
+#include "config_data.h"
 
 extern uint32_t wx_last_good_temperature_time;
 extern uint32_t wx_last_good_wind_time;

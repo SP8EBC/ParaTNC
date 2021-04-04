@@ -244,6 +244,9 @@ int main(int argc, char* argv[]){
 
 #endif
 
+  // initalizing separated Open Collector output
+  io_oc_init();
+
   // initialize sensor power control and switch off supply voltage
   wx_pwr_init();
 
@@ -425,9 +428,6 @@ int main(int argc, char* argv[]){
 
   // initialize GPIO pins leds are connecting to
   led_init();
-
-  // initalizing separated Open Collector output
-  io_oc_init();
 
   // initialize AX25 & APRS stuff
   AFSK_Init(&main_afsk);
