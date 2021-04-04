@@ -8,7 +8,6 @@
 #include <delay.h>
 #include <stm32f10x.h>
 #include "drivers/dallas.h"
-#include "drivers/tx20.h"
 #include "drivers/ms5611.h"
 #include "drivers/_dht22.h"
 #include "drivers/serial.h"

@@ -8,7 +8,6 @@
 #include "./aprs/wx.h"
 #include "./aprs/telemetry.h"
 
-#include "./drivers/tx20.h"
 #include "./drivers/serial.h"
 
 #include "./umb_master/umb_master.h"

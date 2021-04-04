@@ -12,8 +12,7 @@ C_SRCS += \
 ../system/src/drivers/gpio_conf.c \
 ../system/src/drivers/i2c.c \
 ../system/src/drivers/ms5611.c \
-../system/src/drivers/serial.c \
-../system/src/drivers/tx20.c 
+../system/src/drivers/serial.c 
 
 OBJS += \
 ./system/src/drivers/_dht22.o \
@@ -24,8 +23,7 @@ OBJS += \
 ./system/src/drivers/gpio_conf.o \
 ./system/src/drivers/i2c.o \
 ./system/src/drivers/ms5611.o \
-./system/src/drivers/serial.o \
-./system/src/drivers/tx20.o 
+./system/src/drivers/serial.o 
 
 C_DEPS += \
 ./system/src/drivers/_dht22.d \
@@ -36,8 +34,7 @@ C_DEPS += \
 ./system/src/drivers/gpio_conf.d \
 ./system/src/drivers/i2c.d \
 ./system/src/drivers/ms5611.d \
-./system/src/drivers/serial.d \
-./system/src/drivers/tx20.d 
+./system/src/drivers/serial.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

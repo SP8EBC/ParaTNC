@@ -15,7 +15,6 @@
 #include "drivers/ms5611.h"
 #include "drivers/bme280.h"
 #include "drivers/analog_anemometer.h"
-#include "drivers/tx20.h"
 
 #include "station_config.h"
 

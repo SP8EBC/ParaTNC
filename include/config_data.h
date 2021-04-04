@@ -78,15 +78,6 @@ typedef struct config_data_basic_t {
 
 } config_data_basic_t;
 
-typedef struct config_data_wx_sources_t {
-
-	config_data_wx_sources_enum_t temperature;
-	config_data_wx_sources_enum_t pressure;
-	config_data_wx_sources_enum_t humidity;
-	config_data_wx_sources_enum_t wind;
-
-} config_data_wx_sources_t;
-
 typedef enum config_data_wx_sources_enum_t {
 	/**
 	 * Internal sensors are:
@@ -118,6 +109,15 @@ typedef enum config_data_wx_sources_enum_t {
 	WX_SOURCE_FULL_RTU = 4,
 	WX_SOURCE_DAVIS_SERIAL = 5
 } config_data_wx_sources_enum_t;
+
+typedef struct config_data_wx_sources_t {
+
+	config_data_wx_sources_enum_t temperature;
+	config_data_wx_sources_enum_t pressure;
+	config_data_wx_sources_enum_t humidity;
+	config_data_wx_sources_enum_t wind;
+
+} config_data_wx_sources_t;
 
 typedef struct config_data_umb_t {
 

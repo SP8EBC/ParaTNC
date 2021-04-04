@@ -40,7 +40,6 @@
 #include <wx_handler.h>
 #include "drivers/dallas.h"
 #include "drivers/i2c.h"
-#include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 

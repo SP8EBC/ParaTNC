@@ -8,7 +8,6 @@
 #ifndef INCLUDE_APRS_WX_H_
 #define INCLUDE_APRS_WX_H_
 
-#include "drivers/tx20.h"
 #include "station_config.h"
 #include <stdint.h>
 

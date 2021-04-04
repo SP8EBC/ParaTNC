@@ -7,7 +7,6 @@
 
 #include "aprs/wx.h"
 #include "aprs/digi.h"
-#include "drivers/tx20.h"
 #include "main.h"
 #include "rte_main.h"
 
