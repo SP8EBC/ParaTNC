@@ -32,9 +32,6 @@ int16_t rte_wx_average_winddirection = 0;
 
 int8_t rte_wx_humidity = 0, rte_wx_humidity_valid = 0;
 
-uint8_t rte_wx_tx20_excessive_slew_rate = 0;
-
-dht22Values rte_wx_dht, rte_wx_dht_valid;		// quality factor inside this structure
 dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
 dallas_average_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf = MS5611_QF_UNKNOWN;

@@ -8,9 +8,10 @@
 #ifndef INCLUDE_APRS_TELEMETRY_H_
 #define INCLUDE_APRS_TELEMETRY_H_
 
+#include "config_data.h"
+
 #include "./drivers/dallas.h"
 #include "./drivers/ms5611.h"
-#include "./drivers/_dht22.h"
 #include "./umb_master/umb_qf_t.h"
 #include "./ve_direct_protocol/raw_struct.h"
 #include "./ve_direct_protocol/average_struct.h"
@@ -20,9 +21,7 @@
 #define TELEMETRY_MIN_DALLAS	-25.0f
 #define TELEMETRY_MAX_DALLAS	38.75f
 
-#ifdef _VICTRON
 #include "ve_direct_protocol/parser.h"
-#endif
 
 #include "stdint.h"
 
@@ -61,7 +60,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								pressure_qf_t press_qf,
 								humidity_qf_t humid_qf,
 								wind_qf_t anemometer_q);
-void telemetry_send_chns_description_pv(void);
+void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic);
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count);
 
 void telemetry_send_values(	uint8_t rx_pkts,
@@ -73,7 +72,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							pressure_qf_t press_qf,
 							humidity_qf_t humid_qf,
 							wind_qf_t anemometer_qf);
-void telemetry_send_chns_description(void);
+void telemetry_send_chns_description(const config_data_basic_t * const config_basic);
 void telemetry_send_status(void);
 
 void telemetry_send_status_raw_values_modbus(void);

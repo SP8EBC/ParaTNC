@@ -15,8 +15,6 @@
 #include "main.h"
 #include "delay.h"
 
-#include "config_data.h"
-
 #define _TELEM_DESCR_INTERVAL	150
 
 uint8_t packet_tx_beacon_interval = _BCN_INTERVAL;
@@ -66,7 +64,7 @@ inline void packet_tx_multi_per_call_handler(void) {
 }
 
 // this shall be called in 60 seconds periods
-void packet_tx_handler(void) {
+void packet_tx_handler(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode) {
 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
 
 	pressure_qf_t pressure_qf = PRESSURE_QF_UNKNOWN;
@@ -89,7 +87,7 @@ void packet_tx_handler(void) {
 
 	if (packet_tx_error_status_counter >= packet_tx_error_status_interval) {
 	//#if defined(_UMB_MASTER)
-		if (config_data_mode.wx_umb) {
+		if (config_mode->wx_umb) {
 			umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
 
 			packet_tx_multi_per_call_handler();
@@ -157,7 +155,7 @@ void packet_tx_handler(void) {
 
 	// check if Victron VE.Direct serial protocol client is enabled and it is
 	// a time to send status message
-	if (config_data_mode.victron == 1 &&
+	if (config_mode->victron == 1 &&
 		packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
 		packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
 	{
@@ -239,13 +237,7 @@ void packet_tx_handler(void) {
 		#elif defined(_SENSOR_BME280)
 		// humidity sensors quality factors
 		if (rte_wx_bme280_qf == BME280_QF_UKNOWN) {
-			// use DHT22
-			switch(rte_wx_dht_valid.qf) {
-				case DHT22_QF_UNKNOWN: humidity_qf = HUMIDITY_QF_UNKNOWN; break;
-				case DHT22_QF_FULL: humidity_qf = HUMIDITY_QF_FULL; break;
-				case DHT22_QF_DEGRADATED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
-				case DHT22_QF_UNAVALIABLE: humidity_qf = HUMIDITY_QF_NOT_AVALIABLE; break;
-			}
+			;
 		}
 		else {
 			// use BME280
@@ -290,32 +282,24 @@ void packet_tx_handler(void) {
 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
-//#ifdef _VICTRON
-//
-		if (config_data_mode.victron == 1) {
+
+		if (config_mode->victron == 1) {
 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 		}
 		else {
-//
-//#else
-//
-//		#if defined _DALLAS_AS_TELEM
+
 				// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
 				//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf, rte_wx_umb_qf);
-//		#elif defined _METEO
-			if (config_data_mode.wx == 1) {
+			if (config_mode->wx == 1) {
 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 			}
-//		#else
 			else {
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 			}
-//		#endif
-//
-//#endif
+
 		}
 		packet_tx_telemetry_counter = 0;
 
@@ -328,15 +312,13 @@ void packet_tx_handler(void) {
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 		packet_tx_multi_per_call_handler();
 
-//#ifdef _VICTRON
-		if (config_data_mode.victron == 1) {
-			telemetry_send_chns_description_pv();
+		if (config_mode->victron == 1) {
+			telemetry_send_chns_description_pv(&config_basic);
 
 			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
-//#else
 		else {
-			telemetry_send_chns_description();
+			telemetry_send_chns_description(&config_basic);
 
 			packet_tx_multi_per_call_handler();
 
@@ -345,12 +327,11 @@ void packet_tx_handler(void) {
 
 		telemetry_send_status();
 
-//#endif
-//#if defined _UMB_MASTER
-		if (config_data_mode.wx_umb == 1) {
+
+		if (config_mode->wx_umb == 1) {
 			umb_clear_error_history(&rte_wx_umb_context);
 		}
-//#endif
+
 		packet_tx_telemetry_descr_counter = 0;
 	}
 

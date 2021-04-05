@@ -12,15 +12,15 @@
 
 #include <string.h>
 
-umb_retval_t umb_0x26_status_request(umb_frame_t* frame, umb_context_t* ctx) {
+umb_retval_t umb_0x26_status_request(umb_frame_t* frame, umb_context_t* ctx, const config_data_umb_t * const config_umb) {
 
 	if (ctx->state != UMB_STATUS_IDLE && ctx->state != UMB_STATUS_ERROR) {
 		return UMB_BUSY;
 	}
 
 	frame->command_id = 0x26;
-	frame->slave_class = (uint8_t)(config_data_umb.slave_class & 0xFF);
-	frame->slave_id = (uint8_t)(config_data_umb.slave_id & 0xFF);
+	frame->slave_class = (uint8_t)(config_umb->slave_class & 0xFF);
+	frame->slave_id = (uint8_t)(config_umb->slave_id & 0xFF);
 	frame->lenght = 0;
 
 	memset(frame->payload, 0x00, UMB_FRAME_MAX_PAYLOAD_LN);

@@ -13,30 +13,28 @@
 
 #include "modbus_rtu/rtu_getters.h"
 
-#include "config_data.h"
-
 #include <main.h>
 #include <stdio.h>
 #include <string.h>
 
 uint16_t telemetry_counter = 0;
 
-void telemetry_send_chns_description_pv(void) {
+void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic) {
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
 	char message_prefix_buffer[9];
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", config_data_basic.callsign, config_data_basic.ssid);
+	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	while (main_afsk.sending == 1);
 
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
 	else
 		return;
@@ -50,11 +48,11 @@ void telemetry_send_chns_description_pv(void) {
 
 	delay_fixed(1200);
 
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4", message_prefix_buffer);
 	else
 		return;
@@ -68,11 +66,11 @@ void telemetry_send_chns_description_pv(void) {
 
 	delay_fixed(1200);
 
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else
 		return;
@@ -191,14 +189,14 @@ void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_rea
 /**
  * Sends four frames with telemetry description
  */
-void telemetry_send_chns_description(void) {
+void telemetry_send_chns_description(const config_data_basic_t * const config_basic) {
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
 	char message_prefix_buffer[9];
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", config_data_basic.callsign, config_data_basic.ssid);
+	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	// wait for any RF transmission to finish
 	main_wait_for_tx_complete();
@@ -207,11 +205,11 @@ void telemetry_send_chns_description(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 	// prepare a frame with channel names depending on SSID
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
 	else
 		return;
@@ -232,11 +230,11 @@ void telemetry_send_chns_description(void) {
 
 	while (main_ax25.dcd == 1);
 
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50", message_prefix_buffer);
 	else
 		return;
@@ -252,11 +250,11 @@ void telemetry_send_chns_description(void) {
 
 	while (main_ax25.dcd == 1);
 
-	if (config_data_basic.ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_data_basic.callsign);
-	else if (config_data_basic.ssid > 0 && config_data_basic.ssid < 10)
+	if (config_basic->ssid == 0)
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
-	else if (config_data_basic.ssid >= 10 && config_data_basic.ssid < 16)
+	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else
 		return;

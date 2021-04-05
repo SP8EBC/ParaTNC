@@ -282,9 +282,5 @@ typedef struct config_data_rtu_t {
 
 } config_data_rtu_t;
 
-extern const config_data_basic_t config_data_basic;
-extern const config_data_mode_t config_data_mode;
-extern const config_data_umb_t config_data_umb;
-extern const config_data_rtu_t config_data_rtu;
 
 #endif /* CONFIG_DATA_H_ */

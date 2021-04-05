@@ -13,7 +13,6 @@
 #include <umb_master/umb_master.h>
 #include <umb_master/umb_channel_pool.h>
 #include <rte_wx.h>
-#include "config_data.h"
 
 #define SOH 0x01
 #define STX 0x02
@@ -27,7 +26,7 @@
 
 #define TEN_MINUTES (1000 * 600)
 
-void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx) {
+void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config_data_umb_t * const config_umb) {
 	ctx->current_routine = -1;
 	ctx->state = UMB_STATUS_IDLE;
 	ctx->nok_error_it = 0;
@@ -47,25 +46,15 @@ void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx) {
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++)
 		rte_wx_umb_channel_values[i][0] = 0xFFFF;
 
-#ifdef _UMB_CHANNEL_WINDSPEED
-	ctx->channel_numbers[0] = config_data_umb.channel_windspeed;
-#endif
+	ctx->channel_numbers[0] = config_umb->channel_windspeed;
 
-#ifdef _UMB_CHANNEL_WINDGUSTS
-	ctx->channel_numbers[1] = config_data_umb.channel_wingsusts;
-#endif
+	ctx->channel_numbers[1] = config_umb->channel_wingsusts;
 
-#ifdef _UMB_CHANNEL_WINDDIRECTION
-	ctx->channel_numbers[2] = config_data_umb.channel_winddirection;
-#endif
+	ctx->channel_numbers[2] = config_umb->channel_winddirection;
 
-#ifdef _UMB_CHANNEL_TEMPERATURE
-	ctx->channel_numbers[3] = config_data_umb.channel_temperature;
-#endif
+	ctx->channel_numbers[3] = config_umb->channel_temperature;
 
-#ifdef _UMB_CHANNEL_QFE
-	ctx->channel_numbers[4] = config_data_umb.channel_qfe;
-#endif
+	ctx->channel_numbers[4] = config_umb->channel_qfe;
 
 }
 
@@ -117,7 +106,7 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	return UMB_OK;
 }
 
-umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame, uint16_t* target_ln) {
+umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame, uint16_t* target_ln, const config_data_umb_t * const config_umb) {
 
 	int i = 0;
 	uint16_t crc = 0xFFFFu;
@@ -129,8 +118,8 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 
 	serial_buffer[i++] = SOH;
 	serial_buffer[i++] = V10;
-	serial_buffer[i++] = (uint8_t)(config_data_umb.slave_id & 0xFF); //_UMB_SLAVE_ID;
-	serial_buffer[i++] = (uint8_t)(config_data_umb.slave_class & 0xFF) << 4;//_UMB_SLAVE_CLASS << 4;
+	serial_buffer[i++] = (uint8_t)(config_umb->slave_id & 0xFF); //_UMB_SLAVE_ID;
+	serial_buffer[i++] = (uint8_t)(config_umb->slave_class & 0xFF) << 4;//_UMB_SLAVE_CLASS << 4;
 	serial_buffer[i++] = MASTER_ID;
 	serial_buffer[i++] = MASTER_CLASS;
 	serial_buffer[i++] = frame->lenght + 2;
@@ -181,7 +170,7 @@ uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
  * This function is called in main 'for' loop to check if there
  * is anything to do regarding UMB
  */
-umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32_t master_time) {
+umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32_t master_time, const config_data_umb_t * const config_umb) {
 
 	uint16_t temp = 0;
 	umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
@@ -193,7 +182,7 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 			// Check if serial port is idle and can be used in this moment to transmit something
 			if (r == REASON_TRANSMIT_IDLE) {
 				// parsing UMB frame into serial buffer
-				umb_parse_frame_to_serial_buffer(srl_usart1_tx_buffer, TX_BUFFER_1_LN, &rte_wx_umb, &temp);
+				umb_parse_frame_to_serial_buffer(srl_usart1_tx_buffer, TX_BUFFER_1_LN, &rte_wx_umb, &temp, config_umb);
 
 				// starting data transfer
 				srl_start_tx(ctx->serial_context, temp);
@@ -433,12 +422,12 @@ void umb_clear_error_history(umb_context_t* ctx) {
 }
 
 
-uint16_t umb_get_windspeed(void) {
+uint16_t umb_get_windspeed(const config_data_umb_t * const config_umb) {
 
 	uint16_t out = 0;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_data_umb.channel_windspeed) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_windspeed) {
 			out = (uint16_t)rte_wx_umb_channel_values[i][1];
 			break;
 		}
@@ -447,11 +436,11 @@ uint16_t umb_get_windspeed(void) {
 	return out;
 }
 
-uint16_t umb_get_windgusts(void) {
+uint16_t umb_get_windgusts(const config_data_umb_t * const config_umb) {
 	uint16_t out = 0;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_data_umb.channel_wingsusts) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_wingsusts) {
 			out = (uint16_t)rte_wx_umb_channel_values[i][1];
 			break;
 		}
@@ -460,11 +449,11 @@ uint16_t umb_get_windgusts(void) {
 	return out;
 }
 
-int16_t umb_get_winddirection(void) {
+int16_t umb_get_winddirection(const config_data_umb_t * const config_umb) {
 	int16_t out = 0;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_data_umb.channel_winddirection) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_winddirection) {
 			out = (int16_t)rte_wx_umb_channel_values[i][1];
 			break;
 		}
@@ -473,11 +462,11 @@ int16_t umb_get_winddirection(void) {
 	return out;
 }
 
-float umb_get_temperature(void) {
+float umb_get_temperature(const config_data_umb_t * const config_umb) {
 	float out = 0.0f;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_data_umb.channel_temperature) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_temperature) {
 			out = (float)rte_wx_umb_channel_values[i][1] * 0.1f;
 			break;
 		}
@@ -486,11 +475,11 @@ float umb_get_temperature(void) {
 	return out;
 }
 
-float umb_get_qfe(void) {
+float umb_get_qfe(const config_data_umb_t * const config_umb) {
 	float out = 0;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_data_umb.channel_qfe) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_qfe) {
 			out = (float)rte_wx_umb_channel_values[i][1] * 0.1f;
 			break;
 		}

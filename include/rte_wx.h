@@ -10,7 +10,6 @@
 
 #include "station_config.h"
 
-#include "drivers/_dht22.h"
 #include "drivers/dallas.h"
 #include "drivers/analog_anemometer.h"
 #include "davis_vantage/davis_qf_t.h"
@@ -59,7 +58,6 @@ extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
-extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;

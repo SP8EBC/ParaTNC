@@ -9,7 +9,6 @@
 #include <stm32f10x.h>
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
-#include "drivers/_dht22.h"
 #include "drivers/serial.h"
 #include "drivers/i2c.h"
 #include "drivers/analog_anemometer.h"
@@ -124,7 +123,6 @@ void I2C1_ER_IRQHandler(void) {
 
 void EXTI4_IRQHandler(void) {
   EXTI->PR |= EXTI_PR_PR4;
-  dht22_irq_handler();
 }
 
 void TIM2_IRQHandler( void ) {

@@ -4,7 +4,6 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../system/src/drivers/_dht22.c \
 ../system/src/drivers/analog_anemometer.c \
 ../system/src/drivers/bme280.c \
 ../system/src/drivers/dallas.c \
@@ -15,7 +14,6 @@ C_SRCS += \
 ../system/src/drivers/serial.c 
 
 OBJS += \
-./system/src/drivers/_dht22.o \
 ./system/src/drivers/analog_anemometer.o \
 ./system/src/drivers/bme280.o \
 ./system/src/drivers/dallas.o \
@@ -26,7 +24,6 @@ OBJS += \
 ./system/src/drivers/serial.o 
 
 C_DEPS += \
-./system/src/drivers/_dht22.d \
 ./system/src/drivers/analog_anemometer.d \
 ./system/src/drivers/bme280.d \
 ./system/src/drivers/dallas.d \

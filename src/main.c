@@ -12,7 +12,7 @@
 #include "packet_tx_handler.h"
 
 #include "station_config.h"
-#include "config_data.h"
+#include "config_data_externs.h"
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"
@@ -443,8 +443,6 @@ int main(int argc, char* argv[]){
 
 #ifdef _METEO
 
-  // initialize humidity sensor
-  dht22_init();
 	#ifndef _DALLAS_SPLIT_PIN
 	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
 	#else
@@ -550,7 +548,7 @@ int main(int argc, char* argv[]){
 
  #ifdef _METEO
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
-  wx_get_all_measurements();
+  wx_get_all_measurements(&config_data_wx_sources, &config_data_mode, &config_data_umb);
 #endif
 
   // start serial port i/o transaction depending on station configuration
@@ -583,7 +581,7 @@ int main(int argc, char* argv[]){
 
   // initialize UMB transaction
   if (config_data_mode.wx_umb == 1) {
-	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
   }
 
 #ifdef INTERNAL_WATCHDOG
@@ -699,16 +697,16 @@ int main(int argc, char* argv[]){
 		else if (config_data_mode.wx_umb == 1) {
 			// if some UMB data have been received
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, &config_data_umb);
 			}
 
 			// if there were an error during receiving frame from host, restart rxing once again
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, &config_data_umb);
 			}
 
 			if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, &config_data_umb);
 			}
 		}
 		else {
@@ -740,9 +738,7 @@ int main(int argc, char* argv[]){
 
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
-//#ifdef _MODBUS_RTU
 			rtu_serial_pool();
-//#endif
 		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
@@ -752,15 +748,15 @@ int main(int argc, char* argv[]){
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
 			}
-#ifdef _METEO
-			wx_get_all_measurements();
-#endif
 
-			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
-				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+			if (config_data_mode.wx == 1) {
+				wx_get_all_measurements(&config_data_wx_sources, &config_data_mode, &config_data_umb);
 			}
-			//#endif
+
+
+			if (config_data_mode.wx_umb == 1) {
+				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
+			}
 
 			if (main_davis_serial_enabled == 1) {
 				davis_trigger_rxcheck_packet();
@@ -785,7 +781,7 @@ int main(int argc, char* argv[]){
 		if (main_one_minute_pool_timer < 10) {
 
 			#ifndef _MUTE_OWN
-			packet_tx_handler();
+			packet_tx_handler(&config_data_basic, &config_data_mode);
 			#endif
 
 			main_one_minute_pool_timer = 60000;
@@ -825,7 +821,7 @@ int main(int argc, char* argv[]){
 
 			//#if defined(_UMB_MASTER)
 			if (config_data_mode.wx_umb == 1) {
-				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
+				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
 			}
 			//#endif
 
@@ -851,10 +847,7 @@ int main(int argc, char* argv[]){
 			main_ten_second_pool_timer = 10000;
 		}
 
-#ifdef _METEO
-		// dht22 sensor communication pooling
-		wx_pool_dht22();
-#endif
+
     }
   // Infinite loop, never return.
 }
