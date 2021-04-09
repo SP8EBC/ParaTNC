@@ -81,7 +81,11 @@ const config_data_mode_t config_data_mode = {
 		.victron = 0,
 #endif
 
-
+#ifdef _SENSOR_BME280
+		.wx_ms5611_or_bme = 1,
+#else
+		.wx_ms5611_or_bme = 0,
+#endif
 
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,

@@ -118,7 +118,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		//SendWXFrame(&VNAME, rte_wx_temperature_valid, rte_wx_pressure_valid);
 		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_ms, rte_wx_pressure_valid, rte_wx_humidity_valid);
 		#else
-		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+		SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 		#endif
 
 		#ifdef EXTERNAL_WATCHDOG
@@ -169,7 +169,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
 
 		srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
@@ -293,7 +293,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			if (config_mode->wx == 1) {
 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_ms_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
+				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 			}
 			else {
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
@@ -304,8 +304,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		packet_tx_telemetry_counter = 0;
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
-
-		rte_wx_tx20_excessive_slew_rate = 0;
 
 	}
 

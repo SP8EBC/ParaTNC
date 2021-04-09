@@ -620,7 +620,7 @@ int main(int argc, char* argv[]){
 
 	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
 
 	  			if (main_kiss_enabled == 1) {
 	  				srl_start_tx(main_kiss_srl_ctx_ptr, ln);

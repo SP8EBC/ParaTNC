@@ -35,11 +35,11 @@
 #define RTE_WX_MEASUREMENT_TEMPERATURE	100
 #define RTE_WX_MEASUREMENT_PRESSUERE	300
 
-extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
-extern float rte_wx_temperature_dalls_slew_rate;
-extern float rte_wx_temperature_average_dallas_valid;
-extern float rte_wx_temperature_min_dallas_valid, rte_wx_temperature_max_dallas_valid;
-extern float rte_wx_temperature_ms, rte_wx_temperature_ms_valid;
+extern float rte_wx_temperature_external, rte_wx_temperature_external_valid;
+extern float rte_wx_temperature_external_slew_rate;
+extern float rte_wx_temperature_average_external_valid;
+extern float rte_wx_temperature_min_external_valid, rte_wx_temperature_max_external_valid;
+extern float rte_wx_temperature_internal, rte_wx_temperature_internal_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
 extern float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
 extern uint8_t rte_wx_pressure_it;

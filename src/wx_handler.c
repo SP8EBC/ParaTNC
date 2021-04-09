@@ -46,17 +46,187 @@ static const float direction_constant = M_PI/180.0f;
 #define MODBUS_QF_PRESSURE_FULL			(1 << 5)
 #define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
 
+#define PARAMETER_RESULT_TEMPERATURE	(1 << 1)
+#define PARAMETER_RESULT_PRESSURE		(1 << 2)
+#define PARAMETER_RESULT_HUMIDITY		(1 << 3)
+#define PARAMETER_RESULT_WIND			(1 << 4)
+#define PARAMETER_RESULT_TEMP_INTERNAL	(1 << 5)
+
 void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
 
-	int8_t j = 0;
-	int32_t i = 0;
 	int32_t return_value = 0;
-	int8_t modbus_qf = 0;
+	int32_t i = 0, j = 0;
 	float pressure_average_sum = 0.0f;
+	int32_t function_result = -1;						// used for return values from various functions
+	int8_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
+	int8_t modbus_qf = 0;								// quality factor for Modbus-RTU communication
+	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+
+	// choose a temperature source from the configuration
+	switch(config_sources->temperature) {
+		// controller measures two temperatures
+		//	internal - provided by pressure/humidity sensor on PCB
+		//  external - usually dallas one wire but it might by something different
+
+		case WX_SOURCE_INTERNAL: {
+			// internal means sensors connected directly to the controller - one-wire and/or I2C on the PCB
+			// it has nothing to do with distinction between external and internal temperature
+
+			// check which sensor is configured. it doesn't check which one is
+			// in fact installed. if the configuration doesn't mach with hardware
+			// the measuremenet won't be retrieved
+			if (config_mode->wx_ms5611_or_bme == 1) {
+				// this will get all three parameters (humidity, pressure, internal temp) in single call
+				function_result = wx_get_bme280_temperature_pressure_humidity(&rte_wx_temperature_internal, &rte_wx_pressure, &rte_wx_humidity);
+			}
+			else {
+				// ms5611 is a bit different as the sensor (internal) temperature is collected separately from pressure
+				function_result = wx_get_ms5611_temperature(&rte_wx_temperature_internal);
+			}
+
+			// check if temperature from pressure sensor has been retrieved w/o errors
+			if (function_result == BME280_OK || function_result == MS5611_OK) {
+
+				// set the flag for internal temperature
+				parameter_result |= PARAMETER_RESULT_TEMP_INTERNAL;
+
+				// check which sensor is used once again
+				if (config_mode->wx_ms5611_or_bme == 1) {
+					// BME280 measures all three things at one call to the driver
+					parameter_result |= PARAMETER_RESULT_PRESSURE;
+					parameter_result |= PARAMETER_RESULT_HUMIDITY;
+
+					// always read the temperature as it is used as an internal temperature in 5th telemetry channel
+					rte_wx_temperature_internal_valid = rte_wx_temperature_external;
+
+					// set humidity
+					rte_wx_humidity_valid = rte_wx_humidity;
+
+					// add the current pressure into buffer for average calculation
+					rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+
+					// reseting the average length iterator
+					j = 0;
+
+					// check if and end of the buffer was reached
+					if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+						rte_wx_pressure_it = 0;
+					}
+
+					// calculating the average of pressure measuremenets
+					for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+
+						// skip empty slots in the history to provide proper value even for first wx packet
+						if (rte_wx_pressure_history[i] < 10.0f) {
+							continue;
+						}
+
+						// add to the average
+						pressure_average_sum += rte_wx_pressure_history[i];
+
+						// increase the average lenght iterator
+						j++;
+					}
+
+					rte_wx_pressure_valid = pressure_average_sum / (float)j;
+
+				}
+				else {
+
+					;	// MS5611 measures pressure and temperature separately
+				}
+			}
+
+			// measure an external temperature using Dallas one wire sensor.
+			// this function has blockin I/O which also adds a delay required by MS5611
+			// sensor to finish data acquisition after the pressure measurement
+			// is triggered.
+			function_result = wx_get_dallas_temperature();
+
+			// check if communication with dallas sensor has successed
+			if (function_result == 0) {
+				// if yes set the local variable with flag signalling that we have an external temperature
+				parameter_result |= PARAMETER_RESULT_TEMPERATURE;
+			}
+
+			break;
+		}
+		case WX_SOURCE_UMB: {
+			// get current UMB bus quality factor
+			umb_quality_factor = umb_get_current_qf(&rte_wx_umb_context, master_time);
+
+			// if there are any data collected from UMB sensors
+			if (umb_quality_factor == UMB_QF_FULL || umb_quality_factor == UMB_QF_DEGRADED) {
+
+				// get the average temperature directly, there is no need for any further processing
+				rte_wx_temperature_average_external_valid = umb_get_temperature(config_umb);
+
+				// set the flag that external temperature is available
+				parameter_result |= PARAMETER_RESULT_TEMPERATURE;
+			}
+			else {
+				// do nothing if no new data was received from UMB sensor in last 10 minutes
+				;
+			}
+
+			break;
+		}
+		case WX_SOURCE_RTU:
+		case WX_SOURCE_FULL_RTU: {
+
+			// get the value read from RTU registers
+			function_result = rtu_get_temperature(rte_wx_temperature_external);
+
+			// check
+			if (function_result == MODBUS_RET_OK || function_result == MODBUS_RET_DEGRADED) {
+
+				// set the flag that external temperature is available
+				parameter_result |= PARAMETER_RESULT_TEMPERATURE;
+			}
+
+			break;
+		}
+		case WX_SOURCE_DAVIS_SERIAL:
+			break;
+
+	}
+
+	/**
+	 *
+	 * 				// add the current pressure into buffer
+				rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+
+				// reseting the average length iterator
+				j = 0;
+
+				// check if and end of the buffer was reached
+				if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+					rte_wx_pressure_it = 0;
+				}
+
+				// calculating the average of pressure measuremenets
+				for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+
+					// skip empty slots in the history to provide proper value even for first wx packet
+					if (rte_wx_pressure_history[i] < 10.0f) {
+						continue;
+					}
+
+					// add to the average
+					pressure_average_sum += rte_wx_pressure_history[i];
+
+					// increase the average lenght iterator
+					j++;
+				}
+
+				rte_wx_pressure_valid = pressure_average_sum / (float)j;
+	 *
+	 *
+	 */
 
 	if (config_mode->wx_umb == 1) {
 		if (rte_wx_umb_qf == UMB_QF_FULL) {
-			rte_wx_temperature_average_dallas_valid = umb_get_temperature(config_umb);
+			rte_wx_temperature_average_external_valid = umb_get_temperature(config_umb);
 			rte_wx_pressure_valid = umb_get_qfe(config_umb);
 		}
 	}
@@ -64,7 +234,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 #if !defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && defined(_MODBUS_RTU)
 
 	#ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
-	return_value = rtu_get_temperature(&rte_wx_temperature_average_dallas_valid);
+	return_value = rtu_get_temperature(&rte_wx_temperature_external_dallas_valid);
 
 	// if temperature has been uploaded by the modbus sensor correctly
 	if (return_value == MODBUS_RET_OK) {
@@ -137,7 +307,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 
 #if (!defined(_UMB_MASTER) && !defined(_DAVIS_SERIAL) && !defined(_MODBUS_RTU) && defined (_SENSOR_BME280)) || (defined (_SENSOR_BME280) && defined (_MODBUS_RTU))
 
-	wx_get_bme280_temperature_pressure_humidity();
+	//wx_get_bme280_temperature_pressure_humidity();
 
 //	// reading raw values from BME280 sensor
 //	return_value = bme280_read_raw_data(bme280_data_buffer);
@@ -312,51 +482,55 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 
 }
 
-void wx_get_dallas_temperature() {
-	rte_wx_temperature_dallas = dallas_query(&rte_wx_current_dallas_qf);
+int32_t wx_get_dallas_temperature() {
+
+	int32_t output = 0;
+
+	// get the value from dallas one-wire sensor
+	rte_wx_temperature_external = dallas_query(&rte_wx_current_dallas_qf);
 
 	// checking if communication was successfull
-	if (rte_wx_temperature_dallas != -128.0f) {
+	if (rte_wx_temperature_external != -128.0f) {
 
 		// calculate the slew rate
-		rte_wx_temperature_dalls_slew_rate = rte_wx_temperature_dallas - rte_wx_temperature_dallas_valid;
+		rte_wx_temperature_external_slew_rate = rte_wx_temperature_external - rte_wx_temperature_external_valid;
 
 		// chcecking the positive (ascending) slew rate of the temperature measuremenets
-		if (rte_wx_temperature_dalls_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
+		if (rte_wx_temperature_external_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
 
 			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
 
 			// and increase the temperature only by 1.0f to decrease slew rate
-			rte_wx_temperature_dallas += 1.0f;
+			rte_wx_temperature_external += 1.0f;
 
 		}
 
 		// chcecking the negaive (descending) slew rate of the temperature measuremenets
-		if (rte_wx_temperature_dalls_slew_rate < -WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
+		if (rte_wx_temperature_external_slew_rate < -WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
 
 			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
 
 			// and decrease the temperature only by 1.0f to decrease slew rate
-			rte_wx_temperature_dallas -= 1.0f;
+			rte_wx_temperature_external -= 1.0f;
 
 		}
 
 		// store current value
-		rte_wx_temperature_dallas_valid = rte_wx_temperature_dallas;
+		rte_wx_temperature_external_valid = rte_wx_temperature_external;
 
 		// include current temperature into the average
-		dallas_average(rte_wx_temperature_dallas, &rte_wx_dallas_average);
+		dallas_average(rte_wx_temperature_external, &rte_wx_dallas_average);
 
 		// update the current temperature with current average
-		rte_wx_temperature_average_dallas_valid = dallas_get_average(&rte_wx_dallas_average);
+		rte_wx_temperature_average_external_valid = dallas_get_average(&rte_wx_dallas_average);
 
 		// update current minimal temperature
-		rte_wx_temperature_min_dallas_valid = dallas_get_min(&rte_wx_dallas_average);
+		rte_wx_temperature_min_external_valid = dallas_get_min(&rte_wx_dallas_average);
 
 		// and update maximum also
-		rte_wx_temperature_max_dallas_valid = dallas_get_max(&rte_wx_dallas_average);
+		rte_wx_temperature_max_external_valid = dallas_get_max(&rte_wx_dallas_average);
 
 		// updating last good measurement time
 		wx_last_good_temperature_time = master_time;
@@ -365,10 +539,14 @@ void wx_get_dallas_temperature() {
 		// if there were a communication error set the error to unavaliable
 		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 
+		// set the output value
+		output = -1;
 	}
+
+	return output;
 }
 
-void wx_get_bme280_temperature_pressure_humidity(void) {
+int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressure, int8_t * const humidity) {
 
 	int i = 0, j = 0;
 	int32_t return_value = 0;
@@ -383,108 +561,49 @@ void wx_get_bme280_temperature_pressure_humidity(void) {
 		rte_wx_bme280_qf = BME280_QF_FULL;
 
 		// converting raw values to temperature
-		bme280_get_temperature(&rte_wx_temperature_ms, bme280_get_adc_t(), &rte_wx_bme280_qf);
+		bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
 
 		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to NOT_AVALIABLE
-		bme280_get_pressure(&rte_wx_pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+		bme280_get_pressure(pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
 
 		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to NOT_AVALIABLE
-		bme280_get_humidity(&rte_wx_humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
+		bme280_get_humidity(humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
 
 		if (rte_wx_bme280_qf == BME280_QF_FULL) {
-
-			// always read the temperature as it is used as an internal temperature in 5th telemetry channel
-			rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
-
-			rte_wx_humidity_valid = rte_wx_humidity;
-
-			rte_wx_pressure_valid = rte_wx_pressure;
-
-			// add the current pressure into buffer
-			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
-
-			// reseting the average length iterator
-			j = 0;
-
-			// check if and end of the buffer was reached
-			if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
-				rte_wx_pressure_it = 0;
-			}
-
-			// calculating the average of pressure measuremenets
-			for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
-
-				// skip empty slots in the history to provide proper value even for first wx packet
-				if (rte_wx_pressure_history[i] < 10.0f) {
-					continue;
-				}
-
-				// add to the average
-				pressure_average_sum += rte_wx_pressure_history[i];
-
-				// increase the average lenght iterator
-				j++;
-			}
-
-			rte_wx_pressure_valid = pressure_average_sum / (float)j;
-
+			;
 		}
 	}
 	else {
 		// set the quality factor is sensor is not responding on the i2c bus
 		rte_wx_bme280_qf = BME280_QF_NOT_AVAILABLE;
 	}
+
+	return return_value;
 }
 
-void wx_get_ms5611_temperature(void) {
+int32_t wx_get_ms5611_temperature(float * const temperature) {
 	int32_t return_value = 0;
 
 	// quering MS5611 sensor for temperature
-	return_value = ms5611_get_temperature(&rte_wx_temperature_ms, &rte_wx_ms5611_qf);
+	return_value = ms5611_get_temperature(&temperature, &rte_wx_ms5611_qf);
 
-	if (return_value == MS5611_OK) {
-		rte_wx_temperature_ms_valid = rte_wx_temperature_ms;
-
-	}
+	return return_value;
 }
 
-void wx_get_ms5611_pressure(void) {
+int32_t wx_get_ms5611_pressure(float * const pressure) {
 
 	int32_t return_value = 0;
 	int i = 0, j = 0;
 	float pressure_average_sum = 0.0f;
 
 	// quering MS5611 sensor for pressure
-	return_value = ms5611_get_pressure(&rte_wx_pressure,  &rte_wx_ms5611_qf);
+	return_value = ms5611_get_pressure(&pressure,  &rte_wx_ms5611_qf);
 
-	// add the current pressure into buffer
-	rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
-
-	// reseting the average length iterator
-	j = 0;
-
-	// check if and end of the buffer was reached
-	if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
-		rte_wx_pressure_it = 0;
+	if (return_value == MS5611_OK) {
+		;
 	}
 
-	// calculating the average of pressure measuremenets
-	for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
-
-		// skip empty slots in the history to provide proper value even for first wx packet
-		if (rte_wx_pressure_history[i] < 10.0f) {
-			continue;
-		}
-
-		// add to the average
-		pressure_average_sum += rte_wx_pressure_history[i];
-
-		// increase the average lenght iterator
-		j++;
-	}
-
-	rte_wx_pressure_valid = pressure_average_sum / (float)j;
-
+	return return_value;
 
 }
 

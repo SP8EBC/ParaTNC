@@ -27,7 +27,7 @@ typedef struct config_data_mode_t {
 
 	uint8_t wx_davis;
 
-	uint8_t wx_rtu;
+	uint8_t wx_ms5611_or_bme;
 
 	uint8_t victron;
 

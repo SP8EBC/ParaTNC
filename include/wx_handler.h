@@ -23,10 +23,10 @@ typedef enum wx_pwr_state_t {
 }wx_pwr_state_t;
 
 void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb);
-void wx_get_dallas_temperature(void);
-void wx_get_bme280_temperature_pressure_humidity(void);
-void wx_get_ms5611_temperature(void);
-void wx_get_ms5611_pressure(void);
+int32_t wx_get_dallas_temperature(void);
+int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressure, int8_t * const humidity);
+int32_t wx_get_ms5611_temperature(float * const temperature);
+int32_t wx_get_ms5611_pressure(float * const pressure);
 void wx_pool_anemometer(void);
 void wx_pwr_init(void);
 void wx_pwr_periodic_handle(void);
