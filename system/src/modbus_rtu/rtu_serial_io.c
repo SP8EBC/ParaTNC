@@ -157,38 +157,38 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 
 //#ifdef _MODBUS_RTU
 
-	queue->function_id[0] =_RTU_SLAVE_FUNC_1;
+	queue->function_id[0] = config->slave_1_function;
 	queue->function_parameter[0] = &rte_wx_modbus_rtu_f1;
 	rte_wx_modbus_rtu_f1.slave_address = config->slave_1_bus_address;
 	rte_wx_modbus_rtu_f1.base_address = config->slave_1_register_address;
 	rte_wx_modbus_rtu_f1.number_of_registers = config->slave_1_lenght;
 
-	queue->function_id[1] =_RTU_SLAVE_FUNC_2;
+	queue->function_id[1] =config->slave_2_function;;
 	queue->function_parameter[1] = &rte_wx_modbus_rtu_f2;
 	rte_wx_modbus_rtu_f2.slave_address = config->slave_2_bus_address;
 	rte_wx_modbus_rtu_f2.base_address = config->slave_2_register_address;
 	rte_wx_modbus_rtu_f2.number_of_registers = config->slave_2_lenght;
 
-	queue->function_id[2] =_RTU_SLAVE_FUNC_3;
+	queue->function_id[2] =config->slave_3_function;;
 	queue->function_parameter[2] = &rte_wx_modbus_rtu_f3;
 	rte_wx_modbus_rtu_f3.slave_address = config->slave_3_bus_address;
 	rte_wx_modbus_rtu_f3.base_address = config->slave_3_register_address;
 	rte_wx_modbus_rtu_f3.number_of_registers = config->slave_3_lenght;
 
-	queue->function_id[3] =_RTU_SLAVE_FUNC_4;
+	queue->function_id[3] =config->slave_4_function;;
 	queue->function_parameter[3] = &rte_wx_modbus_rtu_f4;
 	rte_wx_modbus_rtu_f4.slave_address = config->slave_4_bus_address;
 	rte_wx_modbus_rtu_f4.base_address = config->slave_4_register_address;
 	rte_wx_modbus_rtu_f4.number_of_registers = config->slave_4_lenght;
 
-	queue->function_id[4] =_RTU_SLAVE_FUNC_5;
+	queue->function_id[4] =config->slave_5_function;;
 	queue->function_parameter[4] = &rte_wx_modbus_rtu_f5;
 	rte_wx_modbus_rtu_f5.slave_address = config->slave_5_bus_address;
 	rte_wx_modbus_rtu_f5.base_address = config->slave_5_register_address;
 	rte_wx_modbus_rtu_f5.number_of_registers = config->slave_5_lenght;
 
 
-	queue->function_id[5] =_RTU_SLAVE_FUNC_6;
+	queue->function_id[5] =config->slave_6_function;;
 	queue->function_parameter[5] = &rte_wx_modbus_rtu_f6;
 	rte_wx_modbus_rtu_f6.slave_address = config->slave_6_bus_address;
 	rte_wx_modbus_rtu_f6.base_address = config->slave_6_register_address;

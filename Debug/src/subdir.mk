@@ -19,7 +19,8 @@ C_SRCS += \
 ../src/rte_pv.c \
 ../src/rte_rtu.c \
 ../src/rte_wx.c \
-../src/wx_handler.c 
+../src/wx_handler.c \
+../src/wx_handler_temperature.c 
 
 OBJS += \
 ./src/KissCommunication.o \
@@ -37,7 +38,8 @@ OBJS += \
 ./src/rte_pv.o \
 ./src/rte_rtu.o \
 ./src/rte_wx.o \
-./src/wx_handler.o 
+./src/wx_handler.o \
+./src/wx_handler_temperature.o 
 
 C_DEPS += \
 ./src/KissCommunication.d \
@@ -55,14 +57,15 @@ C_DEPS += \
 ./src/rte_pv.d \
 ./src/rte_rtu.d \
 ./src/rte_wx.d \
-./src/wx_handler.d 
+./src/wx_handler.d \
+./src/wx_handler_temperature.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/%.o: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross ARM C Compiler'
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -DDEBUG -DTRACE -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -I"../include" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -Wunused-function -fstack-usage -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -DDEBUG -DTRACE -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -I"../include" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -Wunused-function -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
