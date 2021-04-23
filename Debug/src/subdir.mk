@@ -20,6 +20,8 @@ C_SRCS += \
 ../src/rte_rtu.c \
 ../src/rte_wx.c \
 ../src/wx_handler.c \
+../src/wx_handler_humidity.c \
+../src/wx_handler_pressure.c \
 ../src/wx_handler_temperature.c 
 
 OBJS += \
@@ -39,6 +41,8 @@ OBJS += \
 ./src/rte_rtu.o \
 ./src/rte_wx.o \
 ./src/wx_handler.o \
+./src/wx_handler_humidity.o \
+./src/wx_handler_pressure.o \
 ./src/wx_handler_temperature.o 
 
 C_DEPS += \
@@ -58,6 +62,8 @@ C_DEPS += \
 ./src/rte_rtu.d \
 ./src/rte_wx.d \
 ./src/wx_handler.d \
+./src/wx_handler_humidity.d \
+./src/wx_handler_pressure.d \
 ./src/wx_handler_temperature.d 
 
 

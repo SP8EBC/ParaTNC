@@ -251,7 +251,7 @@ const config_data_umb_t config_data_umb = {
 		.channel_wingsusts = _UMB_CHANNEL_WINDGUSTS,
 		.channel_winddirection = _UMB_CHANNEL_WINDDIRECTION,
 		.channel_temperature = _UMB_CHANNEL_TEMPERATURE,
-		.channel_qfe = _UMB_CHANNEL_QFE
+		.channel_qnh = _UMB_CHANNEL_QFE
 #else
 		.channel_windspeed = 0xFFFF,
 		.channel_wingsusts = 0xFFFF,

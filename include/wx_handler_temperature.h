@@ -13,6 +13,6 @@
 int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb);
 int32_t wx_get_temperature_dallas(void);
 int32_t wx_get_temperature_ms5611(float * const temperature);
-int32_t wx_get_temperature_bme280();
+int32_t wx_get_temperature_bme280(float * const temperature);
 
 #endif /* WX_HANDLER_TEMPERATURE_H_ */

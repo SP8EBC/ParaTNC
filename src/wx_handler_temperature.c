@@ -25,8 +25,8 @@ uint8_t wx_inhibit_slew_rate_check = 1;
 int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
 
 
-	int32_t function_result = -1;						// used for return values from various functions
-	int8_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
+	int32_t measurement_result = -1;						// used for return values from various functions
+	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
 	int32_t i = 0, j = 0;
 
@@ -45,76 +45,31 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// the measuremenet won't be retrieved
 			if (config_mode->wx_ms5611_or_bme == 1) {
 				// this will get all three parameters (humidity, pressure, internal temp) in single call
-				function_result = wx_get_bme280_temperature_pressure_humidity(&rte_wx_temperature_internal, &rte_wx_pressure, &rte_wx_humidity);
+				measurement_result = wx_get_temperature_bme280(&rte_wx_temperature_internal);
 			}
 			else {
 				// ms5611 is a bit different as the sensor (internal) temperature is collected separately from pressure
-				function_result = wx_get_ms5611_temperature(&rte_wx_temperature_internal);
+				measurement_result = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
 			}
 
 			// check if temperature from pressure sensor has been retrieved w/o errors
-			if (function_result == BME280_OK || function_result == MS5611_OK) {
+			if (measurement_result == BME280_OK || measurement_result == MS5611_OK) {
 
 				// set the flag for internal temperature
-				parameter_result |= WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
+				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 
-				// check which sensor is used once again
-				if (config_mode->wx_ms5611_or_bme == 1) {
-					// BME280 measures all three things at one call to the driver
-					parameter_result |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;
-					parameter_result |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;
-
-					// always read the temperature as it is used as an internal temperature in 5th telemetry channel
-					rte_wx_temperature_internal_valid = rte_wx_temperature_external;
-
-					// set humidity
-					rte_wx_humidity_valid = rte_wx_humidity;
-
-					// add the current pressure into buffer for average calculation
-					rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
-
-					// reseting the average length iterator
-					j = 0;
-
-					// check if and end of the buffer was reached
-					if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
-						rte_wx_pressure_it = 0;
-					}
-
-					// calculating the average of pressure measuremenets
-					for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
-
-						// skip empty slots in the history to provide proper value even for first wx packet
-						if (rte_wx_pressure_history[i] < 10.0f) {
-							continue;
-						}
-
-						// add to the average
-						pressure_average_sum += rte_wx_pressure_history[i];
-
-						// increase the average lenght iterator
-						j++;
-					}
-
-					rte_wx_pressure_valid = pressure_average_sum / (float)j;
-
-				}
-				else {
-
-					;	// MS5611 measures pressure and temperature separately
-				}
 			}
 
 			// measure an external temperature using Dallas one wire sensor.
 			// this function has blockin I/O which also adds a delay required by MS5611
 			// sensor to finish data acquisition after the pressure measurement
 			// is triggered.
-			function_result = wx_get_dallas_temperature();
+			measurement_result = wx_get_temperature_dallas();
 
 			// check if communication with dallas sensor has successed
-			if (function_result == 0) {
+			if (measurement_result == 0) {
 				// if yes set the local variable with flag signalling that we have an external temperature
-				parameter_result |= WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 			}
 
 			break;
@@ -130,7 +85,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				rte_wx_temperature_average_external_valid = umb_get_temperature(config_umb);
 
 				// set the flag that external temperature is available
-				parameter_result |= WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 			}
 			else {
 				// do nothing if no new data was received from UMB sensor in last 10 minutes
@@ -143,10 +98,10 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		case WX_SOURCE_FULL_RTU: {
 
 			// get the value read from RTU registers
-			function_result = rtu_get_temperature(&rte_wx_temperature_external);
+			measurement_result = rtu_get_temperature(&rte_wx_temperature_external);
 
 			// check
-			if (function_result == MODBUS_RET_OK || function_result == MODBUS_RET_DEGRADED) {
+			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
 
 				// set the flag that external temperature is available
 				parameter_result |= WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
@@ -159,7 +114,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 
 	}
 
-	return function_result;
+	return parameter_result;
 }
 
 int32_t wx_get_temperature_dallas() {
@@ -230,9 +185,19 @@ int32_t wx_get_temperature_ms5611(float * const temperature) {
 	int32_t return_value = 0;
 
 	// quering MS5611 sensor for temperature
-	return_value = ms5611_get_temperature(&temperature, &rte_wx_ms5611_qf);
+	return_value = ms5611_get_temperature(temperature, &rte_wx_ms5611_qf);
 
 	return return_value;
+}
+
+int32_t wx_get_temperature_bme280(float * const temperature){
+	int32_t output = 0;
+
+	if (rte_wx_bme280_qf == BME280_QF_FULL) {
+		output = bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
+	}
+
+	return output;
 }
 
 

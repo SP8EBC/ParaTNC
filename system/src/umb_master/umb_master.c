@@ -54,7 +54,7 @@ void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config
 
 	ctx->channel_numbers[3] = config_umb->channel_temperature;
 
-	ctx->channel_numbers[4] = config_umb->channel_qfe;
+	ctx->channel_numbers[4] = config_umb->channel_qnh;
 
 }
 
@@ -475,11 +475,11 @@ float umb_get_temperature(const config_data_umb_t * const config_umb) {
 	return out;
 }
 
-float umb_get_qfe(const config_data_umb_t * const config_umb) {
+float umb_get_qnh(const config_data_umb_t * const config_umb) {
 	float out = 0;
 
 	for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
-		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_qfe) {
+		if (rte_wx_umb_channel_values[i][0] == (int16_t)config_umb->channel_qnh) {
 			out = (float)rte_wx_umb_channel_values[i][1] * 0.1f;
 			break;
 		}

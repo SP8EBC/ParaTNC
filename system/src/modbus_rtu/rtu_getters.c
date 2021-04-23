@@ -576,7 +576,7 @@ int32_t rtu_get_humidity(int8_t* out) {
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
-				physical_register_value > 99 || physical_register_value < 0) {
+				physical_register_value > 100 || physical_register_value < 0) {
 			retval = MODBUS_RET_NOT_AVALIABLE;
 		}
 		else {

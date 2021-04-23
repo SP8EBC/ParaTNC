@@ -30,7 +30,7 @@ uint16_t umb_get_windspeed(const config_data_umb_t * const config_umb);
 uint16_t umb_get_windgusts(const config_data_umb_t * const config_umb);
 int16_t umb_get_winddirection(const config_data_umb_t * const config_umb);
 float umb_get_temperature(const config_data_umb_t * const config_umb);
-float umb_get_qfe(const config_data_umb_t * const config_umb);
+float umb_get_qnh(const config_data_umb_t * const config_umb);
 
 
 #endif /* INCLUDE_UMB_MASTER_UMB_MASTER_H_ */

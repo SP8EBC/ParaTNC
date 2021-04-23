@@ -133,7 +133,7 @@ typedef struct config_data_umb_t {
 
 	uint16_t channel_temperature;
 
-	uint16_t channel_qfe;
+	uint16_t channel_qnh;
 /**
  * #define _UMB_CHANNEL_WINDSPEED			460
 #define _UMB_CHANNEL_WINDGUSTS			440
