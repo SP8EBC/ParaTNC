@@ -54,17 +54,16 @@ static const config_data_wx_sources_t internal = {
 void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
 
 	int32_t return_value = 0;
-	int32_t i = 0, j = 0;
-	int32_t function_result = -1;						// used for return values from various functions
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	int32_t backup_parameter_result = 0;				// uses during retrieving backup
-	int8_t modbus_qf = 0;								// quality factor for Modbus-RTU communication
-	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
 
+	int32_t temperature_result = 0;
+	int32_t pressure_result = 0;
+	int32_t humidity_result = 0;
 
-	parameter_result = wx_get_temperature_measurement(config_sources, config_mode, config_umb);
-	parameter_result = wx_get_pressure_measurement(config_sources, config_mode, config_umb);
-	parameter_result = wx_get_humidity_measurement(config_sources, config_mode, config_umb);
+	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb);
+	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb);
+	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb);
 
 	// check if all parameters (except wind) were collected successfully
 	if (parameter_result == (WX_HANDLER_PARAMETER_RESULT_TEMPERATURE | WX_HANDLER_PARAMETER_RESULT_PRESSURE | WX_HANDLER_PARAMETER_RESULT_HUMIDITY | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL)) {
@@ -72,7 +71,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 	}
 	else {
 		// if not check what was faulty and backup with an internal sensor
-		if (parameter_result & WX_HANDLER_PARAMETER_RESULT_TEMPERATURE == 0) {
+		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_TEMPERATURE) == 0) {
 			// if we don't have temperature
 			// check what is the primary source of temperature
 			if (config_sources->temperature != WX_SOURCE_INTERNAL) {
@@ -84,65 +83,20 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 			}
 		}
 
-		if (parameter_result & WX_HANDLER_PARAMETER_RESULT_PRESSURE == 0) {
+		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_PRESSURE) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
 				backup_parameter_result |= wx_get_pressure_measurement(&internal, config_mode, config_umb);
 			}
 		}
 
-		if (parameter_result & WX_HANDLER_PARAMETER_RESULT_HUMIDITY == 0) {
+		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_HUMIDITY) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
 				backup_parameter_result |= wx_get_humidity_measurement(&internal, config_mode, config_umb);
 			}
 		}
 	}
-
-
-//#if defined(_MODBUS_RTU)
-//
-//	// unify quality factor across Modbus-RTU sensor and embedded
-//	// ones.
-//
-//	// BME280 (or MS5611) has a prioryty over the Modbus-RTU
-//	if (rte_wx_bme280_qf == BME280_QF_NOT_AVAILABLE ||
-//		rte_wx_bme280_qf == BME280_QF_UKNOWN)
-//	{
-//		// if an internal sensor is not responding or it is not used at all
-//		// check the result of modbus RTU. this is an a little bit of complicated
-//		// case as BME280 is a pressure and humidity sensor at once, so changing
-//		// this QF will also influence the pressure one, but at this point we might
-//		// agree that we won't use BME280 and external, RTU pressure sensor as it
-//		// would make no sense to do so
-//		if ((modbus_qf & MODBUS_QF_HUMIDITY_FULL) > 0) {
-//			rte_wx_bme280_qf = BME280_QF_FULL;
-//		}
-//		else {
-//			rte_wx_bme280_qf = BME280_QF_UKNOWN;
-//		}
-//	}
-//
-//	// Dallas temperature qualiy factor
-//	if (rte_wx_error_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
-//
-//		// if an internal sensor is not responding check the result of modbus RTU
-//		if ((modbus_qf & MODBUS_QF_TEMPERATURE_FULL) > 0) {
-//			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
-//			rte_wx_current_dallas_qf = DALLAS_QF_FULL;
-//
-//		}
-//		else if ((modbus_qf & MODBUS_QF_TEMPERATURE_DEGR) > 0) {
-//			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
-//			rte_wx_current_dallas_qf = DALLAS_QF_DEGRADATED;
-//		}
-//		else if ((modbus_qf & MODBUS_QF_TEMPERATURE_NAVB) > 0) {
-//			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
-//			rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
-//		}
-//	}
-//#endif
-
 
 
 }

@@ -28,7 +28,6 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 	int32_t measurement_result = -1;						// used for return values from various functions
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
-	int32_t i = 0, j = 0;
 
 	// choose a temperature source from the configuration
 	switch(config_sources->temperature) {

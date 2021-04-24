@@ -332,7 +332,7 @@ int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf) {
 
 	if (*out > 99 || *out < 0) {
 		*qf = BME280_QF_HUMIDITY_DEGRADED;
-		out = BME280_WRONG_HUMIDITY_READOUT;
+		ret = BME280_WRONG_HUMIDITY_READOUT;
 	}
 
 	return ret;
