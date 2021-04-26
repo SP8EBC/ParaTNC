@@ -10,11 +10,11 @@
 
 #include "config_data.h"
 
-extern const config_data_basic_t config_data_basic;
-extern const config_data_mode_t config_data_mode;
-extern const config_data_umb_t config_data_umb;
-extern const config_data_rtu_t config_data_rtu;
-extern const config_data_wx_sources_t config_data_wx_sources;
+extern const config_data_basic_t config_data_basic_first;
+extern const config_data_mode_t config_data_mode_first;
+extern const config_data_umb_t config_data_umb_first;
+extern const config_data_rtu_t config_data_rtu_first;
+extern const config_data_wx_sources_t config_data_wx_sources_first;
 
 
 #endif /* CONFIG_DATA_EXTERNS_H_ */

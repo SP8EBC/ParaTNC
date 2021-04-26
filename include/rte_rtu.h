@@ -26,17 +26,17 @@ extern uint16_t rte_rtu_number_of_successfull_serial_comm;
 
 //#ifdef _MODBUS_RTU
 
-extern rtu_register_data_t RTU_GETTERS_F1_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f1;
 
-extern rtu_register_data_t RTU_GETTERS_F2_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f2;
 
-extern rtu_register_data_t RTU_GETTERS_F3_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f3;
 
-extern rtu_register_data_t RTU_GETTERS_F4_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f4;
 
-extern rtu_register_data_t RTU_GETTERS_F5_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f5;
 
-extern rtu_register_data_t RTU_GETTERS_F6_NAME;
+extern rtu_register_data_t rte_wx_modbus_rtu_f6;
 
 extern rtu_exception_t rte_rtu_last_modbus_exception;
 extern uint32_t rte_rtu_last_modbus_rx_error_timestamp;

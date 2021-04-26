@@ -14,7 +14,10 @@
 #include <drivers/ms5611.h>
 #include <drivers/bme280.h>
 
-int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
+#include <modbus_rtu/rtu_getters.h>
+#include <modbus_rtu/rtu_return_values.h>
+
+int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 	int32_t output = 0;
 	int32_t measurement_retval = 0;
@@ -91,6 +94,21 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 	}
 	case WX_SOURCE_RTU:
 	case WX_SOURCE_FULL_RTU: {
+
+		// get the value read from RTU registers
+		measurement_retval = rtu_get_humidity(&rte_wx_humidity, config_rtu);
+
+		// check
+		if (measurement_retval == MODBUS_RET_OK || measurement_retval == MODBUS_RET_DEGRADED) {
+
+			// set the flag that external temperature is available
+			output |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;
+
+			if (measurement_retval == BME280_OK) {
+				rte_wx_humidity_valid = rte_wx_humidity;
+			}
+		}
+
 		break;
 	}
 	case WX_SOURCE_DAVIS_SERIAL:

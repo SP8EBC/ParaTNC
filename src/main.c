@@ -93,6 +93,13 @@
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wempty-body"
 
+// used configuration structures
+const config_data_mode_t * main_config_data_mode = 0;
+const config_data_basic_t * main_config_data_basic = 0;
+const config_data_wx_sources_t * main_config_data_wx_sources = 0;
+const config_data_umb_t * main_config_data_umb = 0;
+const config_data_rtu_t * main_config_data_rtu = 0;
+
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
@@ -298,7 +305,7 @@ int main(int argc, char* argv[]){
 #endif
 
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
-  if (config_data_mode.victron == 1) {
+  if (main_config_data_mode->victron == 1) {
     main_target_kiss_baudrate = 19200u;
 
     // and disable the kiss TNC option as it shares the same port
@@ -358,15 +365,15 @@ int main(int argc, char* argv[]){
   }
 #endif
 //#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
-  if (config_data_mode.wx_modbus == 1) {
+  if (main_config_data_mode->wx_modbus == 1) {
 
-	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, &config_data_rtu);
+	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
 
-	  main_target_wx_baudrate = config_data_rtu.slave_speed;
+	  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
 
 	  // initialize serial ports according to RS485 network configuration for Modbus-RTU
 	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, config_data_rtu.slave_stop_bits);
+	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
 	  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
 
 	  // enabling rtu master code
@@ -397,7 +404,7 @@ int main(int argc, char* argv[]){
   memset (main_own_path, 0x00, sizeof(main_own_path));
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
-  main_own_path_ln = ConfigPath(main_own_path, &config_data_basic);
+  main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
   // enable write access to watchdog registers
@@ -439,7 +446,7 @@ int main(int argc, char* argv[]){
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 
   // initializing the digipeater configuration
-  digi_init(&config_data_mode);
+  digi_init(main_config_data_mode);
 
 #ifdef _METEO
 
@@ -548,11 +555,11 @@ int main(int argc, char* argv[]){
 
  #ifdef _METEO
   // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
-  wx_get_all_measurements(&config_data_wx_sources, &config_data_mode, &config_data_umb);
+  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 #endif
 
   // start serial port i/o transaction depending on station configuration
-  if (config_data_mode.victron == 1) {
+  if (main_config_data_mode->victron == 1) {
 	  // initializing protocol parser
 	  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
 
@@ -580,8 +587,8 @@ int main(int argc, char* argv[]){
 #endif
 
   // initialize UMB transaction
-  if (config_data_mode.wx_umb == 1) {
-	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
+  if (main_config_data_mode->wx_umb == 1) {
+	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
   }
 
 #ifdef INTERNAL_WATCHDOG
@@ -602,8 +609,12 @@ int main(int argc, char* argv[]){
 	  // incrementing current cpu ticks
 	  main_current_cpu_idle_ticks++;
 
-	    if (rte_main_reboot_req == 1)
+	    if (rte_main_reboot_req == 1) {
 	    	NVIC_SystemReset();
+	    }
+	    else {
+	    	;
+	    }
 
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
 
@@ -650,7 +661,7 @@ int main(int argc, char* argv[]){
 			//digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-			digi_process(&ax25_rxed_frame, &config_data_basic, &config_data_mode);
+			digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
 	#endif
 #endif
 			ax25_new_msg_rx_flag = 0;
@@ -658,7 +669,7 @@ int main(int argc, char* argv[]){
 		}
 
 		// if Victron VE.direct client is enabled
-		if (config_data_mode.victron == 1) {
+		if (main_config_data_mode->victron == 1) {
 
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
@@ -694,19 +705,19 @@ int main(int argc, char* argv[]){
 				srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
 			}
 		}
-		else if (config_data_mode.wx_umb == 1) {
+		else if (main_config_data_mode->wx_umb == 1) {
 			// if some UMB data have been received
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, &config_data_umb);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
 			}
 
 			// if there were an error during receiving frame from host, restart rxing once again
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, &config_data_umb);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
 			}
 
 			if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, &config_data_umb);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, main_config_data_umb);
 			}
 		}
 		else {
@@ -749,13 +760,13 @@ int main(int argc, char* argv[]){
 				rtu_serial_start();
 			}
 
-			if (config_data_mode.wx == 1) {
-				wx_get_all_measurements(&config_data_wx_sources, &config_data_mode, &config_data_umb);
+			if (main_config_data_mode->wx == 1) {
+				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
 
 
-			if (config_data_mode.wx_umb == 1) {
-				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
+			if (main_config_data_mode->wx_umb == 1) {
+				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 			}
 
 			if (main_davis_serial_enabled == 1) {
@@ -781,7 +792,7 @@ int main(int argc, char* argv[]){
 		if (main_one_minute_pool_timer < 10) {
 
 			#ifndef _MUTE_OWN
-			packet_tx_handler(&config_data_basic, &config_data_mode);
+			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
 
 			main_one_minute_pool_timer = 60000;
@@ -820,13 +831,13 @@ int main(int argc, char* argv[]){
 		if (main_ten_second_pool_timer < 10) {
 
 			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
-				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, &config_data_umb);
+			if (main_config_data_mode->wx_umb == 1) {
+				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 			}
 			//#endif
 
 			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
+			if (main_config_data_mode->wx_umb == 1) {
 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			}
 			//#endif

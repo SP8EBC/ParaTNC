@@ -13,7 +13,7 @@
 #include <modbus_rtu/rtu_getters.h>
 #include <modbus_rtu/rtu_return_values.h>
 
-int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
+int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 	int32_t out = 0;
 	int32_t measurement_result = 0;
@@ -48,7 +48,7 @@ int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const confi
 		case WX_SOURCE_FULL_RTU: {
 
 			// get the value read from RTU registers
-			measurement_result = rtu_get_humidity(&rte_wx_humidity);
+			measurement_result = rtu_get_humidity(&rte_wx_humidity, config_rtu);
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {

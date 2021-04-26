@@ -10,7 +10,7 @@
 
 #include "config_data.h"
 
-int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb);
+int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu);
 int32_t wx_get_humidity_bme280(int8_t * const humidity);
 
 #endif /* WX_HANDLER_HUMIDITY_H_ */

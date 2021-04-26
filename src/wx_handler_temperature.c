@@ -22,7 +22,7 @@
 
 uint8_t wx_inhibit_slew_rate_check = 1;
 
-int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
+int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 
 	int32_t measurement_result = -1;						// used for return values from various functions
@@ -97,7 +97,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		case WX_SOURCE_FULL_RTU: {
 
 			// get the value read from RTU registers
-			measurement_result = rtu_get_temperature(&rte_wx_temperature_external);
+			measurement_result = rtu_get_temperature(&rte_wx_temperature_external, config_rtu);
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {

@@ -14,17 +14,17 @@ uint8_t rte_rtu_number_of_serial_io_errors = 0;
 
 uint16_t rte_rtu_number_of_successfull_serial_comm = 0;
 
-rtu_register_data_t RTU_GETTERS_F1_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f1;
 
-rtu_register_data_t RTU_GETTERS_F2_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f2;
 
-rtu_register_data_t RTU_GETTERS_F3_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f3;
 
-rtu_register_data_t RTU_GETTERS_F4_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f4;
 
-rtu_register_data_t RTU_GETTERS_F5_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f5;
 
-rtu_register_data_t RTU_GETTERS_F6_NAME;
+rtu_register_data_t rte_wx_modbus_rtu_f6;
 
 rtu_exception_t rte_rtu_last_modbus_exception;
 uint32_t rte_rtu_last_modbus_exception_timestamp;

@@ -10,7 +10,7 @@
 
 #include "config_data.h"
 
-int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb);
+int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu);
 int32_t wx_get_pressure_ms5611(float * const pressure);
 int32_t wx_get_pressure_bme280(float * const pressure);
 

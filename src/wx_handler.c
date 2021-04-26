@@ -51,19 +51,14 @@ static const config_data_wx_sources_t internal = {
 #define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
 
 
-void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb) {
+void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
-	int32_t return_value = 0;
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	int32_t backup_parameter_result = 0;				// uses during retrieving backup
 
-	int32_t temperature_result = 0;
-	int32_t pressure_result = 0;
-	int32_t humidity_result = 0;
-
-	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb);
-	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb);
-	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb);
+	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config_rtu);
+	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb, config_rtu);
+	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb, config_rtu);
 
 	// check if all parameters (except wind) were collected successfully
 	if (parameter_result == (WX_HANDLER_PARAMETER_RESULT_TEMPERATURE | WX_HANDLER_PARAMETER_RESULT_PRESSURE | WX_HANDLER_PARAMETER_RESULT_HUMIDITY | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL)) {
@@ -76,7 +71,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 			// check what is the primary source of temperature
 			if (config_sources->temperature != WX_SOURCE_INTERNAL) {
 				// if this is something different than an internal source use the internal sensor
-				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb);
+				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb, config_rtu);
 			}
 			else {
 				; //
@@ -86,14 +81,14 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_PRESSURE) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
-				backup_parameter_result |= wx_get_pressure_measurement(&internal, config_mode, config_umb);
+				backup_parameter_result |= wx_get_pressure_measurement(&internal, config_mode, config_umb, config_rtu);
 			}
 		}
 
 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_HUMIDITY) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
-				backup_parameter_result |= wx_get_humidity_measurement(&internal, config_mode, config_umb);
+				backup_parameter_result |= wx_get_humidity_measurement(&internal, config_mode, config_umb, config_rtu);
 			}
 		}
 	}
