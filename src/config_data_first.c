@@ -43,7 +43,7 @@
 /**
  *
  */
-const config_data_mode_t config_data_mode_first = {
+const config_data_mode_t __attribute__((section(".config_section_first"))) config_data_mode_first = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -109,7 +109,7 @@ const config_data_mode_t config_data_mode_first = {
 /**
  *
  */
-const config_data_basic_t config_data_basic_first = {
+const config_data_basic_t __attribute__((section(".config_section_first"))) config_data_basic_first = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -168,7 +168,7 @@ const config_data_basic_t config_data_basic_first = {
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t config_data_wx_sources_first = {
+const config_data_wx_sources_t __attribute__((section(".config_section_first"))) config_data_wx_sources_first = {
 #ifdef _TEMPERATURE_INTERNAL
 		.temperature = WX_SOURCE_INTERNAL,
 #endif
@@ -233,7 +233,7 @@ const config_data_wx_sources_t config_data_wx_sources_first = {
 /**
  *
  */
-const config_data_umb_t config_data_umb_first = {
+const config_data_umb_t __attribute__((section(".config_section_first"))) config_data_umb_first = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -265,7 +265,7 @@ const config_data_umb_t config_data_umb_first = {
 /**
  *
  */
-const config_data_rtu_t config_data_rtu_first = {
+const config_data_rtu_t __attribute__((section(".config_section_first"))) config_data_rtu_first = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
