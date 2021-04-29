@@ -1,13 +1,18 @@
 /*
- * config_data_second.c
+ * config_data_default.c
  *
- *  Created on: Apr 26, 2021
+ *  Created on: Apr 27, 2021
  *      Author: mateusz
  */
+
+// this file contains default configuration used if both first and second config_data section doesn't contains valid
+// configuration data (CRC32 calculated from both sections is wrong). In such case the software erases both sections and
+// reprogram it from the default set stored somewhere within .code section
 
 #include "config_data.h"
 
 #include "station_config.h"
+
 
 #ifndef _RTU_SLAVE_LENGHT_1
 	#define _RTU_SLAVE_LENGHT_1 0x1
@@ -33,14 +38,11 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
-const uint32_t __attribute__((section(".config_section_second"))) config_data_pgm_cntr_second = 0x2;
-
-const uint32_t __attribute__((section(".config_section_second.crc"))) config_data_crc_val_second = 0xDEADBEEF;
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_second.mode"))) config_data_mode_second = {
+volatile const config_data_mode_t config_data_mode_default = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -106,7 +108,7 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_second.basic"))) config_data_basic_second = {
+volatile const config_data_basic_t config_data_basic_default = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -165,7 +167,7 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_second.sources"))) config_data_wx_sources_second = {
+volatile const config_data_wx_sources_t config_data_wx_sources_default = {
 #ifdef _TEMPERATURE_INTERNAL
 		.temperature = WX_SOURCE_INTERNAL,
 #endif
@@ -230,7 +232,7 @@ const config_data_wx_sources_t __attribute__((section(".config_section_second.so
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_second.umb"))) config_data_umb_second = {
+volatile const config_data_umb_t config_data_umb_default = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -262,7 +264,7 @@ const config_data_umb_t __attribute__((section(".config_section_second.umb"))) c
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) config_data_rtu_second = {
+volatile const config_data_rtu_t config_data_rtu_default = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
@@ -426,3 +428,4 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 
 		.slave_6_unsigned_signed = 0
 };
+

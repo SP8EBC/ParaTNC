@@ -3,6 +3,7 @@
 
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
+#include "config_data.h"
 
 #define SW_VER "DF14"
 #define SW_DATE "22032021"
@@ -16,6 +17,12 @@
 #define OWN_APRS_MSG_LN 	160
 
 extern uint32_t master_time;
+
+extern const config_data_mode_t * main_config_data_mode;
+extern const config_data_basic_t * main_config_data_basic;
+extern const config_data_wx_sources_t * main_config_data_wx_sources;
+extern const config_data_umb_t * main_config_data_umb;
+extern const config_data_rtu_t * main_config_data_rtu;
 
 extern int32_t main_wx_sensors_pool_timer;
 extern int32_t main_one_minute_pool_timer;

@@ -39,11 +39,14 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
+const uint32_t __attribute__((section(".config_section_first"))) config_data_pgm_cntr_first = 0x1;
+
+const uint32_t __attribute__((section(".config_section_first.crc"))) config_data_crc_val_first = 0xDEADBEEF;
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_first"))) config_data_mode_first = {
+const config_data_mode_t __attribute__((section(".config_section_first.mode"))) config_data_mode_first = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -109,7 +112,7 @@ const config_data_mode_t __attribute__((section(".config_section_first"))) confi
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_first"))) config_data_basic_first = {
+const config_data_basic_t __attribute__((section(".config_section_first.basic"))) config_data_basic_first = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -168,7 +171,7 @@ const config_data_basic_t __attribute__((section(".config_section_first"))) conf
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_first"))) config_data_wx_sources_first = {
+const config_data_wx_sources_t __attribute__((section(".config_section_first.sources"))) config_data_wx_sources_first = {
 #ifdef _TEMPERATURE_INTERNAL
 		.temperature = WX_SOURCE_INTERNAL,
 #endif
@@ -233,7 +236,7 @@ const config_data_wx_sources_t __attribute__((section(".config_section_first")))
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_first"))) config_data_umb_first = {
+const config_data_umb_t __attribute__((section(".config_section_first.umb"))) config_data_umb_first = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -265,7 +268,7 @@ const config_data_umb_t __attribute__((section(".config_section_first"))) config
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_first"))) config_data_rtu_first = {
+const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) config_data_rtu_first = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,

@@ -13,6 +13,7 @@
 
 #include "station_config.h"
 #include "config_data_externs.h"
+#include "configuration_handler.h"
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"
@@ -191,6 +192,7 @@ int main(int argc, char* argv[]){
 
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
+  RCC->AHBENR |= RCC_AHBENR_CRCEN;
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
@@ -241,6 +243,9 @@ int main(int argc, char* argv[]){
   // initializing variables & arrays in rte_wx
   rte_wx_init();
   rte_rtu_init();
+
+  // calculate CRC over configuration blocks
+  configuration_handler_check_crc();
 
 #if defined _RANDOM_DELAY
   // configuring a default delay value
