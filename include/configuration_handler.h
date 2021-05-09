@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 uint32_t configuration_handler_check_crc(void);
-uint32_t configuration_handler_restore_default(void);
+uint32_t configuration_handler_restore_default_first(void);
 uint32_t configuration_handler_load_configuration(void);
 uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx);
 

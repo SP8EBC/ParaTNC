@@ -84,6 +84,10 @@
 // 5 -> hard fault LR LSB
 // 6 -> hard fault LR MSB
 
+#define CONFIG_FIRST_RESTORED 			(1)
+#define CONFIG_FIRST_FAIL_RESTORING	  	(1 << 1)
+#define CONFIG_FIRST_CRC_OK				(1 << 2)
+
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at
@@ -174,6 +178,8 @@ uint16_t buffer_len = 0;
 // return value from UMB related functions
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 
+// result of CRC calculation
+uint32_t main_crc_result = 0;
 
 char after_tx_lock;
 
@@ -228,8 +234,8 @@ int main(int argc, char* argv[]){
   // storing increased value
   BKP->DR2 |= rte_main_boot_cycles;
 
-  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
-  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
+//  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
+//  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
 
   BKP->DR3 = 0;
   BKP->DR4 = 0;
@@ -245,7 +251,26 @@ int main(int argc, char* argv[]){
   rte_rtu_init();
 
   // calculate CRC over configuration blocks
-  configuration_handler_check_crc();
+  main_crc_result = configuration_handler_check_crc();
+
+  // if first section has wrong CRC and it hasn't been restored before
+  if ((main_crc_result & 0x01) == 0 && (BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+	  // restore default configuration
+	  if (configuration_handler_restore_default_first() == 0) {
+
+		  // if configuration has been restored successfully
+		  BKP->DR3 |= CONFIG_FIRST_RESTORED;
+	  }
+	  else {
+		  // if not store the flag in the backup register
+		  BKP->DR3 |= CONFIG_FIRST_FAIL_RESTORING;
+	  }
+
+
+  }
+  else {
+	  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+  }
 
 #if defined _RANDOM_DELAY
   // configuring a default delay value
