@@ -22,6 +22,7 @@
 #include "PathConfig.h"
 #include "LedConfig.h"
 #include "io.h"
+#include "float_to_string.h"
 
 #include "it_handlers.h"
 
@@ -87,6 +88,10 @@
 #define CONFIG_FIRST_RESTORED 			(1)
 #define CONFIG_FIRST_FAIL_RESTORING	  	(1 << 1)
 #define CONFIG_FIRST_CRC_OK				(1 << 2)
+
+#define CONFIG_SECOND_RESTORED 				(1 << 3)
+#define CONFIG_SECOND_FAIL_RESTORING	  	(1 << 4)
+#define CONFIG_SECOND_CRC_OK				(1 << 5)
 
 // ----- main() ---------------------------------------------------------------
 
@@ -170,6 +175,12 @@ uint8_t main_own_path_ln = 0;
 uint8_t main_own_aprs_msg_len;
 char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
+char main_string_latitude[9];
+char main_string_longitude[9];
+
+char main_symbol_f = '/';
+char main_symbol_s = '#';
+
 // global variable used to store return value from various functions
 volatile uint8_t retval = 100;
 
@@ -242,9 +253,6 @@ int main(int argc, char* argv[]){
   BKP->DR5 = 0;
   BKP->DR6 = 0;
 
-  // disabling access to BKP registers
-  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
-  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
 
   // initializing variables & arrays in rte_wx
   rte_wx_init();
@@ -260,16 +268,120 @@ int main(int argc, char* argv[]){
 
 		  // if configuration has been restored successfully
 		  BKP->DR3 |= CONFIG_FIRST_RESTORED;
+
+		  // set also CRC flag because if restoring is successfull the region has good CRC
+		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+
 	  }
 	  else {
-		  // if not store the flag in the backup register
+		  // if not store the flag in the backup register to block
+		  // reinitializing once again in the consecutive restart
 		  BKP->DR3 |= CONFIG_FIRST_FAIL_RESTORING;
 	  }
 
 
   }
   else {
-	  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+	  // if the combined confition is not met check failed restoring flag
+	  if ((BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+		  // a CRC checksum is ok, so first configuration section can be used further
+		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+	  }
+	  else {
+		  ;
+	  }
+  }
+
+  // if second section has wrong CRC and it hasn't been restored before
+  if ((main_crc_result & 0x02) == 0 && (BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+	  // restore default configuration
+	  if (configuration_handler_restore_default_second() == 0) {
+
+		  // if configuration has been restored successfully
+		  BKP->DR3 |= CONFIG_SECOND_RESTORED;
+
+		  // set also CRC flag as if restoring is successfull the region has good CRC
+		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+
+	  }
+	  else {
+		  // if not store the flag in the backup register
+		  BKP->DR3 |= CONFIG_SECOND_FAIL_RESTORING;
+
+		  BKP->DR3 &= (0xFFFF ^ CONFIG_SECOND_CRC_OK);
+	  }
+
+
+  }
+  else {
+	  // check failed restoring flag
+	  if ((BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+		  // second configuration section has good CRC and can be used further
+		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+	  }
+	  else {
+		  ;
+	  }
+  }
+
+  // at this point both sections have either verified CRC or restored values to default
+  if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+	  // if both sections are OK check programming counters
+	  if (config_data_pgm_cntr_first > config_data_pgm_cntr_second) {
+		  // if first section has bigger programing counter use it
+		  configuration_handler_load_configuration(REGION_FIRST);
+	  }
+	  else {
+		  configuration_handler_load_configuration(REGION_SECOND);
+
+	  }
+  }
+  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) == 0) {
+	  // if only first region is OK use it
+	  configuration_handler_load_configuration(REGION_FIRST);
+  }
+  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) == 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+	  // if only first region is OK use it
+	  configuration_handler_load_configuration(REGION_FIRST);
+  }
+  else {
+	  configuration_handler_load_configuration(REGION_DEFAULT);
+  }
+
+  // disabling access to BKP registers
+  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
+  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
+
+  // converting latitude into string
+  memset(main_string_latitude, 0x00, sizeof(main_string_latitude));
+  float_to_string(main_config_data_basic->latitude, main_string_latitude, sizeof(main_string_latitude), 2, 2);
+
+  // converting longitude into string
+  memset(main_string_longitude, 0x00, sizeof(main_string_longitude));
+  float_to_string(main_config_data_basic->longitude, main_string_longitude, sizeof(main_string_longitude), 2, 5);
+
+  switch(main_config_data_basic->symbol) {
+  case 0:		// _SYMBOL_DIGI
+	  main_symbol_f = '/';
+	  main_symbol_s = '#';
+	  break;
+  case 1:		// _SYMBOL_WIDE1_DIGI
+	  main_symbol_f = '1';
+	  main_symbol_s = '#';
+	  break;
+  case 2:		// _SYMBOL_HOUSE
+	  main_symbol_f = '/';
+	  main_symbol_s = '-';
+	  break;
+  case 3:		// _SYMBOL_RXIGATE
+	  main_symbol_f = 'I';
+	  main_symbol_s = '&';
+	  break;
+  default:		// _SYMBOL_IGATE
+	  main_symbol_f = 'R';
+	  main_symbol_s = '&';
+	  break;
+
   }
 
 #if defined _RANDOM_DELAY
@@ -531,7 +643,7 @@ int main(int argc, char* argv[]){
 
  if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 
 	  // terminating the aprs message
 	  main_own_aprs_msg[main_own_aprs_msg_len] = 0;

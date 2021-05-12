@@ -114,15 +114,15 @@ volatile const config_data_basic_t config_data_basic_default = {
 		.latitude = _LAT,
 		.longitude = _LON,
 #if (_LATNS == 'N')
-		.zero_to_n_one_to_s = 0,
+		.n_or_s = 'N',
 #else
-		.zero_to_n_one_to_s = 1,
+		.n_or_s = 'S',
 #endif
 
 #if (_LONWE == 'E')
-		.zero_to_e_one_to_w = 0,
+		.e_or_w = 'E',
 #else
-		.zero_to_e_one_to_w = 1,
+		.e_or_w = 'W',
 #endif
 
 		.comment = _COMMENT,

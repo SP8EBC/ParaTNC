@@ -49,12 +49,12 @@ typedef struct config_data_basic_t {
 	float latitude;
 
 	// N or S
-	uint8_t zero_to_n_one_to_s;
+	char n_or_s;
 
 	float longitude;
 
 	// E or W
-	uint8_t zero_to_e_one_to_w;
+	char e_or_w;
 
 	char comment[128];
 

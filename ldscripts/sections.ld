@@ -18,7 +18,7 @@ _estack = __stack; 	/* STM specific definition */
  * for the different modes.
  */
 
-__Main_Stack_Size = 512 ;
+__Main_Stack_Size = 333 ;
 
 PROVIDE ( _Main_Stack_Size = __Main_Stack_Size ) ;
 
@@ -32,7 +32,7 @@ PROVIDE ( _Main_Stack_Limit = __Main_Stack_Limit ) ;
  * There will be a link error if there is not this amount of 
  * RAM free at the end. 
  */
-_Minimum_Stack_Size = 256 ;
+_Minimum_Stack_Size = 333 ;
 
 /*
  * Default heap definitions.

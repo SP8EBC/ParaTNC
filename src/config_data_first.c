@@ -39,7 +39,7 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
-const uint32_t __attribute__((section(".config_section_first"))) config_data_pgm_cntr_first = 0x1;
+const uint16_t __attribute__((section(".config_section_first"))) config_data_pgm_cntr_first = 0x1;
 
 const uint32_t __attribute__((section(".config_section_first.crc"))) config_data_crc_val_first = 0xDEADBEEF;
 
@@ -118,15 +118,15 @@ const config_data_basic_t __attribute__((section(".config_section_first.basic"))
 		.latitude = _LAT,
 		.longitude = _LON,
 #if (_LATNS == 'N')
-		.zero_to_n_one_to_s = 0,
+		.n_or_s = 'N',
 #else
-		.zero_to_n_one_to_s = 1,
+		.n_or_s = 'S',
 #endif
 
 #if (_LONWE == 'E')
-		.zero_to_e_one_to_w = 0,
+		.e_or_w = 'E',
 #else
-		.zero_to_e_one_to_w = 1,
+		.e_or_w = 'W',
 #endif
 
 		.comment = _COMMENT,

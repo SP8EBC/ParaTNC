@@ -13,9 +13,10 @@
 extern const int __config_section_first_crc;
 extern const int __config_section_second_crc;
 
-extern const int __config_section_first_pgm_counter;
-extern const int __config_section_second_pgm_counter;
-
+//extern const int __config_section_first_pgm_counter;
+//extern const int __config_section_second_pgm_counter;
+extern const uint16_t config_data_pgm_cntr_first;
+extern const uint16_t config_data_pgm_cntr_second;
 
 extern const config_data_basic_t config_data_basic_first;
 extern const config_data_mode_t config_data_mode_first;
