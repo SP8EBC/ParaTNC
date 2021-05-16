@@ -52,7 +52,7 @@ extern uint8_t rte_wx_winddirection_it;
 extern uint16_t rte_wx_winddirection_last;
 extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
-extern int16_t rte_wx_average_winddirection;
+extern uint16_t rte_wx_average_winddirection;
 
 extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 

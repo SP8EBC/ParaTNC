@@ -385,5 +385,5 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 }
 
 uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx) {
-
+	return -1;
 }

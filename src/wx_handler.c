@@ -100,7 +100,6 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 
 int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressure, int8_t * const humidity) {
 
-	int i = 0, j = 0;
 	int32_t return_value = 0;
 
 	// reading raw values from BME280 sensor
@@ -130,7 +129,7 @@ int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, f
 }
 
 
-void wx_pool_anemometer(void) {
+void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 	// locals
 	uint32_t average_windspeed = 0;
@@ -143,167 +142,165 @@ void wx_pool_anemometer(void) {
 	short i = 0;
 	uint8_t average_ln;
 
-#ifdef _MODBUS_RTU
 	int32_t modbus_retval;
-#endif
 
 	wx_wind_pool_call_counter++;
 
 	uint16_t scaled_windspeed = 0;
 
 	// internal sensors
-	#if defined(_ANEMOMETER_ANALOGUE) && !defined(_UMB_MASTER) && !defined(_MODBUS_RTU) || (!defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && !defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_ANEMOMETER_ANALOGUE))
-	// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
-	scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
-	#endif
-
-	#if defined(_UMB_MASTER)
-	rte_wx_average_winddirection = umb_get_winddirection();
-	rte_wx_average_windspeed = umb_get_windspeed();
-	rte_wx_max_windspeed = umb_get_windgusts();
-	#else
-
-	#if defined(_MODBUS_RTU) && defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && !defined(_RTU_SLAVE_FULL_WIND_DATA)
-	// get the value from modbus registers
-	modbus_retval = rtu_get_wind_speed(&scaled_windspeed);
-
-	// check if this value has been processed w/o errors
-	if (modbus_retval == MODBUS_RET_OK) {
-		// if yes continue to further processing
-		modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last);
-
+	if (config_sources->wind == WX_SOURCE_INTERNAL) {
+		// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
+		scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
 	}
 
-	// the second IF to check if the return value was the same for wind direction
-	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
-		// if the value is not available (like modbus is not configured as a source
-		// for wind data) get the value from internal sensors..
-		#ifdef _INTERNAL_AS_BACKUP
-			// .. if they are configured
-			scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
-		#endif
+	else if (config_sources->wind == WX_SOURCE_UMB) {
+		rte_wx_average_winddirection = umb_get_winddirection(config_umb);
+		rte_wx_average_windspeed = umb_get_windspeed(config_umb);
+		rte_wx_max_windspeed = umb_get_windgusts(config_umb);
 	}
-	#elif defined(_MODBUS_RTU) && defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) && defined(_RTU_SLAVE_WIND_SPEED_SOURCE) && defined(_RTU_SLAVE_FULL_WIND_DATA)
-	// get the value from modbus registers
-	modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection);
 
-	// check if this value has been processed w/o errors
-	if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
-		// if yes continue to further processing
-		modbus_retval = rtu_get_wind_gusts(&rte_wx_max_windspeed);
-		modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last);
+	else if (config_sources->wind == WX_SOURCE_RTU) {
+		// get the value from modbus registers
+		modbus_retval = rtu_get_wind_speed(&scaled_windspeed, config_rtu);
 
+		// check if this value has been processed w/o errors
+		if (modbus_retval == MODBUS_RET_OK) {
+			// if yes continue to further processing
+			modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last, config_rtu);
+
+		}
+
+		// the second IF to check if the return value was the same for wind direction
+		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+			// if the value is not available (like modbus is not configured as a source
+			// for wind data) get the value from internal sensors..
+			#ifdef _INTERNAL_AS_BACKUP
+				// .. if they are configured
+				scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+			#endif
+		}
 	}
-	#else
-	//rte_wx_reset_last_measuremenet_timers(RTE_WX_MEASUREMENT_WIND);
-	#endif
 
+	else if (config_sources->wind == WX_SOURCE_FULL_RTU) {
+		// get the value from modbus registers
+		modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection, config_rtu);
 
-#ifndef _RTU_SLAVE_FULL_WIND_DATA
-	// check how many times before the pool function was called
-	if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
-		// if it was called less time than a length of buffers, the average length
-		// needs to be shortened to handle the underrun properly
-		average_ln = (uint8_t)wx_wind_pool_call_counter;
+		// check if this value has been processed w/o errors
+		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+			// if yes continue to further processing
+			modbus_retval = rtu_get_wind_gusts(&rte_wx_max_windspeed, config_rtu);
+			modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last, config_rtu);
+
+		}
 	}
 	else {
-		average_ln = WIND_AVERAGE_LEN;
+		;
 	}
 
-	// putting the wind speed into circular buffer
-	rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;
+	if (config_sources->wind != WX_SOURCE_FULL_RTU) {
+		// check how many times before the pool function was called
+		if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
+			// if it was called less time than a length of buffers, the average length
+			// needs to be shortened to handle the underrun properly
+			average_ln = (uint8_t)wx_wind_pool_call_counter;
+		}
+		else {
+			average_ln = WIND_AVERAGE_LEN;
+		}
 
-	// increasing the iterator to the windspeed buffer
-	rte_wx_windspeed_it++;
+		// putting the wind speed into circular buffer
+		rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;
 
-	// checking if iterator reached an end of the buffer
-	if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN) {
-		rte_wx_windspeed_it = 0;
+		// increasing the iterator to the windspeed buffer
+		rte_wx_windspeed_it++;
+
+		// checking if iterator reached an end of the buffer
+		if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN) {
+			rte_wx_windspeed_it = 0;
+		}
+
+		// calculating the average windspeed
+		for (i = 0; i < average_ln; i++)
+			average_windspeed += rte_wx_windspeed[i];
+
+		average_windspeed /= average_ln;
+
+		// store the value in rte
+		rte_wx_average_windspeed = average_windspeed;
+
+		// reuse the local variable to find maximum value
+		average_windspeed = 0;
+
+		// looking for gusts
+		for (i = 0; i < average_ln; i++) {
+			if (average_windspeed < rte_wx_windspeed[i])
+				average_windspeed = rte_wx_windspeed[i];
+		}
+
+		// storing wind gusts value in rte
+		rte_wx_max_windspeed = average_windspeed;
+
+		// adding last wind direction to the buffers
+		if (rte_wx_winddirection_it >= WIND_AVERAGE_LEN)
+			rte_wx_winddirection_it = 0;
+
+		rte_wx_winddirection[rte_wx_winddirection_it++] = rte_wx_winddirection_last;
+
+		// calculating average wind direction
+		for (i = 0; i < average_ln; i++) {
+
+			dir_temp = (float)rte_wx_winddirection[i];
+
+			// split the wind direction into x and y component
+			wind_direction_x = (int16_t)(100.0f * cosf(dir_temp * direction_constant));
+			wind_direction_y = (int16_t)(100.0f * sinf(dir_temp * direction_constant));
+
+			// adding components to calculate average
+			wind_direction_x_avg += wind_direction_x;
+			wind_direction_y_avg += wind_direction_y;
+
+		}
+
+		// dividing to get average of x and y componen
+		wind_direction_x_avg /= average_ln;
+		wind_direction_y_avg /= average_ln;
+
+		// converting x & y component of wind direction back to an angle
+		arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);
+
+		rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f/M_PI));
+
+		if (rte_wx_average_winddirection < 0)
+			rte_wx_average_winddirection += 360;
+
 	}
 
-	// calculating the average windspeed
-	for (i = 0; i < average_ln; i++)
-		average_windspeed += rte_wx_windspeed[i];
-
-	average_windspeed /= average_ln;
-
-	// store the value in rte
-	rte_wx_average_windspeed = average_windspeed;
-
-	// reuse the local variable to find maximum value
-	average_windspeed = 0;
-
-	// looking for gusts
-	for (i = 0; i < average_ln; i++) {
-		if (average_windspeed < rte_wx_windspeed[i])
-			average_windspeed = rte_wx_windspeed[i];
-	}
-
-	// storing wind gusts value in rte
-	rte_wx_max_windspeed = average_windspeed;
-
-	// adding last wind direction to the buffers
-	if (rte_wx_winddirection_it >= WIND_AVERAGE_LEN)
-		rte_wx_winddirection_it = 0;
-
-	rte_wx_winddirection[rte_wx_winddirection_it++] = rte_wx_winddirection_last;
-
-	// calculating average wind direction
-	for (i = 0; i < average_ln; i++) {
-
-		dir_temp = (float)rte_wx_winddirection[i];
-
-		// split the wind direction into x and y component
-		wind_direction_x = (int16_t)(100.0f * cosf(dir_temp * direction_constant));
-		wind_direction_y = (int16_t)(100.0f * sinf(dir_temp * direction_constant));
-
-		// adding components to calculate average
-		wind_direction_x_avg += wind_direction_x;
-		wind_direction_y_avg += wind_direction_y;
-
-	}
-
-	// dividing to get average of x and y componen
-	wind_direction_x_avg /= average_ln;
-	wind_direction_y_avg /= average_ln;
-
-	// converting x & y component of wind direction back to an angle
-	arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);
-
-	rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f/M_PI));
-
-	if (rte_wx_average_winddirection < 0)
-		rte_wx_average_winddirection += 360;
-
-#endif
-
-#if defined (_MODBUS_RTU) && (defined(_RTU_SLAVE_WIND_DIRECTION_SORUCE) || defined(_RTU_SLAVE_WIND_SPEED_SOURCE) || defined(_RTU_SLAVE_FULL_WIND_DATA))
-	if (modbus_retval == MODBUS_RET_OK) {
-		rte_wx_wind_qf = AN_WIND_QF_FULL;
-	}
-	else if (modbus_retval == MODBUS_RET_DEGRADED) {
-		rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
-	}
-	else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
-		rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-	}
-	else {
-		#ifdef _INTERNAL_AS_BACKUP
-			rte_wx_wind_qf = analog_anemometer_get_qf();
-		#else
+	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind != WX_SOURCE_RTU) {
+		if (modbus_retval == MODBUS_RET_OK) {
+			rte_wx_wind_qf = AN_WIND_QF_FULL;
+		}
+		else if (modbus_retval == MODBUS_RET_DEGRADED) {
+			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+		}
+		else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
 			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-		#endif
+		}
+		else {
+			if ((config_mode->wx & WX_INTERNAL_AS_BACKUP) != 0)
+				rte_wx_wind_qf = analog_anemometer_get_qf();
+			else
+				rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+		}
 	}
-#elif defined(_ANEMOMETER_ANALOGUE)
-	rte_wx_wind_qf = analog_anemometer_get_qf();
-#elif defined(_ANEMOMETER_TX20)
-	;
-#else
-	rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
-#endif
+	else if (config_sources->wind == WX_SOURCE_INTERNAL) {
+		rte_wx_wind_qf = analog_anemometer_get_qf();
+	}
+	else {
+		rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+	}
 
 
-	#endif
 }
 
 void wx_pwr_init(void) {

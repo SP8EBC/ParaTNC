@@ -404,11 +404,10 @@ int main(int argc, char* argv[]){
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
-#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
   // Configure I/O pins for USART2 (wx meteo comm)
   Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
-#endif
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
   Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
@@ -423,28 +422,11 @@ int main(int argc, char* argv[]){
   RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-#if defined(PARATNC_HWREV_A)
-  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
-  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
-
-  main_target_kiss_baudrate = 9600u;
-#if defined(_UMB_MASTER)
-  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
-#endif
-#endif
-#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
-#endif
-#if !defined(PARATNC_HWREV_A) && !defined(PARATNC_HWREV_B) && !defined(PARATNC_HWREV_C)
-  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
-  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
-
-  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
-#endif
 
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
   if (main_config_data_mode->victron == 1) {
@@ -506,7 +488,6 @@ int main(int argc, char* argv[]){
 
   }
 #endif
-//#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
   if (main_config_data_mode->wx_modbus == 1) {
 
 	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
@@ -524,14 +505,10 @@ int main(int argc, char* argv[]){
 	  rtu_serial_start();
   }
   else {
-//#else
 	  // initializing UART drvier
 	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
   }
-
-//#endif
-
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
@@ -902,7 +879,7 @@ int main(int argc, char* argv[]){
 				rtu_serial_start();
 			}
 
-			if (main_config_data_mode->wx == 1) {
+			if (main_config_data_mode->wx > 0) {
 				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
 
@@ -984,7 +961,7 @@ int main(int argc, char* argv[]){
 			}
 			//#endif
 
-			wx_pool_anemometer();
+			wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 
 			if (main_davis_serial_enabled == 1) {
 

@@ -5,8 +5,8 @@
 #include "drivers/serial.h"
 #include "config_data.h"
 
-#define SW_VER "DF14"
-#define SW_DATE "22032021"
+#define SW_VER "EA00"
+#define SW_DATE "13052021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -37,6 +37,12 @@ extern AX25Call main_own_path[3];
 extern uint8_t main_own_path_ln;
 extern uint8_t main_own_aprs_msg_len;
 extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+
+extern char main_string_latitude[9];
+extern char main_string_longitude[9];
+
+extern char main_symbol_f;
+extern char main_symbol_s;
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;

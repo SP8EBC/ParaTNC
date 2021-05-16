@@ -17,6 +17,9 @@
 
 typedef struct config_data_mode_t {
 
+#define WX_ENABLED 				(1)
+#define WX_INTERNAL_AS_BACKUP 	(1 << 1)
+
 	uint8_t digi;
 
 	uint8_t wx;

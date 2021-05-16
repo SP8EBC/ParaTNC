@@ -122,8 +122,6 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 int32_t wx_get_pressure_ms5611(float * const pressure) {
 
 	int32_t return_value = 0;
-	int i = 0, j = 0;
-	float pressure_average_sum = 0.0f;
 
 	// quering MS5611 sensor for pressure
 	return_value = ms5611_get_pressure(pressure,  &rte_wx_ms5611_qf);

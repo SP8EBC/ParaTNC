@@ -174,7 +174,7 @@ void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_rea
 	ve_direct_state_to_string(state, string_buff_state, 23);
 	ve_direct_error_to_string(*last_error, string_buff_err, 24);
 
-	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %X, MC %X, CMC %X, IMIN %d, IMAX %d, %s, %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %lX, MC %lX, CMC %lX, IMIN %d, IMAX %d, %s, %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
 
