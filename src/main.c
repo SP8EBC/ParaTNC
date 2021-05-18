@@ -567,34 +567,23 @@ int main(int argc, char* argv[]){
   // initializing the digipeater configuration
   digi_init(main_config_data_mode);
 
-#ifdef _METEO
+  if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 
-	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
-	#else
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-	#endif
 
-	#if defined(_UMB_MASTER)
-	  	// UMB client cannot be used in the same time with TX20 or analogue anemometer
-		#undef _ANEMOMETER_TX20
-		#undef _ANEMOMETER_ANALOGUE
+	  if (main_config_data_mode->wx_umb == 1) {
+		  // client initialization
+		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+	  }
 
-	  // client initialization
-	  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr);
-	#endif
+	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
+		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+	  }
+	  else {
+		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+	  }
+  }
 
-	#ifdef  _ANEMOMETER_TX20
-	  tx20_init();
-	#endif
-	#ifdef _ANEMOMETER_ANALOGUE
-	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
-	#endif
-	#ifdef _ANEMOMETER_ANALOGUE_SPARKFUN
-	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
-	#endif
-
-#endif
 #ifdef _DALLAS_AS_TELEM
 	#ifndef _DALLAS_SPLIT_PIN
 	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
@@ -701,9 +690,8 @@ int main(int argc, char* argv[]){
   // configuting system timers
   TimerConfig();
 
-#ifdef _BCN_ON_STARTUP
-  beacon_send_own();
-#endif
+  if (main_config_data_basic-> beacon_at_bootup == 1)
+	  beacon_send_own();
 
   // initialize UMB transaction
   if (main_config_data_mode->wx_umb == 1) {
@@ -879,7 +867,7 @@ int main(int argc, char* argv[]){
 				rtu_serial_start();
 			}
 
-			if (main_config_data_mode->wx > 0) {
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
 
@@ -892,15 +880,14 @@ int main(int argc, char* argv[]){
 				davis_trigger_rxcheck_packet();
 			}
 
-			if (rte_main_trigger_modbus_status == 1) {
-#ifdef _MODBUS_RTU
+			if (rte_main_trigger_modbus_status == 1 && main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 
 			 	afsk_txStart(&main_afsk);
-#endif
-				rte_main_trigger_modbus_status = 0;
+
+			 	rte_main_trigger_modbus_status = 0;
 
 
 			}
@@ -921,17 +908,17 @@ int main(int argc, char* argv[]){
 
 			//digi_pool_viscous();
 
-			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-			analog_anemometer_direction_handler();
-			#endif
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				analog_anemometer_direction_handler();
+			}
 
 			main_one_second_pool_timer = 1000;
 		}
 		else if (main_one_second_pool_timer < -10) {
 
-			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-			analog_anemometer_direction_reset();
-			#endif
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				analog_anemometer_direction_reset();
+			}
 
 			main_one_second_pool_timer = 1000;
 		}
@@ -949,17 +936,13 @@ int main(int argc, char* argv[]){
 
 		if (main_ten_second_pool_timer < 10) {
 
-			//#if defined(_UMB_MASTER)
 			if (main_config_data_mode->wx_umb == 1) {
 				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 			}
-			//#endif
 
-			//#if defined(_UMB_MASTER)
 			if (main_config_data_mode->wx_umb == 1) {
 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			}
-			//#endif
 
 			wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 

@@ -17,20 +17,6 @@ dallas_struct_t dallas;
 
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average) {
 
-#ifndef _DALLAS_SPLIT_PIN
-	dallas.GPIOx = GPIOx;
-	dallas.GPIO_Pin = GPIO_Pin;
-	dallas.GPIO_Pin_input = GPIO_Pin;
-
-	dallas.GPIO_Mode = (3 << GPIO_PinSource * 4);
-	dallas.GPIO_Cnf = (3 << GPIO_PinSource * 4) + 2;
-	dallas.shift = GPIO_PinSource * 4 + 2;
-
-	dallas.clear_term = 0xFFFFFFFF ^ (dallas.GPIO_Mode | dallas.GPIO_Cnf);
-	dallas.input_term = 1 << dallas.shift;
-	dallas.output_term = (1 << dallas.shift - 2) | (1 << dallas.shift);
-
-#else
 	GPIO_InitTypeDef GPIO_input;
 	GPIO_InitTypeDef GPIO_output;
 
@@ -48,7 +34,6 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 	dallas.GPIOx = GPIOx;
 	dallas.GPIO_Pin = GPIO_Pin;
 	dallas.GPIO_Pin_input = GPIO_Pin << 1;
-#endif
 
 	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
 		average->values[i] = DALLAS_INIT_VALUE;
@@ -97,20 +82,13 @@ void dallas_deconfig_timer(void) {
 
 char dallas_reset(void) {
 	// PULLING LINE LOW
-#ifndef _DALLAS_SPLIT_PIN
-	dallas.GPIOx->CRL &=  dallas.clear_term;
-	dallas.GPIOx->CRL |= dallas.output_term;
-#endif
+
 	dallas.GPIOx->BSRR |= (dallas.GPIO_Pin << 16);	// line low
 	delay_5us = 100;		// delay 500us
 	while (delay_5us != 0);
 
 	// WAITING FOR SLAVE PRESENT PULSE
 	dallas.GPIOx->BSRR |= (dallas.GPIO_Pin);		// line high
-#ifndef _DALLAS_SPLIT_PIN
-	dallas.GPIOx->CRL &=  dallas.clear_term;
-	dallas.GPIOx->CRL |= dallas.input_term;
-#endif
 	delay_5us = 20;			// delay 100us
 	while (delay_5us != 0);
 
@@ -130,10 +108,6 @@ void __attribute__((optimize("O0"))) dallas_send_byte(char data) {
 	char i;
 	for (i = 0; i < 8; i++) {
 		// PULLING LINE LOW
-#ifndef _DALLAS_SPLIT_PIN
-		dallas.GPIOx->CRL &=  dallas.clear_term;
-		dallas.GPIOx->CRL |= dallas.output_term;
-#endif
 		dallas.GPIOx->BSRR |= (dallas.GPIO_Pin << 16);	// line low
 		delay_5us = ((data >> i) & 0x01) ? 2 : 13;		// delay 10us if sending logic "1", or 75us if "0"
 		while (delay_5us != 0);
@@ -152,20 +126,12 @@ char __attribute__((optimize("O0"))) dallas_receive_byte(void) {
 	for (i = 0; i < 8; i++) {
 
 		// PULLING LINE LOW
-#ifndef _DALLAS_SPLIT_PIN
-		dallas.GPIOx->CRL &=  dallas.clear_term;
-		dallas.GPIOx->CRL |= dallas.output_term;
-#endif
 		dallas.GPIOx->BSRR |= (dallas.GPIO_Pin << 16);	// line low
 		delay_5us = 2;		// delay 10us
 		while (delay_5us != 0);
 
 		// PULLING LINE BACK HIGH
 		dallas.GPIOx->BSRR |= (dallas.GPIO_Pin);		// line high
-#ifndef _DALLAS_SPLIT_PIN
-		dallas.GPIOx->CRL &=  dallas.clear_term;
-		dallas.GPIOx->CRL |= dallas.input_term;
-#endif
 		delay_5us = 1;		// delay 10us
 		while (delay_5us != 0);
 

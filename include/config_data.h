@@ -17,8 +17,9 @@
 
 typedef struct config_data_mode_t {
 
-#define WX_ENABLED 				(1)
-#define WX_INTERNAL_AS_BACKUP 	(1 << 1)
+#define WX_ENABLED 					(1)
+#define WX_INTERNAL_AS_BACKUP 		(1 << 1)
+#define WX_INTERNAL_SPARKFUN_WIND	(1 << 2)
 
 	uint8_t digi;
 
