@@ -9,6 +9,7 @@
 
 #include <rte_wx.h>
 #include <rte_rtu.h>
+#include <rte_main.h>
 #include <math.h>
 #include <stm32f10x.h>
 #include "drivers/_dht22.h"
@@ -40,6 +41,7 @@ uint32_t wx_last_good_wind_time = 0;
 wx_pwr_state_t wx_pwr_state;
 uint8_t wx_inhibit_slew_rate_check = 1;
 uint32_t wx_wind_pool_call_counter = 0;
+uint8_t wx_force_i2c_sensor_reset = 0;
 
 static const float direction_constant = M_PI/180.0f;
 
@@ -50,6 +52,24 @@ static const float direction_constant = M_PI/180.0f;
 #define MODBUS_QF_HUMIDITY_DEGR 		(1 << 4)
 #define MODBUS_QF_PRESSURE_FULL			(1 << 5)
 #define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
+
+void wx_check_force_i2c_reset(void) {
+
+	if (wx_force_i2c_sensor_reset == 1) {
+		wx_force_i2c_sensor_reset = 0;
+
+#if defined (_SENSOR_BME280)
+		 bme280_reset(&rte_wx_bme280_qf);
+		 bme280_setup();
+#endif
+
+#if defined (_SENSOR_MS5611)
+		 ms5611_reset(&rte_wx_ms5611_qf);
+		 ms5611_trigger_measure(0, 0);
+#endif
+	}
+
+}
 
 void wx_get_all_measurements(void) {
 
@@ -231,6 +251,17 @@ void wx_get_all_measurements(void) {
 
 		// calculate the slew rate
 		rte_wx_temperature_dalls_slew_rate = rte_wx_temperature_dallas - rte_wx_temperature_dallas_valid;
+
+		// check the positive slew rate for a hard sensor error
+		if (rte_wx_temperature_dalls_slew_rate >  (3 * WX_MAX_TEMPERATURE_SLEW_RATE) && wx_inhibit_slew_rate_check == 0) {
+			rte_main_reboot_req = 1;
+		}
+
+		// the same but for negative slew
+		if (rte_wx_temperature_dalls_slew_rate < (-WX_MAX_TEMPERATURE_SLEW_RATE * 3) && wx_inhibit_slew_rate_check == 0) {
+			rte_main_reboot_req = 1;
+
+		}
 
 		// chcecking the positive (ascending) slew rate of the temperature measuremenets
 		if (rte_wx_temperature_dalls_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
@@ -636,6 +667,10 @@ void wx_pwr_periodic_handle(void) {
 			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
 			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
 
+#ifdef PWR_SWITCH_BOTH
+			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+#endif
+
 			// setting the last_good timers to current value to prevent reset loop
 			wx_last_good_temperature_time = master_time;
 			wx_last_good_wind_time = master_time;
@@ -672,6 +707,12 @@ void wx_pwr_periodic_handle(void) {
 		// Turn on the +5V_ISOL (VDD_SW) voltage
 		GPIO_SetBits(GPIOB, GPIO_Pin_8);
 
+#ifdef PWR_SWITCH_BOTH
+		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+
+		wx_force_i2c_sensor_reset = 1;
+#endif
+
 		wx_pwr_state = WX_PWR_ON;
 
 		break;
@@ -680,43 +721,43 @@ void wx_pwr_periodic_handle(void) {
 	}
 }
 
-void wx_pwr_disable_12v_sw(void) {
-#if (defined PARATNC_HWREV_C)
-	wx_pwr_state = WX_PWR_DISABLED;
-
-	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
-
-#endif
-}
-
-void wx_pwr_disable_5v_isol(void) {
-	wx_pwr_state = WX_PWR_DISABLED;
-
-	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-
-
-}
-
-void wx_pwr_enable_12v_sw(void) {
-#if (defined PARATNC_HWREV_C)
-	wx_pwr_state = WX_PWR_OFF;
-
-	// setting last good measurements timers to inhibit relay clicking
-	// just after the power is applied
-	wx_last_good_temperature_time =  master_time;
-	wx_last_good_wind_time = master_time;
-
-#endif
-}
-
-void wx_pwr_enable_5v_isol(void) {
-#if (defined PARATNC_HWREV_C)
-	wx_pwr_state = WX_PWR_OFF;
-
-	// setting last good measurements timers to inhibit relay clicking
-	// just after the power is applied
-	wx_last_good_temperature_time =  master_time;
-	wx_last_good_wind_time = master_time;
-
-#endif
-}
+//void wx_pwr_disable_12v_sw(void) {
+//#if (defined PARATNC_HWREV_C)
+//	wx_pwr_state = WX_PWR_DISABLED;
+//
+//	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+//
+//#endif
+//}
+//
+//void wx_pwr_disable_5v_isol(void) {
+//	wx_pwr_state = WX_PWR_DISABLED;
+//
+//	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+//
+//
+//}
+//
+//void wx_pwr_enable_12v_sw(void) {
+//#if (defined PARATNC_HWREV_C)
+//	wx_pwr_state = WX_PWR_OFF;
+//
+//	// setting last good measurements timers to inhibit relay clicking
+//	// just after the power is applied
+//	wx_last_good_temperature_time =  master_time;
+//	wx_last_good_wind_time = master_time;
+//
+//#endif
+//}
+//
+//void wx_pwr_enable_5v_isol(void) {
+//#if (defined PARATNC_HWREV_C)
+//	wx_pwr_state = WX_PWR_OFF;
+//
+//	// setting last good measurements timers to inhibit relay clicking
+//	// just after the power is applied
+//	wx_last_good_temperature_time =  master_time;
+//	wx_last_good_wind_time = master_time;
+//
+//#endif
+//}
