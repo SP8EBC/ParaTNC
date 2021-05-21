@@ -13,6 +13,8 @@
 
 #include "./umb_master/umb_master.h"
 
+#include "./modbus_rtu/rtu_configuration.h"
+
 #include "main.h"
 #include "delay.h"
 
@@ -134,6 +136,8 @@ void packet_tx_handler(void) {
 
 #ifdef _METEO
 #ifdef _MODBUS_RTU
+#ifdef RTU_ENABLE_DEBUG_STATUS
+
 	// send the status packet with raw values of all requested modbus-RTU registers
 	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
 			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
@@ -144,16 +148,17 @@ void packet_tx_handler(void) {
 		telemetry_send_status_raw_values_modbus();
 	}
 
-//	// trigger the status packet with modbus-rtu state like error counters, timestamps etc.
-//	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
-//			packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
-//			packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
-//	{
-//
-//		packet_tx_multi_per_call_handler();
-//
-//		rte_main_trigger_modbus_status = 1;
-//	}
+	// trigger the status packet with modbus-rtu state like error counters, timestamps etc.
+	if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+			packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
+			packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
+	{
+
+		packet_tx_multi_per_call_handler();
+
+		rte_main_trigger_modbus_status = 1;
+	}
+#endif
 #endif
 
 	// check if Victron VE.Direct serial protocol client is enabled and it is

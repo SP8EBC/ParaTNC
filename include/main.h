@@ -5,7 +5,7 @@
 #include "drivers/serial.h"
 
 #define SW_VER "DF16"
-#define SW_DATE "18052021"
+#define SW_DATE "19052021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
