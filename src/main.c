@@ -616,7 +616,7 @@ int main(int argc, char* argv[]){
 
 	  // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
 	  //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
-	  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
+	  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN);
 
 	  // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
 	  // Here this could be omitted because UART isn't used before but general idea
@@ -738,7 +738,7 @@ int main(int argc, char* argv[]){
 
 	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN, &ln);
 
 	  			if (main_kiss_enabled == 1) {
 	  				srl_start_tx(main_kiss_srl_ctx_ptr, ln);
@@ -754,11 +754,11 @@ int main(int argc, char* argv[]){
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
-			memset(srl_usart1_tx_buffer, 0x00, sizeof(srl_usart1_tx_buffer));
+			memset(main_kiss_srl_ctx.srl_tx_buf_pointer, 0x00, main_kiss_srl_ctx.srl_tx_buf_ln);
 
 			if (main_kiss_enabled == 1) {
 				// convert message to kiss format and send it to host
-				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_usart1_tx_buffer, TX_BUFFER_1_LN));
+				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
 			}
 
 			main_ax25.dcd = false;

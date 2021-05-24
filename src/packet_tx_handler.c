@@ -71,7 +71,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
 
-	int ln = 0;
+	uint16_t ln = 0;
 
 	// set to one if more than one packet will be send from this function at once (like beacon + telemetry)
 	packet_tx_more_than_one = 0;
@@ -169,7 +169,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
-		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
+		SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln, &ln);
 
 		srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 

@@ -182,7 +182,7 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 			// Check if serial port is idle and can be used in this moment to transmit something
 			if (r == REASON_TRANSMIT_IDLE) {
 				// parsing UMB frame into serial buffer
-				umb_parse_frame_to_serial_buffer(srl_usart1_tx_buffer, TX_BUFFER_1_LN, &rte_wx_umb, &temp, config_umb);
+				umb_parse_frame_to_serial_buffer(ctx->serial_context->srl_tx_buf_pointer, ctx->serial_context->srl_tx_buf_ln, &rte_wx_umb, &temp, config_umb);
 
 				// starting data transfer
 				srl_start_tx(ctx->serial_context, temp);
