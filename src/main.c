@@ -38,7 +38,6 @@
 #include "rte_main.h"
 #include "rte_rtu.h"
 
-#ifdef _METEO
 #include <wx_handler.h>
 #include "drivers/dallas.h"
 #include "drivers/i2c.h"
@@ -50,23 +49,14 @@
 #include "../system/include/davis_vantage/davis.h"
 #include "../system/include/davis_vantage/davis_parsers.h"
 
-#ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
-#endif
-
-#ifdef _SENSOR_BME280
 #include <drivers/bme280.h>
-#endif
 
 #include "umb_master/umb_master.h"
 #include "umb_master/umb_channel_pool.h"
 #include "umb_master/umb_0x26_status.h"
 
-#endif	// _METEO
-
-#ifdef _DALLAS_AS_TELEM
 #include "drivers/dallas.h"
-#endif
 
 #include "KissCommunication.h"
 
@@ -437,58 +427,58 @@ int main(int argc, char* argv[]){
   }
 
 
-#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
-  // reinitialize the KISS serial port temporary to davis baudrate
-  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
+  if (main_config_data_mode->wx_davis == 1) {
+	  // reinitialize the KISS serial port temporary to davis baudrate
+	  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
 
-  // reset RX state to allow reinitialization with changed baudrate
-  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-
-  // reinitializing serial hardware to wake up Davis wx station
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-
-  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
-
-  davis_init(main_kiss_srl_ctx_ptr);
-
-  // try to wake up the davis base
-  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
-
-  // if davis weather stations is connected to SERIAL port
-  if (rte_wx_davis_station_avaliable == 1) {
-	  // turn LCD backlight on..
-	  davis_control_backlight(1);
-
-	  // wait for a while
-	  delay_fixed(1000);
-
-	  // and then off to let the user know that communication is working
-	  davis_control_backlight(0);
-
-	  // disable the KISS modem as the UART will be used for DAVIS wx station
-	  main_kiss_enabled = 0;
-
-	  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
-	  // This only controls the callback it doesn't mean that the station itself is responding to
-	  // communication. It stays set to one event if Davis station
-	  main_davis_serial_enabled = 1;
-
-	  // trigger the rxcheck to get all counter values
-	  davis_trigger_rxcheck_packet();
-
-  }
-  else {
-	  // if not revert back to KISS configuration
-	  main_target_kiss_baudrate = 9600u;
+	  // reset RX state to allow reinitialization with changed baudrate
 	  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
 
-	  // initializing UART drvier
+	  // reinitializing serial hardware to wake up Davis wx station
 	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
 
+	  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
+
+	  davis_init(main_kiss_srl_ctx_ptr);
+
+	  // try to wake up the davis base
+	  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
+
+	  // if davis weather stations is connected to SERIAL port
+	  if (rte_wx_davis_station_avaliable == 1) {
+		  // turn LCD backlight on..
+		  davis_control_backlight(1);
+
+		  // wait for a while
+		  delay_fixed(1000);
+
+		  // and then off to let the user know that communication is working
+		  davis_control_backlight(0);
+
+		  // disable the KISS modem as the UART will be used for DAVIS wx station
+		  main_kiss_enabled = 0;
+
+		  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
+		  // This only controls the callback it doesn't mean that the station itself is responding to
+		  // communication. It stays set to one event if Davis station
+		  main_davis_serial_enabled = 1;
+
+		  // trigger the rxcheck to get all counter values
+		  davis_trigger_rxcheck_packet();
+
+	  }
+	  else {
+		  // if not revert back to KISS configuration
+		  main_target_kiss_baudrate = 9600u;
+		  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+
+		  // initializing UART drvier
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+
+	  }
   }
-#endif
-  if (main_config_data_mode->wx_modbus == 1) {
+  else if (main_config_data_mode->wx_modbus == 1) {
 
 	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
 
@@ -584,28 +574,27 @@ int main(int argc, char* argv[]){
 	  }
   }
 
-#ifdef _DALLAS_AS_TELEM
-	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
-	#else
-	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-	#endif
-#endif
+//#ifdef _DALLAS_AS_TELEM
+//	#ifndef _DALLAS_SPLIT_PIN
+//	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
+//	#else
+//	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
+//	#endif
+//#endif
 
   // configuring interrupt priorities
   it_handlers_set_priorities();
 
-#if (defined _METEO && defined _SENSOR_MS5611)
- ms5611_reset(&rte_wx_ms5611_qf);
- ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
- ms5611_trigger_measure(0, 0);
-#endif
-
-#if (defined _METEO && defined _SENSOR_BME280)
- bme280_reset(&rte_wx_bme280_qf);
- bme280_setup();
- bme280_read_calibration(bme280_calibration_data);
-#endif
+	if (main_config_data_mode->wx_ms5611_or_bme == 0) {
+	 ms5611_reset(&rte_wx_ms5611_qf);
+	 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
+	 ms5611_trigger_measure(0, 0);
+	}
+	else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
+	 bme280_reset(&rte_wx_bme280_qf);
+	 bme280_setup();
+	 bme280_read_calibration(bme280_calibration_data);
+	}
 
  if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
@@ -661,10 +650,10 @@ int main(int argc, char* argv[]){
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, message_callback);
 
- #ifdef _METEO
-  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
-  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
-#endif
+	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
+	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+	}
 
   // start serial port i/o transaction depending on station configuration
   if (main_config_data_mode->victron == 1) {
@@ -723,27 +712,30 @@ int main(int argc, char* argv[]){
 	    	;
 	    }
 
+	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
 
+	  		// if modem is not busy on transmitting something and the button is not
+	  		// inhibited
 	  		if (main_afsk.sending == false && button_inhibit == 0) {
 
+	  			// wait for radio channel to be released
 	  			while(main_ax25.dcd == true);
 
-#ifndef _METEO
-	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
-	  			beacon_send_own();
-#else
+	  			if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
 
-	  			//SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
-
-	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
-
-	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN, &ln);
-
-	  			if (main_kiss_enabled == 1) {
-	  				srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+	  				beacon_send_own();
 	  			}
-#endif // #ifndef _METEO
+	  			else {
+
+					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
+					SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN, &ln);
+
+					if (main_kiss_enabled == 1) {
+						srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+					}
+	  			}
 	  		}
 
 	  		button_inhibit = 1;
@@ -873,6 +865,7 @@ int main(int argc, char* argv[]){
 
 
 			if (main_config_data_mode->wx_umb == 1) {
+				//
 				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 			}
 

@@ -156,15 +156,9 @@ void TIM4_IRQHandler( void ) {
 	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 	DAC->SWTRIGR |= 1;
 
-#ifndef _METEO
-	led_control_led2_bottom(main_afsk.sending);
-#endif
-//	if (main_afsk.sending) {
-//		GPIO_SetBits(GPIOC, GPIO_Pin_9);
-//	}
-//	else {
-//		GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-//	}
+	if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
+		led_control_led2_bottom(main_afsk.sending);
+	}
 
 }
 

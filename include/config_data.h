@@ -21,6 +21,8 @@ typedef struct config_data_mode_t {
 #define WX_INTERNAL_AS_BACKUP 		(1 << 1)
 #define WX_INTERNAL_SPARKFUN_WIND	(1 << 2)
 
+#define WX_MODBUS_DEBUG				(1 << 1)
+
 	uint8_t digi;
 
 	uint8_t wx;
@@ -31,7 +33,7 @@ typedef struct config_data_mode_t {
 
 	uint8_t wx_davis;
 
-	uint8_t wx_ms5611_or_bme;
+	uint8_t wx_ms5611_or_bme;		// set to one to choose bme, zero to ms5611
 
 	uint8_t victron;
 
