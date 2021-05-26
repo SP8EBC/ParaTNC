@@ -12,6 +12,8 @@
 
 #include "./umb_master/umb_master.h"
 
+#include "./modbus_rtu/rtu_configuration.h"
+
 #include "main.h"
 #include "delay.h"
 
@@ -124,6 +126,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 					packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
 			{
 
+
 				packet_tx_multi_per_call_handler();
 
 				telemetry_send_status_raw_values_modbus();
@@ -140,6 +143,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				rte_main_trigger_modbus_status = 1;
 			}
 		}
+
 
 		// check if Victron VE.Direct serial protocol client is enabled and it is
 		// a time to send the status message
@@ -269,6 +273,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
 				//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf, rte_wx_umb_qf);
 			if (config_mode->wx == 1) {
+
 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
@@ -291,6 +296,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		if (config_mode->victron == 1) {
 			telemetry_send_chns_description_pv(&config_basic);
 
+
+			if (rte_pv_battery_voltage == 0) {
+				rte_main_reboot_req = 1;
+			}
+
 			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
 		else {
@@ -305,6 +315,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 
 		if (config_mode->wx_umb == 1) {
+
 			umb_clear_error_history(&rte_wx_umb_context);
 		}
 

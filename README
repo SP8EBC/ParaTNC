@@ -1,7 +1,17 @@
-ParaTNC version DF03, June 25th 2020
+ParaTNC version DF15, April 4th 2021
 -----------------------------------------
 
 // Please look into 'doc' directory for more documentation and user manuals
+// WARNING: This readme could be sligtly outdated due to my lack of time :)
+
+// Ongoing changes
+// ---------------
+// Currently intense refactoring is done, which will result in new main software version EA00.
+// EA00 will remove the support for any Hardware Revision before HW-RevC, so it won't work on STM32VLDISCOVERY
+// anymore. Conditional compilation will be removed, so EA00 and all consecutive version will be build as 
+// one binary with support to everything. The configuration will be kept in Flash memory and could be 
+// altered 'on the fly' by using some external (not yet started) software tool, without a need to recompile
+// and reflash the controller. 
 
 1. INTRODUCTION
 ParaTNC is a hardware and a software which offers the functionality of multi function APRS controler. 
@@ -67,16 +77,20 @@ ParaTNC software and hardware are licensed under terms included to the source co
      - Davis 6410 or any another analogue anemometer with resisntance as a direction output and impulses as a windspeed
          WARNING: Not avaliable in Hardware Revision A due to lack of circuitry. Fully working only in HW-Rev C
      - Lufft V200A/Ventus or any other UMB compatible device.
+     - Any Modbus-RTU sensor
   b) Pressure Sensors:
      - MS5611
      - Bosh BMP280
      - Any UMB protocol compatible device
+     - Any Modbus-RTU sensor
   c) Temperature sensors:
      - Dallas One wire DS18B20
      - Any UMB protocol compatible device
+     - Any Modbus-RTU sensor
   d) Humidity Sensors:
      - DHT22
      - Bosh BMP280
+     - Any Modbus-RTU sensor (F&F MB-AHT1 is recommended)
 
 
 6. SUPPORTED FEATURES OD VE.Direct PROTOCOL

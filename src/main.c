@@ -382,6 +382,9 @@ int main(int argc, char* argv[]){
 
 #endif
 
+  // initalizing separated Open Collector output
+  io_oc_init();
+
   // initialize sensor power control and switch off supply voltage
   wx_pwr_init();
 
@@ -529,7 +532,7 @@ int main(int argc, char* argv[]){
   IWDG_Enable();
 
   // do not disable the watchdog when the core is halted on a breakpoint
-  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE); // TODO
+  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);
 
   // reload watchdog counter
   IWDG_ReloadCounter();
@@ -542,9 +545,6 @@ int main(int argc, char* argv[]){
 
   // initialize GPIO pins leds are connecting to
   led_init();
-
-  // initalizing separated Open Collector output
-  io_oc_init();
 
   // initialize AX25 & APRS stuff
   AFSK_Init(&main_afsk);
@@ -917,6 +917,8 @@ int main(int argc, char* argv[]){
 		}
 
 		if (main_two_second_pool_timer < 10) {
+
+			wx_check_force_i2c_reset();
 
 			wx_pwr_periodic_handle();
 

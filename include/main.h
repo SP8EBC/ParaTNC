@@ -14,6 +14,8 @@
 #define INTERNAL_WATCHDOG
 #define EXTERNAL_WATCHDOG
 
+#define PWR_SWITCH_BOTH
+
 #define OWN_APRS_MSG_LN 	160
 
 extern uint32_t master_time;
