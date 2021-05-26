@@ -24,7 +24,7 @@ void beacon_send_own(void) {
 }
 
 void beacon_send_on_startup(void) {
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "> START boot_cnt %#.2x hf_cnt %#.2x hf_pc %#.8x hf_lr %#.8x", rte_main_boot_cycles, rte_main_hard_faults, rte_main_hardfault_pc, rte_main_hardfault_lr);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "> START boot_cnt %#.2x hf_cnt %#.2x", (uint16_t)rte_main_boot_cycles, (uint16_t)rte_main_hard_faults);
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;

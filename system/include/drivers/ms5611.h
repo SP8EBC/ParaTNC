@@ -30,7 +30,7 @@ typedef enum ms5611_qf {
 
 int32_t ms5611_reset(ms5611_qf_t *qf);
 int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t* qf);
-unsigned char crc4(int n_prom[]);
+unsigned char crc4(int32_t* n_prom);
 int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out);
 int32_t ms5611_get_temperature(float* out, ms5611_qf_t* qf);
 int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf);

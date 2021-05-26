@@ -61,7 +61,6 @@ void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame) {
 
 	uint16_t crc = 0xFFFFu;
-	uint16_t crc_from_frame;
 
 	if (serial_buffer[0] != SOH && serial_buffer[1] != V10)
 		return UMB_NOT_VALID_FRAME;
@@ -87,9 +86,6 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	for (int i = 0; (i < frame->lenght && i < buffer_ln); i++) {
 		frame->payload[i] = serial_buffer[10 + i];
 	}
-
-	// Retrieving the crc value from frame
-	crc_from_frame = serial_buffer[frame->lenght + 9] | (serial_buffer[frame->lenght + 10] << 8);
 
 	// recalculating crc from frame content
 	for (int j = 0; j <= frame->lenght + 8 + 2; j++) {

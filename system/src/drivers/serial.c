@@ -650,10 +650,11 @@ void srl_irq_handler(srl_context_t *ctx) {
 		switch (ctx->srl_tx_state) {
 		case SRL_TXING:
 			if (ctx->srl_tx_bytes_counter < ctx->srl_tx_bytes_req) {
-				if (ctx->te_port != 0)
+				if (ctx->te_port != 0) {
 					GPIO_SetBits(ctx->te_port, ctx->te_pin);
+				}
 
-					ctx->port->DR = ctx->srl_tx_buf_pointer[ctx->srl_tx_bytes_counter++];
+				ctx->port->DR = ctx->srl_tx_buf_pointer[ctx->srl_tx_bytes_counter++];
 			}
 			else {
 				while((ctx->port->SR & USART_SR_TC) != USART_SR_TC);
