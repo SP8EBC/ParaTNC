@@ -12,7 +12,8 @@
 #include "packet_tx_handler.h"
 
 #include "station_config.h"
-#include "config_data.h"
+#include "config_data_externs.h"
+#include "configuration_handler.h"
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"
@@ -21,6 +22,7 @@
 #include "PathConfig.h"
 #include "LedConfig.h"
 #include "io.h"
+#include "float_to_string.h"
 
 #include "it_handlers.h"
 
@@ -36,11 +38,9 @@
 #include "rte_main.h"
 #include "rte_rtu.h"
 
-#ifdef _METEO
 #include <wx_handler.h>
 #include "drivers/dallas.h"
 #include "drivers/i2c.h"
-#include "drivers/tx20.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 
@@ -49,23 +49,14 @@
 #include "../system/include/davis_vantage/davis.h"
 #include "../system/include/davis_vantage/davis_parsers.h"
 
-#ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
-#endif
-
-#ifdef _SENSOR_BME280
 #include <drivers/bme280.h>
-#endif
 
 #include "umb_master/umb_master.h"
 #include "umb_master/umb_channel_pool.h"
 #include "umb_master/umb_0x26_status.h"
 
-#endif	// _METEO
-
-#ifdef _DALLAS_AS_TELEM
 #include "drivers/dallas.h"
-#endif
 
 #include "KissCommunication.h"
 
@@ -84,6 +75,14 @@
 // 5 -> hard fault LR LSB
 // 6 -> hard fault LR MSB
 
+#define CONFIG_FIRST_RESTORED 			(1)
+#define CONFIG_FIRST_FAIL_RESTORING	  	(1 << 1)
+#define CONFIG_FIRST_CRC_OK				(1 << 2)
+
+#define CONFIG_SECOND_RESTORED 				(1 << 3)
+#define CONFIG_SECOND_FAIL_RESTORING	  	(1 << 4)
+#define CONFIG_SECOND_CRC_OK				(1 << 5)
+
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at
@@ -93,6 +92,13 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wempty-body"
+
+// used configuration structures
+const config_data_mode_t * main_config_data_mode = 0;
+const config_data_basic_t * main_config_data_basic = 0;
+const config_data_wx_sources_t * main_config_data_wx_sources = 0;
+const config_data_umb_t * main_config_data_umb = 0;
+const config_data_rtu_t * main_config_data_rtu = 0;
 
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
@@ -159,6 +165,12 @@ uint8_t main_own_path_ln = 0;
 uint8_t main_own_aprs_msg_len;
 char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
+char main_string_latitude[9];
+char main_string_longitude[9];
+
+char main_symbol_f = '/';
+char main_symbol_s = '#';
+
 // global variable used to store return value from various functions
 volatile uint8_t retval = 100;
 
@@ -167,6 +179,8 @@ uint16_t buffer_len = 0;
 // return value from UMB related functions
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 
+// result of CRC calculation
+uint32_t main_crc_result = 0;
 
 char after_tx_lock;
 
@@ -185,6 +199,7 @@ int main(int argc, char* argv[]){
 
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
+  RCC->AHBENR |= RCC_AHBENR_CRCEN;
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
@@ -220,21 +235,144 @@ int main(int argc, char* argv[]){
   // storing increased value
   BKP->DR2 |= rte_main_boot_cycles;
 
-  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
-  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
+//  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
+//  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
 
   BKP->DR3 = 0;
   BKP->DR4 = 0;
   BKP->DR5 = 0;
   BKP->DR6 = 0;
 
-  // disabling access to BKP registers
-  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
-  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
 
   // initializing variables & arrays in rte_wx
   rte_wx_init();
   rte_rtu_init();
+
+  // calculate CRC over configuration blocks
+  main_crc_result = configuration_handler_check_crc();
+
+  // if first section has wrong CRC and it hasn't been restored before
+  if ((main_crc_result & 0x01) == 0 && (BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+	  // restore default configuration
+	  if (configuration_handler_restore_default_first() == 0) {
+
+		  // if configuration has been restored successfully
+		  BKP->DR3 |= CONFIG_FIRST_RESTORED;
+
+		  // set also CRC flag because if restoring is successfull the region has good CRC
+		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+
+	  }
+	  else {
+		  // if not store the flag in the backup register to block
+		  // reinitializing once again in the consecutive restart
+		  BKP->DR3 |= CONFIG_FIRST_FAIL_RESTORING;
+	  }
+
+
+  }
+  else {
+	  // if the combined confition is not met check failed restoring flag
+	  if ((BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+		  // a CRC checksum is ok, so first configuration section can be used further
+		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+	  }
+	  else {
+		  ;
+	  }
+  }
+
+  // if second section has wrong CRC and it hasn't been restored before
+  if ((main_crc_result & 0x02) == 0 && (BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+	  // restore default configuration
+	  if (configuration_handler_restore_default_second() == 0) {
+
+		  // if configuration has been restored successfully
+		  BKP->DR3 |= CONFIG_SECOND_RESTORED;
+
+		  // set also CRC flag as if restoring is successfull the region has good CRC
+		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+
+	  }
+	  else {
+		  // if not store the flag in the backup register
+		  BKP->DR3 |= CONFIG_SECOND_FAIL_RESTORING;
+
+		  BKP->DR3 &= (0xFFFF ^ CONFIG_SECOND_CRC_OK);
+	  }
+
+
+  }
+  else {
+	  // check failed restoring flag
+	  if ((BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+		  // second configuration section has good CRC and can be used further
+		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+	  }
+	  else {
+		  ;
+	  }
+  }
+
+  // at this point both sections have either verified CRC or restored values to default
+  if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+	  // if both sections are OK check programming counters
+	  if (config_data_pgm_cntr_first > config_data_pgm_cntr_second) {
+		  // if first section has bigger programing counter use it
+		  configuration_handler_load_configuration(REGION_FIRST);
+	  }
+	  else {
+		  configuration_handler_load_configuration(REGION_SECOND);
+
+	  }
+  }
+  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) == 0) {
+	  // if only first region is OK use it
+	  configuration_handler_load_configuration(REGION_FIRST);
+  }
+  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) == 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+	  // if only first region is OK use it
+	  configuration_handler_load_configuration(REGION_FIRST);
+  }
+  else {
+	  configuration_handler_load_configuration(REGION_DEFAULT);
+  }
+
+  // disabling access to BKP registers
+  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
+  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
+
+  // converting latitude into string
+  memset(main_string_latitude, 0x00, sizeof(main_string_latitude));
+  float_to_string(main_config_data_basic->latitude, main_string_latitude, sizeof(main_string_latitude), 2, 2);
+
+  // converting longitude into string
+  memset(main_string_longitude, 0x00, sizeof(main_string_longitude));
+  float_to_string(main_config_data_basic->longitude, main_string_longitude, sizeof(main_string_longitude), 2, 5);
+
+  switch(main_config_data_basic->symbol) {
+  case 0:		// _SYMBOL_DIGI
+	  main_symbol_f = '/';
+	  main_symbol_s = '#';
+	  break;
+  case 1:		// _SYMBOL_WIDE1_DIGI
+	  main_symbol_f = '1';
+	  main_symbol_s = '#';
+	  break;
+  case 2:		// _SYMBOL_HOUSE
+	  main_symbol_f = '/';
+	  main_symbol_s = '-';
+	  break;
+  case 3:		// _SYMBOL_RXIGATE
+	  main_symbol_f = 'I';
+	  main_symbol_s = '&';
+	  break;
+  default:		// _SYMBOL_IGATE
+	  main_symbol_f = 'R';
+	  main_symbol_s = '&';
+	  break;
+
+  }
 
 #if defined _RANDOM_DELAY
   // configuring a default delay value
@@ -259,11 +397,10 @@ int main(int argc, char* argv[]){
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
-#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
   // Configure I/O pins for USART2 (wx meteo comm)
   Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
-#endif
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
   Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
@@ -278,31 +415,14 @@ int main(int argc, char* argv[]){
   RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
-#if defined(PARATNC_HWREV_A)
-  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
-  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
-
-  main_target_kiss_baudrate = 9600u;
-#if defined(_UMB_MASTER)
-  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
-#endif
-#endif
-#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
-#endif
-#if !defined(PARATNC_HWREV_A) && !defined(PARATNC_HWREV_B) && !defined(PARATNC_HWREV_C)
-  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
-  main_wx_srl_ctx_ptr = &main_kiss_srl_ctx;
-
-  main_target_kiss_baudrate = _SERIAL_BAUDRATE;
-#endif
 
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
-  if (config_data_mode.victron == 1) {
+  if (main_config_data_mode->victron == 1) {
     main_target_kiss_baudrate = 19200u;
 
     // and disable the kiss TNC option as it shares the same port
@@ -310,81 +430,78 @@ int main(int argc, char* argv[]){
   }
 
 
-#if (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_DAVIS_SERIAL)
-  // reinitialize the KISS serial port temporary to davis baudrate
-  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
+  if (main_config_data_mode->wx_davis == 1) {
+	  // reinitialize the KISS serial port temporary to davis baudrate
+	  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
 
-  // reset RX state to allow reinitialization with changed baudrate
-  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-
-  // reinitializing serial hardware to wake up Davis wx station
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-
-  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
-
-  davis_init(main_kiss_srl_ctx_ptr);
-
-  // try to wake up the davis base
-  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
-
-  // if davis weather stations is connected to SERIAL port
-  if (rte_wx_davis_station_avaliable == 1) {
-	  // turn LCD backlight on..
-	  davis_control_backlight(1);
-
-	  // wait for a while
-	  delay_fixed(1000);
-
-	  // and then off to let the user know that communication is working
-	  davis_control_backlight(0);
-
-	  // disable the KISS modem as the UART will be used for DAVIS wx station
-	  main_kiss_enabled = 0;
-
-	  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
-	  // This only controls the callback it doesn't mean that the station itself is responding to
-	  // communication. It stays set to one event if Davis station
-	  main_davis_serial_enabled = 1;
-
-	  // trigger the rxcheck to get all counter values
-	  davis_trigger_rxcheck_packet();
-
-  }
-  else {
-	  // if not revert back to KISS configuration
-	  main_target_kiss_baudrate = 9600u;
+	  // reset RX state to allow reinitialization with changed baudrate
 	  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
 
+	  // reinitializing serial hardware to wake up Davis wx station
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+
+	  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
+
+	  davis_init(main_kiss_srl_ctx_ptr);
+
+	  // try to wake up the davis base
+	  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
+
+	  // if davis weather stations is connected to SERIAL port
+	  if (rte_wx_davis_station_avaliable == 1) {
+		  // turn LCD backlight on..
+		  davis_control_backlight(1);
+
+		  // wait for a while
+		  delay_fixed(1000);
+
+		  // and then off to let the user know that communication is working
+		  davis_control_backlight(0);
+
+		  // disable the KISS modem as the UART will be used for DAVIS wx station
+		  main_kiss_enabled = 0;
+
+		  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
+		  // This only controls the callback it doesn't mean that the station itself is responding to
+		  // communication. It stays set to one event if Davis station
+		  main_davis_serial_enabled = 1;
+
+		  // trigger the rxcheck to get all counter values
+		  davis_trigger_rxcheck_packet();
+
+	  }
+	  else {
+		  // if not revert back to KISS configuration
+		  main_target_kiss_baudrate = 9600u;
+		  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+
+		  // initializing UART drvier
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+
+	  }
+  }
+  else if (main_config_data_mode->wx_modbus == 1) {
+
+	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
+
+	  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
+
+	  // initialize serial ports according to RS485 network configuration for Modbus-RTU
+	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
+	  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
+
+	  // enabling rtu master code
+	  main_modbus_rtu_master_enabled = 1;
+
+	  rtu_serial_start();
+  }
+  else {
 	  // initializing UART drvier
 	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-
   }
-
-#elif (defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)) && defined(_MODBUS_RTU)
-
-  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr);
-
-  main_target_wx_baudrate = _RTU_SLAVE_SPEED;
-
-  // initialize serial ports according to RS485 network configuration for Modbus-RTU
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, _RTU_SLAVE_STOP_BITS);
-  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
-
-  // enabling rtu master code
-  main_modbus_rtu_master_enabled = 1;
-
-  rtu_serial_start();
-
-#else
-  // initializing UART drvier
-  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-
-
-#endif
-
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
@@ -399,7 +516,7 @@ int main(int argc, char* argv[]){
   memset (main_own_path, 0x00, sizeof(main_own_path));
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
-  main_own_path_ln = ConfigPath(main_own_path, &config_data_basic);
+  main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
   // enable write access to watchdog registers
@@ -438,71 +555,57 @@ int main(int argc, char* argv[]){
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 
   // initializing the digipeater configuration
-  digi_init(&config_data_mode);
+  digi_init(main_config_data_mode);
 
-#ifdef _METEO
+  if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 
-  // initialize humidity sensor
-  dht22_init();
-	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
-	#else
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-	#endif
 
-	#if defined(_UMB_MASTER)
-	  	// UMB client cannot be used in the same time with TX20 or analogue anemometer
-		#undef _ANEMOMETER_TX20
-		#undef _ANEMOMETER_ANALOGUE
+	  if (main_config_data_mode->wx_umb == 1) {
+		  // client initialization
+		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+	  }
 
-	  // client initialization
-	  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr);
-	#endif
+	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
+		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+	  }
+	  else {
+		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+	  }
+  }
 
-	#ifdef  _ANEMOMETER_TX20
-	  tx20_init();
-	#endif
-	#ifdef _ANEMOMETER_ANALOGUE
-	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
-	#endif
-	#ifdef _ANEMOMETER_ANALOGUE_SPARKFUN
-	  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
-	#endif
-
-#endif
-#ifdef _DALLAS_AS_TELEM
-	#ifndef _DALLAS_SPLIT_PIN
-	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
-	#else
-	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-	#endif
-#endif
+//#ifdef _DALLAS_AS_TELEM
+//	#ifndef _DALLAS_SPLIT_PIN
+//	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
+//	#else
+//	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
+//	#endif
+//#endif
 
   // configuring interrupt priorities
   it_handlers_set_priorities();
 
-#if (defined _METEO && defined _SENSOR_MS5611)
- ms5611_reset(&rte_wx_ms5611_qf);
- ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
- ms5611_trigger_measure(0, 0);
-#endif
-
-#if (defined _METEO && defined _SENSOR_BME280)
- bme280_reset(&rte_wx_bme280_qf);
- bme280_setup();
- bme280_read_calibration(bme280_calibration_data);
-#endif
+	if (main_config_data_mode->wx_ms5611_or_bme == 0) {
+	 ms5611_reset(&rte_wx_ms5611_qf);
+	 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
+	 ms5611_trigger_measure(0, 0);
+	}
+	else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
+	 bme280_reset(&rte_wx_bme280_qf);
+	 bme280_setup();
+	 bme280_read_calibration(bme280_calibration_data);
+	}
 
  if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%07.2f%c%c%08.2f%c%c %s", (float)_LAT, _LATNS, _SYMBOL_F, (float)_LON, _LONWE, _SYMBOL_S, _COMMENT);
+	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 
 	  // terminating the aprs message
 	  main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 
 	  // 'sending' the message which will only encapsulate it inside AX25 protocol (ax25_starttx is not called here)
 	  //ax25_sendVia(&main_ax25, main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len);
-	  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, srl_usart1_tx_buffer, TX_BUFFER_1_LN);
+	  ln = ax25_sendVia_toBuffer(main_own_path, (sizeof(main_own_path) / sizeof(*(main_own_path))), main_own_aprs_msg, main_own_aprs_msg_len, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN);
 
 	  // SendKISSToHost function cleares the output buffer hence routine need to wait till the UART will be ready for next transmission.
 	  // Here this could be omitted because UART isn't used before but general idea
@@ -547,13 +650,13 @@ int main(int argc, char* argv[]){
   AFSK_Init(&main_afsk);
   ax25_init(&main_ax25, &main_afsk, 0, message_callback);
 
- #ifdef _METEO
-  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
-  wx_get_all_measurements();
-#endif
+	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
+	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+	}
 
   // start serial port i/o transaction depending on station configuration
-  if (config_data_mode.victron == 1) {
+  if (main_config_data_mode->victron == 1) {
 	  // initializing protocol parser
 	  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
 
@@ -576,13 +679,12 @@ int main(int argc, char* argv[]){
   // configuting system timers
   TimerConfig();
 
-#ifdef _BCN_ON_STARTUP
-  beacon_send_own();
-#endif
+  if (main_config_data_basic-> beacon_at_bootup == 1)
+	  beacon_send_own();
 
   // initialize UMB transaction
-  if (config_data_mode.wx_umb == 1) {
-	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+  if (main_config_data_mode->wx_umb == 1) {
+	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
   }
 
 #ifdef INTERNAL_WATCHDOG
@@ -603,30 +705,37 @@ int main(int argc, char* argv[]){
 	  // incrementing current cpu ticks
 	  main_current_cpu_idle_ticks++;
 
-	    if (rte_main_reboot_req == 1)
+	    if (rte_main_reboot_req == 1) {
 	    	NVIC_SystemReset();
+	    }
+	    else {
+	    	;
+	    }
 
+	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
 
+	  		// if modem is not busy on transmitting something and the button is not
+	  		// inhibited
 	  		if (main_afsk.sending == false && button_inhibit == 0) {
 
+	  			// wait for radio channel to be released
 	  			while(main_ax25.dcd == true);
 
-#ifndef _METEO
-	  			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, rte_wx_dallas_qf, rte_wx_ms5611_qf, rte_wx_dht.qf);
-	  			beacon_send_own();
-#else
+	  			if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
 
-	  			//SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity);
-
-	  			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
-
-	  			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_dallas_valid, rte_wx_pressure_valid, rte_wx_humidity, srl_usart1_tx_buffer, TX_BUFFER_1_LN, &ln);
-
-	  			if (main_kiss_enabled == 1) {
-	  				srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+	  				beacon_send_own();
 	  			}
-#endif // #ifndef _METEO
+	  			else {
+
+					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
+					SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN, &ln);
+
+					if (main_kiss_enabled == 1) {
+						srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+					}
+	  			}
 	  		}
 
 	  		button_inhibit = 1;
@@ -637,11 +746,11 @@ int main(int argc, char* argv[]){
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
-			memset(srl_usart1_tx_buffer, 0x00, sizeof(srl_usart1_tx_buffer));
+			memset(main_kiss_srl_ctx.srl_tx_buf_pointer, 0x00, main_kiss_srl_ctx.srl_tx_buf_ln);
 
 			if (main_kiss_enabled == 1) {
 				// convert message to kiss format and send it to host
-				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), srl_usart1_tx_buffer, TX_BUFFER_1_LN));
+				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
 			}
 
 			main_ax25.dcd = false;
@@ -651,7 +760,7 @@ int main(int argc, char* argv[]){
 			//digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-			digi_process(&ax25_rxed_frame, &config_data_basic, &config_data_mode);
+			digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
 	#endif
 #endif
 			ax25_new_msg_rx_flag = 0;
@@ -659,7 +768,7 @@ int main(int argc, char* argv[]){
 		}
 
 		// if Victron VE.direct client is enabled
-		if (config_data_mode.victron == 1) {
+		if (main_config_data_mode->victron == 1) {
 
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
@@ -695,19 +804,19 @@ int main(int argc, char* argv[]){
 				srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
 			}
 		}
-		else if (config_data_mode.wx_umb == 1) {
+		else if (main_config_data_mode->wx_umb == 1) {
 			// if some UMB data have been received
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
 			}
 
 			// if there were an error during receiving frame from host, restart rxing once again
 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
 			}
 
 			if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time);
+				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, main_config_data_umb);
 			}
 		}
 		else {
@@ -739,9 +848,7 @@ int main(int argc, char* argv[]){
 
 		// if modbus rtu master is enabled
 		if (main_modbus_rtu_master_enabled == 1) {
-#ifdef _MODBUS_RTU
 			rtu_serial_pool();
-#endif
 		}
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
@@ -751,29 +858,29 @@ int main(int argc, char* argv[]){
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
 			}
-#ifdef _METEO
-			wx_get_all_measurements();
-#endif
 
-			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
-				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context);
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
-			//#endif
+
+
+			if (main_config_data_mode->wx_umb == 1) {
+				//
+				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
+			}
 
 			if (main_davis_serial_enabled == 1) {
 				davis_trigger_rxcheck_packet();
 			}
 
-			if (rte_main_trigger_modbus_status == 1) {
-#ifdef _MODBUS_RTU
+			if (rte_main_trigger_modbus_status == 1 && main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 
 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 
 			 	afsk_txStart(&main_afsk);
-#endif
-				rte_main_trigger_modbus_status = 0;
+
+			 	rte_main_trigger_modbus_status = 0;
 
 
 			}
@@ -784,7 +891,7 @@ int main(int argc, char* argv[]){
 		if (main_one_minute_pool_timer < 10) {
 
 			#ifndef _MUTE_OWN
-			packet_tx_handler();
+			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
 
 			main_one_minute_pool_timer = 60000;
@@ -794,17 +901,17 @@ int main(int argc, char* argv[]){
 
 			//digi_pool_viscous();
 
-			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-			analog_anemometer_direction_handler();
-			#endif
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				analog_anemometer_direction_handler();
+			}
 
 			main_one_second_pool_timer = 1000;
 		}
 		else if (main_one_second_pool_timer < -10) {
 
-			#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-			analog_anemometer_direction_reset();
-			#endif
+			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				analog_anemometer_direction_reset();
+			}
 
 			main_one_second_pool_timer = 1000;
 		}
@@ -824,19 +931,15 @@ int main(int argc, char* argv[]){
 
 		if (main_ten_second_pool_timer < 10) {
 
-			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
-				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context);
+			if (main_config_data_mode->wx_umb == 1) {
+				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 			}
-			//#endif
 
-			//#if defined(_UMB_MASTER)
-			if (config_data_mode.wx_umb == 1) {
+			if (main_config_data_mode->wx_umb == 1) {
 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			}
-			//#endif
 
-			wx_pool_anemometer();
+			wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 
 			if (main_davis_serial_enabled == 1) {
 
@@ -852,10 +955,7 @@ int main(int argc, char* argv[]){
 			main_ten_second_pool_timer = 10000;
 		}
 
-#ifdef _METEO
-		// dht22 sensor communication pooling
-		wx_pool_dht22();
-#endif
+
     }
   // Infinite loop, never return.
 }

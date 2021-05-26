@@ -20,8 +20,6 @@
 #include "rte_main.h"
 #include "rte_rtu.h"
 
-#include "station_config.h"
-
 #include <string.h>
 #include <stdio.h>
 
@@ -144,7 +142,7 @@ uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffe
 	return retval;
 }
 
-int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t* serial_context) {
+int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t* serial_context, const config_data_rtu_t * const config) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 
@@ -157,63 +155,47 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 
 	rtu_used_serial_context = serial_context;
 
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
-#ifdef _RTU_SLAVE_ID_1
-	queue->function_id[0] =_RTU_SLAVE_FUNC_1;
+	queue->function_id[0] = config->slave_1_function;
 	queue->function_parameter[0] = &rte_wx_modbus_rtu_f1;
+	rte_wx_modbus_rtu_f1.slave_address = config->slave_1_bus_address;
+	rte_wx_modbus_rtu_f1.base_address = config->slave_1_register_address;
+	rte_wx_modbus_rtu_f1.number_of_registers = config->slave_1_lenght;
 
-	rte_wx_modbus_rtu_f1.slave_address = _RTU_SLAVE_ID_1;
-	rte_wx_modbus_rtu_f1.base_address = _RTU_SLAVE_ADDR_1;
-	rte_wx_modbus_rtu_f1.number_of_registers = _RTU_SLAVE_LENGHT_1;
-#endif
-
-#ifdef _RTU_SLAVE_ID_2
-	queue->function_id[1] =_RTU_SLAVE_FUNC_2;
+	queue->function_id[1] =config->slave_2_function;;
 	queue->function_parameter[1] = &rte_wx_modbus_rtu_f2;
+	rte_wx_modbus_rtu_f2.slave_address = config->slave_2_bus_address;
+	rte_wx_modbus_rtu_f2.base_address = config->slave_2_register_address;
+	rte_wx_modbus_rtu_f2.number_of_registers = config->slave_2_lenght;
 
-	rte_wx_modbus_rtu_f2.slave_address = _RTU_SLAVE_ID_2;
-	rte_wx_modbus_rtu_f2.base_address = _RTU_SLAVE_ADDR_2;
-	rte_wx_modbus_rtu_f2.number_of_registers = _RTU_SLAVE_LENGHT_2;
-#endif
-
-#ifdef _RTU_SLAVE_ID_3
-	queue->function_id[2] =_RTU_SLAVE_FUNC_3;
+	queue->function_id[2] =config->slave_3_function;;
 	queue->function_parameter[2] = &rte_wx_modbus_rtu_f3;
+	rte_wx_modbus_rtu_f3.slave_address = config->slave_3_bus_address;
+	rte_wx_modbus_rtu_f3.base_address = config->slave_3_register_address;
+	rte_wx_modbus_rtu_f3.number_of_registers = config->slave_3_lenght;
 
-	rte_wx_modbus_rtu_f3.slave_address = _RTU_SLAVE_ID_3;
-	rte_wx_modbus_rtu_f3.base_address = _RTU_SLAVE_ADDR_3;
-	rte_wx_modbus_rtu_f3.number_of_registers = _RTU_SLAVE_LENGHT_3;
-#endif
-
-#ifdef _RTU_SLAVE_ID_4
-	queue->function_id[3] =_RTU_SLAVE_FUNC_4;
+	queue->function_id[3] =config->slave_4_function;;
 	queue->function_parameter[3] = &rte_wx_modbus_rtu_f4;
+	rte_wx_modbus_rtu_f4.slave_address = config->slave_4_bus_address;
+	rte_wx_modbus_rtu_f4.base_address = config->slave_4_register_address;
+	rte_wx_modbus_rtu_f4.number_of_registers = config->slave_4_lenght;
 
-	rte_wx_modbus_rtu_f4.slave_address = _RTU_SLAVE_ID_4;
-	rte_wx_modbus_rtu_f4.base_address = _RTU_SLAVE_ADDR_4;
-	rte_wx_modbus_rtu_f4.number_of_registers = _RTU_SLAVE_LENGHT_4;
-#endif
-
-#ifdef _RTU_SLAVE_ID_5
-	queue->function_id[4] =_RTU_SLAVE_FUNC_5;
+	queue->function_id[4] =config->slave_5_function;;
 	queue->function_parameter[4] = &rte_wx_modbus_rtu_f5;
+	rte_wx_modbus_rtu_f5.slave_address = config->slave_5_bus_address;
+	rte_wx_modbus_rtu_f5.base_address = config->slave_5_register_address;
+	rte_wx_modbus_rtu_f5.number_of_registers = config->slave_5_lenght;
 
-	rte_wx_modbus_rtu_f5.slave_address = _RTU_SLAVE_ID_5;
-	rte_wx_modbus_rtu_f5.base_address = _RTU_SLAVE_ADDR_5;
-	rte_wx_modbus_rtu_f5.number_of_registers = _RTU_SLAVE_LENGHT_5;
-#endif
 
-#ifdef _RTU_SLAVE_ID_6
-	queue->function_id[5] =_RTU_SLAVE_FUNC_6;
+	queue->function_id[5] =config->slave_6_function;;
 	queue->function_parameter[5] = &rte_wx_modbus_rtu_f6;
+	rte_wx_modbus_rtu_f6.slave_address = config->slave_6_bus_address;
+	rte_wx_modbus_rtu_f6.base_address = config->slave_6_register_address;
+	rte_wx_modbus_rtu_f6.number_of_registers = config->slave_6_lenght;
 
-	rte_wx_modbus_rtu_f6.slave_address = _RTU_SLAVE_ID_6;
-	rte_wx_modbus_rtu_f6.base_address = _RTU_SLAVE_ADDR_6;
-	rte_wx_modbus_rtu_f6.number_of_registers = _RTU_SLAVE_LENGHT_6;
-#endif
 
-#endif
+//#endif
 
 	return retval;
 
@@ -222,7 +204,7 @@ int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t*
 int32_t rtu_serial_pool(void) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 	int32_t result = MODBUS_RET_UNINITIALIZED;
 
 	uint8_t output_data_lenght = 0;
@@ -500,7 +482,7 @@ int32_t rtu_serial_pool(void) {
 			break;
 		}
 	}
-#endif
+//#endif
 	return retval;
 }
 
@@ -564,9 +546,9 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl
 	int string_ln = 0;
 
 	memset(out, 0x00, out_buffer_ln);
-#ifdef _MODBUS_RTU
+//#ifdef _MODBUS_RTU
 
-	string_ln = snprintf(out, out_buffer_ln, ">MT %X, LRET %X, LSCT %X, NSSC %X, NSE %X, RXB %X, RXI %X, TXB %X",
+	string_ln = snprintf(out, out_buffer_ln, ">MT %lX, LRET %lX, LSCT %lX, NSSC %X, NSE %X, RXB %lX, RXI %X, TXB %lX",
 												main_get_master_time(),
 												rte_rtu_last_modbus_rx_error_timestamp,
 												rtu_time_of_last_successfull_comm,
@@ -577,7 +559,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl
 												srl_ctx->total_tx_bytes);
 
 	*generated_string_ln = (uint8_t) string_ln;
-#endif
+//#endif
 	return retval;
 }
 

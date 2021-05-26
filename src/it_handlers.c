@@ -8,9 +8,7 @@
 #include <delay.h>
 #include <stm32f10x.h>
 #include "drivers/dallas.h"
-#include "drivers/tx20.h"
 #include "drivers/ms5611.h"
-#include "drivers/_dht22.h"
 #include "drivers/serial.h"
 #include "drivers/i2c.h"
 #include "drivers/analog_anemometer.h"
@@ -125,7 +123,6 @@ void I2C1_ER_IRQHandler(void) {
 
 void EXTI4_IRQHandler(void) {
   EXTI->PR |= EXTI_PR_PR4;
-  dht22_irq_handler();
 }
 
 void TIM2_IRQHandler( void ) {
@@ -159,15 +156,9 @@ void TIM4_IRQHandler( void ) {
 	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 	DAC->SWTRIGR |= 1;
 
-#ifndef _METEO
-	led_control_led2_bottom(main_afsk.sending);
-#endif
-//	if (main_afsk.sending) {
-//		GPIO_SetBits(GPIOC, GPIO_Pin_9);
-//	}
-//	else {
-//		GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-//	}
+	if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
+		led_control_led2_bottom(main_afsk.sending);
+	}
 
 }
 

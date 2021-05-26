@@ -404,7 +404,7 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	TIM_Cmd(TIM3, DISABLE);
 
-	uint16_t downscaled_angle;
+	uint16_t downscaled_angle = 0;
 
 	// getting current counter value
 	uint16_t current_value = TIM_GetCounter(TIM3);

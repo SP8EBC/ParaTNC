@@ -3,9 +3,10 @@
 
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
+#include "config_data.h"
 
-#define SW_VER "DF16"
-#define SW_DATE "19052021"
+#define SW_VER "EA00"
+#define SW_DATE "23052021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -18,6 +19,12 @@
 #define OWN_APRS_MSG_LN 	160
 
 extern uint32_t master_time;
+
+extern const config_data_mode_t * main_config_data_mode;
+extern const config_data_basic_t * main_config_data_basic;
+extern const config_data_wx_sources_t * main_config_data_wx_sources;
+extern const config_data_umb_t * main_config_data_umb;
+extern const config_data_rtu_t * main_config_data_rtu;
 
 extern int32_t main_wx_sensors_pool_timer;
 extern int32_t main_one_minute_pool_timer;
@@ -32,6 +39,12 @@ extern AX25Call main_own_path[3];
 extern uint8_t main_own_path_ln;
 extern uint8_t main_own_aprs_msg_len;
 extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+
+extern char main_string_latitude[9];
+extern char main_string_longitude[9];
+
+extern char main_symbol_f;
+extern char main_symbol_s;
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;

@@ -14,6 +14,8 @@
 
 #include "./modbus_rtu/rtu_pool_queue_t.h"
 
+#include "config_data.h"
+
 extern uint16_t rtu_serial_previous_crc;
 
 inline void rtu_serial_reset_crc(void) {
@@ -22,7 +24,7 @@ inline void rtu_serial_reset_crc(void) {
 
 uint8_t rtu_serial_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
-int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t* serial_context);
+int32_t rtu_serial_init(rtu_pool_queue_t* queue, uint8_t io_mode, srl_context_t* serial_context, const config_data_rtu_t * const config);
 int32_t rtu_serial_pool(void);
 int32_t rtu_serial_blocking_io(srl_context_t* serial_context, uint8_t query_ln);
 int32_t rtu_serial_start(void);

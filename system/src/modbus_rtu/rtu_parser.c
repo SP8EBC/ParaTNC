@@ -34,7 +34,7 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 	uint8_t slave_address_from_frame = 0;
 
 	// iterator through input table and registers table
-	int i = 0, j = 3;
+	int j = 3;
 
 	// rewind the input buffer if the first byte is not valid modbus rtu slave address
 	if (*input < 1 || *input > 0xF7) {

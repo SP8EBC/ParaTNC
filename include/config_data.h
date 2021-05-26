@@ -17,6 +17,12 @@
 
 typedef struct config_data_mode_t {
 
+#define WX_ENABLED 					(1)
+#define WX_INTERNAL_AS_BACKUP 		(1 << 1)
+#define WX_INTERNAL_SPARKFUN_WIND	(1 << 2)
+
+#define WX_MODBUS_DEBUG				(1 << 1)
+
 	uint8_t digi;
 
 	uint8_t wx;
@@ -26,6 +32,8 @@ typedef struct config_data_mode_t {
 	uint8_t wx_modbus;
 
 	uint8_t wx_davis;
+
+	uint8_t wx_ms5611_or_bme;		// set to one to choose bme, zero to ms5611
 
 	uint8_t victron;
 
@@ -47,12 +55,12 @@ typedef struct config_data_basic_t {
 	float latitude;
 
 	// N or S
-	uint8_t zero_to_n_one_to_s;
+	char n_or_s;
 
 	float longitude;
 
 	// E or W
-	uint8_t zero_to_e_one_to_w;
+	char e_or_w;
 
 	char comment[128];
 
@@ -76,6 +84,47 @@ typedef struct config_data_basic_t {
 
 } config_data_basic_t;
 
+typedef enum config_data_wx_sources_enum_t {
+	/**
+	 * Internal sensors are:
+	 * 	- Dallas DS18B20 for temperature
+	 * 	- MS5611 or BME280 for pressure/humidity
+	 * 	- analog/mechanical anemometer for wind
+	 */
+	WX_SOURCE_INTERNAL = 1,
+
+	/**
+	 * Lufft UMB devices
+	 */
+	WX_SOURCE_UMB = 2,
+
+	/**
+	 * RTU can be used for any measuremd parameter, but by default
+	 * it is used for wind in the same way as the mechanic anemometer is.
+	 * The controller asks for the windspeed and treat it as momentary value,
+	 * which then is put into the circular buffer to calculate average and
+	 * max from.
+	 */
+	WX_SOURCE_RTU = 3,
+
+	/**
+	 * This option makes a difference only for wind measurements. With all
+	 * other parameters it works exactly the same as WX_SOURCE_RTU. In this mode
+	 * the controller queries for average and maximum wind speed.
+	 */
+	WX_SOURCE_FULL_RTU = 4,
+	WX_SOURCE_DAVIS_SERIAL = 5
+} config_data_wx_sources_enum_t;
+
+typedef struct config_data_wx_sources_t {
+
+	config_data_wx_sources_enum_t temperature;
+	config_data_wx_sources_enum_t pressure;
+	config_data_wx_sources_enum_t humidity;
+	config_data_wx_sources_enum_t wind;
+
+} config_data_wx_sources_t;
+
 typedef struct config_data_umb_t {
 
 	uint16_t slave_class;
@@ -90,7 +139,7 @@ typedef struct config_data_umb_t {
 
 	uint16_t channel_temperature;
 
-	uint16_t channel_qfe;
+	uint16_t channel_qnh;
 /**
  * #define _UMB_CHANNEL_WINDSPEED			460
 #define _UMB_CHANNEL_WINDGUSTS			440
@@ -100,8 +149,144 @@ typedef struct config_data_umb_t {
  */
 } config_data_umb_t;
 
-extern const config_data_basic_t config_data_basic;
-extern const config_data_mode_t config_data_mode;
-extern const config_data_umb_t config_data_umb;
+typedef struct config_data_rtu_t {
+	uint16_t slave_speed;
+
+	uint8_t slave_parity;
+
+	uint8_t slave_stop_bits;
+
+	uint8_t use_full_wind_data;
+
+	// sources
+	uint8_t temperature_source;
+
+	uint8_t humidity_source;
+
+	uint8_t pressure_source;
+
+	uint8_t wind_direction_source;
+
+	uint8_t wind_speed_source;
+
+	uint8_t wind_gusts_source;
+
+	// channel 1
+	uint8_t slave_1_bus_address;
+
+	uint8_t slave_1_function;
+
+	uint16_t slave_1_register_address;
+
+	uint16_t slave_1_lenght;
+
+	uint8_t slave_1_scaling_a;
+
+	uint8_t slave_1_scaling_b;
+
+	uint8_t slave_1_scaling_c;
+
+	uint8_t slave_1_scaling_d;
+
+	uint8_t slave_1_unsigned_signed;
+
+	// channel 2
+	uint8_t slave_2_bus_address;
+
+	uint8_t slave_2_function;
+
+	uint16_t slave_2_register_address;
+
+	uint16_t slave_2_lenght;
+
+	uint8_t slave_2_scaling_a;
+
+	uint8_t slave_2_scaling_b;
+
+	uint8_t slave_2_scaling_c;
+
+	uint8_t slave_2_scaling_d;
+
+	uint8_t slave_2_unsigned_signed;
+
+	// channel 3
+	uint8_t slave_3_bus_address;
+
+	uint8_t slave_3_function;
+
+	uint16_t slave_3_register_address;
+
+	uint16_t slave_3_lenght;
+
+	uint8_t slave_3_scaling_a;
+
+	uint8_t slave_3_scaling_b;
+
+	uint8_t slave_3_scaling_c;
+
+	uint8_t slave_3_scaling_d;
+
+	uint8_t slave_3_unsigned_signed;
+
+	// channel 4
+	uint8_t slave_4_bus_address;
+
+	uint8_t slave_4_function;
+
+	uint16_t slave_4_register_address;
+
+	uint16_t slave_4_lenght;
+
+	uint8_t slave_4_scaling_a;
+
+	uint8_t slave_4_scaling_b;
+
+	uint8_t slave_4_scaling_c;
+
+	uint8_t slave_4_scaling_d;
+
+	uint8_t slave_4_unsigned_signed;
+
+	// channel 5
+	uint8_t slave_5_bus_address;
+
+	uint8_t slave_5_function;
+
+	uint16_t slave_5_register_address;
+
+	uint16_t slave_5_lenght;
+
+	uint8_t slave_5_scaling_a;
+
+	uint8_t slave_5_scaling_b;
+
+	uint8_t slave_5_scaling_c;
+
+	uint8_t slave_5_scaling_d;
+
+	uint8_t slave_5_unsigned_signed;
+
+	// channel 6
+	uint8_t slave_6_bus_address;
+
+	uint8_t slave_6_function;
+
+	uint16_t slave_6_register_address;
+
+	uint16_t slave_6_lenght;
+
+	uint8_t slave_6_scaling_a;
+
+	uint8_t slave_6_scaling_b;
+
+	uint8_t slave_6_scaling_c;
+
+	uint8_t slave_6_scaling_d;
+
+	uint8_t slave_6_unsigned_signed;
+
+
+} config_data_rtu_t;
+
 
 #endif /* CONFIG_DATA_H_ */

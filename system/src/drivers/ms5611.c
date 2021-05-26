@@ -17,8 +17,6 @@ char state;	// zmienna sygnalizuj�ca przebieg pomiaru..
 #define TX_ADDR 0xEE
 #define RX_ADDR 0xEF
 
-#ifdef _SENSOR_MS5611
-
 // An array to store Calibration data
 int32_t SensorCalData[8];
 double SensorDT = 0.0;
@@ -380,5 +378,3 @@ float CalcQNHFromQFE(float qfe, float alti, float temp) {
 
 	return qnh;
 }
-
-#endif

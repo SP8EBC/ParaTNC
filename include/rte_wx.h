@@ -10,7 +10,6 @@
 
 #include "station_config.h"
 
-#include "drivers/_dht22.h"
 #include "drivers/dallas.h"
 #include "drivers/analog_anemometer.h"
 #include "davis_vantage/davis_qf_t.h"
@@ -36,11 +35,11 @@
 #define RTE_WX_MEASUREMENT_TEMPERATURE	100
 #define RTE_WX_MEASUREMENT_PRESSUERE	300
 
-extern float rte_wx_temperature_dallas, rte_wx_temperature_dallas_valid;
-extern float rte_wx_temperature_dalls_slew_rate;
-extern float rte_wx_temperature_average_dallas_valid;
-extern float rte_wx_temperature_min_dallas_valid, rte_wx_temperature_max_dallas_valid;
-extern float rte_wx_temperature_ms, rte_wx_temperature_ms_valid;
+extern float rte_wx_temperature_external, rte_wx_temperature_external_valid;
+extern float rte_wx_temperature_external_slew_rate;
+extern float rte_wx_temperature_average_external_valid;
+extern float rte_wx_temperature_min_external_valid, rte_wx_temperature_max_external_valid;
+extern float rte_wx_temperature_internal, rte_wx_temperature_internal_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
 extern float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
 extern uint8_t rte_wx_pressure_it;
@@ -53,13 +52,12 @@ extern uint8_t rte_wx_winddirection_it;
 extern uint16_t rte_wx_winddirection_last;
 extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
-extern int16_t rte_wx_average_winddirection;
+extern uint16_t rte_wx_average_winddirection;
 
 extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
-extern dht22Values rte_wx_dht, rte_wx_dht_valid;
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
 extern dallas_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
