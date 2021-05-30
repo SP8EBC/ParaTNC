@@ -1,6 +1,5 @@
+#include <drivers/gpio_conf_stm32f1x.h>
 #include "drivers/serial.h"
-#include "drivers/gpio_conf.h"
-
 #include "station_config.h"
 #include "diag/Trace.h"
 

@@ -1,12 +1,21 @@
+#ifdef STM32F10X_MD_VL
+#include <stm32f10x_rcc.h>
+#include <stm32f10x_iwdg.h>
+#include <stm32f10x.h>
+#include <drivers/gpio_conf_stm32f1x.h>
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_iwdg.h>
+#include <stm32l4xx_ll_rcc.h>
+#endif
+
 #include <delay.h>
 #include <LedConfig.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stm32f10x_rcc.h>
-#include <stm32f10x_iwdg.h>
-#include <stm32f10x.h>
-#include "drivers/gpio_conf.h"
 
 #include "main.h"
 #include "packet_tx_handler.h"
@@ -130,10 +139,8 @@ int32_t main_ten_second_pool_timer = 10000;
 // serial context for UART used to KISS
 srl_context_t main_kiss_srl_ctx;
 
-#if defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
 // serial context for UART used for comm with wx sensors
 srl_context_t main_wx_srl_ctx;
-#endif
 
 // a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;

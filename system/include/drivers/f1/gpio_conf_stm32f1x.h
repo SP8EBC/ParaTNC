@@ -1,6 +1,7 @@
 #ifndef __GPIO_CONF_H
 #define __GPIO_CONF_H
 
+#ifdef STM32F10X_MD_VL
 				 
 #include <stm32f10x.h>
 
@@ -40,5 +41,7 @@
 #define AFOD_OUTPUT_50MHZ 	((CNF_AFOD << 2) | MODE_OUTPUT_50MHZ)
 
 void Configure_GPIO(GPIO_TypeDef* gpio, uint8_t pin, uint8_t conf);
+
+#endif
 
 #endif

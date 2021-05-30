@@ -8,3 +8,4 @@ Release/
 *.elf
 /STM32F100/
 /STM32F100_ParaTNC/
+/STM32L476_ParaMETEO/

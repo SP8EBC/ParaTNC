@@ -8,12 +8,21 @@
 #ifndef DALLAS_H
 #define DALLAS_H
 
+#include "station_config_target_hw.h"
+
 /* C++ detection */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef STM32F10X_MD_VL
 #include <stm32f10x_gpio.h>
+#endif
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_gpio.h>
+#endif
+
 #include "station_config.h"
 
 #define DALLAS_AVERAGE_LN 9

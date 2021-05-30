@@ -1,5 +1,5 @@
+#include <drivers/gpio_conf_stm32f1x.h>
 #include "drivers/i2c.h"
-#include "drivers/gpio_conf.h"
 #include <stm32f10x.h>
 
 #include "main.h"
