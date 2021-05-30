@@ -9,6 +9,7 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_iwdg.h>
 #include <stm32l4xx_ll_rcc.h>
+#include <stm32l4xx_ll_gpio.h>
 #endif
 
 #include <delay.h>
@@ -516,6 +517,10 @@ int main(int argc, char* argv[]){
 #endif
 #if defined(PARATNC_HWREV_C)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
+  main_wx_srl_ctx_ptr->te_port = GPIOA;
+#endif
+#if defined(PARAMETEO)
+  main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
 
