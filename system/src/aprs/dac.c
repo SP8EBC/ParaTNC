@@ -1,26 +1,27 @@
 
 #include "dac.h"
-
 #include <adc.h>
 
 #include "station_config.h"
+#include "station_config_target_hw.h"
+
+#ifdef STM32F10X_MD_VL
+#include <stm32f10x.h>
+#include "antilib_gpio.h"
+
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_gpio.h>
+#endif
 
 Afsk *dac_afsk;
-
-///*********************************************************************************************************************/
-//void TIM2_IRQHandler(void) {
-///*********************************************************************************************************************/
-//
-////	TIM2->SR = ~TIM_IT_Update;
-////
-////	DAC->DHR8R1 = AFSK_DAC_ISR(dac_afsk);
-////	DAC->SWTRIGR |= 1;
-//
-//}
 
 /*********************************************************************************************************************/
 void DA_Init(void) {
 /*********************************************************************************************************************/
+#ifdef STM32F10X_MD_VL
 
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
@@ -45,7 +46,19 @@ void DA_Init(void) {
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+#endif
 
+#ifdef STM32L471xx
+
+	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_4;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_0;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_LOW;
+#endif
 
 }
 
@@ -60,18 +73,11 @@ void DA_Start() {
 /*********************************************************************************************************************/
 
 	AD_Stop();
-//
-//	//stm32_gpioPinWrite(PTT_GPIO_BASE, PTT_PIN, 1);
-//	GPIO_SetBits(GPIOB, GPIO_Pin_11);
 
-#ifndef _PTT_PUSHPULL
-	GPIOC->BSRR |= GPIO_BSRR_BR3;	 /// bez sep
-#else
+
+
 	GPIOC->BSRR |= GPIO_BSRR_BS3;	 //// sep
-#endif
-	//	GPIOC->BSRR |= GPIO_BSRR_BS8;
-//
-//	//Timer2 ENABLE
+
 	TIM4->CR1 |= TIM_CR1_CEN;
 
 
@@ -86,12 +92,8 @@ void DA_Stop() {
 
 	AD_Start();
 
-#ifndef _PTT_PUSHPULL
-	GPIOC->BSRR |= GPIO_BSRR_BS3; //// bez sep
-#else
+
 	GPIOC->BSRR |= GPIO_BSRR_BR3;
-#endif
-//	GPIOC->BSRR |= GPIO_BSRR_BR8;
 
 //	//Timer2 DISABLE
 	TIM4->CR1 &= ~TIM_CR1_CEN;

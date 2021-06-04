@@ -11,9 +11,18 @@
 
 #include "main.h"
 
-#include "stm32f10x.h"
+#ifdef STM32F10X_MD_VL
+#include <stm32f10x.h>
 #include <stm32f10x_crc.h>
 #include <stm32f10x_flash.h>
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_flash.h>
+#include <stm32l4xx_ll_crc.h>
+#endif
+
 
 #include <string.h>
 

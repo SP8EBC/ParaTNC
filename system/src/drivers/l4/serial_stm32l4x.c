@@ -3,13 +3,6 @@
 #include "station_config.h"
 #include "station_config_target_hw.h"
 
-#ifdef PARAMETEO
-	// those defines and an undef are only required for shitty Eclipse indexer to see anything from STM32L471xx target
-	#define STM32L471xx
-	#define USE_FULL_LL_DRIVER
-	#undef STM32F10X_MD_VL
-#endif
-
 //#include <drivers/f1/gpio_conf_stm32f1x.h>
 #include "diag/Trace.h"
 
