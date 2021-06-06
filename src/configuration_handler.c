@@ -18,8 +18,8 @@
 #endif
 
 #ifdef STM32L471xx
+#include "./drivers/l4/flash_stm32l4x.h"
 #include <stm32l4xx.h>
-#include <stm32l4xx_ll_flash.h>
 #include <stm32l4xx_ll_crc.h>
 #endif
 
