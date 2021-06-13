@@ -1,0 +1,772 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"wx.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	__aeabi_ui2f
+  16              		.global	__aeabi_fdiv
+  17              		.global	__aeabi_f2d
+  18              		.global	__aeabi_ddiv
+  19              		.global	__aeabi_d2f
+  20              		.global	__aeabi_f2iz
+  21              		.global	__aeabi_i2f
+  22              		.global	__aeabi_fsub
+  23              		.global	__aeabi_fcmpge
+  24              		.global	__aeabi_fmul
+  25              		.global	__aeabi_f2uiz
+  26              		.global	__aeabi_dmul
+  27              		.global	__aeabi_dadd
+  28              		.global	__aeabi_d2iz
+  29              		.section	.text.SendWXFrame,"ax",%progbits
+  30              		.align	1
+  31              		.global	SendWXFrame
+  32              		.syntax unified
+  33              		.thumb
+  34              		.thumb_func
+  35              		.fpu softvfp
+  37              	SendWXFrame:
+  38              	.LFB73:
+  39              		.file 1 "../system/src/aprs/wx.c"
+   1:../system/src/aprs/wx.c **** /*
+   2:../system/src/aprs/wx.c ****  * wx.c
+   3:../system/src/aprs/wx.c ****  *
+   4:../system/src/aprs/wx.c ****  *  Created on: 28.05.2017
+   5:../system/src/aprs/wx.c ****  *      Author: mateusz
+   6:../system/src/aprs/wx.c ****  */
+   7:../system/src/aprs/wx.c **** 
+   8:../system/src/aprs/wx.c **** #include "aprs/wx.h"
+   9:../system/src/aprs/wx.c **** #include "aprs/digi.h"
+  10:../system/src/aprs/wx.c **** #include "main.h"
+  11:../system/src/aprs/wx.c **** #include "rte_main.h"
+  12:../system/src/aprs/wx.c **** 
+  13:../system/src/aprs/wx.c **** #include "station_config.h"
+  14:../system/src/aprs/wx.c **** 
+  15:../system/src/aprs/wx.c **** #include <string.h>
+  16:../system/src/aprs/wx.c **** #include <stdio.h>
+  17:../system/src/aprs/wx.c **** 
+  18:../system/src/aprs/wx.c **** 
+  19:../system/src/aprs/wx.c **** void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura,
+  40              		.loc 1 19 0
+  41              		.cfi_startproc
+  42              		@ args = 8, pretend = 0, frame = 0
+  43              		@ frame_needed = 0, uses_anonymous_args = 0
+  44              	.LVL0:
+  45 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+  46              		.cfi_def_cfa_offset 36
+  47              		.cfi_offset 4, -36
+  48              		.cfi_offset 5, -32
+  49              		.cfi_offset 6, -28
+  50              		.cfi_offset 7, -24
+  51              		.cfi_offset 8, -20
+  52              		.cfi_offset 9, -16
+  53              		.cfi_offset 10, -12
+  54              		.cfi_offset 11, -8
+  55              		.cfi_offset 14, -4
+  56 0004 8BB0     		sub	sp, sp, #44
+  57              		.cfi_def_cfa_offset 80
+  58 0006 0C46     		mov	r4, r1
+  59 0008 1646     		mov	r6, r2
+  60 000a 1F46     		mov	r7, r3
+  61              	.LVL1:
+  20:../system/src/aprs/wx.c **** 
+  21:../system/src/aprs/wx.c **** 	float max_wind_speed = 0.0f, temp = 0.0f;
+  22:../system/src/aprs/wx.c **** 	uint8_t wind_speed_mph = 0, wind_gusts_mph = 0;
+  23:../system/src/aprs/wx.c **** 	uint32_t pressure = 0;
+  24:../system/src/aprs/wx.c **** 
+  25:../system/src/aprs/wx.c **** 	uint16_t direction = winddirection;
+  26:../system/src/aprs/wx.c **** 
+  27:../system/src/aprs/wx.c **** 	// windspeed is stored as an increment of 0.1 meters per second in 16bit unsigned integer
+  28:../system/src/aprs/wx.c **** 	temp =   ((float)windspeed / 10.0f);
+  62              		.loc 1 28 0
+  63 000c FFF7FEFF 		bl	__aeabi_ui2f
+  64              	.LVL2:
+  65 0010 5549     		ldr	r1, .L16+16
+  66 0012 FFF7FEFF 		bl	__aeabi_fdiv
+  67              	.LVL3:
+  68 0016 0546     		mov	r5, r0
+  69              	.LVL4:
+  29:../system/src/aprs/wx.c **** 	max_wind_speed =  ((float)windgusts / 10.0f);
+  70              		.loc 1 29 0
+  71 0018 2046     		mov	r0, r4
+  72              	.LVL5:
+  73 001a FFF7FEFF 		bl	__aeabi_ui2f
+  74              	.LVL6:
+  75 001e 5249     		ldr	r1, .L16+16
+  76 0020 FFF7FEFF 		bl	__aeabi_fdiv
+  77              	.LVL7:
+  78 0024 0446     		mov	r4, r0
+  79              	.LVL8:
+  30:../system/src/aprs/wx.c **** 
+  31:../system/src/aprs/wx.c **** 	temp /= 0.45;																						// Konwersja na mile na godzine
+  80              		.loc 1 31 0
+  81 0026 2846     		mov	r0, r5
+  82              	.LVL9:
+  83 0028 FFF7FEFF 		bl	__aeabi_f2d
+  84              	.LVL10:
+  85 002c 4AA3     		adr	r3, .L16
+  86 002e D3E90023 		ldrd	r2, [r3]
+  87 0032 FFF7FEFF 		bl	__aeabi_ddiv
+  88              	.LVL11:
+  89 0036 FFF7FEFF 		bl	__aeabi_d2f
+  90              	.LVL12:
+  91 003a 0546     		mov	r5, r0
+  92              	.LVL13:
+  32:../system/src/aprs/wx.c **** 	max_wind_speed /= 0.45;
+  93              		.loc 1 32 0
+  94 003c 2046     		mov	r0, r4
+  95              	.LVL14:
+  96 003e FFF7FEFF 		bl	__aeabi_f2d
+  97              	.LVL15:
+  98 0042 45A3     		adr	r3, .L16
+  99 0044 D3E90023 		ldrd	r2, [r3]
+ 100 0048 FFF7FEFF 		bl	__aeabi_ddiv
+ 101              	.LVL16:
+ 102 004c FFF7FEFF 		bl	__aeabi_d2f
+ 103              	.LVL17:
+ 104 0050 8046     		mov	r8, r0
+ 105              	.LVL18:
+  33:../system/src/aprs/wx.c **** 	if ((temp - (short)temp) >= 0.5)												// Zaokraglanie wartosci
+ 106              		.loc 1 33 0
+ 107 0052 2846     		mov	r0, r5
+ 108              	.LVL19:
+ 109 0054 FFF7FEFF 		bl	__aeabi_f2iz
+ 110              	.LVL20:
+ 111 0058 04B2     		sxth	r4, r0
+ 112 005a 2046     		mov	r0, r4
+ 113 005c FFF7FEFF 		bl	__aeabi_i2f
+ 114              	.LVL21:
+ 115 0060 0146     		mov	r1, r0
+ 116 0062 2846     		mov	r0, r5
+ 117 0064 FFF7FEFF 		bl	__aeabi_fsub
+ 118              	.LVL22:
+ 119 0068 4FF07C51 		mov	r1, #1056964608
+ 120 006c FFF7FEFF 		bl	__aeabi_fcmpge
+ 121              	.LVL23:
+ 122 0070 D0B1     		cbz	r0, .L12
+  34:../system/src/aprs/wx.c **** 		/* Odejmuje od wartosci zmiennoprzecinkowej w milach nad godzine wartosc
+  35:../system/src/aprs/wx.c **** 			 po zrzutowaniu na typ short czyli z odcienta czescia po przecinku.
+  36:../system/src/aprs/wx.c **** 			 Jezeli wynik jest wiekszy albo rowny 0.5 to trzeba zaokraglic w gore */
+  37:../system/src/aprs/wx.c **** 		wind_speed_mph = (short)temp + 1;
+ 123              		.loc 1 37 0
+ 124 0072 E4B2     		uxtb	r4, r4
+ 125 0074 0134     		adds	r4, r4, #1
+ 126 0076 E5B2     		uxtb	r5, r4
+ 127              	.LVL24:
+ 128              	.L4:
+  38:../system/src/aprs/wx.c **** 	else
+  39:../system/src/aprs/wx.c **** 		/* A jezeli jest mniejsza niz 0.5 to zaokraglamy w dol */
+  40:../system/src/aprs/wx.c **** 		wind_speed_mph = (short)temp;
+  41:../system/src/aprs/wx.c **** 	if ((max_wind_speed - (short)max_wind_speed) >= 0.5)
+ 129              		.loc 1 41 0
+ 130 0078 4046     		mov	r0, r8
+ 131 007a FFF7FEFF 		bl	__aeabi_f2iz
+ 132              	.LVL25:
+ 133 007e 04B2     		sxth	r4, r0
+ 134 0080 2046     		mov	r0, r4
+ 135 0082 FFF7FEFF 		bl	__aeabi_i2f
+ 136              	.LVL26:
+ 137 0086 0146     		mov	r1, r0
+ 138 0088 4046     		mov	r0, r8
+ 139 008a FFF7FEFF 		bl	__aeabi_fsub
+ 140              	.LVL27:
+ 141 008e 4FF07C51 		mov	r1, #1056964608
+ 142 0092 FFF7FEFF 		bl	__aeabi_fcmpge
+ 143              	.LVL28:
+ 144 0096 48B1     		cbz	r0, .L13
+  42:../system/src/aprs/wx.c **** 		/* Analogiczna procedura ma miejsce dla porywow wiatru*/
+  43:../system/src/aprs/wx.c **** 		wind_gusts_mph = (short)max_wind_speed + 1;
+ 145              		.loc 1 43 0
+ 146 0098 E4B2     		uxtb	r4, r4
+ 147 009a 0134     		adds	r4, r4, #1
+ 148 009c E4B2     		uxtb	r4, r4
+ 149              	.LVL29:
+ 150              	.L7:
+  44:../system/src/aprs/wx.c **** 	else
+  45:../system/src/aprs/wx.c **** 		wind_gusts_mph = (short)max_wind_speed;
+  46:../system/src/aprs/wx.c **** 
+  47:../system/src/aprs/wx.c ****  	if (wind_speed_mph > wind_gusts_mph) {
+ 151              		.loc 1 47 0
+ 152 009e A542     		cmp	r5, r4
+ 153 00a0 06D9     		bls	.L15
+ 154              	.LVL30:
+ 155              	.L1:
+  48:../system/src/aprs/wx.c ****  		return;
+  49:../system/src/aprs/wx.c ****  		rte_main_reboot_req = 1;
+  50:../system/src/aprs/wx.c ****  	}
+  51:../system/src/aprs/wx.c **** 
+  52:../system/src/aprs/wx.c ****  	pressure = (unsigned)(cisnienie * 10);
+  53:../system/src/aprs/wx.c **** 
+  54:../system/src/aprs/wx.c ****  	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+  55:../system/src/aprs/wx.c **** 
+  56:../system/src/aprs/wx.c ****  	// 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude
+  57:../system/src/aprs/wx.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%
+  58:../system/src/aprs/wx.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+  59:../system/src/aprs/wx.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+  60:../system/src/aprs/wx.c **** 	after_tx_lock = 1;
+  61:../system/src/aprs/wx.c **** 	while(main_ax25.dcd == true);
+  62:../system/src/aprs/wx.c ****  	afsk_txStart(&main_afsk);
+  63:../system/src/aprs/wx.c **** 
+  64:../system/src/aprs/wx.c **** 
+  65:../system/src/aprs/wx.c **** }
+ 156              		.loc 1 65 0
+ 157 00a2 0BB0     		add	sp, sp, #44
+ 158              		.cfi_remember_state
+ 159              		.cfi_def_cfa_offset 36
+ 160              		@ sp needed
+ 161 00a4 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 162              	.LVL31:
+ 163              	.L12:
+ 164              		.cfi_restore_state
+  40:../system/src/aprs/wx.c **** 	if ((max_wind_speed - (short)max_wind_speed) >= 0.5)
+ 165              		.loc 1 40 0
+ 166 00a8 E5B2     		uxtb	r5, r4
+ 167              	.LVL32:
+ 168 00aa E5E7     		b	.L4
+ 169              	.L13:
+  45:../system/src/aprs/wx.c **** 
+ 170              		.loc 1 45 0
+ 171 00ac E4B2     		uxtb	r4, r4
+ 172              	.LVL33:
+ 173 00ae F6E7     		b	.L7
+ 174              	.L15:
+  52:../system/src/aprs/wx.c **** 
+ 175              		.loc 1 52 0
+ 176 00b0 2D49     		ldr	r1, .L16+16
+ 177 00b2 1498     		ldr	r0, [sp, #80]	@ float
+ 178 00b4 FFF7FEFF 		bl	__aeabi_fmul
+ 179              	.LVL34:
+ 180 00b8 FFF7FEFF 		bl	__aeabi_f2uiz
+ 181              	.LVL35:
+ 182 00bc 8246     		mov	r10, r0
+ 183              	.LVL36:
+  54:../system/src/aprs/wx.c **** 
+ 184              		.loc 1 54 0
+ 185 00be DFF8D880 		ldr	r8, .L16+64
+ 186              	.LVL37:
+ 187 00c2 A022     		movs	r2, #160
+ 188 00c4 0021     		movs	r1, #0
+ 189 00c6 4046     		mov	r0, r8
+ 190              	.LVL38:
+ 191 00c8 FFF7FEFF 		bl	memset
+ 192              	.LVL39:
+  57:../system/src/aprs/wx.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 193              		.loc 1 57 0
+ 194 00cc 274B     		ldr	r3, .L16+20
+ 195 00ce 1B68     		ldr	r3, [r3]
+ 196 00d0 93F90C90 		ldrsb	r9, [r3, #12]
+ 197 00d4 93F914B0 		ldrsb	fp, [r3, #20]
+ 198 00d8 3846     		mov	r0, r7
+ 199 00da FFF7FEFF 		bl	__aeabi_f2d
+ 200              	.LVL40:
+ 201 00de 20A3     		adr	r3, .L16+8
+ 202 00e0 D3E90023 		ldrd	r2, [r3]
+ 203 00e4 FFF7FEFF 		bl	__aeabi_dmul
+ 204              	.LVL41:
+ 205 00e8 0022     		movs	r2, #0
+ 206 00ea 214B     		ldr	r3, .L16+24
+ 207 00ec FFF7FEFF 		bl	__aeabi_dadd
+ 208              	.LVL42:
+ 209 00f0 FFF7FEFF 		bl	__aeabi_d2iz
+ 210              	.LVL43:
+ 211 00f4 00B2     		sxth	r0, r0
+ 212 00f6 9DF85430 		ldrb	r3, [sp, #84]	@ zero_extendqisi2
+ 213 00fa 0993     		str	r3, [sp, #36]
+ 214 00fc CDF820A0 		str	r10, [sp, #32]
+ 215 0100 0790     		str	r0, [sp, #28]
+ 216 0102 0694     		str	r4, [sp, #24]
+ 217 0104 0595     		str	r5, [sp, #20]
+ 218 0106 0496     		str	r6, [sp, #16]
+ 219 0108 5F23     		movs	r3, #95
+ 220 010a 0393     		str	r3, [sp, #12]
+ 221 010c CDF808B0 		str	fp, [sp, #8]
+ 222 0110 184B     		ldr	r3, .L16+28
+ 223 0112 0193     		str	r3, [sp, #4]
+ 224 0114 2F23     		movs	r3, #47
+ 225 0116 0093     		str	r3, [sp]
+ 226 0118 4B46     		mov	r3, r9
+ 227 011a 174A     		ldr	r2, .L16+32
+ 228 011c 1749     		ldr	r1, .L16+36
+ 229 011e 4046     		mov	r0, r8
+ 230 0120 FFF7FEFF 		bl	sprintf
+ 231              	.LVL44:
+ 232 0124 C0B2     		uxtb	r0, r0
+ 233 0126 164B     		ldr	r3, .L16+40
+ 234 0128 1870     		strb	r0, [r3]
+  58:../system/src/aprs/wx.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 235              		.loc 1 58 0
+ 236 012a 0023     		movs	r3, #0
+ 237 012c 08F80030 		strb	r3, [r8, r0]
+  59:../system/src/aprs/wx.c **** 	after_tx_lock = 1;
+ 238              		.loc 1 59 0
+ 239 0130 144B     		ldr	r3, .L16+44
+ 240 0132 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 241 0134 0090     		str	r0, [sp]
+ 242 0136 4346     		mov	r3, r8
+ 243 0138 1349     		ldr	r1, .L16+48
+ 244 013a 1448     		ldr	r0, .L16+52
+ 245 013c FFF7FEFF 		bl	ax25_sendVia
+ 246              	.LVL45:
+  60:../system/src/aprs/wx.c **** 	while(main_ax25.dcd == true);
+ 247              		.loc 1 60 0
+ 248 0140 134B     		ldr	r3, .L16+56
+ 249 0142 0122     		movs	r2, #1
+ 250 0144 1A70     		strb	r2, [r3]
+ 251              	.L9:
+  61:../system/src/aprs/wx.c ****  	afsk_txStart(&main_afsk);
+ 252              		.loc 1 61 0 discriminator 1
+ 253 0146 114B     		ldr	r3, .L16+52
+ 254 0148 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 255 014c 002B     		cmp	r3, #0
+ 256 014e FAD1     		bne	.L9
+  62:../system/src/aprs/wx.c **** 
+ 257              		.loc 1 62 0
+ 258 0150 1048     		ldr	r0, .L16+60
+ 259 0152 FFF7FEFF 		bl	afsk_txStart
+ 260              	.LVL46:
+ 261 0156 A4E7     		b	.L1
+ 262              	.L17:
+ 263              		.align	3
+ 264              	.L16:
+ 265 0158 CDCCCCCC 		.word	3435973837
+ 266 015c CCCCDC3F 		.word	1071434956
+ 267 0160 CDCCCCCC 		.word	3435973837
+ 268 0164 CCCCFC3F 		.word	1073532108
+ 269 0168 00002041 		.word	1092616192
+ 270 016c 00000000 		.word	main_config_data_basic
+ 271 0170 00004040 		.word	1077936128
+ 272 0174 00000000 		.word	main_string_longitude
+ 273 0178 00000000 		.word	main_string_latitude
+ 274 017c 00000000 		.word	.LC0
+ 275 0180 00000000 		.word	main_own_aprs_msg_len
+ 276 0184 00000000 		.word	main_own_path_ln
+ 277 0188 00000000 		.word	main_own_path
+ 278 018c 00000000 		.word	main_ax25
+ 279 0190 00000000 		.word	after_tx_lock
+ 280 0194 00000000 		.word	main_afsk
+ 281 0198 00000000 		.word	main_own_aprs_msg
+ 282              		.cfi_endproc
+ 283              	.LFE73:
+ 285              		.section	.text.SendWXFrameToBuffer,"ax",%progbits
+ 286              		.align	1
+ 287              		.global	SendWXFrameToBuffer
+ 288              		.syntax unified
+ 289              		.thumb
+ 290              		.thumb_func
+ 291              		.fpu softvfp
+ 293              	SendWXFrameToBuffer:
+ 294              	.LFB74:
+  66:../system/src/aprs/wx.c **** 
+  67:../system/src/aprs/wx.c **** 
+  68:../system/src/aprs/wx.c **** void SendWXFrameToBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temp
+ 295              		.loc 1 68 0
+ 296              		.cfi_startproc
+ 297              		@ args = 20, pretend = 0, frame = 0
+ 298              		@ frame_needed = 0, uses_anonymous_args = 0
+ 299              	.LVL47:
+ 300 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 301              		.cfi_def_cfa_offset 32
+ 302              		.cfi_offset 4, -32
+ 303              		.cfi_offset 5, -28
+ 304              		.cfi_offset 6, -24
+ 305              		.cfi_offset 7, -20
+ 306              		.cfi_offset 8, -16
+ 307              		.cfi_offset 9, -12
+ 308              		.cfi_offset 10, -8
+ 309              		.cfi_offset 14, -4
+ 310 0004 8AB0     		sub	sp, sp, #40
+ 311              		.cfi_def_cfa_offset 72
+ 312 0006 0C46     		mov	r4, r1
+ 313 0008 1646     		mov	r6, r2
+ 314 000a 1F46     		mov	r7, r3
+ 315              	.LVL48:
+  69:../system/src/aprs/wx.c **** 
+  70:../system/src/aprs/wx.c **** 	uint16_t output_frame_ln = 0;
+  71:../system/src/aprs/wx.c **** 
+  72:../system/src/aprs/wx.c **** 	float max_wind_speed = 0.0f, temp = 0.0f;
+  73:../system/src/aprs/wx.c **** 	uint8_t wind_speed_mph = 0, wind_gusts_mph = 0;
+  74:../system/src/aprs/wx.c **** 	uint32_t pressure = 0;
+  75:../system/src/aprs/wx.c **** 
+  76:../system/src/aprs/wx.c **** 	uint16_t direction = winddirection;
+  77:../system/src/aprs/wx.c **** 
+  78:../system/src/aprs/wx.c **** 	// windspeed is stored as an increment of 0.1 meters per second in 16bit unsigned integer
+  79:../system/src/aprs/wx.c **** 	temp =  (float) (windspeed / 10.0f);
+ 316              		.loc 1 79 0
+ 317 000c FFF7FEFF 		bl	__aeabi_i2f
+ 318              	.LVL49:
+ 319 0010 4F49     		ldr	r1, .L31+16
+ 320 0012 FFF7FEFF 		bl	__aeabi_fdiv
+ 321              	.LVL50:
+ 322 0016 0546     		mov	r5, r0
+ 323              	.LVL51:
+  80:../system/src/aprs/wx.c **** 	max_wind_speed = (float) (windgusts / 10.0f);
+ 324              		.loc 1 80 0
+ 325 0018 2046     		mov	r0, r4
+ 326              	.LVL52:
+ 327 001a FFF7FEFF 		bl	__aeabi_i2f
+ 328              	.LVL53:
+ 329 001e 4C49     		ldr	r1, .L31+16
+ 330 0020 FFF7FEFF 		bl	__aeabi_fdiv
+ 331              	.LVL54:
+ 332 0024 0446     		mov	r4, r0
+ 333              	.LVL55:
+  81:../system/src/aprs/wx.c **** 
+  82:../system/src/aprs/wx.c **** 	temp /= 0.45;																						// Konwersja na mile na godzine
+ 334              		.loc 1 82 0
+ 335 0026 2846     		mov	r0, r5
+ 336              	.LVL56:
+ 337 0028 FFF7FEFF 		bl	__aeabi_f2d
+ 338              	.LVL57:
+ 339 002c 44A3     		adr	r3, .L31
+ 340 002e D3E90023 		ldrd	r2, [r3]
+ 341 0032 FFF7FEFF 		bl	__aeabi_ddiv
+ 342              	.LVL58:
+ 343 0036 FFF7FEFF 		bl	__aeabi_d2f
+ 344              	.LVL59:
+ 345 003a 0546     		mov	r5, r0
+ 346              	.LVL60:
+  83:../system/src/aprs/wx.c **** 	max_wind_speed /= 0.45;
+ 347              		.loc 1 83 0
+ 348 003c 2046     		mov	r0, r4
+ 349              	.LVL61:
+ 350 003e FFF7FEFF 		bl	__aeabi_f2d
+ 351              	.LVL62:
+ 352 0042 3FA3     		adr	r3, .L31
+ 353 0044 D3E90023 		ldrd	r2, [r3]
+ 354 0048 FFF7FEFF 		bl	__aeabi_ddiv
+ 355              	.LVL63:
+ 356 004c FFF7FEFF 		bl	__aeabi_d2f
+ 357              	.LVL64:
+ 358 0050 8046     		mov	r8, r0
+ 359              	.LVL65:
+  84:../system/src/aprs/wx.c **** 	if ((temp - (short)temp) >= 0.5)												// Zaokraglanie wartosci
+ 360              		.loc 1 84 0
+ 361 0052 2846     		mov	r0, r5
+ 362              	.LVL66:
+ 363 0054 FFF7FEFF 		bl	__aeabi_f2iz
+ 364              	.LVL67:
+ 365 0058 04B2     		sxth	r4, r0
+ 366 005a 2046     		mov	r0, r4
+ 367 005c FFF7FEFF 		bl	__aeabi_i2f
+ 368              	.LVL68:
+ 369 0060 0146     		mov	r1, r0
+ 370 0062 2846     		mov	r0, r5
+ 371 0064 FFF7FEFF 		bl	__aeabi_fsub
+ 372              	.LVL69:
+ 373 0068 4FF07C51 		mov	r1, #1056964608
+ 374 006c FFF7FEFF 		bl	__aeabi_fcmpge
+ 375              	.LVL70:
+ 376 0070 0028     		cmp	r0, #0
+ 377 0072 5DD0     		beq	.L27
+  85:../system/src/aprs/wx.c **** 		/* Odejmuje od wartosci zmiennoprzecinkowej w milach nad godzine wartosc
+  86:../system/src/aprs/wx.c **** 			 po zrzutowaniu na typ short czyli z odcienta czescia po przecinku.
+  87:../system/src/aprs/wx.c **** 			 Jezeli wynik jest wiekszy albo rowny 0.5 to trzeba zaokraglic w gore */
+  88:../system/src/aprs/wx.c **** 		wind_speed_mph = (short)temp + 1;
+ 378              		.loc 1 88 0
+ 379 0074 E4B2     		uxtb	r4, r4
+ 380 0076 0134     		adds	r4, r4, #1
+ 381 0078 E4B2     		uxtb	r4, r4
+ 382              	.LVL71:
+ 383              	.L21:
+  89:../system/src/aprs/wx.c **** 	else
+  90:../system/src/aprs/wx.c **** 		/* A jezeli jest mniejsza niz 0.5 to zaokraglamy w dol */
+  91:../system/src/aprs/wx.c **** 		wind_speed_mph = (short)temp;
+  92:../system/src/aprs/wx.c **** 	if ((max_wind_speed - (short)max_wind_speed) >= 0.5)
+ 384              		.loc 1 92 0
+ 385 007a 4046     		mov	r0, r8
+ 386 007c FFF7FEFF 		bl	__aeabi_f2iz
+ 387              	.LVL72:
+ 388 0080 05B2     		sxth	r5, r0
+ 389              	.LVL73:
+ 390 0082 2846     		mov	r0, r5
+ 391 0084 FFF7FEFF 		bl	__aeabi_i2f
+ 392              	.LVL74:
+ 393 0088 0146     		mov	r1, r0
+ 394 008a 4046     		mov	r0, r8
+ 395 008c FFF7FEFF 		bl	__aeabi_fsub
+ 396              	.LVL75:
+ 397 0090 4FF07C51 		mov	r1, #1056964608
+ 398 0094 FFF7FEFF 		bl	__aeabi_fcmpge
+ 399              	.LVL76:
+ 400 0098 0028     		cmp	r0, #0
+ 401 009a 4BD1     		bne	.L30
+  93:../system/src/aprs/wx.c **** 		/* Analogiczna procedura ma miejsce dla porywow wiatru*/
+  94:../system/src/aprs/wx.c **** 		wind_gusts_mph = (short)max_wind_speed + 1;
+  95:../system/src/aprs/wx.c **** 	else
+  96:../system/src/aprs/wx.c **** 		wind_gusts_mph = (short)max_wind_speed;
+ 402              		.loc 1 96 0
+ 403 009c EDB2     		uxtb	r5, r5
+ 404              	.LVL77:
+ 405              	.L24:
+  97:../system/src/aprs/wx.c **** 
+  98:../system/src/aprs/wx.c ****  	pressure = (unsigned)(cisnienie * 10);
+ 406              		.loc 1 98 0
+ 407 009e 2C49     		ldr	r1, .L31+16
+ 408 00a0 1298     		ldr	r0, [sp, #72]	@ float
+ 409 00a2 FFF7FEFF 		bl	__aeabi_fmul
+ 410              	.LVL78:
+ 411 00a6 FFF7FEFF 		bl	__aeabi_f2uiz
+ 412              	.LVL79:
+ 413 00aa 8146     		mov	r9, r0
+ 414              	.LVL80:
+  99:../system/src/aprs/wx.c **** 
+ 100:../system/src/aprs/wx.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%
+ 415              		.loc 1 100 0
+ 416 00ac 294B     		ldr	r3, .L31+20
+ 417 00ae 1B68     		ldr	r3, [r3]
+ 418 00b0 93F90C80 		ldrsb	r8, [r3, #12]
+ 419              	.LVL81:
+ 420 00b4 93F914A0 		ldrsb	r10, [r3, #20]
+ 421 00b8 3846     		mov	r0, r7
+ 422              	.LVL82:
+ 423 00ba FFF7FEFF 		bl	__aeabi_f2d
+ 424              	.LVL83:
+ 425 00be 22A3     		adr	r3, .L31+8
+ 426 00c0 D3E90023 		ldrd	r2, [r3]
+ 427 00c4 FFF7FEFF 		bl	__aeabi_dmul
+ 428              	.LVL84:
+ 429 00c8 0022     		movs	r2, #0
+ 430 00ca 234B     		ldr	r3, .L31+24
+ 431 00cc FFF7FEFF 		bl	__aeabi_dadd
+ 432              	.LVL85:
+ 433 00d0 FFF7FEFF 		bl	__aeabi_d2iz
+ 434              	.LVL86:
+ 435 00d4 00B2     		sxth	r0, r0
+ 436 00d6 214F     		ldr	r7, .L31+28
+ 437              	.LVL87:
+ 438 00d8 9DF84C30 		ldrb	r3, [sp, #76]	@ zero_extendqisi2
+ 439 00dc 0993     		str	r3, [sp, #36]
+ 440 00de CDF82090 		str	r9, [sp, #32]
+ 441 00e2 0790     		str	r0, [sp, #28]
+ 442 00e4 0695     		str	r5, [sp, #24]
+ 443 00e6 0594     		str	r4, [sp, #20]
+ 444 00e8 0496     		str	r6, [sp, #16]
+ 445 00ea 5F23     		movs	r3, #95
+ 446 00ec 0393     		str	r3, [sp, #12]
+ 447 00ee CDF808A0 		str	r10, [sp, #8]
+ 448 00f2 1B4B     		ldr	r3, .L31+32
+ 449 00f4 0193     		str	r3, [sp, #4]
+ 450 00f6 2F23     		movs	r3, #47
+ 451 00f8 0093     		str	r3, [sp]
+ 452 00fa 4346     		mov	r3, r8
+ 453 00fc 194A     		ldr	r2, .L31+36
+ 454 00fe 1A49     		ldr	r1, .L31+40
+ 455 0100 3846     		mov	r0, r7
+ 456 0102 FFF7FEFF 		bl	sprintf
+ 457              	.LVL88:
+ 458 0106 C3B2     		uxtb	r3, r0
+ 459 0108 184A     		ldr	r2, .L31+44
+ 460 010a 1370     		strb	r3, [r2]
+ 101:../system/src/aprs/wx.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 461              		.loc 1 101 0
+ 462 010c 0022     		movs	r2, #0
+ 463 010e FA54     		strb	r2, [r7, r3]
+ 102:../system/src/aprs/wx.c **** 
+ 103:../system/src/aprs/wx.c **** 	output_frame_ln = ax25_sendVia_toBuffer(main_own_path, main_own_path_ln, main_own_aprs_msg, main_o
+ 464              		.loc 1 103 0
+ 465 0110 174A     		ldr	r2, .L31+48
+ 466 0112 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 467 0114 BDF85420 		ldrh	r2, [sp, #84]
+ 468 0118 0192     		str	r2, [sp, #4]
+ 469 011a 149A     		ldr	r2, [sp, #80]
+ 470 011c 0092     		str	r2, [sp]
+ 471 011e 3A46     		mov	r2, r7
+ 472 0120 1448     		ldr	r0, .L31+52
+ 473 0122 FFF7FEFF 		bl	ax25_sendVia_toBuffer
+ 474              	.LVL89:
+ 104:../system/src/aprs/wx.c **** 	*output_ln = output_frame_ln;
+ 475              		.loc 1 104 0
+ 476 0126 169B     		ldr	r3, [sp, #88]
+ 477 0128 1880     		strh	r0, [r3]	@ movhi
+ 105:../system/src/aprs/wx.c **** 
+ 106:../system/src/aprs/wx.c **** 	return;
+ 107:../system/src/aprs/wx.c **** }
+ 478              		.loc 1 107 0
+ 479 012a 0AB0     		add	sp, sp, #40
+ 480              		.cfi_remember_state
+ 481              		.cfi_def_cfa_offset 32
+ 482              		@ sp needed
+ 483 012c BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 484              	.LVL90:
+ 485              	.L27:
+ 486              		.cfi_restore_state
+  91:../system/src/aprs/wx.c **** 	if ((max_wind_speed - (short)max_wind_speed) >= 0.5)
+ 487              		.loc 1 91 0
+ 488 0130 E4B2     		uxtb	r4, r4
+ 489              	.LVL91:
+ 490 0132 A2E7     		b	.L21
+ 491              	.LVL92:
+ 492              	.L30:
+  94:../system/src/aprs/wx.c **** 	else
+ 493              		.loc 1 94 0
+ 494 0134 EDB2     		uxtb	r5, r5
+ 495 0136 0135     		adds	r5, r5, #1
+ 496 0138 EDB2     		uxtb	r5, r5
+ 497              	.LVL93:
+ 498 013a B0E7     		b	.L24
+ 499              	.L32:
+ 500 013c AFF30080 		.align	3
+ 501              	.L31:
+ 502 0140 CDCCCCCC 		.word	3435973837
+ 503 0144 CCCCDC3F 		.word	1071434956
+ 504 0148 CDCCCCCC 		.word	3435973837
+ 505 014c CCCCFC3F 		.word	1073532108
+ 506 0150 00002041 		.word	1092616192
+ 507 0154 00000000 		.word	main_config_data_basic
+ 508 0158 00004040 		.word	1077936128
+ 509 015c 00000000 		.word	main_own_aprs_msg
+ 510 0160 00000000 		.word	main_string_longitude
+ 511 0164 00000000 		.word	main_string_latitude
+ 512 0168 00000000 		.word	.LC0
+ 513 016c 00000000 		.word	main_own_aprs_msg_len
+ 514 0170 00000000 		.word	main_own_path_ln
+ 515 0174 00000000 		.word	main_own_path
+ 516              		.cfi_endproc
+ 517              	.LFE74:
+ 519              		.section	.rodata.SendWXFrame.str1.4,"aMS",%progbits,1
+ 520              		.align	2
+ 521              	.LC0:
+ 522 0000 21257325 		.ascii	"!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh"
+ 522      63256325 
+ 522      73256325 
+ 522      63253033 
+ 522      642F2530 
+ 523 0033 25303264 		.ascii	"%02d\000"
+ 523      00
+ 524              		.text
+ 525              	.Letext0:
+ 526              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 527              		.file 3 "../system/include/cmsis/core_cm3.h"
+ 528              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+ 529              		.file 5 "../system/include/cmsis/stm32f10x.h"
+ 530              		.file 6 "../system/include/aprs/cfifo.h"
+ 531              		.file 7 "../system/include/aprs/afsk.h"
+ 532              		.file 8 "../system/include/aprs/ax25.h"
+ 533              		.file 9 "../include/config_data.h"
+ 534              		.file 10 "../system/include/drivers/serial.h"
+ 535              		.file 11 "../include/main.h"
+ 536              		.file 12 "../include/rte_main.h"
+ 537              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 538              		.file 14 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 539              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 540              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 541              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+ 542              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 wx.c
+     /tmp/cc1C2Ukx.s:30     .text.SendWXFrame:0000000000000000 $t
+     /tmp/cc1C2Ukx.s:37     .text.SendWXFrame:0000000000000000 SendWXFrame
+     /tmp/cc1C2Ukx.s:265    .text.SendWXFrame:0000000000000158 $d
+     /tmp/cc1C2Ukx.s:286    .text.SendWXFrameToBuffer:0000000000000000 $t
+     /tmp/cc1C2Ukx.s:293    .text.SendWXFrameToBuffer:0000000000000000 SendWXFrameToBuffer
+     /tmp/cc1C2Ukx.s:502    .text.SendWXFrameToBuffer:0000000000000140 $d
+     /tmp/cc1C2Ukx.s:520    .rodata.SendWXFrame.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.station_config.h.9.75b6c5687acc8f60d219d6a552b2bf59
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.digi.h.14.769ea2ae98162dd36806ccf4982c3c8a
+                           .group:0000000000000000 wm4.serial.h.2.3544b1c529a5f3b4e56f5aba673d9e30
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+
+UNDEFINED SYMBOLS
+__aeabi_ui2f
+__aeabi_fdiv
+__aeabi_f2d
+__aeabi_ddiv
+__aeabi_d2f
+__aeabi_f2iz
+__aeabi_i2f
+__aeabi_fsub
+__aeabi_fcmpge
+__aeabi_fmul
+__aeabi_f2uiz
+__aeabi_dmul
+__aeabi_dadd
+__aeabi_d2iz
+memset
+sprintf
+ax25_sendVia
+afsk_txStart
+main_config_data_basic
+main_string_longitude
+main_string_latitude
+main_own_aprs_msg_len
+main_own_path_ln
+main_own_path
+main_ax25
+after_tx_lock
+main_afsk
+main_own_aprs_msg
+ax25_sendVia_toBuffer

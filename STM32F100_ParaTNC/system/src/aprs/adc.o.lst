@@ -1,0 +1,329 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"adc.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.AD_Init,"ax",%progbits
+  16              		.align	1
+  17              		.global	AD_Init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	AD_Init:
+  24              	.LFB66:
+  25              		.file 1 "../system/src/aprs/adc.c"
+   1:../system/src/aprs/adc.c **** 
+   2:../system/src/aprs/adc.c **** #include "adc.h"
+   3:../system/src/aprs/adc.c **** 
+   4:../system/src/aprs/adc.c **** #include <stdlib.h>
+   5:../system/src/aprs/adc.c **** #include <stdio.h>
+   6:../system/src/aprs/adc.c **** 
+   7:../system/src/aprs/adc.c **** #define ADC1_DR_Address	((uint32_t)0x4001244C)
+   8:../system/src/aprs/adc.c **** 
+   9:../system/src/aprs/adc.c **** 
+  10:../system/src/aprs/adc.c **** Afsk *adc_afsk;
+  11:../system/src/aprs/adc.c **** 
+  12:../system/src/aprs/adc.c **** volatile uint16_t ADCValue[16];
+  13:../system/src/aprs/adc.c **** 
+  14:../system/src/aprs/adc.c **** uint16_t max_value;
+  15:../system/src/aprs/adc.c **** uint32_t samplecount;
+  16:../system/src/aprs/adc.c **** 
+  17:../system/src/aprs/adc.c **** 
+  18:../system/src/aprs/adc.c **** 
+  19:../system/src/aprs/adc.c **** 
+  20:../system/src/aprs/adc.c **** /**************************************************************************************************
+  21:../system/src/aprs/adc.c **** void AD_Init(Afsk *af) {
+  26              		.loc 1 21 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 30B5     		push	{r4, r5, lr}
+  32              		.cfi_def_cfa_offset 12
+  33              		.cfi_offset 4, -12
+  34              		.cfi_offset 5, -8
+  35              		.cfi_offset 14, -4
+  36 0002 83B0     		sub	sp, sp, #12
+  37              		.cfi_def_cfa_offset 24
+  38 0004 0546     		mov	r5, r0
+  22:../system/src/aprs/adc.c **** /**************************************************************************************************
+  23:../system/src/aprs/adc.c **** 
+  24:../system/src/aprs/adc.c **** 	GPIO_InitTypeDef GPIO_InitStructure;
+  25:../system/src/aprs/adc.c **** 	NVIC_InitTypeDef NVIC_InitStructure;
+  26:../system/src/aprs/adc.c **** 
+  27:../system/src/aprs/adc.c **** 	//Dolacz zegar do GPIOA, ADC1
+  28:../system/src/aprs/adc.c **** 	RCC->APB2ENR |= RCC_APB2Periph_GPIOA | RCC_APB2Periph_ADC1;
+  39              		.loc 1 28 0
+  40 0006 174C     		ldr	r4, .L3
+  41 0008 A369     		ldr	r3, [r4, #24]
+  42 000a 43F40173 		orr	r3, r3, #516
+  43 000e A361     		str	r3, [r4, #24]
+  29:../system/src/aprs/adc.c **** 	RCC_ADCCLKConfig(RCC_PCLK2_Div6);
+  44              		.loc 1 29 0
+  45 0010 4FF40040 		mov	r0, #32768
+  46              	.LVL1:
+  47 0014 FFF7FEFF 		bl	RCC_ADCCLKConfig
+  48              	.LVL2:
+  30:../system/src/aprs/adc.c **** 
+  31:../system/src/aprs/adc.c **** 	//Dolacz zegar do DMA1
+  32:../system/src/aprs/adc.c **** 	RCC->AHBENR |= RCC_AHBPeriph_DMA1;
+  49              		.loc 1 32 0
+  50 0018 6369     		ldr	r3, [r4, #20]
+  51 001a 43F00103 		orr	r3, r3, #1
+  52 001e 6361     		str	r3, [r4, #20]
+  33:../system/src/aprs/adc.c **** 
+  34:../system/src/aprs/adc.c **** 	//Konfiguracja portu
+  35:../system/src/aprs/adc.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 ;
+  53              		.loc 1 35 0
+  54 0020 0124     		movs	r4, #1
+  55 0022 ADF80440 		strh	r4, [sp, #4]	@ movhi
+  36:../system/src/aprs/adc.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  56              		.loc 1 36 0
+  57 0026 0323     		movs	r3, #3
+  58 0028 8DF80630 		strb	r3, [sp, #6]
+  37:../system/src/aprs/adc.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  59              		.loc 1 37 0
+  60 002c 0423     		movs	r3, #4
+  61 002e 8DF80730 		strb	r3, [sp, #7]
+  38:../system/src/aprs/adc.c **** 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+  62              		.loc 1 38 0
+  63 0032 0DEB0301 		add	r1, sp, r3
+  64 0036 0C48     		ldr	r0, .L3+4
+  65 0038 FFF7FEFF 		bl	GPIO_Init
+  66              	.LVL3:
+  39:../system/src/aprs/adc.c **** 
+  40:../system/src/aprs/adc.c **** 	AD_Reset();
+  67              		.loc 1 40 0
+  68 003c FFF7FEFF 		bl	AD_Reset
+  69              	.LVL4:
+  41:../system/src/aprs/adc.c **** 
+  42:../system/src/aprs/adc.c **** 	adc_afsk = af;
+  70              		.loc 1 42 0
+  71 0040 0A4B     		ldr	r3, .L3+8
+  72 0042 1D60     		str	r5, [r3]
+  43:../system/src/aprs/adc.c **** 
+  44:../system/src/aprs/adc.c **** 	//Przerwania DMA1 Kanal1
+  45:../system/src/aprs/adc.c **** 	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+  73              		.loc 1 45 0
+  74 0044 0B23     		movs	r3, #11
+  75 0046 8DF80030 		strb	r3, [sp]
+  46:../system/src/aprs/adc.c **** 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  76              		.loc 1 46 0
+  77 004a 0023     		movs	r3, #0
+  78 004c 8DF80130 		strb	r3, [sp, #1]
+  47:../system/src/aprs/adc.c **** 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  79              		.loc 1 47 0
+  80 0050 8DF80230 		strb	r3, [sp, #2]
+  48:../system/src/aprs/adc.c **** 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  81              		.loc 1 48 0
+  82 0054 8DF80340 		strb	r4, [sp, #3]
+  49:../system/src/aprs/adc.c **** 	NVIC_Init(&NVIC_InitStructure);
+  83              		.loc 1 49 0
+  84 0058 6846     		mov	r0, sp
+  85 005a FFF7FEFF 		bl	NVIC_Init
+  86              	.LVL5:
+  50:../system/src/aprs/adc.c **** 
+  51:../system/src/aprs/adc.c **** }
+  87              		.loc 1 51 0
+  88 005e 03B0     		add	sp, sp, #12
+  89              		.cfi_def_cfa_offset 12
+  90              		@ sp needed
+  91 0060 30BD     		pop	{r4, r5, pc}
+  92              	.LVL6:
+  93              	.L4:
+  94 0062 00BF     		.align	2
+  95              	.L3:
+  96 0064 00100240 		.word	1073876992
+  97 0068 00080140 		.word	1073809408
+  98 006c 00000000 		.word	adc_afsk
+  99              		.cfi_endproc
+ 100              	.LFE66:
+ 102              		.section	.text.AD_Start,"ax",%progbits
+ 103              		.align	1
+ 104              		.global	AD_Start
+ 105              		.syntax unified
+ 106              		.thumb
+ 107              		.thumb_func
+ 108              		.fpu softvfp
+ 110              	AD_Start:
+ 111              	.LFB67:
+  52:../system/src/aprs/adc.c **** 
+  53:../system/src/aprs/adc.c **** 
+  54:../system/src/aprs/adc.c **** /**************************************************************************************************
+  55:../system/src/aprs/adc.c **** void AD_Start() {
+ 112              		.loc 1 55 0
+ 113              		.cfi_startproc
+ 114              		@ args = 0, pretend = 0, frame = 0
+ 115              		@ frame_needed = 0, uses_anonymous_args = 0
+ 116              		@ link register save eliminated.
+  56:../system/src/aprs/adc.c **** /**************************************************************************************************
+  57:../system/src/aprs/adc.c **** 
+  58:../system/src/aprs/adc.c **** // 	samplecount = 0;
+  59:../system/src/aprs/adc.c **** // 	max_value = 0;
+  60:../system/src/aprs/adc.c **** 
+  61:../system/src/aprs/adc.c **** 	//Timer3 ENABLE
+  62:../system/src/aprs/adc.c **** 	TIM2->CR1 |= TIM_CR1_CEN;
+ 117              		.loc 1 62 0
+ 118 0000 4FF08042 		mov	r2, #1073741824
+ 119 0004 1388     		ldrh	r3, [r2]
+ 120 0006 43F00103 		orr	r3, r3, #1
+ 121 000a 1380     		strh	r3, [r2]	@ movhi
+  63:../system/src/aprs/adc.c **** 
+  64:../system/src/aprs/adc.c **** }
+ 122              		.loc 1 64 0
+ 123 000c 7047     		bx	lr
+ 124              		.cfi_endproc
+ 125              	.LFE67:
+ 127              		.section	.text.AD_Stop,"ax",%progbits
+ 128              		.align	1
+ 129              		.global	AD_Stop
+ 130              		.syntax unified
+ 131              		.thumb
+ 132              		.thumb_func
+ 133              		.fpu softvfp
+ 135              	AD_Stop:
+ 136              	.LFB68:
+  65:../system/src/aprs/adc.c **** 
+  66:../system/src/aprs/adc.c **** 
+  67:../system/src/aprs/adc.c **** /**************************************************************************************************
+  68:../system/src/aprs/adc.c **** void AD_Stop() {
+ 137              		.loc 1 68 0
+ 138              		.cfi_startproc
+ 139              		@ args = 0, pretend = 0, frame = 0
+ 140              		@ frame_needed = 0, uses_anonymous_args = 0
+ 141              		@ link register save eliminated.
+  69:../system/src/aprs/adc.c **** /**************************************************************************************************
+  70:../system/src/aprs/adc.c **** 
+  71:../system/src/aprs/adc.c **** 	//Timer3 DISABLE
+  72:../system/src/aprs/adc.c **** 	TIM2->CR1 &= ~TIM_CR1_CEN;
+ 142              		.loc 1 72 0
+ 143 0000 4FF08042 		mov	r2, #1073741824
+ 144 0004 1388     		ldrh	r3, [r2]
+ 145 0006 9BB2     		uxth	r3, r3
+ 146 0008 23F00103 		bic	r3, r3, #1
+ 147 000c 9BB2     		uxth	r3, r3
+ 148 000e 1380     		strh	r3, [r2]	@ movhi
+  73:../system/src/aprs/adc.c **** 
+  74:../system/src/aprs/adc.c **** // 	AD_Reset();
+  75:../system/src/aprs/adc.c **** 
+  76:../system/src/aprs/adc.c **** }
+ 149              		.loc 1 76 0
+ 150 0010 7047     		bx	lr
+ 151              		.cfi_endproc
+ 152              	.LFE68:
+ 154              		.comm	samplecount,4,4
+ 155              		.comm	max_value,2,2
+ 156              		.comm	ADCValue,32,4
+ 157              		.comm	adc_afsk,4,4
+ 158              		.text
+ 159              	.Letext0:
+ 160              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 161              		.file 3 "../system/include/cmsis/core_cm3.h"
+ 162              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+ 163              		.file 5 "../system/include/cmsis/stm32f10x.h"
+ 164              		.file 6 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+ 165              		.file 7 "../system/include/stm32f1-stdperiph/misc.h"
+ 166              		.file 8 "../system/include/aprs/cfifo.h"
+ 167              		.file 9 "../system/include/aprs/afsk.h"
+ 168              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 169              		.file 11 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 170              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 171              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 172              		.file 14 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+ 173              		.file 15 "../system/include/stm32f1-stdperiph/stm32f10x_rcc.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 adc.c
+     /tmp/ccpczhYr.s:16     .text.AD_Init:0000000000000000 $t
+     /tmp/ccpczhYr.s:23     .text.AD_Init:0000000000000000 AD_Init
+     /tmp/ccpczhYr.s:96     .text.AD_Init:0000000000000064 $d
+                            *COM*:0000000000000004 adc_afsk
+     /tmp/ccpczhYr.s:103    .text.AD_Start:0000000000000000 $t
+     /tmp/ccpczhYr.s:110    .text.AD_Start:0000000000000000 AD_Start
+     /tmp/ccpczhYr.s:128    .text.AD_Stop:0000000000000000 $t
+     /tmp/ccpczhYr.s:135    .text.AD_Stop:0000000000000000 AD_Stop
+                            *COM*:0000000000000004 samplecount
+                            *COM*:0000000000000002 max_value
+                            *COM*:0000000000000020 ADCValue
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stdlib.h.13.4ed386f5c1a80d71e72172885d946ef2
+                           .group:0000000000000000 wm4.stddef.h.187.e1c83cba2098ce92b68f6311de19e6b1
+                           .group:0000000000000000 wm4.stddef.h.39.57db33e786ccd422e31be63a26e19309
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.alloca.h.8.dfc0c703c47ec3e69746825b17d9e66d
+                           .group:0000000000000000 wm4.stdlib.h.56.d4493cd3736e51e9d56335045f26df45
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+
+UNDEFINED SYMBOLS
+RCC_ADCCLKConfig
+GPIO_Init
+AD_Reset
+NVIC_Init

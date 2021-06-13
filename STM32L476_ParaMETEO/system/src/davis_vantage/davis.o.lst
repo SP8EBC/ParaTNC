@@ -1,0 +1,2242 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"davis.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.davis_init,"ax",%progbits
+  18              		.align	1
+  19              		.global	davis_init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	davis_init:
+  26              	.LFB352:
+  27              		.file 1 "../system/src/davis_vantage/davis.c"
+   1:../system/src/davis_vantage/davis.c **** /*
+   2:../system/src/davis_vantage/davis.c ****  * davis_vantage.c
+   3:../system/src/davis_vantage/davis.c ****  *
+   4:../system/src/davis_vantage/davis.c ****  *  Created on: 06.08.2020
+   5:../system/src/davis_vantage/davis.c ****  *      Author: mateusz
+   6:../system/src/davis_vantage/davis.c ****  */
+   7:../system/src/davis_vantage/davis.c **** 
+   8:../system/src/davis_vantage/davis.c **** #include <davis_vantage/davis.h>
+   9:../system/src/davis_vantage/davis.c **** #include <davis_vantage/davis_parsers.h>
+  10:../system/src/davis_vantage/davis.c **** #include <davis_vantage/davis_query_state_t.h>
+  11:../system/src/davis_vantage/davis.c **** #include <davis_vantage/davis_global_state_t.h>
+  12:../system/src/davis_vantage/davis.c **** #include <davis_vantage/davis_qf_t.h>
+  13:../system/src/davis_vantage/davis.c **** 
+  14:../system/src/davis_vantage/davis.c **** #include <string.h>
+  15:../system/src/davis_vantage/davis.c **** 
+  16:../system/src/davis_vantage/davis.c **** #include "main.h"
+  17:../system/src/davis_vantage/davis.c **** 
+  18:../system/src/davis_vantage/davis.c **** #define DAVIS_ACK 0x06
+  19:../system/src/davis_vantage/davis.c **** 
+  20:../system/src/davis_vantage/davis.c **** #define LOOP_PACKET_LN 				100
+  21:../system/src/davis_vantage/davis.c **** #define RX_CHECK_LN_WITH_ACK		32
+  22:../system/src/davis_vantage/davis.c **** #define RX_CHECK_MIN_LN_WITH_ACK	16
+  23:../system/src/davis_vantage/davis.c **** 
+  24:../system/src/davis_vantage/davis.c **** #define DAVIS_QUERY_ABOUT_LOOP2
+  25:../system/src/davis_vantage/davis.c **** 
+  26:../system/src/davis_vantage/davis.c **** /**
+  27:../system/src/davis_vantage/davis.c ****  * Serial port context to be used for communication
+  28:../system/src/davis_vantage/davis.c ****  */
+  29:../system/src/davis_vantage/davis.c **** srl_context_t* davis_serial_context;
+  30:../system/src/davis_vantage/davis.c **** 
+  31:../system/src/davis_vantage/davis.c **** /**
+  32:../system/src/davis_vantage/davis.c ****  * The internal state during loop packet retrieval
+  33:../system/src/davis_vantage/davis.c ****  */
+  34:../system/src/davis_vantage/davis.c **** davis_query_state_t davis_loop_state;
+  35:../system/src/davis_vantage/davis.c **** 
+  36:../system/src/davis_vantage/davis.c **** /**
+  37:../system/src/davis_vantage/davis.c ****  * Internal state during waking up the station base
+  38:../system/src/davis_vantage/davis.c ****  */
+  39:../system/src/davis_vantage/davis.c **** davis_query_state_t davis_wake_up_state;
+  40:../system/src/davis_vantage/davis.c **** 
+  41:../system/src/davis_vantage/davis.c **** /**
+  42:../system/src/davis_vantage/davis.c ****  * Internal state during RXCHECK query
+  43:../system/src/davis_vantage/davis.c ****  */
+  44:../system/src/davis_vantage/davis.c **** davis_query_state_t davis_rx_check_state;
+  45:../system/src/davis_vantage/davis.c **** 
+  46:../system/src/davis_vantage/davis.c **** /**
+  47:../system/src/davis_vantage/davis.c ****  * Global state of Davis Vantage communication
+  48:../system/src/davis_vantage/davis.c ****  */
+  49:../system/src/davis_vantage/davis.c **** dallas_global_state_t davis_global_state;
+  50:../system/src/davis_vantage/davis.c **** 
+  51:../system/src/davis_vantage/davis.c **** /**
+  52:../system/src/davis_vantage/davis.c ****  *
+  53:../system/src/davis_vantage/davis.c ****  */
+  54:../system/src/davis_vantage/davis.c **** davis_qf_t davis_quality_factor;
+  55:../system/src/davis_vantage/davis.c **** 
+  56:../system/src/davis_vantage/davis.c **** /**
+  57:../system/src/davis_vantage/davis.c ****  * Set to one if station was detected during bootup
+  58:../system/src/davis_vantage/davis.c ****  */
+  59:../system/src/davis_vantage/davis.c **** uint8_t davis_avaliable;
+  60:../system/src/davis_vantage/davis.c **** 
+  61:../system/src/davis_vantage/davis.c **** uint16_t davis_base_total_packet_received = 0;
+  62:../system/src/davis_vantage/davis.c **** 
+  63:../system/src/davis_vantage/davis.c **** uint16_t davis_base_total_packet_missed = 0;
+  64:../system/src/davis_vantage/davis.c **** 
+  65:../system/src/davis_vantage/davis.c **** uint16_t davis_base_resynchronizations = 0;
+  66:../system/src/davis_vantage/davis.c **** 
+  67:../system/src/davis_vantage/davis.c **** uint16_t davis_base_packets_in_the_row = 0;
+  68:../system/src/davis_vantage/davis.c **** 
+  69:../system/src/davis_vantage/davis.c **** uint16_t davis_base_crc_errors = 0;
+  70:../system/src/davis_vantage/davis.c **** 
+  71:../system/src/davis_vantage/davis.c **** uint32_t davis_last_good_loop = 0;
+  72:../system/src/davis_vantage/davis.c **** 
+  73:../system/src/davis_vantage/davis.c **** uint32_t davis_last_good_rxcheck = 0;
+  74:../system/src/davis_vantage/davis.c **** 
+  75:../system/src/davis_vantage/davis.c **** static const char line_feed = '\n';
+  76:../system/src/davis_vantage/davis.c **** static const char line_feed_return[] = {'\n', '\r'};
+  77:../system/src/davis_vantage/davis.c **** static const char lamps_off[] = "LAMPS 0\n";
+  78:../system/src/davis_vantage/davis.c **** static const char lamps_on[] = "LAMPS 1\n";
+  79:../system/src/davis_vantage/davis.c **** static const char leave_rx_screen[] = "RXTEST\n";	// it also resets
+  80:../system/src/davis_vantage/davis.c **** static const char rx_check[] = "RXCHECK\n";
+  81:../system/src/davis_vantage/davis.c **** #ifdef DAVIS_QUERY_ABOUT_LOOP2
+  82:../system/src/davis_vantage/davis.c **** static const char loop_command[] = "LPS 2 1\n";
+  83:../system/src/davis_vantage/davis.c **** #else
+  84:../system/src/davis_vantage/davis.c **** static const char loop_command[] = "LOOP 1\n";
+  85:../system/src/davis_vantage/davis.c **** #endif
+  86:../system/src/davis_vantage/davis.c **** 
+  87:../system/src/davis_vantage/davis.c **** 
+  88:../system/src/davis_vantage/davis.c **** uint32_t davis_init(srl_context_t* srl_port) {
+  28              		.loc 1 88 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37              	.LVL1:
+  89:../system/src/davis_vantage/davis.c **** 
+  90:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+  91:../system/src/davis_vantage/davis.c **** 
+  92:../system/src/davis_vantage/davis.c **** 	davis_serial_context = srl_port;
+  38              		.loc 1 92 0
+  39 0002 0B4B     		ldr	r3, .L3
+  40 0004 1860     		str	r0, [r3]
+  93:../system/src/davis_vantage/davis.c **** 
+  94:../system/src/davis_vantage/davis.c **** 	davis_quality_factor = DAVIS_QF_UNINITIALIZED;
+  41              		.loc 1 94 0
+  42 0006 0024     		movs	r4, #0
+  43 0008 0A4B     		ldr	r3, .L3+4
+  44 000a 1C70     		strb	r4, [r3]
+  95:../system/src/davis_vantage/davis.c **** 
+  96:../system/src/davis_vantage/davis.c **** 	davis_loop_state = DAVIS_QUERY_IDLE;
+  45              		.loc 1 96 0
+  46 000c 0A4B     		ldr	r3, .L3+8
+  47 000e 1C70     		strb	r4, [r3]
+  97:../system/src/davis_vantage/davis.c **** 
+  98:../system/src/davis_vantage/davis.c **** 	davis_wake_up_state = DAVIS_QUERY_IDLE;
+  48              		.loc 1 98 0
+  49 0010 0A4B     		ldr	r3, .L3+12
+  50 0012 1C70     		strb	r4, [r3]
+  99:../system/src/davis_vantage/davis.c **** 
+ 100:../system/src/davis_vantage/davis.c **** 	davis_rx_check_state = DAVIS_QUERY_IDLE;
+  51              		.loc 1 100 0
+  52 0014 0A4B     		ldr	r3, .L3+16
+  53 0016 1C70     		strb	r4, [r3]
+ 101:../system/src/davis_vantage/davis.c **** 
+ 102:../system/src/davis_vantage/davis.c **** 	davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+  54              		.loc 1 102 0
+  55 0018 0A4B     		ldr	r3, .L3+20
+  56 001a 1C70     		strb	r4, [r3]
+ 103:../system/src/davis_vantage/davis.c **** 
+ 104:../system/src/davis_vantage/davis.c **** 	davis_avaliable = 0;
+  57              		.loc 1 104 0
+  58 001c 0A4B     		ldr	r3, .L3+24
+  59 001e 1C70     		strb	r4, [r3]
+ 105:../system/src/davis_vantage/davis.c **** 
+ 106:../system/src/davis_vantage/davis.c **** 	// set the timeout according to davis vantage documentation
+ 107:../system/src/davis_vantage/davis.c **** 	srl_switch_timeout(srl_port, 1, 1200);
+  60              		.loc 1 107 0
+  61 0020 4FF49662 		mov	r2, #1200
+  62 0024 0121     		movs	r1, #1
+  63 0026 FFF7FEFF 		bl	srl_switch_timeout
+  64              	.LVL2:
+ 108:../system/src/davis_vantage/davis.c **** 
+ 109:../system/src/davis_vantage/davis.c **** 	return retval;
+ 110:../system/src/davis_vantage/davis.c **** }
+  65              		.loc 1 110 0
+  66 002a 2046     		mov	r0, r4
+  67 002c 10BD     		pop	{r4, pc}
+  68              	.L4:
+  69 002e 00BF     		.align	2
+  70              	.L3:
+  71 0030 00000000 		.word	davis_serial_context
+  72 0034 00000000 		.word	davis_quality_factor
+  73 0038 00000000 		.word	davis_loop_state
+  74 003c 00000000 		.word	davis_wake_up_state
+  75 0040 00000000 		.word	davis_rx_check_state
+  76 0044 00000000 		.word	davis_global_state
+  77 0048 00000000 		.word	davis_avaliable
+  78              		.cfi_endproc
+  79              	.LFE352:
+  81              		.section	.text.davis_wake_up,"ax",%progbits
+  82              		.align	1
+  83              		.global	davis_wake_up
+  84              		.syntax unified
+  85              		.thumb
+  86              		.thumb_func
+  87              		.fpu fpv4-sp-d16
+  89              	davis_wake_up:
+  90              	.LFB353:
+ 111:../system/src/davis_vantage/davis.c **** 
+ 112:../system/src/davis_vantage/davis.c **** /**
+ 113:../system/src/davis_vantage/davis.c ****  * This function may have blocking I/O
+ 114:../system/src/davis_vantage/davis.c ****  */
+ 115:../system/src/davis_vantage/davis.c **** uint32_t davis_wake_up(uint8_t is_io_blocking) {
+  91              		.loc 1 115 0
+  92              		.cfi_startproc
+  93              		@ args = 0, pretend = 0, frame = 8
+  94              		@ frame_needed = 0, uses_anonymous_args = 0
+  95              	.LVL3:
+  96 0000 30B5     		push	{r4, r5, lr}
+  97              		.cfi_def_cfa_offset 12
+  98              		.cfi_offset 4, -12
+  99              		.cfi_offset 5, -8
+ 100              		.cfi_offset 14, -4
+ 101 0002 87B0     		sub	sp, sp, #28
+ 102              		.cfi_def_cfa_offset 40
+ 116:../system/src/davis_vantage/davis.c **** 
+ 117:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 103              		.loc 1 117 0
+ 104 0004 0023     		movs	r3, #0
+ 105 0006 0593     		str	r3, [sp, #20]
+ 106              	.LVL4:
+ 118:../system/src/davis_vantage/davis.c **** 
+ 119:../system/src/davis_vantage/davis.c **** 	int comparation_result = -1;
+ 120:../system/src/davis_vantage/davis.c **** 
+ 121:../system/src/davis_vantage/davis.c **** 	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_WAKE
+ 107              		.loc 1 121 0
+ 108 0008 684B     		ldr	r3, .L27
+ 109 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 110 000c 33B1     		cbz	r3, .L6
+ 111              		.loc 1 121 0 is_stmt 0 discriminator 1
+ 112 000e 032B     		cmp	r3, #3
+ 113 0010 04D0     		beq	.L6
+ 122:../system/src/davis_vantage/davis.c **** 
+ 123:../system/src/davis_vantage/davis.c **** 		// switch the internal state
+ 124:../system/src/davis_vantage/davis.c **** 		davis_global_state = DAVIS_GLOBAL_WAKE_UP;
+ 125:../system/src/davis_vantage/davis.c **** 
+ 126:../system/src/davis_vantage/davis.c **** 		// sending the new line to wake up the console
+ 127:../system/src/davis_vantage/davis.c **** 		srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
+ 128:../system/src/davis_vantage/davis.c **** 
+ 129:../system/src/davis_vantage/davis.c **** 		// check if a user want to have blocking I/O
+ 130:../system/src/davis_vantage/davis.c **** 		if (is_io_blocking == 1) {
+ 131:../system/src/davis_vantage/davis.c **** 			// if yes wait for transmission completion and then wait for response
+ 132:../system/src/davis_vantage/davis.c **** 			srl_wait_for_tx_completion(davis_serial_context);
+ 133:../system/src/davis_vantage/davis.c **** 
+ 134:../system/src/davis_vantage/davis.c **** 			// start waiting for console response
+ 135:../system/src/davis_vantage/davis.c **** 			srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0);
+ 136:../system/src/davis_vantage/davis.c **** 
+ 137:../system/src/davis_vantage/davis.c **** 			// wait for station response or for timeout
+ 138:../system/src/davis_vantage/davis.c **** 			srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+ 139:../system/src/davis_vantage/davis.c **** 
+ 140:../system/src/davis_vantage/davis.c **** 			// if response has been received
+ 141:../system/src/davis_vantage/davis.c **** 			if (retval == SRL_OK) {
+ 142:../system/src/davis_vantage/davis.c **** 				//
+ 143:../system/src/davis_vantage/davis.c **** 				retval = DAVIS_OK;
+ 144:../system/src/davis_vantage/davis.c **** 
+ 145:../system/src/davis_vantage/davis.c **** 				// set the quality factor appropriate to signalize that the station
+ 146:../system/src/davis_vantage/davis.c **** 				// is avaliable
+ 147:../system/src/davis_vantage/davis.c **** 				davis_quality_factor = DAVIS_QF_FULL;
+ 148:../system/src/davis_vantage/davis.c **** 
+ 149:../system/src/davis_vantage/davis.c **** 				davis_avaliable = 1;
+ 150:../system/src/davis_vantage/davis.c **** 			}
+ 151:../system/src/davis_vantage/davis.c **** 			else {
+ 152:../system/src/davis_vantage/davis.c **** 				// send the wake up command one more time
+ 153:../system/src/davis_vantage/davis.c **** 
+ 154:../system/src/davis_vantage/davis.c **** 				// sending the new line to wake up the console
+ 155:../system/src/davis_vantage/davis.c **** 				srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
+ 156:../system/src/davis_vantage/davis.c **** 
+ 157:../system/src/davis_vantage/davis.c **** 				// if yes wait for transmission completion and then wait for response
+ 158:../system/src/davis_vantage/davis.c **** 				srl_wait_for_tx_completion(davis_serial_context);
+ 159:../system/src/davis_vantage/davis.c **** 
+ 160:../system/src/davis_vantage/davis.c **** 				// start waiting for console response
+ 161:../system/src/davis_vantage/davis.c **** 				srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+ 162:../system/src/davis_vantage/davis.c **** 
+ 163:../system/src/davis_vantage/davis.c **** 				// wait for station response or for timeout
+ 164:../system/src/davis_vantage/davis.c **** 				srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+ 165:../system/src/davis_vantage/davis.c **** 
+ 166:../system/src/davis_vantage/davis.c **** 				// if second attempt was successful
+ 167:../system/src/davis_vantage/davis.c **** 				if (retval == SRL_OK) {
+ 168:../system/src/davis_vantage/davis.c **** 					retval = DAVIS_OK;
+ 169:../system/src/davis_vantage/davis.c **** 
+ 170:../system/src/davis_vantage/davis.c **** 					// set the quality factor appropriate to signalize that the station
+ 171:../system/src/davis_vantage/davis.c **** 					// is avaliable
+ 172:../system/src/davis_vantage/davis.c **** 					davis_quality_factor = DAVIS_QF_FULL;
+ 173:../system/src/davis_vantage/davis.c **** 
+ 174:../system/src/davis_vantage/davis.c **** 					davis_avaliable = 1;
+ 175:../system/src/davis_vantage/davis.c **** 				}
+ 176:../system/src/davis_vantage/davis.c **** 				else {
+ 177:../system/src/davis_vantage/davis.c **** 					// if not the station is dead an
+ 178:../system/src/davis_vantage/davis.c **** 					davis_quality_factor = DAVIS_QF_NOT_AVALIABLE;
+ 179:../system/src/davis_vantage/davis.c **** 
+ 180:../system/src/davis_vantage/davis.c **** 					retval = DAVIS_NOT_AVALIABLE;
+ 181:../system/src/davis_vantage/davis.c **** 				}
+ 182:../system/src/davis_vantage/davis.c **** 
+ 183:../system/src/davis_vantage/davis.c **** 			}
+ 184:../system/src/davis_vantage/davis.c **** 
+ 185:../system/src/davis_vantage/davis.c **** 			// switch the internal state to release the station
+ 186:../system/src/davis_vantage/davis.c **** 			davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 187:../system/src/davis_vantage/davis.c **** 
+ 188:../system/src/davis_vantage/davis.c **** 		}
+ 189:../system/src/davis_vantage/davis.c **** 		else {
+ 190:../system/src/davis_vantage/davis.c **** 			// non blocking input/output
+ 191:../system/src/davis_vantage/davis.c **** 			switch (davis_wake_up_state) {
+ 192:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_IDLE: {
+ 193:../system/src/davis_vantage/davis.c **** 					// sending the new line to wake up the console
+ 194:../system/src/davis_vantage/davis.c **** 					srl_send_data(davis_serial_context, (uint8_t*)&line_feed, 1, 1, 0);
+ 195:../system/src/davis_vantage/davis.c **** 
+ 196:../system/src/davis_vantage/davis.c **** 					// switching the internal state
+ 197:../system/src/davis_vantage/davis.c **** 					davis_wake_up_state = DAVIS_QUERY_SENDING_QUERY;
+ 198:../system/src/davis_vantage/davis.c **** 
+ 199:../system/src/davis_vantage/davis.c **** 					// switch the internal state to block another poolers
+ 200:../system/src/davis_vantage/davis.c **** 					davis_global_state =  DAVIS_GLOBAL_WAKE_UP;
+ 201:../system/src/davis_vantage/davis.c **** 
+ 202:../system/src/davis_vantage/davis.c **** 					break;
+ 203:../system/src/davis_vantage/davis.c **** 				}
+ 204:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_SENDING_QUERY: {
+ 205:../system/src/davis_vantage/davis.c **** 					// check if wakeup has been sent
+ 206:../system/src/davis_vantage/davis.c **** 
+ 207:../system/src/davis_vantage/davis.c **** 					if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+ 208:../system/src/davis_vantage/davis.c **** 						// if transmission was successful trigger the reception
+ 209:../system/src/davis_vantage/davis.c **** 						srl_receive_data(davis_serial_context, 2, 0, 0, 0, 0, 0);
+ 210:../system/src/davis_vantage/davis.c **** 
+ 211:../system/src/davis_vantage/davis.c **** 						// switching the internal state
+ 212:../system/src/davis_vantage/davis.c **** 						davis_wake_up_state = DAVIS_QUERY_RECEIVING;
+ 213:../system/src/davis_vantage/davis.c **** 					}
+ 214:../system/src/davis_vantage/davis.c **** 
+ 215:../system/src/davis_vantage/davis.c **** 					if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+ 216:../system/src/davis_vantage/davis.c **** 						davis_wake_up_state = DAVIS_QUERY_ERROR;
+ 217:../system/src/davis_vantage/davis.c **** 
+ 218:../system/src/davis_vantage/davis.c **** 						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 219:../system/src/davis_vantage/davis.c **** 					}
+ 220:../system/src/davis_vantage/davis.c **** 
+ 221:../system/src/davis_vantage/davis.c **** 					break;
+ 222:../system/src/davis_vantage/davis.c **** 				}
+ 223:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_RECEIVING: {
+ 224:../system/src/davis_vantage/davis.c **** 					// check if receive has been successfull
+ 225:../system/src/davis_vantage/davis.c **** 
+ 226:../system/src/davis_vantage/davis.c **** 					if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
+ 227:../system/src/davis_vantage/davis.c **** 						// check the content of what was received from the davis
+ 228:../system/src/davis_vantage/davis.c **** 						comparation_result = memcmp(line_feed_return, srl_get_rx_buffer(davis_serial_context), 2);
+ 229:../system/src/davis_vantage/davis.c **** 
+ 230:../system/src/davis_vantage/davis.c **** 						if (comparation_result == 0) {
+ 231:../system/src/davis_vantage/davis.c **** 							// if the base of davis wx station responden with '\r\n' it measn that wake up was sucessful
+ 232:../system/src/davis_vantage/davis.c **** 							davis_wake_up_state = DAVIS_QUERY_OK;
+ 233:../system/src/davis_vantage/davis.c **** 						}
+ 234:../system/src/davis_vantage/davis.c **** 						else {
+ 235:../system/src/davis_vantage/davis.c **** 							davis_wake_up_state = DAVIS_QUERY_ERROR;
+ 236:../system/src/davis_vantage/davis.c **** 						}
+ 237:../system/src/davis_vantage/davis.c **** 
+ 238:../system/src/davis_vantage/davis.c **** 						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 239:../system/src/davis_vantage/davis.c **** 					}
+ 240:../system/src/davis_vantage/davis.c **** 
+ 241:../system/src/davis_vantage/davis.c **** 					if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+ 242:../system/src/davis_vantage/davis.c **** 						davis_wake_up_state = DAVIS_QUERY_ERROR;
+ 243:../system/src/davis_vantage/davis.c **** 
+ 244:../system/src/davis_vantage/davis.c **** 						davis_global_state =  DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 245:../system/src/davis_vantage/davis.c **** 					}
+ 246:../system/src/davis_vantage/davis.c **** 
+ 247:../system/src/davis_vantage/davis.c **** 
+ 248:../system/src/davis_vantage/davis.c **** 					break;
+ 249:../system/src/davis_vantage/davis.c **** 				}
+ 250:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_OK: {
+ 251:../system/src/davis_vantage/davis.c **** 					davis_avaliable = 1;
+ 252:../system/src/davis_vantage/davis.c **** 					break;
+ 253:../system/src/davis_vantage/davis.c **** 				}
+ 254:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_ERROR: {
+ 255:../system/src/davis_vantage/davis.c **** 					davis_avaliable = 0;
+ 256:../system/src/davis_vantage/davis.c **** 					break;
+ 257:../system/src/davis_vantage/davis.c **** 				}
+ 258:../system/src/davis_vantage/davis.c **** 			}
+ 259:../system/src/davis_vantage/davis.c **** 		}
+ 260:../system/src/davis_vantage/davis.c **** 	}
+ 261:../system/src/davis_vantage/davis.c **** 	else {
+ 262:../system/src/davis_vantage/davis.c **** 		// if station is currently busy on another transmission return with an error
+ 263:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_BUSY;
+ 114              		.loc 1 263 0 is_stmt 1
+ 115 0012 0423     		movs	r3, #4
+ 116 0014 0593     		str	r3, [sp, #20]
+ 117              	.LVL5:
+ 118              	.L12:
+ 264:../system/src/davis_vantage/davis.c **** 	}
+ 265:../system/src/davis_vantage/davis.c **** 
+ 266:../system/src/davis_vantage/davis.c **** 	return retval;
+ 267:../system/src/davis_vantage/davis.c **** }
+ 119              		.loc 1 267 0
+ 120 0016 0598     		ldr	r0, [sp, #20]
+ 121 0018 07B0     		add	sp, sp, #28
+ 122              		.cfi_remember_state
+ 123              		.cfi_def_cfa_offset 12
+ 124              		@ sp needed
+ 125 001a 30BD     		pop	{r4, r5, pc}
+ 126              	.LVL6:
+ 127              	.L6:
+ 128              		.cfi_restore_state
+ 129 001c 0446     		mov	r4, r0
+ 124:../system/src/davis_vantage/davis.c **** 
+ 130              		.loc 1 124 0
+ 131 001e 634B     		ldr	r3, .L27
+ 132 0020 0322     		movs	r2, #3
+ 133 0022 1A70     		strb	r2, [r3]
+ 127:../system/src/davis_vantage/davis.c **** 
+ 134              		.loc 1 127 0
+ 135 0024 624B     		ldr	r3, .L27+4
+ 136 0026 1868     		ldr	r0, [r3]
+ 137              	.LVL7:
+ 138 0028 0023     		movs	r3, #0
+ 139 002a 0093     		str	r3, [sp]
+ 140 002c 0123     		movs	r3, #1
+ 141 002e 1A46     		mov	r2, r3
+ 142 0030 6049     		ldr	r1, .L27+8
+ 143 0032 FFF7FEFF 		bl	srl_send_data
+ 144              	.LVL8:
+ 130:../system/src/davis_vantage/davis.c **** 			// if yes wait for transmission completion and then wait for response
+ 145              		.loc 1 130 0
+ 146 0036 012C     		cmp	r4, #1
+ 147 0038 12D0     		beq	.L24
+ 191:../system/src/davis_vantage/davis.c **** 				case DAVIS_QUERY_IDLE: {
+ 148              		.loc 1 191 0
+ 149 003a 5F4B     		ldr	r3, .L27+12
+ 150 003c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 151 003e 052B     		cmp	r3, #5
+ 152 0040 E9D8     		bhi	.L12
+ 153 0042 01A2     		adr	r2, .L14
+ 154 0044 52F823F0 		ldr	pc, [r2, r3, lsl #2]
+ 155              		.p2align 2
+ 156              	.L14:
+ 157 0048 ED000000 		.word	.L13+1
+ 158 004c 0D010000 		.word	.L15+1
+ 159 0050 17000000 		.word	.L12+1
+ 160 0054 4D010000 		.word	.L16+1
+ 161 0058 9B010000 		.word	.L17+1
+ 162 005c A3010000 		.word	.L18+1
+ 163              		.p2align 1
+ 164              	.L24:
+ 132:../system/src/davis_vantage/davis.c **** 
+ 165              		.loc 1 132 0
+ 166 0060 534C     		ldr	r4, .L27+4
+ 167 0062 2068     		ldr	r0, [r4]
+ 168 0064 FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 169              	.LVL9:
+ 135:../system/src/davis_vantage/davis.c **** 
+ 170              		.loc 1 135 0
+ 171 0068 0022     		movs	r2, #0
+ 172 006a 0292     		str	r2, [sp, #8]
+ 173 006c 0192     		str	r2, [sp, #4]
+ 174 006e 0092     		str	r2, [sp]
+ 175 0070 1346     		mov	r3, r2
+ 176 0072 0221     		movs	r1, #2
+ 177 0074 2068     		ldr	r0, [r4]
+ 178 0076 FFF7FEFF 		bl	srl_receive_data_with_instant_timeout
+ 179              	.LVL10:
+ 138:../system/src/davis_vantage/davis.c **** 
+ 180              		.loc 1 138 0
+ 181 007a 05A9     		add	r1, sp, #20
+ 182 007c 2068     		ldr	r0, [r4]
+ 183 007e FFF7FEFF 		bl	srl_wait_for_rx_completion_or_timeout
+ 184              	.LVL11:
+ 141:../system/src/davis_vantage/davis.c **** 				//
+ 185              		.loc 1 141 0
+ 186 0082 059B     		ldr	r3, [sp, #20]
+ 187 0084 53B9     		cbnz	r3, .L9
+ 143:../system/src/davis_vantage/davis.c **** 
+ 188              		.loc 1 143 0
+ 189 0086 0593     		str	r3, [sp, #20]
+ 147:../system/src/davis_vantage/davis.c **** 
+ 190              		.loc 1 147 0
+ 191 0088 4C4B     		ldr	r3, .L27+16
+ 192 008a 0522     		movs	r2, #5
+ 193 008c 1A70     		strb	r2, [r3]
+ 149:../system/src/davis_vantage/davis.c **** 			}
+ 194              		.loc 1 149 0
+ 195 008e 4C4B     		ldr	r3, .L27+20
+ 196 0090 0122     		movs	r2, #1
+ 197 0092 1A70     		strb	r2, [r3]
+ 198              	.L10:
+ 186:../system/src/davis_vantage/davis.c **** 
+ 199              		.loc 1 186 0
+ 200 0094 454B     		ldr	r3, .L27
+ 201 0096 0022     		movs	r2, #0
+ 202 0098 1A70     		strb	r2, [r3]
+ 203 009a BCE7     		b	.L12
+ 204              	.L9:
+ 155:../system/src/davis_vantage/davis.c **** 
+ 205              		.loc 1 155 0
+ 206 009c 444D     		ldr	r5, .L27+4
+ 207 009e 0024     		movs	r4, #0
+ 208 00a0 0094     		str	r4, [sp]
+ 209 00a2 0123     		movs	r3, #1
+ 210 00a4 1A46     		mov	r2, r3
+ 211 00a6 4349     		ldr	r1, .L27+8
+ 212 00a8 2868     		ldr	r0, [r5]
+ 213 00aa FFF7FEFF 		bl	srl_send_data
+ 214              	.LVL12:
+ 158:../system/src/davis_vantage/davis.c **** 
+ 215              		.loc 1 158 0
+ 216 00ae 2868     		ldr	r0, [r5]
+ 217 00b0 FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 218              	.LVL13:
+ 161:../system/src/davis_vantage/davis.c **** 
+ 219              		.loc 1 161 0
+ 220 00b4 0294     		str	r4, [sp, #8]
+ 221 00b6 0194     		str	r4, [sp, #4]
+ 222 00b8 0094     		str	r4, [sp]
+ 223 00ba 2346     		mov	r3, r4
+ 224 00bc 2246     		mov	r2, r4
+ 225 00be 0221     		movs	r1, #2
+ 226 00c0 2868     		ldr	r0, [r5]
+ 227 00c2 FFF7FEFF 		bl	srl_receive_data
+ 228              	.LVL14:
+ 164:../system/src/davis_vantage/davis.c **** 
+ 229              		.loc 1 164 0
+ 230 00c6 05A9     		add	r1, sp, #20
+ 231 00c8 2868     		ldr	r0, [r5]
+ 232 00ca FFF7FEFF 		bl	srl_wait_for_rx_completion_or_timeout
+ 233              	.LVL15:
+ 167:../system/src/davis_vantage/davis.c **** 					retval = DAVIS_OK;
+ 234              		.loc 1 167 0
+ 235 00ce 059B     		ldr	r3, [sp, #20]
+ 236 00d0 3BB9     		cbnz	r3, .L11
+ 168:../system/src/davis_vantage/davis.c **** 
+ 237              		.loc 1 168 0
+ 238 00d2 0594     		str	r4, [sp, #20]
+ 172:../system/src/davis_vantage/davis.c **** 
+ 239              		.loc 1 172 0
+ 240 00d4 394B     		ldr	r3, .L27+16
+ 241 00d6 0522     		movs	r2, #5
+ 242 00d8 1A70     		strb	r2, [r3]
+ 174:../system/src/davis_vantage/davis.c **** 				}
+ 243              		.loc 1 174 0
+ 244 00da 394B     		ldr	r3, .L27+20
+ 245 00dc 0122     		movs	r2, #1
+ 246 00de 1A70     		strb	r2, [r3]
+ 247 00e0 D8E7     		b	.L10
+ 248              	.L11:
+ 178:../system/src/davis_vantage/davis.c **** 
+ 249              		.loc 1 178 0
+ 250 00e2 0123     		movs	r3, #1
+ 251 00e4 354A     		ldr	r2, .L27+16
+ 252 00e6 1370     		strb	r3, [r2]
+ 180:../system/src/davis_vantage/davis.c **** 				}
+ 253              		.loc 1 180 0
+ 254 00e8 0593     		str	r3, [sp, #20]
+ 255 00ea D3E7     		b	.L10
+ 256              	.L13:
+ 194:../system/src/davis_vantage/davis.c **** 
+ 257              		.loc 1 194 0
+ 258 00ec 304B     		ldr	r3, .L27+4
+ 259 00ee 1868     		ldr	r0, [r3]
+ 260 00f0 0023     		movs	r3, #0
+ 261 00f2 0093     		str	r3, [sp]
+ 262 00f4 0123     		movs	r3, #1
+ 263 00f6 1A46     		mov	r2, r3
+ 264 00f8 2E49     		ldr	r1, .L27+8
+ 265 00fa FFF7FEFF 		bl	srl_send_data
+ 266              	.LVL16:
+ 197:../system/src/davis_vantage/davis.c **** 
+ 267              		.loc 1 197 0
+ 268 00fe 2E4B     		ldr	r3, .L27+12
+ 269 0100 0122     		movs	r2, #1
+ 270 0102 1A70     		strb	r2, [r3]
+ 200:../system/src/davis_vantage/davis.c **** 
+ 271              		.loc 1 200 0
+ 272 0104 294B     		ldr	r3, .L27
+ 273 0106 0322     		movs	r2, #3
+ 274 0108 1A70     		strb	r2, [r3]
+ 202:../system/src/davis_vantage/davis.c **** 				}
+ 275              		.loc 1 202 0
+ 276 010a 84E7     		b	.L12
+ 277              	.L15:
+ 207:../system/src/davis_vantage/davis.c **** 						// if transmission was successful trigger the reception
+ 278              		.loc 1 207 0
+ 279 010c 284B     		ldr	r3, .L27+4
+ 280 010e 1868     		ldr	r0, [r3]
+ 281 0110 90F84530 		ldrb	r3, [r0, #69]	@ zero_extendqisi2
+ 282 0114 012B     		cmp	r3, #1
+ 283 0116 0DD0     		beq	.L25
+ 284              	.L19:
+ 215:../system/src/davis_vantage/davis.c **** 						davis_wake_up_state = DAVIS_QUERY_ERROR;
+ 285              		.loc 1 215 0
+ 286 0118 254B     		ldr	r3, .L27+4
+ 287 011a 1B68     		ldr	r3, [r3]
+ 288 011c 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
+ 289 0120 042B     		cmp	r3, #4
+ 290 0122 7FF478AF 		bne	.L12
+ 216:../system/src/davis_vantage/davis.c **** 
+ 291              		.loc 1 216 0
+ 292 0126 244B     		ldr	r3, .L27+12
+ 293 0128 0522     		movs	r2, #5
+ 294 012a 1A70     		strb	r2, [r3]
+ 218:../system/src/davis_vantage/davis.c **** 					}
+ 295              		.loc 1 218 0
+ 296 012c 1F4B     		ldr	r3, .L27
+ 297 012e 0022     		movs	r2, #0
+ 298 0130 1A70     		strb	r2, [r3]
+ 299 0132 70E7     		b	.L12
+ 300              	.L25:
+ 209:../system/src/davis_vantage/davis.c **** 
+ 301              		.loc 1 209 0
+ 302 0134 0022     		movs	r2, #0
+ 303 0136 0292     		str	r2, [sp, #8]
+ 304 0138 0192     		str	r2, [sp, #4]
+ 305 013a 0092     		str	r2, [sp]
+ 306 013c 1346     		mov	r3, r2
+ 307 013e 0221     		movs	r1, #2
+ 308 0140 FFF7FEFF 		bl	srl_receive_data
+ 309              	.LVL17:
+ 212:../system/src/davis_vantage/davis.c **** 					}
+ 310              		.loc 1 212 0
+ 311 0144 1C4B     		ldr	r3, .L27+12
+ 312 0146 0322     		movs	r2, #3
+ 313 0148 1A70     		strb	r2, [r3]
+ 314 014a E5E7     		b	.L19
+ 315              	.L16:
+ 226:../system/src/davis_vantage/davis.c **** 						// check the content of what was received from the davis
+ 316              		.loc 1 226 0
+ 317 014c 184B     		ldr	r3, .L27+4
+ 318 014e 1868     		ldr	r0, [r3]
+ 319 0150 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
+ 320 0154 042B     		cmp	r3, #4
+ 321 0156 0DD0     		beq	.L26
+ 322              	.LVL18:
+ 323              	.L20:
+ 241:../system/src/davis_vantage/davis.c **** 						davis_wake_up_state = DAVIS_QUERY_ERROR;
+ 324              		.loc 1 241 0
+ 325 0158 154B     		ldr	r3, .L27+4
+ 326 015a 1B68     		ldr	r3, [r3]
+ 327 015c 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 328 0160 052B     		cmp	r3, #5
+ 329 0162 7FF458AF 		bne	.L12
+ 242:../system/src/davis_vantage/davis.c **** 
+ 330              		.loc 1 242 0
+ 331 0166 144B     		ldr	r3, .L27+12
+ 332 0168 0522     		movs	r2, #5
+ 333 016a 1A70     		strb	r2, [r3]
+ 244:../system/src/davis_vantage/davis.c **** 					}
+ 334              		.loc 1 244 0
+ 335 016c 0F4B     		ldr	r3, .L27
+ 336 016e 0022     		movs	r2, #0
+ 337 0170 1A70     		strb	r2, [r3]
+ 338 0172 50E7     		b	.L12
+ 339              	.LVL19:
+ 340              	.L26:
+ 228:../system/src/davis_vantage/davis.c **** 
+ 341              		.loc 1 228 0
+ 342 0174 FFF7FEFF 		bl	srl_get_rx_buffer
+ 343              	.LVL20:
+ 344 0178 0222     		movs	r2, #2
+ 345 017a 0146     		mov	r1, r0
+ 346 017c 1148     		ldr	r0, .L27+24
+ 347 017e FFF7FEFF 		bl	memcmp
+ 348              	.LVL21:
+ 230:../system/src/davis_vantage/davis.c **** 							// if the base of davis wx station responden with '\r\n' it measn that wake up was sucessful
+ 349              		.loc 1 230 0
+ 350 0182 30B9     		cbnz	r0, .L21
+ 232:../system/src/davis_vantage/davis.c **** 						}
+ 351              		.loc 1 232 0
+ 352 0184 0C4B     		ldr	r3, .L27+12
+ 353 0186 0422     		movs	r2, #4
+ 354 0188 1A70     		strb	r2, [r3]
+ 355              	.L22:
+ 238:../system/src/davis_vantage/davis.c **** 					}
+ 356              		.loc 1 238 0
+ 357 018a 084B     		ldr	r3, .L27
+ 358 018c 0022     		movs	r2, #0
+ 359 018e 1A70     		strb	r2, [r3]
+ 360 0190 E2E7     		b	.L20
+ 361              	.L21:
+ 235:../system/src/davis_vantage/davis.c **** 						}
+ 362              		.loc 1 235 0
+ 363 0192 094B     		ldr	r3, .L27+12
+ 364 0194 0522     		movs	r2, #5
+ 365 0196 1A70     		strb	r2, [r3]
+ 366 0198 F7E7     		b	.L22
+ 367              	.LVL22:
+ 368              	.L17:
+ 251:../system/src/davis_vantage/davis.c **** 					break;
+ 369              		.loc 1 251 0
+ 370 019a 094B     		ldr	r3, .L27+20
+ 371 019c 0122     		movs	r2, #1
+ 372 019e 1A70     		strb	r2, [r3]
+ 252:../system/src/davis_vantage/davis.c **** 				}
+ 373              		.loc 1 252 0
+ 374 01a0 39E7     		b	.L12
+ 375              	.L18:
+ 255:../system/src/davis_vantage/davis.c **** 					break;
+ 376              		.loc 1 255 0
+ 377 01a2 074B     		ldr	r3, .L27+20
+ 378 01a4 0022     		movs	r2, #0
+ 379 01a6 1A70     		strb	r2, [r3]
+ 256:../system/src/davis_vantage/davis.c **** 				}
+ 380              		.loc 1 256 0
+ 381 01a8 35E7     		b	.L12
+ 382              	.L28:
+ 383 01aa 00BF     		.align	2
+ 384              	.L27:
+ 385 01ac 00000000 		.word	davis_global_state
+ 386 01b0 00000000 		.word	davis_serial_context
+ 387 01b4 00000000 		.word	.LANCHOR0
+ 388 01b8 00000000 		.word	davis_wake_up_state
+ 389 01bc 00000000 		.word	davis_quality_factor
+ 390 01c0 00000000 		.word	davis_avaliable
+ 391 01c4 00000000 		.word	.LANCHOR1
+ 392              		.cfi_endproc
+ 393              	.LFE353:
+ 395              		.section	.text.davis_rxcheck_packet_pooler,"ax",%progbits
+ 396              		.align	1
+ 397              		.global	davis_rxcheck_packet_pooler
+ 398              		.syntax unified
+ 399              		.thumb
+ 400              		.thumb_func
+ 401              		.fpu fpv4-sp-d16
+ 403              	davis_rxcheck_packet_pooler:
+ 404              	.LFB354:
+ 268:../system/src/davis_vantage/davis.c **** uint32_t davis_rxcheck_packet_pooler(void) {
+ 405              		.loc 1 268 0
+ 406              		.cfi_startproc
+ 407              		@ args = 0, pretend = 0, frame = 0
+ 408              		@ frame_needed = 0, uses_anonymous_args = 0
+ 409              	.LVL23:
+ 269:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 270:../system/src/davis_vantage/davis.c **** 
+ 271:../system/src/davis_vantage/davis.c **** 	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_RXCH
+ 410              		.loc 1 271 0
+ 411 0000 414B     		ldr	r3, .L53
+ 412 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 413 0004 0BB1     		cbz	r3, .L30
+ 414              		.loc 1 271 0 is_stmt 0 discriminator 1
+ 415 0006 022B     		cmp	r3, #2
+ 416 0008 79D1     		bne	.L41
+ 417              	.L30:
+ 268:../system/src/davis_vantage/davis.c **** uint32_t davis_rxcheck_packet_pooler(void) {
+ 418              		.loc 1 268 0 is_stmt 1
+ 419 000a 10B5     		push	{r4, lr}
+ 420              		.cfi_def_cfa_offset 8
+ 421              		.cfi_offset 4, -8
+ 422              		.cfi_offset 14, -4
+ 423 000c 84B0     		sub	sp, sp, #16
+ 424              		.cfi_def_cfa_offset 24
+ 272:../system/src/davis_vantage/davis.c **** 
+ 273:../system/src/davis_vantage/davis.c **** 		switch(davis_rx_check_state) {
+ 425              		.loc 1 273 0
+ 426 000e 3F4B     		ldr	r3, .L53+4
+ 427 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 428 0012 032B     		cmp	r3, #3
+ 429 0014 76D8     		bhi	.L42
+ 430 0016 DFE803F0 		tbb	[pc, r3]
+ 431              	.L33:
+ 432 001a 02       		.byte	(.L32-.L33)/2
+ 433 001b 1B       		.byte	(.L34-.L33)/2
+ 434 001c 3A       		.byte	(.L35-.L33)/2
+ 435 001d 43       		.byte	(.L36-.L33)/2
+ 436              		.p2align 1
+ 437              	.L32:
+ 274:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_IDLE: {
+ 275:../system/src/davis_vantage/davis.c **** 
+ 276:../system/src/davis_vantage/davis.c **** 				// if station isn't avalaible switch to error w/o any further
+ 277:../system/src/davis_vantage/davis.c **** 				// comms
+ 278:../system/src/davis_vantage/davis.c **** 				if (davis_avaliable == 0) {
+ 438              		.loc 1 278 0
+ 439 001e 3C4B     		ldr	r3, .L53+8
+ 440 0020 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 441 0022 23B9     		cbnz	r3, .L37
+ 279:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_ERROR;
+ 442              		.loc 1 279 0
+ 443 0024 3B4B     		ldr	r3, .L53+12
+ 444 0026 0522     		movs	r2, #5
+ 445 0028 1A70     		strb	r2, [r3]
+ 446              	.LVL24:
+ 280:../system/src/davis_vantage/davis.c **** 
+ 281:../system/src/davis_vantage/davis.c **** 					retval = DAVIS_NOT_AVALIABLE;
+ 447              		.loc 1 281 0
+ 448 002a 0123     		movs	r3, #1
+ 449 002c 35E0     		b	.L29
+ 450              	.LVL25:
+ 451              	.L37:
+ 282:../system/src/davis_vantage/davis.c **** 				}
+ 283:../system/src/davis_vantage/davis.c **** 				else {
+ 284:../system/src/davis_vantage/davis.c **** 					// send the command
+ 285:../system/src/davis_vantage/davis.c **** 					srl_send_data(davis_serial_context, (uint8_t*)&rx_check, 1, sizeof(rx_check), 0);
+ 452              		.loc 1 285 0
+ 453 002e 3A4B     		ldr	r3, .L53+16
+ 454 0030 1868     		ldr	r0, [r3]
+ 455 0032 0024     		movs	r4, #0
+ 456 0034 0094     		str	r4, [sp]
+ 457 0036 0923     		movs	r3, #9
+ 458 0038 0122     		movs	r2, #1
+ 459 003a 3849     		ldr	r1, .L53+20
+ 460 003c FFF7FEFF 		bl	srl_send_data
+ 461              	.LVL26:
+ 286:../system/src/davis_vantage/davis.c **** 
+ 287:../system/src/davis_vantage/davis.c **** 					davis_rx_check_state = DAVIS_QUERY_SENDING_QUERY;
+ 462              		.loc 1 287 0
+ 463 0040 324B     		ldr	r3, .L53+4
+ 464 0042 0122     		movs	r2, #1
+ 465 0044 1A70     		strb	r2, [r3]
+ 288:../system/src/davis_vantage/davis.c **** 
+ 289:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_RXCHECK;
+ 466              		.loc 1 289 0
+ 467 0046 304B     		ldr	r3, .L53
+ 468 0048 0222     		movs	r2, #2
+ 469 004a 1A70     		strb	r2, [r3]
+ 269:../system/src/davis_vantage/davis.c **** 
+ 470              		.loc 1 269 0
+ 471 004c 2346     		mov	r3, r4
+ 472 004e 24E0     		b	.L29
+ 473              	.L34:
+ 290:../system/src/davis_vantage/davis.c **** 				}
+ 291:../system/src/davis_vantage/davis.c **** 
+ 292:../system/src/davis_vantage/davis.c **** 
+ 293:../system/src/davis_vantage/davis.c **** 				break;
+ 294:../system/src/davis_vantage/davis.c **** 			}
+ 295:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_SENDING_QUERY: {
+ 296:../system/src/davis_vantage/davis.c **** 
+ 297:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+ 474              		.loc 1 297 0
+ 475 0050 314B     		ldr	r3, .L53+16
+ 476 0052 1868     		ldr	r0, [r3]
+ 477 0054 90F84530 		ldrb	r3, [r0, #69]	@ zero_extendqisi2
+ 478 0058 012B     		cmp	r3, #1
+ 479 005a 07D0     		beq	.L49
+ 480              	.L38:
+ 298:../system/src/davis_vantage/davis.c **** 					// if transmission was successful trigger the reception
+ 299:../system/src/davis_vantage/davis.c **** 					srl_receive_data(davis_serial_context, RX_CHECK_LN_WITH_ACK, 0, 0, 0, 0, 0);
+ 300:../system/src/davis_vantage/davis.c **** 
+ 301:../system/src/davis_vantage/davis.c **** 					// switching the internal state
+ 302:../system/src/davis_vantage/davis.c **** 					davis_rx_check_state = DAVIS_QUERY_RECEIVING;
+ 303:../system/src/davis_vantage/davis.c **** 				}
+ 304:../system/src/davis_vantage/davis.c **** 
+ 305:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+ 481              		.loc 1 305 0
+ 482 005c 2E4B     		ldr	r3, .L53+16
+ 483 005e 1B68     		ldr	r3, [r3]
+ 484 0060 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
+ 485 0064 042B     		cmp	r3, #4
+ 486 0066 0DD0     		beq	.L50
+ 269:../system/src/davis_vantage/davis.c **** 
+ 487              		.loc 1 269 0
+ 488 0068 0023     		movs	r3, #0
+ 489 006a 16E0     		b	.L29
+ 490              	.L49:
+ 299:../system/src/davis_vantage/davis.c **** 
+ 491              		.loc 1 299 0
+ 492 006c 0022     		movs	r2, #0
+ 493 006e 0292     		str	r2, [sp, #8]
+ 494 0070 0192     		str	r2, [sp, #4]
+ 495 0072 0092     		str	r2, [sp]
+ 496 0074 1346     		mov	r3, r2
+ 497 0076 2021     		movs	r1, #32
+ 498 0078 FFF7FEFF 		bl	srl_receive_data
+ 499              	.LVL27:
+ 302:../system/src/davis_vantage/davis.c **** 				}
+ 500              		.loc 1 302 0
+ 501 007c 234B     		ldr	r3, .L53+4
+ 502 007e 0322     		movs	r2, #3
+ 503 0080 1A70     		strb	r2, [r3]
+ 504 0082 EBE7     		b	.L38
+ 505              	.L50:
+ 306:../system/src/davis_vantage/davis.c **** 					davis_rx_check_state = DAVIS_QUERY_ERROR;
+ 506              		.loc 1 306 0
+ 507 0084 214B     		ldr	r3, .L53+4
+ 508 0086 0522     		movs	r2, #5
+ 509 0088 1A70     		strb	r2, [r3]
+ 269:../system/src/davis_vantage/davis.c **** 
+ 510              		.loc 1 269 0
+ 511 008a 0023     		movs	r3, #0
+ 512 008c 05E0     		b	.L29
+ 513              	.L35:
+ 307:../system/src/davis_vantage/davis.c **** 				}
+ 308:../system/src/davis_vantage/davis.c **** 
+ 309:../system/src/davis_vantage/davis.c **** 				break;
+ 310:../system/src/davis_vantage/davis.c **** 			}
+ 311:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_RECEIVING_ACK: {
+ 312:../system/src/davis_vantage/davis.c **** 
+ 313:../system/src/davis_vantage/davis.c **** 				// this state is illegal as the wx station base sends
+ 314:../system/src/davis_vantage/davis.c **** 				// ACK and command result in one transaction
+ 315:../system/src/davis_vantage/davis.c **** 				davis_rx_check_state = DAVIS_QUERY_ERROR;
+ 514              		.loc 1 315 0
+ 515 008e 1F4B     		ldr	r3, .L53+4
+ 516 0090 0522     		movs	r2, #5
+ 517 0092 1A70     		strb	r2, [r3]
+ 316:../system/src/davis_vantage/davis.c **** 
+ 317:../system/src/davis_vantage/davis.c **** 				davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 518              		.loc 1 317 0
+ 519 0094 0023     		movs	r3, #0
+ 520 0096 1C4A     		ldr	r2, .L53
+ 521 0098 1370     		strb	r3, [r2]
+ 522              	.LVL28:
+ 523              	.L29:
+ 318:../system/src/davis_vantage/davis.c **** 
+ 319:../system/src/davis_vantage/davis.c **** 				break;
+ 320:../system/src/davis_vantage/davis.c **** 			}
+ 321:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_RECEIVING: {
+ 322:../system/src/davis_vantage/davis.c **** 
+ 323:../system/src/davis_vantage/davis.c **** 				// the result of RXCHECK command has variable lenght depends on counters values
+ 324:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_rx_state == SRL_RX_DONE || davis_serial_context->srl_rx_state == 
+ 325:../system/src/davis_vantage/davis.c **** 					// so check how many bytes has been received
+ 326:../system/src/davis_vantage/davis.c **** 					if (davis_serial_context->srl_rx_bytes_counter > RX_CHECK_MIN_LN_WITH_ACK) {
+ 327:../system/src/davis_vantage/davis.c **** 						// if the base unit transmitted more bytes than minimal length of RXCHECK is
+ 328:../system/src/davis_vantage/davis.c **** 						// we might assume that the content is somewhat correct
+ 329:../system/src/davis_vantage/davis.c **** 
+ 330:../system/src/davis_vantage/davis.c **** 						// parse the response
+ 331:../system/src/davis_vantage/davis.c **** 						retval = davis_parsers_rxcheck(
+ 332:../system/src/davis_vantage/davis.c **** 								srl_get_rx_buffer(davis_serial_context),
+ 333:../system/src/davis_vantage/davis.c **** 								davis_serial_context->srl_rx_bytes_counter,
+ 334:../system/src/davis_vantage/davis.c **** 								&davis_base_total_packet_received,
+ 335:../system/src/davis_vantage/davis.c **** 								&davis_base_total_packet_missed,
+ 336:../system/src/davis_vantage/davis.c **** 								&davis_base_resynchronizations,
+ 337:../system/src/davis_vantage/davis.c **** 								&davis_base_packets_in_the_row,
+ 338:../system/src/davis_vantage/davis.c **** 								&davis_base_crc_errors);
+ 339:../system/src/davis_vantage/davis.c **** 
+ 340:../system/src/davis_vantage/davis.c **** 						if (retval == DAVIS_PARSERS_OK) {
+ 341:../system/src/davis_vantage/davis.c **** 							davis_rx_check_state = DAVIS_QUERY_OK;
+ 342:../system/src/davis_vantage/davis.c **** 
+ 343:../system/src/davis_vantage/davis.c **** 							davis_last_good_rxcheck = main_get_master_time();
+ 344:../system/src/davis_vantage/davis.c **** 						}
+ 345:../system/src/davis_vantage/davis.c **** 						else
+ 346:../system/src/davis_vantage/davis.c **** 							davis_rx_check_state = DAVIS_QUERY_ERROR;
+ 347:../system/src/davis_vantage/davis.c **** 					}
+ 348:../system/src/davis_vantage/davis.c **** 					else {
+ 349:../system/src/davis_vantage/davis.c **** 						;
+ 350:../system/src/davis_vantage/davis.c **** 					}
+ 351:../system/src/davis_vantage/davis.c **** 
+ 352:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 353:../system/src/davis_vantage/davis.c **** 				}
+ 354:../system/src/davis_vantage/davis.c **** 
+ 355:../system/src/davis_vantage/davis.c **** 				break;
+ 356:../system/src/davis_vantage/davis.c **** 			}
+ 357:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_OK: {
+ 358:../system/src/davis_vantage/davis.c **** 				break;
+ 359:../system/src/davis_vantage/davis.c **** 			}
+ 360:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_ERROR: {
+ 361:../system/src/davis_vantage/davis.c **** 				break;
+ 362:../system/src/davis_vantage/davis.c **** 			}
+ 363:../system/src/davis_vantage/davis.c **** 		}
+ 364:../system/src/davis_vantage/davis.c **** 	}
+ 365:../system/src/davis_vantage/davis.c **** 	else {
+ 366:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_BUSY;
+ 367:../system/src/davis_vantage/davis.c **** 	}
+ 368:../system/src/davis_vantage/davis.c **** 
+ 369:../system/src/davis_vantage/davis.c **** 	return retval;
+ 370:../system/src/davis_vantage/davis.c **** }
+ 524              		.loc 1 370 0
+ 525 009a 1846     		mov	r0, r3
+ 526 009c 04B0     		add	sp, sp, #16
+ 527              		.cfi_remember_state
+ 528              		.cfi_def_cfa_offset 8
+ 529              		@ sp needed
+ 530 009e 10BD     		pop	{r4, pc}
+ 531              	.LVL29:
+ 532              	.L36:
+ 533              		.cfi_restore_state
+ 324:../system/src/davis_vantage/davis.c **** 					// so check how many bytes has been received
+ 534              		.loc 1 324 0
+ 535 00a0 1D4B     		ldr	r3, .L53+16
+ 536 00a2 1868     		ldr	r0, [r3]
+ 537 00a4 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
+ 538 00a8 043B     		subs	r3, r3, #4
+ 539 00aa DBB2     		uxtb	r3, r3
+ 540 00ac 012B     		cmp	r3, #1
+ 541 00ae 01D9     		bls	.L51
+ 269:../system/src/davis_vantage/davis.c **** 
+ 542              		.loc 1 269 0
+ 543 00b0 0023     		movs	r3, #0
+ 369:../system/src/davis_vantage/davis.c **** }
+ 544              		.loc 1 369 0
+ 545 00b2 F2E7     		b	.L29
+ 546              	.L51:
+ 326:../system/src/davis_vantage/davis.c **** 						// if the base unit transmitted more bytes than minimal length of RXCHECK is
+ 547              		.loc 1 326 0
+ 548 00b4 038C     		ldrh	r3, [r0, #32]
+ 549 00b6 102B     		cmp	r3, #16
+ 550 00b8 04D8     		bhi	.L52
+ 269:../system/src/davis_vantage/davis.c **** 
+ 551              		.loc 1 269 0
+ 552 00ba 0023     		movs	r3, #0
+ 553              	.LVL30:
+ 554              	.L39:
+ 352:../system/src/davis_vantage/davis.c **** 				}
+ 555              		.loc 1 352 0
+ 556 00bc 124A     		ldr	r2, .L53
+ 557 00be 0021     		movs	r1, #0
+ 558 00c0 1170     		strb	r1, [r2]
+ 559 00c2 EAE7     		b	.L29
+ 560              	.LVL31:
+ 561              	.L52:
+ 331:../system/src/davis_vantage/davis.c **** 								srl_get_rx_buffer(davis_serial_context),
+ 562              		.loc 1 331 0
+ 563 00c4 FFF7FEFF 		bl	srl_get_rx_buffer
+ 564              	.LVL32:
+ 333:../system/src/davis_vantage/davis.c **** 								&davis_base_total_packet_received,
+ 565              		.loc 1 333 0
+ 566 00c8 134B     		ldr	r3, .L53+16
+ 567 00ca 1B68     		ldr	r3, [r3]
+ 331:../system/src/davis_vantage/davis.c **** 								srl_get_rx_buffer(davis_serial_context),
+ 568              		.loc 1 331 0
+ 569 00cc 198C     		ldrh	r1, [r3, #32]
+ 570 00ce 144B     		ldr	r3, .L53+24
+ 571 00d0 0293     		str	r3, [sp, #8]
+ 572 00d2 144B     		ldr	r3, .L53+28
+ 573 00d4 0193     		str	r3, [sp, #4]
+ 574 00d6 144B     		ldr	r3, .L53+32
+ 575 00d8 0093     		str	r3, [sp]
+ 576 00da 144B     		ldr	r3, .L53+36
+ 577 00dc 144A     		ldr	r2, .L53+40
+ 578 00de FFF7FEFF 		bl	davis_parsers_rxcheck
+ 579              	.LVL33:
+ 340:../system/src/davis_vantage/davis.c **** 							davis_rx_check_state = DAVIS_QUERY_OK;
+ 580              		.loc 1 340 0
+ 581 00e2 0346     		mov	r3, r0
+ 582 00e4 38B9     		cbnz	r0, .L40
+ 341:../system/src/davis_vantage/davis.c **** 
+ 583              		.loc 1 341 0
+ 584 00e6 094A     		ldr	r2, .L53+4
+ 585 00e8 0421     		movs	r1, #4
+ 586 00ea 1170     		strb	r1, [r2]
+ 587              	.LBB6:
+ 588              	.LBB7:
+ 589              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA00"
+   9:../include/main.h **** #define SW_DATE "23052021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+ 590              		.loc 2 63 0
+ 591 00ec 114A     		ldr	r2, .L53+44
+ 592 00ee 1168     		ldr	r1, [r2]
+ 593              	.LBE7:
+ 594              	.LBE6:
+ 343:../system/src/davis_vantage/davis.c **** 						}
+ 595              		.loc 1 343 0
+ 596 00f0 114A     		ldr	r2, .L53+48
+ 597 00f2 1160     		str	r1, [r2]
+ 598 00f4 E2E7     		b	.L39
+ 599              	.L40:
+ 346:../system/src/davis_vantage/davis.c **** 					}
+ 600              		.loc 1 346 0
+ 601 00f6 054A     		ldr	r2, .L53+4
+ 602 00f8 0521     		movs	r1, #5
+ 603 00fa 1170     		strb	r1, [r2]
+ 604 00fc DEE7     		b	.L39
+ 605              	.LVL34:
+ 606              	.L41:
+ 607              		.cfi_def_cfa_offset 0
+ 608              		.cfi_restore 4
+ 609              		.cfi_restore 14
+ 366:../system/src/davis_vantage/davis.c **** 	}
+ 610              		.loc 1 366 0
+ 611 00fe 0423     		movs	r3, #4
+ 612              		.loc 1 370 0
+ 613 0100 1846     		mov	r0, r3
+ 614 0102 7047     		bx	lr
+ 615              	.L42:
+ 269:../system/src/davis_vantage/davis.c **** 
+ 616              		.loc 1 269 0
+ 617 0104 0023     		movs	r3, #0
+ 618 0106 C8E7     		b	.L29
+ 619              	.L54:
+ 620              		.align	2
+ 621              	.L53:
+ 622 0108 00000000 		.word	davis_global_state
+ 623 010c 00000000 		.word	davis_rx_check_state
+ 624 0110 00000000 		.word	davis_avaliable
+ 625 0114 00000000 		.word	davis_loop_state
+ 626 0118 00000000 		.word	davis_serial_context
+ 627 011c 00000000 		.word	.LANCHOR2
+ 628 0120 00000000 		.word	.LANCHOR5
+ 629 0124 00000000 		.word	.LANCHOR6
+ 630 0128 00000000 		.word	.LANCHOR7
+ 631 012c 00000000 		.word	.LANCHOR3
+ 632 0130 00000000 		.word	.LANCHOR4
+ 633 0134 00000000 		.word	master_time
+ 634 0138 00000000 		.word	.LANCHOR8
+ 635              		.cfi_endproc
+ 636              	.LFE354:
+ 638              		.section	.text.davis_loop_packet_pooler,"ax",%progbits
+ 639              		.align	1
+ 640              		.global	davis_loop_packet_pooler
+ 641              		.syntax unified
+ 642              		.thumb
+ 643              		.thumb_func
+ 644              		.fpu fpv4-sp-d16
+ 646              	davis_loop_packet_pooler:
+ 647              	.LFB355:
+ 371:../system/src/davis_vantage/davis.c **** 
+ 372:../system/src/davis_vantage/davis.c **** uint32_t davis_loop_packet_pooler(uint8_t* loop_avaliable_flag) {
+ 648              		.loc 1 372 0
+ 649              		.cfi_startproc
+ 650              		@ args = 0, pretend = 0, frame = 0
+ 651              		@ frame_needed = 0, uses_anonymous_args = 0
+ 652              	.LVL35:
+ 373:../system/src/davis_vantage/davis.c **** 
+ 374:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 375:../system/src/davis_vantage/davis.c **** 
+ 376:../system/src/davis_vantage/davis.c **** 	if (davis_global_state == DAVIS_GLOBAL_IDLE_OR_BLOCKING || davis_global_state == DAVIS_GLOBAL_LOOP
+ 653              		.loc 1 376 0
+ 654 0000 3B4B     		ldr	r3, .L78
+ 655 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 656 0004 012B     		cmp	r3, #1
+ 657 0006 6ED8     		bhi	.L66
+ 372:../system/src/davis_vantage/davis.c **** 
+ 658              		.loc 1 372 0
+ 659 0008 F0B5     		push	{r4, r5, r6, r7, lr}
+ 660              		.cfi_def_cfa_offset 20
+ 661              		.cfi_offset 4, -20
+ 662              		.cfi_offset 5, -16
+ 663              		.cfi_offset 6, -12
+ 664              		.cfi_offset 7, -8
+ 665              		.cfi_offset 14, -4
+ 666 000a 85B0     		sub	sp, sp, #20
+ 667              		.cfi_def_cfa_offset 40
+ 668 000c 0546     		mov	r5, r0
+ 377:../system/src/davis_vantage/davis.c **** 
+ 378:../system/src/davis_vantage/davis.c **** 		switch (davis_loop_state) {
+ 669              		.loc 1 378 0
+ 670 000e 394B     		ldr	r3, .L78+4
+ 671 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 672 0012 052B     		cmp	r3, #5
+ 673 0014 62D8     		bhi	.L57
+ 674 0016 DFE803F0 		tbb	[pc, r3]
+ 675              	.L59:
+ 676 001a 03       		.byte	(.L58-.L59)/2
+ 677 001b 21       		.byte	(.L60-.L59)/2
+ 678 001c 61       		.byte	(.L57-.L59)/2
+ 679 001d 42       		.byte	(.L61-.L59)/2
+ 680 001e 68       		.byte	(.L67-.L59)/2
+ 681 001f 5D       		.byte	(.L62-.L59)/2
+ 682              		.p2align 1
+ 683              	.L58:
+ 379:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_IDLE: {
+ 380:../system/src/davis_vantage/davis.c **** 
+ 381:../system/src/davis_vantage/davis.c **** 				// if station isn't avalaible switch to error w/o any further
+ 382:../system/src/davis_vantage/davis.c **** 				// comms
+ 383:../system/src/davis_vantage/davis.c **** 				if (davis_avaliable == 0) {
+ 684              		.loc 1 383 0
+ 685 0020 354B     		ldr	r3, .L78+8
+ 686 0022 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 687 0024 23B9     		cbnz	r3, .L63
+ 384:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_ERROR;
+ 688              		.loc 1 384 0
+ 689 0026 334B     		ldr	r3, .L78+4
+ 690 0028 0522     		movs	r2, #5
+ 691 002a 1A70     		strb	r2, [r3]
+ 692              	.LVL36:
+ 385:../system/src/davis_vantage/davis.c **** 
+ 386:../system/src/davis_vantage/davis.c **** 					retval = DAVIS_NOT_AVALIABLE;
+ 693              		.loc 1 386 0
+ 694 002c 0120     		movs	r0, #1
+ 695              	.LVL37:
+ 696 002e 5DE0     		b	.L55
+ 697              	.LVL38:
+ 698              	.L63:
+ 387:../system/src/davis_vantage/davis.c **** 				}
+ 388:../system/src/davis_vantage/davis.c **** 				else {
+ 389:../system/src/davis_vantage/davis.c **** 					// send the LOOP query
+ 390:../system/src/davis_vantage/davis.c **** 					srl_send_data(davis_serial_context, (uint8_t*)loop_command, 1, strlen(loop_command), 0);
+ 699              		.loc 1 390 0
+ 700 0030 324B     		ldr	r3, .L78+12
+ 701 0032 1F68     		ldr	r7, [r3]
+ 702 0034 324E     		ldr	r6, .L78+16
+ 703 0036 3046     		mov	r0, r6
+ 704              	.LVL39:
+ 705 0038 FFF7FEFF 		bl	strlen
+ 706              	.LVL40:
+ 707 003c 0024     		movs	r4, #0
+ 708 003e 0094     		str	r4, [sp]
+ 709 0040 83B2     		uxth	r3, r0
+ 710 0042 0122     		movs	r2, #1
+ 711 0044 3146     		mov	r1, r6
+ 712 0046 3846     		mov	r0, r7
+ 713 0048 FFF7FEFF 		bl	srl_send_data
+ 714              	.LVL41:
+ 391:../system/src/davis_vantage/davis.c **** 
+ 392:../system/src/davis_vantage/davis.c **** 					*loop_avaliable_flag = 0;
+ 715              		.loc 1 392 0
+ 716 004c 2C70     		strb	r4, [r5]
+ 393:../system/src/davis_vantage/davis.c **** 
+ 394:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_SENDING_QUERY;
+ 717              		.loc 1 394 0
+ 718 004e 0123     		movs	r3, #1
+ 719 0050 284A     		ldr	r2, .L78+4
+ 720 0052 1370     		strb	r3, [r2]
+ 395:../system/src/davis_vantage/davis.c **** 
+ 396:../system/src/davis_vantage/davis.c **** 					// set the global state to block another poolers to jam or screw
+ 397:../system/src/davis_vantage/davis.c **** 					// the transmission in another way
+ 398:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_LOOP;
+ 721              		.loc 1 398 0
+ 722 0054 264A     		ldr	r2, .L78
+ 723 0056 1370     		strb	r3, [r2]
+ 374:../system/src/davis_vantage/davis.c **** 
+ 724              		.loc 1 374 0
+ 725 0058 2046     		mov	r0, r4
+ 726 005a 47E0     		b	.L55
+ 727              	.LVL42:
+ 728              	.L60:
+ 399:../system/src/davis_vantage/davis.c **** 				}
+ 400:../system/src/davis_vantage/davis.c **** 
+ 401:../system/src/davis_vantage/davis.c **** 				break;
+ 402:../system/src/davis_vantage/davis.c **** 			}
+ 403:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_SENDING_QUERY: {
+ 404:../system/src/davis_vantage/davis.c **** 
+ 405:../system/src/davis_vantage/davis.c **** 				// if transmission was successful
+ 406:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_tx_state == SRL_TX_IDLE) {
+ 729              		.loc 1 406 0
+ 730 005c 274B     		ldr	r3, .L78+12
+ 731 005e 1868     		ldr	r0, [r3]
+ 732              	.LVL43:
+ 733 0060 90F84530 		ldrb	r3, [r0, #69]	@ zero_extendqisi2
+ 734 0064 012B     		cmp	r3, #1
+ 735 0066 07D0     		beq	.L74
+ 736              	.L64:
+ 407:../system/src/davis_vantage/davis.c **** 					// trigger the reception of ACK message
+ 408:../system/src/davis_vantage/davis.c **** 					srl_receive_data(davis_serial_context, LOOP_PACKET_LN, 0, 0, 0, 0, 0);
+ 409:../system/src/davis_vantage/davis.c **** 
+ 410:../system/src/davis_vantage/davis.c **** 					// switching the internal state
+ 411:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_RECEIVING;
+ 412:../system/src/davis_vantage/davis.c **** 				}
+ 413:../system/src/davis_vantage/davis.c **** 
+ 414:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_tx_state == SRL_TX_ERROR) {
+ 737              		.loc 1 414 0
+ 738 0068 244B     		ldr	r3, .L78+12
+ 739 006a 1B68     		ldr	r3, [r3]
+ 740 006c 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
+ 741 0070 042B     		cmp	r3, #4
+ 742 0072 0DD0     		beq	.L75
+ 374:../system/src/davis_vantage/davis.c **** 
+ 743              		.loc 1 374 0
+ 744 0074 0020     		movs	r0, #0
+ 745 0076 39E0     		b	.L55
+ 746              	.L74:
+ 408:../system/src/davis_vantage/davis.c **** 
+ 747              		.loc 1 408 0
+ 748 0078 0022     		movs	r2, #0
+ 749 007a 0292     		str	r2, [sp, #8]
+ 750 007c 0192     		str	r2, [sp, #4]
+ 751 007e 0092     		str	r2, [sp]
+ 752 0080 1346     		mov	r3, r2
+ 753 0082 6421     		movs	r1, #100
+ 754 0084 FFF7FEFF 		bl	srl_receive_data
+ 755              	.LVL44:
+ 411:../system/src/davis_vantage/davis.c **** 				}
+ 756              		.loc 1 411 0
+ 757 0088 1A4B     		ldr	r3, .L78+4
+ 758 008a 0322     		movs	r2, #3
+ 759 008c 1A70     		strb	r2, [r3]
+ 760 008e EBE7     		b	.L64
+ 761              	.L75:
+ 415:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_ERROR;
+ 762              		.loc 1 415 0
+ 763 0090 184B     		ldr	r3, .L78+4
+ 764 0092 0522     		movs	r2, #5
+ 765 0094 1A70     		strb	r2, [r3]
+ 416:../system/src/davis_vantage/davis.c **** 
+ 417:../system/src/davis_vantage/davis.c **** 					// unlock the global state to free the communication with
+ 418:../system/src/davis_vantage/davis.c **** 					// the station base
+ 419:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 766              		.loc 1 419 0
+ 767 0096 0020     		movs	r0, #0
+ 768 0098 154B     		ldr	r3, .L78
+ 769 009a 1870     		strb	r0, [r3]
+ 770 009c 26E0     		b	.L55
+ 771              	.LVL45:
+ 772              	.L61:
+ 420:../system/src/davis_vantage/davis.c **** 				}
+ 421:../system/src/davis_vantage/davis.c **** 
+ 422:../system/src/davis_vantage/davis.c **** 				break;
+ 423:../system/src/davis_vantage/davis.c **** 			}
+ 424:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_RECEIVING: {
+ 425:../system/src/davis_vantage/davis.c **** 				if (davis_serial_context->srl_rx_state == SRL_RX_DONE) {
+ 773              		.loc 1 425 0
+ 774 009e 174B     		ldr	r3, .L78+12
+ 775 00a0 1B68     		ldr	r3, [r3]
+ 776 00a2 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 777 00a6 042B     		cmp	r3, #4
+ 778 00a8 03D0     		beq	.L76
+ 426:../system/src/davis_vantage/davis.c **** 					// parse the loop packet
+ 427:../system/src/davis_vantage/davis.c **** 					*loop_avaliable_flag = 1;
+ 428:../system/src/davis_vantage/davis.c **** 
+ 429:../system/src/davis_vantage/davis.c **** 					davis_last_good_loop = main_get_master_time();
+ 430:../system/src/davis_vantage/davis.c **** 
+ 431:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 432:../system/src/davis_vantage/davis.c **** 				}
+ 433:../system/src/davis_vantage/davis.c **** 				else if (davis_serial_context->srl_rx_state == SRL_RX_ERROR) {
+ 779              		.loc 1 433 0
+ 780 00aa 052B     		cmp	r3, #5
+ 781 00ac 0BD0     		beq	.L77
+ 374:../system/src/davis_vantage/davis.c **** 
+ 782              		.loc 1 374 0
+ 783 00ae 0020     		movs	r0, #0
+ 784              	.LVL46:
+ 434:../system/src/davis_vantage/davis.c **** 					davis_loop_state = DAVIS_QUERY_ERROR;
+ 435:../system/src/davis_vantage/davis.c **** 
+ 436:../system/src/davis_vantage/davis.c **** 					// unlock the global state to free the communication with
+ 437:../system/src/davis_vantage/davis.c **** 					// the station base
+ 438:../system/src/davis_vantage/davis.c **** 					davis_global_state = DAVIS_GLOBAL_IDLE_OR_BLOCKING;
+ 439:../system/src/davis_vantage/davis.c **** 				}
+ 440:../system/src/davis_vantage/davis.c **** 
+ 441:../system/src/davis_vantage/davis.c **** 				break;
+ 442:../system/src/davis_vantage/davis.c **** 			}
+ 443:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_OK: {
+ 444:../system/src/davis_vantage/davis.c **** 
+ 445:../system/src/davis_vantage/davis.c **** 				break;
+ 446:../system/src/davis_vantage/davis.c **** 			}
+ 447:../system/src/davis_vantage/davis.c **** 			case DAVIS_QUERY_ERROR: {
+ 448:../system/src/davis_vantage/davis.c **** 				// clear data availability flag
+ 449:../system/src/davis_vantage/davis.c **** 				*loop_avaliable_flag = 0;
+ 450:../system/src/davis_vantage/davis.c **** 				break;
+ 451:../system/src/davis_vantage/davis.c **** 			}
+ 452:../system/src/davis_vantage/davis.c **** 			default: {
+ 453:../system/src/davis_vantage/davis.c **** 				davis_loop_state = DAVIS_QUERY_ERROR;
+ 454:../system/src/davis_vantage/davis.c **** 			}
+ 455:../system/src/davis_vantage/davis.c **** 		}
+ 456:../system/src/davis_vantage/davis.c **** 	}
+ 457:../system/src/davis_vantage/davis.c **** 	else {
+ 458:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_BUSY;
+ 459:../system/src/davis_vantage/davis.c **** 	}
+ 460:../system/src/davis_vantage/davis.c **** 
+ 461:../system/src/davis_vantage/davis.c **** 	return retval;
+ 785              		.loc 1 461 0
+ 786 00b0 1CE0     		b	.L55
+ 787              	.LVL47:
+ 788              	.L76:
+ 427:../system/src/davis_vantage/davis.c **** 
+ 789              		.loc 1 427 0
+ 790 00b2 0123     		movs	r3, #1
+ 791 00b4 0370     		strb	r3, [r0]
+ 792              	.LBB8:
+ 793              	.LBB9:
+ 794              		.loc 2 63 0
+ 795 00b6 134B     		ldr	r3, .L78+20
+ 796 00b8 1A68     		ldr	r2, [r3]
+ 797              	.LBE9:
+ 798              	.LBE8:
+ 429:../system/src/davis_vantage/davis.c **** 
+ 799              		.loc 1 429 0
+ 800 00ba 134B     		ldr	r3, .L78+24
+ 801 00bc 1A60     		str	r2, [r3]
+ 431:../system/src/davis_vantage/davis.c **** 				}
+ 802              		.loc 1 431 0
+ 803 00be 0020     		movs	r0, #0
+ 804              	.LVL48:
+ 805 00c0 0B4B     		ldr	r3, .L78
+ 806 00c2 1870     		strb	r0, [r3]
+ 807 00c4 12E0     		b	.L55
+ 808              	.LVL49:
+ 809              	.L77:
+ 434:../system/src/davis_vantage/davis.c **** 
+ 810              		.loc 1 434 0
+ 811 00c6 0B4B     		ldr	r3, .L78+4
+ 812 00c8 0522     		movs	r2, #5
+ 813 00ca 1A70     		strb	r2, [r3]
+ 438:../system/src/davis_vantage/davis.c **** 				}
+ 814              		.loc 1 438 0
+ 815 00cc 0020     		movs	r0, #0
+ 816              	.LVL50:
+ 817 00ce 084B     		ldr	r3, .L78
+ 818 00d0 1870     		strb	r0, [r3]
+ 819 00d2 0BE0     		b	.L55
+ 820              	.LVL51:
+ 821              	.L62:
+ 449:../system/src/davis_vantage/davis.c **** 				break;
+ 822              		.loc 1 449 0
+ 823 00d4 0023     		movs	r3, #0
+ 824 00d6 0370     		strb	r3, [r0]
+ 374:../system/src/davis_vantage/davis.c **** 
+ 825              		.loc 1 374 0
+ 826 00d8 1846     		mov	r0, r3
+ 827              	.LVL52:
+ 450:../system/src/davis_vantage/davis.c **** 			}
+ 828              		.loc 1 450 0
+ 829 00da 07E0     		b	.L55
+ 830              	.LVL53:
+ 831              	.L57:
+ 453:../system/src/davis_vantage/davis.c **** 			}
+ 832              		.loc 1 453 0
+ 833 00dc 054B     		ldr	r3, .L78+4
+ 834 00de 0522     		movs	r2, #5
+ 835 00e0 1A70     		strb	r2, [r3]
+ 374:../system/src/davis_vantage/davis.c **** 
+ 836              		.loc 1 374 0
+ 837 00e2 0020     		movs	r0, #0
+ 838              	.LVL54:
+ 839 00e4 02E0     		b	.L55
+ 840              	.LVL55:
+ 841              	.L66:
+ 842              		.cfi_def_cfa_offset 0
+ 843              		.cfi_restore 4
+ 844              		.cfi_restore 5
+ 845              		.cfi_restore 6
+ 846              		.cfi_restore 7
+ 847              		.cfi_restore 14
+ 458:../system/src/davis_vantage/davis.c **** 	}
+ 848              		.loc 1 458 0
+ 849 00e6 0420     		movs	r0, #4
+ 850              	.LVL56:
+ 462:../system/src/davis_vantage/davis.c **** }
+ 851              		.loc 1 462 0
+ 852 00e8 7047     		bx	lr
+ 853              	.LVL57:
+ 854              	.L67:
+ 855              		.cfi_def_cfa_offset 40
+ 856              		.cfi_offset 4, -20
+ 857              		.cfi_offset 5, -16
+ 858              		.cfi_offset 6, -12
+ 859              		.cfi_offset 7, -8
+ 860              		.cfi_offset 14, -4
+ 374:../system/src/davis_vantage/davis.c **** 
+ 861              		.loc 1 374 0
+ 862 00ea 0020     		movs	r0, #0
+ 863              	.LVL58:
+ 864              	.L55:
+ 865              		.loc 1 462 0
+ 866 00ec 05B0     		add	sp, sp, #20
+ 867              		.cfi_def_cfa_offset 20
+ 868              		@ sp needed
+ 869 00ee F0BD     		pop	{r4, r5, r6, r7, pc}
+ 870              	.LVL59:
+ 871              	.L79:
+ 872              		.align	2
+ 873              	.L78:
+ 874 00f0 00000000 		.word	davis_global_state
+ 875 00f4 00000000 		.word	davis_loop_state
+ 876 00f8 00000000 		.word	davis_avaliable
+ 877 00fc 00000000 		.word	davis_serial_context
+ 878 0100 00000000 		.word	.LANCHOR9
+ 879 0104 00000000 		.word	master_time
+ 880 0108 00000000 		.word	.LANCHOR10
+ 881              		.cfi_endproc
+ 882              	.LFE355:
+ 884              		.section	.text.davis_trigger_rxcheck_packet,"ax",%progbits
+ 885              		.align	1
+ 886              		.global	davis_trigger_rxcheck_packet
+ 887              		.syntax unified
+ 888              		.thumb
+ 889              		.thumb_func
+ 890              		.fpu fpv4-sp-d16
+ 892              	davis_trigger_rxcheck_packet:
+ 893              	.LFB356:
+ 463:../system/src/davis_vantage/davis.c **** 
+ 464:../system/src/davis_vantage/davis.c **** uint32_t davis_trigger_rxcheck_packet(void) {
+ 894              		.loc 1 464 0
+ 895              		.cfi_startproc
+ 896              		@ args = 0, pretend = 0, frame = 0
+ 897              		@ frame_needed = 0, uses_anonymous_args = 0
+ 898              		@ link register save eliminated.
+ 465:../system/src/davis_vantage/davis.c **** 	davis_rx_check_state = DAVIS_QUERY_IDLE;
+ 899              		.loc 1 465 0
+ 900 0000 0020     		movs	r0, #0
+ 901 0002 014B     		ldr	r3, .L81
+ 902 0004 1870     		strb	r0, [r3]
+ 466:../system/src/davis_vantage/davis.c **** 
+ 467:../system/src/davis_vantage/davis.c **** 	return DAVIS_OK;
+ 468:../system/src/davis_vantage/davis.c **** }
+ 903              		.loc 1 468 0
+ 904 0006 7047     		bx	lr
+ 905              	.L82:
+ 906              		.align	2
+ 907              	.L81:
+ 908 0008 00000000 		.word	davis_rx_check_state
+ 909              		.cfi_endproc
+ 910              	.LFE356:
+ 912              		.section	.text.davis_trigger_loop_packet,"ax",%progbits
+ 913              		.align	1
+ 914              		.global	davis_trigger_loop_packet
+ 915              		.syntax unified
+ 916              		.thumb
+ 917              		.thumb_func
+ 918              		.fpu fpv4-sp-d16
+ 920              	davis_trigger_loop_packet:
+ 921              	.LFB357:
+ 469:../system/src/davis_vantage/davis.c **** 
+ 470:../system/src/davis_vantage/davis.c **** /** This function will be called from the for(;;) loop in main.c every
+ 471:../system/src/davis_vantage/davis.c ****  * ten seconds to trigger the pooler to query for next 'LOOP' packet
+ 472:../system/src/davis_vantage/davis.c ****  *
+ 473:../system/src/davis_vantage/davis.c ****  */
+ 474:../system/src/davis_vantage/davis.c **** uint32_t davis_trigger_loop_packet(void) {
+ 922              		.loc 1 474 0
+ 923              		.cfi_startproc
+ 924              		@ args = 0, pretend = 0, frame = 0
+ 925              		@ frame_needed = 0, uses_anonymous_args = 0
+ 926              		@ link register save eliminated.
+ 927              	.LVL60:
+ 475:../system/src/davis_vantage/davis.c **** 
+ 476:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 477:../system/src/davis_vantage/davis.c **** 
+ 478:../system/src/davis_vantage/davis.c **** 	davis_loop_state = DAVIS_QUERY_IDLE;
+ 928              		.loc 1 478 0
+ 929 0000 0020     		movs	r0, #0
+ 930 0002 014B     		ldr	r3, .L84
+ 931 0004 1870     		strb	r0, [r3]
+ 479:../system/src/davis_vantage/davis.c **** 
+ 480:../system/src/davis_vantage/davis.c **** 	return retval;
+ 481:../system/src/davis_vantage/davis.c **** }
+ 932              		.loc 1 481 0
+ 933 0006 7047     		bx	lr
+ 934              	.L85:
+ 935              		.align	2
+ 936              	.L84:
+ 937 0008 00000000 		.word	davis_loop_state
+ 938              		.cfi_endproc
+ 939              	.LFE357:
+ 941              		.section	.text.davis_leave_receiving_screen,"ax",%progbits
+ 942              		.align	1
+ 943              		.global	davis_leave_receiving_screen
+ 944              		.syntax unified
+ 945              		.thumb
+ 946              		.thumb_func
+ 947              		.fpu fpv4-sp-d16
+ 949              	davis_leave_receiving_screen:
+ 950              	.LFB358:
+ 482:../system/src/davis_vantage/davis.c **** 
+ 483:../system/src/davis_vantage/davis.c **** /**
+ 484:../system/src/davis_vantage/davis.c ****  * This function will send 'RXTEST' command which resets the counters regarding
+ 485:../system/src/davis_vantage/davis.c ****  * communication with Outdoor ODU and also leaves the 'Receiving...' if this is a
+ 486:../system/src/davis_vantage/davis.c ****  * state the weather station is when the function is called. This function has blocking
+ 487:../system/src/davis_vantage/davis.c ****  * I/O
+ 488:../system/src/davis_vantage/davis.c ****  */
+ 489:../system/src/davis_vantage/davis.c **** uint32_t davis_leave_receiving_screen(void) {
+ 951              		.loc 1 489 0
+ 952              		.cfi_startproc
+ 953              		@ args = 0, pretend = 0, frame = 8
+ 954              		@ frame_needed = 0, uses_anonymous_args = 0
+ 955 0000 30B5     		push	{r4, r5, lr}
+ 956              		.cfi_def_cfa_offset 12
+ 957              		.cfi_offset 4, -12
+ 958              		.cfi_offset 5, -8
+ 959              		.cfi_offset 14, -4
+ 960 0002 87B0     		sub	sp, sp, #28
+ 961              		.cfi_def_cfa_offset 40
+ 490:../system/src/davis_vantage/davis.c **** 
+ 491:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 962              		.loc 1 491 0
+ 963 0004 0024     		movs	r4, #0
+ 964 0006 0594     		str	r4, [sp, #20]
+ 492:../system/src/davis_vantage/davis.c **** 
+ 493:../system/src/davis_vantage/davis.c **** 	uint8_t transmission_result;
+ 494:../system/src/davis_vantage/davis.c **** 
+ 495:../system/src/davis_vantage/davis.c **** 	transmission_result = srl_send_data(davis_serial_context, (uint8_t*)&leave_rx_screen, 1, 1, 0);
+ 965              		.loc 1 495 0
+ 966 0008 0E4D     		ldr	r5, .L90
+ 967 000a 0094     		str	r4, [sp]
+ 968 000c 0123     		movs	r3, #1
+ 969 000e 1A46     		mov	r2, r3
+ 970 0010 0D49     		ldr	r1, .L90+4
+ 971 0012 2868     		ldr	r0, [r5]
+ 972 0014 FFF7FEFF 		bl	srl_send_data
+ 973              	.LVL61:
+ 496:../system/src/davis_vantage/davis.c **** 
+ 497:../system/src/davis_vantage/davis.c **** 	srl_wait_for_tx_completion(davis_serial_context);
+ 974              		.loc 1 497 0
+ 975 0018 2868     		ldr	r0, [r5]
+ 976 001a FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 977              	.LVL62:
+ 498:../system/src/davis_vantage/davis.c **** 
+ 499:../system/src/davis_vantage/davis.c **** 	// wait for the response from the wx console only to clear the input buffer
+ 500:../system/src/davis_vantage/davis.c **** 	transmission_result = srl_receive_data_with_instant_timeout(davis_serial_context, 2, 0, 0, 0, 0, 0
+ 978              		.loc 1 500 0
+ 979 001e 2868     		ldr	r0, [r5]
+ 980 0020 0294     		str	r4, [sp, #8]
+ 981 0022 0194     		str	r4, [sp, #4]
+ 982 0024 0094     		str	r4, [sp]
+ 983 0026 2346     		mov	r3, r4
+ 984 0028 2246     		mov	r2, r4
+ 985 002a 0221     		movs	r1, #2
+ 986 002c FFF7FEFF 		bl	srl_receive_data_with_instant_timeout
+ 987              	.LVL63:
+ 501:../system/src/davis_vantage/davis.c **** 
+ 502:../system/src/davis_vantage/davis.c **** 	if (transmission_result == SRL_OK ) {
+ 988              		.loc 1 502 0
+ 989 0030 10B1     		cbz	r0, .L89
+ 990              	.LVL64:
+ 991              	.L87:
+ 503:../system/src/davis_vantage/davis.c **** 		srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+ 504:../system/src/davis_vantage/davis.c **** 
+ 505:../system/src/davis_vantage/davis.c **** 	}
+ 506:../system/src/davis_vantage/davis.c **** 
+ 507:../system/src/davis_vantage/davis.c **** 	return retval;
+ 508:../system/src/davis_vantage/davis.c **** }
+ 992              		.loc 1 508 0
+ 993 0032 0598     		ldr	r0, [sp, #20]
+ 994 0034 07B0     		add	sp, sp, #28
+ 995              		.cfi_remember_state
+ 996              		.cfi_def_cfa_offset 12
+ 997              		@ sp needed
+ 998 0036 30BD     		pop	{r4, r5, pc}
+ 999              	.LVL65:
+ 1000              	.L89:
+ 1001              		.cfi_restore_state
+ 503:../system/src/davis_vantage/davis.c **** 		srl_wait_for_rx_completion_or_timeout(davis_serial_context, ((uint8_t*)&retval));
+ 1002              		.loc 1 503 0
+ 1003 0038 05A9     		add	r1, sp, #20
+ 1004 003a 2868     		ldr	r0, [r5]
+ 1005              	.LVL66:
+ 1006 003c FFF7FEFF 		bl	srl_wait_for_rx_completion_or_timeout
+ 1007              	.LVL67:
+ 1008 0040 F7E7     		b	.L87
+ 1009              	.L91:
+ 1010 0042 00BF     		.align	2
+ 1011              	.L90:
+ 1012 0044 00000000 		.word	davis_serial_context
+ 1013 0048 00000000 		.word	.LANCHOR11
+ 1014              		.cfi_endproc
+ 1015              	.LFE358:
+ 1017              		.section	.text.davis_control_backlight,"ax",%progbits
+ 1018              		.align	1
+ 1019              		.global	davis_control_backlight
+ 1020              		.syntax unified
+ 1021              		.thumb
+ 1022              		.thumb_func
+ 1023              		.fpu fpv4-sp-d16
+ 1025              	davis_control_backlight:
+ 1026              	.LFB359:
+ 509:../system/src/davis_vantage/davis.c **** 
+ 510:../system/src/davis_vantage/davis.c **** /** This function sends the "LAMPS" commands to the station base unit
+ 511:../system/src/davis_vantage/davis.c ****  * which controls the backliht of main LCD screen. Warning! this call
+ 512:../system/src/davis_vantage/davis.c ****  * has blocking I/O and waits until the transmission through RS232 port
+ 513:../system/src/davis_vantage/davis.c ****  * finish
+ 514:../system/src/davis_vantage/davis.c ****  *
+ 515:../system/src/davis_vantage/davis.c ****  *
+ 516:../system/src/davis_vantage/davis.c ****  */
+ 517:../system/src/davis_vantage/davis.c **** uint32_t davis_control_backlight(uint8_t state) {
+ 1027              		.loc 1 517 0
+ 1028              		.cfi_startproc
+ 1029              		@ args = 0, pretend = 0, frame = 0
+ 1030              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1031              	.LVL68:
+ 1032 0000 30B5     		push	{r4, r5, lr}
+ 1033              		.cfi_def_cfa_offset 12
+ 1034              		.cfi_offset 4, -12
+ 1035              		.cfi_offset 5, -8
+ 1036              		.cfi_offset 14, -4
+ 1037 0002 83B0     		sub	sp, sp, #12
+ 1038              		.cfi_def_cfa_offset 24
+ 1039              	.LVL69:
+ 518:../system/src/davis_vantage/davis.c **** 
+ 519:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 520:../system/src/davis_vantage/davis.c **** 
+ 521:../system/src/davis_vantage/davis.c **** 	uint8_t serial_result = SRL_UNINITIALIZED;
+ 522:../system/src/davis_vantage/davis.c **** 
+ 523:../system/src/davis_vantage/davis.c **** 	// switch over desired backlight state
+ 524:../system/src/davis_vantage/davis.c **** 	if (state == 0) {
+ 1040              		.loc 1 524 0
+ 1041 0004 20B1     		cbz	r0, .L99
+ 525:../system/src/davis_vantage/davis.c **** 		serial_result = srl_send_data(davis_serial_context, (uint8_t*)lamps_off, 1, strlen(lamps_off), 0)
+ 526:../system/src/davis_vantage/davis.c **** 	}
+ 527:../system/src/davis_vantage/davis.c **** 	else if (state == 1) {
+ 1042              		.loc 1 527 0
+ 1043 0006 0128     		cmp	r0, #1
+ 1044 0008 17D0     		beq	.L100
+ 528:../system/src/davis_vantage/davis.c **** 		serial_result = srl_send_data(davis_serial_context, (uint8_t*)lamps_on, 1, strlen(lamps_on), 0);
+ 529:../system/src/davis_vantage/davis.c **** 
+ 530:../system/src/davis_vantage/davis.c **** 	}
+ 531:../system/src/davis_vantage/davis.c **** 	else {
+ 532:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_WRONG_PARAMETER;
+ 533:../system/src/davis_vantage/davis.c **** 	}
+ 534:../system/src/davis_vantage/davis.c **** 
+ 535:../system/src/davis_vantage/davis.c **** 	// check the transmission request result
+ 536:../system/src/davis_vantage/davis.c **** 	if (serial_result == SRL_OK) {
+ 537:../system/src/davis_vantage/davis.c **** 		// if it was OK wait until the transmission will finish
+ 538:../system/src/davis_vantage/davis.c **** 		srl_wait_for_tx_completion(davis_serial_context);
+ 539:../system/src/davis_vantage/davis.c **** 	}
+ 540:../system/src/davis_vantage/davis.c **** 	else {
+ 541:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_GEN_FAIL;
+ 1045              		.loc 1 541 0
+ 1046 000a 7F20     		movs	r0, #127
+ 1047              	.LVL70:
+ 1048              	.L92:
+ 542:../system/src/davis_vantage/davis.c **** 	}
+ 543:../system/src/davis_vantage/davis.c **** 
+ 544:../system/src/davis_vantage/davis.c **** 	return retval;
+ 545:../system/src/davis_vantage/davis.c **** }
+ 1049              		.loc 1 545 0
+ 1050 000c 03B0     		add	sp, sp, #12
+ 1051              		.cfi_remember_state
+ 1052              		.cfi_def_cfa_offset 12
+ 1053              		@ sp needed
+ 1054 000e 30BD     		pop	{r4, r5, pc}
+ 1055              	.LVL71:
+ 1056              	.L99:
+ 1057              		.cfi_restore_state
+ 525:../system/src/davis_vantage/davis.c **** 	}
+ 1058              		.loc 1 525 0
+ 1059 0010 124B     		ldr	r3, .L101
+ 1060 0012 1D68     		ldr	r5, [r3]
+ 1061 0014 124C     		ldr	r4, .L101+4
+ 1062 0016 2046     		mov	r0, r4
+ 1063              	.LVL72:
+ 1064 0018 FFF7FEFF 		bl	strlen
+ 1065              	.LVL73:
+ 1066 001c 0023     		movs	r3, #0
+ 1067 001e 0093     		str	r3, [sp]
+ 1068 0020 83B2     		uxth	r3, r0
+ 1069 0022 0122     		movs	r2, #1
+ 1070 0024 2146     		mov	r1, r4
+ 1071 0026 2846     		mov	r0, r5
+ 1072 0028 FFF7FEFF 		bl	srl_send_data
+ 1073              	.LVL74:
+ 1074              	.L94:
+ 536:../system/src/davis_vantage/davis.c **** 		// if it was OK wait until the transmission will finish
+ 1075              		.loc 1 536 0
+ 1076 002c A0B9     		cbnz	r0, .L97
+ 538:../system/src/davis_vantage/davis.c **** 	}
+ 1077              		.loc 1 538 0
+ 1078 002e 0B4B     		ldr	r3, .L101
+ 1079 0030 1868     		ldr	r0, [r3]
+ 1080              	.LVL75:
+ 1081 0032 FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 1082              	.LVL76:
+ 1083 0036 0020     		movs	r0, #0
+ 1084 0038 E8E7     		b	.L92
+ 1085              	.LVL77:
+ 1086              	.L100:
+ 528:../system/src/davis_vantage/davis.c **** 
+ 1087              		.loc 1 528 0
+ 1088 003a 084B     		ldr	r3, .L101
+ 1089 003c 1D68     		ldr	r5, [r3]
+ 1090 003e 094C     		ldr	r4, .L101+8
+ 1091 0040 2046     		mov	r0, r4
+ 1092              	.LVL78:
+ 1093 0042 FFF7FEFF 		bl	strlen
+ 1094              	.LVL79:
+ 1095 0046 0023     		movs	r3, #0
+ 1096 0048 0093     		str	r3, [sp]
+ 1097 004a 83B2     		uxth	r3, r0
+ 1098 004c 0122     		movs	r2, #1
+ 1099 004e 2146     		mov	r1, r4
+ 1100 0050 2846     		mov	r0, r5
+ 1101 0052 FFF7FEFF 		bl	srl_send_data
+ 1102              	.LVL80:
+ 1103 0056 E9E7     		b	.L94
+ 1104              	.L97:
+ 541:../system/src/davis_vantage/davis.c **** 	}
+ 1105              		.loc 1 541 0
+ 1106 0058 7F20     		movs	r0, #127
+ 1107              	.LVL81:
+ 544:../system/src/davis_vantage/davis.c **** }
+ 1108              		.loc 1 544 0
+ 1109 005a D7E7     		b	.L92
+ 1110              	.L102:
+ 1111              		.align	2
+ 1112              	.L101:
+ 1113 005c 00000000 		.word	davis_serial_context
+ 1114 0060 00000000 		.word	.LANCHOR12
+ 1115 0064 00000000 		.word	.LANCHOR13
+ 1116              		.cfi_endproc
+ 1117              	.LFE359:
+ 1119              		.section	.text.davis_get_temperature,"ax",%progbits
+ 1120              		.align	1
+ 1121              		.global	davis_get_temperature
+ 1122              		.syntax unified
+ 1123              		.thumb
+ 1124              		.thumb_func
+ 1125              		.fpu fpv4-sp-d16
+ 1127              	davis_get_temperature:
+ 1128              	.LFB360:
+ 546:../system/src/davis_vantage/davis.c **** 
+ 547:../system/src/davis_vantage/davis.c **** uint32_t davis_get_temperature(davis_loop_t* input, float* output) {
+ 1129              		.loc 1 547 0
+ 1130              		.cfi_startproc
+ 1131              		@ args = 0, pretend = 0, frame = 0
+ 1132              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1133              		@ link register save eliminated.
+ 1134              	.LVL82:
+ 548:../system/src/davis_vantage/davis.c **** 
+ 549:../system/src/davis_vantage/davis.c **** 	// The value is sent as 10 th of a degree in F. For example, 795 is
+ 550:../system/src/davis_vantage/davis.c **** 	// returned for 79.5°F.
+ 551:../system/src/davis_vantage/davis.c **** 
+ 552:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 553:../system/src/davis_vantage/davis.c **** 
+ 554:../system/src/davis_vantage/davis.c **** 	float out = 0.0f;
+ 555:../system/src/davis_vantage/davis.c **** 
+ 556:../system/src/davis_vantage/davis.c **** 	out = (float)input->outside_temperature / 10.0f;
+ 1135              		.loc 1 556 0
+ 1136 0000 8388     		ldrh	r3, [r0, #4]
+ 1137 0002 07EE103A 		vmov	s14, r3	@ int
+ 1138 0006 B8EE477A 		vcvt.f32.u32	s14, s14
+ 1139 000a F2EE046A 		vmov.f32	s13, #1.0e+1
+ 1140 000e C7EE267A 		vdiv.f32	s15, s14, s13
+ 1141              	.LVL83:
+ 557:../system/src/davis_vantage/davis.c **** 
+ 558:../system/src/davis_vantage/davis.c **** 	out = 0.56f * (out - 32.0f);
+ 1142              		.loc 1 558 0
+ 1143 0012 9FED067A 		vldr.32	s14, .L104
+ 1144 0016 77EEC77A 		vsub.f32	s15, s15, s14
+ 1145              	.LVL84:
+ 1146 001a 9FED057A 		vldr.32	s14, .L104+4
+ 1147 001e 67EE877A 		vmul.f32	s15, s15, s14
+ 1148              	.LVL85:
+ 559:../system/src/davis_vantage/davis.c **** 
+ 560:../system/src/davis_vantage/davis.c **** 	*output = out;
+ 1149              		.loc 1 560 0
+ 1150 0022 C1ED007A 		vstr.32	s15, [r1]
+ 561:../system/src/davis_vantage/davis.c **** 
+ 562:../system/src/davis_vantage/davis.c **** 	return retval;
+ 563:../system/src/davis_vantage/davis.c **** }
+ 1151              		.loc 1 563 0
+ 1152 0026 0020     		movs	r0, #0
+ 1153              	.LVL86:
+ 1154 0028 7047     		bx	lr
+ 1155              	.L105:
+ 1156 002a 00BF     		.align	2
+ 1157              	.L104:
+ 1158 002c 00000042 		.word	1107296256
+ 1159 0030 295C0F3F 		.word	1057971241
+ 1160              		.cfi_endproc
+ 1161              	.LFE360:
+ 1163              		.section	.text.davis_get_pressure,"ax",%progbits
+ 1164              		.align	1
+ 1165              		.global	davis_get_pressure
+ 1166              		.syntax unified
+ 1167              		.thumb
+ 1168              		.thumb_func
+ 1169              		.fpu fpv4-sp-d16
+ 1171              	davis_get_pressure:
+ 1172              	.LFB361:
+ 564:../system/src/davis_vantage/davis.c **** 
+ 565:../system/src/davis_vantage/davis.c **** uint32_t davis_get_pressure(davis_loop_t* input, float* output) {
+ 1173              		.loc 1 565 0
+ 1174              		.cfi_startproc
+ 1175              		@ args = 0, pretend = 0, frame = 0
+ 1176              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1177              		@ link register save eliminated.
+ 1178              	.LVL87:
+ 566:../system/src/davis_vantage/davis.c **** 
+ 567:../system/src/davis_vantage/davis.c **** 	// Current Barometer. Units are (in Hg / 1000). The barometric
+ 568:../system/src/davis_vantage/davis.c **** 	// value should be between 20 inches and 32.5 inches in Vantage
+ 569:../system/src/davis_vantage/davis.c **** 	// Pro and between 20 inches and 32.5 inches in both Vantatge Pro
+ 570:../system/src/davis_vantage/davis.c **** 	// Vantage Pro2. Values outside these ranges will not be logged.
+ 571:../system/src/davis_vantage/davis.c **** 
+ 572:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 573:../system/src/davis_vantage/davis.c **** 
+ 574:../system/src/davis_vantage/davis.c **** 	float out = 0.0f;
+ 575:../system/src/davis_vantage/davis.c **** 
+ 576:../system/src/davis_vantage/davis.c **** 	out = (float)input->barometer * 1000.0f;
+ 1179              		.loc 1 576 0
+ 1180 0000 0388     		ldrh	r3, [r0]
+ 1181 0002 07EE903A 		vmov	s15, r3	@ int
+ 1182 0006 F8EE677A 		vcvt.f32.u32	s15, s15
+ 1183 000a 9FED067A 		vldr.32	s14, .L107
+ 1184 000e 67EE877A 		vmul.f32	s15, s15, s14
+ 1185              	.LVL88:
+ 577:../system/src/davis_vantage/davis.c **** 
+ 578:../system/src/davis_vantage/davis.c **** 	out *= 33.86f;
+ 1186              		.loc 1 578 0
+ 1187 0012 9FED057A 		vldr.32	s14, .L107+4
+ 1188 0016 67EE877A 		vmul.f32	s15, s15, s14
+ 1189              	.LVL89:
+ 579:../system/src/davis_vantage/davis.c **** 
+ 580:../system/src/davis_vantage/davis.c **** 	*output = out;
+ 1190              		.loc 1 580 0
+ 1191 001a C1ED007A 		vstr.32	s15, [r1]
+ 581:../system/src/davis_vantage/davis.c **** 
+ 582:../system/src/davis_vantage/davis.c **** 	return retval;
+ 583:../system/src/davis_vantage/davis.c **** }
+ 1192              		.loc 1 583 0
+ 1193 001e 0020     		movs	r0, #0
+ 1194              	.LVL90:
+ 1195 0020 7047     		bx	lr
+ 1196              	.L108:
+ 1197 0022 00BF     		.align	2
+ 1198              	.L107:
+ 1199 0024 00007A44 		.word	1148846080
+ 1200 0028 A4700742 		.word	1107783844
+ 1201              		.cfi_endproc
+ 1202              	.LFE361:
+ 1204              		.section	.text.davis_get_wind,"ax",%progbits
+ 1205              		.align	1
+ 1206              		.global	davis_get_wind
+ 1207              		.syntax unified
+ 1208              		.thumb
+ 1209              		.thumb_func
+ 1210              		.fpu fpv4-sp-d16
+ 1212              	davis_get_wind:
+ 1213              	.LFB362:
+ 584:../system/src/davis_vantage/davis.c **** 
+ 585:../system/src/davis_vantage/davis.c **** uint32_t davis_get_wind(davis_loop_t* input, uint16_t* speed, uint16_t* gusts, uint16_t* direction)
+ 1214              		.loc 1 585 0
+ 1215              		.cfi_startproc
+ 1216              		@ args = 0, pretend = 0, frame = 0
+ 1217              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1218              		@ link register save eliminated.
+ 1219              	.LVL91:
+ 586:../system/src/davis_vantage/davis.c **** 
+ 587:../system/src/davis_vantage/davis.c **** 	uint32_t retval = DAVIS_OK;
+ 588:../system/src/davis_vantage/davis.c **** 
+ 589:../system/src/davis_vantage/davis.c **** 	// It is a two byte unsigned value from 1 to 360 degrees. (0° is no
+ 590:../system/src/davis_vantage/davis.c **** 	// wind data, 90° is East, 180° is South, 270° is West and 360° is
+ 591:../system/src/davis_vantage/davis.c **** 	// north)
+ 592:../system/src/davis_vantage/davis.c **** 	*direction = input->wind_direction - 1;
+ 1220              		.loc 1 592 0
+ 1221 0000 8289     		ldrh	r2, [r0, #12]
+ 1222              	.LVL92:
+ 1223 0002 013A     		subs	r2, r2, #1
+ 1224 0004 1A80     		strh	r2, [r3]	@ movhi
+ 593:../system/src/davis_vantage/davis.c **** 
+ 594:../system/src/davis_vantage/davis.c **** 	// It is a byte unsigned value in mph. If the wind speed is dashed
+ 595:../system/src/davis_vantage/davis.c **** 	// because it lost synchronization with the radio or due to some
+ 596:../system/src/davis_vantage/davis.c **** 	// other reason, the wind speed is forced to be 0.
+ 597:../system/src/davis_vantage/davis.c **** 
+ 598:../system/src/davis_vantage/davis.c **** 	// this will give a value in 0.01 m/s incremenets
+ 599:../system/src/davis_vantage/davis.c **** 	*speed = ((input->wind_speed) * 45);
+ 1225              		.loc 1 599 0
+ 1226 0006 C388     		ldrh	r3, [r0, #6]
+ 1227              	.LVL93:
+ 1228 0008 03EB4303 		add	r3, r3, r3, lsl #1
+ 1229 000c C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1230 0010 9BB2     		uxth	r3, r3
+ 600:../system/src/davis_vantage/davis.c **** 
+ 601:../system/src/davis_vantage/davis.c **** 	// this will truncate the precision to .1 of m/s
+ 602:../system/src/davis_vantage/davis.c **** 	*speed = (uint16_t)((uint16_t)(*speed) / 10u);
+ 1231              		.loc 1 602 0
+ 1232 0012 074A     		ldr	r2, .L113
+ 1233 0014 A2FB0323 		umull	r2, r3, r2, r3
+ 1234 0018 DB08     		lsrs	r3, r3, #3
+ 1235 001a 0B80     		strh	r3, [r1]	@ movhi
+ 603:../system/src/davis_vantage/davis.c **** 
+ 604:../system/src/davis_vantage/davis.c **** 	if (input->wind_direction == 0 || input->wind_direction > 360)
+ 1236              		.loc 1 604 0
+ 1237 001c 8389     		ldrh	r3, [r0, #12]
+ 1238 001e 013B     		subs	r3, r3, #1
+ 1239 0020 9BB2     		uxth	r3, r3
+ 1240 0022 B3F5B47F 		cmp	r3, #360
+ 1241 0026 01D3     		bcc	.L112
+ 605:../system/src/davis_vantage/davis.c **** 		retval = DAVIS_NOT_AVALIABLE;
+ 1242              		.loc 1 605 0
+ 1243 0028 0120     		movs	r0, #1
+ 1244              	.LVL94:
+ 606:../system/src/davis_vantage/davis.c **** 
+ 607:../system/src/davis_vantage/davis.c **** 	return retval;
+ 608:../system/src/davis_vantage/davis.c **** }
+ 1245              		.loc 1 608 0
+ 1246 002a 7047     		bx	lr
+ 1247              	.LVL95:
+ 1248              	.L112:
+ 587:../system/src/davis_vantage/davis.c **** 
+ 1249              		.loc 1 587 0
+ 1250 002c 0020     		movs	r0, #0
+ 1251              	.LVL96:
+ 1252 002e 7047     		bx	lr
+ 1253              	.L114:
+ 1254              		.align	2
+ 1255              	.L113:
+ 1256 0030 CDCCCCCC 		.word	-858993459
+ 1257              		.cfi_endproc
+ 1258              	.LFE362:
+ 1260              		.global	davis_last_good_rxcheck
+ 1261              		.global	davis_last_good_loop
+ 1262              		.global	davis_base_crc_errors
+ 1263              		.global	davis_base_packets_in_the_row
+ 1264              		.global	davis_base_resynchronizations
+ 1265              		.global	davis_base_total_packet_missed
+ 1266              		.global	davis_base_total_packet_received
+ 1267              		.comm	davis_avaliable,1,1
+ 1268              		.comm	davis_quality_factor,1,1
+ 1269              		.comm	davis_global_state,1,1
+ 1270              		.comm	davis_rx_check_state,1,1
+ 1271              		.comm	davis_wake_up_state,1,1
+ 1272              		.comm	davis_loop_state,1,1
+ 1273              		.comm	davis_serial_context,4,4
+ 1274              		.section	.bss.davis_base_crc_errors,"aw",%nobits
+ 1275              		.align	1
+ 1276              		.set	.LANCHOR5,. + 0
+ 1279              	davis_base_crc_errors:
+ 1280 0000 0000     		.space	2
+ 1281              		.section	.bss.davis_base_packets_in_the_row,"aw",%nobits
+ 1282              		.align	1
+ 1283              		.set	.LANCHOR6,. + 0
+ 1286              	davis_base_packets_in_the_row:
+ 1287 0000 0000     		.space	2
+ 1288              		.section	.bss.davis_base_resynchronizations,"aw",%nobits
+ 1289              		.align	1
+ 1290              		.set	.LANCHOR7,. + 0
+ 1293              	davis_base_resynchronizations:
+ 1294 0000 0000     		.space	2
+ 1295              		.section	.bss.davis_base_total_packet_missed,"aw",%nobits
+ 1296              		.align	1
+ 1297              		.set	.LANCHOR3,. + 0
+ 1300              	davis_base_total_packet_missed:
+ 1301 0000 0000     		.space	2
+ 1302              		.section	.bss.davis_base_total_packet_received,"aw",%nobits
+ 1303              		.align	1
+ 1304              		.set	.LANCHOR4,. + 0
+ 1307              	davis_base_total_packet_received:
+ 1308 0000 0000     		.space	2
+ 1309              		.section	.bss.davis_last_good_loop,"aw",%nobits
+ 1310              		.align	2
+ 1311              		.set	.LANCHOR10,. + 0
+ 1314              	davis_last_good_loop:
+ 1315 0000 00000000 		.space	4
+ 1316              		.section	.bss.davis_last_good_rxcheck,"aw",%nobits
+ 1317              		.align	2
+ 1318              		.set	.LANCHOR8,. + 0
+ 1321              	davis_last_good_rxcheck:
+ 1322 0000 00000000 		.space	4
+ 1323              		.section	.rodata.lamps_off,"a",%progbits
+ 1324              		.align	2
+ 1325              		.set	.LANCHOR12,. + 0
+ 1328              	lamps_off:
+ 1329 0000 4C414D50 		.ascii	"LAMPS 0\012\000"
+ 1329      5320300A 
+ 1329      00
+ 1330              		.section	.rodata.lamps_on,"a",%progbits
+ 1331              		.align	2
+ 1332              		.set	.LANCHOR13,. + 0
+ 1335              	lamps_on:
+ 1336 0000 4C414D50 		.ascii	"LAMPS 1\012\000"
+ 1336      5320310A 
+ 1336      00
+ 1337              		.section	.rodata.leave_rx_screen,"a",%progbits
+ 1338              		.align	2
+ 1339              		.set	.LANCHOR11,. + 0
+ 1342              	leave_rx_screen:
+ 1343 0000 52585445 		.ascii	"RXTEST\012\000"
+ 1343      53540A00 
+ 1344              		.section	.rodata.line_feed,"a",%progbits
+ 1345              		.set	.LANCHOR0,. + 0
+ 1348              	line_feed:
+ 1349 0000 0A       		.byte	10
+ 1350              		.section	.rodata.line_feed_return,"a",%progbits
+ 1351              		.align	2
+ 1352              		.set	.LANCHOR1,. + 0
+ 1355              	line_feed_return:
+ 1356 0000 0A       		.byte	10
+ 1357 0001 0D       		.byte	13
+ 1358              		.section	.rodata.loop_command,"a",%progbits
+ 1359              		.align	2
+ 1360              		.set	.LANCHOR9,. + 0
+ 1363              	loop_command:
+ 1364 0000 4C505320 		.ascii	"LPS 2 1\012\000"
+ 1364      3220310A 
+ 1364      00
+ 1365              		.section	.rodata.rx_check,"a",%progbits
+ 1366              		.align	2
+ 1367              		.set	.LANCHOR2,. + 0
+ 1370              	rx_check:
+ 1371 0000 52584348 		.ascii	"RXCHECK\012\000"
+ 1371      45434B0A 
+ 1371      00
+ 1372              		.text
+ 1373              	.Letext0:
+ 1374              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1375              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 1376              		.file 5 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 1377              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 1378              		.file 7 "../system/include/drivers/serial.h"
+ 1379              		.file 8 "../system/include/davis_vantage/davis_qf_t.h"
+ 1380              		.file 9 "../system/include/davis_vantage/davis_loop_t.h"
+ 1381              		.file 10 "../system/include/davis_vantage/davis.h"
+ 1382              		.file 11 "../system/include/davis_vantage/davis_query_state_t.h"
+ 1383              		.file 12 "../system/include/davis_vantage/davis_global_state_t.h"
+ 1384              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1385              		.file 14 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1386              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 1387              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1388              		.file 17 "../system/include/aprs/cfifo.h"
+ 1389              		.file 18 "../system/include/aprs/afsk.h"
+ 1390              		.file 19 "../system/include/aprs/ax25.h"
+ 1391              		.file 20 "../include/config_data.h"
+ 1392              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 1393              		.file 22 "../system/include/davis_vantage/davis_parsers.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 davis.c
+     /tmp/ccnx4Fnq.s:18     .text.davis_init:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:25     .text.davis_init:0000000000000000 davis_init
+     /tmp/ccnx4Fnq.s:71     .text.davis_init:0000000000000030 $d
+                            *COM*:0000000000000004 davis_serial_context
+                            *COM*:0000000000000001 davis_quality_factor
+                            *COM*:0000000000000001 davis_loop_state
+                            *COM*:0000000000000001 davis_wake_up_state
+                            *COM*:0000000000000001 davis_rx_check_state
+                            *COM*:0000000000000001 davis_global_state
+                            *COM*:0000000000000001 davis_avaliable
+     /tmp/ccnx4Fnq.s:82     .text.davis_wake_up:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:89     .text.davis_wake_up:0000000000000000 davis_wake_up
+     /tmp/ccnx4Fnq.s:157    .text.davis_wake_up:0000000000000048 $d
+     /tmp/ccnx4Fnq.s:163    .text.davis_wake_up:0000000000000060 $t
+     /tmp/ccnx4Fnq.s:385    .text.davis_wake_up:00000000000001ac $d
+     /tmp/ccnx4Fnq.s:396    .text.davis_rxcheck_packet_pooler:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:403    .text.davis_rxcheck_packet_pooler:0000000000000000 davis_rxcheck_packet_pooler
+     /tmp/ccnx4Fnq.s:432    .text.davis_rxcheck_packet_pooler:000000000000001a $d
+     /tmp/ccnx4Fnq.s:436    .text.davis_rxcheck_packet_pooler:000000000000001e $t
+     /tmp/ccnx4Fnq.s:622    .text.davis_rxcheck_packet_pooler:0000000000000108 $d
+     /tmp/ccnx4Fnq.s:639    .text.davis_loop_packet_pooler:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:646    .text.davis_loop_packet_pooler:0000000000000000 davis_loop_packet_pooler
+     /tmp/ccnx4Fnq.s:676    .text.davis_loop_packet_pooler:000000000000001a $d
+     /tmp/ccnx4Fnq.s:682    .text.davis_loop_packet_pooler:0000000000000020 $t
+     /tmp/ccnx4Fnq.s:874    .text.davis_loop_packet_pooler:00000000000000f0 $d
+     /tmp/ccnx4Fnq.s:885    .text.davis_trigger_rxcheck_packet:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:892    .text.davis_trigger_rxcheck_packet:0000000000000000 davis_trigger_rxcheck_packet
+     /tmp/ccnx4Fnq.s:908    .text.davis_trigger_rxcheck_packet:0000000000000008 $d
+     /tmp/ccnx4Fnq.s:913    .text.davis_trigger_loop_packet:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:920    .text.davis_trigger_loop_packet:0000000000000000 davis_trigger_loop_packet
+     /tmp/ccnx4Fnq.s:937    .text.davis_trigger_loop_packet:0000000000000008 $d
+     /tmp/ccnx4Fnq.s:942    .text.davis_leave_receiving_screen:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:949    .text.davis_leave_receiving_screen:0000000000000000 davis_leave_receiving_screen
+     /tmp/ccnx4Fnq.s:1012   .text.davis_leave_receiving_screen:0000000000000044 $d
+     /tmp/ccnx4Fnq.s:1018   .text.davis_control_backlight:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:1025   .text.davis_control_backlight:0000000000000000 davis_control_backlight
+     /tmp/ccnx4Fnq.s:1113   .text.davis_control_backlight:000000000000005c $d
+     /tmp/ccnx4Fnq.s:1120   .text.davis_get_temperature:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:1127   .text.davis_get_temperature:0000000000000000 davis_get_temperature
+     /tmp/ccnx4Fnq.s:1158   .text.davis_get_temperature:000000000000002c $d
+     /tmp/ccnx4Fnq.s:1164   .text.davis_get_pressure:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:1171   .text.davis_get_pressure:0000000000000000 davis_get_pressure
+     /tmp/ccnx4Fnq.s:1199   .text.davis_get_pressure:0000000000000024 $d
+     /tmp/ccnx4Fnq.s:1205   .text.davis_get_wind:0000000000000000 $t
+     /tmp/ccnx4Fnq.s:1212   .text.davis_get_wind:0000000000000000 davis_get_wind
+     /tmp/ccnx4Fnq.s:1256   .text.davis_get_wind:0000000000000030 $d
+     /tmp/ccnx4Fnq.s:1321   .bss.davis_last_good_rxcheck:0000000000000000 davis_last_good_rxcheck
+     /tmp/ccnx4Fnq.s:1314   .bss.davis_last_good_loop:0000000000000000 davis_last_good_loop
+     /tmp/ccnx4Fnq.s:1279   .bss.davis_base_crc_errors:0000000000000000 davis_base_crc_errors
+     /tmp/ccnx4Fnq.s:1286   .bss.davis_base_packets_in_the_row:0000000000000000 davis_base_packets_in_the_row
+     /tmp/ccnx4Fnq.s:1293   .bss.davis_base_resynchronizations:0000000000000000 davis_base_resynchronizations
+     /tmp/ccnx4Fnq.s:1300   .bss.davis_base_total_packet_missed:0000000000000000 davis_base_total_packet_missed
+     /tmp/ccnx4Fnq.s:1307   .bss.davis_base_total_packet_received:0000000000000000 davis_base_total_packet_received
+     /tmp/ccnx4Fnq.s:1275   .bss.davis_base_crc_errors:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1282   .bss.davis_base_packets_in_the_row:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1289   .bss.davis_base_resynchronizations:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1296   .bss.davis_base_total_packet_missed:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1303   .bss.davis_base_total_packet_received:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1310   .bss.davis_last_good_loop:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1317   .bss.davis_last_good_rxcheck:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1324   .rodata.lamps_off:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1328   .rodata.lamps_off:0000000000000000 lamps_off
+     /tmp/ccnx4Fnq.s:1331   .rodata.lamps_on:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1335   .rodata.lamps_on:0000000000000000 lamps_on
+     /tmp/ccnx4Fnq.s:1338   .rodata.leave_rx_screen:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1342   .rodata.leave_rx_screen:0000000000000000 leave_rx_screen
+     /tmp/ccnx4Fnq.s:1348   .rodata.line_feed:0000000000000000 line_feed
+     /tmp/ccnx4Fnq.s:1351   .rodata.line_feed_return:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1355   .rodata.line_feed_return:0000000000000000 line_feed_return
+     /tmp/ccnx4Fnq.s:1359   .rodata.loop_command:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1363   .rodata.loop_command:0000000000000000 loop_command
+     /tmp/ccnx4Fnq.s:1366   .rodata.rx_check:0000000000000000 $d
+     /tmp/ccnx4Fnq.s:1370   .rodata.rx_check:0000000000000000 rx_check
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
+                           .group:0000000000000000 wm4.davis_retval_def.h.9.025968613fbef7aa10339676702cdb4e
+                           .group:0000000000000000 wm4.davis.h.18.aa92228551d9a3484fe55d6024d1b87b
+                           .group:0000000000000000 wm4.davis_parsers.h.15.1cf20b7725fbc6387ea18eb1ec35046c
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.7eec48e1bc15e3b0aff1089c232f5a9c
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+
+UNDEFINED SYMBOLS
+srl_switch_timeout
+srl_send_data
+srl_wait_for_tx_completion
+srl_receive_data_with_instant_timeout
+srl_wait_for_rx_completion_or_timeout
+srl_receive_data
+srl_get_rx_buffer
+memcmp
+davis_parsers_rxcheck
+master_time
+strlen

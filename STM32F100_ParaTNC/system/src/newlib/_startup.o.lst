@@ -1,0 +1,887 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"_startup.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.__initialize_data,"ax",%progbits
+  16              		.align	1
+  17              		.global	__initialize_data
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	__initialize_data:
+  24              	.LFB0:
+  25              		.file 1 "../system/src/newlib/_startup.c"
+   1:../system/src/newlib/_startup.c **** //
+   2:../system/src/newlib/_startup.c **** // This file is part of the µOS++ III distribution.
+   3:../system/src/newlib/_startup.c **** // Copyright (c) 2014 Liviu Ionescu.
+   4:../system/src/newlib/_startup.c **** //
+   5:../system/src/newlib/_startup.c **** 
+   6:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+   7:../system/src/newlib/_startup.c **** 
+   8:../system/src/newlib/_startup.c **** // This module contains the startup code for a portable embedded
+   9:../system/src/newlib/_startup.c **** // C/C++ application, built with newlib.
+  10:../system/src/newlib/_startup.c **** //
+  11:../system/src/newlib/_startup.c **** // Control reaches here from the reset handler via jump or call.
+  12:../system/src/newlib/_startup.c **** //
+  13:../system/src/newlib/_startup.c **** // The actual steps performed by _start are:
+  14:../system/src/newlib/_startup.c **** // - copy the initialised data region(s)
+  15:../system/src/newlib/_startup.c **** // - clear the BSS region(s)
+  16:../system/src/newlib/_startup.c **** // - initialise the system
+  17:../system/src/newlib/_startup.c **** // - run the preinit/init array (for the C++ static constructors)
+  18:../system/src/newlib/_startup.c **** // - initialise the arc/argv
+  19:../system/src/newlib/_startup.c **** // - branch to main()
+  20:../system/src/newlib/_startup.c **** // - run the fini array (for the C++ static destructors)
+  21:../system/src/newlib/_startup.c **** // - call _exit(), directly or via exit()
+  22:../system/src/newlib/_startup.c **** //
+  23:../system/src/newlib/_startup.c **** // If OS_INCLUDE_STARTUP_INIT_MULTIPLE_RAM_SECTIONS is defined, the
+  24:../system/src/newlib/_startup.c **** // code is capable of initialising multiple regions.
+  25:../system/src/newlib/_startup.c **** //
+  26:../system/src/newlib/_startup.c **** // The normal configuration is standalone, with all support
+  27:../system/src/newlib/_startup.c **** // functions implemented locally.
+  28:../system/src/newlib/_startup.c **** //
+  29:../system/src/newlib/_startup.c **** // For this to be called, the project linker must be configured without
+  30:../system/src/newlib/_startup.c **** // the startup sequence (-nostartfiles).
+  31:../system/src/newlib/_startup.c **** 
+  32:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+  33:../system/src/newlib/_startup.c **** 
+  34:../system/src/newlib/_startup.c **** #include <stdint.h>
+  35:../system/src/newlib/_startup.c **** #include <sys/types.h>
+  36:../system/src/newlib/_startup.c **** 
+  37:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+  38:../system/src/newlib/_startup.c **** 
+  39:../system/src/newlib/_startup.c **** #if !defined(OS_INCLUDE_STARTUP_GUARD_CHECKS)
+  40:../system/src/newlib/_startup.c **** #define OS_INCLUDE_STARTUP_GUARD_CHECKS (1)
+  41:../system/src/newlib/_startup.c **** #endif
+  42:../system/src/newlib/_startup.c **** 
+  43:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+  44:../system/src/newlib/_startup.c **** 
+  45:../system/src/newlib/_startup.c **** #if !defined(OS_INCLUDE_STARTUP_INIT_MULTIPLE_RAM_SECTIONS)
+  46:../system/src/newlib/_startup.c **** // Begin address for the initialisation values of the .data section.
+  47:../system/src/newlib/_startup.c **** // defined in linker script
+  48:../system/src/newlib/_startup.c **** extern unsigned int _sidata;
+  49:../system/src/newlib/_startup.c **** // Begin address for the .data section; defined in linker script
+  50:../system/src/newlib/_startup.c **** extern unsigned int _sdata;
+  51:../system/src/newlib/_startup.c **** // End address for the .data section; defined in linker script
+  52:../system/src/newlib/_startup.c **** extern unsigned int _edata;
+  53:../system/src/newlib/_startup.c **** 
+  54:../system/src/newlib/_startup.c **** // Begin address for the .bss section; defined in linker script
+  55:../system/src/newlib/_startup.c **** extern unsigned int __bss_start__;
+  56:../system/src/newlib/_startup.c **** // End address for the .bss section; defined in linker script
+  57:../system/src/newlib/_startup.c **** extern unsigned int __bss_end__;
+  58:../system/src/newlib/_startup.c **** #else
+  59:../system/src/newlib/_startup.c **** // The following symbols are constructs generated by the linker, indicating
+  60:../system/src/newlib/_startup.c **** // the location of various points in the "Memory regions initialisation arrays".
+  61:../system/src/newlib/_startup.c **** // These arrays are created by the linker via the managed linker script
+  62:../system/src/newlib/_startup.c **** // of each RW data mechanism. It contains the load address, execution address
+  63:../system/src/newlib/_startup.c **** // and length section and the execution and length of each BSS (zero
+  64:../system/src/newlib/_startup.c **** // initialised) section.
+  65:../system/src/newlib/_startup.c **** extern unsigned int __data_regions_array_start;
+  66:../system/src/newlib/_startup.c **** extern unsigned int __data_regions_array_end;
+  67:../system/src/newlib/_startup.c **** extern unsigned int __bss_regions_array_start;
+  68:../system/src/newlib/_startup.c **** extern unsigned int __bss_regions_array_end;
+  69:../system/src/newlib/_startup.c **** #endif
+  70:../system/src/newlib/_startup.c **** 
+  71:../system/src/newlib/_startup.c **** extern void
+  72:../system/src/newlib/_startup.c **** __initialize_args (int*, char***);
+  73:../system/src/newlib/_startup.c **** 
+  74:../system/src/newlib/_startup.c **** // main() is the entry point for newlib based applications.
+  75:../system/src/newlib/_startup.c **** // By default, there are no arguments, but this can be customised
+  76:../system/src/newlib/_startup.c **** // by redefining __initialize_args(), which is done when the
+  77:../system/src/newlib/_startup.c **** // semihosting configurations are used.
+  78:../system/src/newlib/_startup.c **** extern int
+  79:../system/src/newlib/_startup.c **** main (int argc, char* argv[]);
+  80:../system/src/newlib/_startup.c **** 
+  81:../system/src/newlib/_startup.c **** // The implementation for the exit routine; for embedded
+  82:../system/src/newlib/_startup.c **** // applications, a system reset will be performed.
+  83:../system/src/newlib/_startup.c **** extern void
+  84:../system/src/newlib/_startup.c **** __attribute__((noreturn))
+  85:../system/src/newlib/_startup.c **** _exit (int);
+  86:../system/src/newlib/_startup.c **** 
+  87:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+  88:../system/src/newlib/_startup.c **** 
+  89:../system/src/newlib/_startup.c **** // Forward declarations
+  90:../system/src/newlib/_startup.c **** 
+  91:../system/src/newlib/_startup.c **** void
+  92:../system/src/newlib/_startup.c **** _start (void);
+  93:../system/src/newlib/_startup.c **** 
+  94:../system/src/newlib/_startup.c **** void
+  95:../system/src/newlib/_startup.c **** __initialize_data (unsigned int* from, unsigned int* region_begin,
+  96:../system/src/newlib/_startup.c **** 		   unsigned int* region_end);
+  97:../system/src/newlib/_startup.c **** 
+  98:../system/src/newlib/_startup.c **** void
+  99:../system/src/newlib/_startup.c **** __initialize_bss (unsigned int* region_begin, unsigned int* region_end);
+ 100:../system/src/newlib/_startup.c **** 
+ 101:../system/src/newlib/_startup.c **** void
+ 102:../system/src/newlib/_startup.c **** __run_init_array (void);
+ 103:../system/src/newlib/_startup.c **** 
+ 104:../system/src/newlib/_startup.c **** void
+ 105:../system/src/newlib/_startup.c **** __run_fini_array (void);
+ 106:../system/src/newlib/_startup.c **** 
+ 107:../system/src/newlib/_startup.c **** void
+ 108:../system/src/newlib/_startup.c **** __initialize_hardware_early (void);
+ 109:../system/src/newlib/_startup.c **** 
+ 110:../system/src/newlib/_startup.c **** void
+ 111:../system/src/newlib/_startup.c **** __initialize_hardware (void);
+ 112:../system/src/newlib/_startup.c **** 
+ 113:../system/src/newlib/_startup.c **** // ----------------------------------------------------------------------------
+ 114:../system/src/newlib/_startup.c **** 
+ 115:../system/src/newlib/_startup.c **** inline void
+ 116:../system/src/newlib/_startup.c **** __attribute__((always_inline))
+ 117:../system/src/newlib/_startup.c **** __initialize_data (unsigned int* from, unsigned int* region_begin,
+ 118:../system/src/newlib/_startup.c **** 		   unsigned int* region_end)
+ 119:../system/src/newlib/_startup.c **** {
+  26              		.loc 1 119 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+ 120:../system/src/newlib/_startup.c ****   // Iterate and copy word by word.
+ 121:../system/src/newlib/_startup.c ****   // It is assumed that the pointers are word aligned.
+ 122:../system/src/newlib/_startup.c ****   unsigned int *p = region_begin;
+ 123:../system/src/newlib/_startup.c ****   while (p < region_end)
+  32              		.loc 1 123 0
+  33 0000 03E0     		b	.L2
+  34              	.LVL1:
+  35              	.L3:
+ 124:../system/src/newlib/_startup.c ****     *p++ = *from++;
+  36              		.loc 1 124 0
+  37 0002 0368     		ldr	r3, [r0]
+  38 0004 0B60     		str	r3, [r1]
+  39 0006 0431     		adds	r1, r1, #4
+  40              	.LVL2:
+  41 0008 0430     		adds	r0, r0, #4
+  42              	.LVL3:
+  43              	.L2:
+ 123:../system/src/newlib/_startup.c ****     *p++ = *from++;
+  44              		.loc 1 123 0
+  45 000a 9142     		cmp	r1, r2
+  46 000c F9D3     		bcc	.L3
+ 125:../system/src/newlib/_startup.c **** }
+  47              		.loc 1 125 0
+  48 000e 7047     		bx	lr
+  49              		.cfi_endproc
+  50              	.LFE0:
+  52              		.section	.text.__initialize_bss,"ax",%progbits
+  53              		.align	1
+  54              		.global	__initialize_bss
+  55              		.syntax unified
+  56              		.thumb
+  57              		.thumb_func
+  58              		.fpu softvfp
+  60              	__initialize_bss:
+  61              	.LFB1:
+ 126:../system/src/newlib/_startup.c **** 
+ 127:../system/src/newlib/_startup.c **** inline void
+ 128:../system/src/newlib/_startup.c **** __attribute__((always_inline))
+ 129:../system/src/newlib/_startup.c **** __initialize_bss (unsigned int* region_begin, unsigned int* region_end)
+ 130:../system/src/newlib/_startup.c **** {
+  62              		.loc 1 130 0
+  63              		.cfi_startproc
+  64              		@ args = 0, pretend = 0, frame = 0
+  65              		@ frame_needed = 0, uses_anonymous_args = 0
+  66              		@ link register save eliminated.
+  67              	.LVL4:
+ 131:../system/src/newlib/_startup.c ****   // Iterate and clear word by word.
+ 132:../system/src/newlib/_startup.c ****   // It is assumed that the pointers are word aligned.
+ 133:../system/src/newlib/_startup.c ****   unsigned int *p = region_begin;
+ 134:../system/src/newlib/_startup.c ****   while (p < region_end)
+  68              		.loc 1 134 0
+  69 0000 02E0     		b	.L5
+  70              	.LVL5:
+  71              	.L6:
+ 135:../system/src/newlib/_startup.c ****     *p++ = 0;
+  72              		.loc 1 135 0
+  73 0002 0023     		movs	r3, #0
+  74 0004 0360     		str	r3, [r0]
+  75 0006 0430     		adds	r0, r0, #4
+  76              	.LVL6:
+  77              	.L5:
+ 134:../system/src/newlib/_startup.c ****     *p++ = 0;
+  78              		.loc 1 134 0
+  79 0008 8842     		cmp	r0, r1
+  80 000a FAD3     		bcc	.L6
+ 136:../system/src/newlib/_startup.c **** }
+  81              		.loc 1 136 0
+  82 000c 7047     		bx	lr
+  83              		.cfi_endproc
+  84              	.LFE1:
+  86              		.section	.text.__run_init_array,"ax",%progbits
+  87              		.align	1
+  88              		.global	__run_init_array
+  89              		.syntax unified
+  90              		.thumb
+  91              		.thumb_func
+  92              		.fpu softvfp
+  94              	__run_init_array:
+  95              	.LFB2:
+ 137:../system/src/newlib/_startup.c **** 
+ 138:../system/src/newlib/_startup.c **** // These magic symbols are provided by the linker.
+ 139:../system/src/newlib/_startup.c **** extern void
+ 140:../system/src/newlib/_startup.c **** (*__preinit_array_start[]) (void) __attribute__((weak));
+ 141:../system/src/newlib/_startup.c **** extern void
+ 142:../system/src/newlib/_startup.c **** (*__preinit_array_end[]) (void) __attribute__((weak));
+ 143:../system/src/newlib/_startup.c **** extern void
+ 144:../system/src/newlib/_startup.c **** (*__init_array_start[]) (void) __attribute__((weak));
+ 145:../system/src/newlib/_startup.c **** extern void
+ 146:../system/src/newlib/_startup.c **** (*__init_array_end[]) (void) __attribute__((weak));
+ 147:../system/src/newlib/_startup.c **** extern void
+ 148:../system/src/newlib/_startup.c **** (*__fini_array_start[]) (void) __attribute__((weak));
+ 149:../system/src/newlib/_startup.c **** extern void
+ 150:../system/src/newlib/_startup.c **** (*__fini_array_end[]) (void) __attribute__((weak));
+ 151:../system/src/newlib/_startup.c **** 
+ 152:../system/src/newlib/_startup.c **** // Iterate over all the preinit/init routines (mainly static constructors).
+ 153:../system/src/newlib/_startup.c **** inline void
+ 154:../system/src/newlib/_startup.c **** __attribute__((always_inline))
+ 155:../system/src/newlib/_startup.c **** __run_init_array (void)
+ 156:../system/src/newlib/_startup.c **** {
+  96              		.loc 1 156 0
+  97              		.cfi_startproc
+  98              		@ args = 0, pretend = 0, frame = 0
+  99              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100 0000 38B5     		push	{r3, r4, r5, lr}
+ 101              		.cfi_def_cfa_offset 16
+ 102              		.cfi_offset 3, -16
+ 103              		.cfi_offset 4, -12
+ 104              		.cfi_offset 5, -8
+ 105              		.cfi_offset 14, -4
+ 157:../system/src/newlib/_startup.c ****   int count;
+ 158:../system/src/newlib/_startup.c ****   int i;
+ 159:../system/src/newlib/_startup.c **** 
+ 160:../system/src/newlib/_startup.c ****   count = __preinit_array_end - __preinit_array_start;
+ 106              		.loc 1 160 0
+ 107 0002 0D4D     		ldr	r5, .L13
+ 108 0004 0D4B     		ldr	r3, .L13+4
+ 109 0006 ED1A     		subs	r5, r5, r3
+ 110 0008 AD10     		asrs	r5, r5, #2
+ 111              	.LVL7:
+ 161:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 112              		.loc 1 161 0
+ 113 000a 0024     		movs	r4, #0
+ 114 000c 04E0     		b	.L8
+ 115              	.LVL8:
+ 116              	.L9:
+ 162:../system/src/newlib/_startup.c ****     __preinit_array_start[i] ();
+ 117              		.loc 1 162 0 discriminator 3
+ 118 000e 0B4B     		ldr	r3, .L13+4
+ 119 0010 53F82430 		ldr	r3, [r3, r4, lsl #2]
+ 120 0014 9847     		blx	r3
+ 121              	.LVL9:
+ 161:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 122              		.loc 1 161 0 discriminator 3
+ 123 0016 0134     		adds	r4, r4, #1
+ 124              	.LVL10:
+ 125              	.L8:
+ 161:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 126              		.loc 1 161 0 is_stmt 0 discriminator 1
+ 127 0018 AC42     		cmp	r4, r5
+ 128 001a F8DB     		blt	.L9
+ 163:../system/src/newlib/_startup.c **** 
+ 164:../system/src/newlib/_startup.c ****   // If you need to run the code in the .init section, please use
+ 165:../system/src/newlib/_startup.c ****   // the startup files, since this requires the code in crti.o and crtn.o
+ 166:../system/src/newlib/_startup.c ****   // to add the function prologue/epilogue.
+ 167:../system/src/newlib/_startup.c ****   //_init(); // DO NOT ENABE THIS!
+ 168:../system/src/newlib/_startup.c **** 
+ 169:../system/src/newlib/_startup.c ****   count = __init_array_end - __init_array_start;
+ 129              		.loc 1 169 0 is_stmt 1
+ 130 001c 084D     		ldr	r5, .L13+8
+ 131              	.LVL11:
+ 132 001e 094B     		ldr	r3, .L13+12
+ 133 0020 ED1A     		subs	r5, r5, r3
+ 134 0022 AD10     		asrs	r5, r5, #2
+ 135              	.LVL12:
+ 170:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 136              		.loc 1 170 0
+ 137 0024 0024     		movs	r4, #0
+ 138 0026 04E0     		b	.L10
+ 139              	.LVL13:
+ 140              	.L11:
+ 171:../system/src/newlib/_startup.c ****     __init_array_start[i] ();
+ 141              		.loc 1 171 0 discriminator 3
+ 142 0028 064B     		ldr	r3, .L13+12
+ 143 002a 53F82430 		ldr	r3, [r3, r4, lsl #2]
+ 144 002e 9847     		blx	r3
+ 145              	.LVL14:
+ 170:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 146              		.loc 1 170 0 discriminator 3
+ 147 0030 0134     		adds	r4, r4, #1
+ 148              	.LVL15:
+ 149              	.L10:
+ 170:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 150              		.loc 1 170 0 is_stmt 0 discriminator 1
+ 151 0032 AC42     		cmp	r4, r5
+ 152 0034 F8DB     		blt	.L11
+ 172:../system/src/newlib/_startup.c **** }
+ 153              		.loc 1 172 0 is_stmt 1
+ 154 0036 38BD     		pop	{r3, r4, r5, pc}
+ 155              	.LVL16:
+ 156              	.L14:
+ 157              		.align	2
+ 158              	.L13:
+ 159 0038 00000000 		.word	__preinit_array_end
+ 160 003c 00000000 		.word	__preinit_array_start
+ 161 0040 00000000 		.word	__init_array_end
+ 162 0044 00000000 		.word	__init_array_start
+ 163              		.cfi_endproc
+ 164              	.LFE2:
+ 166              		.section	.text.__run_fini_array,"ax",%progbits
+ 167              		.align	1
+ 168              		.global	__run_fini_array
+ 169              		.syntax unified
+ 170              		.thumb
+ 171              		.thumb_func
+ 172              		.fpu softvfp
+ 174              	__run_fini_array:
+ 175              	.LFB3:
+ 173:../system/src/newlib/_startup.c **** 
+ 174:../system/src/newlib/_startup.c **** // Run all the cleanup routines (mainly static destructors).
+ 175:../system/src/newlib/_startup.c **** inline void
+ 176:../system/src/newlib/_startup.c **** __attribute__((always_inline))
+ 177:../system/src/newlib/_startup.c **** __run_fini_array (void)
+ 178:../system/src/newlib/_startup.c **** {
+ 176              		.loc 1 178 0
+ 177              		.cfi_startproc
+ 178              		@ args = 0, pretend = 0, frame = 0
+ 179              		@ frame_needed = 0, uses_anonymous_args = 0
+ 180 0000 10B5     		push	{r4, lr}
+ 181              		.cfi_def_cfa_offset 8
+ 182              		.cfi_offset 4, -8
+ 183              		.cfi_offset 14, -4
+ 179:../system/src/newlib/_startup.c ****   int count;
+ 180:../system/src/newlib/_startup.c ****   int i;
+ 181:../system/src/newlib/_startup.c **** 
+ 182:../system/src/newlib/_startup.c ****   count = __fini_array_end - __fini_array_start;
+ 184              		.loc 1 182 0
+ 185 0002 064C     		ldr	r4, .L19
+ 186 0004 064B     		ldr	r3, .L19+4
+ 187 0006 E41A     		subs	r4, r4, r3
+ 188 0008 A410     		asrs	r4, r4, #2
+ 189              	.LVL17:
+ 183:../system/src/newlib/_startup.c ****   for (i = count; i > 0; i--)
+ 190              		.loc 1 183 0
+ 191 000a 04E0     		b	.L16
+ 192              	.LVL18:
+ 193              	.L17:
+ 184:../system/src/newlib/_startup.c ****     __fini_array_start[i - 1] ();
+ 194              		.loc 1 184 0 discriminator 3
+ 195 000c 013C     		subs	r4, r4, #1
+ 196              	.LVL19:
+ 197 000e 044B     		ldr	r3, .L19+4
+ 198              	.LVL20:
+ 199 0010 53F82430 		ldr	r3, [r3, r4, lsl #2]
+ 200              	.LVL21:
+ 201 0014 9847     		blx	r3
+ 202              	.LVL22:
+ 203              	.L16:
+ 183:../system/src/newlib/_startup.c ****   for (i = count; i > 0; i--)
+ 204              		.loc 1 183 0 discriminator 1
+ 205 0016 002C     		cmp	r4, #0
+ 206 0018 F8DC     		bgt	.L17
+ 185:../system/src/newlib/_startup.c **** 
+ 186:../system/src/newlib/_startup.c ****   // If you need to run the code in the .fini section, please use
+ 187:../system/src/newlib/_startup.c ****   // the startup files, since this requires the code in crti.o and crtn.o
+ 188:../system/src/newlib/_startup.c ****   // to add the function prologue/epilogue.
+ 189:../system/src/newlib/_startup.c ****   //_fini(); // DO NOT ENABE THIS!
+ 190:../system/src/newlib/_startup.c **** }
+ 207              		.loc 1 190 0
+ 208 001a 10BD     		pop	{r4, pc}
+ 209              	.LVL23:
+ 210              	.L20:
+ 211              		.align	2
+ 212              	.L19:
+ 213 001c 00000000 		.word	__fini_array_end
+ 214 0020 00000000 		.word	__fini_array_start
+ 215              		.cfi_endproc
+ 216              	.LFE3:
+ 218              		.section	.after_vectors,"ax",%progbits
+ 219              		.align	1
+ 220              		.weak	_start
+ 221              		.syntax unified
+ 222              		.thumb
+ 223              		.thumb_func
+ 224              		.fpu softvfp
+ 226              	_start:
+ 227              	.LFB4:
+ 191:../system/src/newlib/_startup.c **** 
+ 192:../system/src/newlib/_startup.c **** #if defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 193:../system/src/newlib/_startup.c **** 
+ 194:../system/src/newlib/_startup.c **** // These definitions are used to check if the routines used to
+ 195:../system/src/newlib/_startup.c **** // clear the BSS and to copy the initialised DATA perform correctly.
+ 196:../system/src/newlib/_startup.c **** 
+ 197:../system/src/newlib/_startup.c **** #define BSS_GUARD_BAD_VALUE (0xCADEBABA)
+ 198:../system/src/newlib/_startup.c **** 
+ 199:../system/src/newlib/_startup.c **** static uint32_t volatile __attribute__ ((section(".bss_begin")))
+ 200:../system/src/newlib/_startup.c **** __bss_begin_guard;
+ 201:../system/src/newlib/_startup.c **** static uint32_t volatile __attribute__ ((section(".bss_end")))
+ 202:../system/src/newlib/_startup.c **** __bss_end_guard;
+ 203:../system/src/newlib/_startup.c **** 
+ 204:../system/src/newlib/_startup.c **** #define DATA_GUARD_BAD_VALUE (0xCADEBABA)
+ 205:../system/src/newlib/_startup.c **** #define DATA_BEGIN_GUARD_VALUE (0x12345678)
+ 206:../system/src/newlib/_startup.c **** #define DATA_END_GUARD_VALUE (0x98765432)
+ 207:../system/src/newlib/_startup.c **** 
+ 208:../system/src/newlib/_startup.c **** static uint32_t volatile __attribute__ ((section(".data_begin")))
+ 209:../system/src/newlib/_startup.c **** __data_begin_guard = DATA_BEGIN_GUARD_VALUE;
+ 210:../system/src/newlib/_startup.c **** 
+ 211:../system/src/newlib/_startup.c **** static uint32_t volatile __attribute__ ((section(".data_end")))
+ 212:../system/src/newlib/_startup.c **** __data_end_guard = DATA_END_GUARD_VALUE;
+ 213:../system/src/newlib/_startup.c **** 
+ 214:../system/src/newlib/_startup.c **** #endif // defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 215:../system/src/newlib/_startup.c **** 
+ 216:../system/src/newlib/_startup.c **** // This is the place where Cortex-M core will go immediately after reset,
+ 217:../system/src/newlib/_startup.c **** // via a call or jump from the Reset_Handler.
+ 218:../system/src/newlib/_startup.c **** //
+ 219:../system/src/newlib/_startup.c **** // For the call to work, and for the call to __initialize_hardware_early()
+ 220:../system/src/newlib/_startup.c **** // to work, the reset stack must point to a valid internal RAM area.
+ 221:../system/src/newlib/_startup.c **** 
+ 222:../system/src/newlib/_startup.c **** void __attribute__ ((section(".after_vectors"),noreturn,weak))
+ 223:../system/src/newlib/_startup.c **** _start (void)
+ 224:../system/src/newlib/_startup.c **** {
+ 228              		.loc 1 224 0
+ 229              		.cfi_startproc
+ 230              		@ Volatile: function does not return.
+ 231              		@ args = 0, pretend = 0, frame = 8
+ 232              		@ frame_needed = 0, uses_anonymous_args = 0
+ 233 0000 00B5     		push	{lr}
+ 234              		.cfi_def_cfa_offset 4
+ 235              		.cfi_offset 14, -4
+ 236 0002 83B0     		sub	sp, sp, #12
+ 237              		.cfi_def_cfa_offset 16
+ 225:../system/src/newlib/_startup.c **** 
+ 226:../system/src/newlib/_startup.c ****   // Initialise hardware right after reset, to switch clock to higher
+ 227:../system/src/newlib/_startup.c ****   // frequency and have the rest of the initialisations run faster.
+ 228:../system/src/newlib/_startup.c ****   //
+ 229:../system/src/newlib/_startup.c ****   // Mandatory on platforms like Kinetis, which start with the watch dog
+ 230:../system/src/newlib/_startup.c ****   // enabled and require an early sequence to disable it.
+ 231:../system/src/newlib/_startup.c ****   //
+ 232:../system/src/newlib/_startup.c ****   // Also useful on platform with external RAM, that need to be
+ 233:../system/src/newlib/_startup.c ****   // initialised before filling the BSS section.
+ 234:../system/src/newlib/_startup.c **** 
+ 235:../system/src/newlib/_startup.c ****   __initialize_hardware_early ();
+ 238              		.loc 1 235 0
+ 239 0004 FFF7FEFF 		bl	__initialize_hardware_early
+ 240              	.LVL24:
+ 236:../system/src/newlib/_startup.c **** 
+ 237:../system/src/newlib/_startup.c ****   // Use Old Style DATA and BSS section initialisation,
+ 238:../system/src/newlib/_startup.c ****   // that will manage a single BSS sections.
+ 239:../system/src/newlib/_startup.c **** 
+ 240:../system/src/newlib/_startup.c **** #if defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 241:../system/src/newlib/_startup.c ****   __data_begin_guard = DATA_GUARD_BAD_VALUE;
+ 241              		.loc 1 241 0
+ 242 0008 304B     		ldr	r3, .L39
+ 243 000a 314A     		ldr	r2, .L39+4
+ 244 000c 1360     		str	r3, [r2]
+ 242:../system/src/newlib/_startup.c ****   __data_end_guard = DATA_GUARD_BAD_VALUE;
+ 245              		.loc 1 242 0
+ 246 000e 314A     		ldr	r2, .L39+8
+ 247 0010 1360     		str	r3, [r2]
+ 248              	.LVL25:
+ 249              	.LBB10:
+ 250              	.LBB11:
+ 122:../system/src/newlib/_startup.c ****   while (p < region_end)
+ 251              		.loc 1 122 0
+ 252 0012 314B     		ldr	r3, .L39+12
+ 253              	.LBE11:
+ 254              	.LBE10:
+ 255              		.loc 1 242 0
+ 256 0014 314A     		ldr	r2, .L39+16
+ 257              	.LVL26:
+ 258              	.L22:
+ 259              	.LBB13:
+ 260              	.LBB12:
+ 123:../system/src/newlib/_startup.c ****     *p++ = *from++;
+ 261              		.loc 1 123 0
+ 262 0016 3249     		ldr	r1, .L39+20
+ 263 0018 8B42     		cmp	r3, r1
+ 264 001a 04D2     		bcs	.L37
+ 265              	.LVL27:
+ 124:../system/src/newlib/_startup.c **** }
+ 266              		.loc 1 124 0
+ 267 001c 1168     		ldr	r1, [r2]
+ 268 001e 1960     		str	r1, [r3]
+ 269 0020 0433     		adds	r3, r3, #4
+ 270              	.LVL28:
+ 271 0022 0432     		adds	r2, r2, #4
+ 272              	.LVL29:
+ 273 0024 F7E7     		b	.L22
+ 274              	.L37:
+ 275              	.LVL30:
+ 276              	.LBE12:
+ 277              	.LBE13:
+ 243:../system/src/newlib/_startup.c **** #endif
+ 244:../system/src/newlib/_startup.c **** 
+ 245:../system/src/newlib/_startup.c **** #if !defined(OS_INCLUDE_STARTUP_INIT_MULTIPLE_RAM_SECTIONS)
+ 246:../system/src/newlib/_startup.c ****   // Copy the DATA segment from Flash to RAM (inlined).
+ 247:../system/src/newlib/_startup.c ****   __initialize_data(&_sidata, &_sdata, &_edata);
+ 248:../system/src/newlib/_startup.c **** #else
+ 249:../system/src/newlib/_startup.c **** 
+ 250:../system/src/newlib/_startup.c ****   // Copy the data sections from flash to SRAM.
+ 251:../system/src/newlib/_startup.c ****   for (unsigned int* p = &__data_regions_array_start;
+ 252:../system/src/newlib/_startup.c ****       p < &__data_regions_array_end;)
+ 253:../system/src/newlib/_startup.c ****     {
+ 254:../system/src/newlib/_startup.c ****       unsigned int* from = (unsigned int *) (*p++);
+ 255:../system/src/newlib/_startup.c ****       unsigned int* region_begin = (unsigned int *) (*p++);
+ 256:../system/src/newlib/_startup.c ****       unsigned int* region_end = (unsigned int *) (*p++);
+ 257:../system/src/newlib/_startup.c **** 
+ 258:../system/src/newlib/_startup.c ****       __initialize_data (from, region_begin, region_end);
+ 259:../system/src/newlib/_startup.c ****     }
+ 260:../system/src/newlib/_startup.c **** 
+ 261:../system/src/newlib/_startup.c **** #endif
+ 262:../system/src/newlib/_startup.c **** 
+ 263:../system/src/newlib/_startup.c **** #if defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 264:../system/src/newlib/_startup.c ****   if ((__data_begin_guard != DATA_BEGIN_GUARD_VALUE)
+ 278              		.loc 1 264 0
+ 279 0026 2A4B     		ldr	r3, .L39+4
+ 280 0028 1A68     		ldr	r2, [r3]
+ 281 002a 2E4B     		ldr	r3, .L39+24
+ 282 002c 9A42     		cmp	r2, r3
+ 283 002e 00D0     		beq	.L38
+ 284              	.L24:
+ 285 0030 FEE7     		b	.L24
+ 286              	.L38:
+ 265:../system/src/newlib/_startup.c ****       || (__data_end_guard != DATA_END_GUARD_VALUE))
+ 287              		.loc 1 265 0
+ 288 0032 284B     		ldr	r3, .L39+8
+ 289 0034 1A68     		ldr	r2, [r3]
+ 290 0036 2C4B     		ldr	r3, .L39+28
+ 291 0038 9A42     		cmp	r2, r3
+ 292 003a F9D1     		bne	.L24
+ 266:../system/src/newlib/_startup.c ****     {
+ 267:../system/src/newlib/_startup.c ****       for (;;)
+ 268:../system/src/newlib/_startup.c **** 	;
+ 269:../system/src/newlib/_startup.c ****     }
+ 270:../system/src/newlib/_startup.c **** #endif
+ 271:../system/src/newlib/_startup.c **** 
+ 272:../system/src/newlib/_startup.c **** #if defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 273:../system/src/newlib/_startup.c ****   __bss_begin_guard = BSS_GUARD_BAD_VALUE;
+ 293              		.loc 1 273 0
+ 294 003c 234B     		ldr	r3, .L39
+ 295 003e 2B4A     		ldr	r2, .L39+32
+ 296 0040 1360     		str	r3, [r2]
+ 274:../system/src/newlib/_startup.c ****   __bss_end_guard = BSS_GUARD_BAD_VALUE;
+ 297              		.loc 1 274 0
+ 298 0042 2B4A     		ldr	r2, .L39+36
+ 299 0044 1360     		str	r3, [r2]
+ 300              	.LVL31:
+ 301              	.LBB14:
+ 302              	.LBB15:
+ 133:../system/src/newlib/_startup.c ****   while (p < region_end)
+ 303              		.loc 1 133 0
+ 304 0046 2B4B     		ldr	r3, .L39+40
+ 305 0048 02E0     		b	.L26
+ 306              	.LVL32:
+ 307              	.L27:
+ 135:../system/src/newlib/_startup.c **** }
+ 308              		.loc 1 135 0
+ 309 004a 0022     		movs	r2, #0
+ 310 004c 1A60     		str	r2, [r3]
+ 311 004e 0433     		adds	r3, r3, #4
+ 312              	.LVL33:
+ 313              	.L26:
+ 134:../system/src/newlib/_startup.c ****     *p++ = 0;
+ 314              		.loc 1 134 0
+ 315 0050 294A     		ldr	r2, .L39+44
+ 316 0052 9342     		cmp	r3, r2
+ 317 0054 F9D3     		bcc	.L27
+ 318              	.LVL34:
+ 319              	.LBE15:
+ 320              	.LBE14:
+ 275:../system/src/newlib/_startup.c **** #endif
+ 276:../system/src/newlib/_startup.c **** 
+ 277:../system/src/newlib/_startup.c **** #if !defined(OS_INCLUDE_STARTUP_INIT_MULTIPLE_RAM_SECTIONS)
+ 278:../system/src/newlib/_startup.c ****   // Zero fill the BSS section (inlined).
+ 279:../system/src/newlib/_startup.c ****   __initialize_bss(&__bss_start__, &__bss_end__);
+ 280:../system/src/newlib/_startup.c **** #else
+ 281:../system/src/newlib/_startup.c **** 
+ 282:../system/src/newlib/_startup.c ****   // Zero fill all bss segments
+ 283:../system/src/newlib/_startup.c ****   for (unsigned int *p = &__bss_regions_array_start;
+ 284:../system/src/newlib/_startup.c ****       p < &__bss_regions_array_end;)
+ 285:../system/src/newlib/_startup.c ****     {
+ 286:../system/src/newlib/_startup.c ****       unsigned int* region_begin = (unsigned int*) (*p++);
+ 287:../system/src/newlib/_startup.c ****       unsigned int* region_end = (unsigned int*) (*p++);
+ 288:../system/src/newlib/_startup.c ****       __initialize_bss (region_begin, region_end);
+ 289:../system/src/newlib/_startup.c ****     }
+ 290:../system/src/newlib/_startup.c **** #endif
+ 291:../system/src/newlib/_startup.c **** 
+ 292:../system/src/newlib/_startup.c **** #if defined(DEBUG) && (OS_INCLUDE_STARTUP_GUARD_CHECKS)
+ 293:../system/src/newlib/_startup.c ****   if ((__bss_begin_guard != 0) || (__bss_end_guard != 0))
+ 321              		.loc 1 293 0
+ 322 0056 254B     		ldr	r3, .L39+32
+ 323 0058 1B68     		ldr	r3, [r3]
+ 324 005a 13B9     		cbnz	r3, .L28
+ 325              		.loc 1 293 0 is_stmt 0 discriminator 1
+ 326 005c 244B     		ldr	r3, .L39+36
+ 327 005e 1B68     		ldr	r3, [r3]
+ 328 0060 03B1     		cbz	r3, .L29
+ 329              	.L28:
+ 330 0062 FEE7     		b	.L28
+ 331              	.L29:
+ 294:../system/src/newlib/_startup.c ****     {
+ 295:../system/src/newlib/_startup.c ****       for (;;)
+ 296:../system/src/newlib/_startup.c **** 	;
+ 297:../system/src/newlib/_startup.c ****     }
+ 298:../system/src/newlib/_startup.c **** #endif
+ 299:../system/src/newlib/_startup.c **** 
+ 300:../system/src/newlib/_startup.c ****   // Hook to continue the initialisations. Usually compute and store the
+ 301:../system/src/newlib/_startup.c ****   // clock frequency in the global CMSIS variable, cleared above.
+ 302:../system/src/newlib/_startup.c ****   __initialize_hardware ();
+ 332              		.loc 1 302 0 is_stmt 1
+ 333 0064 FFF7FEFF 		bl	__initialize_hardware
+ 334              	.LVL35:
+ 303:../system/src/newlib/_startup.c **** 
+ 304:../system/src/newlib/_startup.c ****   // Get the argc/argv (useful in semihosting configurations).
+ 305:../system/src/newlib/_startup.c ****   int argc;
+ 306:../system/src/newlib/_startup.c ****   char** argv;
+ 307:../system/src/newlib/_startup.c ****   __initialize_args (&argc, &argv);
+ 335              		.loc 1 307 0
+ 336 0068 6946     		mov	r1, sp
+ 337 006a 01A8     		add	r0, sp, #4
+ 338 006c FFF7FEFF 		bl	__initialize_args
+ 339              	.LVL36:
+ 340              	.LBB16:
+ 341              	.LBB17:
+ 160:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 342              		.loc 1 160 0
+ 343 0070 224C     		ldr	r4, .L39+48
+ 344 0072 234B     		ldr	r3, .L39+52
+ 345 0074 E41A     		subs	r4, r4, r3
+ 346 0076 A410     		asrs	r4, r4, #2
+ 347              	.LVL37:
+ 161:../system/src/newlib/_startup.c ****     __preinit_array_start[i] ();
+ 348              		.loc 1 161 0
+ 349 0078 0025     		movs	r5, #0
+ 350              	.LVL38:
+ 351              	.L30:
+ 352 007a AC42     		cmp	r4, r5
+ 353 007c 14DC     		bgt	.L31
+ 169:../system/src/newlib/_startup.c ****   for (i = 0; i < count; i++)
+ 354              		.loc 1 169 0
+ 355 007e 214C     		ldr	r4, .L39+56
+ 356              	.LVL39:
+ 357 0080 214B     		ldr	r3, .L39+60
+ 358 0082 E41A     		subs	r4, r4, r3
+ 359 0084 A410     		asrs	r4, r4, #2
+ 360              	.LVL40:
+ 170:../system/src/newlib/_startup.c ****     __init_array_start[i] ();
+ 361              		.loc 1 170 0
+ 362 0086 0025     		movs	r5, #0
+ 363              	.LVL41:
+ 364              	.L32:
+ 365 0088 AC42     		cmp	r4, r5
+ 366 008a 13DC     		bgt	.L33
+ 367              	.LVL42:
+ 368              	.LBE17:
+ 369              	.LBE16:
+ 308:../system/src/newlib/_startup.c **** 
+ 309:../system/src/newlib/_startup.c ****   // Call the standard library initialisation (mandatory for C++ to
+ 310:../system/src/newlib/_startup.c ****   // execute the constructors for the static objects).
+ 311:../system/src/newlib/_startup.c ****   __run_init_array ();
+ 312:../system/src/newlib/_startup.c **** 
+ 313:../system/src/newlib/_startup.c ****   // Call the main entry point, and save the exit code.
+ 314:../system/src/newlib/_startup.c ****   int code = main (argc, argv);
+ 370              		.loc 1 314 0
+ 371 008c 0099     		ldr	r1, [sp]
+ 372 008e 0198     		ldr	r0, [sp, #4]
+ 373 0090 FFF7FEFF 		bl	main
+ 374              	.LVL43:
+ 375 0094 0546     		mov	r5, r0
+ 376              	.LVL44:
+ 377              	.LBB19:
+ 378              	.LBB20:
+ 182:../system/src/newlib/_startup.c ****   for (i = count; i > 0; i--)
+ 379              		.loc 1 182 0
+ 380 0096 1D4C     		ldr	r4, .L39+64
+ 381 0098 1D4B     		ldr	r3, .L39+68
+ 382 009a E41A     		subs	r4, r4, r3
+ 383 009c A410     		asrs	r4, r4, #2
+ 384              	.LVL45:
+ 385              	.L34:
+ 183:../system/src/newlib/_startup.c ****     __fini_array_start[i - 1] ();
+ 386              		.loc 1 183 0
+ 387 009e 002C     		cmp	r4, #0
+ 388 00a0 0EDC     		bgt	.L35
+ 389              	.LVL46:
+ 390              	.LBE20:
+ 391              	.LBE19:
+ 315:../system/src/newlib/_startup.c **** 
+ 316:../system/src/newlib/_startup.c ****   // Run the C++ static destructors.
+ 317:../system/src/newlib/_startup.c ****   __run_fini_array ();
+ 318:../system/src/newlib/_startup.c **** 
+ 319:../system/src/newlib/_startup.c ****   _exit (code);
+ 392              		.loc 1 319 0
+ 393 00a2 2846     		mov	r0, r5
+ 394 00a4 FFF7FEFF 		bl	_exit
+ 395              	.LVL47:
+ 396              	.L31:
+ 397              	.LBB22:
+ 398              	.LBB18:
+ 162:../system/src/newlib/_startup.c **** 
+ 399              		.loc 1 162 0
+ 400 00a8 154B     		ldr	r3, .L39+52
+ 401 00aa 53F82530 		ldr	r3, [r3, r5, lsl #2]
+ 402 00ae 9847     		blx	r3
+ 403              	.LVL48:
+ 161:../system/src/newlib/_startup.c ****     __preinit_array_start[i] ();
+ 404              		.loc 1 161 0
+ 405 00b0 0135     		adds	r5, r5, #1
+ 406              	.LVL49:
+ 407 00b2 E2E7     		b	.L30
+ 408              	.L33:
+ 171:../system/src/newlib/_startup.c **** }
+ 409              		.loc 1 171 0
+ 410 00b4 144B     		ldr	r3, .L39+60
+ 411 00b6 53F82530 		ldr	r3, [r3, r5, lsl #2]
+ 412 00ba 9847     		blx	r3
+ 413              	.LVL50:
+ 170:../system/src/newlib/_startup.c ****     __init_array_start[i] ();
+ 414              		.loc 1 170 0
+ 415 00bc 0135     		adds	r5, r5, #1
+ 416              	.LVL51:
+ 417 00be E3E7     		b	.L32
+ 418              	.LVL52:
+ 419              	.L35:
+ 420              	.LBE18:
+ 421              	.LBE22:
+ 422              	.LBB23:
+ 423              	.LBB21:
+ 184:../system/src/newlib/_startup.c **** 
+ 424              		.loc 1 184 0
+ 425 00c0 013C     		subs	r4, r4, #1
+ 426              	.LVL53:
+ 427 00c2 134B     		ldr	r3, .L39+68
+ 428              	.LVL54:
+ 429 00c4 53F82430 		ldr	r3, [r3, r4, lsl #2]
+ 430              	.LVL55:
+ 431 00c8 9847     		blx	r3
+ 432              	.LVL56:
+ 433 00ca E8E7     		b	.L34
+ 434              	.L40:
+ 435              		.align	2
+ 436              	.L39:
+ 437 00cc BABADECA 		.word	-891372870
+ 438 00d0 00000000 		.word	.LANCHOR0
+ 439 00d4 00000000 		.word	.LANCHOR1
+ 440 00d8 00000000 		.word	_sdata
+ 441 00dc 00000000 		.word	_sidata
+ 442 00e0 00000000 		.word	_edata
+ 443 00e4 78563412 		.word	305419896
+ 444 00e8 32547698 		.word	-1737075662
+ 445 00ec 00000000 		.word	.LANCHOR2
+ 446 00f0 00000000 		.word	.LANCHOR3
+ 447 00f4 00000000 		.word	__bss_start__
+ 448 00f8 00000000 		.word	__bss_end__
+ 449 00fc 00000000 		.word	__preinit_array_end
+ 450 0100 00000000 		.word	__preinit_array_start
+ 451 0104 00000000 		.word	__init_array_end
+ 452 0108 00000000 		.word	__init_array_start
+ 453 010c 00000000 		.word	__fini_array_end
+ 454 0110 00000000 		.word	__fini_array_start
+ 455              	.LBE21:
+ 456              	.LBE23:
+ 457              		.cfi_endproc
+ 458              	.LFE4:
+ 460              		.section	.bss_begin,"aw",%progbits
+ 461              		.align	2
+ 462              		.set	.LANCHOR2,. + 0
+ 465              	__bss_begin_guard:
+ 466 0000 00000000 		.space	4
+ 467              		.section	.bss_end,"aw",%progbits
+ 468              		.align	2
+ 469              		.set	.LANCHOR3,. + 0
+ 472              	__bss_end_guard:
+ 473 0000 00000000 		.space	4
+ 474              		.section	.data_begin,"aw",%progbits
+ 475              		.align	2
+ 476              		.set	.LANCHOR0,. + 0
+ 479              	__data_begin_guard:
+ 480 0000 78563412 		.word	305419896
+ 481              		.section	.data_end,"aw",%progbits
+ 482              		.align	2
+ 483              		.set	.LANCHOR1,. + 0
+ 486              	__data_end_guard:
+ 487 0000 32547698 		.word	-1737075662
+ 488              		.weak	__fini_array_start
+ 489              		.weak	__fini_array_end
+ 490              		.weak	__init_array_start
+ 491              		.weak	__init_array_end
+ 492              		.weak	__preinit_array_start
+ 493              		.weak	__preinit_array_end
+ 494              		.text
+ 495              	.Letext0:
+ 496              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 _startup.c
+     /tmp/ccolE0mW.s:16     .text.__initialize_data:0000000000000000 $t
+     /tmp/ccolE0mW.s:23     .text.__initialize_data:0000000000000000 __initialize_data
+     /tmp/ccolE0mW.s:53     .text.__initialize_bss:0000000000000000 $t
+     /tmp/ccolE0mW.s:60     .text.__initialize_bss:0000000000000000 __initialize_bss
+     /tmp/ccolE0mW.s:87     .text.__run_init_array:0000000000000000 $t
+     /tmp/ccolE0mW.s:94     .text.__run_init_array:0000000000000000 __run_init_array
+     /tmp/ccolE0mW.s:159    .text.__run_init_array:0000000000000038 $d
+     /tmp/ccolE0mW.s:167    .text.__run_fini_array:0000000000000000 $t
+     /tmp/ccolE0mW.s:174    .text.__run_fini_array:0000000000000000 __run_fini_array
+     /tmp/ccolE0mW.s:213    .text.__run_fini_array:000000000000001c $d
+     /tmp/ccolE0mW.s:219    .after_vectors:0000000000000000 $t
+     /tmp/ccolE0mW.s:226    .after_vectors:0000000000000000 _start
+     /tmp/ccolE0mW.s:437    .after_vectors:00000000000000cc $d
+     /tmp/ccolE0mW.s:461    .bss_begin:0000000000000000 $d
+     /tmp/ccolE0mW.s:465    .bss_begin:0000000000000000 __bss_begin_guard
+     /tmp/ccolE0mW.s:468    .bss_end:0000000000000000 $d
+     /tmp/ccolE0mW.s:472    .bss_end:0000000000000000 __bss_end_guard
+     /tmp/ccolE0mW.s:475    .data_begin:0000000000000000 $d
+     /tmp/ccolE0mW.s:479    .data_begin:0000000000000000 __data_begin_guard
+     /tmp/ccolE0mW.s:482    .data_end:0000000000000000 $d
+     /tmp/ccolE0mW.s:486    .data_end:0000000000000000 __data_end_guard
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+
+UNDEFINED SYMBOLS
+__preinit_array_end
+__preinit_array_start
+__init_array_end
+__init_array_start
+__fini_array_end
+__fini_array_start
+__initialize_hardware_early
+__initialize_hardware
+__initialize_args
+main
+_exit
+_sdata
+_sidata
+_edata
+__bss_start__
+__bss_end__

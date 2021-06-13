@@ -1,0 +1,3230 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"rtu_getters.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	__aeabi_ui2f
+  16              		.global	__aeabi_i2f
+  17              		.global	__aeabi_fmul
+  18              		.global	__aeabi_fadd
+  19              		.global	__aeabi_fdiv
+  20              		.global	__aeabi_fcmplt
+  21              		.global	__aeabi_fcmpgt
+  22              		.section	.text.rtu_get_temperature,"ax",%progbits
+  23              		.align	1
+  24              		.global	rtu_get_temperature
+  25              		.syntax unified
+  26              		.thumb
+  27              		.thumb_func
+  28              		.fpu softvfp
+  30              	rtu_get_temperature:
+  31              	.LFB95:
+  32              		.file 1 "../system/src/modbus_rtu/rtu_getters.c"
+   1:../system/src/modbus_rtu/rtu_getters.c **** /*
+   2:../system/src/modbus_rtu/rtu_getters.c ****  * rtu_getters.c
+   3:../system/src/modbus_rtu/rtu_getters.c ****  *
+   4:../system/src/modbus_rtu/rtu_getters.c ****  *  Created on: 29.09.2020
+   5:../system/src/modbus_rtu/rtu_getters.c ****  *      Author: mateusz
+   6:../system/src/modbus_rtu/rtu_getters.c ****  */
+   7:../system/src/modbus_rtu/rtu_getters.c **** 
+   8:../system/src/modbus_rtu/rtu_getters.c **** #include <stdio.h>
+   9:../system/src/modbus_rtu/rtu_getters.c **** 
+  10:../system/src/modbus_rtu/rtu_getters.c **** #include "station_config.h"
+  11:../system/src/modbus_rtu/rtu_getters.c **** 
+  12:../system/src/modbus_rtu/rtu_getters.c **** #include "modbus_rtu/rtu_getters.h"
+  13:../system/src/modbus_rtu/rtu_getters.c **** #include "modbus_rtu/rtu_return_values.h"
+  14:../system/src/modbus_rtu/rtu_getters.c **** #include "modbus_rtu/rtu_register_data_t.h"
+  15:../system/src/modbus_rtu/rtu_getters.c **** 
+  16:../system/src/modbus_rtu/rtu_getters.c **** #include "modbus_rtu/rtu_configuration.h"
+  17:../system/src/modbus_rtu/rtu_getters.c **** 
+  18:../system/src/modbus_rtu/rtu_getters.c **** #include "rte_wx.h"
+  19:../system/src/modbus_rtu/rtu_getters.c **** #include "rte_rtu.h"
+  20:../system/src/modbus_rtu/rtu_getters.c **** #include "main.h"
+  21:../system/src/modbus_rtu/rtu_getters.c **** 
+  22:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_temperature(float* out, const config_data_rtu_t * const config) {
+  33              		.loc 1 22 0
+  34              		.cfi_startproc
+  35              		@ args = 0, pretend = 0, frame = 0
+  36              		@ frame_needed = 0, uses_anonymous_args = 0
+  37              	.LVL0:
+  38 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+  39              		.cfi_def_cfa_offset 32
+  40              		.cfi_offset 4, -32
+  41              		.cfi_offset 5, -28
+  42              		.cfi_offset 6, -24
+  43              		.cfi_offset 7, -20
+  44              		.cfi_offset 8, -16
+  45              		.cfi_offset 9, -12
+  46              		.cfi_offset 10, -8
+  47              		.cfi_offset 14, -4
+  48              	.LVL1:
+  23:../system/src/modbus_rtu/rtu_getters.c **** 
+  24:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+  25:../system/src/modbus_rtu/rtu_getters.c **** 
+  26:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+  27:../system/src/modbus_rtu/rtu_getters.c **** 
+  28:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t raw_register_value = 0;
+  29:../system/src/modbus_rtu/rtu_getters.c **** 
+  30:../system/src/modbus_rtu/rtu_getters.c **** 	float physical_register_value = 0.0f;
+  31:../system/src/modbus_rtu/rtu_getters.c **** 
+  32:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+  33:../system/src/modbus_rtu/rtu_getters.c **** 
+  34:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+  35:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+  36:../system/src/modbus_rtu/rtu_getters.c **** 
+  37:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->temperature_source) {
+  49              		.loc 1 37 0
+  50 0004 4B79     		ldrb	r3, [r1, #5]	@ zero_extendqisi2
+  51 0006 013B     		subs	r3, r3, #1
+  52 0008 052B     		cmp	r3, #5
+  53 000a 5DD8     		bhi	.L12
+  54 000c DFE803F0 		tbb	[pc, r3]
+  55              	.L4:
+  56 0010 03       		.byte	(.L3-.L4)/2
+  57 0011 13       		.byte	(.L5-.L4)/2
+  58 0012 20       		.byte	(.L6-.L4)/2
+  59 0013 2F       		.byte	(.L7-.L4)/2
+  60 0014 3E       		.byte	(.L8-.L4)/2
+  61 0015 4D       		.byte	(.L9-.L4)/2
+  62              		.p2align 1
+  63              	.L3:
+  64              	.LVL2:
+  38:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+  39:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+  40:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+  65              		.loc 1 40 0
+  66 0016 8F7C     		ldrb	r7, [r1, #18]	@ zero_extendqisi2
+  67              	.LVL3:
+  41:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+  68              		.loc 1 41 0
+  69 0018 CE7C     		ldrb	r6, [r1, #19]	@ zero_extendqisi2
+  70              	.LVL4:
+  42:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+  71              		.loc 1 42 0
+  72 001a 0D7D     		ldrb	r5, [r1, #20]	@ zero_extendqisi2
+  73              	.LVL5:
+  43:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+  74              		.loc 1 43 0
+  75 001c 4C7D     		ldrb	r4, [r1, #21]	@ zero_extendqisi2
+  76              	.LVL6:
+  44:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+  77              		.loc 1 44 0
+  78 001e 544B     		ldr	r3, .L19
+  79 0020 D3F82080 		ldr	r8, [r3, #32]
+  80              	.LVL7:
+  39:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+  81              		.loc 1 39 0
+  82 0024 534A     		ldr	r2, .L19+4
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+  83              		.loc 1 24 0
+  84 0026 4FF0FF33 		mov	r3, #-1
+  85              	.LVL8:
+  86              	.L2:
+  45:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  46:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+  47:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+  48:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+  49:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+  50:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+  51:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+  52:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+  53:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+  54:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  55:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+  56:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+  57:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+  58:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+  59:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+  60:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+  61:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+  62:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+  63:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  64:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+  65:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+  66:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+  67:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+  68:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+  69:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+  70:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+  71:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+  72:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  73:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+  74:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+  75:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+  76:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+  77:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+  78:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+  79:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+  80:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+  81:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  82:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+  83:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+  84:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+  85:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+  86:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+  87:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+  88:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+  89:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+  90:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+  91:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+  92:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+  93:../system/src/modbus_rtu/rtu_getters.c **** 	}
+  94:../system/src/modbus_rtu/rtu_getters.c **** 
+  95:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+  87              		.loc 1 95 0
+  88 002a B3F1FF3F 		cmp	r3, #-1
+  89 002e 50D0     		beq	.L18
+  90              	.LVL9:
+  91              	.L1:
+  96:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+  97:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+  98:../system/src/modbus_rtu/rtu_getters.c **** 
+  99:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value in degrees C
+ 100:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(
+ 101:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_a * (float)raw_register_value * (float)raw_register_value +
+ 102:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 103:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 104:../system/src/modbus_rtu/rtu_getters.c **** 				) /
+ 105:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_d;
+ 106:../system/src/modbus_rtu/rtu_getters.c **** 
+ 107:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 108:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 109:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_TEMPERATURE ||
+ 110:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > RTU_MAX_VALID_TEMPERATURE) {
+ 111:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 112:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 113:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 114:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 115:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 116:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 117:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 118:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 119:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 120:../system/src/modbus_rtu/rtu_getters.c **** 
+ 121:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 122:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 123:../system/src/modbus_rtu/rtu_getters.c **** 
+ 124:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 125:../system/src/modbus_rtu/rtu_getters.c **** 
+ 126:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 127:../system/src/modbus_rtu/rtu_getters.c **** }
+  92              		.loc 1 127 0
+  93 0030 1846     		mov	r0, r3
+  94 0032 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+  95              	.LVL10:
+  96              	.L5:
+  48:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+  97              		.loc 1 48 0
+  98 0036 8F7F     		ldrb	r7, [r1, #30]	@ zero_extendqisi2
+  99              	.LVL11:
+  49:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 100              		.loc 1 49 0
+ 101 0038 CE7F     		ldrb	r6, [r1, #31]	@ zero_extendqisi2
+ 102              	.LVL12:
+  50:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 103              		.loc 1 50 0
+ 104 003a 91F82050 		ldrb	r5, [r1, #32]	@ zero_extendqisi2
+ 105              	.LVL13:
+  51:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 106              		.loc 1 51 0
+ 107 003e 91F82140 		ldrb	r4, [r1, #33]	@ zero_extendqisi2
+ 108              	.LVL14:
+  52:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 109              		.loc 1 52 0
+ 110 0042 4B4B     		ldr	r3, .L19
+ 111 0044 D3F82480 		ldr	r8, [r3, #36]
+ 112              	.LVL15:
+  53:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 113              		.loc 1 53 0
+ 114 0048 4B4A     		ldr	r2, .L19+8
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+ 115              		.loc 1 24 0
+ 116 004a 4FF0FF33 		mov	r3, #-1
+  54:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 117              		.loc 1 54 0
+ 118 004e ECE7     		b	.L2
+ 119              	.LVL16:
+ 120              	.L6:
+  57:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 121              		.loc 1 57 0
+ 122 0050 91F82A70 		ldrb	r7, [r1, #42]	@ zero_extendqisi2
+ 123              	.LVL17:
+  58:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 124              		.loc 1 58 0
+ 125 0054 91F82B60 		ldrb	r6, [r1, #43]	@ zero_extendqisi2
+ 126              	.LVL18:
+  59:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 127              		.loc 1 59 0
+ 128 0058 91F82C50 		ldrb	r5, [r1, #44]	@ zero_extendqisi2
+ 129              	.LVL19:
+  60:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 130              		.loc 1 60 0
+ 131 005c 91F82D40 		ldrb	r4, [r1, #45]	@ zero_extendqisi2
+ 132              	.LVL20:
+  61:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 133              		.loc 1 61 0
+ 134 0060 434B     		ldr	r3, .L19
+ 135 0062 D3F82880 		ldr	r8, [r3, #40]
+ 136              	.LVL21:
+  62:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 137              		.loc 1 62 0
+ 138 0066 454A     		ldr	r2, .L19+12
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+ 139              		.loc 1 24 0
+ 140 0068 4FF0FF33 		mov	r3, #-1
+  63:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 141              		.loc 1 63 0
+ 142 006c DDE7     		b	.L2
+ 143              	.LVL22:
+ 144              	.L7:
+  66:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 145              		.loc 1 66 0
+ 146 006e 91F83670 		ldrb	r7, [r1, #54]	@ zero_extendqisi2
+ 147              	.LVL23:
+  67:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 148              		.loc 1 67 0
+ 149 0072 91F83760 		ldrb	r6, [r1, #55]	@ zero_extendqisi2
+ 150              	.LVL24:
+  68:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 151              		.loc 1 68 0
+ 152 0076 91F83850 		ldrb	r5, [r1, #56]	@ zero_extendqisi2
+ 153              	.LVL25:
+  69:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 154              		.loc 1 69 0
+ 155 007a 91F83940 		ldrb	r4, [r1, #57]	@ zero_extendqisi2
+ 156              	.LVL26:
+  70:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 157              		.loc 1 70 0
+ 158 007e 3C4B     		ldr	r3, .L19
+ 159 0080 D3F82C80 		ldr	r8, [r3, #44]
+ 160              	.LVL27:
+  71:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 161              		.loc 1 71 0
+ 162 0084 3E4A     		ldr	r2, .L19+16
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+ 163              		.loc 1 24 0
+ 164 0086 4FF0FF33 		mov	r3, #-1
+  72:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 165              		.loc 1 72 0
+ 166 008a CEE7     		b	.L2
+ 167              	.LVL28:
+ 168              	.L8:
+  75:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 169              		.loc 1 75 0
+ 170 008c 91F84270 		ldrb	r7, [r1, #66]	@ zero_extendqisi2
+ 171              	.LVL29:
+  76:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 172              		.loc 1 76 0
+ 173 0090 91F84360 		ldrb	r6, [r1, #67]	@ zero_extendqisi2
+ 174              	.LVL30:
+  77:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 175              		.loc 1 77 0
+ 176 0094 91F84450 		ldrb	r5, [r1, #68]	@ zero_extendqisi2
+ 177              	.LVL31:
+  78:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 178              		.loc 1 78 0
+ 179 0098 91F84540 		ldrb	r4, [r1, #69]	@ zero_extendqisi2
+ 180              	.LVL32:
+  79:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 181              		.loc 1 79 0
+ 182 009c 344B     		ldr	r3, .L19
+ 183 009e D3F83080 		ldr	r8, [r3, #48]
+ 184              	.LVL33:
+  80:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 185              		.loc 1 80 0
+ 186 00a2 384A     		ldr	r2, .L19+20
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+ 187              		.loc 1 24 0
+ 188 00a4 4FF0FF33 		mov	r3, #-1
+  81:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 189              		.loc 1 81 0
+ 190 00a8 BFE7     		b	.L2
+ 191              	.LVL34:
+ 192              	.L9:
+  84:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 193              		.loc 1 84 0
+ 194 00aa 91F84E70 		ldrb	r7, [r1, #78]	@ zero_extendqisi2
+ 195              	.LVL35:
+  85:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 196              		.loc 1 85 0
+ 197 00ae 91F84F60 		ldrb	r6, [r1, #79]	@ zero_extendqisi2
+ 198              	.LVL36:
+  86:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 199              		.loc 1 86 0
+ 200 00b2 91F85050 		ldrb	r5, [r1, #80]	@ zero_extendqisi2
+ 201              	.LVL37:
+  87:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 202              		.loc 1 87 0
+ 203 00b6 91F85140 		ldrb	r4, [r1, #81]	@ zero_extendqisi2
+ 204              	.LVL38:
+  88:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 205              		.loc 1 88 0
+ 206 00ba 2D4B     		ldr	r3, .L19
+ 207 00bc D3F83480 		ldr	r8, [r3, #52]
+ 208              	.LVL39:
+  89:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 209              		.loc 1 89 0
+ 210 00c0 314A     		ldr	r2, .L19+24
+  24:../system/src/modbus_rtu/rtu_getters.c **** 
+ 211              		.loc 1 24 0
+ 212 00c2 4FF0FF33 		mov	r3, #-1
+  90:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 213              		.loc 1 90 0
+ 214 00c6 B0E7     		b	.L2
+ 215              	.LVL40:
+ 216              	.L12:
+  35:../system/src/modbus_rtu/rtu_getters.c **** 
+ 217              		.loc 1 35 0
+ 218 00c8 4FF00008 		mov	r8, #0
+  26:../system/src/modbus_rtu/rtu_getters.c **** 
+ 219              		.loc 1 26 0
+ 220 00cc 4246     		mov	r2, r8
+  92:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 221              		.loc 1 92 0
+ 222 00ce 0823     		movs	r3, #8
+ 223 00d0 ABE7     		b	.L2
+ 224              	.LVL41:
+ 225              	.L18:
+  95:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 226              		.loc 1 95 0 discriminator 1
+ 227 00d2 002A     		cmp	r2, #0
+ 228 00d4 ACD0     		beq	.L1
+ 229 00d6 8146     		mov	r9, r0
+ 230              	.LVL42:
+ 101:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 231              		.loc 1 101 0
+ 232 00d8 D088     		ldrh	r0, [r2, #6]
+ 233              	.LVL43:
+ 234 00da FFF7FEFF 		bl	__aeabi_ui2f
+ 235              	.LVL44:
+ 236 00de 8246     		mov	r10, r0
+ 237 00e0 3846     		mov	r0, r7
+ 238 00e2 FFF7FEFF 		bl	__aeabi_i2f
+ 239              	.LVL45:
+ 240 00e6 5146     		mov	r1, r10
+ 241 00e8 FFF7FEFF 		bl	__aeabi_fmul
+ 242              	.LVL46:
+ 243 00ec 0146     		mov	r1, r0
+ 244 00ee 5046     		mov	r0, r10
+ 245 00f0 FFF7FEFF 		bl	__aeabi_fmul
+ 246              	.LVL47:
+ 247 00f4 0746     		mov	r7, r0
+ 248              	.LVL48:
+ 102:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 249              		.loc 1 102 0
+ 250 00f6 3046     		mov	r0, r6
+ 251 00f8 FFF7FEFF 		bl	__aeabi_i2f
+ 252              	.LVL49:
+ 253 00fc 5146     		mov	r1, r10
+ 254 00fe FFF7FEFF 		bl	__aeabi_fmul
+ 255              	.LVL50:
+ 101:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 256              		.loc 1 101 0
+ 257 0102 0146     		mov	r1, r0
+ 258 0104 3846     		mov	r0, r7
+ 259 0106 FFF7FEFF 		bl	__aeabi_fadd
+ 260              	.LVL51:
+ 261 010a 0646     		mov	r6, r0
+ 262              	.LVL52:
+ 102:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 263              		.loc 1 102 0
+ 264 010c 2846     		mov	r0, r5
+ 265 010e FFF7FEFF 		bl	__aeabi_i2f
+ 266              	.LVL53:
+ 267 0112 3146     		mov	r1, r6
+ 268 0114 FFF7FEFF 		bl	__aeabi_fadd
+ 269              	.LVL54:
+ 270 0118 0546     		mov	r5, r0
+ 271              	.LVL55:
+ 104:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_d;
+ 272              		.loc 1 104 0
+ 273 011a 2046     		mov	r0, r4
+ 274 011c FFF7FEFF 		bl	__aeabi_i2f
+ 275              	.LVL56:
+ 100:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_a * (float)raw_register_value * (float)raw_register_value +
+ 276              		.loc 1 100 0
+ 277 0120 0146     		mov	r1, r0
+ 278 0122 2846     		mov	r0, r5
+ 279 0124 FFF7FEFF 		bl	__aeabi_fdiv
+ 280              	.LVL57:
+ 281 0128 0546     		mov	r5, r0
+ 282              	.LVL58:
+ 283              	.LBB26:
+ 284              	.LBB27:
+ 285              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA00"
+   9:../include/main.h **** #define SW_DATE "23052021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+ 286              		.loc 2 63 0
+ 287 012a 184B     		ldr	r3, .L19+28
+ 288 012c 1C68     		ldr	r4, [r3]
+ 289              	.LVL59:
+ 290              	.LBE27:
+ 291              	.LBE26:
+ 108:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_TEMPERATURE ||
+ 292              		.loc 1 108 0
+ 293 012e A4EB0808 		sub	r8, r4, r8
+ 294              	.LVL60:
+ 295 0132 174B     		ldr	r3, .L19+32
+ 296 0134 9845     		cmp	r8, r3
+ 297 0136 14D8     		bhi	.L13
+ 108:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_TEMPERATURE ||
+ 298              		.loc 1 108 0 is_stmt 0 discriminator 1
+ 299 0138 1649     		ldr	r1, .L19+36
+ 300 013a FFF7FEFF 		bl	__aeabi_fcmplt
+ 301              	.LVL61:
+ 302 013e 90B9     		cbnz	r0, .L14
+ 109:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > RTU_MAX_VALID_TEMPERATURE) {
+ 303              		.loc 1 109 0 is_stmt 1
+ 304 0140 1549     		ldr	r1, .L19+40
+ 305 0142 2846     		mov	r0, r5
+ 306 0144 FFF7FEFF 		bl	__aeabi_fcmpgt
+ 307              	.LVL62:
+ 308 0148 78B9     		cbnz	r0, .L15
+ 114:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 309              		.loc 1 114 0
+ 310 014a 144B     		ldr	r3, .L19+44
+ 311 014c 1B68     		ldr	r3, [r3]
+ 312 014e E41A     		subs	r4, r4, r3
+ 313 0150 134B     		ldr	r3, .L19+48
+ 314 0152 9C42     		cmp	r4, r3
+ 315 0154 03D8     		bhi	.L16
+ 115:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 316              		.loc 1 115 0
+ 317 0156 0623     		movs	r3, #6
+ 318              	.L11:
+ 319              	.LVL63:
+ 121:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 320              		.loc 1 121 0
+ 321 0158 C9F80050 		str	r5, [r9]	@ float
+ 322 015c 68E7     		b	.L1
+ 323              	.LVL64:
+ 324              	.L16:
+ 118:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 325              		.loc 1 118 0
+ 326 015e 0023     		movs	r3, #0
+ 327 0160 FAE7     		b	.L11
+ 328              	.LVL65:
+ 329              	.L13:
+ 111:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 330              		.loc 1 111 0
+ 331 0162 0523     		movs	r3, #5
+ 332 0164 64E7     		b	.L1
+ 333              	.LVL66:
+ 334              	.L14:
+ 335 0166 0523     		movs	r3, #5
+ 336 0168 62E7     		b	.L1
+ 337              	.L15:
+ 338 016a 0523     		movs	r3, #5
+ 339              	.LVL67:
+ 126:../system/src/modbus_rtu/rtu_getters.c **** }
+ 340              		.loc 1 126 0
+ 341 016c 60E7     		b	.L1
+ 342              	.L20:
+ 343 016e 00BF     		.align	2
+ 344              	.L19:
+ 345 0170 00000000 		.word	rte_rtu_pool_queue
+ 346 0174 00000000 		.word	rte_wx_modbus_rtu_f1
+ 347 0178 00000000 		.word	rte_wx_modbus_rtu_f2
+ 348 017c 00000000 		.word	rte_wx_modbus_rtu_f3
+ 349 0180 00000000 		.word	rte_wx_modbus_rtu_f4
+ 350 0184 00000000 		.word	rte_wx_modbus_rtu_f5
+ 351 0188 00000000 		.word	rte_wx_modbus_rtu_f6
+ 352 018c 00000000 		.word	master_time
+ 353 0190 E0930400 		.word	300000
+ 354 0194 0000F0C1 		.word	-1041235968
+ 355 0198 00007042 		.word	1114636288
+ 356 019c 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 357 01a0 DF930400 		.word	299999
+ 358              		.cfi_endproc
+ 359              	.LFE95:
+ 361              		.section	.text.rtu_get_pressure,"ax",%progbits
+ 362              		.align	1
+ 363              		.global	rtu_get_pressure
+ 364              		.syntax unified
+ 365              		.thumb
+ 366              		.thumb_func
+ 367              		.fpu softvfp
+ 369              	rtu_get_pressure:
+ 370              	.LFB96:
+ 128:../system/src/modbus_rtu/rtu_getters.c **** 
+ 129:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_pressure(float* out, const config_data_rtu_t * const config) {
+ 371              		.loc 1 129 0
+ 372              		.cfi_startproc
+ 373              		@ args = 0, pretend = 0, frame = 0
+ 374              		@ frame_needed = 0, uses_anonymous_args = 0
+ 375              	.LVL68:
+ 376 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 377              		.cfi_def_cfa_offset 32
+ 378              		.cfi_offset 4, -32
+ 379              		.cfi_offset 5, -28
+ 380              		.cfi_offset 6, -24
+ 381              		.cfi_offset 7, -20
+ 382              		.cfi_offset 8, -16
+ 383              		.cfi_offset 9, -12
+ 384              		.cfi_offset 10, -8
+ 385              		.cfi_offset 14, -4
+ 386              	.LVL69:
+ 130:../system/src/modbus_rtu/rtu_getters.c **** 
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+ 132:../system/src/modbus_rtu/rtu_getters.c **** 
+ 133:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+ 134:../system/src/modbus_rtu/rtu_getters.c **** 
+ 135:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t raw_register_value = 0;
+ 136:../system/src/modbus_rtu/rtu_getters.c **** 
+ 137:../system/src/modbus_rtu/rtu_getters.c **** 	float physical_register_value = 0.0f;
+ 138:../system/src/modbus_rtu/rtu_getters.c **** 
+ 139:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+ 140:../system/src/modbus_rtu/rtu_getters.c **** 
+ 141:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+ 142:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+ 143:../system/src/modbus_rtu/rtu_getters.c **** 
+ 144:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->pressure_source) {
+ 387              		.loc 1 144 0
+ 388 0004 CB79     		ldrb	r3, [r1, #7]	@ zero_extendqisi2
+ 389 0006 013B     		subs	r3, r3, #1
+ 390 0008 052B     		cmp	r3, #5
+ 391 000a 5DD8     		bhi	.L32
+ 392 000c DFE803F0 		tbb	[pc, r3]
+ 393              	.L24:
+ 394 0010 03       		.byte	(.L23-.L24)/2
+ 395 0011 13       		.byte	(.L25-.L24)/2
+ 396 0012 20       		.byte	(.L26-.L24)/2
+ 397 0013 2F       		.byte	(.L27-.L24)/2
+ 398 0014 3E       		.byte	(.L28-.L24)/2
+ 399 0015 4D       		.byte	(.L29-.L24)/2
+ 400              		.p2align 1
+ 401              	.L23:
+ 402              	.LVL70:
+ 145:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+ 146:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+ 147:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 403              		.loc 1 147 0
+ 404 0016 8F7C     		ldrb	r7, [r1, #18]	@ zero_extendqisi2
+ 405              	.LVL71:
+ 148:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+ 406              		.loc 1 148 0
+ 407 0018 CE7C     		ldrb	r6, [r1, #19]	@ zero_extendqisi2
+ 408              	.LVL72:
+ 149:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+ 409              		.loc 1 149 0
+ 410 001a 0D7D     		ldrb	r5, [r1, #20]	@ zero_extendqisi2
+ 411              	.LVL73:
+ 150:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+ 412              		.loc 1 150 0
+ 413 001c 4C7D     		ldrb	r4, [r1, #21]	@ zero_extendqisi2
+ 414              	.LVL74:
+ 151:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+ 415              		.loc 1 151 0
+ 416 001e 544B     		ldr	r3, .L39
+ 417 0020 D3F82080 		ldr	r8, [r3, #32]
+ 418              	.LVL75:
+ 146:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 419              		.loc 1 146 0
+ 420 0024 534A     		ldr	r2, .L39+4
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 421              		.loc 1 131 0
+ 422 0026 4FF0FF33 		mov	r3, #-1
+ 423              	.LVL76:
+ 424              	.L22:
+ 152:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 153:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+ 154:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 155:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+ 156:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 157:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 158:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 159:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 160:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 161:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 162:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 163:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 164:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+ 165:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 166:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 167:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 168:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 169:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 170:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 171:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 172:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 173:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+ 174:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 175:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 176:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 177:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 178:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 179:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 180:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 181:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 182:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+ 183:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 184:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 185:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 186:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 187:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 188:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 189:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 190:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 191:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+ 192:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 193:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 194:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 195:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 196:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 197:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 198:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 199:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+ 200:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 201:../system/src/modbus_rtu/rtu_getters.c **** 
+ 202:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+ 425              		.loc 1 202 0
+ 426 002a B3F1FF3F 		cmp	r3, #-1
+ 427 002e 50D0     		beq	.L38
+ 428              	.LVL77:
+ 429              	.L21:
+ 203:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 204:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+ 205:../system/src/modbus_rtu/rtu_getters.c **** 
+ 206:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value in degrees C
+ 207:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(
+ 208:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_a * (float)raw_register_value * (float)raw_register_value +
+ 209:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 210:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 211:../system/src/modbus_rtu/rtu_getters.c **** 				) /
+ 212:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_d;
+ 213:../system/src/modbus_rtu/rtu_getters.c **** 
+ 214:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 215:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 216:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_PRESSURE ||
+ 217:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > RTU_MAX_VALID_PRESSURE) {
+ 218:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 219:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 220:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 221:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 222:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 223:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 224:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 225:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 226:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 227:../system/src/modbus_rtu/rtu_getters.c **** 
+ 228:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 229:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 230:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 231:../system/src/modbus_rtu/rtu_getters.c **** 
+ 232:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 233:../system/src/modbus_rtu/rtu_getters.c **** }
+ 430              		.loc 1 233 0
+ 431 0030 1846     		mov	r0, r3
+ 432 0032 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 433              	.LVL78:
+ 434              	.L25:
+ 155:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 435              		.loc 1 155 0
+ 436 0036 8F7F     		ldrb	r7, [r1, #30]	@ zero_extendqisi2
+ 437              	.LVL79:
+ 156:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 438              		.loc 1 156 0
+ 439 0038 CE7F     		ldrb	r6, [r1, #31]	@ zero_extendqisi2
+ 440              	.LVL80:
+ 157:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 441              		.loc 1 157 0
+ 442 003a 91F82050 		ldrb	r5, [r1, #32]	@ zero_extendqisi2
+ 443              	.LVL81:
+ 158:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 444              		.loc 1 158 0
+ 445 003e 91F82140 		ldrb	r4, [r1, #33]	@ zero_extendqisi2
+ 446              	.LVL82:
+ 159:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 447              		.loc 1 159 0
+ 448 0042 4B4B     		ldr	r3, .L39
+ 449 0044 D3F82480 		ldr	r8, [r3, #36]
+ 450              	.LVL83:
+ 160:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 451              		.loc 1 160 0
+ 452 0048 4B4A     		ldr	r2, .L39+8
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 453              		.loc 1 131 0
+ 454 004a 4FF0FF33 		mov	r3, #-1
+ 161:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 455              		.loc 1 161 0
+ 456 004e ECE7     		b	.L22
+ 457              	.LVL84:
+ 458              	.L26:
+ 164:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 459              		.loc 1 164 0
+ 460 0050 91F82A70 		ldrb	r7, [r1, #42]	@ zero_extendqisi2
+ 461              	.LVL85:
+ 165:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 462              		.loc 1 165 0
+ 463 0054 91F82B60 		ldrb	r6, [r1, #43]	@ zero_extendqisi2
+ 464              	.LVL86:
+ 166:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 465              		.loc 1 166 0
+ 466 0058 91F82C50 		ldrb	r5, [r1, #44]	@ zero_extendqisi2
+ 467              	.LVL87:
+ 167:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 468              		.loc 1 167 0
+ 469 005c 91F82D40 		ldrb	r4, [r1, #45]	@ zero_extendqisi2
+ 470              	.LVL88:
+ 168:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 471              		.loc 1 168 0
+ 472 0060 434B     		ldr	r3, .L39
+ 473 0062 D3F82880 		ldr	r8, [r3, #40]
+ 474              	.LVL89:
+ 169:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 475              		.loc 1 169 0
+ 476 0066 454A     		ldr	r2, .L39+12
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 477              		.loc 1 131 0
+ 478 0068 4FF0FF33 		mov	r3, #-1
+ 170:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 479              		.loc 1 170 0
+ 480 006c DDE7     		b	.L22
+ 481              	.LVL90:
+ 482              	.L27:
+ 173:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 483              		.loc 1 173 0
+ 484 006e 91F83670 		ldrb	r7, [r1, #54]	@ zero_extendqisi2
+ 485              	.LVL91:
+ 174:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 486              		.loc 1 174 0
+ 487 0072 91F83760 		ldrb	r6, [r1, #55]	@ zero_extendqisi2
+ 488              	.LVL92:
+ 175:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 489              		.loc 1 175 0
+ 490 0076 91F83850 		ldrb	r5, [r1, #56]	@ zero_extendqisi2
+ 491              	.LVL93:
+ 176:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 492              		.loc 1 176 0
+ 493 007a 91F83940 		ldrb	r4, [r1, #57]	@ zero_extendqisi2
+ 494              	.LVL94:
+ 177:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 495              		.loc 1 177 0
+ 496 007e 3C4B     		ldr	r3, .L39
+ 497 0080 D3F82C80 		ldr	r8, [r3, #44]
+ 498              	.LVL95:
+ 178:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 499              		.loc 1 178 0
+ 500 0084 3E4A     		ldr	r2, .L39+16
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 501              		.loc 1 131 0
+ 502 0086 4FF0FF33 		mov	r3, #-1
+ 179:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 503              		.loc 1 179 0
+ 504 008a CEE7     		b	.L22
+ 505              	.LVL96:
+ 506              	.L28:
+ 182:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 507              		.loc 1 182 0
+ 508 008c 91F84270 		ldrb	r7, [r1, #66]	@ zero_extendqisi2
+ 509              	.LVL97:
+ 183:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 510              		.loc 1 183 0
+ 511 0090 91F84360 		ldrb	r6, [r1, #67]	@ zero_extendqisi2
+ 512              	.LVL98:
+ 184:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 513              		.loc 1 184 0
+ 514 0094 91F84450 		ldrb	r5, [r1, #68]	@ zero_extendqisi2
+ 515              	.LVL99:
+ 185:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 516              		.loc 1 185 0
+ 517 0098 91F84540 		ldrb	r4, [r1, #69]	@ zero_extendqisi2
+ 518              	.LVL100:
+ 186:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 519              		.loc 1 186 0
+ 520 009c 344B     		ldr	r3, .L39
+ 521 009e D3F83080 		ldr	r8, [r3, #48]
+ 522              	.LVL101:
+ 187:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 523              		.loc 1 187 0
+ 524 00a2 384A     		ldr	r2, .L39+20
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 525              		.loc 1 131 0
+ 526 00a4 4FF0FF33 		mov	r3, #-1
+ 188:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 527              		.loc 1 188 0
+ 528 00a8 BFE7     		b	.L22
+ 529              	.LVL102:
+ 530              	.L29:
+ 191:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 531              		.loc 1 191 0
+ 532 00aa 91F84E70 		ldrb	r7, [r1, #78]	@ zero_extendqisi2
+ 533              	.LVL103:
+ 192:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 534              		.loc 1 192 0
+ 535 00ae 91F84F60 		ldrb	r6, [r1, #79]	@ zero_extendqisi2
+ 536              	.LVL104:
+ 193:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 537              		.loc 1 193 0
+ 538 00b2 91F85050 		ldrb	r5, [r1, #80]	@ zero_extendqisi2
+ 539              	.LVL105:
+ 194:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 540              		.loc 1 194 0
+ 541 00b6 91F85140 		ldrb	r4, [r1, #81]	@ zero_extendqisi2
+ 542              	.LVL106:
+ 195:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 543              		.loc 1 195 0
+ 544 00ba 2D4B     		ldr	r3, .L39
+ 545 00bc D3F83480 		ldr	r8, [r3, #52]
+ 546              	.LVL107:
+ 196:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 547              		.loc 1 196 0
+ 548 00c0 314A     		ldr	r2, .L39+24
+ 131:../system/src/modbus_rtu/rtu_getters.c **** 
+ 549              		.loc 1 131 0
+ 550 00c2 4FF0FF33 		mov	r3, #-1
+ 197:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 551              		.loc 1 197 0
+ 552 00c6 B0E7     		b	.L22
+ 553              	.LVL108:
+ 554              	.L32:
+ 142:../system/src/modbus_rtu/rtu_getters.c **** 
+ 555              		.loc 1 142 0
+ 556 00c8 4FF00008 		mov	r8, #0
+ 133:../system/src/modbus_rtu/rtu_getters.c **** 
+ 557              		.loc 1 133 0
+ 558 00cc 4246     		mov	r2, r8
+ 199:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 559              		.loc 1 199 0
+ 560 00ce 0823     		movs	r3, #8
+ 561 00d0 ABE7     		b	.L22
+ 562              	.LVL109:
+ 563              	.L38:
+ 202:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 564              		.loc 1 202 0 discriminator 1
+ 565 00d2 002A     		cmp	r2, #0
+ 566 00d4 ACD0     		beq	.L21
+ 567 00d6 8146     		mov	r9, r0
+ 568              	.LVL110:
+ 208:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 569              		.loc 1 208 0
+ 570 00d8 D088     		ldrh	r0, [r2, #6]
+ 571              	.LVL111:
+ 572 00da FFF7FEFF 		bl	__aeabi_ui2f
+ 573              	.LVL112:
+ 574 00de 8246     		mov	r10, r0
+ 575 00e0 3846     		mov	r0, r7
+ 576 00e2 FFF7FEFF 		bl	__aeabi_i2f
+ 577              	.LVL113:
+ 578 00e6 5146     		mov	r1, r10
+ 579 00e8 FFF7FEFF 		bl	__aeabi_fmul
+ 580              	.LVL114:
+ 581 00ec 0146     		mov	r1, r0
+ 582 00ee 5046     		mov	r0, r10
+ 583 00f0 FFF7FEFF 		bl	__aeabi_fmul
+ 584              	.LVL115:
+ 585 00f4 0746     		mov	r7, r0
+ 586              	.LVL116:
+ 209:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 587              		.loc 1 209 0
+ 588 00f6 3046     		mov	r0, r6
+ 589 00f8 FFF7FEFF 		bl	__aeabi_i2f
+ 590              	.LVL117:
+ 591 00fc 5146     		mov	r1, r10
+ 592 00fe FFF7FEFF 		bl	__aeabi_fmul
+ 593              	.LVL118:
+ 208:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_b * (float)raw_register_value +
+ 594              		.loc 1 208 0
+ 595 0102 0146     		mov	r1, r0
+ 596 0104 3846     		mov	r0, r7
+ 597 0106 FFF7FEFF 		bl	__aeabi_fadd
+ 598              	.LVL119:
+ 599 010a 0646     		mov	r6, r0
+ 600              	.LVL120:
+ 209:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_c
+ 601              		.loc 1 209 0
+ 602 010c 2846     		mov	r0, r5
+ 603 010e FFF7FEFF 		bl	__aeabi_i2f
+ 604              	.LVL121:
+ 605 0112 3146     		mov	r1, r6
+ 606 0114 FFF7FEFF 		bl	__aeabi_fadd
+ 607              	.LVL122:
+ 608 0118 0546     		mov	r5, r0
+ 609              	.LVL123:
+ 211:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_d;
+ 610              		.loc 1 211 0
+ 611 011a 2046     		mov	r0, r4
+ 612 011c FFF7FEFF 		bl	__aeabi_i2f
+ 613              	.LVL124:
+ 207:../system/src/modbus_rtu/rtu_getters.c **** 				scaling_a * (float)raw_register_value * (float)raw_register_value +
+ 614              		.loc 1 207 0
+ 615 0120 0146     		mov	r1, r0
+ 616 0122 2846     		mov	r0, r5
+ 617 0124 FFF7FEFF 		bl	__aeabi_fdiv
+ 618              	.LVL125:
+ 619 0128 0546     		mov	r5, r0
+ 620              	.LVL126:
+ 621              	.LBB28:
+ 622              	.LBB29:
+ 623              		.loc 2 63 0
+ 624 012a 184B     		ldr	r3, .L39+28
+ 625 012c 1C68     		ldr	r4, [r3]
+ 626              	.LVL127:
+ 627              	.LBE29:
+ 628              	.LBE28:
+ 215:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_PRESSURE ||
+ 629              		.loc 1 215 0
+ 630 012e A4EB0808 		sub	r8, r4, r8
+ 631              	.LVL128:
+ 632 0132 174B     		ldr	r3, .L39+32
+ 633 0134 9845     		cmp	r8, r3
+ 634 0136 14D8     		bhi	.L33
+ 215:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value < RTU_MIN_VALID_PRESSURE ||
+ 635              		.loc 1 215 0 is_stmt 0 discriminator 1
+ 636 0138 1649     		ldr	r1, .L39+36
+ 637 013a FFF7FEFF 		bl	__aeabi_fcmplt
+ 638              	.LVL129:
+ 639 013e 90B9     		cbnz	r0, .L34
+ 216:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > RTU_MAX_VALID_PRESSURE) {
+ 640              		.loc 1 216 0 is_stmt 1
+ 641 0140 1549     		ldr	r1, .L39+40
+ 642 0142 2846     		mov	r0, r5
+ 643 0144 FFF7FEFF 		bl	__aeabi_fcmpgt
+ 644              	.LVL130:
+ 645 0148 78B9     		cbnz	r0, .L35
+ 221:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 646              		.loc 1 221 0
+ 647 014a 144B     		ldr	r3, .L39+44
+ 648 014c 1B68     		ldr	r3, [r3]
+ 649 014e E41A     		subs	r4, r4, r3
+ 650 0150 134B     		ldr	r3, .L39+48
+ 651 0152 9C42     		cmp	r4, r3
+ 652 0154 03D8     		bhi	.L36
+ 222:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 653              		.loc 1 222 0
+ 654 0156 0623     		movs	r3, #6
+ 655              	.L31:
+ 656              	.LVL131:
+ 228:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 657              		.loc 1 228 0
+ 658 0158 C9F80050 		str	r5, [r9]	@ float
+ 659 015c 68E7     		b	.L21
+ 660              	.LVL132:
+ 661              	.L36:
+ 225:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 662              		.loc 1 225 0
+ 663 015e 0023     		movs	r3, #0
+ 664 0160 FAE7     		b	.L31
+ 665              	.LVL133:
+ 666              	.L33:
+ 218:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 667              		.loc 1 218 0
+ 668 0162 0523     		movs	r3, #5
+ 669 0164 64E7     		b	.L21
+ 670              	.LVL134:
+ 671              	.L34:
+ 672 0166 0523     		movs	r3, #5
+ 673 0168 62E7     		b	.L21
+ 674              	.L35:
+ 675 016a 0523     		movs	r3, #5
+ 676              	.LVL135:
+ 232:../system/src/modbus_rtu/rtu_getters.c **** }
+ 677              		.loc 1 232 0
+ 678 016c 60E7     		b	.L21
+ 679              	.L40:
+ 680 016e 00BF     		.align	2
+ 681              	.L39:
+ 682 0170 00000000 		.word	rte_rtu_pool_queue
+ 683 0174 00000000 		.word	rte_wx_modbus_rtu_f1
+ 684 0178 00000000 		.word	rte_wx_modbus_rtu_f2
+ 685 017c 00000000 		.word	rte_wx_modbus_rtu_f3
+ 686 0180 00000000 		.word	rte_wx_modbus_rtu_f4
+ 687 0184 00000000 		.word	rte_wx_modbus_rtu_f5
+ 688 0188 00000000 		.word	rte_wx_modbus_rtu_f6
+ 689 018c 00000000 		.word	master_time
+ 690 0190 E0930400 		.word	300000
+ 691 0194 00006144 		.word	1147207680
+ 692 0198 00808944 		.word	1149861888
+ 693 019c 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 694 01a0 DF930400 		.word	299999
+ 695              		.cfi_endproc
+ 696              	.LFE96:
+ 698              		.section	.text.rtu_get_wind_direction,"ax",%progbits
+ 699              		.align	1
+ 700              		.global	rtu_get_wind_direction
+ 701              		.syntax unified
+ 702              		.thumb
+ 703              		.thumb_func
+ 704              		.fpu softvfp
+ 706              	rtu_get_wind_direction:
+ 707              	.LFB97:
+ 234:../system/src/modbus_rtu/rtu_getters.c **** 
+ 235:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_wind_direction(uint16_t* out, const config_data_rtu_t * const config) {
+ 708              		.loc 1 235 0
+ 709              		.cfi_startproc
+ 710              		@ args = 0, pretend = 0, frame = 0
+ 711              		@ frame_needed = 0, uses_anonymous_args = 0
+ 712              		@ link register save eliminated.
+ 713              	.LVL136:
+ 714 0000 F0B4     		push	{r4, r5, r6, r7}
+ 715              		.cfi_def_cfa_offset 16
+ 716              		.cfi_offset 4, -16
+ 717              		.cfi_offset 5, -12
+ 718              		.cfi_offset 6, -8
+ 719              		.cfi_offset 7, -4
+ 720 0002 0446     		mov	r4, r0
+ 721              	.LVL137:
+ 236:../system/src/modbus_rtu/rtu_getters.c **** 
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+ 238:../system/src/modbus_rtu/rtu_getters.c **** 
+ 239:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+ 240:../system/src/modbus_rtu/rtu_getters.c **** 
+ 241:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t raw_register_value = 0, physical_register_value = 0;
+ 242:../system/src/modbus_rtu/rtu_getters.c **** 
+ 243:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+ 244:../system/src/modbus_rtu/rtu_getters.c **** 
+ 245:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+ 246:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+ 247:../system/src/modbus_rtu/rtu_getters.c **** 
+ 248:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->wind_direction_source) {
+ 722              		.loc 1 248 0
+ 723 0004 0B7A     		ldrb	r3, [r1, #8]	@ zero_extendqisi2
+ 724 0006 013B     		subs	r3, r3, #1
+ 725 0008 052B     		cmp	r3, #5
+ 726 000a 58D8     		bhi	.L52
+ 727 000c DFE803F0 		tbb	[pc, r3]
+ 728              	.LVL138:
+ 729              	.L44:
+ 730 0010 03       		.byte	(.L43-.L44)/2
+ 731 0011 12       		.byte	(.L45-.L44)/2
+ 732 0012 1F       		.byte	(.L46-.L44)/2
+ 733 0013 2D       		.byte	(.L47-.L44)/2
+ 734 0014 3B       		.byte	(.L48-.L44)/2
+ 735 0015 49       		.byte	(.L49-.L44)/2
+ 736              		.p2align 1
+ 737              	.L43:
+ 249:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+ 250:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+ 251:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 738              		.loc 1 251 0
+ 739 0016 8A7C     		ldrb	r2, [r1, #18]	@ zero_extendqisi2
+ 740              	.LVL139:
+ 252:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+ 741              		.loc 1 252 0
+ 742 0018 91F813C0 		ldrb	ip, [r1, #19]	@ zero_extendqisi2
+ 743              	.LVL140:
+ 253:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+ 744              		.loc 1 253 0
+ 745 001c 0E7D     		ldrb	r6, [r1, #20]	@ zero_extendqisi2
+ 746              	.LVL141:
+ 254:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+ 747              		.loc 1 254 0
+ 748 001e 4D7D     		ldrb	r5, [r1, #21]	@ zero_extendqisi2
+ 749              	.LVL142:
+ 255:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+ 750              		.loc 1 255 0
+ 751 0020 3B4B     		ldr	r3, .L58
+ 752 0022 196A     		ldr	r1, [r3, #32]
+ 753              	.LVL143:
+ 250:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 754              		.loc 1 250 0
+ 755 0024 3B4F     		ldr	r7, .L58+4
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 756              		.loc 1 237 0
+ 757 0026 4FF0FF30 		mov	r0, #-1
+ 758              	.LVL144:
+ 759              	.L42:
+ 256:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 257:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+ 258:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 259:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+ 260:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 261:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 262:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 263:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 264:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 265:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 266:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 267:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 268:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+ 269:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 270:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 271:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 272:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 273:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 274:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 275:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 276:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 277:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+ 278:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 279:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 280:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 281:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 282:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 283:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 284:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 285:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 286:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+ 287:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 288:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 289:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 290:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 291:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 292:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 293:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 294:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 295:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+ 296:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 297:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 298:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 299:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 300:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 301:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 302:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 303:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+ 304:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 305:../system/src/modbus_rtu/rtu_getters.c **** 
+ 306:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+ 760              		.loc 1 306 0
+ 761 002a B0F1FF3F 		cmp	r0, #-1
+ 762 002e 4AD0     		beq	.L57
+ 763              	.LVL145:
+ 764              	.L41:
+ 307:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 308:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+ 309:../system/src/modbus_rtu/rtu_getters.c **** 
+ 310:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value
+ 311:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(uint16_t)(
+ 312:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 313:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 314:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 315:../system/src/modbus_rtu/rtu_getters.c **** 							) /
+ 316:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d;
+ 317:../system/src/modbus_rtu/rtu_getters.c **** 
+ 318:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 319:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 320:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > 360) {
+ 321:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 322:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 323:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 324:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 325:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 326:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 327:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 328:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 329:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 330:../system/src/modbus_rtu/rtu_getters.c **** 
+ 331:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 332:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 333:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 334:../system/src/modbus_rtu/rtu_getters.c **** 
+ 335:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 336:../system/src/modbus_rtu/rtu_getters.c **** }
+ 765              		.loc 1 336 0
+ 766 0030 F0BC     		pop	{r4, r5, r6, r7}
+ 767              		.cfi_remember_state
+ 768              		.cfi_restore 7
+ 769              		.cfi_restore 6
+ 770              		.cfi_restore 5
+ 771              		.cfi_restore 4
+ 772              		.cfi_def_cfa_offset 0
+ 773              	.LVL146:
+ 774 0032 7047     		bx	lr
+ 775              	.LVL147:
+ 776              	.L45:
+ 777              		.cfi_restore_state
+ 259:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 778              		.loc 1 259 0
+ 779 0034 8A7F     		ldrb	r2, [r1, #30]	@ zero_extendqisi2
+ 780              	.LVL148:
+ 260:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 781              		.loc 1 260 0
+ 782 0036 91F81FC0 		ldrb	ip, [r1, #31]	@ zero_extendqisi2
+ 783              	.LVL149:
+ 261:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 784              		.loc 1 261 0
+ 785 003a 91F82060 		ldrb	r6, [r1, #32]	@ zero_extendqisi2
+ 786              	.LVL150:
+ 262:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 787              		.loc 1 262 0
+ 788 003e 91F82150 		ldrb	r5, [r1, #33]	@ zero_extendqisi2
+ 789              	.LVL151:
+ 263:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 790              		.loc 1 263 0
+ 791 0042 334B     		ldr	r3, .L58
+ 792 0044 596A     		ldr	r1, [r3, #36]
+ 793              	.LVL152:
+ 264:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 794              		.loc 1 264 0
+ 795 0046 344F     		ldr	r7, .L58+8
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 796              		.loc 1 237 0
+ 797 0048 4FF0FF30 		mov	r0, #-1
+ 265:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 798              		.loc 1 265 0
+ 799 004c EDE7     		b	.L42
+ 800              	.LVL153:
+ 801              	.L46:
+ 268:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 802              		.loc 1 268 0
+ 803 004e 91F82A20 		ldrb	r2, [r1, #42]	@ zero_extendqisi2
+ 804              	.LVL154:
+ 269:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 805              		.loc 1 269 0
+ 806 0052 91F82BC0 		ldrb	ip, [r1, #43]	@ zero_extendqisi2
+ 807              	.LVL155:
+ 270:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 808              		.loc 1 270 0
+ 809 0056 91F82C60 		ldrb	r6, [r1, #44]	@ zero_extendqisi2
+ 810              	.LVL156:
+ 271:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 811              		.loc 1 271 0
+ 812 005a 91F82D50 		ldrb	r5, [r1, #45]	@ zero_extendqisi2
+ 813              	.LVL157:
+ 272:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 814              		.loc 1 272 0
+ 815 005e 2C4B     		ldr	r3, .L58
+ 816 0060 996A     		ldr	r1, [r3, #40]
+ 817              	.LVL158:
+ 273:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 818              		.loc 1 273 0
+ 819 0062 2E4F     		ldr	r7, .L58+12
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 820              		.loc 1 237 0
+ 821 0064 4FF0FF30 		mov	r0, #-1
+ 274:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 822              		.loc 1 274 0
+ 823 0068 DFE7     		b	.L42
+ 824              	.LVL159:
+ 825              	.L47:
+ 277:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 826              		.loc 1 277 0
+ 827 006a 91F83620 		ldrb	r2, [r1, #54]	@ zero_extendqisi2
+ 828              	.LVL160:
+ 278:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 829              		.loc 1 278 0
+ 830 006e 91F837C0 		ldrb	ip, [r1, #55]	@ zero_extendqisi2
+ 831              	.LVL161:
+ 279:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 832              		.loc 1 279 0
+ 833 0072 91F83860 		ldrb	r6, [r1, #56]	@ zero_extendqisi2
+ 834              	.LVL162:
+ 280:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 835              		.loc 1 280 0
+ 836 0076 91F83950 		ldrb	r5, [r1, #57]	@ zero_extendqisi2
+ 837              	.LVL163:
+ 281:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 838              		.loc 1 281 0
+ 839 007a 254B     		ldr	r3, .L58
+ 840 007c D96A     		ldr	r1, [r3, #44]
+ 841              	.LVL164:
+ 282:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 842              		.loc 1 282 0
+ 843 007e 284F     		ldr	r7, .L58+16
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 844              		.loc 1 237 0
+ 845 0080 4FF0FF30 		mov	r0, #-1
+ 283:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 846              		.loc 1 283 0
+ 847 0084 D1E7     		b	.L42
+ 848              	.LVL165:
+ 849              	.L48:
+ 286:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 850              		.loc 1 286 0
+ 851 0086 91F84220 		ldrb	r2, [r1, #66]	@ zero_extendqisi2
+ 852              	.LVL166:
+ 287:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 853              		.loc 1 287 0
+ 854 008a 91F843C0 		ldrb	ip, [r1, #67]	@ zero_extendqisi2
+ 855              	.LVL167:
+ 288:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 856              		.loc 1 288 0
+ 857 008e 91F84460 		ldrb	r6, [r1, #68]	@ zero_extendqisi2
+ 858              	.LVL168:
+ 289:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 859              		.loc 1 289 0
+ 860 0092 91F84550 		ldrb	r5, [r1, #69]	@ zero_extendqisi2
+ 861              	.LVL169:
+ 290:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 862              		.loc 1 290 0
+ 863 0096 1E4B     		ldr	r3, .L58
+ 864 0098 196B     		ldr	r1, [r3, #48]
+ 865              	.LVL170:
+ 291:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 866              		.loc 1 291 0
+ 867 009a 224F     		ldr	r7, .L58+20
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 868              		.loc 1 237 0
+ 869 009c 4FF0FF30 		mov	r0, #-1
+ 292:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 870              		.loc 1 292 0
+ 871 00a0 C3E7     		b	.L42
+ 872              	.LVL171:
+ 873              	.L49:
+ 295:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 874              		.loc 1 295 0
+ 875 00a2 91F84E20 		ldrb	r2, [r1, #78]	@ zero_extendqisi2
+ 876              	.LVL172:
+ 296:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 877              		.loc 1 296 0
+ 878 00a6 91F84FC0 		ldrb	ip, [r1, #79]	@ zero_extendqisi2
+ 879              	.LVL173:
+ 297:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 880              		.loc 1 297 0
+ 881 00aa 91F85060 		ldrb	r6, [r1, #80]	@ zero_extendqisi2
+ 882              	.LVL174:
+ 298:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 883              		.loc 1 298 0
+ 884 00ae 91F85150 		ldrb	r5, [r1, #81]	@ zero_extendqisi2
+ 885              	.LVL175:
+ 299:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 886              		.loc 1 299 0
+ 887 00b2 174B     		ldr	r3, .L58
+ 888 00b4 596B     		ldr	r1, [r3, #52]
+ 889              	.LVL176:
+ 300:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 890              		.loc 1 300 0
+ 891 00b6 1C4F     		ldr	r7, .L58+24
+ 237:../system/src/modbus_rtu/rtu_getters.c **** 
+ 892              		.loc 1 237 0
+ 893 00b8 4FF0FF30 		mov	r0, #-1
+ 301:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 894              		.loc 1 301 0
+ 895 00bc B5E7     		b	.L42
+ 896              	.LVL177:
+ 897              	.L52:
+ 246:../system/src/modbus_rtu/rtu_getters.c **** 
+ 898              		.loc 1 246 0
+ 899 00be 0021     		movs	r1, #0
+ 900              	.LVL178:
+ 239:../system/src/modbus_rtu/rtu_getters.c **** 
+ 901              		.loc 1 239 0
+ 902 00c0 0F46     		mov	r7, r1
+ 303:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 903              		.loc 1 303 0
+ 904 00c2 0820     		movs	r0, #8
+ 905 00c4 B1E7     		b	.L42
+ 906              	.LVL179:
+ 907              	.L57:
+ 306:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 908              		.loc 1 306 0 discriminator 1
+ 909 00c6 002F     		cmp	r7, #0
+ 910 00c8 B2D0     		beq	.L41
+ 308:../system/src/modbus_rtu/rtu_getters.c **** 
+ 911              		.loc 1 308 0
+ 912 00ca F888     		ldrh	r0, [r7, #6]
+ 913              	.LVL180:
+ 312:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 914              		.loc 1 312 0
+ 915 00cc 00FB02C3 		mla	r3, r0, r2, ip
+ 916 00d0 03FB00F3 		mul	r3, r3, r0
+ 917 00d4 9BB2     		uxth	r3, r3
+ 311:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 918              		.loc 1 311 0
+ 919 00d6 3344     		add	r3, r3, r6
+ 920 00d8 9BB2     		uxth	r3, r3
+ 921 00da B3FBF5F3 		udiv	r3, r3, r5
+ 922              	.LVL181:
+ 923              	.LBB30:
+ 924              	.LBB31:
+ 925              		.loc 2 63 0
+ 926 00de 134A     		ldr	r2, .L58+28
+ 927              	.LVL182:
+ 928 00e0 1268     		ldr	r2, [r2]
+ 929              	.LBE31:
+ 930              	.LBE30:
+ 319:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > 360) {
+ 931              		.loc 1 319 0
+ 932 00e2 511A     		subs	r1, r2, r1
+ 933              	.LVL183:
+ 934 00e4 1248     		ldr	r0, .L58+32
+ 935              	.LVL184:
+ 936 00e6 8142     		cmp	r1, r0
+ 937 00e8 0DD8     		bhi	.L53
+ 319:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > 360) {
+ 938              		.loc 1 319 0 is_stmt 0 discriminator 1
+ 939 00ea B3F5B47F 		cmp	r3, #360
+ 940 00ee 0CD8     		bhi	.L54
+ 324:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 941              		.loc 1 324 0 is_stmt 1
+ 942 00f0 1049     		ldr	r1, .L58+36
+ 943 00f2 0968     		ldr	r1, [r1]
+ 944 00f4 521A     		subs	r2, r2, r1
+ 945 00f6 1049     		ldr	r1, .L58+40
+ 946 00f8 8A42     		cmp	r2, r1
+ 947 00fa 02D8     		bhi	.L55
+ 325:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 948              		.loc 1 325 0
+ 949 00fc 0620     		movs	r0, #6
+ 950              	.L51:
+ 951              	.LVL185:
+ 331:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 952              		.loc 1 331 0
+ 953 00fe 2380     		strh	r3, [r4]	@ movhi
+ 954              	.LVL186:
+ 955 0100 96E7     		b	.L41
+ 956              	.LVL187:
+ 957              	.L55:
+ 328:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 958              		.loc 1 328 0
+ 959 0102 0020     		movs	r0, #0
+ 960 0104 FBE7     		b	.L51
+ 961              	.L53:
+ 321:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 962              		.loc 1 321 0
+ 963 0106 0520     		movs	r0, #5
+ 964 0108 92E7     		b	.L41
+ 965              	.L54:
+ 966 010a 0520     		movs	r0, #5
+ 967              	.LVL188:
+ 335:../system/src/modbus_rtu/rtu_getters.c **** }
+ 968              		.loc 1 335 0
+ 969 010c 90E7     		b	.L41
+ 970              	.L59:
+ 971 010e 00BF     		.align	2
+ 972              	.L58:
+ 973 0110 00000000 		.word	rte_rtu_pool_queue
+ 974 0114 00000000 		.word	rte_wx_modbus_rtu_f1
+ 975 0118 00000000 		.word	rte_wx_modbus_rtu_f2
+ 976 011c 00000000 		.word	rte_wx_modbus_rtu_f3
+ 977 0120 00000000 		.word	rte_wx_modbus_rtu_f4
+ 978 0124 00000000 		.word	rte_wx_modbus_rtu_f5
+ 979 0128 00000000 		.word	rte_wx_modbus_rtu_f6
+ 980 012c 00000000 		.word	master_time
+ 981 0130 E0930400 		.word	300000
+ 982 0134 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 983 0138 DF930400 		.word	299999
+ 984              		.cfi_endproc
+ 985              	.LFE97:
+ 987              		.section	.text.rtu_get_wind_speed,"ax",%progbits
+ 988              		.align	1
+ 989              		.global	rtu_get_wind_speed
+ 990              		.syntax unified
+ 991              		.thumb
+ 992              		.thumb_func
+ 993              		.fpu softvfp
+ 995              	rtu_get_wind_speed:
+ 996              	.LFB98:
+ 337:../system/src/modbus_rtu/rtu_getters.c **** 
+ 338:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_wind_speed(uint16_t* out, const config_data_rtu_t * const config) {
+ 997              		.loc 1 338 0
+ 998              		.cfi_startproc
+ 999              		@ args = 0, pretend = 0, frame = 0
+ 1000              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1001              		@ link register save eliminated.
+ 1002              	.LVL189:
+ 1003 0000 F0B4     		push	{r4, r5, r6, r7}
+ 1004              		.cfi_def_cfa_offset 16
+ 1005              		.cfi_offset 4, -16
+ 1006              		.cfi_offset 5, -12
+ 1007              		.cfi_offset 6, -8
+ 1008              		.cfi_offset 7, -4
+ 1009 0002 0446     		mov	r4, r0
+ 1010              	.LVL190:
+ 339:../system/src/modbus_rtu/rtu_getters.c **** 
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+ 341:../system/src/modbus_rtu/rtu_getters.c **** 
+ 342:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+ 343:../system/src/modbus_rtu/rtu_getters.c **** 
+ 344:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t raw_register_value = 0, physical_register_value = 0;
+ 345:../system/src/modbus_rtu/rtu_getters.c **** 
+ 346:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+ 347:../system/src/modbus_rtu/rtu_getters.c **** 
+ 348:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+ 349:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+ 350:../system/src/modbus_rtu/rtu_getters.c **** 
+ 351:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->wind_speed_source) {
+ 1011              		.loc 1 351 0
+ 1012 0004 4B7A     		ldrb	r3, [r1, #9]	@ zero_extendqisi2
+ 1013 0006 013B     		subs	r3, r3, #1
+ 1014 0008 052B     		cmp	r3, #5
+ 1015 000a 56D8     		bhi	.L71
+ 1016 000c DFE803F0 		tbb	[pc, r3]
+ 1017              	.LVL191:
+ 1018              	.L63:
+ 1019 0010 03       		.byte	(.L62-.L63)/2
+ 1020 0011 11       		.byte	(.L64-.L63)/2
+ 1021 0012 1D       		.byte	(.L65-.L63)/2
+ 1022 0013 2B       		.byte	(.L66-.L63)/2
+ 1023 0014 39       		.byte	(.L67-.L63)/2
+ 1024 0015 47       		.byte	(.L68-.L63)/2
+ 1025              		.p2align 1
+ 1026              	.L62:
+ 352:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+ 353:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+ 354:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1027              		.loc 1 354 0
+ 1028 0016 8A7C     		ldrb	r2, [r1, #18]	@ zero_extendqisi2
+ 1029              	.LVL192:
+ 355:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+ 1030              		.loc 1 355 0
+ 1031 0018 CF7C     		ldrb	r7, [r1, #19]	@ zero_extendqisi2
+ 1032              	.LVL193:
+ 356:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+ 1033              		.loc 1 356 0
+ 1034 001a 0E7D     		ldrb	r6, [r1, #20]	@ zero_extendqisi2
+ 1035              	.LVL194:
+ 357:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+ 1036              		.loc 1 357 0
+ 1037 001c 4D7D     		ldrb	r5, [r1, #21]	@ zero_extendqisi2
+ 1038              	.LVL195:
+ 358:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+ 1039              		.loc 1 358 0
+ 1040 001e 3B4B     		ldr	r3, .L77
+ 1041 0020 196A     		ldr	r1, [r3, #32]
+ 1042              	.LVL196:
+ 353:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1043              		.loc 1 353 0
+ 1044 0022 3B4B     		ldr	r3, .L77+4
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1045              		.loc 1 340 0
+ 1046 0024 4FF0FF30 		mov	r0, #-1
+ 1047              	.LVL197:
+ 1048              	.L61:
+ 359:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 360:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+ 361:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 362:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+ 363:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 364:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 365:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 366:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 367:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 368:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 369:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 370:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 371:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+ 372:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 373:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 374:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 375:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 376:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 377:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 378:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 379:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 380:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+ 381:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 382:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 383:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 384:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 385:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 386:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 387:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 388:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 389:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+ 390:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 391:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 392:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 393:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 394:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 395:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 396:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 397:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 398:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+ 399:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 400:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 401:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 402:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 403:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 404:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 405:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 406:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+ 407:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 408:../system/src/modbus_rtu/rtu_getters.c **** 
+ 409:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+ 1049              		.loc 1 409 0
+ 1050 0028 B0F1FF3F 		cmp	r0, #-1
+ 1051 002c 49D0     		beq	.L76
+ 1052              	.LVL198:
+ 1053              	.L60:
+ 410:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 411:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+ 412:../system/src/modbus_rtu/rtu_getters.c **** 
+ 413:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value in .1m/s incremenets
+ 414:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(uint16_t) (10 * (
+ 415:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 416:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 417:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 418:../system/src/modbus_rtu/rtu_getters.c **** 							) /
+ 419:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d);
+ 420:../system/src/modbus_rtu/rtu_getters.c **** 
+ 421:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 422:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 423:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 424:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 425:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 426:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 427:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 428:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 429:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 430:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 431:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 432:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 433:../system/src/modbus_rtu/rtu_getters.c **** 
+ 434:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 435:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 436:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 437:../system/src/modbus_rtu/rtu_getters.c **** 
+ 438:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 439:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1054              		.loc 1 439 0
+ 1055 002e F0BC     		pop	{r4, r5, r6, r7}
+ 1056              		.cfi_remember_state
+ 1057              		.cfi_restore 7
+ 1058              		.cfi_restore 6
+ 1059              		.cfi_restore 5
+ 1060              		.cfi_restore 4
+ 1061              		.cfi_def_cfa_offset 0
+ 1062              	.LVL199:
+ 1063 0030 7047     		bx	lr
+ 1064              	.LVL200:
+ 1065              	.L64:
+ 1066              		.cfi_restore_state
+ 362:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 1067              		.loc 1 362 0
+ 1068 0032 8A7F     		ldrb	r2, [r1, #30]	@ zero_extendqisi2
+ 1069              	.LVL201:
+ 363:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 1070              		.loc 1 363 0
+ 1071 0034 CF7F     		ldrb	r7, [r1, #31]	@ zero_extendqisi2
+ 1072              	.LVL202:
+ 364:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 1073              		.loc 1 364 0
+ 1074 0036 91F82060 		ldrb	r6, [r1, #32]	@ zero_extendqisi2
+ 1075              	.LVL203:
+ 365:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 1076              		.loc 1 365 0
+ 1077 003a 91F82150 		ldrb	r5, [r1, #33]	@ zero_extendqisi2
+ 1078              	.LVL204:
+ 366:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 1079              		.loc 1 366 0
+ 1080 003e 334B     		ldr	r3, .L77
+ 1081 0040 596A     		ldr	r1, [r3, #36]
+ 1082              	.LVL205:
+ 367:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1083              		.loc 1 367 0
+ 1084 0042 344B     		ldr	r3, .L77+8
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1085              		.loc 1 340 0
+ 1086 0044 4FF0FF30 		mov	r0, #-1
+ 368:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 1087              		.loc 1 368 0
+ 1088 0048 EEE7     		b	.L61
+ 1089              	.LVL206:
+ 1090              	.L65:
+ 371:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 1091              		.loc 1 371 0
+ 1092 004a 91F82A20 		ldrb	r2, [r1, #42]	@ zero_extendqisi2
+ 1093              	.LVL207:
+ 372:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 1094              		.loc 1 372 0
+ 1095 004e 91F82B70 		ldrb	r7, [r1, #43]	@ zero_extendqisi2
+ 1096              	.LVL208:
+ 373:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 1097              		.loc 1 373 0
+ 1098 0052 91F82C60 		ldrb	r6, [r1, #44]	@ zero_extendqisi2
+ 1099              	.LVL209:
+ 374:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 1100              		.loc 1 374 0
+ 1101 0056 91F82D50 		ldrb	r5, [r1, #45]	@ zero_extendqisi2
+ 1102              	.LVL210:
+ 375:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 1103              		.loc 1 375 0
+ 1104 005a 2C4B     		ldr	r3, .L77
+ 1105 005c 996A     		ldr	r1, [r3, #40]
+ 1106              	.LVL211:
+ 376:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1107              		.loc 1 376 0
+ 1108 005e 2E4B     		ldr	r3, .L77+12
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1109              		.loc 1 340 0
+ 1110 0060 4FF0FF30 		mov	r0, #-1
+ 377:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 1111              		.loc 1 377 0
+ 1112 0064 E0E7     		b	.L61
+ 1113              	.LVL212:
+ 1114              	.L66:
+ 380:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 1115              		.loc 1 380 0
+ 1116 0066 91F83620 		ldrb	r2, [r1, #54]	@ zero_extendqisi2
+ 1117              	.LVL213:
+ 381:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 1118              		.loc 1 381 0
+ 1119 006a 91F83770 		ldrb	r7, [r1, #55]	@ zero_extendqisi2
+ 1120              	.LVL214:
+ 382:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 1121              		.loc 1 382 0
+ 1122 006e 91F83860 		ldrb	r6, [r1, #56]	@ zero_extendqisi2
+ 1123              	.LVL215:
+ 383:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 1124              		.loc 1 383 0
+ 1125 0072 91F83950 		ldrb	r5, [r1, #57]	@ zero_extendqisi2
+ 1126              	.LVL216:
+ 384:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 1127              		.loc 1 384 0
+ 1128 0076 254B     		ldr	r3, .L77
+ 1129 0078 D96A     		ldr	r1, [r3, #44]
+ 1130              	.LVL217:
+ 385:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1131              		.loc 1 385 0
+ 1132 007a 284B     		ldr	r3, .L77+16
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1133              		.loc 1 340 0
+ 1134 007c 4FF0FF30 		mov	r0, #-1
+ 386:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 1135              		.loc 1 386 0
+ 1136 0080 D2E7     		b	.L61
+ 1137              	.LVL218:
+ 1138              	.L67:
+ 389:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 1139              		.loc 1 389 0
+ 1140 0082 91F84220 		ldrb	r2, [r1, #66]	@ zero_extendqisi2
+ 1141              	.LVL219:
+ 390:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 1142              		.loc 1 390 0
+ 1143 0086 91F84370 		ldrb	r7, [r1, #67]	@ zero_extendqisi2
+ 1144              	.LVL220:
+ 391:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 1145              		.loc 1 391 0
+ 1146 008a 91F84460 		ldrb	r6, [r1, #68]	@ zero_extendqisi2
+ 1147              	.LVL221:
+ 392:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 1148              		.loc 1 392 0
+ 1149 008e 91F84550 		ldrb	r5, [r1, #69]	@ zero_extendqisi2
+ 1150              	.LVL222:
+ 393:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 1151              		.loc 1 393 0
+ 1152 0092 1E4B     		ldr	r3, .L77
+ 1153 0094 196B     		ldr	r1, [r3, #48]
+ 1154              	.LVL223:
+ 394:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1155              		.loc 1 394 0
+ 1156 0096 224B     		ldr	r3, .L77+20
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1157              		.loc 1 340 0
+ 1158 0098 4FF0FF30 		mov	r0, #-1
+ 395:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 1159              		.loc 1 395 0
+ 1160 009c C4E7     		b	.L61
+ 1161              	.LVL224:
+ 1162              	.L68:
+ 398:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 1163              		.loc 1 398 0
+ 1164 009e 91F84E20 		ldrb	r2, [r1, #78]	@ zero_extendqisi2
+ 1165              	.LVL225:
+ 399:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 1166              		.loc 1 399 0
+ 1167 00a2 91F84F70 		ldrb	r7, [r1, #79]	@ zero_extendqisi2
+ 1168              	.LVL226:
+ 400:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 1169              		.loc 1 400 0
+ 1170 00a6 91F85060 		ldrb	r6, [r1, #80]	@ zero_extendqisi2
+ 1171              	.LVL227:
+ 401:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 1172              		.loc 1 401 0
+ 1173 00aa 91F85150 		ldrb	r5, [r1, #81]	@ zero_extendqisi2
+ 1174              	.LVL228:
+ 402:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 1175              		.loc 1 402 0
+ 1176 00ae 174B     		ldr	r3, .L77
+ 1177 00b0 596B     		ldr	r1, [r3, #52]
+ 1178              	.LVL229:
+ 403:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1179              		.loc 1 403 0
+ 1180 00b2 1C4B     		ldr	r3, .L77+24
+ 340:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1181              		.loc 1 340 0
+ 1182 00b4 4FF0FF30 		mov	r0, #-1
+ 404:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 1183              		.loc 1 404 0
+ 1184 00b8 B6E7     		b	.L61
+ 1185              	.LVL230:
+ 1186              	.L71:
+ 349:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1187              		.loc 1 349 0
+ 1188 00ba 0021     		movs	r1, #0
+ 1189              	.LVL231:
+ 342:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1190              		.loc 1 342 0
+ 1191 00bc 0B46     		mov	r3, r1
+ 406:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 1192              		.loc 1 406 0
+ 1193 00be 0820     		movs	r0, #8
+ 1194 00c0 B2E7     		b	.L61
+ 1195              	.LVL232:
+ 1196              	.L76:
+ 409:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 1197              		.loc 1 409 0 discriminator 1
+ 1198 00c2 002B     		cmp	r3, #0
+ 1199 00c4 B3D0     		beq	.L60
+ 411:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1200              		.loc 1 411 0
+ 1201 00c6 DB88     		ldrh	r3, [r3, #6]
+ 1202              	.LVL233:
+ 415:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 1203              		.loc 1 415 0
+ 1204 00c8 03FB0272 		mla	r2, r3, r2, r7
+ 1205              	.LVL234:
+ 416:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 1206              		.loc 1 416 0
+ 1207 00cc 03FB0262 		mla	r2, r3, r2, r6
+ 414:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 1208              		.loc 1 414 0
+ 1209 00d0 02EB8202 		add	r2, r2, r2, lsl #2
+ 1210 00d4 5300     		lsls	r3, r2, #1
+ 1211              	.LVL235:
+ 418:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d);
+ 1212              		.loc 1 418 0
+ 1213 00d6 93FBF5F3 		sdiv	r3, r3, r5
+ 414:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 1214              		.loc 1 414 0
+ 1215 00da 9BB2     		uxth	r3, r3
+ 1216              	.LVL236:
+ 1217              	.LBB32:
+ 1218              	.LBB33:
+ 1219              		.loc 2 63 0
+ 1220 00dc 124A     		ldr	r2, .L77+28
+ 1221 00de 1268     		ldr	r2, [r2]
+ 1222              	.LBE33:
+ 1223              	.LBE32:
+ 422:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 1224              		.loc 1 422 0
+ 1225 00e0 511A     		subs	r1, r2, r1
+ 1226              	.LVL237:
+ 1227 00e2 1248     		ldr	r0, .L77+32
+ 1228              	.LVL238:
+ 1229 00e4 8142     		cmp	r1, r0
+ 1230 00e6 0DD8     		bhi	.L72
+ 422:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 1231              		.loc 1 422 0 is_stmt 0 discriminator 1
+ 1232 00e8 B3F5C87F 		cmp	r3, #400
+ 1233 00ec 0CD8     		bhi	.L73
+ 427:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 1234              		.loc 1 427 0 is_stmt 1
+ 1235 00ee 1049     		ldr	r1, .L77+36
+ 1236 00f0 0968     		ldr	r1, [r1]
+ 1237 00f2 521A     		subs	r2, r2, r1
+ 1238 00f4 0F49     		ldr	r1, .L77+40
+ 1239 00f6 8A42     		cmp	r2, r1
+ 1240 00f8 02D8     		bhi	.L74
+ 428:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1241              		.loc 1 428 0
+ 1242 00fa 0620     		movs	r0, #6
+ 1243              	.L70:
+ 1244              	.LVL239:
+ 434:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 1245              		.loc 1 434 0
+ 1246 00fc 2380     		strh	r3, [r4]	@ movhi
+ 1247 00fe 96E7     		b	.L60
+ 1248              	.LVL240:
+ 1249              	.L74:
+ 431:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1250              		.loc 1 431 0
+ 1251 0100 0020     		movs	r0, #0
+ 1252 0102 FBE7     		b	.L70
+ 1253              	.L72:
+ 424:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 1254              		.loc 1 424 0
+ 1255 0104 0520     		movs	r0, #5
+ 1256 0106 92E7     		b	.L60
+ 1257              	.L73:
+ 1258 0108 0520     		movs	r0, #5
+ 1259              	.LVL241:
+ 438:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1260              		.loc 1 438 0
+ 1261 010a 90E7     		b	.L60
+ 1262              	.L78:
+ 1263              		.align	2
+ 1264              	.L77:
+ 1265 010c 00000000 		.word	rte_rtu_pool_queue
+ 1266 0110 00000000 		.word	rte_wx_modbus_rtu_f1
+ 1267 0114 00000000 		.word	rte_wx_modbus_rtu_f2
+ 1268 0118 00000000 		.word	rte_wx_modbus_rtu_f3
+ 1269 011c 00000000 		.word	rte_wx_modbus_rtu_f4
+ 1270 0120 00000000 		.word	rte_wx_modbus_rtu_f5
+ 1271 0124 00000000 		.word	rte_wx_modbus_rtu_f6
+ 1272 0128 00000000 		.word	master_time
+ 1273 012c E0930400 		.word	300000
+ 1274 0130 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 1275 0134 DF930400 		.word	299999
+ 1276              		.cfi_endproc
+ 1277              	.LFE98:
+ 1279              		.section	.text.rtu_get_wind_gusts,"ax",%progbits
+ 1280              		.align	1
+ 1281              		.global	rtu_get_wind_gusts
+ 1282              		.syntax unified
+ 1283              		.thumb
+ 1284              		.thumb_func
+ 1285              		.fpu softvfp
+ 1287              	rtu_get_wind_gusts:
+ 1288              	.LFB99:
+ 440:../system/src/modbus_rtu/rtu_getters.c **** 
+ 441:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_wind_gusts(uint16_t* out, const config_data_rtu_t * const config) {
+ 1289              		.loc 1 441 0
+ 1290              		.cfi_startproc
+ 1291              		@ args = 0, pretend = 0, frame = 0
+ 1292              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1293              		@ link register save eliminated.
+ 1294              	.LVL242:
+ 1295 0000 F0B4     		push	{r4, r5, r6, r7}
+ 1296              		.cfi_def_cfa_offset 16
+ 1297              		.cfi_offset 4, -16
+ 1298              		.cfi_offset 5, -12
+ 1299              		.cfi_offset 6, -8
+ 1300              		.cfi_offset 7, -4
+ 1301 0002 0446     		mov	r4, r0
+ 1302              	.LVL243:
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+ 443:../system/src/modbus_rtu/rtu_getters.c **** 
+ 444:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+ 445:../system/src/modbus_rtu/rtu_getters.c **** 
+ 446:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t raw_register_value = 0, physical_register_value = 0;
+ 447:../system/src/modbus_rtu/rtu_getters.c **** 
+ 448:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+ 449:../system/src/modbus_rtu/rtu_getters.c **** 
+ 450:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+ 451:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+ 452:../system/src/modbus_rtu/rtu_getters.c **** 
+ 453:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->wind_gusts_source) {
+ 1303              		.loc 1 453 0
+ 1304 0004 8B7A     		ldrb	r3, [r1, #10]	@ zero_extendqisi2
+ 1305 0006 013B     		subs	r3, r3, #1
+ 1306 0008 052B     		cmp	r3, #5
+ 1307 000a 56D8     		bhi	.L90
+ 1308 000c DFE803F0 		tbb	[pc, r3]
+ 1309              	.LVL244:
+ 1310              	.L82:
+ 1311 0010 03       		.byte	(.L81-.L82)/2
+ 1312 0011 11       		.byte	(.L83-.L82)/2
+ 1313 0012 1D       		.byte	(.L84-.L82)/2
+ 1314 0013 2B       		.byte	(.L85-.L82)/2
+ 1315 0014 39       		.byte	(.L86-.L82)/2
+ 1316 0015 47       		.byte	(.L87-.L82)/2
+ 1317              		.p2align 1
+ 1318              	.L81:
+ 454:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+ 455:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+ 456:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1319              		.loc 1 456 0
+ 1320 0016 8A7C     		ldrb	r2, [r1, #18]	@ zero_extendqisi2
+ 1321              	.LVL245:
+ 457:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+ 1322              		.loc 1 457 0
+ 1323 0018 CF7C     		ldrb	r7, [r1, #19]	@ zero_extendqisi2
+ 1324              	.LVL246:
+ 458:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+ 1325              		.loc 1 458 0
+ 1326 001a 0E7D     		ldrb	r6, [r1, #20]	@ zero_extendqisi2
+ 1327              	.LVL247:
+ 459:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+ 1328              		.loc 1 459 0
+ 1329 001c 4D7D     		ldrb	r5, [r1, #21]	@ zero_extendqisi2
+ 1330              	.LVL248:
+ 460:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+ 1331              		.loc 1 460 0
+ 1332 001e 3B4B     		ldr	r3, .L96
+ 1333 0020 196A     		ldr	r1, [r3, #32]
+ 1334              	.LVL249:
+ 455:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1335              		.loc 1 455 0
+ 1336 0022 3B4B     		ldr	r3, .L96+4
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1337              		.loc 1 442 0
+ 1338 0024 4FF0FF30 		mov	r0, #-1
+ 1339              	.LVL250:
+ 1340              	.L80:
+ 461:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 462:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+ 463:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 464:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+ 465:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 466:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 467:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 468:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 469:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 470:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 471:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 472:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 473:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+ 474:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 475:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 476:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 477:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 478:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 479:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 480:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 481:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 482:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+ 483:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 484:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 485:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 486:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 487:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 488:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 489:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 490:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 491:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+ 492:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 493:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 494:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 495:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 496:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 497:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 498:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 499:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 500:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+ 501:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 502:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 503:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 504:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 505:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 506:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 507:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 508:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+ 509:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 510:../system/src/modbus_rtu/rtu_getters.c **** 
+ 511:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+ 1341              		.loc 1 511 0
+ 1342 0028 B0F1FF3F 		cmp	r0, #-1
+ 1343 002c 49D0     		beq	.L95
+ 1344              	.LVL251:
+ 1345              	.L79:
+ 512:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 513:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+ 514:../system/src/modbus_rtu/rtu_getters.c **** 
+ 515:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value in .1m/s incremenets
+ 516:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(uint16_t) (10 * (
+ 517:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 518:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 519:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 520:../system/src/modbus_rtu/rtu_getters.c **** 							) /
+ 521:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d);
+ 522:../system/src/modbus_rtu/rtu_getters.c **** 
+ 523:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 524:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 525:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 526:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 527:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 528:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 529:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 530:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 531:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 532:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 533:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 534:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 535:../system/src/modbus_rtu/rtu_getters.c **** 
+ 536:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 537:../system/src/modbus_rtu/rtu_getters.c **** 
+ 538:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 539:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 540:../system/src/modbus_rtu/rtu_getters.c **** 
+ 541:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 542:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1346              		.loc 1 542 0
+ 1347 002e F0BC     		pop	{r4, r5, r6, r7}
+ 1348              		.cfi_remember_state
+ 1349              		.cfi_restore 7
+ 1350              		.cfi_restore 6
+ 1351              		.cfi_restore 5
+ 1352              		.cfi_restore 4
+ 1353              		.cfi_def_cfa_offset 0
+ 1354              	.LVL252:
+ 1355 0030 7047     		bx	lr
+ 1356              	.LVL253:
+ 1357              	.L83:
+ 1358              		.cfi_restore_state
+ 464:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 1359              		.loc 1 464 0
+ 1360 0032 8A7F     		ldrb	r2, [r1, #30]	@ zero_extendqisi2
+ 1361              	.LVL254:
+ 465:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 1362              		.loc 1 465 0
+ 1363 0034 CF7F     		ldrb	r7, [r1, #31]	@ zero_extendqisi2
+ 1364              	.LVL255:
+ 466:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 1365              		.loc 1 466 0
+ 1366 0036 91F82060 		ldrb	r6, [r1, #32]	@ zero_extendqisi2
+ 1367              	.LVL256:
+ 467:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 1368              		.loc 1 467 0
+ 1369 003a 91F82150 		ldrb	r5, [r1, #33]	@ zero_extendqisi2
+ 1370              	.LVL257:
+ 468:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 1371              		.loc 1 468 0
+ 1372 003e 334B     		ldr	r3, .L96
+ 1373 0040 596A     		ldr	r1, [r3, #36]
+ 1374              	.LVL258:
+ 469:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1375              		.loc 1 469 0
+ 1376 0042 344B     		ldr	r3, .L96+8
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1377              		.loc 1 442 0
+ 1378 0044 4FF0FF30 		mov	r0, #-1
+ 470:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 1379              		.loc 1 470 0
+ 1380 0048 EEE7     		b	.L80
+ 1381              	.LVL259:
+ 1382              	.L84:
+ 473:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 1383              		.loc 1 473 0
+ 1384 004a 91F82A20 		ldrb	r2, [r1, #42]	@ zero_extendqisi2
+ 1385              	.LVL260:
+ 474:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 1386              		.loc 1 474 0
+ 1387 004e 91F82B70 		ldrb	r7, [r1, #43]	@ zero_extendqisi2
+ 1388              	.LVL261:
+ 475:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 1389              		.loc 1 475 0
+ 1390 0052 91F82C60 		ldrb	r6, [r1, #44]	@ zero_extendqisi2
+ 1391              	.LVL262:
+ 476:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 1392              		.loc 1 476 0
+ 1393 0056 91F82D50 		ldrb	r5, [r1, #45]	@ zero_extendqisi2
+ 1394              	.LVL263:
+ 477:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 1395              		.loc 1 477 0
+ 1396 005a 2C4B     		ldr	r3, .L96
+ 1397 005c 996A     		ldr	r1, [r3, #40]
+ 1398              	.LVL264:
+ 478:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1399              		.loc 1 478 0
+ 1400 005e 2E4B     		ldr	r3, .L96+12
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1401              		.loc 1 442 0
+ 1402 0060 4FF0FF30 		mov	r0, #-1
+ 479:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 1403              		.loc 1 479 0
+ 1404 0064 E0E7     		b	.L80
+ 1405              	.LVL265:
+ 1406              	.L85:
+ 482:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 1407              		.loc 1 482 0
+ 1408 0066 91F83620 		ldrb	r2, [r1, #54]	@ zero_extendqisi2
+ 1409              	.LVL266:
+ 483:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 1410              		.loc 1 483 0
+ 1411 006a 91F83770 		ldrb	r7, [r1, #55]	@ zero_extendqisi2
+ 1412              	.LVL267:
+ 484:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 1413              		.loc 1 484 0
+ 1414 006e 91F83860 		ldrb	r6, [r1, #56]	@ zero_extendqisi2
+ 1415              	.LVL268:
+ 485:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 1416              		.loc 1 485 0
+ 1417 0072 91F83950 		ldrb	r5, [r1, #57]	@ zero_extendqisi2
+ 1418              	.LVL269:
+ 486:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 1419              		.loc 1 486 0
+ 1420 0076 254B     		ldr	r3, .L96
+ 1421 0078 D96A     		ldr	r1, [r3, #44]
+ 1422              	.LVL270:
+ 487:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1423              		.loc 1 487 0
+ 1424 007a 284B     		ldr	r3, .L96+16
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1425              		.loc 1 442 0
+ 1426 007c 4FF0FF30 		mov	r0, #-1
+ 488:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 1427              		.loc 1 488 0
+ 1428 0080 D2E7     		b	.L80
+ 1429              	.LVL271:
+ 1430              	.L86:
+ 491:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 1431              		.loc 1 491 0
+ 1432 0082 91F84220 		ldrb	r2, [r1, #66]	@ zero_extendqisi2
+ 1433              	.LVL272:
+ 492:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 1434              		.loc 1 492 0
+ 1435 0086 91F84370 		ldrb	r7, [r1, #67]	@ zero_extendqisi2
+ 1436              	.LVL273:
+ 493:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 1437              		.loc 1 493 0
+ 1438 008a 91F84460 		ldrb	r6, [r1, #68]	@ zero_extendqisi2
+ 1439              	.LVL274:
+ 494:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 1440              		.loc 1 494 0
+ 1441 008e 91F84550 		ldrb	r5, [r1, #69]	@ zero_extendqisi2
+ 1442              	.LVL275:
+ 495:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 1443              		.loc 1 495 0
+ 1444 0092 1E4B     		ldr	r3, .L96
+ 1445 0094 196B     		ldr	r1, [r3, #48]
+ 1446              	.LVL276:
+ 496:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1447              		.loc 1 496 0
+ 1448 0096 224B     		ldr	r3, .L96+20
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1449              		.loc 1 442 0
+ 1450 0098 4FF0FF30 		mov	r0, #-1
+ 497:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 1451              		.loc 1 497 0
+ 1452 009c C4E7     		b	.L80
+ 1453              	.LVL277:
+ 1454              	.L87:
+ 500:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 1455              		.loc 1 500 0
+ 1456 009e 91F84E20 		ldrb	r2, [r1, #78]	@ zero_extendqisi2
+ 1457              	.LVL278:
+ 501:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 1458              		.loc 1 501 0
+ 1459 00a2 91F84F70 		ldrb	r7, [r1, #79]	@ zero_extendqisi2
+ 1460              	.LVL279:
+ 502:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 1461              		.loc 1 502 0
+ 1462 00a6 91F85060 		ldrb	r6, [r1, #80]	@ zero_extendqisi2
+ 1463              	.LVL280:
+ 503:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 1464              		.loc 1 503 0
+ 1465 00aa 91F85150 		ldrb	r5, [r1, #81]	@ zero_extendqisi2
+ 1466              	.LVL281:
+ 504:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 1467              		.loc 1 504 0
+ 1468 00ae 174B     		ldr	r3, .L96
+ 1469 00b0 596B     		ldr	r1, [r3, #52]
+ 1470              	.LVL282:
+ 505:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1471              		.loc 1 505 0
+ 1472 00b2 1C4B     		ldr	r3, .L96+24
+ 442:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1473              		.loc 1 442 0
+ 1474 00b4 4FF0FF30 		mov	r0, #-1
+ 506:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 1475              		.loc 1 506 0
+ 1476 00b8 B6E7     		b	.L80
+ 1477              	.LVL283:
+ 1478              	.L90:
+ 451:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1479              		.loc 1 451 0
+ 1480 00ba 0021     		movs	r1, #0
+ 1481              	.LVL284:
+ 444:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1482              		.loc 1 444 0
+ 1483 00bc 0B46     		mov	r3, r1
+ 508:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 1484              		.loc 1 508 0
+ 1485 00be 0820     		movs	r0, #8
+ 1486 00c0 B2E7     		b	.L80
+ 1487              	.LVL285:
+ 1488              	.L95:
+ 511:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 1489              		.loc 1 511 0 discriminator 1
+ 1490 00c2 002B     		cmp	r3, #0
+ 1491 00c4 B3D0     		beq	.L79
+ 513:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1492              		.loc 1 513 0
+ 1493 00c6 DB88     		ldrh	r3, [r3, #6]
+ 1494              	.LVL286:
+ 517:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 1495              		.loc 1 517 0
+ 1496 00c8 03FB0272 		mla	r2, r3, r2, r7
+ 1497              	.LVL287:
+ 518:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 1498              		.loc 1 518 0
+ 1499 00cc 03FB0262 		mla	r2, r3, r2, r6
+ 516:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 1500              		.loc 1 516 0
+ 1501 00d0 02EB8202 		add	r2, r2, r2, lsl #2
+ 1502 00d4 5300     		lsls	r3, r2, #1
+ 1503              	.LVL288:
+ 520:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d);
+ 1504              		.loc 1 520 0
+ 1505 00d6 93FBF5F3 		sdiv	r3, r3, r5
+ 516:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 1506              		.loc 1 516 0
+ 1507 00da 9BB2     		uxth	r3, r3
+ 1508              	.LVL289:
+ 1509              	.LBB34:
+ 1510              	.LBB35:
+ 1511              		.loc 2 63 0
+ 1512 00dc 124A     		ldr	r2, .L96+28
+ 1513 00de 1268     		ldr	r2, [r2]
+ 1514              	.LBE35:
+ 1515              	.LBE34:
+ 524:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 1516              		.loc 1 524 0
+ 1517 00e0 511A     		subs	r1, r2, r1
+ 1518              	.LVL290:
+ 1519 00e2 1248     		ldr	r0, .L96+32
+ 1520              	.LVL291:
+ 1521 00e4 8142     		cmp	r1, r0
+ 1522 00e6 0DD8     		bhi	.L91
+ 524:../system/src/modbus_rtu/rtu_getters.c **** 			physical_register_value > RTU_MAX_VALID_WINDSPEED) {
+ 1523              		.loc 1 524 0 is_stmt 0 discriminator 1
+ 1524 00e8 B3F5C87F 		cmp	r3, #400
+ 1525 00ec 0CD8     		bhi	.L92
+ 529:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 1526              		.loc 1 529 0 is_stmt 1
+ 1527 00ee 1049     		ldr	r1, .L96+36
+ 1528 00f0 0968     		ldr	r1, [r1]
+ 1529 00f2 521A     		subs	r2, r2, r1
+ 1530 00f4 0F49     		ldr	r1, .L96+40
+ 1531 00f6 8A42     		cmp	r2, r1
+ 1532 00f8 02D8     		bhi	.L93
+ 530:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1533              		.loc 1 530 0
+ 1534 00fa 0620     		movs	r0, #6
+ 1535              	.L89:
+ 1536              	.LVL292:
+ 536:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1537              		.loc 1 536 0
+ 1538 00fc 2380     		strh	r3, [r4]	@ movhi
+ 1539 00fe 96E7     		b	.L79
+ 1540              	.LVL293:
+ 1541              	.L93:
+ 533:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1542              		.loc 1 533 0
+ 1543 0100 0020     		movs	r0, #0
+ 1544 0102 FBE7     		b	.L89
+ 1545              	.L91:
+ 526:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 1546              		.loc 1 526 0
+ 1547 0104 0520     		movs	r0, #5
+ 1548 0106 92E7     		b	.L79
+ 1549              	.L92:
+ 1550 0108 0520     		movs	r0, #5
+ 1551              	.LVL294:
+ 541:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1552              		.loc 1 541 0
+ 1553 010a 90E7     		b	.L79
+ 1554              	.L97:
+ 1555              		.align	2
+ 1556              	.L96:
+ 1557 010c 00000000 		.word	rte_rtu_pool_queue
+ 1558 0110 00000000 		.word	rte_wx_modbus_rtu_f1
+ 1559 0114 00000000 		.word	rte_wx_modbus_rtu_f2
+ 1560 0118 00000000 		.word	rte_wx_modbus_rtu_f3
+ 1561 011c 00000000 		.word	rte_wx_modbus_rtu_f4
+ 1562 0120 00000000 		.word	rte_wx_modbus_rtu_f5
+ 1563 0124 00000000 		.word	rte_wx_modbus_rtu_f6
+ 1564 0128 00000000 		.word	master_time
+ 1565 012c E0930400 		.word	300000
+ 1566 0130 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 1567 0134 DF930400 		.word	299999
+ 1568              		.cfi_endproc
+ 1569              	.LFE99:
+ 1571              		.section	.text.rtu_get_humidity,"ax",%progbits
+ 1572              		.align	1
+ 1573              		.global	rtu_get_humidity
+ 1574              		.syntax unified
+ 1575              		.thumb
+ 1576              		.thumb_func
+ 1577              		.fpu softvfp
+ 1579              	rtu_get_humidity:
+ 1580              	.LFB100:
+ 543:../system/src/modbus_rtu/rtu_getters.c **** 
+ 544:../system/src/modbus_rtu/rtu_getters.c **** int32_t rtu_get_humidity(int8_t* out, const config_data_rtu_t * const config) {
+ 1581              		.loc 1 544 0
+ 1582              		.cfi_startproc
+ 1583              		@ args = 0, pretend = 0, frame = 8
+ 1584              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1585              		@ link register save eliminated.
+ 1586              	.LVL295:
+ 1587 0000 F0B4     		push	{r4, r5, r6, r7}
+ 1588              		.cfi_def_cfa_offset 16
+ 1589              		.cfi_offset 4, -16
+ 1590              		.cfi_offset 5, -12
+ 1591              		.cfi_offset 6, -8
+ 1592              		.cfi_offset 7, -4
+ 1593 0002 82B0     		sub	sp, sp, #8
+ 1594              		.cfi_def_cfa_offset 24
+ 1595 0004 0446     		mov	r4, r0
+ 1596              	.LVL296:
+ 545:../system/src/modbus_rtu/rtu_getters.c **** 
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+ 547:../system/src/modbus_rtu/rtu_getters.c **** 
+ 548:../system/src/modbus_rtu/rtu_getters.c **** 	rtu_register_data_t* source = 0;
+ 549:../system/src/modbus_rtu/rtu_getters.c **** 
+ 550:../system/src/modbus_rtu/rtu_getters.c **** 	volatile uint16_t raw_register_value = 0;
+ 1597              		.loc 1 550 0
+ 1598 0006 0022     		movs	r2, #0
+ 1599 0008 ADF80620 		strh	r2, [sp, #6]	@ movhi
+ 1600              	.LVL297:
+ 551:../system/src/modbus_rtu/rtu_getters.c **** 	int8_t physical_register_value = 0;
+ 552:../system/src/modbus_rtu/rtu_getters.c **** 
+ 553:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
+ 554:../system/src/modbus_rtu/rtu_getters.c **** 
+ 555:../system/src/modbus_rtu/rtu_getters.c **** 	// the timestamp of last update of the register value
+ 556:../system/src/modbus_rtu/rtu_getters.c **** 	uint32_t last_update_timestam = 0;
+ 557:../system/src/modbus_rtu/rtu_getters.c **** 
+ 558:../system/src/modbus_rtu/rtu_getters.c **** 	switch (config->humidity_source) {
+ 1601              		.loc 1 558 0
+ 1602 000c 8B79     		ldrb	r3, [r1, #6]	@ zero_extendqisi2
+ 1603 000e 013B     		subs	r3, r3, #1
+ 1604 0010 052B     		cmp	r3, #5
+ 1605 0012 59D8     		bhi	.L109
+ 1606 0014 DFE803F0 		tbb	[pc, r3]
+ 1607              	.L101:
+ 1608 0018 03       		.byte	(.L100-.L101)/2
+ 1609 0019 13       		.byte	(.L102-.L101)/2
+ 1610 001a 20       		.byte	(.L103-.L101)/2
+ 1611 001b 2E       		.byte	(.L104-.L101)/2
+ 1612 001c 3C       		.byte	(.L105-.L101)/2
+ 1613 001d 4A       		.byte	(.L106-.L101)/2
+ 1614              		.p2align 1
+ 1615              	.L100:
+ 1616              	.LVL298:
+ 559:../system/src/modbus_rtu/rtu_getters.c **** 	case 1:
+ 560:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f1;
+ 561:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1617              		.loc 1 561 0
+ 1618 001e 91F812C0 		ldrb	ip, [r1, #18]	@ zero_extendqisi2
+ 1619              	.LVL299:
+ 562:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_1_scaling_b;
+ 1620              		.loc 1 562 0
+ 1621 0022 CF7C     		ldrb	r7, [r1, #19]	@ zero_extendqisi2
+ 1622              	.LVL300:
+ 563:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_1_scaling_c;
+ 1623              		.loc 1 563 0
+ 1624 0024 0D7D     		ldrb	r5, [r1, #20]	@ zero_extendqisi2
+ 1625              	.LVL301:
+ 564:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_1_scaling_d;
+ 1626              		.loc 1 564 0
+ 1627 0026 4E7D     		ldrb	r6, [r1, #21]	@ zero_extendqisi2
+ 1628              	.LVL302:
+ 565:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[0];
+ 1629              		.loc 1 565 0
+ 1630 0028 424B     		ldr	r3, .L116
+ 1631 002a 196A     		ldr	r1, [r3, #32]
+ 1632              	.LVL303:
+ 560:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_1_scaling_a;
+ 1633              		.loc 1 560 0
+ 1634 002c 424B     		ldr	r3, .L116+4
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1635              		.loc 1 546 0
+ 1636 002e 4FF0FF30 		mov	r0, #-1
+ 1637              	.LVL304:
+ 1638              	.L99:
+ 566:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 567:../system/src/modbus_rtu/rtu_getters.c **** 	case 2:
+ 568:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 569:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_2_scaling_a;
+ 570:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 571:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 572:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 573:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 574:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 575:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 576:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 577:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 578:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_3_scaling_a;
+ 579:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 580:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 581:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 582:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 583:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 584:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 585:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 586:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 587:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_4_scaling_a;
+ 588:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 589:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 590:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 591:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 592:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 593:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 594:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 595:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 596:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_5_scaling_a;
+ 597:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 598:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 599:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 600:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 601:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 602:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 603:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 604:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 605:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_a = config->slave_6_scaling_a;
+ 606:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 607:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 608:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 609:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 610:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 611:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 612:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 613:../system/src/modbus_rtu/rtu_getters.c **** 		retval = MODBUS_RET_NOT_CONFIGURED;
+ 614:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 615:../system/src/modbus_rtu/rtu_getters.c **** 
+ 616:../system/src/modbus_rtu/rtu_getters.c **** 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
+ 1639              		.loc 1 616 0
+ 1640 0032 B0F1FF3F 		cmp	r0, #-1
+ 1641 0036 4BD0     		beq	.L115
+ 1642              	.LVL305:
+ 1643              	.L98:
+ 617:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 618:../system/src/modbus_rtu/rtu_getters.c **** 		raw_register_value = source->registers_values[0];
+ 619:../system/src/modbus_rtu/rtu_getters.c **** 
+ 620:../system/src/modbus_rtu/rtu_getters.c **** 		// rescale the raw value to target value in percents
+ 621:../system/src/modbus_rtu/rtu_getters.c **** 		physical_register_value = 	(int8_t) (
+ 622:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 623:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 624:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 625:../system/src/modbus_rtu/rtu_getters.c **** 							/
+ 626:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_d);
+ 627:../system/src/modbus_rtu/rtu_getters.c **** 
+ 628:../system/src/modbus_rtu/rtu_getters.c **** 		// check when the value has been updated
+ 629:../system/src/modbus_rtu/rtu_getters.c **** 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
+ 630:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > 100 || physical_register_value < 0) {
+ 631:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 632:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 633:../system/src/modbus_rtu/rtu_getters.c **** 		else {
+ 634:../system/src/modbus_rtu/rtu_getters.c **** 			if (main_get_master_time() - rte_rtu_last_modbus_rx_error_timestamp < RTU_MAXIMUM_VALUE_AGE) {
+ 635:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 636:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 637:../system/src/modbus_rtu/rtu_getters.c **** 			else {
+ 638:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_OK;
+ 639:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 640:../system/src/modbus_rtu/rtu_getters.c **** 
+ 641:../system/src/modbus_rtu/rtu_getters.c **** 			*out = physical_register_value;
+ 642:../system/src/modbus_rtu/rtu_getters.c **** 
+ 643:../system/src/modbus_rtu/rtu_getters.c **** 
+ 644:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 645:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 646:../system/src/modbus_rtu/rtu_getters.c **** 
+ 647:../system/src/modbus_rtu/rtu_getters.c **** 	return retval;
+ 648:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1644              		.loc 1 648 0
+ 1645 0038 02B0     		add	sp, sp, #8
+ 1646              		.cfi_remember_state
+ 1647              		.cfi_def_cfa_offset 16
+ 1648              		@ sp needed
+ 1649 003a F0BC     		pop	{r4, r5, r6, r7}
+ 1650              		.cfi_restore 7
+ 1651              		.cfi_restore 6
+ 1652              		.cfi_restore 5
+ 1653              		.cfi_restore 4
+ 1654              		.cfi_def_cfa_offset 0
+ 1655              	.LVL306:
+ 1656 003c 7047     		bx	lr
+ 1657              	.LVL307:
+ 1658              	.L102:
+ 1659              		.cfi_restore_state
+ 569:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_2_scaling_b;
+ 1660              		.loc 1 569 0
+ 1661 003e 91F81EC0 		ldrb	ip, [r1, #30]	@ zero_extendqisi2
+ 1662              	.LVL308:
+ 570:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_2_scaling_c;
+ 1663              		.loc 1 570 0
+ 1664 0042 CF7F     		ldrb	r7, [r1, #31]	@ zero_extendqisi2
+ 1665              	.LVL309:
+ 571:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_2_scaling_d;
+ 1666              		.loc 1 571 0
+ 1667 0044 91F82050 		ldrb	r5, [r1, #32]	@ zero_extendqisi2
+ 1668              	.LVL310:
+ 572:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[1];
+ 1669              		.loc 1 572 0
+ 1670 0048 91F82160 		ldrb	r6, [r1, #33]	@ zero_extendqisi2
+ 1671              	.LVL311:
+ 573:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f2;
+ 1672              		.loc 1 573 0
+ 1673 004c 394B     		ldr	r3, .L116
+ 1674 004e 596A     		ldr	r1, [r3, #36]
+ 1675              	.LVL312:
+ 574:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1676              		.loc 1 574 0
+ 1677 0050 3A4B     		ldr	r3, .L116+8
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1678              		.loc 1 546 0
+ 1679 0052 4FF0FF30 		mov	r0, #-1
+ 1680              	.LVL313:
+ 575:../system/src/modbus_rtu/rtu_getters.c **** 	case 3:
+ 1681              		.loc 1 575 0
+ 1682 0056 ECE7     		b	.L99
+ 1683              	.LVL314:
+ 1684              	.L103:
+ 578:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_3_scaling_b;
+ 1685              		.loc 1 578 0
+ 1686 0058 91F82AC0 		ldrb	ip, [r1, #42]	@ zero_extendqisi2
+ 1687              	.LVL315:
+ 579:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_3_scaling_c;
+ 1688              		.loc 1 579 0
+ 1689 005c 91F82B70 		ldrb	r7, [r1, #43]	@ zero_extendqisi2
+ 1690              	.LVL316:
+ 580:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_3_scaling_d;
+ 1691              		.loc 1 580 0
+ 1692 0060 91F82C50 		ldrb	r5, [r1, #44]	@ zero_extendqisi2
+ 1693              	.LVL317:
+ 581:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[2];
+ 1694              		.loc 1 581 0
+ 1695 0064 91F82D60 		ldrb	r6, [r1, #45]	@ zero_extendqisi2
+ 1696              	.LVL318:
+ 582:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f3;
+ 1697              		.loc 1 582 0
+ 1698 0068 324B     		ldr	r3, .L116
+ 1699 006a 996A     		ldr	r1, [r3, #40]
+ 1700              	.LVL319:
+ 583:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1701              		.loc 1 583 0
+ 1702 006c 344B     		ldr	r3, .L116+12
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1703              		.loc 1 546 0
+ 1704 006e 4FF0FF30 		mov	r0, #-1
+ 1705              	.LVL320:
+ 584:../system/src/modbus_rtu/rtu_getters.c **** 	case 4:
+ 1706              		.loc 1 584 0
+ 1707 0072 DEE7     		b	.L99
+ 1708              	.LVL321:
+ 1709              	.L104:
+ 587:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_4_scaling_b;
+ 1710              		.loc 1 587 0
+ 1711 0074 91F836C0 		ldrb	ip, [r1, #54]	@ zero_extendqisi2
+ 1712              	.LVL322:
+ 588:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_4_scaling_c;
+ 1713              		.loc 1 588 0
+ 1714 0078 91F83770 		ldrb	r7, [r1, #55]	@ zero_extendqisi2
+ 1715              	.LVL323:
+ 589:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_4_scaling_d;
+ 1716              		.loc 1 589 0
+ 1717 007c 91F83850 		ldrb	r5, [r1, #56]	@ zero_extendqisi2
+ 1718              	.LVL324:
+ 590:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[3];
+ 1719              		.loc 1 590 0
+ 1720 0080 91F83960 		ldrb	r6, [r1, #57]	@ zero_extendqisi2
+ 1721              	.LVL325:
+ 591:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f4;
+ 1722              		.loc 1 591 0
+ 1723 0084 2B4B     		ldr	r3, .L116
+ 1724 0086 D96A     		ldr	r1, [r3, #44]
+ 1725              	.LVL326:
+ 592:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1726              		.loc 1 592 0
+ 1727 0088 2E4B     		ldr	r3, .L116+16
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1728              		.loc 1 546 0
+ 1729 008a 4FF0FF30 		mov	r0, #-1
+ 1730              	.LVL327:
+ 593:../system/src/modbus_rtu/rtu_getters.c **** 	case 5:
+ 1731              		.loc 1 593 0
+ 1732 008e D0E7     		b	.L99
+ 1733              	.LVL328:
+ 1734              	.L105:
+ 596:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_5_scaling_b;
+ 1735              		.loc 1 596 0
+ 1736 0090 91F842C0 		ldrb	ip, [r1, #66]	@ zero_extendqisi2
+ 1737              	.LVL329:
+ 597:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_5_scaling_c;
+ 1738              		.loc 1 597 0
+ 1739 0094 91F84370 		ldrb	r7, [r1, #67]	@ zero_extendqisi2
+ 1740              	.LVL330:
+ 598:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_5_scaling_d;
+ 1741              		.loc 1 598 0
+ 1742 0098 91F84450 		ldrb	r5, [r1, #68]	@ zero_extendqisi2
+ 1743              	.LVL331:
+ 599:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[4];
+ 1744              		.loc 1 599 0
+ 1745 009c 91F84560 		ldrb	r6, [r1, #69]	@ zero_extendqisi2
+ 1746              	.LVL332:
+ 600:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f5;
+ 1747              		.loc 1 600 0
+ 1748 00a0 244B     		ldr	r3, .L116
+ 1749 00a2 196B     		ldr	r1, [r3, #48]
+ 1750              	.LVL333:
+ 601:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1751              		.loc 1 601 0
+ 1752 00a4 284B     		ldr	r3, .L116+20
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1753              		.loc 1 546 0
+ 1754 00a6 4FF0FF30 		mov	r0, #-1
+ 1755              	.LVL334:
+ 602:../system/src/modbus_rtu/rtu_getters.c **** 	case 6:
+ 1756              		.loc 1 602 0
+ 1757 00aa C2E7     		b	.L99
+ 1758              	.LVL335:
+ 1759              	.L106:
+ 605:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_b = config->slave_6_scaling_b;
+ 1760              		.loc 1 605 0
+ 1761 00ac 91F84EC0 		ldrb	ip, [r1, #78]	@ zero_extendqisi2
+ 1762              	.LVL336:
+ 606:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_c = config->slave_6_scaling_c;
+ 1763              		.loc 1 606 0
+ 1764 00b0 91F84F70 		ldrb	r7, [r1, #79]	@ zero_extendqisi2
+ 1765              	.LVL337:
+ 607:../system/src/modbus_rtu/rtu_getters.c **** 		scaling_d = config->slave_6_scaling_d;
+ 1766              		.loc 1 607 0
+ 1767 00b4 91F85050 		ldrb	r5, [r1, #80]	@ zero_extendqisi2
+ 1768              	.LVL338:
+ 608:../system/src/modbus_rtu/rtu_getters.c **** 		last_update_timestam = rte_rtu_pool_queue.last_successfull_call_to_function[5];
+ 1769              		.loc 1 608 0
+ 1770 00b8 91F85160 		ldrb	r6, [r1, #81]	@ zero_extendqisi2
+ 1771              	.LVL339:
+ 609:../system/src/modbus_rtu/rtu_getters.c **** 		source = &rte_wx_modbus_rtu_f6;
+ 1772              		.loc 1 609 0
+ 1773 00bc 1D4B     		ldr	r3, .L116
+ 1774 00be 596B     		ldr	r1, [r3, #52]
+ 1775              	.LVL340:
+ 610:../system/src/modbus_rtu/rtu_getters.c **** 		break;
+ 1776              		.loc 1 610 0
+ 1777 00c0 224B     		ldr	r3, .L116+24
+ 546:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1778              		.loc 1 546 0
+ 1779 00c2 4FF0FF30 		mov	r0, #-1
+ 1780              	.LVL341:
+ 611:../system/src/modbus_rtu/rtu_getters.c **** 	default:
+ 1781              		.loc 1 611 0
+ 1782 00c6 B4E7     		b	.L99
+ 1783              	.LVL342:
+ 1784              	.L109:
+ 556:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1785              		.loc 1 556 0
+ 1786 00c8 0021     		movs	r1, #0
+ 1787              	.LVL343:
+ 548:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1788              		.loc 1 548 0
+ 1789 00ca 0B46     		mov	r3, r1
+ 613:../system/src/modbus_rtu/rtu_getters.c **** 	}
+ 1790              		.loc 1 613 0
+ 1791 00cc 0820     		movs	r0, #8
+ 1792              	.LVL344:
+ 1793 00ce B0E7     		b	.L99
+ 1794              	.LVL345:
+ 1795              	.L115:
+ 616:../system/src/modbus_rtu/rtu_getters.c **** 		// copy the raw value from modbus register data
+ 1796              		.loc 1 616 0 discriminator 1
+ 1797 00d0 002B     		cmp	r3, #0
+ 1798 00d2 B1D0     		beq	.L98
+ 618:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1799              		.loc 1 618 0
+ 1800 00d4 DB88     		ldrh	r3, [r3, #6]
+ 1801              	.LVL346:
+ 1802 00d6 ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 622:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_b * (uint16_t)raw_register_value +
+ 1803              		.loc 1 622 0
+ 1804 00da BDF80600 		ldrh	r0, [sp, #6]
+ 1805              	.LVL347:
+ 1806 00de BDF80620 		ldrh	r2, [sp, #6]
+ 1807 00e2 BDF80630 		ldrh	r3, [sp, #6]
+ 1808 00e6 0CFB00FC 		mul	ip, ip, r0
+ 1809              	.LVL348:
+ 1810 00ea 07FB03F3 		mul	r3, r7, r3
+ 1811 00ee 0CFB0233 		mla	r3, ip, r2, r3
+ 1812 00f2 DBB2     		uxtb	r3, r3
+ 623:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_c
+ 1813              		.loc 1 623 0
+ 1814 00f4 B5FBF6F5 		udiv	r5, r5, r6
+ 1815              	.LVL349:
+ 1816 00f8 2B44     		add	r3, r3, r5
+ 621:../system/src/modbus_rtu/rtu_getters.c **** 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
+ 1817              		.loc 1 621 0
+ 1818 00fa 5BB2     		sxtb	r3, r3
+ 1819              	.LVL350:
+ 1820              	.LBB36:
+ 1821              	.LBB37:
+ 1822              		.loc 2 63 0
+ 1823 00fc 144A     		ldr	r2, .L116+28
+ 1824 00fe 1268     		ldr	r2, [r2]
+ 1825              	.LBE37:
+ 1826              	.LBE36:
+ 629:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > 100 || physical_register_value < 0) {
+ 1827              		.loc 1 629 0
+ 1828 0100 511A     		subs	r1, r2, r1
+ 1829              	.LVL351:
+ 1830 0102 1448     		ldr	r0, .L116+32
+ 1831 0104 8142     		cmp	r1, r0
+ 1832 0106 0ED8     		bhi	.L110
+ 629:../system/src/modbus_rtu/rtu_getters.c **** 				physical_register_value > 100 || physical_register_value < 0) {
+ 1833              		.loc 1 629 0 is_stmt 0 discriminator 1
+ 1834 0108 642B     		cmp	r3, #100
+ 1835 010a 0EDC     		bgt	.L111
+ 630:../system/src/modbus_rtu/rtu_getters.c **** 			retval = MODBUS_RET_NOT_AVALIABLE;
+ 1836              		.loc 1 630 0 is_stmt 1
+ 1837 010c 002B     		cmp	r3, #0
+ 1838 010e 0EDB     		blt	.L112
+ 634:../system/src/modbus_rtu/rtu_getters.c **** 				retval = MODBUS_RET_DEGRADED;
+ 1839              		.loc 1 634 0
+ 1840 0110 1149     		ldr	r1, .L116+36
+ 1841 0112 0968     		ldr	r1, [r1]
+ 1842 0114 521A     		subs	r2, r2, r1
+ 1843 0116 1149     		ldr	r1, .L116+40
+ 1844 0118 8A42     		cmp	r2, r1
+ 1845 011a 02D8     		bhi	.L113
+ 635:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1846              		.loc 1 635 0
+ 1847 011c 0620     		movs	r0, #6
+ 1848              	.L108:
+ 1849              	.LVL352:
+ 641:../system/src/modbus_rtu/rtu_getters.c **** 
+ 1850              		.loc 1 641 0
+ 1851 011e 2370     		strb	r3, [r4]
+ 1852 0120 8AE7     		b	.L98
+ 1853              	.LVL353:
+ 1854              	.L113:
+ 638:../system/src/modbus_rtu/rtu_getters.c **** 			}
+ 1855              		.loc 1 638 0
+ 1856 0122 0020     		movs	r0, #0
+ 1857 0124 FBE7     		b	.L108
+ 1858              	.L110:
+ 631:../system/src/modbus_rtu/rtu_getters.c **** 		}
+ 1859              		.loc 1 631 0
+ 1860 0126 0520     		movs	r0, #5
+ 1861 0128 86E7     		b	.L98
+ 1862              	.L111:
+ 1863 012a 0520     		movs	r0, #5
+ 1864 012c 84E7     		b	.L98
+ 1865              	.L112:
+ 1866 012e 0520     		movs	r0, #5
+ 1867              	.LVL354:
+ 647:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1868              		.loc 1 647 0
+ 1869 0130 82E7     		b	.L98
+ 1870              	.L117:
+ 1871 0132 00BF     		.align	2
+ 1872              	.L116:
+ 1873 0134 00000000 		.word	rte_rtu_pool_queue
+ 1874 0138 00000000 		.word	rte_wx_modbus_rtu_f1
+ 1875 013c 00000000 		.word	rte_wx_modbus_rtu_f2
+ 1876 0140 00000000 		.word	rte_wx_modbus_rtu_f3
+ 1877 0144 00000000 		.word	rte_wx_modbus_rtu_f4
+ 1878 0148 00000000 		.word	rte_wx_modbus_rtu_f5
+ 1879 014c 00000000 		.word	rte_wx_modbus_rtu_f6
+ 1880 0150 00000000 		.word	master_time
+ 1881 0154 E0930400 		.word	300000
+ 1882 0158 00000000 		.word	rte_rtu_last_modbus_rx_error_timestamp
+ 1883 015c DF930400 		.word	299999
+ 1884              		.cfi_endproc
+ 1885              	.LFE100:
+ 1887              		.section	.text.rtu_get_raw_values_string,"ax",%progbits
+ 1888              		.align	1
+ 1889              		.global	rtu_get_raw_values_string
+ 1890              		.syntax unified
+ 1891              		.thumb
+ 1892              		.thumb_func
+ 1893              		.fpu softvfp
+ 1895              	rtu_get_raw_values_string:
+ 1896              	.LFB101:
+ 649:../system/src/modbus_rtu/rtu_getters.c **** 
+ 650:../system/src/modbus_rtu/rtu_getters.c **** void rtu_get_raw_values_string(char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
+ 1897              		.loc 1 650 0
+ 1898              		.cfi_startproc
+ 1899              		@ args = 0, pretend = 0, frame = 0
+ 1900              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1901              	.LVL355:
+ 1902 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 1903              		.cfi_def_cfa_offset 20
+ 1904              		.cfi_offset 4, -20
+ 1905              		.cfi_offset 5, -16
+ 1906              		.cfi_offset 6, -12
+ 1907              		.cfi_offset 7, -8
+ 1908              		.cfi_offset 14, -4
+ 1909 0002 87B0     		sub	sp, sp, #28
+ 1910              		.cfi_def_cfa_offset 48
+ 1911 0004 1446     		mov	r4, r2
+ 1912              	.LVL356:
+ 651:../system/src/modbus_rtu/rtu_getters.c **** 
+ 652:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f1_value = 0;
+ 653:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f2_value = 0;
+ 654:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f3_value = 0;
+ 655:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f4_value = 0;
+ 656:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f5_value = 0;
+ 657:../system/src/modbus_rtu/rtu_getters.c **** 	uint16_t f6_value = 0;
+ 658:../system/src/modbus_rtu/rtu_getters.c **** 
+ 659:../system/src/modbus_rtu/rtu_getters.c **** 	int string_ln = 0;
+ 660:../system/src/modbus_rtu/rtu_getters.c **** 
+ 661:../system/src/modbus_rtu/rtu_getters.c **** 	f1_value = rte_wx_modbus_rtu_f1.registers_values[0];
+ 1913              		.loc 1 661 0
+ 1914 0006 0D4B     		ldr	r3, .L120
+ 1915 0008 DB88     		ldrh	r3, [r3, #6]
+ 1916              	.LVL357:
+ 662:../system/src/modbus_rtu/rtu_getters.c **** 
+ 663:../system/src/modbus_rtu/rtu_getters.c **** 	f2_value = rte_wx_modbus_rtu_f2.registers_values[0];
+ 1917              		.loc 1 663 0
+ 1918 000a 0D4A     		ldr	r2, .L120+4
+ 1919              	.LVL358:
+ 1920 000c D288     		ldrh	r2, [r2, #6]
+ 1921              	.LVL359:
+ 664:../system/src/modbus_rtu/rtu_getters.c **** 
+ 665:../system/src/modbus_rtu/rtu_getters.c **** 	f3_value = rte_wx_modbus_rtu_f3.registers_values[0];
+ 1922              		.loc 1 665 0
+ 1923 000e 0D4D     		ldr	r5, .L120+8
+ 1924 0010 ED88     		ldrh	r5, [r5, #6]
+ 1925              	.LVL360:
+ 666:../system/src/modbus_rtu/rtu_getters.c **** 
+ 667:../system/src/modbus_rtu/rtu_getters.c **** 	f4_value = rte_wx_modbus_rtu_f4.registers_values[0];
+ 1926              		.loc 1 667 0
+ 1927 0012 0D4E     		ldr	r6, .L120+12
+ 1928 0014 F688     		ldrh	r6, [r6, #6]
+ 1929              	.LVL361:
+ 668:../system/src/modbus_rtu/rtu_getters.c **** 
+ 669:../system/src/modbus_rtu/rtu_getters.c **** 	f5_value = rte_wx_modbus_rtu_f5.registers_values[0];
+ 1930              		.loc 1 669 0
+ 1931 0016 0D4F     		ldr	r7, .L120+16
+ 1932 0018 FF88     		ldrh	r7, [r7, #6]
+ 1933              	.LVL362:
+ 670:../system/src/modbus_rtu/rtu_getters.c **** 
+ 671:../system/src/modbus_rtu/rtu_getters.c **** 	f6_value = rte_wx_modbus_rtu_f6.registers_values[0];
+ 1934              		.loc 1 671 0
+ 1935 001a DFF838C0 		ldr	ip, .L120+24
+ 1936 001e BCF806C0 		ldrh	ip, [ip, #6]
+ 1937              	.LVL363:
+ 672:../system/src/modbus_rtu/rtu_getters.c **** 
+ 673:../system/src/modbus_rtu/rtu_getters.c **** 	string_ln = snprintf(out, out_buffer_ln, ">F1V %X, F2V %X, F3V %X, F4V %X, F5V %X, F6V %X",
+ 1938              		.loc 1 673 0
+ 1939 0022 CDF810C0 		str	ip, [sp, #16]
+ 1940 0026 0397     		str	r7, [sp, #12]
+ 1941 0028 0296     		str	r6, [sp, #8]
+ 1942 002a 0195     		str	r5, [sp, #4]
+ 1943 002c 0092     		str	r2, [sp]
+ 1944 002e 084A     		ldr	r2, .L120+20
+ 1945              	.LVL364:
+ 1946 0030 FFF7FEFF 		bl	snprintf
+ 1947              	.LVL365:
+ 674:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f1_value,
+ 675:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f2_value,
+ 676:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f3_value,
+ 677:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f4_value,
+ 678:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f5_value,
+ 679:../system/src/modbus_rtu/rtu_getters.c **** 												(int) f6_value);
+ 680:../system/src/modbus_rtu/rtu_getters.c **** 
+ 681:../system/src/modbus_rtu/rtu_getters.c **** 	*generated_string_ln = (uint8_t)string_ln;
+ 1948              		.loc 1 681 0
+ 1949 0034 2070     		strb	r0, [r4]
+ 682:../system/src/modbus_rtu/rtu_getters.c **** }
+ 1950              		.loc 1 682 0
+ 1951 0036 07B0     		add	sp, sp, #28
+ 1952              		.cfi_def_cfa_offset 20
+ 1953              		@ sp needed
+ 1954 0038 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1955              	.LVL366:
+ 1956              	.L121:
+ 1957 003a 00BF     		.align	2
+ 1958              	.L120:
+ 1959 003c 00000000 		.word	rte_wx_modbus_rtu_f1
+ 1960 0040 00000000 		.word	rte_wx_modbus_rtu_f2
+ 1961 0044 00000000 		.word	rte_wx_modbus_rtu_f3
+ 1962 0048 00000000 		.word	rte_wx_modbus_rtu_f4
+ 1963 004c 00000000 		.word	rte_wx_modbus_rtu_f5
+ 1964 0050 00000000 		.word	.LC0
+ 1965 0054 00000000 		.word	rte_wx_modbus_rtu_f6
+ 1966              		.cfi_endproc
+ 1967              	.LFE101:
+ 1969              		.section	.rodata.rtu_get_raw_values_string.str1.4,"aMS",%progbits,1
+ 1970              		.align	2
+ 1971              	.LC0:
+ 1972 0000 3E463156 		.ascii	">F1V %X, F2V %X, F3V %X, F4V %X, F5V %X, F6V %X\000"
+ 1972      2025582C 
+ 1972      20463256 
+ 1972      2025582C 
+ 1972      20463356 
+ 1973              		.text
+ 1974              	.Letext0:
+ 1975              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/machine/_default_
+ 1976              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1977              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1978              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1979              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1980              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_stdint.h"
+ 1981              		.file 9 "../include/config_data.h"
+ 1982              		.file 10 "../system/include/modbus_rtu/rtu_register_data_t.h"
+ 1983              		.file 11 "../system/include/cmsis/core_cm3.h"
+ 1984              		.file 12 "../system/include/cmsis/system_stm32f10x.h"
+ 1985              		.file 13 "../system/include/cmsis/stm32f10x.h"
+ 1986              		.file 14 "../system/include/drivers/dallas.h"
+ 1987              		.file 15 "../system/include/drivers/analog_anemometer.h"
+ 1988              		.file 16 "../system/include/davis_vantage/davis_loop_t.h"
+ 1989              		.file 17 "../system/include/umb_master/umb_frame_t.h"
+ 1990              		.file 18 "../system/include/umb_master/umb_state_t.h"
+ 1991              		.file 19 "../system/include/drivers/serial.h"
+ 1992              		.file 20 "../system/include/umb_master/umb_context_t.h"
+ 1993              		.file 21 "../system/include/umb_master/umb_qf_t.h"
+ 1994              		.file 22 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 1995              		.file 23 "../system/include/drivers/ms5611.h"
+ 1996              		.file 24 "../system/include/drivers/bme280.h"
+ 1997              		.file 25 "../include/rte_wx.h"
+ 1998              		.file 26 "../system/include/modbus_rtu/rtu_exception_t.h"
+ 1999              		.file 27 "../system/include/modbus_rtu/rtu_pool_queue_t.h"
+ 2000              		.file 28 "../include/rte_rtu.h"
+ 2001              		.file 29 "../system/include/aprs/cfifo.h"
+ 2002              		.file 30 "../system/include/aprs/afsk.h"
+ 2003              		.file 31 "../system/include/aprs/ax25.h"
+ 2004              		.file 32 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rtu_getters.c
+     /tmp/ccpn8ngM.s:23     .text.rtu_get_temperature:0000000000000000 $t
+     /tmp/ccpn8ngM.s:30     .text.rtu_get_temperature:0000000000000000 rtu_get_temperature
+     /tmp/ccpn8ngM.s:56     .text.rtu_get_temperature:0000000000000010 $d
+     /tmp/ccpn8ngM.s:62     .text.rtu_get_temperature:0000000000000016 $t
+     /tmp/ccpn8ngM.s:345    .text.rtu_get_temperature:0000000000000170 $d
+     /tmp/ccpn8ngM.s:362    .text.rtu_get_pressure:0000000000000000 $t
+     /tmp/ccpn8ngM.s:369    .text.rtu_get_pressure:0000000000000000 rtu_get_pressure
+     /tmp/ccpn8ngM.s:394    .text.rtu_get_pressure:0000000000000010 $d
+     /tmp/ccpn8ngM.s:400    .text.rtu_get_pressure:0000000000000016 $t
+     /tmp/ccpn8ngM.s:682    .text.rtu_get_pressure:0000000000000170 $d
+     /tmp/ccpn8ngM.s:699    .text.rtu_get_wind_direction:0000000000000000 $t
+     /tmp/ccpn8ngM.s:706    .text.rtu_get_wind_direction:0000000000000000 rtu_get_wind_direction
+     /tmp/ccpn8ngM.s:730    .text.rtu_get_wind_direction:0000000000000010 $d
+     /tmp/ccpn8ngM.s:736    .text.rtu_get_wind_direction:0000000000000016 $t
+     /tmp/ccpn8ngM.s:973    .text.rtu_get_wind_direction:0000000000000110 $d
+     /tmp/ccpn8ngM.s:988    .text.rtu_get_wind_speed:0000000000000000 $t
+     /tmp/ccpn8ngM.s:995    .text.rtu_get_wind_speed:0000000000000000 rtu_get_wind_speed
+     /tmp/ccpn8ngM.s:1019   .text.rtu_get_wind_speed:0000000000000010 $d
+     /tmp/ccpn8ngM.s:1025   .text.rtu_get_wind_speed:0000000000000016 $t
+     /tmp/ccpn8ngM.s:1265   .text.rtu_get_wind_speed:000000000000010c $d
+     /tmp/ccpn8ngM.s:1280   .text.rtu_get_wind_gusts:0000000000000000 $t
+     /tmp/ccpn8ngM.s:1287   .text.rtu_get_wind_gusts:0000000000000000 rtu_get_wind_gusts
+     /tmp/ccpn8ngM.s:1311   .text.rtu_get_wind_gusts:0000000000000010 $d
+     /tmp/ccpn8ngM.s:1317   .text.rtu_get_wind_gusts:0000000000000016 $t
+     /tmp/ccpn8ngM.s:1557   .text.rtu_get_wind_gusts:000000000000010c $d
+     /tmp/ccpn8ngM.s:1572   .text.rtu_get_humidity:0000000000000000 $t
+     /tmp/ccpn8ngM.s:1579   .text.rtu_get_humidity:0000000000000000 rtu_get_humidity
+     /tmp/ccpn8ngM.s:1608   .text.rtu_get_humidity:0000000000000018 $d
+     /tmp/ccpn8ngM.s:1614   .text.rtu_get_humidity:000000000000001e $t
+     /tmp/ccpn8ngM.s:1873   .text.rtu_get_humidity:0000000000000134 $d
+     /tmp/ccpn8ngM.s:1888   .text.rtu_get_raw_values_string:0000000000000000 $t
+     /tmp/ccpn8ngM.s:1895   .text.rtu_get_raw_values_string:0000000000000000 rtu_get_raw_values_string
+     /tmp/ccpn8ngM.s:1959   .text.rtu_get_raw_values_string:000000000000003c $d
+     /tmp/ccpn8ngM.s:1970   .rodata.rtu_get_raw_values_string.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stdio.h.31.7c0e28c411445f3f9c5b11accf882760
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.187.2ff233552538c6ff9b8575ca8ea52cb3
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.stddef.h.39.ec95e8feac892e292b69dc7ae75b0d64
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+                           .group:0000000000000000 wm4.station_config.h.9.75b6c5687acc8f60d219d6a552b2bf59
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+                           .group:0000000000000000 wm4.rtu_configuration.h.9.225559723a46d58da796e0ac6cb0b2ac
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.19.15d389ea66759bb36d2e3183b267092a
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.3544b1c529a5f3b4e56f5aba673d9e30
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+
+UNDEFINED SYMBOLS
+__aeabi_ui2f
+__aeabi_i2f
+__aeabi_fmul
+__aeabi_fadd
+__aeabi_fdiv
+__aeabi_fcmplt
+__aeabi_fcmpgt
+rte_rtu_pool_queue
+rte_wx_modbus_rtu_f1
+rte_wx_modbus_rtu_f2
+rte_wx_modbus_rtu_f3
+rte_wx_modbus_rtu_f4
+rte_wx_modbus_rtu_f5
+rte_wx_modbus_rtu_f6
+master_time
+rte_rtu_last_modbus_rx_error_timestamp
+snprintf

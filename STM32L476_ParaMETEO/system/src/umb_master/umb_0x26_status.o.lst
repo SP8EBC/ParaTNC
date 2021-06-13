@@ -1,0 +1,394 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"umb_0x26_status.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.umb_0x26_status_request,"ax",%progbits
+  18              		.align	1
+  19              		.global	umb_0x26_status_request
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	umb_0x26_status_request:
+  26              	.LFB351:
+  27              		.file 1 "../system/src/umb_master/umb_0x26_status.c"
+   1:../system/src/umb_master/umb_0x26_status.c **** /*
+   2:../system/src/umb_master/umb_0x26_status.c ****  * umb_status_request.c
+   3:../system/src/umb_master/umb_0x26_status.c ****  *
+   4:../system/src/umb_master/umb_0x26_status.c ****  *  Created on: 23.02.2020
+   5:../system/src/umb_master/umb_0x26_status.c ****  *      Author: mateusz
+   6:../system/src/umb_master/umb_0x26_status.c ****  */
+   7:../system/src/umb_master/umb_0x26_status.c **** 
+   8:../system/src/umb_master/umb_0x26_status.c **** #include "../umb_master/umb_master.h"
+   9:../system/src/umb_master/umb_0x26_status.c **** #include "../umb_master/umb_0x26_status.h"
+  10:../system/src/umb_master/umb_0x26_status.c **** #include "config_data.h"
+  11:../system/src/umb_master/umb_0x26_status.c **** #include "main.h"
+  12:../system/src/umb_master/umb_0x26_status.c **** 
+  13:../system/src/umb_master/umb_0x26_status.c **** #include <string.h>
+  14:../system/src/umb_master/umb_0x26_status.c **** 
+  15:../system/src/umb_master/umb_0x26_status.c **** umb_retval_t umb_0x26_status_request(umb_frame_t* frame, umb_context_t* ctx, const config_data_umb_
+  28              		.loc 1 15 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  16:../system/src/umb_master/umb_0x26_status.c **** 
+  17:../system/src/umb_master/umb_0x26_status.c **** 	if (ctx->state != UMB_STATUS_IDLE && ctx->state != UMB_STATUS_ERROR) {
+  33              		.loc 1 17 0
+  34 0000 0B7E     		ldrb	r3, [r1, #24]	@ zero_extendqisi2
+  35 0002 0BB1     		cbz	r3, .L2
+  36              		.loc 1 17 0 is_stmt 0 discriminator 1
+  37 0004 062B     		cmp	r3, #6
+  38 0006 13D1     		bne	.L4
+  39              	.L2:
+  15:../system/src/umb_master/umb_0x26_status.c **** 
+  40              		.loc 1 15 0 is_stmt 1
+  41 0008 70B5     		push	{r4, r5, r6, lr}
+  42              		.cfi_def_cfa_offset 16
+  43              		.cfi_offset 4, -16
+  44              		.cfi_offset 5, -12
+  45              		.cfi_offset 6, -8
+  46              		.cfi_offset 14, -4
+  47 000a 0D46     		mov	r5, r1
+  18:../system/src/umb_master/umb_0x26_status.c **** 		return UMB_BUSY;
+  19:../system/src/umb_master/umb_0x26_status.c **** 	}
+  20:../system/src/umb_master/umb_0x26_status.c **** 
+  21:../system/src/umb_master/umb_0x26_status.c **** 	frame->command_id = 0x26;
+  48              		.loc 1 21 0
+  49 000c 2626     		movs	r6, #38
+  50 000e 0671     		strb	r6, [r0, #4]
+  22:../system/src/umb_master/umb_0x26_status.c **** 	frame->slave_class = (uint8_t)(config_umb->slave_class & 0xFF);
+  51              		.loc 1 22 0
+  52 0010 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+  53 0012 8370     		strb	r3, [r0, #2]
+  23:../system/src/umb_master/umb_0x26_status.c **** 	frame->slave_id = (uint8_t)(config_umb->slave_id & 0xFF);
+  54              		.loc 1 23 0
+  55 0014 9378     		ldrb	r3, [r2, #2]	@ zero_extendqisi2
+  56 0016 4370     		strb	r3, [r0, #1]
+  24:../system/src/umb_master/umb_0x26_status.c **** 	frame->lenght = 0;
+  57              		.loc 1 24 0
+  58 0018 0024     		movs	r4, #0
+  59 001a C470     		strb	r4, [r0, #3]
+  25:../system/src/umb_master/umb_0x26_status.c **** 
+  26:../system/src/umb_master/umb_0x26_status.c **** 	memset(frame->payload, 0x00, UMB_FRAME_MAX_PAYLOAD_LN);
+  60              		.loc 1 26 0
+  61 001c 2822     		movs	r2, #40
+  62              	.LVL1:
+  63 001e 2146     		mov	r1, r4
+  64              	.LVL2:
+  65 0020 0530     		adds	r0, r0, #5
+  66              	.LVL3:
+  67 0022 FFF7FEFF 		bl	memset
+  68              	.LVL4:
+  27:../system/src/umb_master/umb_0x26_status.c **** 
+  28:../system/src/umb_master/umb_0x26_status.c **** 	ctx->state = UMB_STATUS_READY_TO_SEND;
+  69              		.loc 1 28 0
+  70 0026 0123     		movs	r3, #1
+  71 0028 2B76     		strb	r3, [r5, #24]
+  29:../system/src/umb_master/umb_0x26_status.c **** 	ctx->current_routine = 0x26;
+  72              		.loc 1 29 0
+  73 002a 2E80     		strh	r6, [r5]	@ movhi
+  30:../system/src/umb_master/umb_0x26_status.c **** 
+  31:../system/src/umb_master/umb_0x26_status.c **** 	return UMB_OK;
+  74              		.loc 1 31 0
+  75 002c 2046     		mov	r0, r4
+  32:../system/src/umb_master/umb_0x26_status.c **** 
+  33:../system/src/umb_master/umb_0x26_status.c **** }
+  76              		.loc 1 33 0
+  77 002e 70BD     		pop	{r4, r5, r6, pc}
+  78              	.LVL5:
+  79              	.L4:
+  80              		.cfi_def_cfa_offset 0
+  81              		.cfi_restore 4
+  82              		.cfi_restore 5
+  83              		.cfi_restore 6
+  84              		.cfi_restore 14
+  18:../system/src/umb_master/umb_0x26_status.c **** 	}
+  85              		.loc 1 18 0
+  86 0030 6FF00500 		mvn	r0, #5
+  87              	.LVL6:
+  88              		.loc 1 33 0
+  89 0034 7047     		bx	lr
+  90              		.cfi_endproc
+  91              	.LFE351:
+  93              		.section	.text.umb_0x26_status_callback,"ax",%progbits
+  94              		.align	1
+  95              		.global	umb_0x26_status_callback
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+  99              		.fpu fpv4-sp-d16
+ 101              	umb_0x26_status_callback:
+ 102              	.LFB352:
+  34:../system/src/umb_master/umb_0x26_status.c **** 
+  35:../system/src/umb_master/umb_0x26_status.c **** umb_retval_t umb_0x26_status_callback(umb_frame_t* frame, umb_context_t* ctx) {
+ 103              		.loc 1 35 0
+ 104              		.cfi_startproc
+ 105              		@ args = 0, pretend = 0, frame = 0
+ 106              		@ frame_needed = 0, uses_anonymous_args = 0
+ 107              		@ link register save eliminated.
+ 108              	.LVL7:
+ 109 0000 70B4     		push	{r4, r5, r6}
+ 110              		.cfi_def_cfa_offset 12
+ 111              		.cfi_offset 4, -12
+ 112              		.cfi_offset 5, -8
+ 113              		.cfi_offset 6, -4
+ 114              	.LVL8:
+  36:../system/src/umb_master/umb_0x26_status.c **** 
+  37:../system/src/umb_master/umb_0x26_status.c **** 	// return value
+  38:../system/src/umb_master/umb_0x26_status.c **** 	umb_retval_t output = UMB_OK;
+  39:../system/src/umb_master/umb_0x26_status.c **** 
+  40:../system/src/umb_master/umb_0x26_status.c **** 	// first byte of the response is always 0x00 then one or more error code is transmitted
+  41:../system/src/umb_master/umb_0x26_status.c **** 	uint8_t error_codes_amount = frame->lenght - 1;
+ 115              		.loc 1 41 0
+ 116 0002 C478     		ldrb	r4, [r0, #3]	@ zero_extendqisi2
+ 117              	.LVL9:
+  42:../system/src/umb_master/umb_0x26_status.c **** 
+  43:../system/src/umb_master/umb_0x26_status.c **** 	uint8_t first_errc = frame->payload[1];
+ 118              		.loc 1 43 0
+ 119 0004 8379     		ldrb	r3, [r0, #6]	@ zero_extendqisi2
+ 120              	.LVL10:
+  44:../system/src/umb_master/umb_0x26_status.c **** 
+  45:../system/src/umb_master/umb_0x26_status.c **** 	// error code set to 0x00 means just that device operates normally and there are no errors
+  46:../system/src/umb_master/umb_0x26_status.c **** 	if (first_errc == 0x00) {
+ 121              		.loc 1 46 0
+ 122 0006 BBB1     		cbz	r3, .L9
+ 123 0008 013C     		subs	r4, r4, #1
+ 124              	.LVL11:
+ 125 000a E4B2     		uxtb	r4, r4
+ 126              	.LVL12:
+ 127              	.LBB5:
+  47:../system/src/umb_master/umb_0x26_status.c **** 		// so just do nothing and then return from the function
+  48:../system/src/umb_master/umb_0x26_status.c **** 		;
+  49:../system/src/umb_master/umb_0x26_status.c **** 	}
+  50:../system/src/umb_master/umb_0x26_status.c **** 	else {
+  51:../system/src/umb_master/umb_0x26_status.c **** 		// copy error codes to context
+  52:../system/src/umb_master/umb_0x26_status.c **** 		for (int i = 0; i < error_codes_amount && i < UMB_CONTEXT_ERR_HISTORY_LN; i++) {
+ 128              		.loc 1 52 0
+ 129 000c 0022     		movs	r2, #0
+ 130 000e 09E0     		b	.L10
+ 131              	.LVL13:
+ 132              	.L12:
+  53:../system/src/umb_master/umb_0x26_status.c **** 
+  54:../system/src/umb_master/umb_0x26_status.c **** 			// copy current error code to the buffer
+  55:../system/src/umb_master/umb_0x26_status.c **** 			ctx->nok_error_codes[ctx->nok_error_it] = frame->payload[1 + i];
+ 133              		.loc 1 55 0 discriminator 4
+ 134 0010 0132     		adds	r2, r2, #1
+ 135              	.LVL14:
+ 136 0012 8B79     		ldrb	r3, [r1, #6]	@ zero_extendqisi2
+ 137 0014 8518     		adds	r5, r0, r2
+ 138 0016 6E79     		ldrb	r6, [r5, #5]	@ zero_extendqisi2
+ 139 0018 CD18     		adds	r5, r1, r3
+ 140 001a AE70     		strb	r6, [r5, #2]
+  56:../system/src/umb_master/umb_0x26_status.c **** 
+  57:../system/src/umb_master/umb_0x26_status.c **** 			// move the iterator through the buffer
+  58:../system/src/umb_master/umb_0x26_status.c **** 			ctx->nok_error_it++;
+ 141              		.loc 1 58 0 discriminator 4
+ 142 001c 0133     		adds	r3, r3, #1
+  59:../system/src/umb_master/umb_0x26_status.c **** 
+  60:../system/src/umb_master/umb_0x26_status.c **** 			// check if and end of the buffer is reach here
+  61:../system/src/umb_master/umb_0x26_status.c **** 			ctx->nok_error_it %= UMB_CONTEXT_ERR_HISTORY_LN;
+ 143              		.loc 1 61 0 discriminator 4
+ 144 001e 03F00303 		and	r3, r3, #3
+ 145 0022 8B71     		strb	r3, [r1, #6]
+ 146              	.LVL15:
+ 147              	.L10:
+  52:../system/src/umb_master/umb_0x26_status.c **** 
+ 148              		.loc 1 52 0 discriminator 1
+ 149 0024 9442     		cmp	r4, r2
+ 150 0026 01DD     		ble	.L11
+  52:../system/src/umb_master/umb_0x26_status.c **** 
+ 151              		.loc 1 52 0 is_stmt 0 discriminator 3
+ 152 0028 032A     		cmp	r2, #3
+ 153 002a F1DD     		ble	.L12
+ 154              	.L11:
+ 155              	.LBE5:
+ 156              	.LBB6:
+ 157              	.LBB7:
+ 158              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA00"
+   9:../include/main.h **** #define SW_DATE "23052021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+ 159              		.loc 2 63 0 is_stmt 1
+ 160 002c 044B     		ldr	r3, .L14
+ 161 002e 1B68     		ldr	r3, [r3]
+ 162              	.LBE7:
+ 163              	.LBE6:
+  62:../system/src/umb_master/umb_0x26_status.c **** 		}
+  63:../system/src/umb_master/umb_0x26_status.c **** 
+  64:../system/src/umb_master/umb_0x26_status.c **** 		// storing the time when last error code will be stored
+  65:../system/src/umb_master/umb_0x26_status.c **** 		ctx->time_of_last_nok = main_get_master_time();
+ 164              		.loc 1 65 0
+ 165 0030 CB60     		str	r3, [r1, #12]
+  66:../system/src/umb_master/umb_0x26_status.c **** 
+  67:../system/src/umb_master/umb_0x26_status.c **** 		// trigger the status message with a content of fault store
+  68:../system/src/umb_master/umb_0x26_status.c **** 		ctx->trigger_status_msg = 1;
+ 166              		.loc 1 68 0
+ 167 0032 0123     		movs	r3, #1
+ 168 0034 81F82A30 		strb	r3, [r1, #42]
+ 169              	.LVL16:
+ 170              	.L9:
+  69:../system/src/umb_master/umb_0x26_status.c **** 	}
+  70:../system/src/umb_master/umb_0x26_status.c **** 
+  71:../system/src/umb_master/umb_0x26_status.c **** 	ctx->state = UMB_STATUS_IDLE;
+ 171              		.loc 1 71 0
+ 172 0038 0020     		movs	r0, #0
+ 173              	.LVL17:
+ 174 003a 0876     		strb	r0, [r1, #24]
+  72:../system/src/umb_master/umb_0x26_status.c **** 
+  73:../system/src/umb_master/umb_0x26_status.c **** 	return output;
+  74:../system/src/umb_master/umb_0x26_status.c **** }
+ 175              		.loc 1 74 0
+ 176 003c 70BC     		pop	{r4, r5, r6}
+ 177              		.cfi_restore 6
+ 178              		.cfi_restore 5
+ 179              		.cfi_restore 4
+ 180              		.cfi_def_cfa_offset 0
+ 181 003e 7047     		bx	lr
+ 182              	.L15:
+ 183              		.align	2
+ 184              	.L14:
+ 185 0040 00000000 		.word	master_time
+ 186              		.cfi_endproc
+ 187              	.LFE352:
+ 189              		.text
+ 190              	.Letext0:
+ 191              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 192              		.file 4 "../system/include/umb_master/umb_frame_t.h"
+ 193              		.file 5 "../system/include/umb_master/umb_retval_t.h"
+ 194              		.file 6 "../system/include/umb_master/umb_state_t.h"
+ 195              		.file 7 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 196              		.file 8 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 197              		.file 9 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 198              		.file 10 "../system/include/drivers/serial.h"
+ 199              		.file 11 "../system/include/umb_master/umb_context_t.h"
+ 200              		.file 12 "../include/config_data.h"
+ 201              		.file 13 "../system/include/aprs/cfifo.h"
+ 202              		.file 14 "../system/include/aprs/afsk.h"
+ 203              		.file 15 "../system/include/aprs/ax25.h"
+ 204              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 205              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 206              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 207              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 208              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 umb_0x26_status.c
+     /tmp/cckeXPTO.s:18     .text.umb_0x26_status_request:0000000000000000 $t
+     /tmp/cckeXPTO.s:25     .text.umb_0x26_status_request:0000000000000000 umb_0x26_status_request
+     /tmp/cckeXPTO.s:94     .text.umb_0x26_status_callback:0000000000000000 $t
+     /tmp/cckeXPTO.s:101    .text.umb_0x26_status_callback:0000000000000000 umb_0x26_status_callback
+     /tmp/cckeXPTO.s:185    .text.umb_0x26_status_callback:0000000000000040 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.7eec48e1bc15e3b0aff1089c232f5a9c
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+
+UNDEFINED SYMBOLS
+memset
+master_time

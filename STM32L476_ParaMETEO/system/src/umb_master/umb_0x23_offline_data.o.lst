@@ -1,0 +1,751 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"umb_0x23_offline_data.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.umb_0x23_offline_data_request,"ax",%progbits
+  18              		.align	1
+  19              		.global	umb_0x23_offline_data_request
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	umb_0x23_offline_data_request:
+  26              	.LFB397:
+  27              		.file 1 "../system/src/umb_master/umb_0x23_offline_data.c"
+   1:../system/src/umb_master/umb_0x23_offline_data.c **** /*
+   2:../system/src/umb_master/umb_0x23_offline_data.c ****  * umb_0x23_offline_data.c
+   3:../system/src/umb_master/umb_0x23_offline_data.c ****  *
+   4:../system/src/umb_master/umb_0x23_offline_data.c ****  *  Created on: 20.03.2020
+   5:../system/src/umb_master/umb_0x23_offline_data.c ****  *      Author: mateusz
+   6:../system/src/umb_master/umb_0x23_offline_data.c ****  */
+   7:../system/src/umb_master/umb_0x23_offline_data.c **** 
+   8:../system/src/umb_master/umb_0x23_offline_data.c **** #include "../umb_master/umb_master.h"
+   9:../system/src/umb_master/umb_0x23_offline_data.c **** #include "../umb_master/umb_0x23_offline_data.h"
+  10:../system/src/umb_master/umb_0x23_offline_data.c **** #include "rte_wx.h"
+  11:../system/src/umb_master/umb_0x23_offline_data.c **** #include "main.h"
+  12:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  13:../system/src/umb_master/umb_0x23_offline_data.c **** #define UNSIGNED_CHAR 	0x10
+  14:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_CHAR		0x11
+  15:../system/src/umb_master/umb_0x23_offline_data.c **** #define UNSIGNED_SHORT	0x12
+  16:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_SHORT	0x13
+  17:../system/src/umb_master/umb_0x23_offline_data.c **** #define UNSIGNED_LONG	0x14
+  18:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_LONG		0x15
+  19:../system/src/umb_master/umb_0x23_offline_data.c **** #define FLOAT			0x16
+  20:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  21:../system/src/umb_master/umb_0x23_offline_data.c **** #define UNSIGNED_CHAR_LN	1
+  22:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_CHAR_LN		1
+  23:../system/src/umb_master/umb_0x23_offline_data.c **** #define UNSIGNED_SHORT_LN	2
+  24:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_SHORT_LN		2
+  25:../system/src/umb_master/umb_0x23_offline_data.c **** #define	UNSIGNED_LONG_LN	4
+  26:../system/src/umb_master/umb_0x23_offline_data.c **** #define SIGNED_LONG_LN		4
+  27:../system/src/umb_master/umb_0x23_offline_data.c **** #define FLOAT_LN			4
+  28:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  29:../system/src/umb_master/umb_0x23_offline_data.c **** umb_retval_t umb_0x23_offline_data_request(umb_frame_t* frame, umb_context_t* ctx, uint16_t channel
+  28              		.loc 1 29 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  34 0000 30B4     		push	{r4, r5}
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 5, -4
+  30:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  31:../system/src/umb_master/umb_0x23_offline_data.c **** 	if (ctx->state != UMB_STATUS_IDLE && ctx->state != UMB_STATUS_ERROR) {
+  38              		.loc 1 31 0
+  39 0002 0C7E     		ldrb	r4, [r1, #24]	@ zero_extendqisi2
+  40 0004 0CB1     		cbz	r4, .L2
+  41              		.loc 1 31 0 is_stmt 0 discriminator 1
+  42 0006 062C     		cmp	r4, #6
+  43 0008 10D1     		bne	.L4
+  44              	.L2:
+  32:../system/src/umb_master/umb_0x23_offline_data.c **** 		return UMB_BUSY;
+  33:../system/src/umb_master/umb_0x23_offline_data.c **** 	}
+  34:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  35:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->command_id = 0x23;
+  45              		.loc 1 35 0 is_stmt 1
+  46 000a 2324     		movs	r4, #35
+  47 000c 0471     		strb	r4, [r0, #4]
+  36:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->slave_class = (uint8_t)(config_umb->slave_class & 0xFF);
+  48              		.loc 1 36 0
+  49 000e 1D78     		ldrb	r5, [r3]	@ zero_extendqisi2
+  50 0010 8570     		strb	r5, [r0, #2]
+  37:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->slave_id = (uint8_t)(config_umb->slave_id & 0xFF);
+  51              		.loc 1 37 0
+  52 0012 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+  53              	.LVL1:
+  54 0014 4370     		strb	r3, [r0, #1]
+  38:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->lenght = 2;
+  55              		.loc 1 38 0
+  56 0016 0223     		movs	r3, #2
+  57 0018 C370     		strb	r3, [r0, #3]
+  39:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  40:../system/src/umb_master/umb_0x23_offline_data.c **** 	// channels are little endian 16 bit unsigned integer
+  41:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->payload[0] = channel_number & 0xFF;
+  58              		.loc 1 41 0
+  59 001a 4271     		strb	r2, [r0, #5]
+  42:../system/src/umb_master/umb_0x23_offline_data.c **** 	frame->payload[1] = (channel_number & 0xFF00) >> 8;
+  60              		.loc 1 42 0
+  61 001c 120A     		lsrs	r2, r2, #8
+  62              	.LVL2:
+  63 001e 8271     		strb	r2, [r0, #6]
+  43:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  44:../system/src/umb_master/umb_0x23_offline_data.c **** 	ctx->state = UMB_STATUS_READY_TO_SEND;
+  64              		.loc 1 44 0
+  65 0020 0123     		movs	r3, #1
+  66 0022 0B76     		strb	r3, [r1, #24]
+  45:../system/src/umb_master/umb_0x23_offline_data.c **** 	ctx->current_routine = 0x23;
+  67              		.loc 1 45 0
+  68 0024 0C80     		strh	r4, [r1]	@ movhi
+  46:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  47:../system/src/umb_master/umb_0x23_offline_data.c **** 	return UMB_OK;
+  69              		.loc 1 47 0
+  70 0026 0020     		movs	r0, #0
+  71              	.LVL3:
+  72              	.L3:
+  48:../system/src/umb_master/umb_0x23_offline_data.c **** }
+  73              		.loc 1 48 0
+  74 0028 30BC     		pop	{r4, r5}
+  75              		.cfi_remember_state
+  76              		.cfi_restore 5
+  77              		.cfi_restore 4
+  78              		.cfi_def_cfa_offset 0
+  79 002a 7047     		bx	lr
+  80              	.LVL4:
+  81              	.L4:
+  82              		.cfi_restore_state
+  32:../system/src/umb_master/umb_0x23_offline_data.c **** 	}
+  83              		.loc 1 32 0
+  84 002c 6FF00500 		mvn	r0, #5
+  85              	.LVL5:
+  86 0030 FAE7     		b	.L3
+  87              		.cfi_endproc
+  88              	.LFE397:
+  90              		.section	.text.umb_0x23_offline_data_callback,"ax",%progbits
+  91              		.align	1
+  92              		.global	umb_0x23_offline_data_callback
+  93              		.syntax unified
+  94              		.thumb
+  95              		.thumb_func
+  96              		.fpu fpv4-sp-d16
+  98              	umb_0x23_offline_data_callback:
+  99              	.LFB398:
+  49:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  50:../system/src/umb_master/umb_0x23_offline_data.c **** umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* ctx) {
+ 100              		.loc 1 50 0
+ 101              		.cfi_startproc
+ 102              		@ args = 0, pretend = 0, frame = 0
+ 103              		@ frame_needed = 0, uses_anonymous_args = 0
+ 104              		@ link register save eliminated.
+ 105              	.LVL6:
+ 106 0000 30B4     		push	{r4, r5}
+ 107              		.cfi_def_cfa_offset 8
+ 108              		.cfi_offset 4, -8
+ 109              		.cfi_offset 5, -4
+ 110              	.LVL7:
+  51:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  52:../system/src/umb_master/umb_0x23_offline_data.c **** 	// return value
+  53:../system/src/umb_master/umb_0x23_offline_data.c **** 	umb_retval_t output = UMB_OK;
+  54:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  55:../system/src/umb_master/umb_0x23_offline_data.c **** 	// status from sensor
+  56:../system/src/umb_master/umb_0x23_offline_data.c **** 	uint8_t status = frame->payload[0];
+ 111              		.loc 1 56 0
+ 112 0002 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 113              	.LVL8:
+  57:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  58:../system/src/umb_master/umb_0x23_offline_data.c **** 	// value type
+  59:../system/src/umb_master/umb_0x23_offline_data.c **** 	uint8_t type = 0;
+  60:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  61:../system/src/umb_master/umb_0x23_offline_data.c **** 	// channel from response
+  62:../system/src/umb_master/umb_0x23_offline_data.c **** 	uint16_t channel = 0;
+  63:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  64:../system/src/umb_master/umb_0x23_offline_data.c **** 	// raw value from sensor
+  65:../system/src/umb_master/umb_0x23_offline_data.c **** 	uint32_t raw_value = 0;
+  66:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  67:../system/src/umb_master/umb_0x23_offline_data.c **** 	// signed value to be written in RTE
+  68:../system/src/umb_master/umb_0x23_offline_data.c **** 	int32_t value_for_rte = 0;
+  69:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  70:../system/src/umb_master/umb_0x23_offline_data.c **** 	// temporary float point buffer to handle this type
+  71:../system/src/umb_master/umb_0x23_offline_data.c **** 	float temp = 0.0f;
+  72:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  73:../system/src/umb_master/umb_0x23_offline_data.c **** 	// fetch the channel number
+  74:../system/src/umb_master/umb_0x23_offline_data.c **** 	channel = frame->payload[1] | (frame->payload[2] << 8);
+ 114              		.loc 1 74 0
+ 115 0004 8279     		ldrb	r2, [r0, #6]	@ zero_extendqisi2
+ 116 0006 C479     		ldrb	r4, [r0, #7]	@ zero_extendqisi2
+ 117 0008 42EA0422 		orr	r2, r2, r4, lsl #8
+ 118 000c 12B2     		sxth	r2, r2
+ 119              	.LVL9:
+  75:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  76:../system/src/umb_master/umb_0x23_offline_data.c **** 	// check if status is OK
+  77:../system/src/umb_master/umb_0x23_offline_data.c **** 	if (status == 0x00) {
+ 120              		.loc 1 77 0
+ 121 000e 002B     		cmp	r3, #0
+ 122 0010 76D1     		bne	.L7
+  78:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  79:../system/src/umb_master/umb_0x23_offline_data.c **** 		// fetch the value type
+  80:../system/src/umb_master/umb_0x23_offline_data.c **** 		type = frame->payload[3];
+ 123              		.loc 1 80 0
+ 124 0012 047A     		ldrb	r4, [r0, #8]	@ zero_extendqisi2
+ 125              	.LVL10:
+  81:../system/src/umb_master/umb_0x23_offline_data.c **** 
+  82:../system/src/umb_master/umb_0x23_offline_data.c **** 		// fetch the raw value into temporary storage
+  83:../system/src/umb_master/umb_0x23_offline_data.c **** 		switch (type) {
+ 126              		.loc 1 83 0
+ 127 0014 A4F11003 		sub	r3, r4, #16
+ 128              	.LVL11:
+ 129 0018 062B     		cmp	r3, #6
+ 130 001a 2AD8     		bhi	.L8
+ 131 001c DFE803F0 		tbb	[pc, r3]
+ 132              	.L10:
+ 133 0020 04       		.byte	(.L9-.L10)/2
+ 134 0021 04       		.byte	(.L9-.L10)/2
+ 135 0022 0E       		.byte	(.L11-.L10)/2
+ 136 0023 0E       		.byte	(.L11-.L10)/2
+ 137 0024 13       		.byte	(.L12-.L10)/2
+ 138 0025 13       		.byte	(.L12-.L10)/2
+ 139 0026 1E       		.byte	(.L13-.L10)/2
+ 140 0027 00       		.p2align 1
+ 141              	.L9:
+  84:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_CHAR:
+  85:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_CHAR: {
+  86:../system/src/umb_master/umb_0x23_offline_data.c **** 				raw_value = frame->payload[4];
+ 142              		.loc 1 86 0
+ 143 0028 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+ 144              	.LVL12:
+ 145              	.L14:
+  87:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+  88:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+  89:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_SHORT:
+  90:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_SHORT: {
+  91:../system/src/umb_master/umb_0x23_offline_data.c **** 				raw_value = frame->payload[4] | (frame->payload[5] << 8);
+  92:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+  93:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+  94:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_LONG:
+  95:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_LONG: {
+  96:../system/src/umb_master/umb_0x23_offline_data.c **** 				raw_value = frame->payload[4] | (frame->payload[5] << 8) | (frame->payload[6] << 16) | (frame->
+  97:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+  98:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+  99:../system/src/umb_master/umb_0x23_offline_data.c **** 			case FLOAT: {
+ 100:../system/src/umb_master/umb_0x23_offline_data.c **** 				raw_value = frame->payload[4] | (frame->payload[5] << 8) | (frame->payload[6] << 16) | (frame->
+ 101:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 102:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 103:../system/src/umb_master/umb_0x23_offline_data.c **** 			default: {
+ 104:../system/src/umb_master/umb_0x23_offline_data.c **** 				ctx->state = UMB_STATUS_ERROR;
+ 105:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 106:../system/src/umb_master/umb_0x23_offline_data.c **** 				output = UMB_GENERAL_ERROR;
+ 107:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 108:../system/src/umb_master/umb_0x23_offline_data.c **** 				return output;
+ 109:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 110:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 111:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 112:../system/src/umb_master/umb_0x23_offline_data.c **** 		// convert a raw value to a value to be stored in the rte as an integer multiplicity of .1
+ 113:../system/src/umb_master/umb_0x23_offline_data.c **** 		switch (type) {
+ 146              		.loc 1 113 0
+ 147 002a 103C     		subs	r4, r4, #16
+ 148              	.LVL13:
+ 149 002c 062C     		cmp	r4, #6
+ 150 002e 55D8     		bhi	.L27
+ 151 0030 DFE804F0 		tbb	[pc, r4]
+ 152              	.L18:
+ 153 0034 24       		.byte	(.L17-.L18)/2
+ 154 0035 3A       		.byte	(.L19-.L18)/2
+ 155 0036 24       		.byte	(.L17-.L18)/2
+ 156 0037 3F       		.byte	(.L20-.L18)/2
+ 157 0038 24       		.byte	(.L17-.L18)/2
+ 158 0039 24       		.byte	(.L17-.L18)/2
+ 159 003a 44       		.byte	(.L21-.L18)/2
+ 160              	.LVL14:
+ 161 003b 00       		.p2align 1
+ 162              	.L11:
+  91:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 163              		.loc 1 91 0
+ 164 003c 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+ 165 003e 807A     		ldrb	r0, [r0, #10]	@ zero_extendqisi2
+ 166              	.LVL15:
+ 167 0040 43EA0023 		orr	r3, r3, r0, lsl #8
+ 168              	.LVL16:
+  92:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 169              		.loc 1 92 0
+ 170 0044 F1E7     		b	.L14
+ 171              	.LVL17:
+ 172              	.L12:
+  96:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 173              		.loc 1 96 0
+ 174 0046 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+ 175 0048 857A     		ldrb	r5, [r0, #10]	@ zero_extendqisi2
+ 176 004a 43EA0523 		orr	r3, r3, r5, lsl #8
+ 177 004e C57A     		ldrb	r5, [r0, #11]	@ zero_extendqisi2
+ 178 0050 43EA0543 		orr	r3, r3, r5, lsl #16
+ 179 0054 007B     		ldrb	r0, [r0, #12]	@ zero_extendqisi2
+ 180              	.LVL18:
+ 181 0056 43EA0063 		orr	r3, r3, r0, lsl #24
+ 182              	.LVL19:
+  97:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 183              		.loc 1 97 0
+ 184 005a E6E7     		b	.L14
+ 185              	.LVL20:
+ 186              	.L13:
+ 100:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 187              		.loc 1 100 0
+ 188 005c 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+ 189 005e 857A     		ldrb	r5, [r0, #10]	@ zero_extendqisi2
+ 190 0060 43EA0523 		orr	r3, r3, r5, lsl #8
+ 191 0064 C57A     		ldrb	r5, [r0, #11]	@ zero_extendqisi2
+ 192 0066 43EA0543 		orr	r3, r3, r5, lsl #16
+ 193 006a 007B     		ldrb	r0, [r0, #12]	@ zero_extendqisi2
+ 194              	.LVL21:
+ 195 006c 43EA0063 		orr	r3, r3, r0, lsl #24
+ 196              	.LVL22:
+ 101:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 197              		.loc 1 101 0
+ 198 0070 DBE7     		b	.L14
+ 199              	.LVL23:
+ 200              	.L8:
+ 104:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 201              		.loc 1 104 0
+ 202 0072 0623     		movs	r3, #6
+ 203 0074 0B76     		strb	r3, [r1, #24]
+ 204              	.LVL24:
+ 108:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 205              		.loc 1 108 0
+ 206 0076 6FF03E00 		mvn	r0, #62
+ 207              	.LVL25:
+ 208 007a 3FE0     		b	.L15
+ 209              	.LVL26:
+ 210              	.L17:
+ 114:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_CHAR:
+ 115:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_SHORT:
+ 116:../system/src/umb_master/umb_0x23_offline_data.c **** 			case UNSIGNED_LONG:
+ 117:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_LONG: {
+ 118:../system/src/umb_master/umb_0x23_offline_data.c **** 				// multiply this by the factor of ten
+ 119:../system/src/umb_master/umb_0x23_offline_data.c **** 				value_for_rte = raw_value * 10;
+ 211              		.loc 1 119 0
+ 212 007c 03EB8303 		add	r3, r3, r3, lsl #2
+ 213              	.LVL27:
+ 214 0080 5800     		lsls	r0, r3, #1
+ 215              	.LVL28:
+ 216              	.L22:
+ 120:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 121:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 122:../system/src/umb_master/umb_0x23_offline_data.c **** 			// for signed types do a conversion to intermediate signed variable to take care about
+ 123:../system/src/umb_master/umb_0x23_offline_data.c **** 			// negative numbers
+ 124:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_CHAR: {
+ 125:../system/src/umb_master/umb_0x23_offline_data.c **** 				value_for_rte = (int32_t)(((int8_t)(raw_value & 0xFF)) * 10);
+ 126:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 127:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 128:../system/src/umb_master/umb_0x23_offline_data.c **** 			case SIGNED_SHORT: {
+ 129:../system/src/umb_master/umb_0x23_offline_data.c **** 				value_for_rte = (int32_t)(((int16_t)(raw_value & 0xFFFF)) * 10);
+ 130:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 131:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 132:../system/src/umb_master/umb_0x23_offline_data.c **** 			case FLOAT: {
+ 133:../system/src/umb_master/umb_0x23_offline_data.c **** 				temp = *(float*)&raw_value;
+ 134:../system/src/umb_master/umb_0x23_offline_data.c **** 				value_for_rte = (int32_t)(temp * 10.0f);
+ 135:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 136:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 137:../system/src/umb_master/umb_0x23_offline_data.c **** 			// there is no default case here as if a type was any different from supported the function woul
+ 138:../system/src/umb_master/umb_0x23_offline_data.c **** 			// quit before, in previous switch
+ 139:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 140:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 141:../system/src/umb_master/umb_0x23_offline_data.c **** 		// limit the value as rte stores only 16 bit signed integers
+ 142:../system/src/umb_master/umb_0x23_offline_data.c **** 		if (value_for_rte > 32767) {
+ 217              		.loc 1 142 0
+ 218 0082 B0F5004F 		cmp	r0, #32768
+ 219 0086 24DA     		bge	.L30
+ 220              	.LVL29:
+ 221              	.L16:
+ 143:../system/src/umb_master/umb_0x23_offline_data.c **** 			ctx->state = UMB_STATUS_ERROR;
+ 144:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 145:../system/src/umb_master/umb_0x23_offline_data.c **** 			return UMB_VALUE_OUT_OF_RANGE;
+ 146:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 147:../system/src/umb_master/umb_0x23_offline_data.c **** 		else if (value_for_rte < (int32_t)-32767) {
+ 222              		.loc 1 147 0
+ 223 0088 10F5004F 		cmn	r0, #32768
+ 224 008c 28DD     		ble	.L31
+ 225              	.LBB5:
+ 148:../system/src/umb_master/umb_0x23_offline_data.c **** 			ctx->state = UMB_STATUS_ERROR;
+ 149:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 150:../system/src/umb_master/umb_0x23_offline_data.c **** 			return UMB_VALUE_OUT_OF_RANGE;
+ 151:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 152:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 153:../system/src/umb_master/umb_0x23_offline_data.c **** 		for (int i = 0; i < UMB_CHANNELS_STORAGE_CAPAC; i++) {
+ 226              		.loc 1 153 0
+ 227 008e 0023     		movs	r3, #0
+ 228              	.LVL30:
+ 229              	.L23:
+ 230              		.loc 1 153 0 is_stmt 0 discriminator 1
+ 231 0090 052B     		cmp	r3, #5
+ 232 0092 32DC     		bgt	.L32
+ 154:../system/src/umb_master/umb_0x23_offline_data.c **** 			// look for free slot in channel values storage
+ 155:../system/src/umb_master/umb_0x23_offline_data.c **** 			if(	rte_wx_umb_channel_values[i][0] == (int16_t)0xFFFF ||
+ 233              		.loc 1 155 0 is_stmt 1
+ 234 0094 2449     		ldr	r1, .L33
+ 235 0096 31F92310 		ldrsh	r1, [r1, r3, lsl #2]
+ 236 009a B1F1FF3F 		cmp	r1, #-1
+ 237 009e 24D0     		beq	.L24
+ 238              		.loc 1 155 0 is_stmt 0 discriminator 1
+ 239 00a0 8A42     		cmp	r2, r1
+ 240 00a2 22D0     		beq	.L24
+ 153:../system/src/umb_master/umb_0x23_offline_data.c **** 			// look for free slot in channel values storage
+ 241              		.loc 1 153 0 is_stmt 1 discriminator 2
+ 242 00a4 0133     		adds	r3, r3, #1
+ 243              	.LVL31:
+ 244 00a6 F3E7     		b	.L23
+ 245              	.LVL32:
+ 246              	.L19:
+ 247              	.LBE5:
+ 125:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 248              		.loc 1 125 0
+ 249 00a8 5BB2     		sxtb	r3, r3
+ 250              	.LVL33:
+ 251 00aa 03EB8303 		add	r3, r3, r3, lsl #2
+ 252 00ae 5800     		lsls	r0, r3, #1
+ 253              	.LVL34:
+ 126:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 254              		.loc 1 126 0
+ 255 00b0 E7E7     		b	.L22
+ 256              	.LVL35:
+ 257              	.L20:
+ 129:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 258              		.loc 1 129 0
+ 259 00b2 1BB2     		sxth	r3, r3
+ 260              	.LVL36:
+ 261 00b4 03EB8303 		add	r3, r3, r3, lsl #2
+ 262 00b8 5800     		lsls	r0, r3, #1
+ 263              	.LVL37:
+ 130:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 264              		.loc 1 130 0
+ 265 00ba E2E7     		b	.L22
+ 266              	.LVL38:
+ 267              	.L21:
+ 133:../system/src/umb_master/umb_0x23_offline_data.c **** 				value_for_rte = (int32_t)(temp * 10.0f);
+ 268              		.loc 1 133 0
+ 269 00bc 07EE903A 		vmov	s15, r3
+ 270              	.LVL39:
+ 134:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 271              		.loc 1 134 0
+ 272 00c0 B2EE047A 		vmov.f32	s14, #1.0e+1
+ 273 00c4 67EE877A 		vmul.f32	s15, s15, s14
+ 274 00c8 FDEEE77A 		vcvt.s32.f32	s15, s15
+ 275 00cc 17EE900A 		vmov	r0, s15	@ int
+ 276              	.LVL40:
+ 135:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 277              		.loc 1 135 0
+ 278 00d0 D7E7     		b	.L22
+ 279              	.LVL41:
+ 280              	.L30:
+ 143:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 281              		.loc 1 143 0
+ 282 00d2 0623     		movs	r3, #6
+ 283 00d4 0B76     		strb	r3, [r1, #24]
+ 284              	.LVL42:
+ 145:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 285              		.loc 1 145 0
+ 286 00d6 6FF00700 		mvn	r0, #7
+ 287              	.LVL43:
+ 288 00da 0FE0     		b	.L15
+ 289              	.LVL44:
+ 290              	.L27:
+  68:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 291              		.loc 1 68 0
+ 292 00dc 0020     		movs	r0, #0
+ 293 00de D3E7     		b	.L16
+ 294              	.LVL45:
+ 295              	.L31:
+ 148:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 296              		.loc 1 148 0
+ 297 00e0 0623     		movs	r3, #6
+ 298 00e2 0B76     		strb	r3, [r1, #24]
+ 299              	.LVL46:
+ 150:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 300              		.loc 1 150 0
+ 301 00e4 6FF00700 		mvn	r0, #7
+ 302 00e8 08E0     		b	.L15
+ 303              	.LVL47:
+ 304              	.L24:
+ 305              	.LBB6:
+ 156:../system/src/umb_master/umb_0x23_offline_data.c **** 				rte_wx_umb_channel_values[i][0] == (int16_t)channel	)
+ 157:../system/src/umb_master/umb_0x23_offline_data.c **** 			{
+ 158:../system/src/umb_master/umb_0x23_offline_data.c **** 				// if found store the value and then break the loop execution
+ 159:../system/src/umb_master/umb_0x23_offline_data.c **** 				rte_wx_umb_channel_values[i][0] = channel;
+ 306              		.loc 1 159 0
+ 307 00ea 0F49     		ldr	r1, .L33
+ 308 00ec 21F82320 		strh	r2, [r1, r3, lsl #2]	@ movhi
+ 309              	.LVL48:
+ 160:../system/src/umb_master/umb_0x23_offline_data.c **** 				rte_wx_umb_channel_values[i][1] = (int16_t)value_for_rte;
+ 310              		.loc 1 160 0
+ 311 00f0 01EB8303 		add	r3, r1, r3, lsl #2
+ 312              	.LVL49:
+ 313 00f4 5880     		strh	r0, [r3, #2]	@ movhi
+ 314              	.LBE6:
+  53:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 315              		.loc 1 53 0
+ 316 00f6 0020     		movs	r0, #0
+ 317              	.LBB7:
+ 161:../system/src/umb_master/umb_0x23_offline_data.c **** 				break;
+ 318              		.loc 1 161 0
+ 319 00f8 00E0     		b	.L15
+ 320              	.LVL50:
+ 321              	.L32:
+ 322              	.LBE7:
+  53:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 323              		.loc 1 53 0
+ 324 00fa 0020     		movs	r0, #0
+ 325              	.LVL51:
+ 326              	.L15:
+ 162:../system/src/umb_master/umb_0x23_offline_data.c **** 			}
+ 163:../system/src/umb_master/umb_0x23_offline_data.c **** 		}
+ 164:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 165:../system/src/umb_master/umb_0x23_offline_data.c **** 	}
+ 166:../system/src/umb_master/umb_0x23_offline_data.c **** 	else {
+ 167:../system/src/umb_master/umb_0x23_offline_data.c **** 		// if not stop further processing
+ 168:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->state = UMB_STATUS_ERROR;
+ 169:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 170:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->last_fault_channel = channel;
+ 171:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 172:../system/src/umb_master/umb_0x23_offline_data.c **** 		// copy current error code to the buffer
+ 173:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->nok_error_codes[ctx->nok_error_it] = status;
+ 174:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 175:../system/src/umb_master/umb_0x23_offline_data.c **** 		// move the iterator through the buffer
+ 176:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->nok_error_it++;
+ 177:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 178:../system/src/umb_master/umb_0x23_offline_data.c **** 		// check if and end of the buffer is reach here
+ 179:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->nok_error_it %= UMB_CONTEXT_ERR_HISTORY_LN;
+ 180:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 181:../system/src/umb_master/umb_0x23_offline_data.c **** 		// trigger the status frame
+ 182:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->trigger_status_msg = 1;
+ 183:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 184:../system/src/umb_master/umb_0x23_offline_data.c **** 		ctx->time_of_last_nok = main_get_master_time();
+ 185:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 186:../system/src/umb_master/umb_0x23_offline_data.c **** 		output = UMB_NOK_STATUS_GOT_WITH_RESP;
+ 187:../system/src/umb_master/umb_0x23_offline_data.c **** 	}
+ 188:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 189:../system/src/umb_master/umb_0x23_offline_data.c **** 	return output;
+ 190:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 191:../system/src/umb_master/umb_0x23_offline_data.c **** }
+ 327              		.loc 1 191 0
+ 328 00fc 30BC     		pop	{r4, r5}
+ 329              		.cfi_remember_state
+ 330              		.cfi_restore 5
+ 331              		.cfi_restore 4
+ 332              		.cfi_def_cfa_offset 0
+ 333 00fe 7047     		bx	lr
+ 334              	.LVL52:
+ 335              	.L7:
+ 336              		.cfi_restore_state
+ 337 0100 94B2     		uxth	r4, r2
+ 168:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 338              		.loc 1 168 0
+ 339 0102 0622     		movs	r2, #6
+ 340              	.LVL53:
+ 341 0104 0A76     		strb	r2, [r1, #24]
+ 170:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 342              		.loc 1 170 0
+ 343 0106 0C81     		strh	r4, [r1, #8]	@ movhi
+ 173:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 344              		.loc 1 173 0
+ 345 0108 8A79     		ldrb	r2, [r1, #6]	@ zero_extendqisi2
+ 346 010a 8818     		adds	r0, r1, r2
+ 347              	.LVL54:
+ 348 010c 8370     		strb	r3, [r0, #2]
+ 176:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 349              		.loc 1 176 0
+ 350 010e 531C     		adds	r3, r2, #1
+ 351              	.LVL55:
+ 179:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 352              		.loc 1 179 0
+ 353 0110 03F00303 		and	r3, r3, #3
+ 354 0114 8B71     		strb	r3, [r1, #6]
+ 355              	.LVL56:
+ 182:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 356              		.loc 1 182 0
+ 357 0116 0123     		movs	r3, #1
+ 358 0118 81F82A30 		strb	r3, [r1, #42]
+ 359              	.LBB8:
+ 360              	.LBB9:
+ 361              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA00"
+   9:../include/main.h **** #define SW_DATE "23052021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+ 362              		.loc 2 63 0
+ 363 011c 034B     		ldr	r3, .L33+4
+ 364 011e 1B68     		ldr	r3, [r3]
+ 365              	.LBE9:
+ 366              	.LBE8:
+ 184:../system/src/umb_master/umb_0x23_offline_data.c **** 
+ 367              		.loc 1 184 0
+ 368 0120 CB60     		str	r3, [r1, #12]
+ 369              	.LVL57:
+ 186:../system/src/umb_master/umb_0x23_offline_data.c **** 	}
+ 370              		.loc 1 186 0
+ 371 0122 6FF00600 		mvn	r0, #6
+ 372 0126 E9E7     		b	.L15
+ 373              	.L34:
+ 374              		.align	2
+ 375              	.L33:
+ 376 0128 00000000 		.word	rte_wx_umb_channel_values
+ 377 012c 00000000 		.word	master_time
+ 378              		.cfi_endproc
+ 379              	.LFE398:
+ 381              		.text
+ 382              	.Letext0:
+ 383              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 384              		.file 4 "../system/include/umb_master/umb_frame_t.h"
+ 385              		.file 5 "../system/include/umb_master/umb_retval_t.h"
+ 386              		.file 6 "../system/include/umb_master/umb_state_t.h"
+ 387              		.file 7 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 388              		.file 8 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 389              		.file 9 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 390              		.file 10 "../system/include/drivers/serial.h"
+ 391              		.file 11 "../system/include/umb_master/umb_context_t.h"
+ 392              		.file 12 "../system/include/umb_master/umb_qf_t.h"
+ 393              		.file 13 "../include/config_data.h"
+ 394              		.file 14 "../system/include/drivers/dallas.h"
+ 395              		.file 15 "../system/include/drivers/analog_anemometer.h"
+ 396              		.file 16 "../system/include/davis_vantage/davis_loop_t.h"
+ 397              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 398              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 399              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 400              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 401              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 402              		.file 22 "../system/include/drivers/ms5611.h"
+ 403              		.file 23 "../system/include/drivers/bme280.h"
+ 404              		.file 24 "../include/rte_wx.h"
+ 405              		.file 25 "../system/include/aprs/cfifo.h"
+ 406              		.file 26 "../system/include/aprs/afsk.h"
+ 407              		.file 27 "../system/include/aprs/ax25.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 umb_0x23_offline_data.c
+     /tmp/cc9b2sOd.s:18     .text.umb_0x23_offline_data_request:0000000000000000 $t
+     /tmp/cc9b2sOd.s:25     .text.umb_0x23_offline_data_request:0000000000000000 umb_0x23_offline_data_request
+     /tmp/cc9b2sOd.s:91     .text.umb_0x23_offline_data_callback:0000000000000000 $t
+     /tmp/cc9b2sOd.s:98     .text.umb_0x23_offline_data_callback:0000000000000000 umb_0x23_offline_data_callback
+     /tmp/cc9b2sOd.s:133    .text.umb_0x23_offline_data_callback:0000000000000020 $d
+     /tmp/cc9b2sOd.s:153    .text.umb_0x23_offline_data_callback:0000000000000034 $d
+     /tmp/cc9b2sOd.s:376    .text.umb_0x23_offline_data_callback:0000000000000128 $d
+     /tmp/cc9b2sOd.s:140    .text.umb_0x23_offline_data_callback:0000000000000027 $d
+     /tmp/cc9b2sOd.s:140    .text.umb_0x23_offline_data_callback:0000000000000028 $t
+     /tmp/cc9b2sOd.s:161    .text.umb_0x23_offline_data_callback:000000000000003b $d
+     /tmp/cc9b2sOd.s:161    .text.umb_0x23_offline_data_callback:000000000000003c $t
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
+                           .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
+                           .group:0000000000000000 wm4.stm32l4xx_ll_gpio.h.22.6ea69d1eee1200f6e0d48e871aaa811d
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.7eec48e1bc15e3b0aff1089c232f5a9c
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+
+UNDEFINED SYMBOLS
+rte_wx_umb_channel_values
+master_time

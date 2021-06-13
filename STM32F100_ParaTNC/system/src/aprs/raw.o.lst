@@ -1,0 +1,177 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"raw.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.RawFifoInit,"ax",%progbits
+  16              		.align	1
+  17              		.global	RawFifoInit
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	RawFifoInit:
+  24              	.LFB63:
+  25              		.file 1 "../system/src/aprs/raw.c"
+   1:../system/src/aprs/raw.c **** /* 
+   2:../system/src/aprs/raw.c **** 	Library for handling RAW mode transmission. It consist simply functions witch "pop" data from
+   3:../system/src/aprs/raw.c **** 	receiving fifo queue, detect begining and end of HDLC frames (based on standard 0x7E flag) and
+   4:../system/src/aprs/raw.c **** 	swtich do adequatly event
+   5:../system/src/aprs/raw.c **** 	
+   6:../system/src/aprs/raw.c **** */
+   7:../system/src/aprs/raw.c **** 
+   8:../system/src/aprs/raw.c **** #include "raw.h"
+   9:../system/src/aprs/raw.c **** 
+  10:../system/src/aprs/raw.c **** volatile bool prev_dcd_state;
+  11:../system/src/aprs/raw.c **** 
+  12:../system/src/aprs/raw.c **** unsigned char RawRXBuff[128];	// Buffer for reveiced data
+  13:../system/src/aprs/raw.c **** FIFOBuffer RawRXFifo;
+  14:../system/src/aprs/raw.c **** 
+  15:../system/src/aprs/raw.c **** void RawFifoInit(void) {
+  26              		.loc 1 15 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 08B5     		push	{r3, lr}
+  31              		.cfi_def_cfa_offset 8
+  32              		.cfi_offset 3, -8
+  33              		.cfi_offset 14, -4
+  16:../system/src/aprs/raw.c **** 	fifo_init(&RawRXFifo, RawRXBuff, sizeof(RawRXBuff));
+  34              		.loc 1 16 0
+  35 0002 8022     		movs	r2, #128
+  36 0004 0249     		ldr	r1, .L3
+  37 0006 0348     		ldr	r0, .L3+4
+  38 0008 FFF7FEFF 		bl	fifo_init
+  39              	.LVL0:
+  17:../system/src/aprs/raw.c **** }
+  40              		.loc 1 17 0
+  41 000c 08BD     		pop	{r3, pc}
+  42              	.L4:
+  43 000e 00BF     		.align	2
+  44              	.L3:
+  45 0010 00000000 		.word	RawRXBuff
+  46 0014 00000000 		.word	RawRXFifo
+  47              		.cfi_endproc
+  48              	.LFE63:
+  50              		.section	.text.raw_poll,"ax",%progbits
+  51              		.align	1
+  52              		.global	raw_poll
+  53              		.syntax unified
+  54              		.thumb
+  55              		.thumb_func
+  56              		.fpu softvfp
+  58              	raw_poll:
+  59              	.LFB64:
+  18:../system/src/aprs/raw.c **** 
+  19:../system/src/aprs/raw.c **** 
+  20:../system/src/aprs/raw.c **** void raw_poll(AX25Ctx *ctx, Hdlc *hdlc) {
+  60              		.loc 1 20 0
+  61              		.cfi_startproc
+  62              		@ args = 0, pretend = 0, frame = 0
+  63              		@ frame_needed = 0, uses_anonymous_args = 0
+  64              		@ link register save eliminated.
+  65              	.LVL1:
+  21:../system/src/aprs/raw.c **** //	int i;
+  22:../system/src/aprs/raw.c **** 	if (prev_dcd_state == true && hdlc->raw_dcd == false) {
+  66              		.loc 1 22 0
+  67 0000 054B     		ldr	r3, .L7
+  68 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  69 0004 23B1     		cbz	r3, .L6
+  70              		.loc 1 22 0 is_stmt 0 discriminator 1
+  71 0006 0B79     		ldrb	r3, [r1, #4]	@ zero_extendqisi2
+  72 0008 13B9     		cbnz	r3, .L6
+  23:../system/src/aprs/raw.c **** //		i = 3;
+  24:../system/src/aprs/raw.c **** 		prev_dcd_state = false;
+  73              		.loc 1 24 0 is_stmt 1
+  74 000a 034B     		ldr	r3, .L7
+  75 000c 0022     		movs	r2, #0
+  76 000e 1A70     		strb	r2, [r3]
+  77              	.L6:
+  25:../system/src/aprs/raw.c **** 	}
+  26:../system/src/aprs/raw.c **** 	else {
+  27:../system/src/aprs/raw.c **** 
+  28:../system/src/aprs/raw.c **** 	}
+  29:../system/src/aprs/raw.c **** 	prev_dcd_state = hdlc->raw_dcd; 
+  78              		.loc 1 29 0
+  79 0010 0A79     		ldrb	r2, [r1, #4]	@ zero_extendqisi2
+  80 0012 014B     		ldr	r3, .L7
+  81 0014 1A70     		strb	r2, [r3]
+  30:../system/src/aprs/raw.c **** }
+  82              		.loc 1 30 0
+  83 0016 7047     		bx	lr
+  84              	.L8:
+  85              		.align	2
+  86              	.L7:
+  87 0018 00000000 		.word	prev_dcd_state
+  88              		.cfi_endproc
+  89              	.LFE64:
+  91              		.comm	RawRXFifo,16,4
+  92              		.comm	RawRXBuff,128,4
+  93              		.comm	prev_dcd_state,1,1
+  94              		.text
+  95              	.Letext0:
+  96              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  97              		.file 3 "../system/include/cmsis/core_cm3.h"
+  98              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+  99              		.file 5 "../system/include/aprs/cfifo.h"
+ 100              		.file 6 "../system/include/aprs/afsk.h"
+ 101              		.file 7 "../system/include/aprs/ax25.h"
+ 102              		.file 8 "../system/include/aprs/raw.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 raw.c
+     /tmp/ccpxaqok.s:16     .text.RawFifoInit:0000000000000000 $t
+     /tmp/ccpxaqok.s:23     .text.RawFifoInit:0000000000000000 RawFifoInit
+     /tmp/ccpxaqok.s:45     .text.RawFifoInit:0000000000000010 $d
+                            *COM*:0000000000000080 RawRXBuff
+                            *COM*:0000000000000010 RawRXFifo
+     /tmp/ccpxaqok.s:51     .text.raw_poll:0000000000000000 $t
+     /tmp/ccpxaqok.s:58     .text.raw_poll:0000000000000000 raw_poll
+     /tmp/ccpxaqok.s:87     .text.raw_poll:0000000000000018 $d
+                            *COM*:0000000000000001 prev_dcd_state
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+
+UNDEFINED SYMBOLS
+fifo_init

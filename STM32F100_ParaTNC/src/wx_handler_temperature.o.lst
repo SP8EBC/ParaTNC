@@ -1,0 +1,832 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"wx_handler_temperature.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	__aeabi_fcmpeq
+  16              		.global	__aeabi_fsub
+  17              		.global	__aeabi_fcmpgt
+  18              		.global	__aeabi_fadd
+  19              		.global	__aeabi_fcmplt
+  20              		.section	.text.wx_get_temperature_dallas,"ax",%progbits
+  21              		.align	1
+  22              		.global	wx_get_temperature_dallas
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  26              		.fpu softvfp
+  28              	wx_get_temperature_dallas:
+  29              	.LFB92:
+  30              		.file 1 "../src/wx_handler_temperature.c"
+   1:../src/wx_handler_temperature.c **** /*
+   2:../src/wx_handler_temperature.c ****  * wx_handler_temperature.c
+   3:../src/wx_handler_temperature.c ****  *
+   4:../src/wx_handler_temperature.c ****  *  Created on: Apr 14, 2021
+   5:../src/wx_handler_temperature.c ****  *      Author: mateusz
+   6:../src/wx_handler_temperature.c ****  */
+   7:../src/wx_handler_temperature.c **** 
+   8:../src/wx_handler_temperature.c **** #include "wx_handler_temperature.h"
+   9:../src/wx_handler_temperature.c **** 
+  10:../src/wx_handler_temperature.c **** #include <rte_wx.h>
+  11:../src/wx_handler_temperature.c **** #include <wx_handler.h>
+  12:../src/wx_handler_temperature.c **** #include <main.h>
+  13:../src/wx_handler_temperature.c **** 
+  14:../src/wx_handler_temperature.c **** #include <drivers/dallas.h>
+  15:../src/wx_handler_temperature.c **** #include <drivers/ms5611.h>
+  16:../src/wx_handler_temperature.c **** #include <drivers/bme280.h>
+  17:../src/wx_handler_temperature.c **** 
+  18:../src/wx_handler_temperature.c **** #include <modbus_rtu/rtu_getters.h>
+  19:../src/wx_handler_temperature.c **** #include <modbus_rtu/rtu_return_values.h>
+  20:../src/wx_handler_temperature.c **** 
+  21:../src/wx_handler_temperature.c **** #define WX_MAX_TEMPERATURE_SLEW_RATE 4.0f
+  22:../src/wx_handler_temperature.c **** 
+  23:../src/wx_handler_temperature.c **** uint8_t wx_inhibit_slew_rate_check = 1;
+  24:../src/wx_handler_temperature.c **** 
+  25:../src/wx_handler_temperature.c **** int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const
+  26:../src/wx_handler_temperature.c **** 
+  27:../src/wx_handler_temperature.c **** 
+  28:../src/wx_handler_temperature.c **** 	int32_t measurement_result = -1;						// used for return values from various functions
+  29:../src/wx_handler_temperature.c **** 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. th
+  30:../src/wx_handler_temperature.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+  31:../src/wx_handler_temperature.c **** 
+  32:../src/wx_handler_temperature.c **** 	// choose a temperature source from the configuration
+  33:../src/wx_handler_temperature.c **** 	switch(config_sources->temperature) {
+  34:../src/wx_handler_temperature.c **** 		// controller measures two temperatures
+  35:../src/wx_handler_temperature.c **** 		//	internal - provided by pressure/humidity sensor on PCB
+  36:../src/wx_handler_temperature.c **** 		//  external - usually dallas one wire but it might by something different
+  37:../src/wx_handler_temperature.c **** 
+  38:../src/wx_handler_temperature.c **** 		case WX_SOURCE_INTERNAL: {
+  39:../src/wx_handler_temperature.c **** 			// internal means sensors connected directly to the controller - one-wire and/or I2C on the PCB
+  40:../src/wx_handler_temperature.c **** 			// it has nothing to do with distinction between external and internal temperature
+  41:../src/wx_handler_temperature.c **** 
+  42:../src/wx_handler_temperature.c **** 			// check which sensor is configured. it doesn't check which one is
+  43:../src/wx_handler_temperature.c **** 			// in fact installed. if the configuration doesn't mach with hardware
+  44:../src/wx_handler_temperature.c **** 			// the measuremenet won't be retrieved
+  45:../src/wx_handler_temperature.c **** 			if (config_mode->wx_ms5611_or_bme == 1) {
+  46:../src/wx_handler_temperature.c **** 				// this will get all three parameters (humidity, pressure, internal temp) in single call
+  47:../src/wx_handler_temperature.c **** 				measurement_result = wx_get_temperature_bme280(&rte_wx_temperature_internal);
+  48:../src/wx_handler_temperature.c **** 			}
+  49:../src/wx_handler_temperature.c **** 			else {
+  50:../src/wx_handler_temperature.c **** 				// ms5611 is a bit different as the sensor (internal) temperature is collected separately from 
+  51:../src/wx_handler_temperature.c **** 				measurement_result = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
+  52:../src/wx_handler_temperature.c **** 			}
+  53:../src/wx_handler_temperature.c **** 
+  54:../src/wx_handler_temperature.c **** 			// check if temperature from pressure sensor has been retrieved w/o errors
+  55:../src/wx_handler_temperature.c **** 			if (measurement_result == BME280_OK || measurement_result == MS5611_OK) {
+  56:../src/wx_handler_temperature.c **** 
+  57:../src/wx_handler_temperature.c **** 				// set the flag for internal temperature
+  58:../src/wx_handler_temperature.c **** 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
+  59:../src/wx_handler_temperature.c **** 
+  60:../src/wx_handler_temperature.c **** 			}
+  61:../src/wx_handler_temperature.c **** 
+  62:../src/wx_handler_temperature.c **** 			// measure an external temperature using Dallas one wire sensor.
+  63:../src/wx_handler_temperature.c **** 			// this function has blockin I/O which also adds a delay required by MS5611
+  64:../src/wx_handler_temperature.c **** 			// sensor to finish data acquisition after the pressure measurement
+  65:../src/wx_handler_temperature.c **** 			// is triggered.
+  66:../src/wx_handler_temperature.c **** 			measurement_result = wx_get_temperature_dallas();
+  67:../src/wx_handler_temperature.c **** 
+  68:../src/wx_handler_temperature.c **** 			// check if communication with dallas sensor has successed
+  69:../src/wx_handler_temperature.c **** 			if (measurement_result == 0) {
+  70:../src/wx_handler_temperature.c **** 				// if yes set the local variable with flag signalling that we have an external temperature
+  71:../src/wx_handler_temperature.c **** 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+  72:../src/wx_handler_temperature.c **** 			}
+  73:../src/wx_handler_temperature.c **** 
+  74:../src/wx_handler_temperature.c **** 			break;
+  75:../src/wx_handler_temperature.c **** 		}
+  76:../src/wx_handler_temperature.c **** 		case WX_SOURCE_UMB: {
+  77:../src/wx_handler_temperature.c **** 			// get current UMB bus quality factor
+  78:../src/wx_handler_temperature.c **** 			umb_quality_factor = umb_get_current_qf(&rte_wx_umb_context, master_time);
+  79:../src/wx_handler_temperature.c **** 
+  80:../src/wx_handler_temperature.c **** 			// if there are any data collected from UMB sensors
+  81:../src/wx_handler_temperature.c **** 			if (umb_quality_factor == UMB_QF_FULL || umb_quality_factor == UMB_QF_DEGRADED) {
+  82:../src/wx_handler_temperature.c **** 
+  83:../src/wx_handler_temperature.c **** 				// get the average temperature directly, there is no need for any further processing
+  84:../src/wx_handler_temperature.c **** 				rte_wx_temperature_average_external_valid = umb_get_temperature(config_umb);
+  85:../src/wx_handler_temperature.c **** 
+  86:../src/wx_handler_temperature.c **** 				// set the flag that external temperature is available
+  87:../src/wx_handler_temperature.c **** 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+  88:../src/wx_handler_temperature.c **** 			}
+  89:../src/wx_handler_temperature.c **** 			else {
+  90:../src/wx_handler_temperature.c **** 				// do nothing if no new data was received from UMB sensor in last 10 minutes
+  91:../src/wx_handler_temperature.c **** 				;
+  92:../src/wx_handler_temperature.c **** 			}
+  93:../src/wx_handler_temperature.c **** 
+  94:../src/wx_handler_temperature.c **** 			break;
+  95:../src/wx_handler_temperature.c **** 		}
+  96:../src/wx_handler_temperature.c **** 		case WX_SOURCE_RTU:
+  97:../src/wx_handler_temperature.c **** 		case WX_SOURCE_FULL_RTU: {
+  98:../src/wx_handler_temperature.c **** 
+  99:../src/wx_handler_temperature.c **** 			// get the value read from RTU registers
+ 100:../src/wx_handler_temperature.c **** 			measurement_result = rtu_get_temperature(&rte_wx_temperature_external, config_rtu);
+ 101:../src/wx_handler_temperature.c **** 
+ 102:../src/wx_handler_temperature.c **** 			// check
+ 103:../src/wx_handler_temperature.c **** 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
+ 104:../src/wx_handler_temperature.c **** 
+ 105:../src/wx_handler_temperature.c **** 				// set the flag that external temperature is available
+ 106:../src/wx_handler_temperature.c **** 				parameter_result |= WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+ 107:../src/wx_handler_temperature.c **** 			}
+ 108:../src/wx_handler_temperature.c **** 
+ 109:../src/wx_handler_temperature.c **** 			break;
+ 110:../src/wx_handler_temperature.c **** 		}
+ 111:../src/wx_handler_temperature.c **** 		case WX_SOURCE_DAVIS_SERIAL:
+ 112:../src/wx_handler_temperature.c **** 			break;
+ 113:../src/wx_handler_temperature.c **** 
+ 114:../src/wx_handler_temperature.c **** 	}
+ 115:../src/wx_handler_temperature.c **** 
+ 116:../src/wx_handler_temperature.c **** 	return parameter_result;
+ 117:../src/wx_handler_temperature.c **** }
+ 118:../src/wx_handler_temperature.c **** 
+ 119:../src/wx_handler_temperature.c **** int32_t wx_get_temperature_dallas() {
+  31              		.loc 1 119 0
+  32              		.cfi_startproc
+  33              		@ args = 0, pretend = 0, frame = 0
+  34              		@ frame_needed = 0, uses_anonymous_args = 0
+  35 0000 38B5     		push	{r3, r4, r5, lr}
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 3, -16
+  38              		.cfi_offset 4, -12
+  39              		.cfi_offset 5, -8
+  40              		.cfi_offset 14, -4
+  41              	.LVL0:
+ 120:../src/wx_handler_temperature.c **** 
+ 121:../src/wx_handler_temperature.c **** 	int32_t output = 0;
+ 122:../src/wx_handler_temperature.c **** 
+ 123:../src/wx_handler_temperature.c **** 	// get the value from dallas one-wire sensor
+ 124:../src/wx_handler_temperature.c **** 	rte_wx_temperature_external = dallas_query(&rte_wx_current_dallas_qf);
+  42              		.loc 1 124 0
+  43 0002 2D48     		ldr	r0, .L14
+  44 0004 FFF7FEFF 		bl	dallas_query
+  45              	.LVL1:
+  46 0008 0446     		mov	r4, r0
+  47 000a 2C4B     		ldr	r3, .L14+4
+  48 000c 1860     		str	r0, [r3]	@ float
+ 125:../src/wx_handler_temperature.c **** 
+ 126:../src/wx_handler_temperature.c **** 	// checking if communication was successfull
+ 127:../src/wx_handler_temperature.c **** 	if (rte_wx_temperature_external != -128.0f) {
+  49              		.loc 1 127 0
+  50 000e 4FF04341 		mov	r1, #-1023410176
+  51 0012 FFF7FEFF 		bl	__aeabi_fcmpeq
+  52              	.LVL2:
+  53 0016 0028     		cmp	r0, #0
+  54 0018 48D1     		bne	.L12
+ 128:../src/wx_handler_temperature.c **** 
+ 129:../src/wx_handler_temperature.c **** 		// calculate the slew rate
+ 130:../src/wx_handler_temperature.c **** 		rte_wx_temperature_external_slew_rate = rte_wx_temperature_external - rte_wx_temperature_external
+  55              		.loc 1 130 0
+  56 001a 294B     		ldr	r3, .L14+8
+  57 001c 1968     		ldr	r1, [r3]	@ float
+  58 001e 2046     		mov	r0, r4
+  59 0020 FFF7FEFF 		bl	__aeabi_fsub
+  60              	.LVL3:
+  61 0024 0546     		mov	r5, r0
+  62 0026 274B     		ldr	r3, .L14+12
+  63 0028 1860     		str	r0, [r3]	@ float
+ 131:../src/wx_handler_temperature.c **** 
+ 132:../src/wx_handler_temperature.c **** 		// chcecking the positive (ascending) slew rate of the temperature measuremenets
+ 133:../src/wx_handler_temperature.c **** 		if (rte_wx_temperature_external_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate
+  64              		.loc 1 133 0
+  65 002a 4FF08141 		mov	r1, #1082130432
+  66 002e FFF7FEFF 		bl	__aeabi_fcmpgt
+  67              	.LVL4:
+  68 0032 60B1     		cbz	r0, .L4
+  69              		.loc 1 133 0 is_stmt 0 discriminator 1
+  70 0034 244B     		ldr	r3, .L14+16
+  71 0036 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  72 0038 4BB9     		cbnz	r3, .L4
+ 134:../src/wx_handler_temperature.c **** 
+ 135:../src/wx_handler_temperature.c **** 			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet Q
+ 136:../src/wx_handler_temperature.c **** 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+  73              		.loc 1 136 0 is_stmt 1
+  74 003a 244B     		ldr	r3, .L14+20
+  75 003c 0222     		movs	r2, #2
+  76 003e 1A70     		strb	r2, [r3]
+ 137:../src/wx_handler_temperature.c **** 
+ 138:../src/wx_handler_temperature.c **** 			// and increase the temperature only by 1.0f to decrease slew rate
+ 139:../src/wx_handler_temperature.c **** 			rte_wx_temperature_external += 1.0f;
+  77              		.loc 1 139 0
+  78 0040 4FF07E51 		mov	r1, #1065353216
+  79 0044 2046     		mov	r0, r4
+  80 0046 FFF7FEFF 		bl	__aeabi_fadd
+  81              	.LVL5:
+  82 004a 1C4B     		ldr	r3, .L14+4
+  83 004c 1860     		str	r0, [r3]	@ float
+  84              	.L4:
+ 140:../src/wx_handler_temperature.c **** 
+ 141:../src/wx_handler_temperature.c **** 		}
+ 142:../src/wx_handler_temperature.c **** 
+ 143:../src/wx_handler_temperature.c **** 		// chcecking the negaive (descending) slew rate of the temperature measuremenets
+ 144:../src/wx_handler_temperature.c **** 		if (rte_wx_temperature_external_slew_rate < -WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate
+  85              		.loc 1 144 0
+  86 004e 2049     		ldr	r1, .L14+24
+  87 0050 2846     		mov	r0, r5
+  88 0052 FFF7FEFF 		bl	__aeabi_fcmplt
+  89              	.LVL6:
+  90 0056 60B1     		cbz	r0, .L6
+  91              		.loc 1 144 0 is_stmt 0 discriminator 1
+  92 0058 1B4B     		ldr	r3, .L14+16
+  93 005a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  94 005c 4BB9     		cbnz	r3, .L6
+ 145:../src/wx_handler_temperature.c **** 
+ 146:../src/wx_handler_temperature.c **** 			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet Q
+ 147:../src/wx_handler_temperature.c **** 			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
+  95              		.loc 1 147 0 is_stmt 1
+  96 005e 1B4B     		ldr	r3, .L14+20
+  97 0060 0222     		movs	r2, #2
+  98 0062 1A70     		strb	r2, [r3]
+ 148:../src/wx_handler_temperature.c **** 
+ 149:../src/wx_handler_temperature.c **** 			// and decrease the temperature only by 1.0f to decrease slew rate
+ 150:../src/wx_handler_temperature.c **** 			rte_wx_temperature_external -= 1.0f;
+  99              		.loc 1 150 0
+ 100 0064 154C     		ldr	r4, .L14+4
+ 101 0066 4FF07E51 		mov	r1, #1065353216
+ 102 006a 2068     		ldr	r0, [r4]	@ float
+ 103 006c FFF7FEFF 		bl	__aeabi_fsub
+ 104              	.LVL7:
+ 105 0070 2060     		str	r0, [r4]	@ float
+ 106              	.L6:
+ 151:../src/wx_handler_temperature.c **** 
+ 152:../src/wx_handler_temperature.c **** 		}
+ 153:../src/wx_handler_temperature.c **** 
+ 154:../src/wx_handler_temperature.c **** 		// store current value
+ 155:../src/wx_handler_temperature.c **** 		rte_wx_temperature_external_valid = rte_wx_temperature_external;
+ 107              		.loc 1 155 0
+ 108 0072 124B     		ldr	r3, .L14+4
+ 109 0074 1868     		ldr	r0, [r3]	@ float
+ 110 0076 124B     		ldr	r3, .L14+8
+ 111 0078 1860     		str	r0, [r3]	@ float
+ 156:../src/wx_handler_temperature.c **** 
+ 157:../src/wx_handler_temperature.c **** 		// include current temperature into the average
+ 158:../src/wx_handler_temperature.c **** 		dallas_average(rte_wx_temperature_external, &rte_wx_dallas_average);
+ 112              		.loc 1 158 0
+ 113 007a 164C     		ldr	r4, .L14+28
+ 114 007c 2146     		mov	r1, r4
+ 115 007e FFF7FEFF 		bl	dallas_average
+ 116              	.LVL8:
+ 159:../src/wx_handler_temperature.c **** 
+ 160:../src/wx_handler_temperature.c **** 		// update the current temperature with current average
+ 161:../src/wx_handler_temperature.c **** 		rte_wx_temperature_average_external_valid = dallas_get_average(&rte_wx_dallas_average);
+ 117              		.loc 1 161 0
+ 118 0082 2046     		mov	r0, r4
+ 119 0084 FFF7FEFF 		bl	dallas_get_average
+ 120              	.LVL9:
+ 121 0088 134B     		ldr	r3, .L14+32
+ 122 008a 1860     		str	r0, [r3]	@ float
+ 162:../src/wx_handler_temperature.c **** 
+ 163:../src/wx_handler_temperature.c **** 		// update current minimal temperature
+ 164:../src/wx_handler_temperature.c **** 		rte_wx_temperature_min_external_valid = dallas_get_min(&rte_wx_dallas_average);
+ 123              		.loc 1 164 0
+ 124 008c 2046     		mov	r0, r4
+ 125 008e FFF7FEFF 		bl	dallas_get_min
+ 126              	.LVL10:
+ 127 0092 124B     		ldr	r3, .L14+36
+ 128 0094 1860     		str	r0, [r3]	@ float
+ 165:../src/wx_handler_temperature.c **** 
+ 166:../src/wx_handler_temperature.c **** 		// and update maximum also
+ 167:../src/wx_handler_temperature.c **** 		rte_wx_temperature_max_external_valid = dallas_get_max(&rte_wx_dallas_average);
+ 129              		.loc 1 167 0
+ 130 0096 2046     		mov	r0, r4
+ 131 0098 FFF7FEFF 		bl	dallas_get_max
+ 132              	.LVL11:
+ 133 009c 104B     		ldr	r3, .L14+40
+ 134 009e 1860     		str	r0, [r3]	@ float
+ 168:../src/wx_handler_temperature.c **** 
+ 169:../src/wx_handler_temperature.c **** 		// updating last good measurement time
+ 170:../src/wx_handler_temperature.c **** 		wx_last_good_temperature_time = master_time;
+ 135              		.loc 1 170 0
+ 136 00a0 104B     		ldr	r3, .L14+44
+ 137 00a2 1A68     		ldr	r2, [r3]
+ 138 00a4 104B     		ldr	r3, .L14+48
+ 139 00a6 1A60     		str	r2, [r3]
+ 121:../src/wx_handler_temperature.c **** 
+ 140              		.loc 1 121 0
+ 141 00a8 0020     		movs	r0, #0
+ 142              	.LVL12:
+ 143              	.L1:
+ 171:../src/wx_handler_temperature.c **** 	}
+ 172:../src/wx_handler_temperature.c **** 	else {
+ 173:../src/wx_handler_temperature.c **** 		// if there were a communication error set the error to unavaliable
+ 174:../src/wx_handler_temperature.c **** 		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+ 175:../src/wx_handler_temperature.c **** 
+ 176:../src/wx_handler_temperature.c **** 		// set the output value
+ 177:../src/wx_handler_temperature.c **** 		output = -1;
+ 178:../src/wx_handler_temperature.c **** 	}
+ 179:../src/wx_handler_temperature.c **** 
+ 180:../src/wx_handler_temperature.c **** 	return output;
+ 181:../src/wx_handler_temperature.c **** }
+ 144              		.loc 1 181 0
+ 145 00aa 38BD     		pop	{r3, r4, r5, pc}
+ 146              	.LVL13:
+ 147              	.L12:
+ 174:../src/wx_handler_temperature.c **** 
+ 148              		.loc 1 174 0
+ 149 00ac 074B     		ldr	r3, .L14+20
+ 150 00ae 0322     		movs	r2, #3
+ 151 00b0 1A70     		strb	r2, [r3]
+ 152              	.LVL14:
+ 177:../src/wx_handler_temperature.c **** 	}
+ 153              		.loc 1 177 0
+ 154 00b2 4FF0FF30 		mov	r0, #-1
+ 180:../src/wx_handler_temperature.c **** }
+ 155              		.loc 1 180 0
+ 156 00b6 F8E7     		b	.L1
+ 157              	.L15:
+ 158              		.align	2
+ 159              	.L14:
+ 160 00b8 00000000 		.word	rte_wx_current_dallas_qf
+ 161 00bc 00000000 		.word	rte_wx_temperature_external
+ 162 00c0 00000000 		.word	rte_wx_temperature_external_valid
+ 163 00c4 00000000 		.word	rte_wx_temperature_external_slew_rate
+ 164 00c8 00000000 		.word	.LANCHOR0
+ 165 00cc 00000000 		.word	rte_wx_error_dallas_qf
+ 166 00d0 000080C0 		.word	-1065353216
+ 167 00d4 00000000 		.word	rte_wx_dallas_average
+ 168 00d8 00000000 		.word	rte_wx_temperature_average_external_valid
+ 169 00dc 00000000 		.word	rte_wx_temperature_min_external_valid
+ 170 00e0 00000000 		.word	rte_wx_temperature_max_external_valid
+ 171 00e4 00000000 		.word	master_time
+ 172 00e8 00000000 		.word	wx_last_good_temperature_time
+ 173              		.cfi_endproc
+ 174              	.LFE92:
+ 176              		.section	.text.wx_get_temperature_ms5611,"ax",%progbits
+ 177              		.align	1
+ 178              		.global	wx_get_temperature_ms5611
+ 179              		.syntax unified
+ 180              		.thumb
+ 181              		.thumb_func
+ 182              		.fpu softvfp
+ 184              	wx_get_temperature_ms5611:
+ 185              	.LFB93:
+ 182:../src/wx_handler_temperature.c **** 
+ 183:../src/wx_handler_temperature.c **** int32_t wx_get_temperature_ms5611(float * const temperature) {
+ 186              		.loc 1 183 0
+ 187              		.cfi_startproc
+ 188              		@ args = 0, pretend = 0, frame = 0
+ 189              		@ frame_needed = 0, uses_anonymous_args = 0
+ 190              	.LVL15:
+ 191 0000 08B5     		push	{r3, lr}
+ 192              		.cfi_def_cfa_offset 8
+ 193              		.cfi_offset 3, -8
+ 194              		.cfi_offset 14, -4
+ 195              	.LVL16:
+ 184:../src/wx_handler_temperature.c **** 	int32_t return_value = 0;
+ 185:../src/wx_handler_temperature.c **** 
+ 186:../src/wx_handler_temperature.c **** 	// quering MS5611 sensor for temperature
+ 187:../src/wx_handler_temperature.c **** 	return_value = ms5611_get_temperature(temperature, &rte_wx_ms5611_qf);
+ 196              		.loc 1 187 0
+ 197 0002 0249     		ldr	r1, .L18
+ 198 0004 FFF7FEFF 		bl	ms5611_get_temperature
+ 199              	.LVL17:
+ 188:../src/wx_handler_temperature.c **** 
+ 189:../src/wx_handler_temperature.c **** 	return return_value;
+ 190:../src/wx_handler_temperature.c **** }
+ 200              		.loc 1 190 0
+ 201 0008 08BD     		pop	{r3, pc}
+ 202              	.L19:
+ 203 000a 00BF     		.align	2
+ 204              	.L18:
+ 205 000c 00000000 		.word	rte_wx_ms5611_qf
+ 206              		.cfi_endproc
+ 207              	.LFE93:
+ 209              		.section	.text.wx_get_temperature_bme280,"ax",%progbits
+ 210              		.align	1
+ 211              		.global	wx_get_temperature_bme280
+ 212              		.syntax unified
+ 213              		.thumb
+ 214              		.thumb_func
+ 215              		.fpu softvfp
+ 217              	wx_get_temperature_bme280:
+ 218              	.LFB94:
+ 191:../src/wx_handler_temperature.c **** 
+ 192:../src/wx_handler_temperature.c **** int32_t wx_get_temperature_bme280(float * const temperature){
+ 219              		.loc 1 192 0
+ 220              		.cfi_startproc
+ 221              		@ args = 0, pretend = 0, frame = 0
+ 222              		@ frame_needed = 0, uses_anonymous_args = 0
+ 223              	.LVL18:
+ 224 0000 08B5     		push	{r3, lr}
+ 225              		.cfi_def_cfa_offset 8
+ 226              		.cfi_offset 3, -8
+ 227              		.cfi_offset 14, -4
+ 228              	.LVL19:
+ 193:../src/wx_handler_temperature.c **** 	int32_t output = 0;
+ 194:../src/wx_handler_temperature.c **** 
+ 195:../src/wx_handler_temperature.c **** 	if (rte_wx_bme280_qf == BME280_QF_FULL) {
+ 229              		.loc 1 195 0
+ 230 0002 094B     		ldr	r3, .L25
+ 231 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 232 0006 0BB1     		cbz	r3, .L24
+ 193:../src/wx_handler_temperature.c **** 	int32_t output = 0;
+ 233              		.loc 1 193 0
+ 234 0008 0020     		movs	r0, #0
+ 235              	.LVL20:
+ 236              	.L20:
+ 196:../src/wx_handler_temperature.c **** 		output = bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
+ 197:../src/wx_handler_temperature.c **** 	}
+ 198:../src/wx_handler_temperature.c **** 
+ 199:../src/wx_handler_temperature.c **** 	return output;
+ 200:../src/wx_handler_temperature.c **** }
+ 237              		.loc 1 200 0
+ 238 000a 08BD     		pop	{r3, pc}
+ 239              	.LVL21:
+ 240              	.L24:
+ 241              	.LBB4:
+ 242              	.LBB5:
+ 243              		.file 2 "../system/include/drivers/bme280.h"
+   1:../system/include/drivers/bme280.h **** /*
+   2:../system/include/drivers/bme280.h ****  * bma150.h
+   3:../system/include/drivers/bme280.h ****  *
+   4:../system/include/drivers/bme280.h ****  *  Created on: 21.06.2020
+   5:../system/include/drivers/bme280.h ****  *      Author: mateusz
+   6:../system/include/drivers/bme280.h ****  */
+   7:../system/include/drivers/bme280.h **** 
+   8:../system/include/drivers/bme280.h **** #ifndef INCLUDE_DRIVERS_BME280_H_
+   9:../system/include/drivers/bme280.h **** #define INCLUDE_DRIVERS_BME280_H_
+  10:../system/include/drivers/bme280.h **** 
+  11:../system/include/drivers/bme280.h **** #include "stdint.h"
+  12:../system/include/drivers/bme280.h **** 
+  13:../system/include/drivers/bme280.h **** #define BME280_OK						0
+  14:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_RESPONDING	-1
+  15:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_AVALIABLE		-2
+  16:../system/include/drivers/bme280.h **** #define BME280_WRONG_PRESSURE_READOUT	-3
+  17:../system/include/drivers/bme280.h **** #define BME280_WRONG_HUMIDITY_READOUT	-4
+  18:../system/include/drivers/bme280.h **** 
+  19:../system/include/drivers/bme280.h **** #define BME280_LN_CALIBRATION 	41
+  20:../system/include/drivers/bme280.h **** #define BME280_LN_RAW_DATA		8
+  21:../system/include/drivers/bme280.h **** 
+  22:../system/include/drivers/bme280.h **** typedef enum bme280_qf {
+  23:../system/include/drivers/bme280.h **** 	BME280_QF_FULL,
+  24:../system/include/drivers/bme280.h **** 	BME280_QF_NOT_AVAILABLE,
+  25:../system/include/drivers/bme280.h **** 	BME280_QF_HUMIDITY_DEGRADED,
+  26:../system/include/drivers/bme280.h **** 	BME280_QF_PRESSURE_DEGRADED,
+  27:../system/include/drivers/bme280.h **** 	BME280_QF_GEN_DEGRADED,
+  28:../system/include/drivers/bme280.h **** 	BME280_QF_UKNOWN
+  29:../system/include/drivers/bme280.h **** }bme280_qf_t;
+  30:../system/include/drivers/bme280.h **** 
+  31:../system/include/drivers/bme280.h **** extern uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
+  32:../system/include/drivers/bme280.h **** extern uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
+  33:../system/include/drivers/bme280.h **** 
+  34:../system/include/drivers/bme280.h **** int32_t bme280_reset(bme280_qf_t* qf);
+  35:../system/include/drivers/bme280.h **** int32_t bme280_setup(void);
+  36:../system/include/drivers/bme280.h **** int32_t bme280_read_calibration(uint8_t* calibration);
+  37:../system/include/drivers/bme280.h **** int32_t bme280_read_raw_data(uint8_t* raw_data);
+  38:../system/include/drivers/bme280.h **** 
+  39:../system/include/drivers/bme280.h **** int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  40:../system/include/drivers/bme280.h **** int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  41:../system/include/drivers/bme280.h **** int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf);
+  42:../system/include/drivers/bme280.h **** 
+  43:../system/include/drivers/bme280.h **** //#define BME280_CONCAT_BYTES(msb, lsb)            (((uint16_t)msb << 8) | (uint16_t)lsb)
+  44:../system/include/drivers/bme280.h **** 
+  45:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_t(void) {
+  46:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[3] << 12) | (bme280_data_buffer[4] << 4) | (bme280_data_buffer[5] >> 4)
+ 244              		.loc 2 46 0
+ 245 000c 074A     		ldr	r2, .L25+4
+ 246 000e D178     		ldrb	r1, [r2, #3]	@ zero_extendqisi2
+ 247 0010 1379     		ldrb	r3, [r2, #4]	@ zero_extendqisi2
+ 248 0012 1B01     		lsls	r3, r3, #4
+ 249 0014 43EA0133 		orr	r3, r3, r1, lsl #12
+ 250 0018 5179     		ldrb	r1, [r2, #5]	@ zero_extendqisi2
+ 251              	.LBE5:
+ 252              	.LBE4:
+ 196:../src/wx_handler_temperature.c **** 		output = bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
+ 253              		.loc 1 196 0
+ 254 001a 034A     		ldr	r2, .L25
+ 255 001c 43EA1111 		orr	r1, r3, r1, lsr #4
+ 256 0020 FFF7FEFF 		bl	bme280_get_temperature
+ 257              	.LVL22:
+ 258 0024 F1E7     		b	.L20
+ 259              	.L26:
+ 260 0026 00BF     		.align	2
+ 261              	.L25:
+ 262 0028 00000000 		.word	rte_wx_bme280_qf
+ 263 002c 00000000 		.word	bme280_data_buffer
+ 264              		.cfi_endproc
+ 265              	.LFE94:
+ 267              		.section	.text.wx_get_temperature_measurement,"ax",%progbits
+ 268              		.align	1
+ 269              		.global	wx_get_temperature_measurement
+ 270              		.syntax unified
+ 271              		.thumb
+ 272              		.thumb_func
+ 273              		.fpu softvfp
+ 275              	wx_get_temperature_measurement:
+ 276              	.LFB91:
+  25:../src/wx_handler_temperature.c **** 
+ 277              		.loc 1 25 0
+ 278              		.cfi_startproc
+ 279              		@ args = 0, pretend = 0, frame = 0
+ 280              		@ frame_needed = 0, uses_anonymous_args = 0
+ 281              	.LVL23:
+ 282 0000 10B5     		push	{r4, lr}
+ 283              		.cfi_def_cfa_offset 8
+ 284              		.cfi_offset 4, -8
+ 285              		.cfi_offset 14, -4
+ 286 0002 1446     		mov	r4, r2
+ 287              	.LVL24:
+  33:../src/wx_handler_temperature.c **** 		// controller measures two temperatures
+ 288              		.loc 1 33 0
+ 289 0004 0278     		ldrb	r2, [r0]	@ zero_extendqisi2
+ 290              	.LVL25:
+ 291 0006 013A     		subs	r2, r2, #1
+ 292 0008 032A     		cmp	r2, #3
+ 293 000a 31D8     		bhi	.L36
+ 294 000c DFE802F0 		tbb	[pc, r2]
+ 295              	.LVL26:
+ 296              	.L30:
+ 297 0010 02       		.byte	(.L29-.L30)/2
+ 298 0011 16       		.byte	(.L31-.L30)/2
+ 299 0012 27       		.byte	(.L32-.L30)/2
+ 300 0013 27       		.byte	(.L32-.L30)/2
+ 301              		.p2align 1
+ 302              	.L29:
+  45:../src/wx_handler_temperature.c **** 				// this will get all three parameters (humidity, pressure, internal temp) in single call
+ 303              		.loc 1 45 0
+ 304 0014 4B79     		ldrb	r3, [r1, #5]	@ zero_extendqisi2
+ 305              	.LVL27:
+ 306 0016 012B     		cmp	r3, #1
+ 307 0018 0AD0     		beq	.L42
+  51:../src/wx_handler_temperature.c **** 			}
+ 308              		.loc 1 51 0
+ 309 001a 1848     		ldr	r0, .L44
+ 310 001c FFF7FEFF 		bl	wx_get_temperature_ms5611
+ 311              	.LVL28:
+ 312              	.L34:
+  55:../src/wx_handler_temperature.c **** 
+ 313              		.loc 1 55 0
+ 314 0020 50B1     		cbz	r0, .L37
+  29:../src/wx_handler_temperature.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+ 315              		.loc 1 29 0
+ 316 0022 0024     		movs	r4, #0
+ 317              	.LVL29:
+ 318              	.L35:
+  66:../src/wx_handler_temperature.c **** 
+ 319              		.loc 1 66 0
+ 320 0024 FFF7FEFF 		bl	wx_get_temperature_dallas
+ 321              	.LVL30:
+  69:../src/wx_handler_temperature.c **** 				// if yes set the local variable with flag signalling that we have an external temperature
+ 322              		.loc 1 69 0
+ 323 0028 80B9     		cbnz	r0, .L27
+  71:../src/wx_handler_temperature.c **** 			}
+ 324              		.loc 1 71 0
+ 325 002a 44F00204 		orr	r4, r4, #2
+ 326              	.LVL31:
+ 327 002e 0DE0     		b	.L27
+ 328              	.LVL32:
+ 329              	.L42:
+  47:../src/wx_handler_temperature.c **** 			}
+ 330              		.loc 1 47 0
+ 331 0030 1248     		ldr	r0, .L44
+ 332 0032 FFF7FEFF 		bl	wx_get_temperature_bme280
+ 333              	.LVL33:
+ 334 0036 F3E7     		b	.L34
+ 335              	.L37:
+  58:../src/wx_handler_temperature.c **** 
+ 336              		.loc 1 58 0
+ 337 0038 2024     		movs	r4, #32
+ 338              	.LVL34:
+ 339 003a F3E7     		b	.L35
+ 340              	.LVL35:
+ 341              	.L31:
+  78:../src/wx_handler_temperature.c **** 
+ 342              		.loc 1 78 0
+ 343 003c 104B     		ldr	r3, .L44+4
+ 344              	.LVL36:
+ 345 003e 1968     		ldr	r1, [r3]
+ 346              	.LVL37:
+ 347 0040 1048     		ldr	r0, .L44+8
+ 348 0042 FFF7FEFF 		bl	umb_get_current_qf
+ 349              	.LVL38:
+  81:../src/wx_handler_temperature.c **** 
+ 350              		.loc 1 81 0
+ 351 0046 0128     		cmp	r0, #1
+ 352 0048 02D9     		bls	.L43
+  29:../src/wx_handler_temperature.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+ 353              		.loc 1 29 0
+ 354 004a 0024     		movs	r4, #0
+ 355              	.LVL39:
+ 356              	.L27:
+ 117:../src/wx_handler_temperature.c **** 
+ 357              		.loc 1 117 0
+ 358 004c 2046     		mov	r0, r4
+ 359 004e 10BD     		pop	{r4, pc}
+ 360              	.LVL40:
+ 361              	.L43:
+  84:../src/wx_handler_temperature.c **** 
+ 362              		.loc 1 84 0
+ 363 0050 2046     		mov	r0, r4
+ 364              	.LVL41:
+ 365 0052 FFF7FEFF 		bl	umb_get_temperature
+ 366              	.LVL42:
+ 367 0056 0C4B     		ldr	r3, .L44+12
+ 368 0058 1860     		str	r0, [r3]	@ float
+ 369              	.LVL43:
+  87:../src/wx_handler_temperature.c **** 			}
+ 370              		.loc 1 87 0
+ 371 005a 0224     		movs	r4, #2
+ 372              	.LVL44:
+ 373 005c F6E7     		b	.L27
+ 374              	.LVL45:
+ 375              	.L32:
+ 100:../src/wx_handler_temperature.c **** 
+ 376              		.loc 1 100 0
+ 377 005e 1946     		mov	r1, r3
+ 378              	.LVL46:
+ 379 0060 0A48     		ldr	r0, .L44+16
+ 380 0062 FFF7FEFF 		bl	rtu_get_temperature
+ 381              	.LVL47:
+ 103:../src/wx_handler_temperature.c **** 
+ 382              		.loc 1 103 0
+ 383 0066 28B1     		cbz	r0, .L39
+ 103:../src/wx_handler_temperature.c **** 
+ 384              		.loc 1 103 0 is_stmt 0 discriminator 1
+ 385 0068 0628     		cmp	r0, #6
+ 386 006a 05D0     		beq	.L40
+  29:../src/wx_handler_temperature.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+ 387              		.loc 1 29 0 is_stmt 1
+ 388 006c 0024     		movs	r4, #0
+ 389              	.LVL48:
+ 390 006e EDE7     		b	.L27
+ 391              	.LVL49:
+ 392              	.L36:
+ 393 0070 0024     		movs	r4, #0
+ 394              	.LVL50:
+ 395 0072 EBE7     		b	.L27
+ 396              	.LVL51:
+ 397              	.L39:
+ 106:../src/wx_handler_temperature.c **** 			}
+ 398              		.loc 1 106 0
+ 399 0074 0224     		movs	r4, #2
+ 400              	.LVL52:
+ 401 0076 E9E7     		b	.L27
+ 402              	.LVL53:
+ 403              	.L40:
+ 404 0078 0224     		movs	r4, #2
+ 405              	.LVL54:
+ 116:../src/wx_handler_temperature.c **** }
+ 406              		.loc 1 116 0
+ 407 007a E7E7     		b	.L27
+ 408              	.L45:
+ 409              		.align	2
+ 410              	.L44:
+ 411 007c 00000000 		.word	rte_wx_temperature_internal
+ 412 0080 00000000 		.word	master_time
+ 413 0084 00000000 		.word	rte_wx_umb_context
+ 414 0088 00000000 		.word	rte_wx_temperature_average_external_valid
+ 415 008c 00000000 		.word	rte_wx_temperature_external
+ 416              		.cfi_endproc
+ 417              	.LFE91:
+ 419              		.global	wx_inhibit_slew_rate_check
+ 420              		.section	.data.wx_inhibit_slew_rate_check,"aw",%progbits
+ 421              		.set	.LANCHOR0,. + 0
+ 424              	wx_inhibit_slew_rate_check:
+ 425 0000 01       		.byte	1
+ 426              		.text
+ 427              	.Letext0:
+ 428              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 429              		.file 4 "../include/config_data.h"
+ 430              		.file 5 "../system/include/cmsis/core_cm3.h"
+ 431              		.file 6 "../system/include/cmsis/system_stm32f10x.h"
+ 432              		.file 7 "../system/include/cmsis/stm32f10x.h"
+ 433              		.file 8 "../system/include/drivers/dallas.h"
+ 434              		.file 9 "../system/include/drivers/analog_anemometer.h"
+ 435              		.file 10 "../system/include/davis_vantage/davis_loop_t.h"
+ 436              		.file 11 "../system/include/umb_master/umb_frame_t.h"
+ 437              		.file 12 "../system/include/umb_master/umb_state_t.h"
+ 438              		.file 13 "../system/include/drivers/serial.h"
+ 439              		.file 14 "../system/include/umb_master/umb_context_t.h"
+ 440              		.file 15 "../system/include/umb_master/umb_qf_t.h"
+ 441              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 442              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 443              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 444              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 445              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 446              		.file 21 "../system/include/drivers/ms5611.h"
+ 447              		.file 22 "../include/rte_wx.h"
+ 448              		.file 23 "../include/wx_handler.h"
+ 449              		.file 24 "../system/include/aprs/cfifo.h"
+ 450              		.file 25 "../system/include/aprs/afsk.h"
+ 451              		.file 26 "../system/include/aprs/ax25.h"
+ 452              		.file 27 "../include/main.h"
+ 453              		.file 28 "../system/include/umb_master/umb_master.h"
+ 454              		.file 29 "../system/include/modbus_rtu/rtu_getters.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 wx_handler_temperature.c
+     /tmp/ccjFhSM3.s:21     .text.wx_get_temperature_dallas:0000000000000000 $t
+     /tmp/ccjFhSM3.s:28     .text.wx_get_temperature_dallas:0000000000000000 wx_get_temperature_dallas
+     /tmp/ccjFhSM3.s:160    .text.wx_get_temperature_dallas:00000000000000b8 $d
+     /tmp/ccjFhSM3.s:177    .text.wx_get_temperature_ms5611:0000000000000000 $t
+     /tmp/ccjFhSM3.s:184    .text.wx_get_temperature_ms5611:0000000000000000 wx_get_temperature_ms5611
+     /tmp/ccjFhSM3.s:205    .text.wx_get_temperature_ms5611:000000000000000c $d
+     /tmp/ccjFhSM3.s:210    .text.wx_get_temperature_bme280:0000000000000000 $t
+     /tmp/ccjFhSM3.s:217    .text.wx_get_temperature_bme280:0000000000000000 wx_get_temperature_bme280
+     /tmp/ccjFhSM3.s:262    .text.wx_get_temperature_bme280:0000000000000028 $d
+     /tmp/ccjFhSM3.s:268    .text.wx_get_temperature_measurement:0000000000000000 $t
+     /tmp/ccjFhSM3.s:275    .text.wx_get_temperature_measurement:0000000000000000 wx_get_temperature_measurement
+     /tmp/ccjFhSM3.s:297    .text.wx_get_temperature_measurement:0000000000000010 $d
+     /tmp/ccjFhSM3.s:301    .text.wx_get_temperature_measurement:0000000000000014 $t
+     /tmp/ccjFhSM3.s:411    .text.wx_get_temperature_measurement:000000000000007c $d
+     /tmp/ccjFhSM3.s:424    .data.wx_inhibit_slew_rate_check:0000000000000000 wx_inhibit_slew_rate_check
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.20.3fa825aa23b2311026266e3d076368dc
+                           .group:0000000000000000 wm4.station_config.h.9.75b6c5687acc8f60d219d6a552b2bf59
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.19.15d389ea66759bb36d2e3183b267092a
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.3544b1c529a5f3b4e56f5aba673d9e30
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.wx_handler.h.9.70f7141466ac521f5731794f4f690a16
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+
+UNDEFINED SYMBOLS
+__aeabi_fcmpeq
+__aeabi_fsub
+__aeabi_fcmpgt
+__aeabi_fadd
+__aeabi_fcmplt
+dallas_query
+dallas_average
+dallas_get_average
+dallas_get_min
+dallas_get_max
+rte_wx_current_dallas_qf
+rte_wx_temperature_external
+rte_wx_temperature_external_valid
+rte_wx_temperature_external_slew_rate
+rte_wx_error_dallas_qf
+rte_wx_dallas_average
+rte_wx_temperature_average_external_valid
+rte_wx_temperature_min_external_valid
+rte_wx_temperature_max_external_valid
+master_time
+wx_last_good_temperature_time
+ms5611_get_temperature
+rte_wx_ms5611_qf
+bme280_get_temperature
+rte_wx_bme280_qf
+bme280_data_buffer
+umb_get_current_qf
+umb_get_temperature
+rtu_get_temperature
+rte_wx_temperature_internal
+rte_wx_umb_context

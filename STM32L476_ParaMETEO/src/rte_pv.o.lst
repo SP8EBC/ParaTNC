@@ -1,0 +1,60 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"rte_pv.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	rte_pv_corrupted_messages_count
+  18              		.global	rte_pv_messages_count
+  19              		.comm	rte_pv_load_current,2,2
+  20              		.comm	rte_pv_cell_voltage,2,2
+  21              		.comm	rte_pv_battery_voltage,2,2
+  22              		.comm	rte_pv_battery_current,2,2
+  23              		.comm	rte_pv_last_error,1,1
+  24              		.comm	rte_pv_struct,36,4
+  25              		.comm	rte_pv_sys_voltage,1,1
+  26              		.comm	rte_pv_average,200,4
+  27              		.section	.bss.rte_pv_corrupted_messages_count,"aw",%nobits
+  28              		.align	1
+  31              	rte_pv_corrupted_messages_count:
+  32 0000 0000     		.space	2
+  33              		.section	.bss.rte_pv_messages_count,"aw",%nobits
+  34              		.align	1
+  37              	rte_pv_messages_count:
+  38 0000 0000     		.space	2
+  39              		.text
+  40              	.Letext0:
+  41              		.file 1 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  42              		.file 2 "../system/include/./ve_direct_protocol/average_struct.h"
+  43              		.file 3 "../system/include/./ve_direct_protocol/raw_struct.h"
+  44              		.file 4 "../include/rte_pv.h"
+  45              		.file 5 "../src/rte_pv.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rte_pv.c
+     /tmp/ccv2p7Uk.s:31     .bss.rte_pv_corrupted_messages_count:0000000000000000 rte_pv_corrupted_messages_count
+     /tmp/ccv2p7Uk.s:37     .bss.rte_pv_messages_count:0000000000000000 rte_pv_messages_count
+                            *COM*:0000000000000002 rte_pv_load_current
+                            *COM*:0000000000000002 rte_pv_cell_voltage
+                            *COM*:0000000000000002 rte_pv_battery_voltage
+                            *COM*:0000000000000002 rte_pv_battery_current
+                            *COM*:0000000000000001 rte_pv_last_error
+                            *COM*:0000000000000024 rte_pv_struct
+                            *COM*:0000000000000001 rte_pv_sys_voltage
+                            *COM*:00000000000000c8 rte_pv_average
+     /tmp/ccv2p7Uk.s:28     .bss.rte_pv_corrupted_messages_count:0000000000000000 $d
+     /tmp/ccv2p7Uk.s:34     .bss.rte_pv_messages_count:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.average_struct.h.9.41820d0d7dc25dca8a9005c6d1a8bb5f
+
+NO UNDEFINED SYMBOLS

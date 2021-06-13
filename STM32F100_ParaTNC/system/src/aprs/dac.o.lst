@@ -1,0 +1,351 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"dac.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.DA_Init,"ax",%progbits
+  16              		.align	1
+  17              		.global	DA_Init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	DA_Init:
+  24              	.LFB63:
+  25              		.file 1 "../system/src/aprs/dac.c"
+   1:../system/src/aprs/dac.c **** 
+   2:../system/src/aprs/dac.c **** #include "dac.h"
+   3:../system/src/aprs/dac.c **** 
+   4:../system/src/aprs/dac.c **** #include <adc.h>
+   5:../system/src/aprs/dac.c **** 
+   6:../system/src/aprs/dac.c **** #include "station_config.h"
+   7:../system/src/aprs/dac.c **** 
+   8:../system/src/aprs/dac.c **** Afsk *dac_afsk;
+   9:../system/src/aprs/dac.c **** 
+  10:../system/src/aprs/dac.c **** ///************************************************************************************************
+  11:../system/src/aprs/dac.c **** //void TIM2_IRQHandler(void) {
+  12:../system/src/aprs/dac.c **** ///************************************************************************************************
+  13:../system/src/aprs/dac.c **** //
+  14:../system/src/aprs/dac.c **** ////	TIM2->SR = ~TIM_IT_Update;
+  15:../system/src/aprs/dac.c **** ////
+  16:../system/src/aprs/dac.c **** ////	DAC->DHR8R1 = AFSK_DAC_ISR(dac_afsk);
+  17:../system/src/aprs/dac.c **** ////	DAC->SWTRIGR |= 1;
+  18:../system/src/aprs/dac.c **** //
+  19:../system/src/aprs/dac.c **** //}
+  20:../system/src/aprs/dac.c **** 
+  21:../system/src/aprs/dac.c **** /**************************************************************************************************
+  22:../system/src/aprs/dac.c **** void DA_Init(void) {
+  26              		.loc 1 22 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 70B5     		push	{r4, r5, r6, lr}
+  31              		.cfi_def_cfa_offset 16
+  32              		.cfi_offset 4, -16
+  33              		.cfi_offset 5, -12
+  34              		.cfi_offset 6, -8
+  35              		.cfi_offset 14, -4
+  36 0002 82B0     		sub	sp, sp, #8
+  37              		.cfi_def_cfa_offset 24
+  23:../system/src/aprs/dac.c **** /**************************************************************************************************
+  24:../system/src/aprs/dac.c **** 
+  25:../system/src/aprs/dac.c **** 	GPIO_InitTypeDef GPIO_InitStructure;
+  26:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+  38              		.loc 1 26 0
+  39 0004 0823     		movs	r3, #8
+  40 0006 ADF80430 		strh	r3, [sp, #4]	@ movhi
+  27:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  41              		.loc 1 27 0
+  42 000a 0326     		movs	r6, #3
+  43 000c 8DF80660 		strb	r6, [sp, #6]
+  28:../system/src/aprs/dac.c **** #ifndef _PTT_PUSHPULL
+  29:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+  30:../system/src/aprs/dac.c **** #else
+  31:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  44              		.loc 1 31 0
+  45 0010 1025     		movs	r5, #16
+  46 0012 8DF80750 		strb	r5, [sp, #7]
+  32:../system/src/aprs/dac.c **** #endif
+  33:../system/src/aprs/dac.c **** 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+  47              		.loc 1 33 0
+  48 0016 0E4C     		ldr	r4, .L3
+  49 0018 01A9     		add	r1, sp, #4
+  50 001a 2046     		mov	r0, r4
+  51 001c FFF7FEFF 		bl	GPIO_Init
+  52              	.LVL0:
+  34:../system/src/aprs/dac.c **** 
+  35:../system/src/aprs/dac.c **** #ifndef _PTT_PUSHPULL
+  36:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BS3; //// bez sep
+  37:../system/src/aprs/dac.c **** #else
+  38:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BR3; //// bez sep
+  53              		.loc 1 38 0
+  54 0020 2369     		ldr	r3, [r4, #16]
+  55 0022 43F40023 		orr	r3, r3, #524288
+  56 0026 2361     		str	r3, [r4, #16]
+  39:../system/src/aprs/dac.c **** #endif
+  40:../system/src/aprs/dac.c **** 
+  41:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+  57              		.loc 1 41 0
+  58 0028 0223     		movs	r3, #2
+  59 002a ADF80430 		strh	r3, [sp, #4]	@ movhi
+  42:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  60              		.loc 1 42 0
+  61 002e 8DF80660 		strb	r6, [sp, #6]
+  43:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+  62              		.loc 1 43 0
+  63 0032 0023     		movs	r3, #0
+  64 0034 8DF80730 		strb	r3, [sp, #7]
+  44:../system/src/aprs/dac.c **** 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+  65              		.loc 1 44 0
+  66 0038 01A9     		add	r1, sp, #4
+  67 003a 2046     		mov	r0, r4
+  68 003c FFF7FEFF 		bl	GPIO_Init
+  69              	.LVL1:
+  45:../system/src/aprs/dac.c **** 
+  46:../system/src/aprs/dac.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+  70              		.loc 1 46 0
+  71 0040 ADF80450 		strh	r5, [sp, #4]	@ movhi
+  47:../system/src/aprs/dac.c **** 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+  72              		.loc 1 47 0
+  73 0044 01A9     		add	r1, sp, #4
+  74 0046 0348     		ldr	r0, .L3+4
+  75 0048 FFF7FEFF 		bl	GPIO_Init
+  76              	.LVL2:
+  48:../system/src/aprs/dac.c **** 
+  49:../system/src/aprs/dac.c **** 
+  50:../system/src/aprs/dac.c **** }
+  77              		.loc 1 50 0
+  78 004c 02B0     		add	sp, sp, #8
+  79              		.cfi_def_cfa_offset 16
+  80              		@ sp needed
+  81 004e 70BD     		pop	{r4, r5, r6, pc}
+  82              	.L4:
+  83              		.align	2
+  84              	.L3:
+  85 0050 00100140 		.word	1073811456
+  86 0054 00080140 		.word	1073809408
+  87              		.cfi_endproc
+  88              	.LFE63:
+  90              		.section	.text.DA_SetTimer,"ax",%progbits
+  91              		.align	1
+  92              		.global	DA_SetTimer
+  93              		.syntax unified
+  94              		.thumb
+  95              		.thumb_func
+  96              		.fpu softvfp
+  98              	DA_SetTimer:
+  99              	.LFB64:
+  51:../system/src/aprs/dac.c **** 
+  52:../system/src/aprs/dac.c **** /**************************************************************************************************
+  53:../system/src/aprs/dac.c **** void DA_SetTimer(uint16_t prescaler, uint16_t period) {
+ 100              		.loc 1 53 0
+ 101              		.cfi_startproc
+ 102              		@ args = 0, pretend = 0, frame = 0
+ 103              		@ frame_needed = 0, uses_anonymous_args = 0
+ 104              		@ link register save eliminated.
+ 105              	.LVL3:
+  54:../system/src/aprs/dac.c **** /**************************************************************************************************
+  55:../system/src/aprs/dac.c **** 
+  56:../system/src/aprs/dac.c **** }
+ 106              		.loc 1 56 0
+ 107 0000 7047     		bx	lr
+ 108              		.cfi_endproc
+ 109              	.LFE64:
+ 111              		.section	.text.DA_Start,"ax",%progbits
+ 112              		.align	1
+ 113              		.global	DA_Start
+ 114              		.syntax unified
+ 115              		.thumb
+ 116              		.thumb_func
+ 117              		.fpu softvfp
+ 119              	DA_Start:
+ 120              	.LFB65:
+  57:../system/src/aprs/dac.c **** 
+  58:../system/src/aprs/dac.c **** /**************************************************************************************************
+  59:../system/src/aprs/dac.c **** void DA_Start() {
+ 121              		.loc 1 59 0
+ 122              		.cfi_startproc
+ 123              		@ args = 0, pretend = 0, frame = 0
+ 124              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125 0000 08B5     		push	{r3, lr}
+ 126              		.cfi_def_cfa_offset 8
+ 127              		.cfi_offset 3, -8
+ 128              		.cfi_offset 14, -4
+  60:../system/src/aprs/dac.c **** /**************************************************************************************************
+  61:../system/src/aprs/dac.c **** 
+  62:../system/src/aprs/dac.c **** 	AD_Stop();
+ 129              		.loc 1 62 0
+ 130 0002 FFF7FEFF 		bl	AD_Stop
+ 131              	.LVL4:
+  63:../system/src/aprs/dac.c **** //
+  64:../system/src/aprs/dac.c **** //	//stm32_gpioPinWrite(PTT_GPIO_BASE, PTT_PIN, 1);
+  65:../system/src/aprs/dac.c **** //	GPIO_SetBits(GPIOB, GPIO_Pin_11);
+  66:../system/src/aprs/dac.c **** 
+  67:../system/src/aprs/dac.c **** #ifndef _PTT_PUSHPULL
+  68:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BR3;	 /// bez sep
+  69:../system/src/aprs/dac.c **** #else
+  70:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BS3;	 //// sep
+ 132              		.loc 1 70 0
+ 133 0006 064A     		ldr	r2, .L8
+ 134 0008 1369     		ldr	r3, [r2, #16]
+ 135 000a 43F00803 		orr	r3, r3, #8
+ 136 000e 1361     		str	r3, [r2, #16]
+  71:../system/src/aprs/dac.c **** #endif
+  72:../system/src/aprs/dac.c **** 	//	GPIOC->BSRR |= GPIO_BSRR_BS8;
+  73:../system/src/aprs/dac.c **** //
+  74:../system/src/aprs/dac.c **** //	//Timer2 ENABLE
+  75:../system/src/aprs/dac.c **** 	TIM4->CR1 |= TIM_CR1_CEN;
+ 137              		.loc 1 75 0
+ 138 0010 A2F58432 		sub	r2, r2, #67584
+ 139 0014 1388     		ldrh	r3, [r2]
+ 140 0016 43F00103 		orr	r3, r3, #1
+ 141 001a 1380     		strh	r3, [r2]	@ movhi
+  76:../system/src/aprs/dac.c **** 
+  77:../system/src/aprs/dac.c **** 
+  78:../system/src/aprs/dac.c **** #if (!defined(_METEO))
+  79:../system/src/aprs/dac.c **** 	GPIO_SetBits(GPIOC, GPIO_Pin_9);
+  80:../system/src/aprs/dac.c **** #endif
+  81:../system/src/aprs/dac.c **** }
+ 142              		.loc 1 81 0
+ 143 001c 08BD     		pop	{r3, pc}
+ 144              	.L9:
+ 145 001e 00BF     		.align	2
+ 146              	.L8:
+ 147 0020 00100140 		.word	1073811456
+ 148              		.cfi_endproc
+ 149              	.LFE65:
+ 151              		.section	.text.DA_Stop,"ax",%progbits
+ 152              		.align	1
+ 153              		.global	DA_Stop
+ 154              		.syntax unified
+ 155              		.thumb
+ 156              		.thumb_func
+ 157              		.fpu softvfp
+ 159              	DA_Stop:
+ 160              	.LFB66:
+  82:../system/src/aprs/dac.c **** 
+  83:../system/src/aprs/dac.c **** /**************************************************************************************************
+  84:../system/src/aprs/dac.c **** void DA_Stop() {
+ 161              		.loc 1 84 0
+ 162              		.cfi_startproc
+ 163              		@ args = 0, pretend = 0, frame = 0
+ 164              		@ frame_needed = 0, uses_anonymous_args = 0
+ 165 0000 08B5     		push	{r3, lr}
+ 166              		.cfi_def_cfa_offset 8
+ 167              		.cfi_offset 3, -8
+ 168              		.cfi_offset 14, -4
+  85:../system/src/aprs/dac.c **** /**************************************************************************************************
+  86:../system/src/aprs/dac.c **** 
+  87:../system/src/aprs/dac.c **** 	AD_Start();
+ 169              		.loc 1 87 0
+ 170 0002 FFF7FEFF 		bl	AD_Start
+ 171              	.LVL5:
+  88:../system/src/aprs/dac.c **** 
+  89:../system/src/aprs/dac.c **** #ifndef _PTT_PUSHPULL
+  90:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BS3; //// bez sep
+  91:../system/src/aprs/dac.c **** #else
+  92:../system/src/aprs/dac.c **** 	GPIOC->BSRR |= GPIO_BSRR_BR3;
+ 172              		.loc 1 92 0
+ 173 0006 074A     		ldr	r2, .L12
+ 174 0008 1369     		ldr	r3, [r2, #16]
+ 175 000a 43F40023 		orr	r3, r3, #524288
+ 176 000e 1361     		str	r3, [r2, #16]
+  93:../system/src/aprs/dac.c **** #endif
+  94:../system/src/aprs/dac.c **** //	GPIOC->BSRR |= GPIO_BSRR_BR8;
+  95:../system/src/aprs/dac.c **** 
+  96:../system/src/aprs/dac.c **** //	//Timer2 DISABLE
+  97:../system/src/aprs/dac.c **** 	TIM4->CR1 &= ~TIM_CR1_CEN;
+ 177              		.loc 1 97 0
+ 178 0010 A2F58432 		sub	r2, r2, #67584
+ 179 0014 1388     		ldrh	r3, [r2]
+ 180 0016 9BB2     		uxth	r3, r3
+ 181 0018 23F00103 		bic	r3, r3, #1
+ 182 001c 9BB2     		uxth	r3, r3
+ 183 001e 1380     		strh	r3, [r2]	@ movhi
+  98:../system/src/aprs/dac.c **** 
+  99:../system/src/aprs/dac.c **** #if (!defined(_METEO))
+ 100:../system/src/aprs/dac.c **** 	GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+ 101:../system/src/aprs/dac.c **** #endif
+ 102:../system/src/aprs/dac.c **** }
+ 184              		.loc 1 102 0
+ 185 0020 08BD     		pop	{r3, pc}
+ 186              	.L13:
+ 187 0022 00BF     		.align	2
+ 188              	.L12:
+ 189 0024 00100140 		.word	1073811456
+ 190              		.cfi_endproc
+ 191              	.LFE66:
+ 193              		.comm	dac_afsk,4,4
+ 194              		.text
+ 195              	.Letext0:
+ 196              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 197              		.file 3 "../system/include/cmsis/core_cm3.h"
+ 198              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+ 199              		.file 5 "../system/include/cmsis/stm32f10x.h"
+ 200              		.file 6 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+ 201              		.file 7 "../system/include/aprs/cfifo.h"
+ 202              		.file 8 "../system/include/aprs/afsk.h"
+ 203              		.file 9 "../system/include/aprs/adc.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 dac.c
+     /tmp/cc67QmI6.s:16     .text.DA_Init:0000000000000000 $t
+     /tmp/cc67QmI6.s:23     .text.DA_Init:0000000000000000 DA_Init
+     /tmp/cc67QmI6.s:85     .text.DA_Init:0000000000000050 $d
+     /tmp/cc67QmI6.s:91     .text.DA_SetTimer:0000000000000000 $t
+     /tmp/cc67QmI6.s:98     .text.DA_SetTimer:0000000000000000 DA_SetTimer
+     /tmp/cc67QmI6.s:112    .text.DA_Start:0000000000000000 $t
+     /tmp/cc67QmI6.s:119    .text.DA_Start:0000000000000000 DA_Start
+     /tmp/cc67QmI6.s:147    .text.DA_Start:0000000000000020 $d
+     /tmp/cc67QmI6.s:152    .text.DA_Stop:0000000000000000 $t
+     /tmp/cc67QmI6.s:159    .text.DA_Stop:0000000000000000 DA_Stop
+     /tmp/cc67QmI6.s:189    .text.DA_Stop:0000000000000024 $d
+                            *COM*:0000000000000004 dac_afsk
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.station_config.h.9.75b6c5687acc8f60d219d6a552b2bf59
+
+UNDEFINED SYMBOLS
+GPIO_Init
+AD_Stop
+AD_Start

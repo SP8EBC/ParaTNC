@@ -1,0 +1,324 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"rtu_request.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.rtu_request_03_04_registers,"ax",%progbits
+  18              		.align	1
+  19              		.global	rtu_request_03_04_registers
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	rtu_request_03_04_registers:
+  26              	.LFB2:
+  27              		.file 1 "../system/src/modbus_rtu/rtu_request.c"
+   1:../system/src/modbus_rtu/rtu_request.c **** /*
+   2:../system/src/modbus_rtu/rtu_request.c ****  * rtu_request.c
+   3:../system/src/modbus_rtu/rtu_request.c ****  *
+   4:../system/src/modbus_rtu/rtu_request.c ****  *  Created on: 18.09.2020
+   5:../system/src/modbus_rtu/rtu_request.c ****  *      Author: mateusz
+   6:../system/src/modbus_rtu/rtu_request.c ****  */
+   7:../system/src/modbus_rtu/rtu_request.c **** 
+   8:../system/src/modbus_rtu/rtu_request.c **** #include <stdarg.h>
+   9:../system/src/modbus_rtu/rtu_request.c **** #include <string.h>
+  10:../system/src/modbus_rtu/rtu_request.c **** 
+  11:../system/src/modbus_rtu/rtu_request.c **** #include "./modbus_rtu/rtu_request.h"
+  12:../system/src/modbus_rtu/rtu_request.c **** #include "./modbus_rtu/rtu_return_values.h"
+  13:../system/src/modbus_rtu/rtu_request.c **** #include "./modbus_rtu/rtu_crc.h"
+  14:../system/src/modbus_rtu/rtu_request.c **** 
+  15:../system/src/modbus_rtu/rtu_request.c **** int32_t rtu_request_03_04_registers(int8_t input_or_holding, uint8_t* output, uint8_t output_ln, ui
+  28              		.loc 1 15 0
+  29              		.cfi_startproc
+  30              		@ args = 12, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  34              		.cfi_def_cfa_offset 24
+  35              		.cfi_offset 3, -24
+  36              		.cfi_offset 4, -20
+  37              		.cfi_offset 5, -16
+  38              		.cfi_offset 6, -12
+  39              		.cfi_offset 7, -8
+  40              		.cfi_offset 14, -4
+  41 0002 BDF81C50 		ldrh	r5, [sp, #28]
+  42              	.LVL1:
+  16:../system/src/modbus_rtu/rtu_request.c **** 
+  17:../system/src/modbus_rtu/rtu_request.c **** 	int32_t retval = MODBUS_RET_UNINITIALIZED;
+  18:../system/src/modbus_rtu/rtu_request.c **** 
+  19:../system/src/modbus_rtu/rtu_request.c **** 	uint16_t crc = 0;
+  20:../system/src/modbus_rtu/rtu_request.c **** 
+  21:../system/src/modbus_rtu/rtu_request.c **** 	// check if there is a room for a RTU frame
+  22:../system/src/modbus_rtu/rtu_request.c **** 	if (output == 0x00 || output_ln < 8) {
+  43              		.loc 1 22 0
+  44 0006 B9B3     		cbz	r1, .L11
+  45 0008 0E46     		mov	r6, r1
+  46              		.loc 1 22 0 is_stmt 0 discriminator 1
+  47 000a 072A     		cmp	r2, #7
+  48 000c 01D8     		bhi	.L14
+  23:../system/src/modbus_rtu/rtu_request.c **** 		retval = MODBUS_RET_TOO_SHORT;
+  49              		.loc 1 23 0 is_stmt 1
+  50 000e 0120     		movs	r0, #1
+  51              	.LVL2:
+  52              	.L1:
+  24:../system/src/modbus_rtu/rtu_request.c **** 	}
+  25:../system/src/modbus_rtu/rtu_request.c **** 	else {
+  26:../system/src/modbus_rtu/rtu_request.c **** 		// initialize the output buffer for RTU binary frame
+  27:../system/src/modbus_rtu/rtu_request.c **** 		memset(output, 0x00, output_ln);
+  28:../system/src/modbus_rtu/rtu_request.c **** 
+  29:../system/src/modbus_rtu/rtu_request.c **** 		// put the slave address
+  30:../system/src/modbus_rtu/rtu_request.c **** 		*output = slave_address;
+  31:../system/src/modbus_rtu/rtu_request.c **** 
+  32:../system/src/modbus_rtu/rtu_request.c **** 		// put the function code
+  33:../system/src/modbus_rtu/rtu_request.c **** 		if (input_or_holding == 0) {
+  34:../system/src/modbus_rtu/rtu_request.c **** 			*(output + 1) = 0x04;
+  35:../system/src/modbus_rtu/rtu_request.c **** 		}
+  36:../system/src/modbus_rtu/rtu_request.c **** 		else {
+  37:../system/src/modbus_rtu/rtu_request.c **** 			*(output + 1) = 0x03;
+  38:../system/src/modbus_rtu/rtu_request.c **** 		}
+  39:../system/src/modbus_rtu/rtu_request.c **** 
+  40:../system/src/modbus_rtu/rtu_request.c **** 		// put the base address to be read from the slave
+  41:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 2) = (base_register & 0xFF00) >> 8;
+  42:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 3) = base_register & 0xFF;
+  43:../system/src/modbus_rtu/rtu_request.c **** 
+  44:../system/src/modbus_rtu/rtu_request.c **** 		// put the numbers of register to be read from slave
+  45:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 4) = 0x00;	// all in all modbus RTU can transfer no more than 125 at once
+  46:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 5) = number_of_registers;
+  47:../system/src/modbus_rtu/rtu_request.c **** 
+  48:../system/src/modbus_rtu/rtu_request.c **** 		// calculate the CRC from the content
+  49:../system/src/modbus_rtu/rtu_request.c **** 		crc = rtu_crc_buffer(output, 6);
+  50:../system/src/modbus_rtu/rtu_request.c **** 
+  51:../system/src/modbus_rtu/rtu_request.c **** 		// append the crc value
+  52:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 7) = (crc & 0xFF00) >> 8;
+  53:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 6) = crc & 0xFF;
+  54:../system/src/modbus_rtu/rtu_request.c **** 
+  55:../system/src/modbus_rtu/rtu_request.c **** 		*output_ln_used = 8;
+  56:../system/src/modbus_rtu/rtu_request.c **** 
+  57:../system/src/modbus_rtu/rtu_request.c **** 		retval = MODBUS_RET_OK;
+  58:../system/src/modbus_rtu/rtu_request.c **** 	}
+  59:../system/src/modbus_rtu/rtu_request.c **** 
+  60:../system/src/modbus_rtu/rtu_request.c **** 	return retval;
+  61:../system/src/modbus_rtu/rtu_request.c **** }
+  53              		.loc 1 61 0
+  54 0010 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  55              	.LVL3:
+  56              	.L14:
+  57 0012 1F46     		mov	r7, r3
+  58 0014 0446     		mov	r4, r0
+  27:../system/src/modbus_rtu/rtu_request.c **** 
+  59              		.loc 1 27 0
+  60 0016 0021     		movs	r1, #0
+  61              	.LVL4:
+  62 0018 3046     		mov	r0, r6
+  63              	.LVL5:
+  64 001a FFF7FEFF 		bl	memset
+  65              	.LVL6:
+  30:../system/src/modbus_rtu/rtu_request.c **** 
+  66              		.loc 1 30 0
+  67 001e 9DF81830 		ldrb	r3, [sp, #24]	@ zero_extendqisi2
+  68 0022 3370     		strb	r3, [r6]
+  33:../system/src/modbus_rtu/rtu_request.c **** 			*(output + 1) = 0x04;
+  69              		.loc 1 33 0
+  70 0024 64B9     		cbnz	r4, .L3
+  34:../system/src/modbus_rtu/rtu_request.c **** 		}
+  71              		.loc 1 34 0
+  72 0026 0423     		movs	r3, #4
+  73 0028 7370     		strb	r3, [r6, #1]
+  74              	.L4:
+  41:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 3) = base_register & 0xFF;
+  75              		.loc 1 41 0
+  76 002a 2B0A     		lsrs	r3, r5, #8
+  77 002c B370     		strb	r3, [r6, #2]
+  42:../system/src/modbus_rtu/rtu_request.c **** 
+  78              		.loc 1 42 0
+  79 002e F570     		strb	r5, [r6, #3]
+  45:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 5) = number_of_registers;
+  80              		.loc 1 45 0
+  81 0030 0025     		movs	r5, #0
+  82 0032 3571     		strb	r5, [r6, #4]
+  46:../system/src/modbus_rtu/rtu_request.c **** 
+  83              		.loc 1 46 0
+  84 0034 9DF82030 		ldrb	r3, [sp, #32]	@ zero_extendqisi2
+  85 0038 7371     		strb	r3, [r6, #5]
+  86              	.LVL7:
+  87              	.LBB6:
+  88              	.LBB7:
+  89              		.file 2 "../system/include/./modbus_rtu/rtu_crc.h"
+   1:../system/include/./modbus_rtu/rtu_crc.h **** /*
+   2:../system/include/./modbus_rtu/rtu_crc.h ****  * rtu_crc.h
+   3:../system/include/./modbus_rtu/rtu_crc.h ****  *
+   4:../system/include/./modbus_rtu/rtu_crc.h ****  *  Created on: 18.09.2020
+   5:../system/include/./modbus_rtu/rtu_crc.h ****  *      Author: mateusz
+   6:../system/include/./modbus_rtu/rtu_crc.h ****  */
+   7:../system/include/./modbus_rtu/rtu_crc.h **** 
+   8:../system/include/./modbus_rtu/rtu_crc.h **** #ifndef INCLUDE_MODBUS_RTU_RTU_CRC_H_
+   9:../system/include/./modbus_rtu/rtu_crc.h **** #define INCLUDE_MODBUS_RTU_RTU_CRC_H_
+  10:../system/include/./modbus_rtu/rtu_crc.h **** 
+  11:../system/include/./modbus_rtu/rtu_crc.h **** #include <stdint.h>
+  12:../system/include/./modbus_rtu/rtu_crc.h **** 
+  13:../system/include/./modbus_rtu/rtu_crc.h **** inline uint16_t rtu_crc_stream(uint16_t previous_crc, uint8_t current_data) {
+  14:../system/include/./modbus_rtu/rtu_crc.h **** 	int i;
+  15:../system/include/./modbus_rtu/rtu_crc.h **** 
+  16:../system/include/./modbus_rtu/rtu_crc.h **** 	previous_crc ^= (uint16_t)current_data;
+  17:../system/include/./modbus_rtu/rtu_crc.h **** 	for (i = 0; i < 8; ++i) {
+  18:../system/include/./modbus_rtu/rtu_crc.h **** 		if (previous_crc & 1) {
+  19:../system/include/./modbus_rtu/rtu_crc.h **** 			previous_crc = (previous_crc >> 1);
+  20:../system/include/./modbus_rtu/rtu_crc.h **** 			previous_crc = (previous_crc) ^ 0xA001;
+  21:../system/include/./modbus_rtu/rtu_crc.h **** 		}
+  22:../system/include/./modbus_rtu/rtu_crc.h **** 		else
+  23:../system/include/./modbus_rtu/rtu_crc.h **** 			previous_crc = (previous_crc >> 1);
+  24:../system/include/./modbus_rtu/rtu_crc.h **** 	}
+  25:../system/include/./modbus_rtu/rtu_crc.h **** 
+  26:../system/include/./modbus_rtu/rtu_crc.h **** 	return previous_crc;
+  27:../system/include/./modbus_rtu/rtu_crc.h **** }
+  28:../system/include/./modbus_rtu/rtu_crc.h **** 
+  29:../system/include/./modbus_rtu/rtu_crc.h **** inline uint16_t rtu_crc_buffer(const uint8_t* const buffer_ptr, uint8_t buffer_ln) {
+  30:../system/include/./modbus_rtu/rtu_crc.h **** 	uint16_t crc = 0xFFFF;
+  90              		.loc 2 30 0
+  91 003a 4FF6FF72 		movw	r2, #65535
+  92 003e 0EE0     		b	.L5
+  93              	.LVL8:
+  94              	.L3:
+  95              	.LBE7:
+  96              	.LBE6:
+  37:../system/src/modbus_rtu/rtu_request.c **** 		}
+  97              		.loc 1 37 0
+  98 0040 0323     		movs	r3, #3
+  99 0042 7370     		strb	r3, [r6, #1]
+ 100 0044 F1E7     		b	.L4
+ 101              	.LVL9:
+ 102              	.L7:
+ 103              	.LBB12:
+ 104              	.LBB11:
+ 105              	.LBB8:
+ 106              	.LBB9:
+  31:../system/include/./modbus_rtu/rtu_crc.h **** 
+  32:../system/include/./modbus_rtu/rtu_crc.h **** // 		https://ctlsys.com/support/how_to_compute_the_modbus_rtu_message_crc/
+  33:../system/include/./modbus_rtu/rtu_crc.h **** 
+  34:../system/include/./modbus_rtu/rtu_crc.h **** 	for (int pos = 0; pos < buffer_ln; pos++) {
+  35:../system/include/./modbus_rtu/rtu_crc.h **** 	crc ^= (uint16_t)buffer_ptr[pos];          // XOR byte into least sig. byte of crc
+  36:../system/include/./modbus_rtu/rtu_crc.h **** 
+  37:../system/include/./modbus_rtu/rtu_crc.h **** 	for (int i = 8; i != 0; i--) {    // Loop over each bit
+  38:../system/include/./modbus_rtu/rtu_crc.h **** 		if ((crc & 0x0001) != 0) {      // If the LSB is set
+  39:../system/include/./modbus_rtu/rtu_crc.h **** 			crc >>= 1;                    // Shift right and XOR 0xA001
+  40:../system/include/./modbus_rtu/rtu_crc.h **** 			crc ^= 0xA001;
+  41:../system/include/./modbus_rtu/rtu_crc.h **** 		}
+  42:../system/include/./modbus_rtu/rtu_crc.h **** 		else                            // Else LSB is not set
+  43:../system/include/./modbus_rtu/rtu_crc.h **** 			crc >>= 1;                    // Just shift right
+ 107              		.loc 2 43 0
+ 108 0046 5208     		lsrs	r2, r2, #1
+ 109              	.LVL10:
+ 110              	.L8:
+  37:../system/include/./modbus_rtu/rtu_crc.h **** 		if ((crc & 0x0001) != 0) {      // If the LSB is set
+ 111              		.loc 2 37 0
+ 112 0048 0138     		subs	r0, r0, #1
+ 113              	.LVL11:
+ 114              	.L6:
+ 115 004a 38B1     		cbz	r0, .L15
+  38:../system/include/./modbus_rtu/rtu_crc.h **** 			crc >>= 1;                    // Shift right and XOR 0xA001
+ 116              		.loc 2 38 0
+ 117 004c 12F0010F 		tst	r2, #1
+ 118 0050 F9D0     		beq	.L7
+ 119              	.LVL12:
+  40:../system/include/./modbus_rtu/rtu_crc.h **** 		}
+ 120              		.loc 2 40 0
+ 121 0052 4AF20104 		movw	r4, #40961
+ 122 0056 84EA5202 		eor	r2, r4, r2, lsr #1
+ 123              	.LVL13:
+ 124 005a F5E7     		b	.L8
+ 125              	.L15:
+ 126              	.LBE9:
+  34:../system/include/./modbus_rtu/rtu_crc.h **** 	crc ^= (uint16_t)buffer_ptr[pos];          // XOR byte into least sig. byte of crc
+ 127              		.loc 2 34 0
+ 128 005c 0135     		adds	r5, r5, #1
+ 129              	.LVL14:
+ 130              	.L5:
+ 131 005e 052D     		cmp	r5, #5
+ 132 0060 03DC     		bgt	.L16
+  35:../system/include/./modbus_rtu/rtu_crc.h **** 
+ 133              		.loc 2 35 0
+ 134 0062 715D     		ldrb	r1, [r6, r5]	@ zero_extendqisi2
+ 135 0064 4A40     		eors	r2, r2, r1
+ 136              	.LVL15:
+ 137              	.LBB10:
+  37:../system/include/./modbus_rtu/rtu_crc.h **** 		if ((crc & 0x0001) != 0) {      // If the LSB is set
+ 138              		.loc 2 37 0
+ 139 0066 0820     		movs	r0, #8
+ 140 0068 EFE7     		b	.L6
+ 141              	.LVL16:
+ 142              	.L16:
+ 143              	.LBE10:
+ 144              	.LBE8:
+ 145              	.LBE11:
+ 146              	.LBE12:
+  52:../system/src/modbus_rtu/rtu_request.c **** 		*(output + 6) = crc & 0xFF;
+ 147              		.loc 1 52 0
+ 148 006a 130A     		lsrs	r3, r2, #8
+ 149 006c F371     		strb	r3, [r6, #7]
+  53:../system/src/modbus_rtu/rtu_request.c **** 
+ 150              		.loc 1 53 0
+ 151 006e B271     		strb	r2, [r6, #6]
+  55:../system/src/modbus_rtu/rtu_request.c **** 
+ 152              		.loc 1 55 0
+ 153 0070 0823     		movs	r3, #8
+ 154 0072 3B70     		strb	r3, [r7]
+ 155              	.LVL17:
+  57:../system/src/modbus_rtu/rtu_request.c **** 	}
+ 156              		.loc 1 57 0
+ 157 0074 0020     		movs	r0, #0
+ 158 0076 CBE7     		b	.L1
+ 159              	.LVL18:
+ 160              	.L11:
+  23:../system/src/modbus_rtu/rtu_request.c **** 	}
+ 161              		.loc 1 23 0
+ 162 0078 0120     		movs	r0, #1
+ 163              	.LVL19:
+ 164 007a C9E7     		b	.L1
+ 165              		.cfi_endproc
+ 166              	.LFE2:
+ 168              		.text
+ 169              	.Letext0:
+ 170              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 171              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 172              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 173              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 174              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 175              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rtu_request.c
+     /tmp/cclRcNdL.s:18     .text.rtu_request_03_04_registers:0000000000000000 $t
+     /tmp/cclRcNdL.s:25     .text.rtu_request_03_04_registers:0000000000000000 rtu_request_03_04_registers
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdarg.h.31.b55da1089056868966f25de5dbfc7d3c
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+
+UNDEFINED SYMBOLS
+memset

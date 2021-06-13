@@ -1,0 +1,1618 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"bme280.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.bme280_reset,"ax",%progbits
+  18              		.align	1
+  19              		.global	bme280_reset
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	bme280_reset:
+  26              	.LFB21:
+  27              		.file 1 "../system/src/drivers/bme280.c"
+   1:../system/src/drivers/bme280.c **** /*
+   2:../system/src/drivers/bme280.c ****  * bma150.c
+   3:../system/src/drivers/bme280.c ****  *
+   4:../system/src/drivers/bme280.c ****  *  Created on: 21.06.2020
+   5:../system/src/drivers/bme280.c ****  *      Author: mateusz
+   6:../system/src/drivers/bme280.c ****  */
+   7:../system/src/drivers/bme280.c **** 
+   8:../system/src/drivers/bme280.c **** 
+   9:../system/src/drivers/bme280.c **** #include <drivers/bme280.h>
+  10:../system/src/drivers/bme280.c **** #include "../drivers/i2c.h"
+  11:../system/src/drivers/bme280.c **** 
+  12:../system/src/drivers/bme280.c **** #include <string.h>
+  13:../system/src/drivers/bme280.c **** 
+  14:../system/src/drivers/bme280.c **** #define RESET_MAGIC_WORD 0xB6
+  15:../system/src/drivers/bme280.c **** 
+  16:../system/src/drivers/bme280.c **** #define TX_ADDR 0xEC // 11101100
+  17:../system/src/drivers/bme280.c **** #define RX_ADDR 0xED // 11101101
+  18:../system/src/drivers/bme280.c **** 
+  19:../system/src/drivers/bme280.c **** #define MODE 						3	// Normal aka 'cyclic' mode
+  20:../system/src/drivers/bme280.c **** #define FILTER_COEFFICIENT_LN 		16
+  21:../system/src/drivers/bme280.c **** #define HUMIDITY_OVERSAMPLING		4	// oversampling x8
+  22:../system/src/drivers/bme280.c **** #define PRESSURE_OVERSAMPLING		3	// oversampling x4
+  23:../system/src/drivers/bme280.c **** #define TEMPERATURE_OVERSAMPLING	3	// oversampling x4
+  24:../system/src/drivers/bme280.c **** #define STANDBY_TIME				5	// one second
+  25:../system/src/drivers/bme280.c **** 
+  26:../system/src/drivers/bme280.c **** #define CTRL_HUM_ADDR		0xF2
+  27:../system/src/drivers/bme280.c **** #define STATUS_ADDR			0xF3
+  28:../system/src/drivers/bme280.c **** #define CTRL_MEAS_ADDR		0xF4
+  29:../system/src/drivers/bme280.c **** #define CONFIG_ADDR			0xF5
+  30:../system/src/drivers/bme280.c **** #define RESET_ADDR			0xE0
+  31:../system/src/drivers/bme280.c **** 
+  32:../system/src/drivers/bme280.c **** #define PRESS_MSB_ADDR		0xF7
+  33:../system/src/drivers/bme280.c **** #define VALUES_LN			8
+  34:../system/src/drivers/bme280.c **** 
+  35:../system/src/drivers/bme280.c **** #define CALIB00_ADDR		0x88
+  36:../system/src/drivers/bme280.c **** #define CALIB00_READ_LN		0x1A
+  37:../system/src/drivers/bme280.c **** 
+  38:../system/src/drivers/bme280.c **** #define CALIB26_ADDR		0xE1
+  39:../system/src/drivers/bme280.c **** #define CALIB26_READ_LN		0x10
+  40:../system/src/drivers/bme280.c **** 
+  41:../system/src/drivers/bme280.c **** uint8_t bme280_sensor_avaliable = 0;
+  42:../system/src/drivers/bme280.c **** 
+  43:../system/src/drivers/bme280.c **** uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
+  44:../system/src/drivers/bme280.c **** uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
+  45:../system/src/drivers/bme280.c **** 
+  46:../system/src/drivers/bme280.c **** int32_t t_fine = 0;
+  47:../system/src/drivers/bme280.c **** 
+  48:../system/src/drivers/bme280.c **** /**
+  49:../system/src/drivers/bme280.c ****  * This function resets the BMA150 sensor to initial state. After it is called
+  50:../system/src/drivers/bme280.c ****  * the sensor must be reconfigured once again.
+  51:../system/src/drivers/bme280.c ****  */
+  52:../system/src/drivers/bme280.c **** int32_t bme280_reset(bme280_qf_t* qf) {
+  28              		.loc 1 52 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 82B0     		sub	sp, sp, #8
+  38              		.cfi_def_cfa_offset 16
+  39 0004 0446     		mov	r4, r0
+  40              	.LVL1:
+  53:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+  54:../system/src/drivers/bme280.c **** 
+  55:../system/src/drivers/bme280.c **** 	// i2c transmit buffer
+  56:../system/src/drivers/bme280.c **** 	uint8_t tx_buf[] = {RESET_ADDR, RESET_MAGIC_WORD, 0};
+  41              		.loc 1 56 0
+  42 0006 124B     		ldr	r3, .L7
+  43 0008 1B68     		ldr	r3, [r3]
+  44 000a ADF80430 		strh	r3, [sp, #4]	@ movhi
+  45 000e 1B0C     		lsrs	r3, r3, #16
+  46 0010 8DF80630 		strb	r3, [sp, #6]
+  57:../system/src/drivers/bme280.c **** 
+  58:../system/src/drivers/bme280.c **** 	// Send a data to sensor
+  59:../system/src/drivers/bme280.c **** 	i2c_send_data(TX_ADDR, tx_buf, 0);
+  47              		.loc 1 59 0
+  48 0014 0022     		movs	r2, #0
+  49 0016 01A9     		add	r1, sp, #4
+  50 0018 EC20     		movs	r0, #236
+  51              	.LVL2:
+  52 001a FFF7FEFF 		bl	i2c_send_data
+  53              	.LVL3:
+  54              	.L3:
+  60:../system/src/drivers/bme280.c **** 
+  61:../system/src/drivers/bme280.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+  62:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+  55              		.loc 1 62 0 discriminator 2
+  56 001e 0D4B     		ldr	r3, .L7+4
+  57 0020 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  58 0022 23B1     		cbz	r3, .L2
+  59              		.loc 1 62 0 is_stmt 0 discriminator 1
+  60 0024 0B4B     		ldr	r3, .L7+4
+  61 0026 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  62 0028 DBB2     		uxtb	r3, r3
+  63 002a 032B     		cmp	r3, #3
+  64 002c F7D1     		bne	.L3
+  65              	.L2:
+  63:../system/src/drivers/bme280.c **** 
+  64:../system/src/drivers/bme280.c **** 	// If reset was successfull enable a driver
+  65:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+  66              		.loc 1 65 0 is_stmt 1
+  67 002e 094B     		ldr	r3, .L7+4
+  68 0030 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  69 0032 43B9     		cbnz	r3, .L4
+  70              	.LBB42:
+  66:../system/src/drivers/bme280.c **** 		// Enable sensor comms
+  67:../system/src/drivers/bme280.c **** 		bme280_sensor_avaliable = 1;
+  71              		.loc 1 67 0
+  72 0034 084B     		ldr	r3, .L7+8
+  73 0036 0122     		movs	r2, #1
+  74 0038 1A70     		strb	r2, [r3]
+  68:../system/src/drivers/bme280.c **** 
+  69:../system/src/drivers/bme280.c **** 		// wait for sensor reset
+  70:../system/src/drivers/bme280.c **** 		delay_fixed(50);
+  75              		.loc 1 70 0
+  76 003a 3220     		movs	r0, #50
+  77 003c FFF7FEFF 		bl	delay_fixed
+  78              	.LVL4:
+  79              	.LBE42:
+  71:../system/src/drivers/bme280.c **** 
+  72:../system/src/drivers/bme280.c **** 	}
+  73:../system/src/drivers/bme280.c **** 	else {
+  74:../system/src/drivers/bme280.c **** 		// Set Quality Factor to unavaliable
+  75:../system/src/drivers/bme280.c **** 		*qf = BME280_QF_NOT_AVAILABLE;
+  76:../system/src/drivers/bme280.c **** 
+  77:../system/src/drivers/bme280.c **** 		// Return with keeping 'ms5611_sensor_abaliable' set to zero which will
+  78:../system/src/drivers/bme280.c **** 		// disable comms
+  79:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+  80:../system/src/drivers/bme280.c **** 	}
+  81:../system/src/drivers/bme280.c **** 
+  82:../system/src/drivers/bme280.c **** 	return out;
+  80              		.loc 1 82 0
+  81 0040 0020     		movs	r0, #0
+  82              	.L1:
+  83:../system/src/drivers/bme280.c **** }
+  83              		.loc 1 83 0
+  84 0042 02B0     		add	sp, sp, #8
+  85              		.cfi_remember_state
+  86              		.cfi_def_cfa_offset 8
+  87              		@ sp needed
+  88 0044 10BD     		pop	{r4, pc}
+  89              	.LVL5:
+  90              	.L4:
+  91              		.cfi_restore_state
+  75:../system/src/drivers/bme280.c **** 
+  92              		.loc 1 75 0
+  93 0046 0123     		movs	r3, #1
+  94 0048 2370     		strb	r3, [r4]
+  79:../system/src/drivers/bme280.c **** 	}
+  95              		.loc 1 79 0
+  96 004a 4FF0FF30 		mov	r0, #-1
+  97 004e F8E7     		b	.L1
+  98              	.L8:
+  99              		.align	2
+ 100              	.L7:
+ 101 0050 00000000 		.word	.LANCHOR0
+ 102 0054 00000000 		.word	i2c_state
+ 103 0058 00000000 		.word	.LANCHOR1
+ 104              		.cfi_endproc
+ 105              	.LFE21:
+ 107              		.section	.text.bme280_setup,"ax",%progbits
+ 108              		.align	1
+ 109              		.global	bme280_setup
+ 110              		.syntax unified
+ 111              		.thumb
+ 112              		.thumb_func
+ 113              		.fpu fpv4-sp-d16
+ 115              	bme280_setup:
+ 116              	.LFB22:
+  84:../system/src/drivers/bme280.c **** 
+  85:../system/src/drivers/bme280.c **** int32_t bme280_setup(void) {
+ 117              		.loc 1 85 0
+ 118              		.cfi_startproc
+ 119              		@ args = 0, pretend = 0, frame = 8
+ 120              		@ frame_needed = 0, uses_anonymous_args = 0
+ 121              	.LVL6:
+  86:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+  87:../system/src/drivers/bme280.c **** 
+  88:../system/src/drivers/bme280.c **** 	// local variables to represent the data wrote to configuration registers
+  89:../system/src/drivers/bme280.c **** 	uint8_t ctrl_meas = 0;
+  90:../system/src/drivers/bme280.c **** 	uint8_t ctrl_hum = 0;
+  91:../system/src/drivers/bme280.c **** 	uint8_t config = 0;
+  92:../system/src/drivers/bme280.c **** 
+  93:../system/src/drivers/bme280.c **** 	if (bme280_sensor_avaliable == 0) {
+ 122              		.loc 1 93 0
+ 123 0000 194B     		ldr	r3, .L19
+ 124 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 125 0004 4BB3     		cbz	r3, .L13
+  85:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+ 126              		.loc 1 85 0
+ 127 0006 00B5     		push	{lr}
+ 128              		.cfi_def_cfa_offset 4
+ 129              		.cfi_offset 14, -4
+ 130 0008 83B0     		sub	sp, sp, #12
+ 131              		.cfi_def_cfa_offset 16
+ 132              	.LVL7:
+  94:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_AVALIABLE;
+  95:../system/src/drivers/bme280.c **** 	}
+  96:../system/src/drivers/bme280.c **** 
+  97:../system/src/drivers/bme280.c **** 	// setting humidity measurement configutation
+  98:../system/src/drivers/bme280.c **** 	ctrl_hum = HUMIDITY_OVERSAMPLING;
+  99:../system/src/drivers/bme280.c **** 
+ 100:../system/src/drivers/bme280.c **** 	// set mode, and oversampling for humidity and temperature
+ 101:../system/src/drivers/bme280.c **** 	ctrl_meas = MODE | (PRESSURE_OVERSAMPLING << 2) | (TEMPERATURE_OVERSAMPLING << 5);
+ 102:../system/src/drivers/bme280.c **** 
+ 103:../system/src/drivers/bme280.c **** 	// set standby time and filter lenght
+ 104:../system/src/drivers/bme280.c **** 	config = (FILTER_COEFFICIENT_LN << 2) | (STANDBY_TIME << 5);
+ 105:../system/src/drivers/bme280.c **** 
+ 106:../system/src/drivers/bme280.c **** 	// transmit buffer
+ 107:../system/src/drivers/bme280.c **** 	uint8_t tx_buff[] = {CTRL_HUM_ADDR, ctrl_hum, CTRL_MEAS_ADDR, ctrl_meas, CONFIG_ADDR, config, 0};
+ 133              		.loc 1 107 0
+ 134 000a F223     		movs	r3, #242
+ 135 000c 8DF80030 		strb	r3, [sp]
+ 136 0010 0423     		movs	r3, #4
+ 137 0012 8DF80130 		strb	r3, [sp, #1]
+ 138 0016 F423     		movs	r3, #244
+ 139 0018 8DF80230 		strb	r3, [sp, #2]
+ 140 001c 6F23     		movs	r3, #111
+ 141 001e 8DF80330 		strb	r3, [sp, #3]
+ 142 0022 F523     		movs	r3, #245
+ 143 0024 8DF80430 		strb	r3, [sp, #4]
+ 144 0028 E023     		movs	r3, #224
+ 145 002a 8DF80530 		strb	r3, [sp, #5]
+ 146 002e 0022     		movs	r2, #0
+ 147 0030 8DF80620 		strb	r2, [sp, #6]
+ 108:../system/src/drivers/bme280.c **** 
+ 109:../system/src/drivers/bme280.c **** 	// Send a data to sensor
+ 110:../system/src/drivers/bme280.c **** 	i2c_send_data(TX_ADDR, tx_buff, 0);
+ 148              		.loc 1 110 0
+ 149 0034 6946     		mov	r1, sp
+ 150 0036 EC20     		movs	r0, #236
+ 151 0038 FFF7FEFF 		bl	i2c_send_data
+ 152              	.LVL8:
+ 153              	.L12:
+ 111:../system/src/drivers/bme280.c **** 
+ 112:../system/src/drivers/bme280.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+ 113:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 154              		.loc 1 113 0 discriminator 2
+ 155 003c 0B4B     		ldr	r3, .L19+4
+ 156 003e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 157 0040 23B1     		cbz	r3, .L11
+ 158              		.loc 1 113 0 is_stmt 0 discriminator 1
+ 159 0042 0A4B     		ldr	r3, .L19+4
+ 160 0044 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 161 0046 DBB2     		uxtb	r3, r3
+ 162 0048 032B     		cmp	r3, #3
+ 163 004a F7D1     		bne	.L12
+ 164              	.L11:
+ 114:../system/src/drivers/bme280.c **** 
+ 115:../system/src/drivers/bme280.c **** 	// If reset was successfull enable a driver
+ 116:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 165              		.loc 1 116 0 is_stmt 1
+ 166 004c 074B     		ldr	r3, .L19+4
+ 167 004e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 168 0050 33B9     		cbnz	r3, .L14
+  86:../system/src/drivers/bme280.c **** 
+ 169              		.loc 1 86 0
+ 170 0052 0020     		movs	r0, #0
+ 171              	.L9:
+ 117:../system/src/drivers/bme280.c **** 		;
+ 118:../system/src/drivers/bme280.c **** 	}
+ 119:../system/src/drivers/bme280.c **** 	else {
+ 120:../system/src/drivers/bme280.c **** 		out = BME280_SENSOR_NOT_RESPONDING;
+ 121:../system/src/drivers/bme280.c **** 	}
+ 122:../system/src/drivers/bme280.c **** 
+ 123:../system/src/drivers/bme280.c **** 	return out;
+ 124:../system/src/drivers/bme280.c **** }
+ 172              		.loc 1 124 0
+ 173 0054 03B0     		add	sp, sp, #12
+ 174              		.cfi_def_cfa_offset 4
+ 175              		@ sp needed
+ 176 0056 5DF804FB 		ldr	pc, [sp], #4
+ 177              	.LVL9:
+ 178              	.L13:
+ 179              		.cfi_def_cfa_offset 0
+ 180              		.cfi_restore 14
+  94:../system/src/drivers/bme280.c **** 	}
+ 181              		.loc 1 94 0
+ 182 005a 6FF00100 		mvn	r0, #1
+ 183              		.loc 1 124 0
+ 184 005e 7047     		bx	lr
+ 185              	.LVL10:
+ 186              	.L14:
+ 187              		.cfi_def_cfa_offset 16
+ 188              		.cfi_offset 14, -4
+ 120:../system/src/drivers/bme280.c **** 	}
+ 189              		.loc 1 120 0
+ 190 0060 4FF0FF30 		mov	r0, #-1
+ 191 0064 F6E7     		b	.L9
+ 192              	.L20:
+ 193 0066 00BF     		.align	2
+ 194              	.L19:
+ 195 0068 00000000 		.word	.LANCHOR1
+ 196 006c 00000000 		.word	i2c_state
+ 197              		.cfi_endproc
+ 198              	.LFE22:
+ 200              		.section	.text.bme280_read_calibration,"ax",%progbits
+ 201              		.align	1
+ 202              		.global	bme280_read_calibration
+ 203              		.syntax unified
+ 204              		.thumb
+ 205              		.thumb_func
+ 206              		.fpu fpv4-sp-d16
+ 208              	bme280_read_calibration:
+ 209              	.LFB23:
+ 125:../system/src/drivers/bme280.c **** 
+ 126:../system/src/drivers/bme280.c **** int32_t bme280_read_calibration(uint8_t* calibration) {
+ 210              		.loc 1 126 0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 8
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+ 214              	.LVL11:
+ 127:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+ 128:../system/src/drivers/bme280.c **** 
+ 129:../system/src/drivers/bme280.c **** 	if (bme280_sensor_avaliable == 0) {
+ 215              		.loc 1 129 0
+ 216 0000 394B     		ldr	r3, .L40
+ 217 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 218 0004 002B     		cmp	r3, #0
+ 219 0006 5FD0     		beq	.L31
+ 126:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+ 220              		.loc 1 126 0
+ 221 0008 10B5     		push	{r4, lr}
+ 222              		.cfi_def_cfa_offset 8
+ 223              		.cfi_offset 4, -8
+ 224              		.cfi_offset 14, -4
+ 225 000a 82B0     		sub	sp, sp, #8
+ 226              		.cfi_def_cfa_offset 16
+ 227 000c 0446     		mov	r4, r0
+ 130:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_AVALIABLE;
+ 131:../system/src/drivers/bme280.c **** 	}
+ 132:../system/src/drivers/bme280.c **** 
+ 133:../system/src/drivers/bme280.c **** 	// transmit buffer
+ 134:../system/src/drivers/bme280.c **** 	uint8_t tx_buf[] = {CALIB00_ADDR, 0, 0};
+ 228              		.loc 1 134 0
+ 229 000e 8823     		movs	r3, #136
+ 230 0010 8DF80430 		strb	r3, [sp, #4]
+ 231 0014 0022     		movs	r2, #0
+ 232 0016 8DF80520 		strb	r2, [sp, #5]
+ 233 001a 8DF80620 		strb	r2, [sp, #6]
+ 135:../system/src/drivers/bme280.c **** 
+ 136:../system/src/drivers/bme280.c **** 	// Send a data to sensor
+ 137:../system/src/drivers/bme280.c **** 	i2c_send_data(TX_ADDR, tx_buf, 0);
+ 234              		.loc 1 137 0
+ 235 001e 01A9     		add	r1, sp, #4
+ 236 0020 EC20     		movs	r0, #236
+ 237              	.LVL12:
+ 238 0022 FFF7FEFF 		bl	i2c_send_data
+ 239              	.LVL13:
+ 240              	.L24:
+ 138:../system/src/drivers/bme280.c **** 
+ 139:../system/src/drivers/bme280.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+ 140:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 241              		.loc 1 140 0 discriminator 2
+ 242 0026 314B     		ldr	r3, .L40+4
+ 243 0028 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 244 002a 23B1     		cbz	r3, .L23
+ 245              		.loc 1 140 0 is_stmt 0 discriminator 1
+ 246 002c 2F4B     		ldr	r3, .L40+4
+ 247 002e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 248 0030 DBB2     		uxtb	r3, r3
+ 249 0032 032B     		cmp	r3, #3
+ 250 0034 F7D1     		bne	.L24
+ 251              	.L23:
+ 141:../system/src/drivers/bme280.c **** 
+ 142:../system/src/drivers/bme280.c **** 	// check if transmission was successfull
+ 143:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 252              		.loc 1 143 0 is_stmt 1
+ 253 0036 2D4B     		ldr	r3, .L40+4
+ 254 0038 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 255 003a 002B     		cmp	r3, #0
+ 256 003c 47D1     		bne	.L32
+ 144:../system/src/drivers/bme280.c **** 		;
+ 145:../system/src/drivers/bme280.c **** 	}
+ 146:../system/src/drivers/bme280.c **** 	else {
+ 147:../system/src/drivers/bme280.c **** 
+ 148:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 149:../system/src/drivers/bme280.c **** 	}
+ 150:../system/src/drivers/bme280.c **** 
+ 151:../system/src/drivers/bme280.c **** 	// clearing receive buffer
+ 152:../system/src/drivers/bme280.c **** 	memset(calibration, 0x00, BME280_LN_CALIBRATION);
+ 257              		.loc 1 152 0
+ 258 003e 2922     		movs	r2, #41
+ 259 0040 0021     		movs	r1, #0
+ 260 0042 2046     		mov	r0, r4
+ 261 0044 FFF7FEFF 		bl	memset
+ 262              	.LVL14:
+ 153:../system/src/drivers/bme280.c **** 
+ 154:../system/src/drivers/bme280.c **** 	// reading first segment of calibration data
+ 155:../system/src/drivers/bme280.c **** 	i2c_receive_data(RX_ADDR, CALIB00_READ_LN);
+ 263              		.loc 1 155 0
+ 264 0048 1A21     		movs	r1, #26
+ 265 004a ED20     		movs	r0, #237
+ 266 004c FFF7FEFF 		bl	i2c_receive_data
+ 267              	.LVL15:
+ 268              	.L26:
+ 156:../system/src/drivers/bme280.c **** 
+ 157:../system/src/drivers/bme280.c **** 	// Wait until receiving will finish or fail (due to timeout or any other error)
+ 158:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 269              		.loc 1 158 0 discriminator 2
+ 270 0050 264B     		ldr	r3, .L40+4
+ 271 0052 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 272 0054 23B1     		cbz	r3, .L25
+ 273              		.loc 1 158 0 is_stmt 0 discriminator 1
+ 274 0056 254B     		ldr	r3, .L40+4
+ 275 0058 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 276 005a DBB2     		uxtb	r3, r3
+ 277 005c 032B     		cmp	r3, #3
+ 278 005e F7D1     		bne	.L26
+ 279              	.L25:
+ 159:../system/src/drivers/bme280.c **** 
+ 160:../system/src/drivers/bme280.c **** 	// check if receive was successfull
+ 161:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 280              		.loc 1 161 0 is_stmt 1
+ 281 0060 224B     		ldr	r3, .L40+4
+ 282 0062 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 283 0064 002B     		cmp	r3, #0
+ 284 0066 35D1     		bne	.L33
+ 162:../system/src/drivers/bme280.c **** 		;
+ 163:../system/src/drivers/bme280.c **** 	}
+ 164:../system/src/drivers/bme280.c **** 	else {
+ 165:../system/src/drivers/bme280.c **** 
+ 166:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 167:../system/src/drivers/bme280.c **** 	}
+ 168:../system/src/drivers/bme280.c **** 
+ 169:../system/src/drivers/bme280.c **** 	// copying read data
+ 170:../system/src/drivers/bme280.c **** 	memcpy(calibration, (uint8_t*)i2c_rx_data, CALIB00_READ_LN);
+ 285              		.loc 1 170 0
+ 286 0068 1A22     		movs	r2, #26
+ 287 006a 2149     		ldr	r1, .L40+8
+ 288 006c 2046     		mov	r0, r4
+ 289 006e FFF7FEFF 		bl	memcpy
+ 290              	.LVL16:
+ 171:../system/src/drivers/bme280.c **** 
+ 172:../system/src/drivers/bme280.c **** 	// preparing the buffer to receive second segment of calibration data
+ 173:../system/src/drivers/bme280.c **** 	tx_buf[0] = CALIB26_ADDR;
+ 291              		.loc 1 173 0
+ 292 0072 02A9     		add	r1, sp, #8
+ 293 0074 E123     		movs	r3, #225
+ 294 0076 01F8043D 		strb	r3, [r1, #-4]!
+ 174:../system/src/drivers/bme280.c **** 
+ 175:../system/src/drivers/bme280.c **** 	// Send the second request to the sensor
+ 176:../system/src/drivers/bme280.c **** 	i2c_send_data(TX_ADDR, tx_buf, 0);
+ 295              		.loc 1 176 0
+ 296 007a 0022     		movs	r2, #0
+ 297 007c EC20     		movs	r0, #236
+ 298 007e FFF7FEFF 		bl	i2c_send_data
+ 299              	.LVL17:
+ 300              	.L28:
+ 177:../system/src/drivers/bme280.c **** 
+ 178:../system/src/drivers/bme280.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+ 179:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 301              		.loc 1 179 0 discriminator 2
+ 302 0082 1A4B     		ldr	r3, .L40+4
+ 303 0084 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 304 0086 23B1     		cbz	r3, .L27
+ 305              		.loc 1 179 0 is_stmt 0 discriminator 1
+ 306 0088 184B     		ldr	r3, .L40+4
+ 307 008a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 308 008c DBB2     		uxtb	r3, r3
+ 309 008e 032B     		cmp	r3, #3
+ 310 0090 F7D1     		bne	.L28
+ 311              	.L27:
+ 180:../system/src/drivers/bme280.c **** 
+ 181:../system/src/drivers/bme280.c **** 	// check if transmission was successfull
+ 182:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 312              		.loc 1 182 0 is_stmt 1
+ 313 0092 164B     		ldr	r3, .L40+4
+ 314 0094 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 315 0096 03BB     		cbnz	r3, .L34
+ 183:../system/src/drivers/bme280.c **** 		;
+ 184:../system/src/drivers/bme280.c **** 	}
+ 185:../system/src/drivers/bme280.c **** 	else {
+ 186:../system/src/drivers/bme280.c **** 
+ 187:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 188:../system/src/drivers/bme280.c **** 	}
+ 189:../system/src/drivers/bme280.c **** 
+ 190:../system/src/drivers/bme280.c **** 	// reading second segment of calibration data
+ 191:../system/src/drivers/bme280.c **** 	i2c_receive_data(RX_ADDR, CALIB26_READ_LN);
+ 316              		.loc 1 191 0
+ 317 0098 1021     		movs	r1, #16
+ 318 009a ED20     		movs	r0, #237
+ 319 009c FFF7FEFF 		bl	i2c_receive_data
+ 320              	.LVL18:
+ 321              	.L30:
+ 192:../system/src/drivers/bme280.c **** 
+ 193:../system/src/drivers/bme280.c **** 	// Wait until receiving will finish or fail (due to timeout or any other error)
+ 194:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 322              		.loc 1 194 0 discriminator 2
+ 323 00a0 124B     		ldr	r3, .L40+4
+ 324 00a2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 325 00a4 23B1     		cbz	r3, .L29
+ 326              		.loc 1 194 0 is_stmt 0 discriminator 1
+ 327 00a6 114B     		ldr	r3, .L40+4
+ 328 00a8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 329 00aa DBB2     		uxtb	r3, r3
+ 330 00ac 032B     		cmp	r3, #3
+ 331 00ae F7D1     		bne	.L30
+ 332              	.L29:
+ 195:../system/src/drivers/bme280.c **** 
+ 196:../system/src/drivers/bme280.c **** 	// check if receive was successfull
+ 197:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 333              		.loc 1 197 0 is_stmt 1
+ 334 00b0 0E4B     		ldr	r3, .L40+4
+ 335 00b2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 336 00b4 A3B9     		cbnz	r3, .L35
+ 198:../system/src/drivers/bme280.c **** 		;
+ 199:../system/src/drivers/bme280.c **** 	}
+ 200:../system/src/drivers/bme280.c **** 	else {
+ 201:../system/src/drivers/bme280.c **** 
+ 202:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 203:../system/src/drivers/bme280.c **** 	}
+ 204:../system/src/drivers/bme280.c **** 
+ 205:../system/src/drivers/bme280.c **** 	// copying read data
+ 206:../system/src/drivers/bme280.c **** 	memcpy(calibration + CALIB00_READ_LN, (uint8_t*)i2c_rx_data, CALIB26_READ_LN);
+ 337              		.loc 1 206 0
+ 338 00b6 1022     		movs	r2, #16
+ 339 00b8 0D49     		ldr	r1, .L40+8
+ 340 00ba 04F11A00 		add	r0, r4, #26
+ 341 00be FFF7FEFF 		bl	memcpy
+ 342              	.LVL19:
+ 207:../system/src/drivers/bme280.c **** 
+ 208:../system/src/drivers/bme280.c **** 	return out;
+ 343              		.loc 1 208 0
+ 344 00c2 0020     		movs	r0, #0
+ 345              	.L21:
+ 209:../system/src/drivers/bme280.c **** }
+ 346              		.loc 1 209 0
+ 347 00c4 02B0     		add	sp, sp, #8
+ 348              		.cfi_def_cfa_offset 8
+ 349              		@ sp needed
+ 350 00c6 10BD     		pop	{r4, pc}
+ 351              	.LVL20:
+ 352              	.L31:
+ 353              		.cfi_def_cfa_offset 0
+ 354              		.cfi_restore 4
+ 355              		.cfi_restore 14
+ 130:../system/src/drivers/bme280.c **** 	}
+ 356              		.loc 1 130 0
+ 357 00c8 6FF00100 		mvn	r0, #1
+ 358              	.LVL21:
+ 359              		.loc 1 209 0
+ 360 00cc 7047     		bx	lr
+ 361              	.LVL22:
+ 362              	.L32:
+ 363              		.cfi_def_cfa_offset 16
+ 364              		.cfi_offset 4, -8
+ 365              		.cfi_offset 14, -4
+ 148:../system/src/drivers/bme280.c **** 	}
+ 366              		.loc 1 148 0
+ 367 00ce 4FF0FF30 		mov	r0, #-1
+ 368 00d2 F7E7     		b	.L21
+ 369              	.L33:
+ 166:../system/src/drivers/bme280.c **** 	}
+ 370              		.loc 1 166 0
+ 371 00d4 4FF0FF30 		mov	r0, #-1
+ 372 00d8 F4E7     		b	.L21
+ 373              	.L34:
+ 187:../system/src/drivers/bme280.c **** 	}
+ 374              		.loc 1 187 0
+ 375 00da 4FF0FF30 		mov	r0, #-1
+ 376 00de F1E7     		b	.L21
+ 377              	.L35:
+ 202:../system/src/drivers/bme280.c **** 	}
+ 378              		.loc 1 202 0
+ 379 00e0 4FF0FF30 		mov	r0, #-1
+ 380 00e4 EEE7     		b	.L21
+ 381              	.L41:
+ 382 00e6 00BF     		.align	2
+ 383              	.L40:
+ 384 00e8 00000000 		.word	.LANCHOR1
+ 385 00ec 00000000 		.word	i2c_state
+ 386 00f0 00000000 		.word	i2c_rx_data
+ 387              		.cfi_endproc
+ 388              	.LFE23:
+ 390              		.section	.text.bme280_read_raw_data,"ax",%progbits
+ 391              		.align	1
+ 392              		.global	bme280_read_raw_data
+ 393              		.syntax unified
+ 394              		.thumb
+ 395              		.thumb_func
+ 396              		.fpu fpv4-sp-d16
+ 398              	bme280_read_raw_data:
+ 399              	.LFB24:
+ 210:../system/src/drivers/bme280.c **** 
+ 211:../system/src/drivers/bme280.c **** int32_t bme280_read_raw_data(uint8_t* raw_data) {
+ 400              		.loc 1 211 0
+ 401              		.cfi_startproc
+ 402              		@ args = 0, pretend = 0, frame = 8
+ 403              		@ frame_needed = 0, uses_anonymous_args = 0
+ 404              	.LVL23:
+ 212:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+ 213:../system/src/drivers/bme280.c **** 
+ 214:../system/src/drivers/bme280.c **** 	if (bme280_sensor_avaliable == 0) {
+ 405              		.loc 1 214 0
+ 406 0000 214B     		ldr	r3, .L55
+ 407 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 408 0004 002B     		cmp	r3, #0
+ 409 0006 35D0     		beq	.L48
+ 211:../system/src/drivers/bme280.c **** 	int32_t out = BME280_OK;
+ 410              		.loc 1 211 0
+ 411 0008 10B5     		push	{r4, lr}
+ 412              		.cfi_def_cfa_offset 8
+ 413              		.cfi_offset 4, -8
+ 414              		.cfi_offset 14, -4
+ 415 000a 82B0     		sub	sp, sp, #8
+ 416              		.cfi_def_cfa_offset 16
+ 417 000c 0446     		mov	r4, r0
+ 215:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_AVALIABLE;
+ 216:../system/src/drivers/bme280.c **** 	}
+ 217:../system/src/drivers/bme280.c **** 
+ 218:../system/src/drivers/bme280.c **** 	// transmit buffer
+ 219:../system/src/drivers/bme280.c **** 	uint8_t tx_buf[] = {PRESS_MSB_ADDR, 0, 0};
+ 418              		.loc 1 219 0
+ 419 000e F723     		movs	r3, #247
+ 420 0010 8DF80430 		strb	r3, [sp, #4]
+ 421 0014 0022     		movs	r2, #0
+ 422 0016 8DF80520 		strb	r2, [sp, #5]
+ 423 001a 8DF80620 		strb	r2, [sp, #6]
+ 220:../system/src/drivers/bme280.c **** 
+ 221:../system/src/drivers/bme280.c **** 	// Send a data to sensor
+ 222:../system/src/drivers/bme280.c **** 	i2c_send_data(TX_ADDR, tx_buf, 0);
+ 424              		.loc 1 222 0
+ 425 001e 01A9     		add	r1, sp, #4
+ 426 0020 EC20     		movs	r0, #236
+ 427              	.LVL24:
+ 428 0022 FFF7FEFF 		bl	i2c_send_data
+ 429              	.LVL25:
+ 430              	.L45:
+ 223:../system/src/drivers/bme280.c **** 
+ 224:../system/src/drivers/bme280.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+ 225:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 431              		.loc 1 225 0 discriminator 2
+ 432 0026 194B     		ldr	r3, .L55+4
+ 433 0028 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 434 002a 23B1     		cbz	r3, .L44
+ 435              		.loc 1 225 0 is_stmt 0 discriminator 1
+ 436 002c 174B     		ldr	r3, .L55+4
+ 437 002e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 438 0030 DBB2     		uxtb	r3, r3
+ 439 0032 032B     		cmp	r3, #3
+ 440 0034 F7D1     		bne	.L45
+ 441              	.L44:
+ 226:../system/src/drivers/bme280.c **** 
+ 227:../system/src/drivers/bme280.c **** 	// check if transmission was successfull
+ 228:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 442              		.loc 1 228 0 is_stmt 1
+ 443 0036 154B     		ldr	r3, .L55+4
+ 444 0038 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 445 003a F3B9     		cbnz	r3, .L49
+ 229:../system/src/drivers/bme280.c **** 		;
+ 230:../system/src/drivers/bme280.c **** 	}
+ 231:../system/src/drivers/bme280.c **** 	else {
+ 232:../system/src/drivers/bme280.c **** 
+ 233:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 234:../system/src/drivers/bme280.c **** 	}
+ 235:../system/src/drivers/bme280.c **** 
+ 236:../system/src/drivers/bme280.c **** 	// clearing receive buffer
+ 237:../system/src/drivers/bme280.c **** 	memset(raw_data, 0x00, BME280_LN_RAW_DATA);
+ 446              		.loc 1 237 0
+ 447 003c 0822     		movs	r2, #8
+ 448 003e 0021     		movs	r1, #0
+ 449 0040 2046     		mov	r0, r4
+ 450 0042 FFF7FEFF 		bl	memset
+ 451              	.LVL26:
+ 238:../system/src/drivers/bme280.c **** 
+ 239:../system/src/drivers/bme280.c **** 	// reading first segment of calibration data
+ 240:../system/src/drivers/bme280.c **** 	i2c_receive_data(RX_ADDR, BME280_LN_RAW_DATA);
+ 452              		.loc 1 240 0
+ 453 0046 0821     		movs	r1, #8
+ 454 0048 ED20     		movs	r0, #237
+ 455 004a FFF7FEFF 		bl	i2c_receive_data
+ 456              	.LVL27:
+ 457              	.L47:
+ 241:../system/src/drivers/bme280.c **** 
+ 242:../system/src/drivers/bme280.c **** 	// Wait until receiving will finish or fail (due to timeout or any other error)
+ 243:../system/src/drivers/bme280.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 458              		.loc 1 243 0 discriminator 2
+ 459 004e 0F4B     		ldr	r3, .L55+4
+ 460 0050 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 461 0052 23B1     		cbz	r3, .L46
+ 462              		.loc 1 243 0 is_stmt 0 discriminator 1
+ 463 0054 0D4B     		ldr	r3, .L55+4
+ 464 0056 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 465 0058 DBB2     		uxtb	r3, r3
+ 466 005a 032B     		cmp	r3, #3
+ 467 005c F7D1     		bne	.L47
+ 468              	.L46:
+ 244:../system/src/drivers/bme280.c **** 
+ 245:../system/src/drivers/bme280.c **** 	// check if receive was successfull
+ 246:../system/src/drivers/bme280.c **** 	if (i2c_state == I2C_IDLE) {
+ 469              		.loc 1 246 0 is_stmt 1
+ 470 005e 0B4B     		ldr	r3, .L55+4
+ 471 0060 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 472 0062 6BB9     		cbnz	r3, .L50
+ 247:../system/src/drivers/bme280.c **** 		;
+ 248:../system/src/drivers/bme280.c **** 	}
+ 249:../system/src/drivers/bme280.c **** 	else {
+ 250:../system/src/drivers/bme280.c **** 		return BME280_SENSOR_NOT_RESPONDING;
+ 251:../system/src/drivers/bme280.c **** 	}
+ 252:../system/src/drivers/bme280.c **** 
+ 253:../system/src/drivers/bme280.c **** 	// copying read data
+ 254:../system/src/drivers/bme280.c **** 	memcpy(raw_data, (uint8_t*)i2c_rx_data, BME280_LN_RAW_DATA);
+ 473              		.loc 1 254 0
+ 474 0064 0822     		movs	r2, #8
+ 475 0066 0A49     		ldr	r1, .L55+8
+ 476 0068 2046     		mov	r0, r4
+ 477 006a FFF7FEFF 		bl	memcpy
+ 478              	.LVL28:
+ 255:../system/src/drivers/bme280.c **** 
+ 256:../system/src/drivers/bme280.c **** 	return out;
+ 479              		.loc 1 256 0
+ 480 006e 0020     		movs	r0, #0
+ 481              	.L42:
+ 257:../system/src/drivers/bme280.c **** }
+ 482              		.loc 1 257 0
+ 483 0070 02B0     		add	sp, sp, #8
+ 484              		.cfi_def_cfa_offset 8
+ 485              		@ sp needed
+ 486 0072 10BD     		pop	{r4, pc}
+ 487              	.LVL29:
+ 488              	.L48:
+ 489              		.cfi_def_cfa_offset 0
+ 490              		.cfi_restore 4
+ 491              		.cfi_restore 14
+ 215:../system/src/drivers/bme280.c **** 	}
+ 492              		.loc 1 215 0
+ 493 0074 6FF00100 		mvn	r0, #1
+ 494              	.LVL30:
+ 495              		.loc 1 257 0
+ 496 0078 7047     		bx	lr
+ 497              	.LVL31:
+ 498              	.L49:
+ 499              		.cfi_def_cfa_offset 16
+ 500              		.cfi_offset 4, -8
+ 501              		.cfi_offset 14, -4
+ 233:../system/src/drivers/bme280.c **** 	}
+ 502              		.loc 1 233 0
+ 503 007a 4FF0FF30 		mov	r0, #-1
+ 504 007e F7E7     		b	.L42
+ 505              	.L50:
+ 250:../system/src/drivers/bme280.c **** 	}
+ 506              		.loc 1 250 0
+ 507 0080 4FF0FF30 		mov	r0, #-1
+ 508 0084 F4E7     		b	.L42
+ 509              	.L56:
+ 510 0086 00BF     		.align	2
+ 511              	.L55:
+ 512 0088 00000000 		.word	.LANCHOR1
+ 513 008c 00000000 		.word	i2c_state
+ 514 0090 00000000 		.word	i2c_rx_data
+ 515              		.cfi_endproc
+ 516              	.LFE24:
+ 518              		.section	.text.bme280_get_pressure,"ax",%progbits
+ 519              		.align	1
+ 520              		.global	bme280_get_pressure
+ 521              		.syntax unified
+ 522              		.thumb
+ 523              		.thumb_func
+ 524              		.fpu fpv4-sp-d16
+ 526              	bme280_get_pressure:
+ 527              	.LFB25:
+ 258:../system/src/drivers/bme280.c **** 
+ 259:../system/src/drivers/bme280.c **** int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf) {
+ 528              		.loc 1 259 0
+ 529              		.cfi_startproc
+ 530              		@ args = 0, pretend = 0, frame = 0
+ 531              		@ frame_needed = 0, uses_anonymous_args = 0
+ 532              	.LVL32:
+ 533 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 534              		.cfi_def_cfa_offset 20
+ 535              		.cfi_offset 4, -20
+ 536              		.cfi_offset 5, -16
+ 537              		.cfi_offset 6, -12
+ 538              		.cfi_offset 7, -8
+ 539              		.cfi_offset 14, -4
+ 540              	.LVL33:
+ 260:../system/src/drivers/bme280.c **** 	int32_t ret = BME280_OK;
+ 261:../system/src/drivers/bme280.c **** 
+ 262:../system/src/drivers/bme280.c **** 	int32_t var1, var2;
+ 263:../system/src/drivers/bme280.c **** 	uint32_t p;
+ 264:../system/src/drivers/bme280.c **** 
+ 265:../system/src/drivers/bme280.c **** 	uint32_t adc_P = raw_data;
+ 266:../system/src/drivers/bme280.c **** 
+ 267:../system/src/drivers/bme280.c **** 	var1 = (((int32_t)t_fine)>>1) - (int32_t)64000;
+ 541              		.loc 1 267 0
+ 542 0002 434B     		ldr	r3, .L64
+ 543 0004 1B68     		ldr	r3, [r3]
+ 544 0006 5B10     		asrs	r3, r3, #1
+ 545 0008 A3F57A46 		sub	r6, r3, #64000
+ 546              	.LVL34:
+ 268:../system/src/drivers/bme280.c **** 	var2 = (((var1>>2) * (var1>>2)) >> 11 ) * ((int32_t)bme280_get_dig_P6());
+ 547              		.loc 1 268 0
+ 548 000c B710     		asrs	r7, r6, #2
+ 549 000e 07FB07F7 		mul	r7, r7, r7
+ 550 0012 4FEAE72C 		asr	ip, r7, #11
+ 551              	.LBB43:
+ 552              	.LBB44:
+ 553              		.file 2 "../system/include/drivers/bme280.h"
+   1:../system/include/drivers/bme280.h **** /*
+   2:../system/include/drivers/bme280.h ****  * bma150.h
+   3:../system/include/drivers/bme280.h ****  *
+   4:../system/include/drivers/bme280.h ****  *  Created on: 21.06.2020
+   5:../system/include/drivers/bme280.h ****  *      Author: mateusz
+   6:../system/include/drivers/bme280.h ****  */
+   7:../system/include/drivers/bme280.h **** 
+   8:../system/include/drivers/bme280.h **** #ifndef INCLUDE_DRIVERS_BME280_H_
+   9:../system/include/drivers/bme280.h **** #define INCLUDE_DRIVERS_BME280_H_
+  10:../system/include/drivers/bme280.h **** 
+  11:../system/include/drivers/bme280.h **** #include "stdint.h"
+  12:../system/include/drivers/bme280.h **** 
+  13:../system/include/drivers/bme280.h **** #define BME280_OK						0
+  14:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_RESPONDING	-1
+  15:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_AVALIABLE		-2
+  16:../system/include/drivers/bme280.h **** #define BME280_WRONG_PRESSURE_READOUT	-3
+  17:../system/include/drivers/bme280.h **** #define BME280_WRONG_HUMIDITY_READOUT	-4
+  18:../system/include/drivers/bme280.h **** 
+  19:../system/include/drivers/bme280.h **** #define BME280_LN_CALIBRATION 	41
+  20:../system/include/drivers/bme280.h **** #define BME280_LN_RAW_DATA		8
+  21:../system/include/drivers/bme280.h **** 
+  22:../system/include/drivers/bme280.h **** typedef enum bme280_qf {
+  23:../system/include/drivers/bme280.h **** 	BME280_QF_FULL,
+  24:../system/include/drivers/bme280.h **** 	BME280_QF_NOT_AVAILABLE,
+  25:../system/include/drivers/bme280.h **** 	BME280_QF_HUMIDITY_DEGRADED,
+  26:../system/include/drivers/bme280.h **** 	BME280_QF_PRESSURE_DEGRADED,
+  27:../system/include/drivers/bme280.h **** 	BME280_QF_GEN_DEGRADED,
+  28:../system/include/drivers/bme280.h **** 	BME280_QF_UKNOWN
+  29:../system/include/drivers/bme280.h **** }bme280_qf_t;
+  30:../system/include/drivers/bme280.h **** 
+  31:../system/include/drivers/bme280.h **** extern uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
+  32:../system/include/drivers/bme280.h **** extern uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
+  33:../system/include/drivers/bme280.h **** 
+  34:../system/include/drivers/bme280.h **** int32_t bme280_reset(bme280_qf_t* qf);
+  35:../system/include/drivers/bme280.h **** int32_t bme280_setup(void);
+  36:../system/include/drivers/bme280.h **** int32_t bme280_read_calibration(uint8_t* calibration);
+  37:../system/include/drivers/bme280.h **** int32_t bme280_read_raw_data(uint8_t* raw_data);
+  38:../system/include/drivers/bme280.h **** 
+  39:../system/include/drivers/bme280.h **** int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  40:../system/include/drivers/bme280.h **** int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  41:../system/include/drivers/bme280.h **** int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf);
+  42:../system/include/drivers/bme280.h **** 
+  43:../system/include/drivers/bme280.h **** //#define BME280_CONCAT_BYTES(msb, lsb)            (((uint16_t)msb << 8) | (uint16_t)lsb)
+  44:../system/include/drivers/bme280.h **** 
+  45:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_t(void) {
+  46:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[3] << 12) | (bme280_data_buffer[4] << 4) | (bme280_data_buffer[5] >> 4)
+  47:../system/include/drivers/bme280.h **** }
+  48:../system/include/drivers/bme280.h **** 
+  49:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_p(void) {
+  50:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[0] << 12) | (bme280_data_buffer[1] << 4) | (bme280_data_buffer[2] >> 4)
+  51:../system/include/drivers/bme280.h **** 
+  52:../system/include/drivers/bme280.h **** }
+  53:../system/include/drivers/bme280.h **** 
+  54:../system/include/drivers/bme280.h **** inline uint16_t bme280_get_adc_h(void) {
+  55:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[6] << 8) | (bme280_data_buffer[7] );
+  56:../system/include/drivers/bme280.h **** }
+  57:../system/include/drivers/bme280.h **** 
+  58:../system/include/drivers/bme280.h **** 
+  59:../system/include/drivers/bme280.h **** inline uint16_t bme280_get_dig_T1(void) {
+  60:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[0] | (uint16_t)bme280_calibration_data[1] << 8);
+  61:../system/include/drivers/bme280.h **** }
+  62:../system/include/drivers/bme280.h **** 
+  63:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_T2(void) {
+  64:../system/include/drivers/bme280.h **** 	return (uint16_t)bme280_calibration_data[2] | (uint16_t)bme280_calibration_data[3] << 8;
+  65:../system/include/drivers/bme280.h **** 
+  66:../system/include/drivers/bme280.h **** }
+  67:../system/include/drivers/bme280.h **** 
+  68:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_T3(void) {
+  69:../system/include/drivers/bme280.h **** 	return (uint16_t)bme280_calibration_data[4] | (uint16_t)bme280_calibration_data[5] << 8;
+  70:../system/include/drivers/bme280.h **** }
+  71:../system/include/drivers/bme280.h **** 
+  72:../system/include/drivers/bme280.h **** inline uint16_t bme280_get_dig_P1(void) {
+  73:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[6] | (uint16_t)bme280_calibration_data[7] << 8);
+  74:../system/include/drivers/bme280.h **** 
+  75:../system/include/drivers/bme280.h **** }
+  76:../system/include/drivers/bme280.h **** 
+  77:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P2(void) {
+  78:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[8] | (uint16_t)bme280_calibration_data[9] << 8);
+  79:../system/include/drivers/bme280.h **** 
+  80:../system/include/drivers/bme280.h **** }
+  81:../system/include/drivers/bme280.h **** 
+  82:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P3(void) {
+  83:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[10] | (uint16_t)bme280_calibration_data[11] << 8);
+  84:../system/include/drivers/bme280.h **** 
+  85:../system/include/drivers/bme280.h **** }
+  86:../system/include/drivers/bme280.h **** 
+  87:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P4(void) {
+  88:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[12] | (uint16_t)bme280_calibration_data[13] << 8);
+  89:../system/include/drivers/bme280.h **** 
+  90:../system/include/drivers/bme280.h **** }
+  91:../system/include/drivers/bme280.h **** 
+  92:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P5(void) {
+  93:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[14] | (uint16_t)bme280_calibration_data[15] << 8);
+  94:../system/include/drivers/bme280.h **** 
+  95:../system/include/drivers/bme280.h **** }
+  96:../system/include/drivers/bme280.h **** 
+  97:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P6(void) {
+  98:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[16] | (uint16_t)bme280_calibration_data[17] << 8);
+ 554              		.loc 2 98 0
+ 555 0016 3F4C     		ldr	r4, .L64+4
+ 556 0018 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 557 001a 657C     		ldrb	r5, [r4, #17]	@ zero_extendqisi2
+ 558 001c 43EA0523 		orr	r3, r3, r5, lsl #8
+ 559 0020 1BB2     		sxth	r3, r3
+ 560              	.LVL35:
+ 561              	.LBE44:
+ 562              	.LBE43:
+ 563              	.LBB45:
+ 564              	.LBB46:
+  93:../system/include/drivers/bme280.h **** 
+ 565              		.loc 2 93 0
+ 566 0022 A57B     		ldrb	r5, [r4, #14]	@ zero_extendqisi2
+ 567 0024 94F80FE0 		ldrb	lr, [r4, #15]	@ zero_extendqisi2
+ 568 0028 45EA0E25 		orr	r5, r5, lr, lsl #8
+ 569 002c 2DB2     		sxth	r5, r5
+ 570              	.LBE46:
+ 571              	.LBE45:
+ 269:../system/src/drivers/bme280.c **** 	var2 = var2 + ((var1*((int32_t)bme280_get_dig_P5()))<<1);
+ 572              		.loc 1 269 0
+ 573 002e 06FB05F5 		mul	r5, r6, r5
+ 574 0032 6D00     		lsls	r5, r5, #1
+ 575 0034 03FB0C53 		mla	r3, r3, ip, r5
+ 576              	.LVL36:
+ 577              	.LBB47:
+ 578              	.LBB48:
+  88:../system/include/drivers/bme280.h **** 
+ 579              		.loc 2 88 0
+ 580 0038 257B     		ldrb	r5, [r4, #12]	@ zero_extendqisi2
+ 581 003a 94F80DC0 		ldrb	ip, [r4, #13]	@ zero_extendqisi2
+ 582 003e 45EA0C25 		orr	r5, r5, ip, lsl #8
+ 583              	.LBE48:
+ 584              	.LBE47:
+ 270:../system/src/drivers/bme280.c **** 	var2 = (var2>>2)+(((int32_t)bme280_get_dig_P4())<<16);
+ 585              		.loc 1 270 0
+ 586 0042 2D04     		lsls	r5, r5, #16
+ 587 0044 05EBA305 		add	r5, r5, r3, asr #2
+ 588              	.LVL37:
+ 589              	.LBB49:
+ 590              	.LBB50:
+  83:../system/include/drivers/bme280.h **** 
+ 591              		.loc 2 83 0
+ 592 0048 A37A     		ldrb	r3, [r4, #10]	@ zero_extendqisi2
+ 593 004a 94F80BC0 		ldrb	ip, [r4, #11]	@ zero_extendqisi2
+ 594 004e 43EA0C23 		orr	r3, r3, ip, lsl #8
+ 595 0052 1BB2     		sxth	r3, r3
+ 596              	.LBE50:
+ 597              	.LBE49:
+ 271:../system/src/drivers/bme280.c **** 	var1 = (((bme280_get_dig_P3() * (((var1>>2) * (var1>>2)) >> 13 )) >> 3) + ((((int32_t)bme280_get_d
+ 598              		.loc 1 271 0
+ 599 0054 7F13     		asrs	r7, r7, #13
+ 600 0056 07FB03F7 		mul	r7, r7, r3
+ 601              	.LBB51:
+ 602              	.LBB52:
+  78:../system/include/drivers/bme280.h **** 
+ 603              		.loc 2 78 0
+ 604 005a 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
+ 605 005c 94F809C0 		ldrb	ip, [r4, #9]	@ zero_extendqisi2
+ 606 0060 43EA0C23 		orr	r3, r3, ip, lsl #8
+ 607 0064 1BB2     		sxth	r3, r3
+ 608              	.LBE52:
+ 609              	.LBE51:
+ 610              		.loc 1 271 0
+ 611 0066 06FB03F3 		mul	r3, r6, r3
+ 612 006a 5B10     		asrs	r3, r3, #1
+ 613 006c 03EBE703 		add	r3, r3, r7, asr #3
+ 614 0070 9B14     		asrs	r3, r3, #18
+ 615              	.LVL38:
+ 272:../system/src/drivers/bme280.c **** 	var1 =((((32768+var1))*((int32_t)bme280_get_dig_P1()))>>15);
+ 616              		.loc 1 272 0
+ 617 0072 03F50043 		add	r3, r3, #32768
+ 618              	.LVL39:
+ 619              	.LBB53:
+ 620              	.LBB54:
+  73:../system/include/drivers/bme280.h **** 
+ 621              		.loc 2 73 0
+ 622 0076 A679     		ldrb	r6, [r4, #6]	@ zero_extendqisi2
+ 623 0078 E479     		ldrb	r4, [r4, #7]	@ zero_extendqisi2
+ 624 007a 46EA0424 		orr	r4, r6, r4, lsl #8
+ 625              	.LBE54:
+ 626              	.LBE53:
+ 627              		.loc 1 272 0
+ 628 007e 04FB03F3 		mul	r3, r4, r3
+ 629              	.LVL40:
+ 273:../system/src/drivers/bme280.c **** 	if (var1 == 0)
+ 630              		.loc 1 273 0
+ 631 0082 DB13     		asrs	r3, r3, #15
+ 632              	.LVL41:
+ 633 0084 3AD0     		beq	.L63
+ 274:../system/src/drivers/bme280.c **** 	{
+ 275:../system/src/drivers/bme280.c **** 		*qf = BME280_QF_PRESSURE_DEGRADED;
+ 276:../system/src/drivers/bme280.c **** 		return BME280_WRONG_PRESSURE_READOUT; // avoid exception caused by division by zero
+ 277:../system/src/drivers/bme280.c **** 	}
+ 278:../system/src/drivers/bme280.c **** 		p = (((uint32_t)(((int32_t)1048576)-adc_P)-(var2>>12)))*3125;
+ 634              		.loc 1 278 0
+ 635 0086 2A13     		asrs	r2, r5, #12
+ 636              	.LVL42:
+ 637 0088 5242     		negs	r2, r2
+ 638 008a 521A     		subs	r2, r2, r1
+ 639 008c 40F63541 		movw	r1, #3125
+ 640              	.LVL43:
+ 641 0090 01FB02F1 		mul	r1, r1, r2
+ 642 0094 01F14341 		add	r1, r1, #-1023410176
+ 643 0098 01F5A001 		add	r1, r1, #5242880
+ 644              	.LVL44:
+ 279:../system/src/drivers/bme280.c **** 	if (p < 0x80000000)
+ 645              		.loc 1 279 0
+ 646 009c 0029     		cmp	r1, #0
+ 647 009e 32DB     		blt	.L60
+ 280:../system/src/drivers/bme280.c **** 	{
+ 281:../system/src/drivers/bme280.c **** 		p = (p << 1) / ((uint32_t)var1);
+ 648              		.loc 1 281 0
+ 649 00a0 4900     		lsls	r1, r1, #1
+ 650              	.LVL45:
+ 651 00a2 B1FBF3F1 		udiv	r1, r1, r3
+ 652              	.LVL46:
+ 653              	.L61:
+ 654              	.LBB55:
+ 655              	.LBB56:
+  99:../system/include/drivers/bme280.h **** 
+ 100:../system/include/drivers/bme280.h **** }
+ 101:../system/include/drivers/bme280.h **** 
+ 102:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P7(void) {
+ 103:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[18] | (uint16_t)bme280_calibration_data[19] << 8);
+ 104:../system/include/drivers/bme280.h **** 
+ 105:../system/include/drivers/bme280.h **** }
+ 106:../system/include/drivers/bme280.h **** 
+ 107:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P8(void) {
+ 108:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[20] | (uint16_t)bme280_calibration_data[21] << 8);
+ 109:../system/include/drivers/bme280.h **** 
+ 110:../system/include/drivers/bme280.h **** }
+ 111:../system/include/drivers/bme280.h **** 
+ 112:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_P9(void) {
+ 113:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[22] | (uint16_t)bme280_calibration_data[23] << 8);
+ 656              		.loc 2 113 0
+ 657 00a6 1B4C     		ldr	r4, .L64+4
+ 658 00a8 A27D     		ldrb	r2, [r4, #22]	@ zero_extendqisi2
+ 659 00aa E37D     		ldrb	r3, [r4, #23]	@ zero_extendqisi2
+ 660              	.LVL47:
+ 661 00ac 42EA0322 		orr	r2, r2, r3, lsl #8
+ 662 00b0 12B2     		sxth	r2, r2
+ 663              	.LBE56:
+ 664              	.LBE55:
+ 282:../system/src/drivers/bme280.c **** 	}
+ 283:../system/src/drivers/bme280.c **** 	else
+ 284:../system/src/drivers/bme280.c **** 	{
+ 285:../system/src/drivers/bme280.c **** 		p = (p / (uint32_t)var1) * 2;
+ 286:../system/src/drivers/bme280.c **** 	}
+ 287:../system/src/drivers/bme280.c **** 	var1 = (((int32_t)bme280_get_dig_P9()) * ((int32_t)(((p>>3) * (p>>3))>>13)))>>12;
+ 665              		.loc 1 287 0
+ 666 00b2 CB08     		lsrs	r3, r1, #3
+ 667 00b4 03FB03F3 		mul	r3, r3, r3
+ 668 00b8 5B0B     		lsrs	r3, r3, #13
+ 669 00ba 03FB02F3 		mul	r3, r3, r2
+ 670              	.LVL48:
+ 288:../system/src/drivers/bme280.c **** 	var2 = (((int32_t)(p>>2)) * ((int32_t)bme280_get_dig_P8()))>>13;
+ 671              		.loc 1 288 0
+ 672 00be 8D08     		lsrs	r5, r1, #2
+ 673              	.LVL49:
+ 674              	.LBB57:
+ 675              	.LBB58:
+ 108:../system/include/drivers/bme280.h **** 
+ 676              		.loc 2 108 0
+ 677 00c0 227D     		ldrb	r2, [r4, #20]	@ zero_extendqisi2
+ 678 00c2 667D     		ldrb	r6, [r4, #21]	@ zero_extendqisi2
+ 679 00c4 42EA0622 		orr	r2, r2, r6, lsl #8
+ 680 00c8 12B2     		sxth	r2, r2
+ 681              	.LBE58:
+ 682              	.LBE57:
+ 683              		.loc 1 288 0
+ 684 00ca 02FB05F2 		mul	r2, r2, r5
+ 685 00ce 5213     		asrs	r2, r2, #13
+ 686              	.LVL50:
+ 289:../system/src/drivers/bme280.c **** 	p = (uint32_t)((int32_t)p + ((var1 + var2 + bme280_get_dig_P7()) >> 4));
+ 687              		.loc 1 289 0
+ 688 00d0 02EB2332 		add	r2, r2, r3, asr #12
+ 689              	.LVL51:
+ 690              	.LBB59:
+ 691              	.LBB60:
+ 103:../system/include/drivers/bme280.h **** 
+ 692              		.loc 2 103 0
+ 693 00d4 A37C     		ldrb	r3, [r4, #18]	@ zero_extendqisi2
+ 694              	.LVL52:
+ 695 00d6 E47C     		ldrb	r4, [r4, #19]	@ zero_extendqisi2
+ 696 00d8 43EA0423 		orr	r3, r3, r4, lsl #8
+ 697              	.LBE60:
+ 698              	.LBE59:
+ 699              		.loc 1 289 0
+ 700 00dc 02FA83F2 		sxtah	r2, r2, r3
+ 701 00e0 01EB2211 		add	r1, r1, r2, asr #4
+ 702              	.LVL53:
+ 290:../system/src/drivers/bme280.c **** 
+ 291:../system/src/drivers/bme280.c **** 	*out = p / 100.0f;
+ 703              		.loc 1 291 0
+ 704 00e4 07EE901A 		vmov	s15, r1	@ int
+ 705 00e8 F8EE677A 		vcvt.f32.u32	s15, s15
+ 706 00ec DFED0A6A 		vldr.32	s13, .L64+8
+ 707 00f0 87EEA67A 		vdiv.f32	s14, s15, s13
+ 708 00f4 80ED007A 		vstr.32	s14, [r0]
+ 709              	.LVL54:
+ 292:../system/src/drivers/bme280.c **** 
+ 293:../system/src/drivers/bme280.c **** 	return ret;
+ 710              		.loc 1 293 0
+ 711 00f8 0020     		movs	r0, #0
+ 712              	.LVL55:
+ 713              	.L57:
+ 294:../system/src/drivers/bme280.c **** }
+ 714              		.loc 1 294 0
+ 715 00fa F0BD     		pop	{r4, r5, r6, r7, pc}
+ 716              	.LVL56:
+ 717              	.L63:
+ 275:../system/src/drivers/bme280.c **** 		return BME280_WRONG_PRESSURE_READOUT; // avoid exception caused by division by zero
+ 718              		.loc 1 275 0
+ 719 00fc 0323     		movs	r3, #3
+ 720              	.LVL57:
+ 721 00fe 1370     		strb	r3, [r2]
+ 722              	.LVL58:
+ 276:../system/src/drivers/bme280.c **** 	}
+ 723              		.loc 1 276 0
+ 724 0100 6FF00200 		mvn	r0, #2
+ 725              	.LVL59:
+ 726 0104 F9E7     		b	.L57
+ 727              	.LVL60:
+ 728              	.L60:
+ 285:../system/src/drivers/bme280.c **** 	}
+ 729              		.loc 1 285 0
+ 730 0106 B1FBF3F1 		udiv	r1, r1, r3
+ 731              	.LVL61:
+ 732 010a 4900     		lsls	r1, r1, #1
+ 733              	.LVL62:
+ 734 010c CBE7     		b	.L61
+ 735              	.L65:
+ 736 010e 00BF     		.align	2
+ 737              	.L64:
+ 738 0110 00000000 		.word	.LANCHOR2
+ 739 0114 00000000 		.word	bme280_calibration_data
+ 740 0118 0000C842 		.word	1120403456
+ 741              		.cfi_endproc
+ 742              	.LFE25:
+ 744              		.section	.text.bme280_get_temperature,"ax",%progbits
+ 745              		.align	1
+ 746              		.global	bme280_get_temperature
+ 747              		.syntax unified
+ 748              		.thumb
+ 749              		.thumb_func
+ 750              		.fpu fpv4-sp-d16
+ 752              	bme280_get_temperature:
+ 753              	.LFB26:
+ 295:../system/src/drivers/bme280.c **** 
+ 296:../system/src/drivers/bme280.c **** int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf) {
+ 754              		.loc 1 296 0
+ 755              		.cfi_startproc
+ 756              		@ args = 0, pretend = 0, frame = 0
+ 757              		@ frame_needed = 0, uses_anonymous_args = 0
+ 758              		@ link register save eliminated.
+ 759              	.LVL63:
+ 760 0000 70B4     		push	{r4, r5, r6}
+ 761              		.cfi_def_cfa_offset 12
+ 762              		.cfi_offset 4, -12
+ 763              		.cfi_offset 5, -8
+ 764              		.cfi_offset 6, -4
+ 765              	.LVL64:
+ 766              	.LBB61:
+ 767              	.LBB62:
+  60:../system/include/drivers/bme280.h **** }
+ 768              		.loc 2 60 0
+ 769 0002 184D     		ldr	r5, .L68
+ 770 0004 2A78     		ldrb	r2, [r5]	@ zero_extendqisi2
+ 771              	.LVL65:
+ 772 0006 6B78     		ldrb	r3, [r5, #1]	@ zero_extendqisi2
+ 773 0008 42EA0322 		orr	r2, r2, r3, lsl #8
+ 774              	.LBE62:
+ 775              	.LBE61:
+ 297:../system/src/drivers/bme280.c **** 	int32_t ret = BME280_OK;
+ 298:../system/src/drivers/bme280.c **** 
+ 299:../system/src/drivers/bme280.c **** 	uint32_t adc_T = raw_data;
+ 300:../system/src/drivers/bme280.c **** 
+ 301:../system/src/drivers/bme280.c **** 	int32_t var1, var2, T;
+ 302:../system/src/drivers/bme280.c ****     var1 = (((( adc_T >> 3 ) - ((int32_t)bme280_get_dig_T1() << 1))) * ((int32_t)bme280_get_dig_T2(
+ 776              		.loc 1 302 0
+ 777 000c 5400     		lsls	r4, r2, #1
+ 778 000e C4EBD104 		rsb	r4, r4, r1, lsr #3
+ 779              	.LBB63:
+ 780              	.LBB64:
+  64:../system/include/drivers/bme280.h **** 
+ 781              		.loc 2 64 0
+ 782 0012 AB78     		ldrb	r3, [r5, #2]	@ zero_extendqisi2
+ 783 0014 EE78     		ldrb	r6, [r5, #3]	@ zero_extendqisi2
+ 784 0016 43EA0623 		orr	r3, r3, r6, lsl #8
+ 785 001a 1BB2     		sxth	r3, r3
+ 786              	.LBE64:
+ 787              	.LBE63:
+ 788              		.loc 1 302 0
+ 789 001c 03FB04F4 		mul	r4, r3, r4
+ 790              	.LVL66:
+ 303:../system/src/drivers/bme280.c ****     var2 = (((((adc_T >> 4 ) - ((int32_t)bme280_get_dig_T1())) * ((adc_T>>4) - ((int32_t)bme280_get
+ 791              		.loc 1 303 0
+ 792 0020 C2EB1111 		rsb	r1, r2, r1, lsr #4
+ 793              	.LVL67:
+ 794 0024 01FB01F1 		mul	r1, r1, r1
+ 795 0028 090B     		lsrs	r1, r1, #12
+ 796              	.LBB65:
+ 797              	.LBB66:
+  69:../system/include/drivers/bme280.h **** }
+ 798              		.loc 2 69 0
+ 799 002a 2B79     		ldrb	r3, [r5, #4]	@ zero_extendqisi2
+ 800 002c 6A79     		ldrb	r2, [r5, #5]	@ zero_extendqisi2
+ 801 002e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 802 0032 1BB2     		sxth	r3, r3
+ 803              	.LBE66:
+ 804              	.LBE65:
+ 805              		.loc 1 303 0
+ 806 0034 03FB01F3 		mul	r3, r3, r1
+ 807 0038 9B0B     		lsrs	r3, r3, #14
+ 808              	.LVL68:
+ 304:../system/src/drivers/bme280.c **** 
+ 305:../system/src/drivers/bme280.c **** 	t_fine = var1 + var2;
+ 809              		.loc 1 305 0
+ 810 003a 03EBD423 		add	r3, r3, r4, lsr #11
+ 811              	.LVL69:
+ 812 003e 0A4A     		ldr	r2, .L68+4
+ 813              	.LVL70:
+ 814 0040 1360     		str	r3, [r2]
+ 306:../system/src/drivers/bme280.c **** 	T = (t_fine * 5 + 128) >> 8;
+ 815              		.loc 1 306 0
+ 816 0042 03EB8303 		add	r3, r3, r3, lsl #2
+ 817 0046 8033     		adds	r3, r3, #128
+ 818 0048 1B12     		asrs	r3, r3, #8
+ 819              	.LVL71:
+ 307:../system/src/drivers/bme280.c **** 
+ 308:../system/src/drivers/bme280.c **** 	*out = (T / 100.0f);
+ 820              		.loc 1 308 0
+ 821 004a 07EE903A 		vmov	s15, r3	@ int
+ 822 004e F8EEE77A 		vcvt.f32.s32	s15, s15
+ 823 0052 DFED066A 		vldr.32	s13, .L68+8
+ 824 0056 87EEA67A 		vdiv.f32	s14, s15, s13
+ 825 005a 80ED007A 		vstr.32	s14, [r0]
+ 826              	.LVL72:
+ 309:../system/src/drivers/bme280.c **** 
+ 310:../system/src/drivers/bme280.c **** 	return ret;
+ 311:../system/src/drivers/bme280.c **** }
+ 827              		.loc 1 311 0
+ 828 005e 0020     		movs	r0, #0
+ 829              	.LVL73:
+ 830 0060 70BC     		pop	{r4, r5, r6}
+ 831              		.cfi_restore 6
+ 832              		.cfi_restore 5
+ 833              		.cfi_restore 4
+ 834              		.cfi_def_cfa_offset 0
+ 835              	.LVL74:
+ 836 0062 7047     		bx	lr
+ 837              	.L69:
+ 838              		.align	2
+ 839              	.L68:
+ 840 0064 00000000 		.word	bme280_calibration_data
+ 841 0068 00000000 		.word	.LANCHOR2
+ 842 006c 0000C842 		.word	1120403456
+ 843              		.cfi_endproc
+ 844              	.LFE26:
+ 846              		.section	.text.bme280_get_humidity,"ax",%progbits
+ 847              		.align	1
+ 848              		.global	bme280_get_humidity
+ 849              		.syntax unified
+ 850              		.thumb
+ 851              		.thumb_func
+ 852              		.fpu fpv4-sp-d16
+ 854              	bme280_get_humidity:
+ 855              	.LFB27:
+ 312:../system/src/drivers/bme280.c **** 
+ 313:../system/src/drivers/bme280.c **** int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf) {
+ 856              		.loc 1 313 0
+ 857              		.cfi_startproc
+ 858              		@ args = 0, pretend = 0, frame = 0
+ 859              		@ frame_needed = 0, uses_anonymous_args = 0
+ 860              		@ link register save eliminated.
+ 861              	.LVL75:
+ 862 0000 F0B4     		push	{r4, r5, r6, r7}
+ 863              		.cfi_def_cfa_offset 16
+ 864              		.cfi_offset 4, -16
+ 865              		.cfi_offset 5, -12
+ 866              		.cfi_offset 6, -8
+ 867              		.cfi_offset 7, -4
+ 868              	.LVL76:
+ 314:../system/src/drivers/bme280.c **** 	int32_t ret = BME280_OK;
+ 315:../system/src/drivers/bme280.c **** 
+ 316:../system/src/drivers/bme280.c **** 	int32_t v_x1_u32r;
+ 317:../system/src/drivers/bme280.c **** 	uint32_t val = 0;
+ 318:../system/src/drivers/bme280.c **** 
+ 319:../system/src/drivers/bme280.c **** 	int32_t adc_H = raw_data;
+ 320:../system/src/drivers/bme280.c **** 
+ 321:../system/src/drivers/bme280.c **** 	v_x1_u32r = (t_fine - ((int32_t)76800));
+ 869              		.loc 1 321 0
+ 870 0002 2B4B     		ldr	r3, .L75
+ 871 0004 1C68     		ldr	r4, [r3]
+ 872 0006 A4F59634 		sub	r4, r4, #76800
+ 873              	.LVL77:
+ 874              	.LBB67:
+ 875              	.LBB68:
+ 114:../system/include/drivers/bme280.h **** 
+ 115:../system/include/drivers/bme280.h **** }
+ 116:../system/include/drivers/bme280.h **** 
+ 117:../system/include/drivers/bme280.h **** inline uint8_t bme280_get_dig_H1(void) {
+ 118:../system/include/drivers/bme280.h **** 	return bme280_calibration_data[25];
+ 119:../system/include/drivers/bme280.h **** }
+ 120:../system/include/drivers/bme280.h **** 
+ 121:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_H2(void) {	//
+ 122:../system/include/drivers/bme280.h **** 	return ((uint16_t)bme280_calibration_data[26] | (uint16_t)bme280_calibration_data[27] << 8);
+ 123:../system/include/drivers/bme280.h **** 
+ 124:../system/include/drivers/bme280.h **** }
+ 125:../system/include/drivers/bme280.h **** 
+ 126:../system/include/drivers/bme280.h **** inline uint8_t bme280_get_dig_H3(void) {
+ 127:../system/include/drivers/bme280.h **** 	return bme280_calibration_data[28];
+ 128:../system/include/drivers/bme280.h **** 
+ 129:../system/include/drivers/bme280.h **** }
+ 130:../system/include/drivers/bme280.h **** 
+ 131:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_H4(void) {
+ 132:../system/include/drivers/bme280.h ****     int16_t dig_h4_lsb;
+ 133:../system/include/drivers/bme280.h ****     int16_t dig_h4_msb;
+ 134:../system/include/drivers/bme280.h ****     dig_h4_msb = (int16_t)(int8_t)bme280_calibration_data[29] * 16;
+ 876              		.loc 2 134 0
+ 877 000a 2A4D     		ldr	r5, .L75+4
+ 878 000c 95F91D60 		ldrsb	r6, [r5, #29]
+ 879 0010 B6B2     		uxth	r6, r6
+ 880 0012 3601     		lsls	r6, r6, #4
+ 881 0014 36B2     		sxth	r6, r6
+ 882              	.LVL78:
+ 135:../system/include/drivers/bme280.h ****     dig_h4_lsb = (int16_t)(bme280_calibration_data[30] & 0x0F);
+ 883              		.loc 2 135 0
+ 884 0016 AF7F     		ldrb	r7, [r5, #30]	@ zero_extendqisi2
+ 885 0018 07F00F03 		and	r3, r7, #15
+ 886              	.LVL79:
+ 136:../system/include/drivers/bme280.h **** 	return (dig_h4_msb | dig_h4_lsb);
+ 887              		.loc 2 136 0
+ 888 001c 1E43     		orrs	r6, r6, r3
+ 889              	.LVL80:
+ 890              	.LBE68:
+ 891              	.LBE67:
+ 322:../system/src/drivers/bme280.c **** 	v_x1_u32r = (((((adc_H << 14) - (((int32_t)bme280_get_dig_H4()) << 20) - (((int32_t)bme280_get_dig
+ 892              		.loc 1 322 0
+ 893 001e 3605     		lsls	r6, r6, #20
+ 894 0020 C6EB8136 		rsb	r6, r6, r1, lsl #14
+ 895              	.LBB69:
+ 896              	.LBB70:
+ 137:../system/include/drivers/bme280.h **** 
+ 138:../system/include/drivers/bme280.h **** }
+ 139:../system/include/drivers/bme280.h **** 
+ 140:../system/include/drivers/bme280.h **** inline int16_t bme280_get_dig_H5(void) {
+ 141:../system/include/drivers/bme280.h ****     int16_t dig_h5_lsb;
+ 142:../system/include/drivers/bme280.h ****     int16_t dig_h5_msb;
+ 143:../system/include/drivers/bme280.h ****     dig_h5_msb = (int16_t)(int8_t)bme280_calibration_data[31] * 16;
+ 897              		.loc 2 143 0
+ 898 0024 95F91F30 		ldrsb	r3, [r5, #31]
+ 899 0028 9BB2     		uxth	r3, r3
+ 900 002a 1B01     		lsls	r3, r3, #4
+ 901 002c 1BB2     		sxth	r3, r3
+ 902              	.LVL81:
+ 144:../system/include/drivers/bme280.h ****     dig_h5_lsb = (int16_t)(bme280_calibration_data[30] >> 4);
+ 145:../system/include/drivers/bme280.h **** 	return (dig_h5_msb | dig_h5_lsb);
+ 903              		.loc 2 145 0
+ 904 002e 43EA1713 		orr	r3, r3, r7, lsr #4
+ 905              	.LVL82:
+ 906              	.LBE70:
+ 907              	.LBE69:
+ 908              		.loc 1 322 0
+ 909 0032 04FB1363 		mls	r3, r4, r3, r6
+ 910 0036 03F58043 		add	r3, r3, #16384
+ 323:../system/src/drivers/bme280.c **** 	((int32_t)16384)) >> 15) * (((((((v_x1_u32r * ((int32_t)bme280_get_dig_H6())) >> 10) * (((v_x1_u32
+ 911              		.loc 1 323 0
+ 912 003a DE13     		asrs	r6, r3, #15
+ 913              	.LBB71:
+ 914              	.LBB72:
+ 146:../system/include/drivers/bme280.h **** 
+ 147:../system/include/drivers/bme280.h **** }
+ 148:../system/include/drivers/bme280.h **** 
+ 149:../system/include/drivers/bme280.h **** inline int8_t bme280_get_dig_H6(void) {
+ 150:../system/include/drivers/bme280.h **** 	return bme280_calibration_data[32];
+ 915              		.loc 2 150 0
+ 916 003c 95F92030 		ldrsb	r3, [r5, #32]
+ 917              	.LBE72:
+ 918              	.LBE71:
+ 919              		.loc 1 323 0
+ 920 0040 04FB03F3 		mul	r3, r4, r3
+ 921 0044 9912     		asrs	r1, r3, #10
+ 922              	.LVL83:
+ 923              	.LBB73:
+ 924              	.LBB74:
+ 127:../system/include/drivers/bme280.h **** 
+ 925              		.loc 2 127 0
+ 926 0046 2B7F     		ldrb	r3, [r5, #28]	@ zero_extendqisi2
+ 927              	.LBE74:
+ 928              	.LBE73:
+ 929              		.loc 1 323 0
+ 930 0048 04FB03F3 		mul	r3, r4, r3
+ 324:../system/src/drivers/bme280.c **** 	((int32_t)bme280_get_dig_H3())) >> 11) + ((int32_t)32768))) >> 10) + ((int32_t)2097152)) *
+ 931              		.loc 1 324 0
+ 932 004c DB12     		asrs	r3, r3, #11
+ 933 004e 03F50043 		add	r3, r3, #32768
+ 323:../system/src/drivers/bme280.c **** 	((int32_t)bme280_get_dig_H3())) >> 11) + ((int32_t)32768))) >> 10) + ((int32_t)2097152)) *
+ 934              		.loc 1 323 0
+ 935 0052 03FB01F3 		mul	r3, r3, r1
+ 936              		.loc 1 324 0
+ 937 0056 9B12     		asrs	r3, r3, #10
+ 938 0058 03F50011 		add	r1, r3, #2097152
+ 939              	.LBB75:
+ 940              	.LBB76:
+ 122:../system/include/drivers/bme280.h **** 
+ 941              		.loc 2 122 0
+ 942 005c AB7E     		ldrb	r3, [r5, #26]	@ zero_extendqisi2
+ 943 005e EC7E     		ldrb	r4, [r5, #27]	@ zero_extendqisi2
+ 944              	.LVL84:
+ 945 0060 43EA0423 		orr	r3, r3, r4, lsl #8
+ 946 0064 1BB2     		sxth	r3, r3
+ 947              	.LBE76:
+ 948              	.LBE75:
+ 949              		.loc 1 324 0
+ 950 0066 03FB01F3 		mul	r3, r3, r1
+ 325:../system/src/drivers/bme280.c **** 	((int32_t)bme280_get_dig_H2()) + 8192) >> 14));
+ 951              		.loc 1 325 0
+ 952 006a 03F50053 		add	r3, r3, #8192
+ 953 006e 9B13     		asrs	r3, r3, #14
+ 322:../system/src/drivers/bme280.c **** 	((int32_t)16384)) >> 15) * (((((((v_x1_u32r * ((int32_t)bme280_get_dig_H6())) >> 10) * (((v_x1_u32
+ 954              		.loc 1 322 0
+ 955 0070 03FB06F3 		mul	r3, r3, r6
+ 956              	.LVL85:
+ 326:../system/src/drivers/bme280.c **** 	v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((int32_t)bme280_get_d
+ 957              		.loc 1 326 0
+ 958 0074 D913     		asrs	r1, r3, #15
+ 959 0076 01FB01F1 		mul	r1, r1, r1
+ 960 007a C911     		asrs	r1, r1, #7
+ 961              	.LBB77:
+ 962              	.LBB78:
+ 118:../system/include/drivers/bme280.h **** }
+ 963              		.loc 2 118 0
+ 964 007c 6C7E     		ldrb	r4, [r5, #25]	@ zero_extendqisi2
+ 965              	.LBE78:
+ 966              	.LBE77:
+ 967              		.loc 1 326 0
+ 968 007e 04FB01F1 		mul	r1, r4, r1
+ 969 0082 A3EB2113 		sub	r3, r3, r1, asr #4
+ 970              	.LVL86:
+ 327:../system/src/drivers/bme280.c **** 	v_x1_u32r = (v_x1_u32r < 0 ? 0 : v_x1_u32r);
+ 971              		.loc 1 327 0
+ 972 0086 23EAE373 		bic	r3, r3, r3, asr #31
+ 973              	.LVL87:
+ 328:../system/src/drivers/bme280.c **** 	v_x1_u32r = (v_x1_u32r > 419430400 ? 419430400 : v_x1_u32r);
+ 974              		.loc 1 328 0
+ 975 008a B3F1C85F 		cmp	r3, #419430400
+ 976 008e A8BF     		it	ge
+ 977 0090 4FF0C853 		movge	r3, #419430400
+ 978              	.LVL88:
+ 329:../system/src/drivers/bme280.c **** 	val = (uint32_t)(v_x1_u32r>>12);
+ 330:../system/src/drivers/bme280.c **** 
+ 331:../system/src/drivers/bme280.c **** 	*out = (val / 1024);
+ 979              		.loc 1 331 0
+ 980 0094 43F38753 		sbfx	r3, r3, #22, #8
+ 981              	.LVL89:
+ 982 0098 0370     		strb	r3, [r0]
+ 983              	.LVL90:
+ 332:../system/src/drivers/bme280.c **** 
+ 333:../system/src/drivers/bme280.c **** 	if (*out > 99 || *out < 0) {
+ 984              		.loc 1 333 0
+ 985 009a DBB2     		uxtb	r3, r3
+ 986 009c 632B     		cmp	r3, #99
+ 987 009e 02D8     		bhi	.L74
+ 314:../system/src/drivers/bme280.c **** 
+ 988              		.loc 1 314 0
+ 989 00a0 0020     		movs	r0, #0
+ 990              	.LVL91:
+ 991              	.L70:
+ 334:../system/src/drivers/bme280.c **** 		*qf = BME280_QF_HUMIDITY_DEGRADED;
+ 335:../system/src/drivers/bme280.c **** 		ret = BME280_WRONG_HUMIDITY_READOUT;
+ 336:../system/src/drivers/bme280.c **** 	}
+ 337:../system/src/drivers/bme280.c **** 
+ 338:../system/src/drivers/bme280.c **** 	return ret;
+ 339:../system/src/drivers/bme280.c **** }
+ 992              		.loc 1 339 0
+ 993 00a2 F0BC     		pop	{r4, r5, r6, r7}
+ 994              		.cfi_remember_state
+ 995              		.cfi_restore 7
+ 996              		.cfi_restore 6
+ 997              		.cfi_restore 5
+ 998              		.cfi_restore 4
+ 999              		.cfi_def_cfa_offset 0
+ 1000 00a4 7047     		bx	lr
+ 1001              	.LVL92:
+ 1002              	.L74:
+ 1003              		.cfi_restore_state
+ 334:../system/src/drivers/bme280.c **** 		*qf = BME280_QF_HUMIDITY_DEGRADED;
+ 1004              		.loc 1 334 0
+ 1005 00a6 0223     		movs	r3, #2
+ 1006 00a8 1370     		strb	r3, [r2]
+ 1007              	.LVL93:
+ 335:../system/src/drivers/bme280.c **** 	}
+ 1008              		.loc 1 335 0
+ 1009 00aa 6FF00300 		mvn	r0, #3
+ 1010              	.LVL94:
+ 1011 00ae F8E7     		b	.L70
+ 1012              	.L76:
+ 1013              		.align	2
+ 1014              	.L75:
+ 1015 00b0 00000000 		.word	.LANCHOR2
+ 1016 00b4 00000000 		.word	bme280_calibration_data
+ 1017              		.cfi_endproc
+ 1018              	.LFE27:
+ 1020              		.global	t_fine
+ 1021              		.comm	bme280_calibration_data,42,4
+ 1022              		.comm	bme280_data_buffer,9,4
+ 1023              		.global	bme280_sensor_avaliable
+ 1024              		.section	.rodata
+ 1025              		.align	2
+ 1026              		.set	.LANCHOR0,. + 0
+ 1027              	.LC0:
+ 1028 0000 E0       		.byte	-32
+ 1029 0001 B6       		.byte	-74
+ 1030 0002 00       		.byte	0
+ 1031              		.section	.bss.bme280_sensor_avaliable,"aw",%nobits
+ 1032              		.set	.LANCHOR1,. + 0
+ 1035              	bme280_sensor_avaliable:
+ 1036 0000 00       		.space	1
+ 1037              		.section	.bss.t_fine,"aw",%nobits
+ 1038              		.align	2
+ 1039              		.set	.LANCHOR2,. + 0
+ 1042              	t_fine:
+ 1043 0000 00000000 		.space	4
+ 1044              		.text
+ 1045              	.Letext0:
+ 1046              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1047              		.file 4 "../system/include/aprs/../drivers/i2c.h"
+ 1048              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1049              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1050              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1051              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1052              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 bme280.c
+     /tmp/ccef3pCP.s:18     .text.bme280_reset:0000000000000000 $t
+     /tmp/ccef3pCP.s:25     .text.bme280_reset:0000000000000000 bme280_reset
+     /tmp/ccef3pCP.s:101    .text.bme280_reset:0000000000000050 $d
+     /tmp/ccef3pCP.s:108    .text.bme280_setup:0000000000000000 $t
+     /tmp/ccef3pCP.s:115    .text.bme280_setup:0000000000000000 bme280_setup
+     /tmp/ccef3pCP.s:195    .text.bme280_setup:0000000000000068 $d
+     /tmp/ccef3pCP.s:201    .text.bme280_read_calibration:0000000000000000 $t
+     /tmp/ccef3pCP.s:208    .text.bme280_read_calibration:0000000000000000 bme280_read_calibration
+     /tmp/ccef3pCP.s:384    .text.bme280_read_calibration:00000000000000e8 $d
+     /tmp/ccef3pCP.s:391    .text.bme280_read_raw_data:0000000000000000 $t
+     /tmp/ccef3pCP.s:398    .text.bme280_read_raw_data:0000000000000000 bme280_read_raw_data
+     /tmp/ccef3pCP.s:512    .text.bme280_read_raw_data:0000000000000088 $d
+     /tmp/ccef3pCP.s:519    .text.bme280_get_pressure:0000000000000000 $t
+     /tmp/ccef3pCP.s:526    .text.bme280_get_pressure:0000000000000000 bme280_get_pressure
+     /tmp/ccef3pCP.s:738    .text.bme280_get_pressure:0000000000000110 $d
+                            *COM*:000000000000002a bme280_calibration_data
+     /tmp/ccef3pCP.s:745    .text.bme280_get_temperature:0000000000000000 $t
+     /tmp/ccef3pCP.s:752    .text.bme280_get_temperature:0000000000000000 bme280_get_temperature
+     /tmp/ccef3pCP.s:840    .text.bme280_get_temperature:0000000000000064 $d
+     /tmp/ccef3pCP.s:847    .text.bme280_get_humidity:0000000000000000 $t
+     /tmp/ccef3pCP.s:854    .text.bme280_get_humidity:0000000000000000 bme280_get_humidity
+     /tmp/ccef3pCP.s:1015   .text.bme280_get_humidity:00000000000000b0 $d
+     /tmp/ccef3pCP.s:1042   .bss.t_fine:0000000000000000 t_fine
+                            *COM*:0000000000000009 bme280_data_buffer
+     /tmp/ccef3pCP.s:1035   .bss.bme280_sensor_avaliable:0000000000000000 bme280_sensor_avaliable
+     /tmp/ccef3pCP.s:1025   .rodata:0000000000000000 $d
+     /tmp/ccef3pCP.s:1036   .bss.bme280_sensor_avaliable:0000000000000000 $d
+     /tmp/ccef3pCP.s:1038   .bss.t_fine:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.bme280.h.13.f4d7a41695a048e9616e171ad319eeb7
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+
+UNDEFINED SYMBOLS
+i2c_send_data
+delay_fixed
+i2c_state
+memset
+i2c_receive_data
+memcpy
+i2c_rx_data

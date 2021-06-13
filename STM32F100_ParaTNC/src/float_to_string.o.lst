@@ -1,0 +1,298 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"float_to_string.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	__aeabi_f2iz
+  16              		.global	__aeabi_i2f
+  17              		.global	__aeabi_fsub
+  18              		.global	__aeabi_i2d
+  19              		.global	__aeabi_d2iz
+  20              		.global	__aeabi_fmul
+  21              		.section	.text.float_to_string,"ax",%progbits
+  22              		.align	1
+  23              		.global	float_to_string
+  24              		.syntax unified
+  25              		.thumb
+  26              		.thumb_func
+  27              		.fpu softvfp
+  29              	float_to_string:
+  30              	.LFB3:
+  31              		.file 1 "../src/float_to_string.c"
+   1:../src/float_to_string.c **** /*
+   2:../src/float_to_string.c ****  * float_to_string.c
+   3:../src/float_to_string.c ****  *
+   4:../src/float_to_string.c ****  *  Created on: May 12, 2021
+   5:../src/float_to_string.c ****  *      Author: mateusz
+   6:../src/float_to_string.c ****  */
+   7:../src/float_to_string.c **** 
+   8:../src/float_to_string.c **** #include "float_to_string.h"
+   9:../src/float_to_string.c **** 
+  10:../src/float_to_string.c **** #include <string.h>
+  11:../src/float_to_string.c **** #include <stdio.h>
+  12:../src/float_to_string.c **** #include <math.h>
+  13:../src/float_to_string.c **** 
+  14:../src/float_to_string.c **** void float_to_string(float in, char * out, uint8_t ln, int8_t precision, int8_t integer_ln) {
+  32              		.loc 1 14 0
+  33              		.cfi_startproc
+  34              		@ args = 4, pretend = 0, frame = 0
+  35              		@ frame_needed = 0, uses_anonymous_args = 0
+  36              	.LVL0:
+  37 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+  38              		.cfi_def_cfa_offset 28
+  39              		.cfi_offset 4, -28
+  40              		.cfi_offset 5, -24
+  41              		.cfi_offset 6, -20
+  42              		.cfi_offset 7, -16
+  43              		.cfi_offset 8, -12
+  44              		.cfi_offset 9, -8
+  45              		.cfi_offset 14, -4
+  46 0004 83B0     		sub	sp, sp, #12
+  47              		.cfi_def_cfa_offset 40
+  48 0006 0746     		mov	r7, r0
+  49 0008 0D46     		mov	r5, r1
+  50 000a 1646     		mov	r6, r2
+  51 000c 9846     		mov	r8, r3
+  52 000e 9DF92840 		ldrsb	r4, [sp, #40]
+  53              	.LVL1:
+  15:../src/float_to_string.c **** 
+  16:../src/float_to_string.c **** 	int32_t integer_part = 0, decimal_part = 0;
+  17:../src/float_to_string.c **** 
+  18:../src/float_to_string.c **** 	float decimal_in_float = 0.0f;
+  19:../src/float_to_string.c **** 
+  20:../src/float_to_string.c **** 	integer_part = (int32_t)in;
+  54              		.loc 1 20 0
+  55 0012 FFF7FEFF 		bl	__aeabi_f2iz
+  56              	.LVL2:
+  57 0016 8146     		mov	r9, r0
+  58              	.LVL3:
+  21:../src/float_to_string.c **** 
+  22:../src/float_to_string.c **** 	// decimal part stored as float
+  23:../src/float_to_string.c **** 	decimal_in_float = in - integer_part;
+  59              		.loc 1 23 0
+  60 0018 FFF7FEFF 		bl	__aeabi_i2f
+  61              	.LVL4:
+  62 001c 0146     		mov	r1, r0
+  63 001e 3846     		mov	r0, r7
+  64 0020 FFF7FEFF 		bl	__aeabi_fsub
+  65              	.LVL5:
+  66 0024 0746     		mov	r7, r0
+  67              	.LVL6:
+  24:../src/float_to_string.c **** 
+  25:../src/float_to_string.c **** 	// calcaulating decimal precision multiplier
+  26:../src/float_to_string.c **** 	precision = pow(10, precision);
+  68              		.loc 1 26 0
+  69 0026 4046     		mov	r0, r8
+  70              	.LVL7:
+  71 0028 FFF7FEFF 		bl	__aeabi_i2d
+  72              	.LVL8:
+  73 002c 0246     		mov	r2, r0
+  74 002e 0B46     		mov	r3, r1
+  75 0030 0020     		movs	r0, #0
+  76 0032 1D49     		ldr	r1, .L10
+  77 0034 FFF7FEFF 		bl	pow
+  78              	.LVL9:
+  79 0038 FFF7FEFF 		bl	__aeabi_d2iz
+  80              	.LVL10:
+  27:../src/float_to_string.c **** 
+  28:../src/float_to_string.c **** 	// moving decimal point according to precision required by the caller
+  29:../src/float_to_string.c **** 	decimal_in_float *= precision;
+  81              		.loc 1 29 0
+  82 003c 40B2     		sxtb	r0, r0
+  83 003e FFF7FEFF 		bl	__aeabi_i2f
+  84              	.LVL11:
+  85 0042 3946     		mov	r1, r7
+  86 0044 FFF7FEFF 		bl	__aeabi_fmul
+  87              	.LVL12:
+  30:../src/float_to_string.c **** 
+  31:../src/float_to_string.c **** 	// converting decimal part into integer variable
+  32:../src/float_to_string.c **** 	decimal_part = (int32_t) decimal_in_float;
+  88              		.loc 1 32 0
+  89 0048 FFF7FEFF 		bl	__aeabi_f2iz
+  90              	.LVL13:
+  91 004c 0746     		mov	r7, r0
+  92              	.LVL14:
+  33:../src/float_to_string.c **** 
+  34:../src/float_to_string.c **** 	// clearing output
+  35:../src/float_to_string.c **** 	memset (out, 0x00, ln);
+  93              		.loc 1 35 0
+  94 004e 3246     		mov	r2, r6
+  95 0050 0021     		movs	r1, #0
+  96 0052 2846     		mov	r0, r5
+  97              	.LVL15:
+  98 0054 FFF7FEFF 		bl	memset
+  99              	.LVL16:
+  36:../src/float_to_string.c **** 
+  37:../src/float_to_string.c **** 	if (integer_ln == 3) {
+ 100              		.loc 1 37 0
+ 101 0058 032C     		cmp	r4, #3
+ 102 005a 0DD0     		beq	.L7
+  38:../src/float_to_string.c **** 		snprintf(out, ln, "%03ld.%ld", integer_part, decimal_part);
+  39:../src/float_to_string.c **** 	}
+  40:../src/float_to_string.c **** 	else if (integer_ln == 4) {
+ 103              		.loc 1 40 0
+ 104 005c 042C     		cmp	r4, #4
+ 105 005e 13D0     		beq	.L8
+  41:../src/float_to_string.c **** 		snprintf(out, ln, "%04ld.%ld", integer_part, decimal_part);
+  42:../src/float_to_string.c **** 	}
+  43:../src/float_to_string.c **** 	else if (integer_ln == 5) {
+ 106              		.loc 1 43 0
+ 107 0060 052C     		cmp	r4, #5
+ 108 0062 19D0     		beq	.L9
+  44:../src/float_to_string.c **** 		snprintf(out, ln, "%05ld.%ld", integer_part, decimal_part);
+  45:../src/float_to_string.c **** 	}
+  46:../src/float_to_string.c **** 	else {
+  47:../src/float_to_string.c **** 		snprintf(out, ln, "%ld.%ld", integer_part, decimal_part);
+ 109              		.loc 1 47 0
+ 110 0064 0097     		str	r7, [sp]
+ 111 0066 4B46     		mov	r3, r9
+ 112 0068 104A     		ldr	r2, .L10+4
+ 113 006a 3146     		mov	r1, r6
+ 114 006c 2846     		mov	r0, r5
+ 115 006e FFF7FEFF 		bl	snprintf
+ 116              	.LVL17:
+ 117              	.L1:
+  48:../src/float_to_string.c **** 	}
+  49:../src/float_to_string.c **** 
+  50:../src/float_to_string.c **** 
+  51:../src/float_to_string.c **** }
+ 118              		.loc 1 51 0
+ 119 0072 03B0     		add	sp, sp, #12
+ 120              		.cfi_remember_state
+ 121              		.cfi_def_cfa_offset 28
+ 122              		@ sp needed
+ 123 0074 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 124              	.LVL18:
+ 125              	.L7:
+ 126              		.cfi_restore_state
+  38:../src/float_to_string.c **** 	}
+ 127              		.loc 1 38 0
+ 128 0078 0097     		str	r7, [sp]
+ 129 007a 4B46     		mov	r3, r9
+ 130 007c 0C4A     		ldr	r2, .L10+8
+ 131 007e 3146     		mov	r1, r6
+ 132 0080 2846     		mov	r0, r5
+ 133 0082 FFF7FEFF 		bl	snprintf
+ 134              	.LVL19:
+ 135 0086 F4E7     		b	.L1
+ 136              	.L8:
+  41:../src/float_to_string.c **** 	}
+ 137              		.loc 1 41 0
+ 138 0088 0097     		str	r7, [sp]
+ 139 008a 4B46     		mov	r3, r9
+ 140 008c 094A     		ldr	r2, .L10+12
+ 141 008e 3146     		mov	r1, r6
+ 142 0090 2846     		mov	r0, r5
+ 143 0092 FFF7FEFF 		bl	snprintf
+ 144              	.LVL20:
+ 145 0096 ECE7     		b	.L1
+ 146              	.L9:
+  44:../src/float_to_string.c **** 	}
+ 147              		.loc 1 44 0
+ 148 0098 0097     		str	r7, [sp]
+ 149 009a 4B46     		mov	r3, r9
+ 150 009c 064A     		ldr	r2, .L10+16
+ 151 009e 3146     		mov	r1, r6
+ 152 00a0 2846     		mov	r0, r5
+ 153 00a2 FFF7FEFF 		bl	snprintf
+ 154              	.LVL21:
+ 155 00a6 E4E7     		b	.L1
+ 156              	.L11:
+ 157              		.align	2
+ 158              	.L10:
+ 159 00a8 00002440 		.word	1076101120
+ 160 00ac 24000000 		.word	.LC3
+ 161 00b0 00000000 		.word	.LC0
+ 162 00b4 0C000000 		.word	.LC1
+ 163 00b8 18000000 		.word	.LC2
+ 164              		.cfi_endproc
+ 165              	.LFE3:
+ 167              		.section	.rodata.float_to_string.str1.4,"aMS",%progbits,1
+ 168              		.align	2
+ 169              	.LC0:
+ 170 0000 2530336C 		.ascii	"%03ld.%ld\000"
+ 170      642E256C 
+ 170      6400
+ 171 000a 0000     		.space	2
+ 172              	.LC1:
+ 173 000c 2530346C 		.ascii	"%04ld.%ld\000"
+ 173      642E256C 
+ 173      6400
+ 174 0016 0000     		.space	2
+ 175              	.LC2:
+ 176 0018 2530356C 		.ascii	"%05ld.%ld\000"
+ 176      642E256C 
+ 176      6400
+ 177 0022 0000     		.space	2
+ 178              	.LC3:
+ 179 0024 256C642E 		.ascii	"%ld.%ld\000"
+ 179      256C6400 
+ 180              		.text
+ 181              	.Letext0:
+ 182              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 183              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 184              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 185              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 186              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 187              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 188              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 189              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 float_to_string.c
+     /tmp/ccaZ9gHN.s:22     .text.float_to_string:0000000000000000 $t
+     /tmp/ccaZ9gHN.s:29     .text.float_to_string:0000000000000000 float_to_string
+     /tmp/ccaZ9gHN.s:159    .text.float_to_string:00000000000000a8 $d
+     /tmp/ccaZ9gHN.s:168    .rodata.float_to_string.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+
+UNDEFINED SYMBOLS
+__aeabi_f2iz
+__aeabi_i2f
+__aeabi_fsub
+__aeabi_i2d
+__aeabi_d2iz
+__aeabi_fmul
+pow
+memset
+snprintf

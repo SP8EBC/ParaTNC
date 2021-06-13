@@ -1,0 +1,251 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"afsk_pr.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.ADCStartConfig,"ax",%progbits
+  18              		.align	1
+  19              		.global	ADCStartConfig
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	ADCStartConfig:
+  26              	.LFB317:
+  27              		.file 1 "../system/src/aprs/afsk_pr.c"
+   1:../system/src/aprs/afsk_pr.c **** #include "afsk_pr.h"
+   2:../system/src/aprs/afsk_pr.c **** 
+   3:../system/src/aprs/afsk_pr.c **** #include "station_config_target_hw.h"
+   4:../system/src/aprs/afsk_pr.c **** 
+   5:../system/src/aprs/afsk_pr.c **** #ifdef STM32F10X_MD_VL
+   6:../system/src/aprs/afsk_pr.c **** #include <stm32f10x.h>
+   7:../system/src/aprs/afsk_pr.c **** #include "antilib_adc.h"
+   8:../system/src/aprs/afsk_pr.c **** 
+   9:../system/src/aprs/afsk_pr.c **** #endif
+  10:../system/src/aprs/afsk_pr.c **** 
+  11:../system/src/aprs/afsk_pr.c **** #ifdef STM32L471xx
+  12:../system/src/aprs/afsk_pr.c **** #include <stm32l4xx.h>
+  13:../system/src/aprs/afsk_pr.c **** #include <stm32l4xx_ll_adc.h>
+  14:../system/src/aprs/afsk_pr.c **** #endif
+  15:../system/src/aprs/afsk_pr.c **** 
+  16:../system/src/aprs/afsk_pr.c **** 
+  17:../system/src/aprs/afsk_pr.c **** void ADCStartConfig(void) {
+  28              		.loc 1 17 0
+  29              		.cfi_startproc
+  30              		@ Volatile: function does not return.
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  18:../system/src/aprs/afsk_pr.c **** #ifdef STM32F10X_MD_VL
+  19:../system/src/aprs/afsk_pr.c **** 
+  20:../system/src/aprs/afsk_pr.c **** 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN;
+  21:../system/src/aprs/afsk_pr.c **** 	ADC1->CR2 |= ADC_CR2_ADON;
+  22:../system/src/aprs/afsk_pr.c **** 	ADC1->CR2 |= ADC_CR2_RSTCAL;       				// Reset calibration
+  23:../system/src/aprs/afsk_pr.c ****     while(ADC1->CR2 & ADC_CR2_RSTCAL);  			        // Wait for reset
+  24:../system/src/aprs/afsk_pr.c ****     ADC1->CR2 |= ADC_CR2_CAL;          				// Start calibration
+  25:../system/src/aprs/afsk_pr.c ****     while(ADC1->CR2 & ADC_CR2_CAL);
+  26:../system/src/aprs/afsk_pr.c **** 	ADC1->SQR1 = ADC_SEQUENCE_LENGTH(0);		// odczyt tylko jednego kana�u
+  27:../system/src/aprs/afsk_pr.c **** 	ADC1->SQR3 =  ADC_SEQ1(11);				// wyb�r kana�u ADC -- 11 - napi�cie zasilania
+  28:../system/src/aprs/afsk_pr.c **** 	ADC1->SMPR1 = ADC_SAMPLE_TIME0(SAMPLE_TIME_7_5);	// czas pr�bkowania
+  29:../system/src/aprs/afsk_pr.c **** //	ADC1->CR1 = ADC_CR1_EOCIE;			/// przerwanie na zako�czenie konwersji
+  30:../system/src/aprs/afsk_pr.c **** //	NVIC_EnableIRQ(ADC1_2_IRQn);
+  31:../system/src/aprs/afsk_pr.c **** //	NVIC_SetPriority(ADC1_2_IRQn, 3);
+  32:../system/src/aprs/afsk_pr.c **** 	ADC1->CR2 |= ADC_CR2_CONT;
+  33:../system/src/aprs/afsk_pr.c **** 	ADC1->CR2 |= ADC_CR2_ADON;
+  34:../system/src/aprs/afsk_pr.c **** 	ADC1->DR;
+  35:../system/src/aprs/afsk_pr.c **** #endif
+  36:../system/src/aprs/afsk_pr.c **** 
+  37:../system/src/aprs/afsk_pr.c **** #ifdef STM32L471xx
+  38:../system/src/aprs/afsk_pr.c **** 
+  39:../system/src/aprs/afsk_pr.c **** 	/**
+  40:../system/src/aprs/afsk_pr.c **** 	 * On STM32L47x/L48x devices, before any conversion of an input channel coming from
+  41:../system/src/aprs/afsk_pr.c **** 		GPIO pads, it is necessary to configure the corresponding GPIOx_ASCR register in the
+  42:../system/src/aprs/afsk_pr.c **** 		GPIO, in addition to the I/O configuration in analog mode.
+  43:../system/src/aprs/afsk_pr.c **** 	 *
+  44:../system/src/aprs/afsk_pr.c **** 	 */
+  45:../system/src/aprs/afsk_pr.c **** 
+  46:../system/src/aprs/afsk_pr.c **** 	// reset the clock for ADC
+  47:../system/src/aprs/afsk_pr.c **** 	RCC->AHB2ENR &= (0xFFFFFFFF ^ RCC_AHB2ENR_ADCEN);
+  34              		.loc 1 47 0
+  35 0000 0F4B     		ldr	r3, .L3
+  36 0002 DA6C     		ldr	r2, [r3, #76]
+  37 0004 22F40052 		bic	r2, r2, #8192
+  38 0008 DA64     		str	r2, [r3, #76]
+  48:../system/src/aprs/afsk_pr.c **** 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
+  39              		.loc 1 48 0
+  40 000a DA6C     		ldr	r2, [r3, #76]
+  41 000c 42F40052 		orr	r2, r2, #8192
+  42 0010 DA64     		str	r2, [r3, #76]
+  49:../system/src/aprs/afsk_pr.c **** 
+  50:../system/src/aprs/afsk_pr.c **** 	// the adc should be disabled now, but just to be sure that this is a case
+  51:../system/src/aprs/afsk_pr.c **** 	ADC1->CR &= (0xFFFFFFFF ^ ADC_CR_ADEN);
+  43              		.loc 1 51 0
+  44 0012 0C4B     		ldr	r3, .L3+4
+  45 0014 9A68     		ldr	r2, [r3, #8]
+  46 0016 22F00102 		bic	r2, r2, #1
+  47 001a 9A60     		str	r2, [r3, #8]
+  52:../system/src/aprs/afsk_pr.c **** 
+  53:../system/src/aprs/afsk_pr.c **** 	// exit from deep-power-down mode
+  54:../system/src/aprs/afsk_pr.c **** 	ADC1->CR &= (0xFFFFFFFF ^ ADC_CR_DEEPPWD);
+  48              		.loc 1 54 0
+  49 001c 9A68     		ldr	r2, [r3, #8]
+  50 001e 22F00052 		bic	r2, r2, #536870912
+  51 0022 9A60     		str	r2, [r3, #8]
+  55:../system/src/aprs/afsk_pr.c **** 
+  56:../system/src/aprs/afsk_pr.c **** 	// start ADC voltage regulator
+  57:../system/src/aprs/afsk_pr.c **** 	ADC1->CR |= ADC_CR_ADVREGEN;
+  52              		.loc 1 57 0
+  53 0024 9A68     		ldr	r2, [r3, #8]
+  54 0026 42F08052 		orr	r2, r2, #268435456
+  55 002a 9A60     		str	r2, [r3, #8]
+  58:../system/src/aprs/afsk_pr.c **** 
+  59:../system/src/aprs/afsk_pr.c **** 	// start the calibration
+  60:../system/src/aprs/afsk_pr.c **** 	ADC1->CR |= ADC_CR_ADCAL;
+  56              		.loc 1 60 0
+  57 002c 9A68     		ldr	r2, [r3, #8]
+  58 002e 42F00042 		orr	r2, r2, #-2147483648
+  59 0032 9A60     		str	r2, [r3, #8]
+  60              	.L2:
+  61:../system/src/aprs/afsk_pr.c **** 
+  62:../system/src/aprs/afsk_pr.c **** 	// wait for calibration to finish
+  63:../system/src/aprs/afsk_pr.c ****     while(ADC1->CR |= ADC_CR_ADCAL);
+  61              		.loc 1 63 0 discriminator 1
+  62 0034 034A     		ldr	r2, .L3+4
+  63 0036 9368     		ldr	r3, [r2, #8]
+  64 0038 43F00043 		orr	r3, r3, #-2147483648
+  65 003c 9360     		str	r3, [r2, #8]
+  66 003e F9E7     		b	.L2
+  67              	.L4:
+  68              		.align	2
+  69              	.L3:
+  70 0040 00100240 		.word	1073876992
+  71 0044 00000450 		.word	1342439424
+  72              		.cfi_endproc
+  73              	.LFE317:
+  75              		.section	.text.DACStartConfig,"ax",%progbits
+  76              		.align	1
+  77              		.global	DACStartConfig
+  78              		.syntax unified
+  79              		.thumb
+  80              		.thumb_func
+  81              		.fpu fpv4-sp-d16
+  83              	DACStartConfig:
+  84              	.LFB318:
+  64:../system/src/aprs/afsk_pr.c **** 
+  65:../system/src/aprs/afsk_pr.c ****     // set the first (and only channel in a conversion sequence)
+  66:../system/src/aprs/afsk_pr.c ****     ADC1->SQR1 |= (0x4 << 6);
+  67:../system/src/aprs/afsk_pr.c **** 
+  68:../system/src/aprs/afsk_pr.c ****     // set the sampling rate to 12.5 ADC clock cycles
+  69:../system/src/aprs/afsk_pr.c ****     ADC1->SMPR1 |= 0x2;
+  70:../system/src/aprs/afsk_pr.c **** 
+  71:../system/src/aprs/afsk_pr.c ****     // set continuous conversion
+  72:../system/src/aprs/afsk_pr.c **** 	ADC1->CFGR |= ADC_CFGR_CONT;
+  73:../system/src/aprs/afsk_pr.c **** 
+  74:../system/src/aprs/afsk_pr.c ****     // start ADC
+  75:../system/src/aprs/afsk_pr.c **** 	ADC1->CR |= ADC_CR_ADEN;
+  76:../system/src/aprs/afsk_pr.c **** 
+  77:../system/src/aprs/afsk_pr.c ****     //ADC1->SMPR1 = ADC_SAMPLE_TIME0(SAMPLE_TIME_7_5);	// czas pr�bkowania
+  78:../system/src/aprs/afsk_pr.c **** //	ADC1->CR1 = ADC_CR1_EOCIE;			/// przerwanie na zako�czenie konwersji
+  79:../system/src/aprs/afsk_pr.c **** //	NVIC_EnableIRQ(ADC1_2_IRQn);
+  80:../system/src/aprs/afsk_pr.c **** //	NVIC_SetPriority(ADC1_2_IRQn, 3);
+  81:../system/src/aprs/afsk_pr.c **** //	ADC1->CR2 |= ADC_CR2_CONT;
+  82:../system/src/aprs/afsk_pr.c **** //	ADC1->CR2 |= ADC_CR2_ADON;
+  83:../system/src/aprs/afsk_pr.c **** 	ADC1->DR;
+  84:../system/src/aprs/afsk_pr.c **** 
+  85:../system/src/aprs/afsk_pr.c **** #endif
+  86:../system/src/aprs/afsk_pr.c **** }
+  87:../system/src/aprs/afsk_pr.c **** 
+  88:../system/src/aprs/afsk_pr.c **** void DACStartConfig(void) {
+  85              		.loc 1 88 0
+  86              		.cfi_startproc
+  87              		@ args = 0, pretend = 0, frame = 0
+  88              		@ frame_needed = 0, uses_anonymous_args = 0
+  89              		@ link register save eliminated.
+  89:../system/src/aprs/afsk_pr.c **** #ifdef STM32F10X_MD_VL
+  90:../system/src/aprs/afsk_pr.c **** 
+  91:../system/src/aprs/afsk_pr.c **** 	RCC->APB1ENR |= RCC_APB1ENR_DACEN;	// wlanczenie zegara
+  92:../system/src/aprs/afsk_pr.c **** 	// rejestr CR przetownirka domyslnie ma same zera
+  93:../system/src/aprs/afsk_pr.c **** 	DAC->CR &= (0xFFFFFFFF ^ DAC_CR_WAVE1);	// bez generowania przebiegu na wyjsciu
+  94:../system/src/aprs/afsk_pr.c **** 	DAC->CR |= DAC_CR_TSEL1;	// programowe wyzwalanie przetwornika (przez flaga swtrig)
+  95:../system/src/aprs/afsk_pr.c **** 	DAC->CR |= DAC_CR_TEN1;
+  96:../system/src/aprs/afsk_pr.c **** 	DAC->CR |= DAC_CR_EN1;
+  97:../system/src/aprs/afsk_pr.c **** 	DAC->DHR8R1 = 10;
+  98:../system/src/aprs/afsk_pr.c **** 	DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;	
+  99:../system/src/aprs/afsk_pr.c **** #endif
+ 100:../system/src/aprs/afsk_pr.c **** 
+ 101:../system/src/aprs/afsk_pr.c **** #ifdef STM32L471xx
+ 102:../system/src/aprs/afsk_pr.c **** 	// reset the clock for DAC
+ 103:../system/src/aprs/afsk_pr.c **** 	RCC->AHB1ENR &= (0xFFFFFFFF ^ RCC_AHB1ENR_DMA1EN);
+  90              		.loc 1 103 0
+  91 0000 094B     		ldr	r3, .L6
+  92 0002 9A6C     		ldr	r2, [r3, #72]
+  93 0004 22F00102 		bic	r2, r2, #1
+  94 0008 9A64     		str	r2, [r3, #72]
+ 104:../system/src/aprs/afsk_pr.c **** 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+  95              		.loc 1 104 0
+  96 000a 9A6C     		ldr	r2, [r3, #72]
+  97 000c 42F00102 		orr	r2, r2, #1
+  98 0010 9A64     		str	r2, [r3, #72]
+ 105:../system/src/aprs/afsk_pr.c **** 	DAC->CR |= DAC_CR_EN1;
+  99              		.loc 1 105 0
+ 100 0012 A3F5CE33 		sub	r3, r3, #105472
+ 101 0016 1A68     		ldr	r2, [r3]
+ 102 0018 42F00102 		orr	r2, r2, #1
+ 103 001c 1A60     		str	r2, [r3]
+ 106:../system/src/aprs/afsk_pr.c **** 	DAC->SWTRIGR |= DAC_SWTRIGR_SWTRIG1;
+ 104              		.loc 1 106 0
+ 105 001e 5A68     		ldr	r2, [r3, #4]
+ 106 0020 42F00102 		orr	r2, r2, #1
+ 107 0024 5A60     		str	r2, [r3, #4]
+ 107:../system/src/aprs/afsk_pr.c **** 
+ 108:../system/src/aprs/afsk_pr.c **** #endif
+ 109:../system/src/aprs/afsk_pr.c **** 
+ 110:../system/src/aprs/afsk_pr.c **** }
+ 108              		.loc 1 110 0
+ 109 0026 7047     		bx	lr
+ 110              	.L7:
+ 111              		.align	2
+ 112              	.L6:
+ 113 0028 00100240 		.word	1073876992
+ 114              		.cfi_endproc
+ 115              	.LFE318:
+ 117              		.text
+ 118              	.Letext0:
+ 119              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 120              		.file 3 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 121              		.file 4 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 122              		.file 5 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 afsk_pr.c
+     /tmp/ccp2kocc.s:18     .text.ADCStartConfig:0000000000000000 $t
+     /tmp/ccp2kocc.s:25     .text.ADCStartConfig:0000000000000000 ADCStartConfig
+     /tmp/ccp2kocc.s:70     .text.ADCStartConfig:0000000000000040 $d
+     /tmp/ccp2kocc.s:76     .text.DACStartConfig:0000000000000000 $t
+     /tmp/ccp2kocc.s:83     .text.DACStartConfig:0000000000000000 DACStartConfig
+     /tmp/ccp2kocc.s:113    .text.DACStartConfig:0000000000000028 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_adc.h.22.1a01db9155ec232fb5933b76785afed0
+
+NO UNDEFINED SYMBOLS

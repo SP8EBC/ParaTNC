@@ -1,0 +1,173 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"assert.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.__assert_func,"ax",%progbits
+  16              		.align	1
+  17              		.global	__assert_func
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	__assert_func:
+  24              	.LFB0:
+  25              		.file 1 "../system/src/newlib/assert.c"
+   1:../system/src/newlib/assert.c **** //
+   2:../system/src/newlib/assert.c **** // This file is part of the µOS++ III distribution.
+   3:../system/src/newlib/assert.c **** // Copyright (c) 2014 Liviu Ionescu.
+   4:../system/src/newlib/assert.c **** //
+   5:../system/src/newlib/assert.c **** 
+   6:../system/src/newlib/assert.c **** #include <assert.h>
+   7:../system/src/newlib/assert.c **** #include <stdlib.h>
+   8:../system/src/newlib/assert.c **** #include <stdint.h>
+   9:../system/src/newlib/assert.c **** 
+  10:../system/src/newlib/assert.c **** #include "diag/Trace.h"
+  11:../system/src/newlib/assert.c **** 
+  12:../system/src/newlib/assert.c **** // ----------------------------------------------------------------------------
+  13:../system/src/newlib/assert.c **** 
+  14:../system/src/newlib/assert.c **** void
+  15:../system/src/newlib/assert.c **** __attribute__((noreturn))
+  16:../system/src/newlib/assert.c **** __assert_func (const char *file, int line, const char *func,
+  17:../system/src/newlib/assert.c ****                const char *failedexpr)
+  18:../system/src/newlib/assert.c **** {
+  26              		.loc 1 18 0
+  27              		.cfi_startproc
+  28              		@ Volatile: function does not return.
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              	.LVL0:
+  32 0000 00B5     		push	{lr}
+  33              		.cfi_def_cfa_offset 4
+  34              		.cfi_offset 14, -4
+  35 0002 83B0     		sub	sp, sp, #12
+  36              		.cfi_def_cfa_offset 16
+  37 0004 0C46     		mov	r4, r1
+  38 0006 1946     		mov	r1, r3
+  39              	.LVL1:
+  19:../system/src/newlib/assert.c ****   trace_printf ("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",
+  40              		.loc 1 19 0
+  41 0008 1346     		mov	r3, r2
+  42              	.LVL2:
+  43 000a 52B1     		cbz	r2, .L4
+  44 000c 074A     		ldr	r2, .L8
+  45              	.LVL3:
+  46              	.L2:
+  47              		.loc 1 19 0 is_stmt 0 discriminator 4
+  48 000e 53B1     		cbz	r3, .L7
+  49              	.LVL4:
+  50              	.L3:
+  51              		.loc 1 19 0 discriminator 8
+  52 0010 0193     		str	r3, [sp, #4]
+  53 0012 0092     		str	r2, [sp]
+  54 0014 2346     		mov	r3, r4
+  55 0016 0246     		mov	r2, r0
+  56 0018 0548     		ldr	r0, .L8+4
+  57              	.LVL5:
+  58 001a FFF7FEFF 		bl	trace_printf
+  59              	.LVL6:
+  20:../system/src/newlib/assert.c ****                 failedexpr, file, line, func ? ", function: " : "",
+  21:../system/src/newlib/assert.c ****                 func ? func : "");
+  22:../system/src/newlib/assert.c ****   abort ();
+  60              		.loc 1 22 0 is_stmt 1 discriminator 8
+  61 001e FFF7FEFF 		bl	abort
+  62              	.LVL7:
+  63              	.L4:
+  19:../system/src/newlib/assert.c ****   trace_printf ("assertion \"%s\" failed: file \"%s\", line %d%s%s\n",
+  64              		.loc 1 19 0
+  65 0022 044A     		ldr	r2, .L8+8
+  66              	.LVL8:
+  67 0024 F3E7     		b	.L2
+  68              	.L7:
+  69 0026 034B     		ldr	r3, .L8+8
+  70              	.LVL9:
+  71 0028 F2E7     		b	.L3
+  72              	.L9:
+  73 002a 00BF     		.align	2
+  74              	.L8:
+  75 002c 00000000 		.word	.LC0
+  76 0030 14000000 		.word	.LC2
+  77 0034 10000000 		.word	.LC1
+  78              		.cfi_endproc
+  79              	.LFE0:
+  81              		.section	.rodata.__assert_func.str1.4,"aMS",%progbits,1
+  82              		.align	2
+  83              	.LC0:
+  84 0000 2C206675 		.ascii	", function: \000"
+  84      6E637469 
+  84      6F6E3A20 
+  84      00
+  85 000d 000000   		.space	3
+  86              	.LC1:
+  87 0010 00       		.ascii	"\000"
+  88 0011 000000   		.space	3
+  89              	.LC2:
+  90 0014 61737365 		.ascii	"assertion \"%s\" failed: file \"%s\", line %d%s%s\012"
+  90      7274696F 
+  90      6E202225 
+  90      73222066 
+  90      61696C65 
+  91 0042 00       		.ascii	"\000"
+  92              		.text
+  93              	.Letext0:
+  94              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+  95              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+  96              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  97              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+  98              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+  99              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
+ 100              		.file 8 "../system/include/diag/Trace.h"
+ 101              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/assert.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 assert.c
+     /tmp/cc5k7v7a.s:16     .text.__assert_func:0000000000000000 $t
+     /tmp/cc5k7v7a.s:23     .text.__assert_func:0000000000000000 __assert_func
+     /tmp/cc5k7v7a.s:75     .text.__assert_func:000000000000002c $d
+     /tmp/cc5k7v7a.s:82     .rodata.__assert_func.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.assert.h.11.db24e541f16414db224bf986d21017e2
+                           .group:0000000000000000 wm4.stdlib.h.13.4ed386f5c1a80d71e72172885d946ef2
+                           .group:0000000000000000 wm4.stddef.h.187.e1c83cba2098ce92b68f6311de19e6b1
+                           .group:0000000000000000 wm4.stddef.h.39.57db33e786ccd422e31be63a26e19309
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.alloca.h.8.dfc0c703c47ec3e69746825b17d9e66d
+                           .group:0000000000000000 wm4.stdlib.h.56.d4493cd3736e51e9d56335045f26df45
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.unistd.h.2.39165d5b7784d1815ef4b0c4be6df560
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.unistd.h.170.da6e816043042c61475c2b1f58468b37
+
+UNDEFINED SYMBOLS
+trace_printf
+abort

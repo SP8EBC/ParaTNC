@@ -1,0 +1,157 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"umb_channel_pool.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.umb_channel_pool,"ax",%progbits
+  16              		.align	1
+  17              		.global	umb_channel_pool
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	umb_channel_pool:
+  24              	.LFB63:
+  25              		.file 1 "../system/src/umb_master/umb_channel_pool.c"
+   1:../system/src/umb_master/umb_channel_pool.c **** /*
+   2:../system/src/umb_master/umb_channel_pool.c ****  * umb_pool.c
+   3:../system/src/umb_master/umb_channel_pool.c ****  *
+   4:../system/src/umb_master/umb_channel_pool.c ****  *  Created on: 21.03.2020
+   5:../system/src/umb_master/umb_channel_pool.c ****  *      Author: mateusz
+   6:../system/src/umb_master/umb_channel_pool.c ****  */
+   7:../system/src/umb_master/umb_channel_pool.c **** 
+   8:../system/src/umb_master/umb_channel_pool.c **** #include <umb_master/umb_channel_pool.h>
+   9:../system/src/umb_master/umb_channel_pool.c **** #include <umb_master/umb_0x23_offline_data.h>
+  10:../system/src/umb_master/umb_channel_pool.c **** 
+  11:../system/src/umb_master/umb_channel_pool.c **** 
+  12:../system/src/umb_master/umb_channel_pool.c **** void umb_channel_pool(umb_frame_t *frame, umb_context_t *ctx, const config_data_umb_t * const confi
+  26              		.loc 1 12 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 70B5     		push	{r4, r5, r6, lr}
+  32              		.cfi_def_cfa_offset 16
+  33              		.cfi_offset 4, -16
+  34              		.cfi_offset 5, -12
+  35              		.cfi_offset 6, -8
+  36              		.cfi_offset 14, -4
+  37 0002 0C46     		mov	r4, r1
+  13:../system/src/umb_master/umb_channel_pool.c **** 	if (ctx->channel_number_it >=  UMB_CHANNELS_STORAGE_CAPAC)
+  38              		.loc 1 13 0
+  39 0004 91F82610 		ldrb	r1, [r1, #38]	@ zero_extendqisi2
+  40              	.LVL1:
+  41 0008 0529     		cmp	r1, #5
+  42 000a 02D9     		bls	.L2
+  14:../system/src/umb_master/umb_channel_pool.c **** 		ctx->channel_number_it = 0;
+  43              		.loc 1 14 0
+  44 000c 0023     		movs	r3, #0
+  45 000e 84F82630 		strb	r3, [r4, #38]
+  46              	.L2:
+  15:../system/src/umb_master/umb_channel_pool.c **** 
+  16:../system/src/umb_master/umb_channel_pool.c **** 	uint16_t curr_chn = ctx->channel_numbers[ctx->channel_number_it];
+  47              		.loc 1 16 0
+  48 0012 94F82610 		ldrb	r1, [r4, #38]	@ zero_extendqisi2
+  49 0016 0C31     		adds	r1, r1, #12
+  50 0018 04EB4101 		add	r1, r4, r1, lsl #1
+  51 001c 4D88     		ldrh	r5, [r1, #2]
+  52              	.LVL2:
+  17:../system/src/umb_master/umb_channel_pool.c **** 	ctx->current_channel = curr_chn;
+  53              		.loc 1 17 0
+  54 001e 2585     		strh	r5, [r4, #40]	@ movhi
+  18:../system/src/umb_master/umb_channel_pool.c **** 
+  19:../system/src/umb_master/umb_channel_pool.c **** 	if (curr_chn != 0xFFFFu && curr_chn != 0x0u) {
+  55              		.loc 1 19 0
+  56 0020 691E     		subs	r1, r5, #1
+  57 0022 89B2     		uxth	r1, r1
+  58 0024 4FF6FD76 		movw	r6, #65533
+  59 0028 B142     		cmp	r1, r6
+  60 002a 05D9     		bls	.L5
+  61              	.LVL3:
+  62              	.L3:
+  20:../system/src/umb_master/umb_channel_pool.c **** 		umb_0x23_offline_data_request(frame, ctx, curr_chn, config_umb);
+  21:../system/src/umb_master/umb_channel_pool.c **** 	}
+  22:../system/src/umb_master/umb_channel_pool.c **** 
+  23:../system/src/umb_master/umb_channel_pool.c **** 	ctx->channel_number_it++;
+  63              		.loc 1 23 0
+  64 002c 94F82630 		ldrb	r3, [r4, #38]	@ zero_extendqisi2
+  65 0030 0133     		adds	r3, r3, #1
+  66 0032 84F82630 		strb	r3, [r4, #38]
+  24:../system/src/umb_master/umb_channel_pool.c **** }
+  67              		.loc 1 24 0
+  68 0036 70BD     		pop	{r4, r5, r6, pc}
+  69              	.LVL4:
+  70              	.L5:
+  20:../system/src/umb_master/umb_channel_pool.c **** 		umb_0x23_offline_data_request(frame, ctx, curr_chn, config_umb);
+  71              		.loc 1 20 0
+  72 0038 1346     		mov	r3, r2
+  73 003a 2A46     		mov	r2, r5
+  74              	.LVL5:
+  75 003c 2146     		mov	r1, r4
+  76 003e FFF7FEFF 		bl	umb_0x23_offline_data_request
+  77              	.LVL6:
+  78 0042 F3E7     		b	.L3
+  79              		.cfi_endproc
+  80              	.LFE63:
+  82              		.text
+  83              	.Letext0:
+  84              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  85              		.file 3 "../system/include/umb_master/umb_state_t.h"
+  86              		.file 4 "../system/include/cmsis/core_cm3.h"
+  87              		.file 5 "../system/include/cmsis/system_stm32f10x.h"
+  88              		.file 6 "../system/include/cmsis/stm32f10x.h"
+  89              		.file 7 "../system/include/drivers/serial.h"
+  90              		.file 8 "../system/include/umb_master/umb_context_t.h"
+  91              		.file 9 "../system/include/umb_master/umb_frame_t.h"
+  92              		.file 10 "../include/config_data.h"
+  93              		.file 11 "../system/include/umb_master/umb_0x23_offline_data.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 umb_channel_pool.c
+     /tmp/ccC9DiBL.s:16     .text.umb_channel_pool:0000000000000000 $t
+     /tmp/ccC9DiBL.s:23     .text.umb_channel_pool:0000000000000000 umb_channel_pool
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.serial.h.8.be81c40110fd9bb3b68e7ebdb6b30450
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+
+UNDEFINED SYMBOLS
+umb_0x23_offline_data_request

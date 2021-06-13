@@ -1,0 +1,1624 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"wx_handler.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.wx_check_force_i2c_reset,"ax",%progbits
+  16              		.align	1
+  17              		.global	wx_check_force_i2c_reset
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	wx_check_force_i2c_reset:
+  24              	.LFB93:
+  25              		.file 1 "../src/wx_handler.c"
+   1:../src/wx_handler.c **** /*
+   2:../src/wx_handler.c ****  * wx_handler.c
+   3:../src/wx_handler.c ****  *
+   4:../src/wx_handler.c ****  *  Created on: 26.01.2019
+   5:../src/wx_handler.c ****  *      Author: mateusz
+   6:../src/wx_handler.c ****  */
+   7:../src/wx_handler.c **** 
+   8:../src/wx_handler.c **** #include "wx_handler.h"
+   9:../src/wx_handler.c **** #include "wx_handler_humidity.h"
+  10:../src/wx_handler.c **** #include "wx_handler_pressure.h"
+  11:../src/wx_handler.c **** #include "wx_handler_temperature.h"
+  12:../src/wx_handler.c **** 
+  13:../src/wx_handler.c **** #include <rte_wx.h>
+  14:../src/wx_handler.c **** #include <rte_rtu.h>
+  15:../src/wx_handler.c **** #include <rte_main.h>
+  16:../src/wx_handler.c **** #include <math.h>
+  17:../src/wx_handler.c **** #include <stm32f10x.h>
+  18:../src/wx_handler.c **** 
+  19:../src/wx_handler.c **** #include "drivers/analog_anemometer.h"
+  20:../src/wx_handler.c **** 
+  21:../src/wx_handler.c **** #include "station_config.h"
+  22:../src/wx_handler.c **** 
+  23:../src/wx_handler.c **** #include "modbus_rtu/rtu_getters.h"
+  24:../src/wx_handler.c **** #include "modbus_rtu/rtu_return_values.h"
+  25:../src/wx_handler.c **** 
+  26:../src/wx_handler.c **** #include "delay.h"
+  27:../src/wx_handler.c **** #include "telemetry.h"
+  28:../src/wx_handler.c **** #include "main.h"
+  29:../src/wx_handler.c **** 
+  30:../src/wx_handler.c **** #define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
+  31:../src/wx_handler.c **** #define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
+  32:../src/wx_handler.c **** 
+  33:../src/wx_handler.c **** uint32_t wx_last_good_wind_time = 0;
+  34:../src/wx_handler.c **** uint32_t wx_last_good_temperature_time = 0;
+  35:../src/wx_handler.c **** wx_pwr_state_t wx_pwr_state;
+  36:../src/wx_handler.c **** uint32_t wx_wind_pool_call_counter = 0;
+  37:../src/wx_handler.c **** uint8_t wx_force_i2c_sensor_reset = 0;
+  38:../src/wx_handler.c **** 
+  39:../src/wx_handler.c **** static const float direction_constant = M_PI/180.0f;
+  40:../src/wx_handler.c **** static const config_data_wx_sources_t internal = {
+  41:../src/wx_handler.c **** 		.temperature = WX_SOURCE_INTERNAL,
+  42:../src/wx_handler.c **** 		.pressure = WX_SOURCE_INTERNAL,
+  43:../src/wx_handler.c **** 		.humidity = WX_SOURCE_INTERNAL,
+  44:../src/wx_handler.c **** 		.wind = WX_SOURCE_INTERNAL
+  45:../src/wx_handler.c **** };
+  46:../src/wx_handler.c **** 
+  47:../src/wx_handler.c **** #define MODBUS_QF_TEMPERATURE_FULL		1
+  48:../src/wx_handler.c **** #define MODBUS_QF_TEMPERATURE_DEGR		(1 << 1)
+  49:../src/wx_handler.c **** #define MODBUS_QF_TEMPERATURE_NAVB		(1 << 2)
+  50:../src/wx_handler.c **** #define MODBUS_QF_HUMIDITY_FULL 		(1 << 3)
+  51:../src/wx_handler.c **** #define MODBUS_QF_HUMIDITY_DEGR 		(1 << 4)
+  52:../src/wx_handler.c **** #define MODBUS_QF_PRESSURE_FULL			(1 << 5)
+  53:../src/wx_handler.c **** #define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
+  54:../src/wx_handler.c **** 
+  55:../src/wx_handler.c **** 
+  56:../src/wx_handler.c **** void wx_check_force_i2c_reset(void) {
+  26              		.loc 1 56 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  57:../src/wx_handler.c **** 
+  58:../src/wx_handler.c **** 	if (wx_force_i2c_sensor_reset == 1) {
+  30              		.loc 1 58 0
+  31 0000 084B     		ldr	r3, .L8
+  32 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  33 0004 012B     		cmp	r3, #1
+  34 0006 00D0     		beq	.L7
+  35 0008 7047     		bx	lr
+  36              	.L7:
+  56:../src/wx_handler.c **** 
+  37              		.loc 1 56 0
+  38 000a 10B5     		push	{r4, lr}
+  39              		.cfi_def_cfa_offset 8
+  40              		.cfi_offset 4, -8
+  41              		.cfi_offset 14, -4
+  59:../src/wx_handler.c **** 		wx_force_i2c_sensor_reset = 0;
+  42              		.loc 1 59 0
+  43 000c 0024     		movs	r4, #0
+  44 000e 054B     		ldr	r3, .L8
+  45 0010 1C70     		strb	r4, [r3]
+  60:../src/wx_handler.c **** 
+  61:../src/wx_handler.c **** #if defined (_SENSOR_BME280)
+  62:../src/wx_handler.c **** 		 bme280_reset(&rte_wx_bme280_qf);
+  63:../src/wx_handler.c **** 		 bme280_setup();
+  64:../src/wx_handler.c **** #endif
+  65:../src/wx_handler.c **** 
+  66:../src/wx_handler.c **** #if defined (_SENSOR_MS5611)
+  67:../src/wx_handler.c **** 		 ms5611_reset(&rte_wx_ms5611_qf);
+  46              		.loc 1 67 0
+  47 0012 0548     		ldr	r0, .L8+4
+  48 0014 FFF7FEFF 		bl	ms5611_reset
+  49              	.LVL0:
+  68:../src/wx_handler.c **** 		 ms5611_trigger_measure(0, 0);
+  50              		.loc 1 68 0
+  51 0018 2146     		mov	r1, r4
+  52 001a 2046     		mov	r0, r4
+  53 001c FFF7FEFF 		bl	ms5611_trigger_measure
+  54              	.LVL1:
+  69:../src/wx_handler.c **** #endif
+  70:../src/wx_handler.c **** 	}
+  71:../src/wx_handler.c **** 
+  72:../src/wx_handler.c **** }
+  55              		.loc 1 72 0
+  56 0020 10BD     		pop	{r4, pc}
+  57              	.L9:
+  58 0022 00BF     		.align	2
+  59              	.L8:
+  60 0024 00000000 		.word	.LANCHOR0
+  61 0028 00000000 		.word	rte_wx_ms5611_qf
+  62              		.cfi_endproc
+  63              	.LFE93:
+  65              		.section	.text.wx_get_all_measurements,"ax",%progbits
+  66              		.align	1
+  67              		.global	wx_get_all_measurements
+  68              		.syntax unified
+  69              		.thumb
+  70              		.thumb_func
+  71              		.fpu softvfp
+  73              	wx_get_all_measurements:
+  74              	.LFB94:
+  73:../src/wx_handler.c **** 
+  74:../src/wx_handler.c **** void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_da
+  75              		.loc 1 74 0
+  76              		.cfi_startproc
+  77              		@ args = 0, pretend = 0, frame = 0
+  78              		@ frame_needed = 0, uses_anonymous_args = 0
+  79              	.LVL2:
+  80 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  81              		.cfi_def_cfa_offset 24
+  82              		.cfi_offset 4, -24
+  83              		.cfi_offset 5, -20
+  84              		.cfi_offset 6, -16
+  85              		.cfi_offset 7, -12
+  86              		.cfi_offset 8, -8
+  87              		.cfi_offset 14, -4
+  88 0004 0546     		mov	r5, r0
+  89 0006 0E46     		mov	r6, r1
+  90 0008 1746     		mov	r7, r2
+  91 000a 9846     		mov	r8, r3
+  92              	.LVL3:
+  75:../src/wx_handler.c **** 
+  76:../src/wx_handler.c **** 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. th
+  77:../src/wx_handler.c **** 	int32_t backup_parameter_result = 0;				// uses during retrieving backup
+  78:../src/wx_handler.c **** 
+  79:../src/wx_handler.c **** 	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config
+  93              		.loc 1 79 0
+  94 000c FFF7FEFF 		bl	wx_get_temperature_measurement
+  95              	.LVL4:
+  96 0010 0446     		mov	r4, r0
+  97              	.LVL5:
+  80:../src/wx_handler.c **** 	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb, config_rt
+  98              		.loc 1 80 0
+  99 0012 4346     		mov	r3, r8
+ 100 0014 3A46     		mov	r2, r7
+ 101 0016 3146     		mov	r1, r6
+ 102 0018 2846     		mov	r0, r5
+ 103              	.LVL6:
+ 104 001a FFF7FEFF 		bl	wx_get_pressure_measurement
+ 105              	.LVL7:
+ 106 001e 0443     		orrs	r4, r4, r0
+ 107              	.LVL8:
+  81:../src/wx_handler.c **** 	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb, config_rt
+ 108              		.loc 1 81 0
+ 109 0020 4346     		mov	r3, r8
+ 110 0022 3A46     		mov	r2, r7
+ 111 0024 3146     		mov	r1, r6
+ 112 0026 2846     		mov	r0, r5
+ 113 0028 FFF7FEFF 		bl	wx_get_humidity_measurement
+ 114              	.LVL9:
+ 115 002c 0443     		orrs	r4, r4, r0
+ 116              	.LVL10:
+  82:../src/wx_handler.c **** 
+  83:../src/wx_handler.c **** 	// check if all parameters (except wind) were collected successfully
+  84:../src/wx_handler.c **** 	if (parameter_result == (WX_HANDLER_PARAMETER_RESULT_TEMPERATURE | WX_HANDLER_PARAMETER_RESULT_PRE
+ 117              		.loc 1 84 0
+ 118 002e 2E2C     		cmp	r4, #46
+ 119 0030 17D0     		beq	.L10
+  85:../src/wx_handler.c **** 		;	// if everything were OK do nothing
+  86:../src/wx_handler.c **** 	}
+  87:../src/wx_handler.c **** 	else {
+  88:../src/wx_handler.c **** 		// if not check what was faulty and backup with an internal sensor
+  89:../src/wx_handler.c **** 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_TEMPERATURE) == 0) {
+ 120              		.loc 1 89 0
+ 121 0032 14F0020F 		tst	r4, #2
+ 122 0036 02D1     		bne	.L12
+  90:../src/wx_handler.c **** 			// if we don't have temperature
+  91:../src/wx_handler.c **** 			// check what is the primary source of temperature
+  92:../src/wx_handler.c **** 			if (config_sources->temperature != WX_SOURCE_INTERNAL) {
+ 123              		.loc 1 92 0
+ 124 0038 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
+ 125 003a 012B     		cmp	r3, #1
+ 126 003c 13D1     		bne	.L15
+ 127              	.LVL11:
+ 128              	.L12:
+  93:../src/wx_handler.c **** 				// if this is something different than an internal source use the internal sensor
+  94:../src/wx_handler.c **** 				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb, c
+  95:../src/wx_handler.c **** 			}
+  96:../src/wx_handler.c **** 			else {
+  97:../src/wx_handler.c **** 				; //
+  98:../src/wx_handler.c **** 			}
+  99:../src/wx_handler.c **** 		}
+ 100:../src/wx_handler.c **** 
+ 101:../src/wx_handler.c **** 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_PRESSURE) == 0) {
+ 129              		.loc 1 101 0
+ 130 003e 14F0040F 		tst	r4, #4
+ 131 0042 02D1     		bne	.L13
+ 102:../src/wx_handler.c **** 
+ 103:../src/wx_handler.c **** 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
+ 132              		.loc 1 103 0
+ 133 0044 6B78     		ldrb	r3, [r5, #1]	@ zero_extendqisi2
+ 134 0046 012B     		cmp	r3, #1
+ 135 0048 14D1     		bne	.L16
+ 136              	.L13:
+ 104:../src/wx_handler.c **** 				backup_parameter_result |= wx_get_pressure_measurement(&internal, config_mode, config_umb, conf
+ 105:../src/wx_handler.c **** 			}
+ 106:../src/wx_handler.c **** 		}
+ 107:../src/wx_handler.c **** 
+ 108:../src/wx_handler.c **** 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_HUMIDITY) == 0) {
+ 137              		.loc 1 108 0
+ 138 004a 14F0080F 		tst	r4, #8
+ 139 004e 08D1     		bne	.L10
+ 109:../src/wx_handler.c **** 
+ 110:../src/wx_handler.c **** 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
+ 140              		.loc 1 110 0
+ 141 0050 6B78     		ldrb	r3, [r5, #1]	@ zero_extendqisi2
+ 142 0052 012B     		cmp	r3, #1
+ 143 0054 05D0     		beq	.L10
+ 111:../src/wx_handler.c **** 				backup_parameter_result |= wx_get_humidity_measurement(&internal, config_mode, config_umb, conf
+ 144              		.loc 1 111 0
+ 145 0056 4346     		mov	r3, r8
+ 146 0058 3A46     		mov	r2, r7
+ 147 005a 3146     		mov	r1, r6
+ 148 005c 0948     		ldr	r0, .L17
+ 149 005e FFF7FEFF 		bl	wx_get_humidity_measurement
+ 150              	.LVL12:
+ 151              	.L10:
+ 112:../src/wx_handler.c **** 			}
+ 113:../src/wx_handler.c **** 		}
+ 114:../src/wx_handler.c **** 	}
+ 115:../src/wx_handler.c **** 
+ 116:../src/wx_handler.c **** 
+ 117:../src/wx_handler.c **** }
+ 152              		.loc 1 117 0
+ 153 0062 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 154              	.LVL13:
+ 155              	.L15:
+  94:../src/wx_handler.c **** 			}
+ 156              		.loc 1 94 0
+ 157 0066 4346     		mov	r3, r8
+ 158 0068 3A46     		mov	r2, r7
+ 159 006a 3146     		mov	r1, r6
+ 160 006c 0548     		ldr	r0, .L17
+ 161 006e FFF7FEFF 		bl	wx_get_temperature_measurement
+ 162              	.LVL14:
+ 163 0072 E4E7     		b	.L12
+ 164              	.L16:
+ 104:../src/wx_handler.c **** 			}
+ 165              		.loc 1 104 0
+ 166 0074 4346     		mov	r3, r8
+ 167 0076 3A46     		mov	r2, r7
+ 168 0078 3146     		mov	r1, r6
+ 169 007a 0248     		ldr	r0, .L17
+ 170 007c FFF7FEFF 		bl	wx_get_pressure_measurement
+ 171              	.LVL15:
+ 172 0080 E3E7     		b	.L13
+ 173              	.L18:
+ 174 0082 00BF     		.align	2
+ 175              	.L17:
+ 176 0084 00000000 		.word	.LANCHOR1
+ 177              		.cfi_endproc
+ 178              	.LFE94:
+ 180              		.section	.text.wx_get_bme280_temperature_pressure_humidity,"ax",%progbits
+ 181              		.align	1
+ 182              		.global	wx_get_bme280_temperature_pressure_humidity
+ 183              		.syntax unified
+ 184              		.thumb
+ 185              		.thumb_func
+ 186              		.fpu softvfp
+ 188              	wx_get_bme280_temperature_pressure_humidity:
+ 189              	.LFB95:
+ 118:../src/wx_handler.c **** 
+ 119:../src/wx_handler.c **** 
+ 120:../src/wx_handler.c **** 
+ 121:../src/wx_handler.c **** int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressu
+ 190              		.loc 1 121 0
+ 191              		.cfi_startproc
+ 192              		@ args = 0, pretend = 0, frame = 0
+ 193              		@ frame_needed = 0, uses_anonymous_args = 0
+ 194              	.LVL16:
+ 195 0000 08B5     		push	{r3, lr}
+ 196              		.cfi_def_cfa_offset 8
+ 197              		.cfi_offset 3, -8
+ 198              		.cfi_offset 14, -4
+ 199              	.LVL17:
+ 122:../src/wx_handler.c **** 
+ 123:../src/wx_handler.c **** 	int32_t return_value = 0;
+ 124:../src/wx_handler.c **** 
+ 125:../src/wx_handler.c **** 	// reading raw values from BME280 sensor
+ 126:../src/wx_handler.c **** 	return_value = bme280_read_raw_data(bme280_data_buffer);
+ 200              		.loc 1 126 0
+ 201 0002 0748     		ldr	r0, .L24
+ 202              	.LVL18:
+ 203 0004 FFF7FEFF 		bl	bme280_read_raw_data
+ 204              	.LVL19:
+ 127:../src/wx_handler.c **** 
+ 128:../src/wx_handler.c **** 	if (return_value == BME280_OK) {
+ 205              		.loc 1 128 0
+ 206 0008 0346     		mov	r3, r0
+ 207 000a 20B1     		cbz	r0, .L23
+ 129:../src/wx_handler.c **** 
+ 130:../src/wx_handler.c **** 		// setting back the Quality Factor to FULL to trace any problems with sensor readouts
+ 131:../src/wx_handler.c **** 		rte_wx_bme280_qf = BME280_QF_FULL;
+ 132:../src/wx_handler.c **** 
+ 133:../src/wx_handler.c **** 		// converting raw values to temperature
+ 134:../src/wx_handler.c **** 		//bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
+ 135:../src/wx_handler.c **** 
+ 136:../src/wx_handler.c **** 		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to NOT_AVALIABLE
+ 137:../src/wx_handler.c **** 		//bme280_get_pressure(pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+ 138:../src/wx_handler.c **** 
+ 139:../src/wx_handler.c **** 		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to NOT_AVALIABLE
+ 140:../src/wx_handler.c **** 		//bme280_get_humidity(humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
+ 141:../src/wx_handler.c **** 
+ 142:../src/wx_handler.c **** 	}
+ 143:../src/wx_handler.c **** 	else {
+ 144:../src/wx_handler.c **** 		// set the quality factor is sensor is not responding on the i2c bus
+ 145:../src/wx_handler.c **** 		rte_wx_bme280_qf = BME280_QF_NOT_AVAILABLE;
+ 208              		.loc 1 145 0
+ 209 000c 054A     		ldr	r2, .L24+4
+ 210 000e 0121     		movs	r1, #1
+ 211 0010 1170     		strb	r1, [r2]
+ 212              	.L19:
+ 146:../src/wx_handler.c **** 	}
+ 147:../src/wx_handler.c **** 
+ 148:../src/wx_handler.c **** 	return return_value;
+ 149:../src/wx_handler.c **** }
+ 213              		.loc 1 149 0
+ 214 0012 1846     		mov	r0, r3
+ 215              	.LVL20:
+ 216 0014 08BD     		pop	{r3, pc}
+ 217              	.LVL21:
+ 218              	.L23:
+ 131:../src/wx_handler.c **** 
+ 219              		.loc 1 131 0
+ 220 0016 034A     		ldr	r2, .L24+4
+ 221 0018 0021     		movs	r1, #0
+ 222 001a 1170     		strb	r1, [r2]
+ 223 001c F9E7     		b	.L19
+ 224              	.L25:
+ 225 001e 00BF     		.align	2
+ 226              	.L24:
+ 227 0020 00000000 		.word	bme280_data_buffer
+ 228 0024 00000000 		.word	rte_wx_bme280_qf
+ 229              		.cfi_endproc
+ 230              	.LFE95:
+ 232              		.global	__aeabi_ui2f
+ 233              		.global	__aeabi_fmul
+ 234              		.global	__aeabi_f2iz
+ 235              		.global	__aeabi_i2f
+ 236              		.global	__aeabi_f2d
+ 237              		.global	__aeabi_dmul
+ 238              		.global	__aeabi_d2iz
+ 239              		.section	.text.wx_pool_anemometer,"ax",%progbits
+ 240              		.align	1
+ 241              		.global	wx_pool_anemometer
+ 242              		.syntax unified
+ 243              		.thumb
+ 244              		.thumb_func
+ 245              		.fpu softvfp
+ 247              	wx_pool_anemometer:
+ 248              	.LFB96:
+ 150:../src/wx_handler.c **** 
+ 151:../src/wx_handler.c **** 
+ 152:../src/wx_handler.c **** void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, const config_data_mo
+ 249              		.loc 1 152 0
+ 250              		.cfi_startproc
+ 251              		@ args = 0, pretend = 0, frame = 16
+ 252              		@ frame_needed = 0, uses_anonymous_args = 0
+ 253              	.LVL22:
+ 254 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 255              		.cfi_def_cfa_offset 36
+ 256              		.cfi_offset 4, -36
+ 257              		.cfi_offset 5, -32
+ 258              		.cfi_offset 6, -28
+ 259              		.cfi_offset 7, -24
+ 260              		.cfi_offset 8, -20
+ 261              		.cfi_offset 9, -16
+ 262              		.cfi_offset 10, -12
+ 263              		.cfi_offset 11, -8
+ 264              		.cfi_offset 14, -4
+ 265 0004 85B0     		sub	sp, sp, #20
+ 266              		.cfi_def_cfa_offset 56
+ 267 0006 0546     		mov	r5, r0
+ 268 0008 0F46     		mov	r7, r1
+ 269 000a 1446     		mov	r4, r2
+ 270 000c 9846     		mov	r8, r3
+ 271              	.LVL23:
+ 153:../src/wx_handler.c **** 
+ 154:../src/wx_handler.c **** 	// locals
+ 155:../src/wx_handler.c **** 	uint32_t average_windspeed = 0;
+ 156:../src/wx_handler.c **** 	int32_t wind_direction_x_avg = 0;
+ 157:../src/wx_handler.c **** 	int32_t wind_direction_y_avg = 0;
+ 158:../src/wx_handler.c **** 	int16_t wind_direction_x = 0;
+ 159:../src/wx_handler.c **** 	int16_t wind_direction_y = 0;
+ 160:../src/wx_handler.c **** 	volatile float dir_temp = 0;
+ 272              		.loc 1 160 0
+ 273 000e 0023     		movs	r3, #0
+ 274              	.LVL24:
+ 275 0010 0393     		str	r3, [sp, #12]	@ float
+ 161:../src/wx_handler.c **** 	volatile float arctan_value = 0.0f;
+ 276              		.loc 1 161 0
+ 277 0012 0293     		str	r3, [sp, #8]	@ float
+ 278              	.LVL25:
+ 162:../src/wx_handler.c **** 	short i = 0;
+ 163:../src/wx_handler.c **** 	uint8_t average_ln;
+ 164:../src/wx_handler.c **** 
+ 165:../src/wx_handler.c **** 	int32_t modbus_retval;
+ 166:../src/wx_handler.c **** 
+ 167:../src/wx_handler.c **** 	wx_wind_pool_call_counter++;
+ 279              		.loc 1 167 0
+ 280 0014 884A     		ldr	r2, .L66+8
+ 281              	.LVL26:
+ 282 0016 1368     		ldr	r3, [r2]
+ 283 0018 0133     		adds	r3, r3, #1
+ 284 001a 1360     		str	r3, [r2]
+ 168:../src/wx_handler.c **** 
+ 169:../src/wx_handler.c **** 	uint16_t scaled_windspeed = 0;
+ 285              		.loc 1 169 0
+ 286 001c 0023     		movs	r3, #0
+ 287 001e ADF80630 		strh	r3, [sp, #6]	@ movhi
+ 170:../src/wx_handler.c **** 
+ 171:../src/wx_handler.c **** 	// internal sensors
+ 172:../src/wx_handler.c **** 	if (config_sources->wind == WX_SOURCE_INTERNAL) {
+ 288              		.loc 1 172 0
+ 289 0022 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
+ 290 0024 012B     		cmp	r3, #1
+ 291 0026 20D0     		beq	.L55
+ 173:../src/wx_handler.c **** 		// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
+ 174:../src/wx_handler.c **** 		scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+ 175:../src/wx_handler.c **** 	}
+ 176:../src/wx_handler.c **** 
+ 177:../src/wx_handler.c **** 	else if (config_sources->wind == WX_SOURCE_UMB) {
+ 292              		.loc 1 177 0
+ 293 0028 022B     		cmp	r3, #2
+ 294 002a 25D0     		beq	.L56
+ 178:../src/wx_handler.c **** 		rte_wx_average_winddirection = umb_get_winddirection(config_umb);
+ 179:../src/wx_handler.c **** 		rte_wx_average_windspeed = umb_get_windspeed(config_umb);
+ 180:../src/wx_handler.c **** 		rte_wx_max_windspeed = umb_get_windgusts(config_umb);
+ 181:../src/wx_handler.c **** 	}
+ 182:../src/wx_handler.c **** 
+ 183:../src/wx_handler.c **** 	else if (config_sources->wind == WX_SOURCE_RTU) {
+ 295              		.loc 1 183 0
+ 296 002c 032B     		cmp	r3, #3
+ 297 002e 33D0     		beq	.L57
+ 184:../src/wx_handler.c **** 		// get the value from modbus registers
+ 185:../src/wx_handler.c **** 		modbus_retval = rtu_get_wind_speed(&scaled_windspeed, config_rtu);
+ 186:../src/wx_handler.c **** 
+ 187:../src/wx_handler.c **** 		// check if this value has been processed w/o errors
+ 188:../src/wx_handler.c **** 		if (modbus_retval == MODBUS_RET_OK) {
+ 189:../src/wx_handler.c **** 			// if yes continue to further processing
+ 190:../src/wx_handler.c **** 			modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last, config_rtu);
+ 191:../src/wx_handler.c **** 
+ 192:../src/wx_handler.c **** 		}
+ 193:../src/wx_handler.c **** 
+ 194:../src/wx_handler.c **** 		// the second IF to check if the return value was the same for wind direction
+ 195:../src/wx_handler.c **** 		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+ 196:../src/wx_handler.c **** 			// if the value is not available (like modbus is not configured as a source
+ 197:../src/wx_handler.c **** 			// for wind data) get the value from internal sensors..
+ 198:../src/wx_handler.c **** 			#ifdef _INTERNAL_AS_BACKUP
+ 199:../src/wx_handler.c **** 				// .. if they are configured
+ 200:../src/wx_handler.c **** 				scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+ 201:../src/wx_handler.c **** 			#endif
+ 202:../src/wx_handler.c **** 		}
+ 203:../src/wx_handler.c **** 	}
+ 204:../src/wx_handler.c **** 
+ 205:../src/wx_handler.c **** 	else if (config_sources->wind == WX_SOURCE_FULL_RTU) {
+ 298              		.loc 1 205 0
+ 299 0030 042B     		cmp	r3, #4
+ 300 0032 48D0     		beq	.L58
+ 301              	.LVL27:
+ 302              	.L28:
+ 206:../src/wx_handler.c **** 		// get the value from modbus registers
+ 207:../src/wx_handler.c **** 		modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection, config_rtu);
+ 208:../src/wx_handler.c **** 
+ 209:../src/wx_handler.c **** 		// check if this value has been processed w/o errors
+ 210:../src/wx_handler.c **** 		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
+ 211:../src/wx_handler.c **** 			// if yes continue to further processing
+ 212:../src/wx_handler.c **** 			modbus_retval = rtu_get_wind_gusts(&rte_wx_max_windspeed, config_rtu);
+ 213:../src/wx_handler.c **** 			modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last, config_rtu);
+ 214:../src/wx_handler.c **** 
+ 215:../src/wx_handler.c **** 		}
+ 216:../src/wx_handler.c **** 	}
+ 217:../src/wx_handler.c **** 	else {
+ 218:../src/wx_handler.c **** 		;
+ 219:../src/wx_handler.c **** 	}
+ 220:../src/wx_handler.c **** 
+ 221:../src/wx_handler.c **** 	if (config_sources->wind != WX_SOURCE_FULL_RTU) {
+ 303              		.loc 1 221 0
+ 304 0034 EB78     		ldrb	r3, [r5, #3]	@ zero_extendqisi2
+ 305 0036 042B     		cmp	r3, #4
+ 306 0038 00F0C980 		beq	.L34
+ 222:../src/wx_handler.c **** 		// check how many times before the pool function was called
+ 223:../src/wx_handler.c **** 		if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
+ 307              		.loc 1 223 0
+ 308 003c 7E4B     		ldr	r3, .L66+8
+ 309 003e 1A68     		ldr	r2, [r3]
+ 310 0040 112A     		cmp	r2, #17
+ 311 0042 52D8     		bhi	.L52
+ 224:../src/wx_handler.c **** 			// if it was called less time than a length of buffers, the average length
+ 225:../src/wx_handler.c **** 			// needs to be shortened to handle the underrun properly
+ 226:../src/wx_handler.c **** 			average_ln = (uint8_t)wx_wind_pool_call_counter;
+ 312              		.loc 1 226 0
+ 313 0044 D2B2     		uxtb	r2, r2
+ 314              	.LVL28:
+ 315              	.L35:
+ 227:../src/wx_handler.c **** 		}
+ 228:../src/wx_handler.c **** 		else {
+ 229:../src/wx_handler.c **** 			average_ln = WIND_AVERAGE_LEN;
+ 230:../src/wx_handler.c **** 		}
+ 231:../src/wx_handler.c **** 
+ 232:../src/wx_handler.c **** 		// putting the wind speed into circular buffer
+ 233:../src/wx_handler.c **** 		rte_wx_windspeed[rte_wx_windspeed_it] = scaled_windspeed;
+ 316              		.loc 1 233 0
+ 317 0046 7D49     		ldr	r1, .L66+12
+ 318 0048 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 319 004a 7D48     		ldr	r0, .L66+16
+ 320 004c BDF80640 		ldrh	r4, [sp, #6]
+ 321              	.LVL29:
+ 322 0050 20F81340 		strh	r4, [r0, r3, lsl #1]	@ movhi
+ 234:../src/wx_handler.c **** 
+ 235:../src/wx_handler.c **** 		// increasing the iterator to the windspeed buffer
+ 236:../src/wx_handler.c **** 		rte_wx_windspeed_it++;
+ 323              		.loc 1 236 0
+ 324 0054 0133     		adds	r3, r3, #1
+ 325 0056 DBB2     		uxtb	r3, r3
+ 326 0058 0B70     		strb	r3, [r1]
+ 237:../src/wx_handler.c **** 
+ 238:../src/wx_handler.c **** 		// checking if iterator reached an end of the buffer
+ 239:../src/wx_handler.c **** 		if (rte_wx_windspeed_it >= WIND_AVERAGE_LEN) {
+ 327              		.loc 1 239 0
+ 328 005a 112B     		cmp	r3, #17
+ 329 005c 02D9     		bls	.L36
+ 240:../src/wx_handler.c **** 			rte_wx_windspeed_it = 0;
+ 330              		.loc 1 240 0
+ 331 005e 0B46     		mov	r3, r1
+ 332 0060 0021     		movs	r1, #0
+ 333 0062 1970     		strb	r1, [r3]
+ 334              	.L36:
+ 241:../src/wx_handler.c **** 		}
+ 242:../src/wx_handler.c **** 
+ 243:../src/wx_handler.c **** 		// calculating the average windspeed
+ 244:../src/wx_handler.c **** 		for (i = 0; i < average_ln; i++)
+ 335              		.loc 1 244 0
+ 336 0064 0023     		movs	r3, #0
+ 155:../src/wx_handler.c **** 	int32_t wind_direction_x_avg = 0;
+ 337              		.loc 1 155 0
+ 338 0066 1946     		mov	r1, r3
+ 339              		.loc 1 244 0
+ 340 0068 47E0     		b	.L37
+ 341              	.LVL30:
+ 342              	.L55:
+ 174:../src/wx_handler.c **** 	}
+ 343              		.loc 1 174 0
+ 344 006a 764B     		ldr	r3, .L66+20
+ 345 006c 1888     		ldrh	r0, [r3]
+ 346              	.LVL31:
+ 347 006e FFF7FEFF 		bl	analog_anemometer_get_ms_from_pulse
+ 348              	.LVL32:
+ 349 0072 ADF80600 		strh	r0, [sp, #6]	@ movhi
+ 350 0076 DDE7     		b	.L28
+ 351              	.LVL33:
+ 352              	.L56:
+ 178:../src/wx_handler.c **** 		rte_wx_average_windspeed = umb_get_windspeed(config_umb);
+ 353              		.loc 1 178 0
+ 354 0078 2046     		mov	r0, r4
+ 355              	.LVL34:
+ 356 007a FFF7FEFF 		bl	umb_get_winddirection
+ 357              	.LVL35:
+ 358 007e 724B     		ldr	r3, .L66+24
+ 359 0080 1880     		strh	r0, [r3]	@ movhi
+ 179:../src/wx_handler.c **** 		rte_wx_max_windspeed = umb_get_windgusts(config_umb);
+ 360              		.loc 1 179 0
+ 361 0082 2046     		mov	r0, r4
+ 362 0084 FFF7FEFF 		bl	umb_get_windspeed
+ 363              	.LVL36:
+ 364 0088 704B     		ldr	r3, .L66+28
+ 365 008a 1880     		strh	r0, [r3]	@ movhi
+ 180:../src/wx_handler.c **** 	}
+ 366              		.loc 1 180 0
+ 367 008c 2046     		mov	r0, r4
+ 368 008e FFF7FEFF 		bl	umb_get_windgusts
+ 369              	.LVL37:
+ 370 0092 6F4B     		ldr	r3, .L66+32
+ 371 0094 1880     		strh	r0, [r3]	@ movhi
+ 372 0096 CDE7     		b	.L28
+ 373              	.LVL38:
+ 374              	.L57:
+ 185:../src/wx_handler.c **** 
+ 375              		.loc 1 185 0
+ 376 0098 4146     		mov	r1, r8
+ 377              	.LVL39:
+ 378 009a 0DF10600 		add	r0, sp, #6
+ 379              	.LVL40:
+ 380 009e FFF7FEFF 		bl	rtu_get_wind_speed
+ 381              	.LVL41:
+ 188:../src/wx_handler.c **** 			// if yes continue to further processing
+ 382              		.loc 1 188 0
+ 383 00a2 0646     		mov	r6, r0
+ 384 00a4 48B1     		cbz	r0, .L59
+ 385              	.L31:
+ 195:../src/wx_handler.c **** 			// if the value is not available (like modbus is not configured as a source
+ 386              		.loc 1 195 0
+ 387 00a6 0EB1     		cbz	r6, .L32
+ 195:../src/wx_handler.c **** 			// if the value is not available (like modbus is not configured as a source
+ 388              		.loc 1 195 0 is_stmt 0 discriminator 1
+ 389 00a8 062E     		cmp	r6, #6
+ 390 00aa C3D1     		bne	.L28
+ 391              	.L32:
+ 200:../src/wx_handler.c **** 			#endif
+ 392              		.loc 1 200 0 is_stmt 1
+ 393 00ac 654B     		ldr	r3, .L66+20
+ 394 00ae 1888     		ldrh	r0, [r3]
+ 395              	.LVL42:
+ 396 00b0 FFF7FEFF 		bl	analog_anemometer_get_ms_from_pulse
+ 397              	.LVL43:
+ 398 00b4 ADF80600 		strh	r0, [sp, #6]	@ movhi
+ 399 00b8 BCE7     		b	.L28
+ 400              	.LVL44:
+ 401              	.L59:
+ 190:../src/wx_handler.c **** 
+ 402              		.loc 1 190 0
+ 403 00ba 4146     		mov	r1, r8
+ 404 00bc 6548     		ldr	r0, .L66+36
+ 405              	.LVL45:
+ 406 00be FFF7FEFF 		bl	rtu_get_wind_direction
+ 407              	.LVL46:
+ 408 00c2 0646     		mov	r6, r0
+ 409              	.LVL47:
+ 410 00c4 EFE7     		b	.L31
+ 411              	.LVL48:
+ 412              	.L58:
+ 207:../src/wx_handler.c **** 
+ 413              		.loc 1 207 0
+ 414 00c6 4146     		mov	r1, r8
+ 415              	.LVL49:
+ 416 00c8 5F48     		ldr	r0, .L66+24
+ 417              	.LVL50:
+ 418 00ca FFF7FEFF 		bl	rtu_get_wind_direction
+ 419              	.LVL51:
+ 210:../src/wx_handler.c **** 			// if yes continue to further processing
+ 420              		.loc 1 210 0
+ 421 00ce 0646     		mov	r6, r0
+ 422 00d0 08B1     		cbz	r0, .L33
+ 210:../src/wx_handler.c **** 			// if yes continue to further processing
+ 423              		.loc 1 210 0 is_stmt 0 discriminator 1
+ 424 00d2 0628     		cmp	r0, #6
+ 425 00d4 AED1     		bne	.L28
+ 426              	.L33:
+ 212:../src/wx_handler.c **** 			modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last, config_rtu);
+ 427              		.loc 1 212 0 is_stmt 1
+ 428 00d6 4146     		mov	r1, r8
+ 429 00d8 5D48     		ldr	r0, .L66+32
+ 430              	.LVL52:
+ 431 00da FFF7FEFF 		bl	rtu_get_wind_gusts
+ 432              	.LVL53:
+ 213:../src/wx_handler.c **** 
+ 433              		.loc 1 213 0
+ 434 00de 4146     		mov	r1, r8
+ 435 00e0 5C48     		ldr	r0, .L66+36
+ 436 00e2 FFF7FEFF 		bl	rtu_get_wind_speed
+ 437              	.LVL54:
+ 438 00e6 0646     		mov	r6, r0
+ 439              	.LVL55:
+ 440 00e8 A4E7     		b	.L28
+ 441              	.LVL56:
+ 442              	.L52:
+ 229:../src/wx_handler.c **** 		}
+ 443              		.loc 1 229 0
+ 444 00ea 1222     		movs	r2, #18
+ 445 00ec ABE7     		b	.L35
+ 446              	.LVL57:
+ 447              	.L38:
+ 245:../src/wx_handler.c **** 			average_windspeed += rte_wx_windspeed[i];
+ 448              		.loc 1 245 0 discriminator 3
+ 449 00ee 5448     		ldr	r0, .L66+16
+ 450 00f0 30F81300 		ldrh	r0, [r0, r3, lsl #1]
+ 451 00f4 0144     		add	r1, r1, r0
+ 452              	.LVL58:
+ 244:../src/wx_handler.c **** 			average_windspeed += rte_wx_windspeed[i];
+ 453              		.loc 1 244 0 discriminator 3
+ 454 00f6 0133     		adds	r3, r3, #1
+ 455              	.LVL59:
+ 456 00f8 1BB2     		sxth	r3, r3
+ 457              	.LVL60:
+ 458              	.L37:
+ 244:../src/wx_handler.c **** 			average_windspeed += rte_wx_windspeed[i];
+ 459              		.loc 1 244 0 is_stmt 0 discriminator 1
+ 460 00fa 9046     		mov	r8, r2
+ 461 00fc 9342     		cmp	r3, r2
+ 462 00fe F6DB     		blt	.L38
+ 246:../src/wx_handler.c **** 
+ 247:../src/wx_handler.c **** 		average_windspeed /= average_ln;
+ 463              		.loc 1 247 0 is_stmt 1
+ 464 0100 B1FBF2F2 		udiv	r2, r1, r2
+ 465              	.LVL61:
+ 248:../src/wx_handler.c **** 
+ 249:../src/wx_handler.c **** 		// store the value in rte
+ 250:../src/wx_handler.c **** 		rte_wx_average_windspeed = average_windspeed;
+ 466              		.loc 1 250 0
+ 467 0104 514B     		ldr	r3, .L66+28
+ 468              	.LVL62:
+ 469 0106 1A80     		strh	r2, [r3]	@ movhi
+ 470              	.LVL63:
+ 251:../src/wx_handler.c **** 
+ 252:../src/wx_handler.c **** 		// reuse the local variable to find maximum value
+ 253:../src/wx_handler.c **** 		average_windspeed = 0;
+ 254:../src/wx_handler.c **** 
+ 255:../src/wx_handler.c **** 		// looking for gusts
+ 256:../src/wx_handler.c **** 		for (i = 0; i < average_ln; i++) {
+ 471              		.loc 1 256 0
+ 472 0108 0023     		movs	r3, #0
+ 253:../src/wx_handler.c **** 
+ 473              		.loc 1 253 0
+ 474 010a 1946     		mov	r1, r3
+ 475              		.loc 1 256 0
+ 476 010c 01E0     		b	.L39
+ 477              	.LVL64:
+ 478              	.L40:
+ 479              		.loc 1 256 0 is_stmt 0 discriminator 2
+ 480 010e 0133     		adds	r3, r3, #1
+ 481              	.LVL65:
+ 482 0110 1BB2     		sxth	r3, r3
+ 483              	.LVL66:
+ 484              	.L39:
+ 485              		.loc 1 256 0 discriminator 1
+ 486 0112 9845     		cmp	r8, r3
+ 487 0114 06DD     		ble	.L60
+ 257:../src/wx_handler.c **** 			if (average_windspeed < rte_wx_windspeed[i])
+ 488              		.loc 1 257 0 is_stmt 1
+ 489 0116 4A4A     		ldr	r2, .L66+16
+ 490 0118 32F81320 		ldrh	r2, [r2, r3, lsl #1]
+ 491 011c 8A42     		cmp	r2, r1
+ 492 011e F6D9     		bls	.L40
+ 258:../src/wx_handler.c **** 				average_windspeed = rte_wx_windspeed[i];
+ 493              		.loc 1 258 0
+ 494 0120 1146     		mov	r1, r2
+ 495              	.LVL67:
+ 496 0122 F4E7     		b	.L40
+ 497              	.LVL68:
+ 498              	.L60:
+ 259:../src/wx_handler.c **** 		}
+ 260:../src/wx_handler.c **** 
+ 261:../src/wx_handler.c **** 		// storing wind gusts value in rte
+ 262:../src/wx_handler.c **** 		rte_wx_max_windspeed = average_windspeed;
+ 499              		.loc 1 262 0
+ 500 0124 4A4B     		ldr	r3, .L66+32
+ 501              	.LVL69:
+ 502 0126 1980     		strh	r1, [r3]	@ movhi
+ 263:../src/wx_handler.c **** 
+ 264:../src/wx_handler.c **** 		// adding last wind direction to the buffers
+ 265:../src/wx_handler.c **** 		if (rte_wx_winddirection_it >= WIND_AVERAGE_LEN)
+ 503              		.loc 1 265 0
+ 504 0128 4B4B     		ldr	r3, .L66+40
+ 505 012a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 506 012c 112B     		cmp	r3, #17
+ 507 012e 02D9     		bls	.L42
+ 266:../src/wx_handler.c **** 			rte_wx_winddirection_it = 0;
+ 508              		.loc 1 266 0
+ 509 0130 494B     		ldr	r3, .L66+40
+ 510 0132 0022     		movs	r2, #0
+ 511 0134 1A70     		strb	r2, [r3]
+ 512              	.L42:
+ 267:../src/wx_handler.c **** 
+ 268:../src/wx_handler.c **** 		rte_wx_winddirection[rte_wx_winddirection_it++] = rte_wx_winddirection_last;
+ 513              		.loc 1 268 0
+ 514 0136 484A     		ldr	r2, .L66+40
+ 515 0138 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 516 013a 591C     		adds	r1, r3, #1
+ 517              	.LVL70:
+ 518 013c 1170     		strb	r1, [r2]
+ 519 013e 454A     		ldr	r2, .L66+36
+ 520 0140 1188     		ldrh	r1, [r2]
+ 521 0142 464A     		ldr	r2, .L66+44
+ 522 0144 22F81310 		strh	r1, [r2, r3, lsl #1]	@ movhi
+ 523              	.LVL71:
+ 269:../src/wx_handler.c **** 
+ 270:../src/wx_handler.c **** 		// calculating average wind direction
+ 271:../src/wx_handler.c **** 		for (i = 0; i < average_ln; i++) {
+ 524              		.loc 1 271 0
+ 525 0148 0024     		movs	r4, #0
+ 157:../src/wx_handler.c **** 	int16_t wind_direction_x = 0;
+ 526              		.loc 1 157 0
+ 527 014a A246     		mov	r10, r4
+ 156:../src/wx_handler.c **** 	int32_t wind_direction_y_avg = 0;
+ 528              		.loc 1 156 0
+ 529 014c A146     		mov	r9, r4
+ 530              		.loc 1 271 0
+ 531 014e 22E0     		b	.L43
+ 532              	.LVL72:
+ 533              	.L44:
+ 272:../src/wx_handler.c **** 
+ 273:../src/wx_handler.c **** 			dir_temp = (float)rte_wx_winddirection[i];
+ 534              		.loc 1 273 0 discriminator 3
+ 535 0150 424B     		ldr	r3, .L66+44
+ 536 0152 33F81400 		ldrh	r0, [r3, r4, lsl #1]
+ 537 0156 FFF7FEFF 		bl	__aeabi_ui2f
+ 538              	.LVL73:
+ 539 015a 0390     		str	r0, [sp, #12]	@ float
+ 274:../src/wx_handler.c **** 
+ 275:../src/wx_handler.c **** 			// split the wind direction into x and y component
+ 276:../src/wx_handler.c **** 			wind_direction_x = (int16_t)(100.0f * cosf(dir_temp * direction_constant));
+ 540              		.loc 1 276 0 discriminator 3
+ 541 015c 0398     		ldr	r0, [sp, #12]	@ float
+ 542 015e 4049     		ldr	r1, .L66+48
+ 543 0160 FFF7FEFF 		bl	__aeabi_fmul
+ 544              	.LVL74:
+ 545 0164 FFF7FEFF 		bl	cosf
+ 546              	.LVL75:
+ 547 0168 3E49     		ldr	r1, .L66+52
+ 548 016a FFF7FEFF 		bl	__aeabi_fmul
+ 549              	.LVL76:
+ 550 016e FFF7FEFF 		bl	__aeabi_f2iz
+ 551              	.LVL77:
+ 552 0172 0FFA80FB 		sxth	fp, r0
+ 553              	.LVL78:
+ 277:../src/wx_handler.c **** 			wind_direction_y = (int16_t)(100.0f * sinf(dir_temp * direction_constant));
+ 554              		.loc 1 277 0 discriminator 3
+ 555 0176 0398     		ldr	r0, [sp, #12]	@ float
+ 556 0178 3949     		ldr	r1, .L66+48
+ 557 017a FFF7FEFF 		bl	__aeabi_fmul
+ 558              	.LVL79:
+ 559 017e FFF7FEFF 		bl	sinf
+ 560              	.LVL80:
+ 561 0182 3849     		ldr	r1, .L66+52
+ 562 0184 FFF7FEFF 		bl	__aeabi_fmul
+ 563              	.LVL81:
+ 564 0188 FFF7FEFF 		bl	__aeabi_f2iz
+ 565              	.LVL82:
+ 566 018c 00B2     		sxth	r0, r0
+ 567              	.LVL83:
+ 278:../src/wx_handler.c **** 
+ 279:../src/wx_handler.c **** 			// adding components to calculate average
+ 280:../src/wx_handler.c **** 			wind_direction_x_avg += wind_direction_x;
+ 568              		.loc 1 280 0 discriminator 3
+ 569 018e D944     		add	r9, r9, fp
+ 570              	.LVL84:
+ 281:../src/wx_handler.c **** 			wind_direction_y_avg += wind_direction_y;
+ 571              		.loc 1 281 0 discriminator 3
+ 572 0190 8244     		add	r10, r10, r0
+ 573              	.LVL85:
+ 271:../src/wx_handler.c **** 
+ 574              		.loc 1 271 0 discriminator 3
+ 575 0192 0134     		adds	r4, r4, #1
+ 576              	.LVL86:
+ 577 0194 24B2     		sxth	r4, r4
+ 578              	.LVL87:
+ 579              	.L43:
+ 271:../src/wx_handler.c **** 
+ 580              		.loc 1 271 0 is_stmt 0 discriminator 1
+ 581 0196 A045     		cmp	r8, r4
+ 582 0198 DADC     		bgt	.L44
+ 583              	.LVL88:
+ 282:../src/wx_handler.c **** 
+ 283:../src/wx_handler.c **** 		}
+ 284:../src/wx_handler.c **** 
+ 285:../src/wx_handler.c **** 		// dividing to get average of x and y componen
+ 286:../src/wx_handler.c **** 		wind_direction_x_avg /= average_ln;
+ 287:../src/wx_handler.c **** 		wind_direction_y_avg /= average_ln;
+ 584              		.loc 1 287 0 is_stmt 1
+ 585 019a 9AFBF8FA 		sdiv	r10, r10, r8
+ 586              	.LVL89:
+ 288:../src/wx_handler.c **** 
+ 289:../src/wx_handler.c **** 		// converting x & y component of wind direction back to an angle
+ 290:../src/wx_handler.c **** 		arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);
+ 587              		.loc 1 290 0
+ 588 019e 99FBF8F0 		sdiv	r0, r9, r8
+ 589              	.LVL90:
+ 590 01a2 FFF7FEFF 		bl	__aeabi_i2f
+ 591              	.LVL91:
+ 592 01a6 8046     		mov	r8, r0
+ 593              	.LVL92:
+ 594 01a8 5046     		mov	r0, r10
+ 595 01aa FFF7FEFF 		bl	__aeabi_i2f
+ 596              	.LVL93:
+ 597 01ae 4146     		mov	r1, r8
+ 598 01b0 FFF7FEFF 		bl	atan2f
+ 599              	.LVL94:
+ 600 01b4 0290     		str	r0, [sp, #8]	@ float
+ 291:../src/wx_handler.c **** 
+ 292:../src/wx_handler.c **** 		rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f/M_PI));
+ 601              		.loc 1 292 0
+ 602 01b6 0298     		ldr	r0, [sp, #8]	@ float
+ 603 01b8 FFF7FEFF 		bl	__aeabi_f2d
+ 604              	.LVL95:
+ 605 01bc 1CA3     		adr	r3, .L66
+ 606 01be D3E90023 		ldrd	r2, [r3]
+ 607 01c2 FFF7FEFF 		bl	__aeabi_dmul
+ 608              	.LVL96:
+ 609 01c6 FFF7FEFF 		bl	__aeabi_d2iz
+ 610              	.LVL97:
+ 611 01ca 1F4B     		ldr	r3, .L66+24
+ 612 01cc 1880     		strh	r0, [r3]	@ movhi
+ 613              	.LVL98:
+ 614              	.L34:
+ 293:../src/wx_handler.c **** 
+ 294:../src/wx_handler.c **** 		if (rte_wx_average_winddirection < 0)
+ 295:../src/wx_handler.c **** 			rte_wx_average_winddirection += 360;
+ 296:../src/wx_handler.c **** 
+ 297:../src/wx_handler.c **** 	}
+ 298:../src/wx_handler.c **** 
+ 299:../src/wx_handler.c **** 	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind != WX_SOURCE_RTU) {
+ 615              		.loc 1 299 0
+ 616 01ce EB78     		ldrb	r3, [r5, #3]	@ zero_extendqisi2
+ 617 01d0 032B     		cmp	r3, #3
+ 618 01d2 1FD0     		beq	.L45
+ 300:../src/wx_handler.c **** 		if (modbus_retval == MODBUS_RET_OK) {
+ 619              		.loc 1 300 0
+ 620 01d4 5EB1     		cbz	r6, .L61
+ 301:../src/wx_handler.c **** 			rte_wx_wind_qf = AN_WIND_QF_FULL;
+ 302:../src/wx_handler.c **** 		}
+ 303:../src/wx_handler.c **** 		else if (modbus_retval == MODBUS_RET_DEGRADED) {
+ 621              		.loc 1 303 0
+ 622 01d6 062E     		cmp	r6, #6
+ 623 01d8 0FD0     		beq	.L62
+ 304:../src/wx_handler.c **** 			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+ 305:../src/wx_handler.c **** 		}
+ 306:../src/wx_handler.c **** 		else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
+ 624              		.loc 1 306 0
+ 625 01da 052E     		cmp	r6, #5
+ 626 01dc 11D0     		beq	.L63
+ 307:../src/wx_handler.c **** 			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+ 308:../src/wx_handler.c **** 		}
+ 309:../src/wx_handler.c **** 		else {
+ 310:../src/wx_handler.c **** 			if ((config_mode->wx & WX_INTERNAL_AS_BACKUP) != 0)
+ 627              		.loc 1 310 0
+ 628 01de 7B78     		ldrb	r3, [r7, #1]	@ zero_extendqisi2
+ 629 01e0 13F0020F 		tst	r3, #2
+ 630 01e4 11D1     		bne	.L64
+ 311:../src/wx_handler.c **** 				rte_wx_wind_qf = analog_anemometer_get_qf();
+ 312:../src/wx_handler.c **** 			else
+ 313:../src/wx_handler.c **** 				rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+ 631              		.loc 1 313 0
+ 632 01e6 204B     		ldr	r3, .L66+56
+ 633 01e8 0422     		movs	r2, #4
+ 634 01ea 1A70     		strb	r2, [r3]
+ 635 01ec 02E0     		b	.L26
+ 636              	.L61:
+ 301:../src/wx_handler.c **** 		}
+ 637              		.loc 1 301 0
+ 638 01ee 1E4B     		ldr	r3, .L66+56
+ 639 01f0 0022     		movs	r2, #0
+ 640 01f2 1A70     		strb	r2, [r3]
+ 641              	.L26:
+ 314:../src/wx_handler.c **** 		}
+ 315:../src/wx_handler.c **** 	}
+ 316:../src/wx_handler.c **** 	else if (config_sources->wind == WX_SOURCE_INTERNAL) {
+ 317:../src/wx_handler.c **** 		rte_wx_wind_qf = analog_anemometer_get_qf();
+ 318:../src/wx_handler.c **** 	}
+ 319:../src/wx_handler.c **** 	else {
+ 320:../src/wx_handler.c **** 		rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+ 321:../src/wx_handler.c **** 	}
+ 322:../src/wx_handler.c **** 
+ 323:../src/wx_handler.c **** 
+ 324:../src/wx_handler.c **** }
+ 642              		.loc 1 324 0
+ 643 01f4 05B0     		add	sp, sp, #20
+ 644              		.cfi_remember_state
+ 645              		.cfi_def_cfa_offset 36
+ 646              		@ sp needed
+ 647 01f6 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 648              	.LVL99:
+ 649              	.L62:
+ 650              		.cfi_restore_state
+ 304:../src/wx_handler.c **** 		}
+ 651              		.loc 1 304 0
+ 652 01fa 1B4B     		ldr	r3, .L66+56
+ 653 01fc 0322     		movs	r2, #3
+ 654 01fe 1A70     		strb	r2, [r3]
+ 655 0200 F8E7     		b	.L26
+ 656              	.L63:
+ 307:../src/wx_handler.c **** 		}
+ 657              		.loc 1 307 0
+ 658 0202 194B     		ldr	r3, .L66+56
+ 659 0204 0422     		movs	r2, #4
+ 660 0206 1A70     		strb	r2, [r3]
+ 661 0208 F4E7     		b	.L26
+ 662              	.L64:
+ 311:../src/wx_handler.c **** 			else
+ 663              		.loc 1 311 0
+ 664 020a FFF7FEFF 		bl	analog_anemometer_get_qf
+ 665              	.LVL100:
+ 666 020e 164B     		ldr	r3, .L66+56
+ 667 0210 1870     		strb	r0, [r3]
+ 668 0212 EFE7     		b	.L26
+ 669              	.L45:
+ 316:../src/wx_handler.c **** 		rte_wx_wind_qf = analog_anemometer_get_qf();
+ 670              		.loc 1 316 0
+ 671 0214 012B     		cmp	r3, #1
+ 672 0216 03D0     		beq	.L65
+ 320:../src/wx_handler.c **** 	}
+ 673              		.loc 1 320 0
+ 674 0218 134B     		ldr	r3, .L66+56
+ 675 021a 0522     		movs	r2, #5
+ 676 021c 1A70     		strb	r2, [r3]
+ 677              		.loc 1 324 0
+ 678 021e E9E7     		b	.L26
+ 679              	.L65:
+ 317:../src/wx_handler.c **** 	}
+ 680              		.loc 1 317 0
+ 681 0220 FFF7FEFF 		bl	analog_anemometer_get_qf
+ 682              	.LVL101:
+ 683 0224 104B     		ldr	r3, .L66+56
+ 684 0226 1870     		strb	r0, [r3]
+ 685 0228 E4E7     		b	.L26
+ 686              	.L67:
+ 687 022a 00BFAFF3 		.align	3
+ 687      0080
+ 688              	.L66:
+ 689 0230 F8C1631A 		.word	442745336
+ 690 0234 DCA54C40 		.word	1078765020
+ 691 0238 00000000 		.word	.LANCHOR2
+ 692 023c 00000000 		.word	rte_wx_windspeed_it
+ 693 0240 00000000 		.word	rte_wx_windspeed
+ 694 0244 00000000 		.word	rte_wx_windspeed_pulses
+ 695 0248 00000000 		.word	rte_wx_average_winddirection
+ 696 024c 00000000 		.word	rte_wx_average_windspeed
+ 697 0250 00000000 		.word	rte_wx_max_windspeed
+ 698 0254 00000000 		.word	rte_wx_winddirection_last
+ 699 0258 00000000 		.word	rte_wx_winddirection_it
+ 700 025c 00000000 		.word	rte_wx_winddirection
+ 701 0260 35FA8E3C 		.word	1016003125
+ 702 0264 0000C842 		.word	1120403456
+ 703 0268 00000000 		.word	rte_wx_wind_qf
+ 704              		.cfi_endproc
+ 705              	.LFE96:
+ 707              		.section	.text.wx_pwr_init,"ax",%progbits
+ 708              		.align	1
+ 709              		.global	wx_pwr_init
+ 710              		.syntax unified
+ 711              		.thumb
+ 712              		.thumb_func
+ 713              		.fpu softvfp
+ 715              	wx_pwr_init:
+ 716              	.LFB97:
+ 325:../src/wx_handler.c **** 
+ 326:../src/wx_handler.c **** void wx_pwr_init(void) {
+ 717              		.loc 1 326 0
+ 718              		.cfi_startproc
+ 719              		@ args = 0, pretend = 0, frame = 8
+ 720              		@ frame_needed = 0, uses_anonymous_args = 0
+ 721 0000 30B5     		push	{r4, r5, lr}
+ 722              		.cfi_def_cfa_offset 12
+ 723              		.cfi_offset 4, -12
+ 724              		.cfi_offset 5, -8
+ 725              		.cfi_offset 14, -4
+ 726 0002 83B0     		sub	sp, sp, #12
+ 727              		.cfi_def_cfa_offset 24
+ 327:../src/wx_handler.c **** 	// RELAY_CNTRL
+ 328:../src/wx_handler.c **** 	GPIO_InitTypeDef GPIO_InitStructure;
+ 329:../src/wx_handler.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+ 728              		.loc 1 329 0
+ 729 0004 4FF48075 		mov	r5, #256
+ 730 0008 ADF80450 		strh	r5, [sp, #4]	@ movhi
+ 330:../src/wx_handler.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 731              		.loc 1 330 0
+ 732 000c 0323     		movs	r3, #3
+ 733 000e 8DF80630 		strb	r3, [sp, #6]
+ 331:../src/wx_handler.c **** #if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
+ 332:../src/wx_handler.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+ 734              		.loc 1 332 0
+ 735 0012 1423     		movs	r3, #20
+ 736 0014 8DF80730 		strb	r3, [sp, #7]
+ 333:../src/wx_handler.c **** #elif (defined PARATNC_HWREV_C)
+ 334:../src/wx_handler.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+ 335:../src/wx_handler.c **** #else
+ 336:../src/wx_handler.c **** #error ("Hardware Revision not chosen.")
+ 337:../src/wx_handler.c **** #endif
+ 338:../src/wx_handler.c **** 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+ 737              		.loc 1 338 0
+ 738 0018 064C     		ldr	r4, .L70
+ 739 001a 01A9     		add	r1, sp, #4
+ 740 001c 2046     		mov	r0, r4
+ 741 001e FFF7FEFF 		bl	GPIO_Init
+ 742              	.LVL102:
+ 339:../src/wx_handler.c **** 
+ 340:../src/wx_handler.c **** #if (defined PARATNC_HWREV_C)
+ 341:../src/wx_handler.c **** 	// +12V PWR_CNTRL
+ 342:../src/wx_handler.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+ 343:../src/wx_handler.c **** 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+ 344:../src/wx_handler.c **** #endif
+ 345:../src/wx_handler.c **** 
+ 346:../src/wx_handler.c **** 	wx_pwr_state = WX_PWR_OFF;
+ 743              		.loc 1 346 0
+ 744 0022 054B     		ldr	r3, .L70+4
+ 745 0024 0022     		movs	r2, #0
+ 746 0026 1A70     		strb	r2, [r3]
+ 347:../src/wx_handler.c **** 
+ 348:../src/wx_handler.c **** 	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+ 747              		.loc 1 348 0
+ 748 0028 2946     		mov	r1, r5
+ 749 002a 2046     		mov	r0, r4
+ 750 002c FFF7FEFF 		bl	GPIO_ResetBits
+ 751              	.LVL103:
+ 349:../src/wx_handler.c **** 
+ 350:../src/wx_handler.c **** #if (defined PARATNC_HWREV_C)
+ 351:../src/wx_handler.c **** 	// +12V_SW PWR_CNTRL
+ 352:../src/wx_handler.c **** 	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+ 353:../src/wx_handler.c **** #endif
+ 354:../src/wx_handler.c **** 
+ 355:../src/wx_handler.c **** }
+ 752              		.loc 1 355 0
+ 753 0030 03B0     		add	sp, sp, #12
+ 754              		.cfi_def_cfa_offset 12
+ 755              		@ sp needed
+ 756 0032 30BD     		pop	{r4, r5, pc}
+ 757              	.L71:
+ 758              		.align	2
+ 759              	.L70:
+ 760 0034 000C0140 		.word	1073810432
+ 761 0038 00000000 		.word	wx_pwr_state
+ 762              		.cfi_endproc
+ 763              	.LFE97:
+ 765              		.section	.text.wx_pwr_periodic_handle,"ax",%progbits
+ 766              		.align	1
+ 767              		.global	wx_pwr_periodic_handle
+ 768              		.syntax unified
+ 769              		.thumb
+ 770              		.thumb_func
+ 771              		.fpu softvfp
+ 773              	wx_pwr_periodic_handle:
+ 774              	.LFB98:
+ 356:../src/wx_handler.c **** 
+ 357:../src/wx_handler.c **** void wx_pwr_periodic_handle(void) {
+ 775              		.loc 1 357 0
+ 776              		.cfi_startproc
+ 777              		@ args = 0, pretend = 0, frame = 0
+ 778              		@ frame_needed = 0, uses_anonymous_args = 0
+ 779 0000 08B5     		push	{r3, lr}
+ 780              		.cfi_def_cfa_offset 8
+ 781              		.cfi_offset 3, -8
+ 782              		.cfi_offset 14, -4
+ 358:../src/wx_handler.c **** 
+ 359:../src/wx_handler.c **** 	// do a last valid measuremenets timestamps only if power is currently applied
+ 360:../src/wx_handler.c **** 	if (wx_pwr_state == WX_PWR_ON) {
+ 783              		.loc 1 360 0
+ 784 0002 304B     		ldr	r3, .L81
+ 785 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 786 0006 012B     		cmp	r3, #1
+ 787 0008 06D0     		beq	.L80
+ 788              	.L73:
+ 361:../src/wx_handler.c **** 
+ 362:../src/wx_handler.c **** 		// the value of 0xFFFFFFFF is a magic word which disables the check for this parameter
+ 363:../src/wx_handler.c **** 		if (wx_last_good_temperature_time != 0xFFFFFFFF &&
+ 364:../src/wx_handler.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 365:../src/wx_handler.c **** 		{
+ 366:../src/wx_handler.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 367:../src/wx_handler.c **** 		}
+ 368:../src/wx_handler.c **** 
+ 369:../src/wx_handler.c **** 		// as the weather station could be configured not to perform wind measurements at all
+ 370:../src/wx_handler.c **** 		if (wx_last_good_wind_time != 0xFFFFFFFF &&
+ 371:../src/wx_handler.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 372:../src/wx_handler.c **** 		{
+ 373:../src/wx_handler.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 374:../src/wx_handler.c **** 
+ 375:../src/wx_handler.c **** 			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+ 376:../src/wx_handler.c **** 		}
+ 377:../src/wx_handler.c **** 
+ 378:../src/wx_handler.c **** 		if (wx_pwr_state == WX_PWR_UNDER_RESET) {
+ 379:../src/wx_handler.c **** 			// if timeout watchod expired there is a time to reset the supply voltage
+ 380:../src/wx_handler.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 381:../src/wx_handler.c **** 
+ 382:../src/wx_handler.c **** 			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
+ 383:../src/wx_handler.c **** 			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+ 384:../src/wx_handler.c **** 
+ 385:../src/wx_handler.c **** #ifdef PWR_SWITCH_BOTH
+ 386:../src/wx_handler.c **** 			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+ 387:../src/wx_handler.c **** #endif
+ 388:../src/wx_handler.c **** 
+ 389:../src/wx_handler.c **** 			// setting the last_good timers to current value to prevent reset loop
+ 390:../src/wx_handler.c **** 			wx_last_good_temperature_time = master_time;
+ 391:../src/wx_handler.c **** 			wx_last_good_wind_time = master_time;
+ 392:../src/wx_handler.c **** 
+ 393:../src/wx_handler.c **** 			return;
+ 394:../src/wx_handler.c **** 		}
+ 395:../src/wx_handler.c **** 
+ 396:../src/wx_handler.c **** 	}
+ 397:../src/wx_handler.c **** 
+ 398:../src/wx_handler.c **** 	// service actual supply state
+ 399:../src/wx_handler.c **** 	switch (wx_pwr_state) {
+ 789              		.loc 1 399 0
+ 790 000a 2E4B     		ldr	r3, .L81
+ 791 000c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 792 000e 002B     		cmp	r3, #0
+ 793 0010 38D0     		beq	.L77
+ 794 0012 022B     		cmp	r3, #2
+ 795 0014 46D0     		beq	.L78
+ 796              	.L72:
+ 400:../src/wx_handler.c **** 	case WX_PWR_OFF:
+ 401:../src/wx_handler.c **** 
+ 402:../src/wx_handler.c **** 		// one second delay
+ 403:../src/wx_handler.c **** 		delay_fixed(2000);
+ 404:../src/wx_handler.c **** 
+ 405:../src/wx_handler.c **** #if (defined PARATNC_HWREV_C)
+ 406:../src/wx_handler.c **** 		// Turn on the +12V_SW voltage
+ 407:../src/wx_handler.c **** 		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+ 408:../src/wx_handler.c **** #endif
+ 409:../src/wx_handler.c **** 
+ 410:../src/wx_handler.c **** 		delay_fixed(100);
+ 411:../src/wx_handler.c **** 
+ 412:../src/wx_handler.c **** 		// Turn on the +5V_ISOL (VDD_SW) voltage
+ 413:../src/wx_handler.c **** 		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+ 414:../src/wx_handler.c **** 
+ 415:../src/wx_handler.c **** 		// power is off after power-up and needs to be powered on
+ 416:../src/wx_handler.c **** 		wx_pwr_state = WX_PWR_ON;
+ 417:../src/wx_handler.c **** 		break;
+ 418:../src/wx_handler.c **** 	case WX_PWR_ON:
+ 419:../src/wx_handler.c **** 		break;
+ 420:../src/wx_handler.c **** 	case WX_PWR_UNDER_RESET:
+ 421:../src/wx_handler.c **** 
+ 422:../src/wx_handler.c **** 		// Turn on the +5V_ISOL (VDD_SW) voltage
+ 423:../src/wx_handler.c **** 		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+ 424:../src/wx_handler.c **** 
+ 425:../src/wx_handler.c **** #ifdef PWR_SWITCH_BOTH
+ 426:../src/wx_handler.c **** 		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+ 427:../src/wx_handler.c **** 
+ 428:../src/wx_handler.c **** 		wx_force_i2c_sensor_reset = 1;
+ 429:../src/wx_handler.c **** #endif
+ 430:../src/wx_handler.c **** 
+ 431:../src/wx_handler.c **** 		wx_pwr_state = WX_PWR_ON;
+ 432:../src/wx_handler.c **** 
+ 433:../src/wx_handler.c **** 		break;
+ 434:../src/wx_handler.c **** 	case WX_PWR_DISABLED:
+ 435:../src/wx_handler.c **** 		break;
+ 436:../src/wx_handler.c **** 	}
+ 437:../src/wx_handler.c **** }
+ 797              		.loc 1 437 0
+ 798 0016 08BD     		pop	{r3, pc}
+ 799              	.L80:
+ 363:../src/wx_handler.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 800              		.loc 1 363 0
+ 801 0018 2B4B     		ldr	r3, .L81+4
+ 802 001a 1B68     		ldr	r3, [r3]
+ 803 001c B3F1FF3F 		cmp	r3, #-1
+ 804 0020 08D0     		beq	.L74
+ 364:../src/wx_handler.c **** 		{
+ 805              		.loc 1 364 0 discriminator 1
+ 806 0022 2A4A     		ldr	r2, .L81+8
+ 807 0024 1268     		ldr	r2, [r2]
+ 808 0026 D31A     		subs	r3, r2, r3
+ 363:../src/wx_handler.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 809              		.loc 1 363 0 discriminator 1
+ 810 0028 294A     		ldr	r2, .L81+12
+ 811 002a 9342     		cmp	r3, r2
+ 812 002c 02D9     		bls	.L74
+ 366:../src/wx_handler.c **** 		}
+ 813              		.loc 1 366 0
+ 814 002e 254B     		ldr	r3, .L81
+ 815 0030 0222     		movs	r2, #2
+ 816 0032 1A70     		strb	r2, [r3]
+ 817              	.L74:
+ 370:../src/wx_handler.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 818              		.loc 1 370 0
+ 819 0034 274B     		ldr	r3, .L81+16
+ 820 0036 1B68     		ldr	r3, [r3]
+ 821 0038 B3F1FF3F 		cmp	r3, #-1
+ 822 003c 0BD0     		beq	.L75
+ 371:../src/wx_handler.c **** 		{
+ 823              		.loc 1 371 0 discriminator 1
+ 824 003e 234A     		ldr	r2, .L81+8
+ 825 0040 1268     		ldr	r2, [r2]
+ 826 0042 D31A     		subs	r3, r2, r3
+ 370:../src/wx_handler.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 827              		.loc 1 370 0 discriminator 1
+ 828 0044 224A     		ldr	r2, .L81+12
+ 829 0046 9342     		cmp	r3, r2
+ 830 0048 05D9     		bls	.L75
+ 373:../src/wx_handler.c **** 
+ 831              		.loc 1 373 0
+ 832 004a 1E4B     		ldr	r3, .L81
+ 833 004c 0222     		movs	r2, #2
+ 834 004e 1A70     		strb	r2, [r3]
+ 375:../src/wx_handler.c **** 		}
+ 835              		.loc 1 375 0
+ 836 0050 214B     		ldr	r3, .L81+20
+ 837 0052 0322     		movs	r2, #3
+ 838 0054 1A70     		strb	r2, [r3]
+ 839              	.L75:
+ 378:../src/wx_handler.c **** 			// if timeout watchod expired there is a time to reset the supply voltage
+ 840              		.loc 1 378 0
+ 841 0056 1B4B     		ldr	r3, .L81
+ 842 0058 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 843 005a 022B     		cmp	r3, #2
+ 844 005c D5D1     		bne	.L73
+ 380:../src/wx_handler.c **** 
+ 845              		.loc 1 380 0
+ 846 005e 194B     		ldr	r3, .L81
+ 847 0060 0222     		movs	r2, #2
+ 848 0062 1A70     		strb	r2, [r3]
+ 383:../src/wx_handler.c **** 
+ 849              		.loc 1 383 0
+ 850 0064 4FF48071 		mov	r1, #256
+ 851 0068 1C48     		ldr	r0, .L81+24
+ 852 006a FFF7FEFF 		bl	GPIO_ResetBits
+ 853              	.LVL104:
+ 386:../src/wx_handler.c **** #endif
+ 854              		.loc 1 386 0
+ 855 006e 4021     		movs	r1, #64
+ 856 0070 1B48     		ldr	r0, .L81+28
+ 857 0072 FFF7FEFF 		bl	GPIO_ResetBits
+ 858              	.LVL105:
+ 390:../src/wx_handler.c **** 			wx_last_good_wind_time = master_time;
+ 859              		.loc 1 390 0
+ 860 0076 154B     		ldr	r3, .L81+8
+ 861 0078 1B68     		ldr	r3, [r3]
+ 862 007a 134A     		ldr	r2, .L81+4
+ 863 007c 1360     		str	r3, [r2]
+ 391:../src/wx_handler.c **** 
+ 864              		.loc 1 391 0
+ 865 007e 154A     		ldr	r2, .L81+16
+ 866 0080 1360     		str	r3, [r2]
+ 393:../src/wx_handler.c **** 		}
+ 867              		.loc 1 393 0
+ 868 0082 C8E7     		b	.L72
+ 869              	.L77:
+ 403:../src/wx_handler.c **** 
+ 870              		.loc 1 403 0
+ 871 0084 4FF4FA60 		mov	r0, #2000
+ 872 0088 FFF7FEFF 		bl	delay_fixed
+ 873              	.LVL106:
+ 410:../src/wx_handler.c **** 
+ 874              		.loc 1 410 0
+ 875 008c 6420     		movs	r0, #100
+ 876 008e FFF7FEFF 		bl	delay_fixed
+ 877              	.LVL107:
+ 413:../src/wx_handler.c **** 
+ 878              		.loc 1 413 0
+ 879 0092 4FF48071 		mov	r1, #256
+ 880 0096 1148     		ldr	r0, .L81+24
+ 881 0098 FFF7FEFF 		bl	GPIO_SetBits
+ 882              	.LVL108:
+ 416:../src/wx_handler.c **** 		break;
+ 883              		.loc 1 416 0
+ 884 009c 094B     		ldr	r3, .L81
+ 885 009e 0122     		movs	r2, #1
+ 886 00a0 1A70     		strb	r2, [r3]
+ 417:../src/wx_handler.c **** 	case WX_PWR_ON:
+ 887              		.loc 1 417 0
+ 888 00a2 B8E7     		b	.L72
+ 889              	.L78:
+ 423:../src/wx_handler.c **** 
+ 890              		.loc 1 423 0
+ 891 00a4 4FF48071 		mov	r1, #256
+ 892 00a8 0C48     		ldr	r0, .L81+24
+ 893 00aa FFF7FEFF 		bl	GPIO_SetBits
+ 894              	.LVL109:
+ 426:../src/wx_handler.c **** 
+ 895              		.loc 1 426 0
+ 896 00ae 4021     		movs	r1, #64
+ 897 00b0 0B48     		ldr	r0, .L81+28
+ 898 00b2 FFF7FEFF 		bl	GPIO_SetBits
+ 899              	.LVL110:
+ 428:../src/wx_handler.c **** #endif
+ 900              		.loc 1 428 0
+ 901 00b6 0123     		movs	r3, #1
+ 902 00b8 0A4A     		ldr	r2, .L81+32
+ 903 00ba 1370     		strb	r3, [r2]
+ 431:../src/wx_handler.c **** 
+ 904              		.loc 1 431 0
+ 905 00bc 014A     		ldr	r2, .L81
+ 906 00be 1370     		strb	r3, [r2]
+ 433:../src/wx_handler.c **** 	case WX_PWR_DISABLED:
+ 907              		.loc 1 433 0
+ 908 00c0 A9E7     		b	.L72
+ 909              	.L82:
+ 910 00c2 00BF     		.align	2
+ 911              	.L81:
+ 912 00c4 00000000 		.word	wx_pwr_state
+ 913 00c8 00000000 		.word	.LANCHOR3
+ 914 00cc 00000000 		.word	master_time
+ 915 00d0 8F5F0100 		.word	89999
+ 916 00d4 00000000 		.word	.LANCHOR4
+ 917 00d8 00000000 		.word	rte_wx_wind_qf
+ 918 00dc 000C0140 		.word	1073810432
+ 919 00e0 00080140 		.word	1073809408
+ 920 00e4 00000000 		.word	.LANCHOR0
+ 921              		.cfi_endproc
+ 922              	.LFE98:
+ 924              		.global	wx_force_i2c_sensor_reset
+ 925              		.global	wx_wind_pool_call_counter
+ 926              		.comm	wx_pwr_state,1,1
+ 927              		.global	wx_last_good_temperature_time
+ 928              		.global	wx_last_good_wind_time
+ 929              		.section	.bss.wx_force_i2c_sensor_reset,"aw",%nobits
+ 930              		.set	.LANCHOR0,. + 0
+ 933              	wx_force_i2c_sensor_reset:
+ 934 0000 00       		.space	1
+ 935              		.section	.bss.wx_last_good_temperature_time,"aw",%nobits
+ 936              		.align	2
+ 937              		.set	.LANCHOR3,. + 0
+ 940              	wx_last_good_temperature_time:
+ 941 0000 00000000 		.space	4
+ 942              		.section	.bss.wx_last_good_wind_time,"aw",%nobits
+ 943              		.align	2
+ 944              		.set	.LANCHOR4,. + 0
+ 947              	wx_last_good_wind_time:
+ 948 0000 00000000 		.space	4
+ 949              		.section	.bss.wx_wind_pool_call_counter,"aw",%nobits
+ 950              		.align	2
+ 951              		.set	.LANCHOR2,. + 0
+ 954              	wx_wind_pool_call_counter:
+ 955 0000 00000000 		.space	4
+ 956              		.section	.rodata.internal,"a",%progbits
+ 957              		.align	2
+ 958              		.set	.LANCHOR1,. + 0
+ 961              	internal:
+ 962 0000 01       		.byte	1
+ 963 0001 01       		.byte	1
+ 964 0002 01       		.byte	1
+ 965 0003 01       		.byte	1
+ 966              		.text
+ 967              	.Letext0:
+ 968              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 969              		.file 3 "../include/config_data.h"
+ 970              		.file 4 "../include/wx_handler.h"
+ 971              		.file 5 "../system/include/cmsis/core_cm3.h"
+ 972              		.file 6 "../system/include/cmsis/system_stm32f10x.h"
+ 973              		.file 7 "../system/include/cmsis/stm32f10x.h"
+ 974              		.file 8 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+ 975              		.file 9 "../system/include/drivers/dallas.h"
+ 976              		.file 10 "../system/include/drivers/analog_anemometer.h"
+ 977              		.file 11 "../system/include/davis_vantage/davis_loop_t.h"
+ 978              		.file 12 "../system/include/umb_master/umb_frame_t.h"
+ 979              		.file 13 "../system/include/umb_master/umb_state_t.h"
+ 980              		.file 14 "../system/include/drivers/serial.h"
+ 981              		.file 15 "../system/include/umb_master/umb_context_t.h"
+ 982              		.file 16 "../system/include/umb_master/umb_qf_t.h"
+ 983              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 984              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 985              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 986              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 987              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 988              		.file 22 "../system/include/drivers/ms5611.h"
+ 989              		.file 23 "../system/include/drivers/bme280.h"
+ 990              		.file 24 "../include/rte_wx.h"
+ 991              		.file 25 "../system/include/modbus_rtu/rtu_register_data_t.h"
+ 992              		.file 26 "../system/include/modbus_rtu/rtu_exception_t.h"
+ 993              		.file 27 "../system/include/modbus_rtu/rtu_pool_queue_t.h"
+ 994              		.file 28 "../include/rte_rtu.h"
+ 995              		.file 29 "../include/rte_main.h"
+ 996              		.file 30 "../system/include/aprs/cfifo.h"
+ 997              		.file 31 "../system/include/aprs/afsk.h"
+ 998              		.file 32 "../system/include/aprs/ax25.h"
+ 999              		.file 33 "../include/main.h"
+ 1000              		.file 34 "../include/delay.h"
+ 1001              		.file 35 "../system/include/umb_master/umb_master.h"
+ 1002              		.file 36 "../system/include/modbus_rtu/rtu_getters.h"
+ 1003              		.file 37 "../include/wx_handler_temperature.h"
+ 1004              		.file 38 "../include/wx_handler_pressure.h"
+ 1005              		.file 39 "../include/wx_handler_humidity.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 wx_handler.c
+     /tmp/ccJAhX3d.s:16     .text.wx_check_force_i2c_reset:0000000000000000 $t
+     /tmp/ccJAhX3d.s:23     .text.wx_check_force_i2c_reset:0000000000000000 wx_check_force_i2c_reset
+     /tmp/ccJAhX3d.s:60     .text.wx_check_force_i2c_reset:0000000000000024 $d
+     /tmp/ccJAhX3d.s:66     .text.wx_get_all_measurements:0000000000000000 $t
+     /tmp/ccJAhX3d.s:73     .text.wx_get_all_measurements:0000000000000000 wx_get_all_measurements
+     /tmp/ccJAhX3d.s:176    .text.wx_get_all_measurements:0000000000000084 $d
+     /tmp/ccJAhX3d.s:181    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 $t
+     /tmp/ccJAhX3d.s:188    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 wx_get_bme280_temperature_pressure_humidity
+     /tmp/ccJAhX3d.s:227    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000020 $d
+     /tmp/ccJAhX3d.s:240    .text.wx_pool_anemometer:0000000000000000 $t
+     /tmp/ccJAhX3d.s:247    .text.wx_pool_anemometer:0000000000000000 wx_pool_anemometer
+     /tmp/ccJAhX3d.s:689    .text.wx_pool_anemometer:0000000000000230 $d
+     /tmp/ccJAhX3d.s:708    .text.wx_pwr_init:0000000000000000 $t
+     /tmp/ccJAhX3d.s:715    .text.wx_pwr_init:0000000000000000 wx_pwr_init
+     /tmp/ccJAhX3d.s:760    .text.wx_pwr_init:0000000000000034 $d
+                            *COM*:0000000000000001 wx_pwr_state
+     /tmp/ccJAhX3d.s:766    .text.wx_pwr_periodic_handle:0000000000000000 $t
+     /tmp/ccJAhX3d.s:773    .text.wx_pwr_periodic_handle:0000000000000000 wx_pwr_periodic_handle
+     /tmp/ccJAhX3d.s:912    .text.wx_pwr_periodic_handle:00000000000000c4 $d
+     /tmp/ccJAhX3d.s:933    .bss.wx_force_i2c_sensor_reset:0000000000000000 wx_force_i2c_sensor_reset
+     /tmp/ccJAhX3d.s:954    .bss.wx_wind_pool_call_counter:0000000000000000 wx_wind_pool_call_counter
+     /tmp/ccJAhX3d.s:940    .bss.wx_last_good_temperature_time:0000000000000000 wx_last_good_temperature_time
+     /tmp/ccJAhX3d.s:947    .bss.wx_last_good_wind_time:0000000000000000 wx_last_good_wind_time
+     /tmp/ccJAhX3d.s:934    .bss.wx_force_i2c_sensor_reset:0000000000000000 $d
+     /tmp/ccJAhX3d.s:936    .bss.wx_last_good_temperature_time:0000000000000000 $d
+     /tmp/ccJAhX3d.s:943    .bss.wx_last_good_wind_time:0000000000000000 $d
+     /tmp/ccJAhX3d.s:950    .bss.wx_wind_pool_call_counter:0000000000000000 $d
+     /tmp/ccJAhX3d.s:957    .rodata.internal:0000000000000000 $d
+     /tmp/ccJAhX3d.s:961    .rodata.internal:0000000000000000 internal
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
+                           .group:0000000000000000 wm4.wx_handler.h.17.fa2077dbbd4afb2d90289f874af54dc5
+                           .group:0000000000000000 wm4.station_config.h.9.75b6c5687acc8f60d219d6a552b2bf59
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.19.15d389ea66759bb36d2e3183b267092a
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.3544b1c529a5f3b4e56f5aba673d9e30
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.rtu_configuration.h.9.225559723a46d58da796e0ac6cb0b2ac
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.average_struct.h.9.41820d0d7dc25dca8a9005c6d1a8bb5f
+                           .group:0000000000000000 wm4.telemetry.h.21.a87436b8ee86f5e60170454e063be1e3
+                           .group:0000000000000000 wm4.parser.h.9.2d68c8669e0bffa77926bbb9bf5a2aba
+
+UNDEFINED SYMBOLS
+ms5611_reset
+ms5611_trigger_measure
+rte_wx_ms5611_qf
+wx_get_temperature_measurement
+wx_get_pressure_measurement
+wx_get_humidity_measurement
+bme280_read_raw_data
+bme280_data_buffer
+rte_wx_bme280_qf
+__aeabi_ui2f
+__aeabi_fmul
+__aeabi_f2iz
+__aeabi_i2f
+__aeabi_f2d
+__aeabi_dmul
+__aeabi_d2iz
+analog_anemometer_get_ms_from_pulse
+umb_get_winddirection
+umb_get_windspeed
+umb_get_windgusts
+rtu_get_wind_speed
+rtu_get_wind_direction
+rtu_get_wind_gusts
+cosf
+sinf
+atan2f
+analog_anemometer_get_qf
+rte_wx_windspeed_it
+rte_wx_windspeed
+rte_wx_windspeed_pulses
+rte_wx_average_winddirection
+rte_wx_average_windspeed
+rte_wx_max_windspeed
+rte_wx_winddirection_last
+rte_wx_winddirection_it
+rte_wx_winddirection
+rte_wx_wind_qf
+GPIO_Init
+GPIO_ResetBits
+delay_fixed
+GPIO_SetBits
+master_time

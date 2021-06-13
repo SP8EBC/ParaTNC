@@ -1,0 +1,633 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32l4xx_ll_crc.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.LL_CRC_DeInit,"ax",%progbits
+  18              		.align	1
+  19              		.global	LL_CRC_DeInit
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	LL_CRC_DeInit:
+  26              	.LFB194:
+  27              		.file 1 "../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c"
+   1:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /**
+   2:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   ******************************************************************************
+   3:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @file    stm32l4xx_ll_crc.c
+   4:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @author  MCD Application Team
+   5:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @brief   CRC LL module driver.
+   6:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   ******************************************************************************
+   7:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @attention
+   8:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *
+   9:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  10:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * All rights reserved.</center></h2>
+  11:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *
+  12:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * This software component is licensed by ST under BSD 3-Clause license,
+  13:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * the "License"; You may not use this file except in compliance with the
+  14:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * License. You may obtain a copy of the License at:
+  15:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *                        opensource.org/licenses/BSD-3-Clause
+  16:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *
+  17:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   ******************************************************************************
+  18:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  19:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #if defined(USE_FULL_LL_DRIVER)
+  20:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  21:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Includes ------------------------------------------------------------------*/
+  22:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #include "stm32l4xx_ll_crc.h"
+  23:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #include "stm32l4xx_ll_bus.h"
+  24:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  25:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #ifdef  USE_FULL_ASSERT
+  26:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #include "stm32_assert.h"
+  27:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #else
+  28:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #define assert_param(expr) ((void)0U)
+  29:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #endif
+  30:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  31:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /** @addtogroup STM32L4xx_LL_Driver
+  32:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @{
+  33:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  34:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  35:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** #if defined (CRC)
+  36:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  37:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /** @addtogroup CRC_LL
+  38:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @{
+  39:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  40:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  41:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Private types -------------------------------------------------------------*/
+  42:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Private variables ---------------------------------------------------------*/
+  43:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Private constants ---------------------------------------------------------*/
+  44:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Private macros ------------------------------------------------------------*/
+  45:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Private function prototypes -----------------------------------------------*/
+  46:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  47:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /* Exported functions --------------------------------------------------------*/
+  48:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /** @addtogroup CRC_LL_Exported_Functions
+  49:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @{
+  50:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  51:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  52:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /** @addtogroup CRC_LL_EF_Init
+  53:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @{
+  54:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  55:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  56:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** /**
+  57:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @brief  De-initialize CRC registers (Registers restored to their default values).
+  58:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @param  CRCx CRC Instance
+  59:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   * @retval An ErrorStatus enumeration value:
+  60:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *          - SUCCESS: CRC registers are de-initialized
+  61:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   *          - ERROR: CRC registers are not de-initialized
+  62:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   */
+  63:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** ErrorStatus LL_CRC_DeInit(CRC_TypeDef *CRCx)
+  64:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** {
+  28              		.loc 1 64 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  65:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   ErrorStatus status = SUCCESS;
+  66:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  67:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   /* Check the parameters */
+  68:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   assert_param(IS_CRC_ALL_INSTANCE(CRCx));
+  69:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  70:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   if (CRCx == CRC)
+  34              		.loc 1 70 0
+  35 0000 084B     		ldr	r3, .L5
+  36 0002 9842     		cmp	r0, r3
+  37 0004 01D0     		beq	.L4
+  71:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   {
+  72:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****     /* Force CRC reset */
+  73:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****     LL_AHB1_GRP1_ForceReset(LL_AHB1_GRP1_PERIPH_CRC);
+  74:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  75:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****     /* Release CRC reset */
+  76:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****     LL_AHB1_GRP1_ReleaseReset(LL_AHB1_GRP1_PERIPH_CRC);
+  77:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   }
+  78:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   else
+  79:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   {
+  80:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****     status = ERROR;
+  38              		.loc 1 80 0
+  39 0006 0120     		movs	r0, #1
+  40              	.LVL1:
+  81:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   }
+  82:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  83:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c ****   return (status);
+  84:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** }
+  41              		.loc 1 84 0
+  42 0008 7047     		bx	lr
+  43              	.LVL2:
+  44              	.L4:
+  45              	.LBB6:
+  46              	.LBB7:
+  47              		.file 2 "../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h"
+   1:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+   2:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   ******************************************************************************
+   3:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @file    stm32l4xx_ll_bus.h
+   4:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @author  MCD Application Team
+   5:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief   Header file of BUS LL module.
+   6:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+   7:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   @verbatim
+   8:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****                       ##### RCC Limitations #####
+   9:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   ==============================================================================
+  10:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****     [..]
+  11:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       A delay between an RCC peripheral clock enable and the effective peripheral
+  12:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       enabling should be taken into account in order to manage the peripheral read/write
+  13:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       from/to registers.
+  14:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       (+) This delay depends on the peripheral mapping.
+  15:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****         (++) AHB & APB peripherals, 1 dummy read is necessary
+  16:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  17:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****     [..]
+  18:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       Workarounds:
+  19:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****       (#) For AHB & APB peripherals, a dummy read to the peripheral register has been
+  20:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****           inserted in each LL_{BUS}_GRP{x}_EnableClock() function.
+  21:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  22:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   @endverbatim
+  23:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   ******************************************************************************
+  24:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @attention
+  25:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+  26:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  27:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * All rights reserved.</center></h2>
+  28:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+  29:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * This software component is licensed by ST under BSD 3-Clause license,
+  30:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * the "License"; You may not use this file except in compliance with the
+  31:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * License. You may obtain a copy of the License at:
+  32:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *                        opensource.org/licenses/BSD-3-Clause
+  33:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+  34:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   ******************************************************************************
+  35:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  36:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  37:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Define to prevent recursive inclusion -------------------------------------*/
+  38:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #ifndef STM32L4xx_LL_BUS_H
+  39:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define STM32L4xx_LL_BUS_H
+  40:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  41:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #ifdef __cplusplus
+  42:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** extern "C" {
+  43:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif
+  44:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  45:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Includes ------------------------------------------------------------------*/
+  46:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #include "stm32l4xx.h"
+  47:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  48:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @addtogroup STM32L4xx_LL_Driver
+  49:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+  50:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  51:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  52:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(RCC)
+  53:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  54:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL BUS
+  55:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+  56:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  57:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  58:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Private types -------------------------------------------------------------*/
+  59:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Private variables ---------------------------------------------------------*/
+  60:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  61:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Private constants ---------------------------------------------------------*/
+  62:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  63:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Private macros ------------------------------------------------------------*/
+  64:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  65:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Exported types ------------------------------------------------------------*/
+  66:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Exported constants --------------------------------------------------------*/
+  67:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_Exported_Constants BUS Exported Constants
+  68:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+  69:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  70:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  71:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_AHB1_GRP1_PERIPH  AHB1 GRP1 PERIPH
+  72:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+  73:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  74:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_ALL            0xFFFFFFFFU
+  75:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_DMA1           RCC_AHB1ENR_DMA1EN
+  76:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_DMA2           RCC_AHB1ENR_DMA2EN
+  77:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DMAMUX1)
+  78:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_DMAMUX1        RCC_AHB1ENR_DMAMUX1EN
+  79:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DMAMUX1 */
+  80:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_FLASH          RCC_AHB1ENR_FLASHEN
+  81:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_CRC            RCC_AHB1ENR_CRCEN
+  82:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_TSC            RCC_AHB1ENR_TSCEN
+  83:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DMA2D)
+  84:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_DMA2D          RCC_AHB1ENR_DMA2DEN
+  85:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DMA2D */
+  86:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GFXMMU)
+  87:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_GFXMMU         RCC_AHB1ENR_GFXMMUEN
+  88:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* GFXMMU */
+  89:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB1_GRP1_PERIPH_SRAM1          RCC_AHB1SMENR_SRAM1SMEN
+  90:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+  91:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+  92:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  93:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+  94:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_AHB2_GRP1_PERIPH  AHB2 GRP1 PERIPH
+  95:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+  96:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+  97:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_ALL            0xFFFFFFFFU
+  98:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOA          RCC_AHB2ENR_GPIOAEN
+  99:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOB          RCC_AHB2ENR_GPIOBEN
+ 100:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOC          RCC_AHB2ENR_GPIOCEN
+ 101:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GPIOD)
+ 102:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOD          RCC_AHB2ENR_GPIODEN
+ 103:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /*GPIOD*/
+ 104:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GPIOE)
+ 105:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOE          RCC_AHB2ENR_GPIOEEN
+ 106:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /*GPIOE*/
+ 107:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GPIOF)
+ 108:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOF          RCC_AHB2ENR_GPIOFEN
+ 109:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* GPIOF */
+ 110:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GPIOG)
+ 111:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOG          RCC_AHB2ENR_GPIOGEN
+ 112:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* GPIOG */
+ 113:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOH          RCC_AHB2ENR_GPIOHEN
+ 114:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(GPIOI)
+ 115:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_GPIOI          RCC_AHB2ENR_GPIOIEN
+ 116:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* GPIOI */
+ 117:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(USB_OTG_FS)
+ 118:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_OTGFS          RCC_AHB2ENR_OTGFSEN
+ 119:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* USB_OTG_FS */
+ 120:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_ADC            RCC_AHB2ENR_ADCEN
+ 121:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DCMI)
+ 122:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_DCMI           RCC_AHB2ENR_DCMIEN
+ 123:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DCMI */
+ 124:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(AES)
+ 125:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_AES            RCC_AHB2ENR_AESEN
+ 126:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* AES */
+ 127:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(HASH)
+ 128:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_HASH           RCC_AHB2ENR_HASHEN
+ 129:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* HASH */
+ 130:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_RNG            RCC_AHB2ENR_RNGEN
+ 131:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(OCTOSPIM)
+ 132:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_OSPIM          RCC_AHB2ENR_OSPIMEN
+ 133:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* OCTOSPIM */
+ 134:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(PKA)
+ 135:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_PKA            RCC_AHB2ENR_PKAEN
+ 136:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* PKA */
+ 137:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SDMMC1) && defined(RCC_AHB2ENR_SDMMC1EN)
+ 138:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_SDMMC1         RCC_AHB2ENR_SDMMC1EN
+ 139:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SDMMC1 && RCC_AHB2ENR_SDMMC1EN */
+ 140:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_SRAM2          RCC_AHB2SMENR_SRAM2SMEN
+ 141:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SRAM3_BASE)
+ 142:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB2_GRP1_PERIPH_SRAM3          RCC_AHB2SMENR_SRAM3SMEN
+ 143:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SRAM3_BASE */
+ 144:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 145:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 146:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 147:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 148:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_AHB3_GRP1_PERIPH  AHB3 GRP1 PERIPH
+ 149:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 150:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 151:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB3_GRP1_PERIPH_ALL            0xFFFFFFFFU
+ 152:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(FMC_Bank1_R)
+ 153:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB3_GRP1_PERIPH_FMC            RCC_AHB3ENR_FMCEN
+ 154:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* FMC_Bank1_R */
+ 155:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(QUADSPI)
+ 156:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB3_GRP1_PERIPH_QSPI           RCC_AHB3ENR_QSPIEN
+ 157:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* QUADSPI */
+ 158:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(OCTOSPI1)
+ 159:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB3_GRP1_PERIPH_OSPI1          RCC_AHB3ENR_OSPI1EN
+ 160:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* OCTOSPI1 */
+ 161:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(OCTOSPI2)
+ 162:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_AHB3_GRP1_PERIPH_OSPI2          RCC_AHB3ENR_OSPI2EN
+ 163:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* OCTOSPI2 */
+ 164:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 165:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 166:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 167:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 168:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_APB1_GRP1_PERIPH  APB1 GRP1 PERIPH
+ 169:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 170:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 171:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_ALL            0xFFFFFFFFU
+ 172:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM2           RCC_APB1ENR1_TIM2EN
+ 173:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(TIM3)
+ 174:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM3           RCC_APB1ENR1_TIM3EN
+ 175:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* TIM3 */
+ 176:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(TIM4)
+ 177:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM4           RCC_APB1ENR1_TIM4EN
+ 178:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* TIM4 */
+ 179:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(TIM5)
+ 180:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM5           RCC_APB1ENR1_TIM5EN
+ 181:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* TIM5 */
+ 182:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM6           RCC_APB1ENR1_TIM6EN
+ 183:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_TIM7           RCC_APB1ENR1_TIM7EN
+ 184:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(LCD)
+ 185:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_LCD            RCC_APB1ENR1_LCDEN
+ 186:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* LCD */
+ 187:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(RCC_APB1ENR1_RTCAPBEN)
+ 188:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_RTCAPB         RCC_APB1ENR1_RTCAPBEN
+ 189:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* RCC_APB1ENR1_RTCAPBEN */
+ 190:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_WWDG           RCC_APB1ENR1_WWDGEN
+ 191:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SPI2)
+ 192:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_SPI2           RCC_APB1ENR1_SPI2EN
+ 193:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SPI2 */
+ 194:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_SPI3           RCC_APB1ENR1_SPI3EN
+ 195:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_USART2         RCC_APB1ENR1_USART2EN
+ 196:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(USART3)
+ 197:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_USART3         RCC_APB1ENR1_USART3EN
+ 198:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* USART3 */
+ 199:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(UART4)
+ 200:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_UART4          RCC_APB1ENR1_UART4EN
+ 201:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* UART4 */
+ 202:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(UART5)
+ 203:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_UART5          RCC_APB1ENR1_UART5EN
+ 204:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* UART5 */
+ 205:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_I2C1           RCC_APB1ENR1_I2C1EN
+ 206:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(I2C2)
+ 207:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_I2C2           RCC_APB1ENR1_I2C2EN
+ 208:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* I2C2 */
+ 209:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_I2C3           RCC_APB1ENR1_I2C3EN
+ 210:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(CRS)
+ 211:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_CRS            RCC_APB1ENR1_CRSEN
+ 212:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* CRS */
+ 213:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_CAN1           RCC_APB1ENR1_CAN1EN
+ 214:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(CAN2)
+ 215:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_CAN2           RCC_APB1ENR1_CAN2EN
+ 216:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* CAN2 */
+ 217:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(USB)
+ 218:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_USB            RCC_APB1ENR1_USBFSEN
+ 219:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* USB */
+ 220:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_PWR            RCC_APB1ENR1_PWREN
+ 221:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_DAC1           RCC_APB1ENR1_DAC1EN
+ 222:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_OPAMP          RCC_APB1ENR1_OPAMPEN
+ 223:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP1_PERIPH_LPTIM1         RCC_APB1ENR1_LPTIM1EN
+ 224:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 225:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 226:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 227:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 228:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 229:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_APB1_GRP2_PERIPH  APB1 GRP2 PERIPH
+ 230:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 231:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 232:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP2_PERIPH_ALL            0xFFFFFFFFU
+ 233:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP2_PERIPH_LPUART1        RCC_APB1ENR2_LPUART1EN
+ 234:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(I2C4)
+ 235:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP2_PERIPH_I2C4           RCC_APB1ENR2_I2C4EN
+ 236:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* I2C4 */
+ 237:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SWPMI1)
+ 238:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP2_PERIPH_SWPMI1         RCC_APB1ENR2_SWPMI1EN
+ 239:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SWPMI1 */
+ 240:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB1_GRP2_PERIPH_LPTIM2         RCC_APB1ENR2_LPTIM2EN
+ 241:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 242:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 243:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 244:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 245:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EC_APB2_GRP1_PERIPH  APB2 GRP1 PERIPH
+ 246:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 247:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 248:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_ALL            0xFFFFFFFFU
+ 249:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_SYSCFG         RCC_APB2ENR_SYSCFGEN
+ 250:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_FW             RCC_APB2ENR_FWEN
+ 251:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SDMMC1) && defined(RCC_APB2ENR_SDMMC1EN)
+ 252:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_SDMMC1         RCC_APB2ENR_SDMMC1EN
+ 253:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SDMMC1 && RCC_APB2ENR_SDMMC1EN */
+ 254:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_TIM1           RCC_APB2ENR_TIM1EN
+ 255:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_SPI1           RCC_APB2ENR_SPI1EN
+ 256:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(TIM8)
+ 257:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_TIM8           RCC_APB2ENR_TIM8EN
+ 258:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* TIM8 */
+ 259:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_USART1         RCC_APB2ENR_USART1EN
+ 260:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_TIM15          RCC_APB2ENR_TIM15EN
+ 261:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_TIM16          RCC_APB2ENR_TIM16EN
+ 262:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(TIM17)
+ 263:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_TIM17          RCC_APB2ENR_TIM17EN
+ 264:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* TIM17 */
+ 265:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_SAI1           RCC_APB2ENR_SAI1EN
+ 266:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(SAI2)
+ 267:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_SAI2           RCC_APB2ENR_SAI2EN
+ 268:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* SAI2 */
+ 269:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DFSDM1_Channel0)
+ 270:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_DFSDM1         RCC_APB2ENR_DFSDM1EN
+ 271:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DFSDM1_Channel0 */
+ 272:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(LTDC)
+ 273:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_LTDC           RCC_APB2ENR_LTDCEN
+ 274:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* LTDC */
+ 275:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DSI)
+ 276:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_DSI            RCC_APB2ENR_DSIEN
+ 277:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DSI */
+ 278:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 279:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 280:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 281:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 282:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** Legacy definitions for compatibility purpose
+ 283:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** @cond 0
+ 284:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 285:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #if defined(DFSDM1_Channel0)
+ 286:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #define LL_APB2_GRP1_PERIPH_DFSDM          LL_APB2_GRP1_PERIPH_DFSDM1
+ 287:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** #endif /* DFSDM1_Channel0 */
+ 288:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 289:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** @endcond
+ 290:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 291:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 292:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 293:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @}
+ 294:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 295:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 296:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Exported macro ------------------------------------------------------------*/
+ 297:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /* Exported functions --------------------------------------------------------*/
+ 298:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_Exported_Functions BUS Exported Functions
+ 299:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 300:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 301:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 302:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /** @defgroup BUS_LL_EF_AHB1 AHB1
+ 303:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @{
+ 304:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   */
+ 305:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 306:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 307:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief  Enable AHB1 peripherals clock.
+ 308:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @rmtoll AHB1ENR      DMA1EN        LL_AHB1_GRP1_EnableClock\n
+ 309:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2EN        LL_AHB1_GRP1_EnableClock\n
+ 310:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMAMUX1EN     LL_AHB1_GRP1_EnableClock\n
+ 311:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      FLASHEN       LL_AHB1_GRP1_EnableClock\n
+ 312:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      CRCEN         LL_AHB1_GRP1_EnableClock\n
+ 313:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      TSCEN         LL_AHB1_GRP1_EnableClock\n
+ 314:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2DEN       LL_AHB1_GRP1_EnableClock\n
+ 315:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      GFXMMUEN      LL_AHB1_GRP1_EnableClock
+ 316:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @param  Periphs This parameter can be a combination of the following values:
+ 317:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA1
+ 318:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2
+ 319:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMAMUX1 (*)
+ 320:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_FLASH
+ 321:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_CRC
+ 322:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_TSC
+ 323:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2D (*)
+ 324:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_GFXMMU (*)
+ 325:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+ 326:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         (*) value not defined in all devices.
+ 327:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @retval None
+ 328:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 329:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** __STATIC_INLINE void LL_AHB1_GRP1_EnableClock(uint32_t Periphs)
+ 330:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** {
+ 331:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   __IO uint32_t tmpreg;
+ 332:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   SET_BIT(RCC->AHB1ENR, Periphs);
+ 333:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   /* Delay after an RCC peripheral clock enabling */
+ 334:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   tmpreg = READ_BIT(RCC->AHB1ENR, Periphs);
+ 335:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   (void)tmpreg;
+ 336:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** }
+ 337:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 338:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 339:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief  Check if AHB1 peripheral clock is enabled or not
+ 340:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @rmtoll AHB1ENR      DMA1EN        LL_AHB1_GRP1_IsEnabledClock\n
+ 341:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2EN        LL_AHB1_GRP1_IsEnabledClock\n
+ 342:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMAMUX1EN     LL_AHB1_GRP1_IsEnabledClock\n
+ 343:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      FLASHEN       LL_AHB1_GRP1_IsEnabledClock\n
+ 344:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      CRCEN         LL_AHB1_GRP1_IsEnabledClock\n
+ 345:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      TSCEN         LL_AHB1_GRP1_IsEnabledClock\n
+ 346:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2DEN       LL_AHB1_GRP1_IsEnabledClock\n
+ 347:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      GFXMMUEN      LL_AHB1_GRP1_IsEnabledClock
+ 348:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @param  Periphs This parameter can be a combination of the following values:
+ 349:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA1
+ 350:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2
+ 351:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMAMUX1 (*)
+ 352:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_FLASH
+ 353:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_CRC
+ 354:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_TSC
+ 355:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2D (*)
+ 356:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_GFXMMU (*)
+ 357:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+ 358:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         (*) value not defined in all devices.
+ 359:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @retval State of Periphs (1 or 0).
+ 360:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 361:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** __STATIC_INLINE uint32_t LL_AHB1_GRP1_IsEnabledClock(uint32_t Periphs)
+ 362:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** {
+ 363:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   return ((READ_BIT(RCC->AHB1ENR, Periphs) == Periphs) ? 1UL : 0UL);
+ 364:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** }
+ 365:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 366:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 367:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief  Disable AHB1 peripherals clock.
+ 368:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @rmtoll AHB1ENR      DMA1EN        LL_AHB1_GRP1_DisableClock\n
+ 369:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2EN        LL_AHB1_GRP1_DisableClock\n
+ 370:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMAMUX1EN     LL_AHB1_GRP1_DisableClock\n
+ 371:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      FLASHEN       LL_AHB1_GRP1_DisableClock\n
+ 372:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      CRCEN         LL_AHB1_GRP1_DisableClock\n
+ 373:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      TSCEN         LL_AHB1_GRP1_DisableClock\n
+ 374:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      DMA2DEN       LL_AHB1_GRP1_DisableClock\n
+ 375:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1ENR      GFXMMUEN      LL_AHB1_GRP1_DisableClock
+ 376:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @param  Periphs This parameter can be a combination of the following values:
+ 377:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA1
+ 378:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2
+ 379:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMAMUX1 (*)
+ 380:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_FLASH
+ 381:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_CRC
+ 382:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_TSC
+ 383:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2D (*)
+ 384:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_GFXMMU (*)
+ 385:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+ 386:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         (*) value not defined in all devices.
+ 387:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @retval None
+ 388:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 389:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** __STATIC_INLINE void LL_AHB1_GRP1_DisableClock(uint32_t Periphs)
+ 390:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** {
+ 391:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   CLEAR_BIT(RCC->AHB1ENR, Periphs);
+ 392:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** }
+ 393:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 394:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 395:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief  Force AHB1 peripherals reset.
+ 396:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @rmtoll AHB1RSTR     DMA1RST       LL_AHB1_GRP1_ForceReset\n
+ 397:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMA2RST       LL_AHB1_GRP1_ForceReset\n
+ 398:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMAMUX1RST     LL_AHB1_GRP1_ForceReset\n
+ 399:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     FLASHRST      LL_AHB1_GRP1_ForceReset\n
+ 400:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     CRCRST        LL_AHB1_GRP1_ForceReset\n
+ 401:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     TSCRST        LL_AHB1_GRP1_ForceReset\n
+ 402:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMA2DRST      LL_AHB1_GRP1_ForceReset\n
+ 403:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     GFXMMURST     LL_AHB1_GRP1_ForceReset
+ 404:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @param  Periphs This parameter can be a combination of the following values:
+ 405:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_ALL
+ 406:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA1
+ 407:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2
+ 408:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMAMUX1 (*)
+ 409:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_FLASH
+ 410:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_CRC
+ 411:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_TSC
+ 412:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2D (*)
+ 413:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_GFXMMU (*)
+ 414:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+ 415:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         (*) value not defined in all devices.
+ 416:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @retval None
+ 417:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 418:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** __STATIC_INLINE void LL_AHB1_GRP1_ForceReset(uint32_t Periphs)
+ 419:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** {
+ 420:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   SET_BIT(RCC->AHB1RSTR, Periphs);
+  48              		.loc 2 420 0
+  49 000a A3F50053 		sub	r3, r3, #8192
+  50 000e 9A6A     		ldr	r2, [r3, #40]
+  51 0010 42F48052 		orr	r2, r2, #4096
+  52 0014 9A62     		str	r2, [r3, #40]
+  53              	.LVL3:
+  54              	.LBE7:
+  55              	.LBE6:
+  56              	.LBB8:
+  57              	.LBB9:
+ 421:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** }
+ 422:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** 
+ 423:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** /**
+ 424:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @brief  Release AHB1 peripherals reset.
+ 425:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @rmtoll AHB1RSTR     DMA1RST       LL_AHB1_GRP1_ReleaseReset\n
+ 426:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMA2RST       LL_AHB1_GRP1_ReleaseReset\n
+ 427:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMAMUX1RST     LL_AHB1_GRP1_ReleaseReset\n
+ 428:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     FLASHRST      LL_AHB1_GRP1_ReleaseReset\n
+ 429:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     CRCRST        LL_AHB1_GRP1_ReleaseReset\n
+ 430:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     TSCRST        LL_AHB1_GRP1_ReleaseReset\n
+ 431:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     DMA2DRST      LL_AHB1_GRP1_ReleaseReset\n
+ 432:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         AHB1RSTR     GFXMMURST     LL_AHB1_GRP1_ReleaseReset
+ 433:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @param  Periphs This parameter can be a combination of the following values:
+ 434:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_ALL
+ 435:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA1
+ 436:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2
+ 437:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMAMUX1 (*)
+ 438:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_FLASH
+ 439:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_CRC
+ 440:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_TSC
+ 441:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_DMA2D (*)
+ 442:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         @arg @ref LL_AHB1_GRP1_PERIPH_GFXMMU (*)
+ 443:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *
+ 444:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   *         (*) value not defined in all devices.
+ 445:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   * @retval None
+ 446:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** */
+ 447:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** __STATIC_INLINE void LL_AHB1_GRP1_ReleaseReset(uint32_t Periphs)
+ 448:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h **** {
+ 449:../system/include/stm32l4-hal-driver/stm32l4xx_ll_bus.h ****   CLEAR_BIT(RCC->AHB1RSTR, Periphs);
+  58              		.loc 2 449 0
+  59 0016 9A6A     		ldr	r2, [r3, #40]
+  60 0018 22F48052 		bic	r2, r2, #4096
+  61 001c 9A62     		str	r2, [r3, #40]
+  62              	.LBE9:
+  63              	.LBE8:
+  65:../system/src/stm32l4-hal-driver/stm32l4xx_ll_crc.c **** 
+  64              		.loc 1 65 0
+  65 001e 0020     		movs	r0, #0
+  66              	.LVL4:
+  67 0020 7047     		bx	lr
+  68              	.L6:
+  69 0022 00BF     		.align	2
+  70              	.L5:
+  71 0024 00300240 		.word	1073885184
+  72              		.cfi_endproc
+  73              	.LFE194:
+  75              		.text
+  76              	.Letext0:
+  77              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  78              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+  79              		.file 5 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+  80              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+  81              		.file 7 "../system/include/cmsis/stm32l4xx/device/stm32l4xx.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 stm32l4xx_ll_crc.c
+     /tmp/ccPfDM5Y.s:18     .text.LL_CRC_DeInit:0000000000000000 $t
+     /tmp/ccPfDM5Y.s:25     .text.LL_CRC_DeInit:0000000000000000 LL_CRC_DeInit
+     /tmp/ccPfDM5Y.s:71     .text.LL_CRC_DeInit:0000000000000024 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_crc.h.55.8c0cfe4656bd245ee945a1e7a06cc919
+                           .group:0000000000000000 wm4.stm32l4xx_ll_bus.h.39.fb197a76289ebb493618e5ac412f5462
+
+NO UNDEFINED SYMBOLS

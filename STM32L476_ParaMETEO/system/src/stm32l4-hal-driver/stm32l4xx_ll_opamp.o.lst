@@ -1,0 +1,373 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32l4xx_ll_opamp.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.LL_OPAMP_DeInit,"ax",%progbits
+  18              		.align	1
+  19              		.global	LL_OPAMP_DeInit
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	LL_OPAMP_DeInit:
+  26              	.LFB158:
+  27              		.file 1 "../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c"
+   1:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /**
+   2:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   ******************************************************************************
+   3:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @file    stm32l4xx_ll_opamp.c
+   4:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @author  MCD Application Team
+   5:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @brief   OPAMP LL module driver
+   6:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   ******************************************************************************
+   7:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @attention
+   8:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *
+   9:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  10:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * All rights reserved.</center></h2>
+  11:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *
+  12:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * This software component is licensed by ST under BSD 3-Clause license,
+  13:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * the "License"; You may not use this file except in compliance with the
+  14:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * License. You may obtain a copy of the License at:
+  15:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *                        opensource.org/licenses/BSD-3-Clause
+  16:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *
+  17:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   ******************************************************************************
+  18:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  19:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #if defined(USE_FULL_LL_DRIVER)
+  20:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  21:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Includes ------------------------------------------------------------------*/
+  22:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #include "stm32l4xx_ll_opamp.h"
+  23:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  24:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #ifdef  USE_FULL_ASSERT
+  25:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   #include "stm32_assert.h"
+  26:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #else
+  27:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   #define assert_param(expr) ((void)0U)
+  28:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #endif
+  29:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  30:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /** @addtogroup STM32L4xx_LL_Driver
+  31:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @{
+  32:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  33:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  34:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #if defined (OPAMP1) || defined (OPAMP2)
+  35:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  36:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /** @addtogroup OPAMP_LL OPAMP
+  37:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @{
+  38:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  39:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  40:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Private types -------------------------------------------------------------*/
+  41:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Private variables ---------------------------------------------------------*/
+  42:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Private constants ---------------------------------------------------------*/
+  43:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Private macros ------------------------------------------------------------*/
+  44:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  45:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /** @addtogroup OPAMP_LL_Private_Macros
+  46:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @{
+  47:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  48:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  49:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Check of parameters for configuration of OPAMP hierarchical scope:         */
+  50:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* OPAMP instance.                                                            */
+  51:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  52:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #define IS_LL_OPAMP_POWER_MODE(__POWER_MODE__)                                 \
+  53:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   (   ((__POWER_MODE__) == LL_OPAMP_POWERMODE_NORMAL)                          \
+  54:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__POWER_MODE__) == LL_OPAMP_POWERMODE_LOWPOWER))
+  55:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  56:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #define IS_LL_OPAMP_FUNCTIONAL_MODE(__FUNCTIONAL_MODE__)                       \
+  57:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   (   ((__FUNCTIONAL_MODE__) == LL_OPAMP_MODE_STANDALONE)                      \
+  58:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__FUNCTIONAL_MODE__) == LL_OPAMP_MODE_FOLLOWER)                        \
+  59:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__FUNCTIONAL_MODE__) == LL_OPAMP_MODE_PGA)                             \
+  60:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   )
+  61:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  62:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Note: Comparator non-inverting inputs parameters are the same on all       */
+  63:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       OPAMP instances.                                                     */
+  64:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       However, comparator instance kept as macro parameter for             */
+  65:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       compatibility with other STM32 families.                             */
+  66:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #define IS_LL_OPAMP_INPUT_NONINVERTING(__OPAMPX__, __INPUT_NONINVERTING__)     \
+  67:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   (   ((__INPUT_NONINVERTING__) == LL_OPAMP_INPUT_NONINVERT_IO0)               \
+  68:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__INPUT_NONINVERTING__) == LL_OPAMP_INPUT_NONINV_DAC1_CH1)             \
+  69:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   )
+  70:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  71:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Note: Comparator non-inverting inputs parameters are the same on all       */
+  72:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       OPAMP instances.                                                     */
+  73:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       However, comparator instance kept as macro parameter for             */
+  74:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /*       compatibility with other STM32 families.                             */
+  75:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** #define IS_LL_OPAMP_INPUT_INVERTING(__OPAMPX__, __INPUT_INVERTING__)           \
+  76:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   (   ((__INPUT_INVERTING__) == LL_OPAMP_INPUT_INVERT_IO0)                     \
+  77:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__INPUT_INVERTING__) == LL_OPAMP_INPUT_INVERT_IO1)                     \
+  78:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****    || ((__INPUT_INVERTING__) == LL_OPAMP_INPUT_INVERT_CONNECT_NO)              \
+  79:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   )
+  80:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  81:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /**
+  82:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @}
+  83:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  84:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  85:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  86:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Private function prototypes -----------------------------------------------*/
+  87:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  88:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /* Exported functions --------------------------------------------------------*/
+  89:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /** @addtogroup OPAMP_LL_Exported_Functions
+  90:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @{
+  91:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  92:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  93:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /** @addtogroup OPAMP_LL_EF_Init
+  94:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @{
+  95:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+  96:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+  97:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /**
+  98:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @brief  De-initialize registers of the selected OPAMP instance
+  99:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         to their default reset values.
+ 100:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @param  OPAMPx OPAMP instance
+ 101:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @retval An ErrorStatus enumeration value:
+ 102:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *          - SUCCESS: OPAMP registers are de-initialized
+ 103:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *          - ERROR: OPAMP registers are not de-initialized
+ 104:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+ 105:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** ErrorStatus LL_OPAMP_DeInit(OPAMP_TypeDef* OPAMPx)
+ 106:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** {
+  28              		.loc 1 106 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+ 107:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   ErrorStatus status = SUCCESS;
+ 108:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 109:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Check the parameters */
+ 110:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   assert_param(IS_OPAMP_ALL_INSTANCE(OPAMPx));
+ 111:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 112:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   LL_OPAMP_WriteReg(OPAMPx, CSR, 0x00000000U);
+  34              		.loc 1 112 0
+  35 0000 0023     		movs	r3, #0
+  36 0002 0360     		str	r3, [r0]
+ 113:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 114:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   return status;
+ 115:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** }
+  37              		.loc 1 115 0
+  38 0004 1846     		mov	r0, r3
+  39              	.LVL1:
+  40 0006 7047     		bx	lr
+  41              		.cfi_endproc
+  42              	.LFE158:
+  44              		.section	.text.LL_OPAMP_Init,"ax",%progbits
+  45              		.align	1
+  46              		.global	LL_OPAMP_Init
+  47              		.syntax unified
+  48              		.thumb
+  49              		.thumb_func
+  50              		.fpu fpv4-sp-d16
+  52              	LL_OPAMP_Init:
+  53              	.LFB159:
+ 116:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 117:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /**
+ 118:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @brief  Initialize some features of OPAMP instance.
+ 119:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @note   This function reset bit of calibration mode to ensure
+ 120:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         to be in functional mode, in order to have OPAMP parameters
+ 121:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         (inputs selection, ...) set with the corresponding OPAMP mode
+ 122:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         to be effective.
+ 123:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @note   This function configures features of the selected OPAMP instance.
+ 124:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         Some features are also available at scope OPAMP common instance
+ 125:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         (common to several OPAMP instances).
+ 126:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *         Refer to functions having argument "OPAMPxy_COMMON" as parameter.
+ 127:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @param  OPAMPx OPAMP instance
+ 128:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @param  OPAMP_InitStruct Pointer to a @ref LL_OPAMP_InitTypeDef structure
+ 129:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @retval An ErrorStatus enumeration value:
+ 130:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *          - SUCCESS: OPAMP registers are initialized
+ 131:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *          - ERROR: OPAMP registers are not initialized
+ 132:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+ 133:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** ErrorStatus LL_OPAMP_Init(OPAMP_TypeDef *OPAMPx, LL_OPAMP_InitTypeDef *OPAMP_InitStruct)
+ 134:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** {
+  54              		.loc 1 134 0
+  55              		.cfi_startproc
+  56              		@ args = 0, pretend = 0, frame = 0
+  57              		@ frame_needed = 0, uses_anonymous_args = 0
+  58              		@ link register save eliminated.
+  59              	.LVL2:
+ 135:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Check the parameters */
+ 136:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   assert_param(IS_OPAMP_ALL_INSTANCE(OPAMPx));
+ 137:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   assert_param(IS_LL_OPAMP_POWER_MODE(OPAMP_InitStruct->PowerMode));
+ 138:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   assert_param(IS_LL_OPAMP_FUNCTIONAL_MODE(OPAMP_InitStruct->FunctionalMode));
+ 139:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   assert_param(IS_LL_OPAMP_INPUT_NONINVERTING(OPAMPx, OPAMP_InitStruct->InputNonInverting));
+ 140:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 141:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Note: OPAMP inverting input can be used with OPAMP in mode standalone    */
+ 142:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*       or PGA with external capacitors for filtering circuit.             */
+ 143:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*       Otherwise (OPAMP in mode follower), OPAMP inverting input is       */
+ 144:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*       not used (not connected to GPIO pin).                              */
+ 145:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   if(OPAMP_InitStruct->FunctionalMode != LL_OPAMP_MODE_FOLLOWER)
+  60              		.loc 1 145 0
+  61 0000 4B68     		ldr	r3, [r1, #4]
+ 146:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   {
+ 147:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****     assert_param(IS_LL_OPAMP_INPUT_INVERTING(OPAMPx, OPAMP_InitStruct->InputInverting));
+ 148:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   }
+ 149:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 150:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Configuration of OPAMP instance :                                        */
+ 151:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*  - PowerMode                                                             */
+ 152:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*  - Functional mode                                                       */
+ 153:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*  - Input non-inverting                                                   */
+ 154:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*  - Input inverting                                                       */
+ 155:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Note: Bit OPAMP_CSR_CALON reset to ensure to be in functional mode.      */
+ 156:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   if(OPAMP_InitStruct->FunctionalMode != LL_OPAMP_MODE_FOLLOWER)
+  62              		.loc 1 156 0
+  63 0002 0C2B     		cmp	r3, #12
+  64 0004 13D0     		beq	.L3
+ 134:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Check the parameters */
+  65              		.loc 1 134 0
+  66 0006 10B4     		push	{r4}
+  67              		.cfi_def_cfa_offset 4
+  68              		.cfi_offset 4, -4
+ 157:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   {
+ 158:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****     MODIFY_REG(OPAMPx->CSR,
+  69              		.loc 1 158 0
+  70 0008 0268     		ldr	r2, [r0]
+  71 000a 22F4B852 		bic	r2, r2, #5888
+  72 000e 22F00E02 		bic	r2, r2, #14
+  73 0012 0C68     		ldr	r4, [r1]
+  74 0014 04F00204 		and	r4, r4, #2
+  75 0018 2343     		orrs	r3, r3, r4
+  76 001a 8C68     		ldr	r4, [r1, #8]
+  77 001c 2343     		orrs	r3, r3, r4
+  78 001e C968     		ldr	r1, [r1, #12]
+  79              	.LVL3:
+  80 0020 0B43     		orrs	r3, r3, r1
+  81 0022 1343     		orrs	r3, r3, r2
+  82 0024 0360     		str	r3, [r0]
+ 159:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                  OPAMP_CSR_OPALPM
+ 160:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_OPAMODE
+ 161:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_CALON
+ 162:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_VMSEL
+ 163:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_VPSEL
+ 164:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****               ,
+ 165:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                  (OPAMP_InitStruct->PowerMode & OPAMP_POWERMODE_CSR_BIT_MASK)
+ 166:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_InitStruct->FunctionalMode
+ 167:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_InitStruct->InputNonInverting
+ 168:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_InitStruct->InputInverting
+ 169:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****               );
+ 170:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   }
+ 171:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   else
+ 172:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   {
+ 173:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****     MODIFY_REG(OPAMPx->CSR,
+ 174:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                  OPAMP_CSR_OPALPM
+ 175:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_OPAMODE
+ 176:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_CALON
+ 177:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_VMSEL
+ 178:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_CSR_VPSEL
+ 179:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****               ,
+ 180:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                  (OPAMP_InitStruct->PowerMode & OPAMP_POWERMODE_CSR_BIT_MASK)
+ 181:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | LL_OPAMP_MODE_FOLLOWER
+ 182:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | OPAMP_InitStruct->InputNonInverting
+ 183:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                | LL_OPAMP_INPUT_INVERT_CONNECT_NO
+ 184:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****               );
+ 185:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   }
+ 186:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 187:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   return SUCCESS;
+ 188:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** }
+  83              		.loc 1 188 0
+  84 0026 0020     		movs	r0, #0
+  85              	.LVL4:
+  86 0028 5DF8044B 		ldr	r4, [sp], #4
+  87              		.cfi_restore 4
+  88              		.cfi_def_cfa_offset 0
+  89 002c 7047     		bx	lr
+  90              	.LVL5:
+  91              	.L3:
+ 173:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****                  OPAMP_CSR_OPALPM
+  92              		.loc 1 173 0
+  93 002e 0368     		ldr	r3, [r0]
+  94 0030 23F4B853 		bic	r3, r3, #5888
+  95 0034 23F00E03 		bic	r3, r3, #14
+  96 0038 0A68     		ldr	r2, [r1]
+  97 003a 02F00202 		and	r2, r2, #2
+  98 003e 8968     		ldr	r1, [r1, #8]
+  99              	.LVL6:
+ 100 0040 0A43     		orrs	r2, r2, r1
+ 101 0042 1343     		orrs	r3, r3, r2
+ 102 0044 43F40373 		orr	r3, r3, #524
+ 103 0048 0360     		str	r3, [r0]
+ 104              		.loc 1 188 0
+ 105 004a 0020     		movs	r0, #0
+ 106              	.LVL7:
+ 107 004c 7047     		bx	lr
+ 108              		.cfi_endproc
+ 109              	.LFE159:
+ 111              		.section	.text.LL_OPAMP_StructInit,"ax",%progbits
+ 112              		.align	1
+ 113              		.global	LL_OPAMP_StructInit
+ 114              		.syntax unified
+ 115              		.thumb
+ 116              		.thumb_func
+ 117              		.fpu fpv4-sp-d16
+ 119              	LL_OPAMP_StructInit:
+ 120              	.LFB160:
+ 189:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** 
+ 190:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** /**
+ 191:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @brief Set each @ref LL_OPAMP_InitTypeDef field to default value.
+ 192:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @param OPAMP_InitStruct pointer to a @ref LL_OPAMP_InitTypeDef structure
+ 193:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   *                         whose fields will be set to default values.
+ 194:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   * @retval None
+ 195:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   */
+ 196:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** void LL_OPAMP_StructInit(LL_OPAMP_InitTypeDef *OPAMP_InitStruct)
+ 197:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** {
+ 121              		.loc 1 197 0
+ 122              		.cfi_startproc
+ 123              		@ args = 0, pretend = 0, frame = 0
+ 124              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125              		@ link register save eliminated.
+ 126              	.LVL8:
+ 198:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Set OPAMP_InitStruct fields to default values */
+ 199:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   OPAMP_InitStruct->PowerMode         = LL_OPAMP_POWERMODE_NORMAL;
+ 127              		.loc 1 199 0
+ 128 0000 0023     		movs	r3, #0
+ 129 0002 0360     		str	r3, [r0]
+ 200:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   OPAMP_InitStruct->FunctionalMode    = LL_OPAMP_MODE_FOLLOWER;
+ 130              		.loc 1 200 0
+ 131 0004 0C22     		movs	r2, #12
+ 132 0006 4260     		str	r2, [r0, #4]
+ 201:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   OPAMP_InitStruct->InputNonInverting = LL_OPAMP_INPUT_NONINVERT_IO0;
+ 133              		.loc 1 201 0
+ 134 0008 8360     		str	r3, [r0, #8]
+ 202:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /* Note: Parameter discarded if OPAMP in functional mode follower,          */
+ 203:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   /*       set anyway to its default value.                                   */
+ 204:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c ****   OPAMP_InitStruct->InputInverting    = LL_OPAMP_INPUT_INVERT_CONNECT_NO;
+ 135              		.loc 1 204 0
+ 136 000a 4FF40073 		mov	r3, #512
+ 137 000e C360     		str	r3, [r0, #12]
+ 205:../system/src/stm32l4-hal-driver/stm32l4xx_ll_opamp.c **** }
+ 138              		.loc 1 205 0
+ 139 0010 7047     		bx	lr
+ 140              		.cfi_endproc
+ 141              	.LFE160:
+ 143              		.text
+ 144              	.Letext0:
+ 145              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 146              		.file 3 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 147              		.file 4 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 148              		.file 5 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 149              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l4xx.h"
+ 150              		.file 7 "../system/include/stm32l4-hal-driver/stm32l4xx_ll_opamp.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 stm32l4xx_ll_opamp.c
+     /tmp/cck0AyvC.s:18     .text.LL_OPAMP_DeInit:0000000000000000 $t
+     /tmp/cck0AyvC.s:25     .text.LL_OPAMP_DeInit:0000000000000000 LL_OPAMP_DeInit
+     /tmp/cck0AyvC.s:45     .text.LL_OPAMP_Init:0000000000000000 $t
+     /tmp/cck0AyvC.s:52     .text.LL_OPAMP_Init:0000000000000000 LL_OPAMP_Init
+     /tmp/cck0AyvC.s:112    .text.LL_OPAMP_StructInit:0000000000000000 $t
+     /tmp/cck0AyvC.s:119    .text.LL_OPAMP_StructInit:0000000000000000 LL_OPAMP_StructInit
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_opamp.h.55.e744c3587170b044b681c3429dcc8a10
+
+NO UNDEFINED SYMBOLS
