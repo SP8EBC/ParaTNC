@@ -12,6 +12,8 @@ void io_oc_init(void);
 void io_oc_output_low(void);
 void io_oc_output_hiz(void);
 
+void io_ext_watchdog_config(void);
+void io_ext_watchdog_service(void);
 
 
 #endif /* IO_H_ */

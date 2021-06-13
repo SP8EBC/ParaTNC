@@ -77,25 +77,6 @@ void srl_init(
 	USART_InitStructure.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
 	USART_InitStructure.OverSampling = LL_USART_OVERSAMPLING_16;
 
-
-//	USART_InitStructure.USART_BaudRate = baudrate;
-//	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-//	USART_InitStructure.USART_Parity = USART_Parity_No;
-//	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-//	USART_InitStructure.USART_Mode = USART_Mode_Rx;
-//	if (stop_bits == 1)
-//		USART_InitStructure.USART_StopBits = USART_StopBits_1;
-//	else if (stop_bits == 2)
-//		USART_InitStructure.USART_StopBits = USART_StopBits_2;
-//	else if (stop_bits == 3)
-//		USART_InitStructure.USART_StopBits = USART_StopBits_0_5;
-//	else if (stop_bits == 4)
-//		USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
-//	else
-//		USART_InitStructure.USART_StopBits = USART_StopBits_1;
-//
-//	USART_Init(port, &USART_InitStructure);
-
 	LL_USART_Init(port, &USART_InitStructure);
 
 	if (port == USART1) {

@@ -1,3 +1,5 @@
+#include "station_config_target_hw.h"
+
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_iwdg.h>
@@ -194,6 +196,9 @@ char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
+#if defined(PARAMETEO)
+LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+#endif
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -205,11 +210,12 @@ int main(int argc, char* argv[]){
 
   uint8_t button_inhibit = 0;
 
+  memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
+
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
   RCC->AHBENR |= RCC_AHBENR_CRCEN;
-
-  memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
@@ -226,8 +232,6 @@ int main(int argc, char* argv[]){
   RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
   PWR->CR |= PWR_CR_DBP;
 
-  rte_main_reboot_req = 0;
-
   // read current number of boot cycles
   rte_main_boot_cycles = (uint8_t)(BKP->DR2 & 0xFF);
 
@@ -243,14 +247,21 @@ int main(int argc, char* argv[]){
   // storing increased value
   BKP->DR2 |= rte_main_boot_cycles;
 
-//  rte_main_hardfault_pc = (BKP->DR3 | (BKP->DR4 << 16));
-//  rte_main_hardfault_lr = (BKP->DR5 | (BKP->DR6 << 16));
-
   BKP->DR3 = 0;
   BKP->DR4 = 0;
   BKP->DR5 = 0;
   BKP->DR6 = 0;
+#endif
 
+#if defined(PARAMETEO)
+  RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN);
+  RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);
+  RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
+  RCC->AHB2ENR |= (RCC_AHB2ENR_ADCEN | RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN);
+  RCC->BDCR |= RCC_BDCR_RTCEN;
+#endif
+
+  rte_main_reboot_req = 0;
 
   // initializing variables & arrays in rte_wx
   rte_wx_init();
@@ -346,9 +357,11 @@ int main(int argc, char* argv[]){
 	  configuration_handler_load_configuration(REGION_DEFAULT);
   }
 
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // disabling access to BKP registers
   RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
   PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
+#endif
 
   // converting latitude into string
   memset(main_string_latitude, 0x00, sizeof(main_string_latitude));
@@ -402,6 +415,8 @@ int main(int argc, char* argv[]){
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
@@ -409,6 +424,41 @@ int main(int argc, char* argv[]){
   // Configure I/O pins for USART2 (wx meteo comm)
   Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
   Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
+
+#endif
+
+#if defined(PARAMETEO)
+  	// USART1 - KISS
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
+
+	// USART2 - METEO
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_3;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
+
+#endif
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
   Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
@@ -419,9 +469,21 @@ int main(int argc, char* argv[]){
   GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 #endif
 
+#if defined(PARAMETEO)
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
+#endif
+
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // enabling the clock for both USARTs
   RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+#endif
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
@@ -531,6 +593,7 @@ int main(int argc, char* argv[]){
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // enable write access to watchdog registers
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 
@@ -549,6 +612,7 @@ int main(int argc, char* argv[]){
   // reload watchdog counter
   IWDG_ReloadCounter();
 #endif
+#endif
 
 #ifdef _METEO
   // initialize i2c controller
@@ -563,15 +627,32 @@ int main(int argc, char* argv[]){
   ax25_init(&main_ax25, &main_afsk, 0, 0x00);
   DA_Init();
 
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // initialize Watchdog output
   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
+#endif
+
+#if defined(PARAMETEO)
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
+#endif
 
   // initializing the digipeater configuration
   digi_init(main_config_data_mode);
 
   if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
+#endif
+
+#if defined(PARAMETEO)
+	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
+#endif
 
 	  if (main_config_data_mode->wx_umb == 1) {
 		  // client initialization
@@ -585,14 +666,6 @@ int main(int argc, char* argv[]){
 		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
 	  }
   }
-
-//#ifdef _DALLAS_AS_TELEM
-//	#ifndef _DALLAS_SPLIT_PIN
-//	  dallas_init(GPIOC, GPIO_Pin_6, GPIO_PinSource6, &rte_wx_dallas_average);
-//	#else
-//	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-//	#endif
-//#endif
 
   // configuring interrupt priorities
   it_handlers_set_priorities();
@@ -686,6 +759,7 @@ int main(int argc, char* argv[]){
   }
 
   io_oc_output_low();
+
   GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
 
   // configuting system timers
@@ -705,10 +779,18 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef EXTERNAL_WATCHDOG
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
    Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// external watchdog
 
    GPIOA->ODR ^= GPIO_Pin_12; // Flip the watchdog pin
+#endif
 
+#if defined(PARAMETEO)
+   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// external watchdog
+
+   GPIOA->ODR ^= GPIO_Pin_12; // Flip the watchdog pin
+#endif
 #endif
 
   // Infinite loop
@@ -724,8 +806,14 @@ int main(int argc, char* argv[]){
 	    	;
 	    }
 
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
 	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
+#endif
+#ifdef STM32L471xx
+		    // read the state of a button input
+		  	if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0)) {
+#endif
 
 	  		// if modem is not busy on transmitting something and the button is not
 	  		// inhibited
