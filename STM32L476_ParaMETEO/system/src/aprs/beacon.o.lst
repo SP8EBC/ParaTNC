@@ -389,17 +389,17 @@
  281              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 beacon.c
-     /tmp/ccodDXyr.s:18     .text.beacon_send_own:0000000000000000 $t
-     /tmp/ccodDXyr.s:25     .text.beacon_send_own:0000000000000000 beacon_send_own
-     /tmp/ccodDXyr.s:102    .text.beacon_send_own:000000000000006c $d
-     /tmp/ccodDXyr.s:119    .text.beacon_send_on_startup:0000000000000000 $t
-     /tmp/ccodDXyr.s:126    .text.beacon_send_on_startup:0000000000000000 beacon_send_on_startup
-     /tmp/ccodDXyr.s:179    .text.beacon_send_on_startup:0000000000000040 $d
-     /tmp/ccodDXyr.s:193    .text.beacon_send_from_user_content:0000000000000000 $t
-     /tmp/ccodDXyr.s:200    .text.beacon_send_from_user_content:0000000000000000 beacon_send_from_user_content
-     /tmp/ccodDXyr.s:249    .text.beacon_send_from_user_content:0000000000000030 $d
-     /tmp/ccodDXyr.s:258    .rodata.beacon_send_on_startup.str1.4:0000000000000000 $d
-     /tmp/ccodDXyr.s:262    .rodata.beacon_send_own.str1.4:0000000000000000 $d
+     /tmp/ccCgKK86.s:18     .text.beacon_send_own:0000000000000000 $t
+     /tmp/ccCgKK86.s:25     .text.beacon_send_own:0000000000000000 beacon_send_own
+     /tmp/ccCgKK86.s:102    .text.beacon_send_own:000000000000006c $d
+     /tmp/ccCgKK86.s:119    .text.beacon_send_on_startup:0000000000000000 $t
+     /tmp/ccCgKK86.s:126    .text.beacon_send_on_startup:0000000000000000 beacon_send_on_startup
+     /tmp/ccCgKK86.s:179    .text.beacon_send_on_startup:0000000000000040 $d
+     /tmp/ccCgKK86.s:193    .text.beacon_send_from_user_content:0000000000000000 $t
+     /tmp/ccCgKK86.s:200    .text.beacon_send_from_user_content:0000000000000000 beacon_send_from_user_content
+     /tmp/ccCgKK86.s:249    .text.beacon_send_from_user_content:0000000000000030 $d
+     /tmp/ccCgKK86.s:258    .rodata.beacon_send_on_startup.str1.4:0000000000000000 $d
+     /tmp/ccCgKK86.s:262    .rodata.beacon_send_own.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461

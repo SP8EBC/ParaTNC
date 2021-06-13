@@ -7345,17 +7345,17 @@
  2345              		.file 68 "../src/../system/include/davis_vantage/davis_parsers.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-     /tmp/ccdkLhHv.s:18     .text.message_callback:0000000000000000 $t
-     /tmp/ccdkLhHv.s:24     .text.message_callback:0000000000000000 message_callback
-     /tmp/ccdkLhHv.s:39     .text.main:0000000000000000 $t
-     /tmp/ccdkLhHv.s:46     .text.main:0000000000000000 main
-     /tmp/ccdkLhHv.s:305    .text.main:00000000000001a0 $d
-     /tmp/ccdkLhHv.s:313    .text.main:00000000000001a8 $d
+     /tmp/ccNuqp4f.s:18     .text.message_callback:0000000000000000 $t
+     /tmp/ccNuqp4f.s:24     .text.message_callback:0000000000000000 message_callback
+     /tmp/ccNuqp4f.s:39     .text.main:0000000000000000 $t
+     /tmp/ccNuqp4f.s:46     .text.main:0000000000000000 main
+     /tmp/ccNuqp4f.s:305    .text.main:00000000000001a0 $d
+     /tmp/ccNuqp4f.s:313    .text.main:00000000000001a8 $d
                             *COM*:00000000000000a0 main_own_aprs_msg
                             *COM*:0000000000000009 main_string_latitude
                             *COM*:0000000000000009 main_string_longitude
-     /tmp/ccdkLhHv.s:325    .text.main:00000000000001d0 $t
-     /tmp/ccdkLhHv.s:731    .text.main:0000000000000454 $d
+     /tmp/ccNuqp4f.s:325    .text.main:00000000000001d0 $t
+     /tmp/ccNuqp4f.s:731    .text.main:0000000000000454 $d
                             *COM*:0000000000000018 GPIO_InitTypeDef
                             *COM*:0000000000000004 main_kiss_srl_ctx_ptr
                             *COM*:0000000000000058 main_kiss_srl_ctx
@@ -7366,74 +7366,74 @@ DEFINED SYMBOLS
                             *COM*:0000000000000015 main_own_path
                             *COM*:0000000000000444 main_afsk
                             *COM*:0000000000000218 main_ax25
-     /tmp/ccdkLhHv.s:758    .text.main:00000000000004b8 $t
-     /tmp/ccdkLhHv.s:1149   .text.main:000000000000072c $d
+     /tmp/ccNuqp4f.s:758    .text.main:00000000000004b8 $t
+     /tmp/ccNuqp4f.s:1149   .text.main:000000000000072c $d
                             *COM*:0000000000000001 main_own_aprs_msg_len
-     /tmp/ccdkLhHv.s:1196   .text.main:00000000000007d8 $t
-     /tmp/ccdkLhHv.s:1541   .text.main:0000000000000a24 $d
-     /tmp/ccdkLhHv.s:1573   .text.main:0000000000000a98 $t
-     /tmp/ccdkLhHv.s:1929   .text.main:0000000000000cd8 $d
-     /tmp/ccdkLhHv.s:1971   .text.main_get_adc_sample:0000000000000000 $t
-     /tmp/ccdkLhHv.s:1978   .text.main_get_adc_sample:0000000000000000 main_get_adc_sample
-     /tmp/ccdkLhHv.s:1994   .text.main_get_adc_sample:0000000000000008 $d
-     /tmp/ccdkLhHv.s:1999   .text.main_service_cpu_load_ticks:0000000000000000 $t
-     /tmp/ccdkLhHv.s:2006   .text.main_service_cpu_load_ticks:0000000000000000 main_service_cpu_load_ticks
-     /tmp/ccdkLhHv.s:2037   .text.main_service_cpu_load_ticks:0000000000000020 $d
-     /tmp/ccdkLhHv.s:2111   .bss.kiss10m:0000000000000000 kiss10m
-     /tmp/ccdkLhHv.s:2104   .bss.digidrop10m:0000000000000000 digidrop10m
-     /tmp/ccdkLhHv.s:2098   .bss.digi10m:0000000000000000 digi10m
-     /tmp/ccdkLhHv.s:2211   .bss.tx10m:0000000000000000 tx10m
-     /tmp/ccdkLhHv.s:2205   .bss.rx10m:0000000000000000 rx10m
+     /tmp/ccNuqp4f.s:1196   .text.main:00000000000007d8 $t
+     /tmp/ccNuqp4f.s:1541   .text.main:0000000000000a24 $d
+     /tmp/ccNuqp4f.s:1573   .text.main:0000000000000a98 $t
+     /tmp/ccNuqp4f.s:1929   .text.main:0000000000000cd8 $d
+     /tmp/ccNuqp4f.s:1971   .text.main_get_adc_sample:0000000000000000 $t
+     /tmp/ccNuqp4f.s:1978   .text.main_get_adc_sample:0000000000000000 main_get_adc_sample
+     /tmp/ccNuqp4f.s:1994   .text.main_get_adc_sample:0000000000000008 $d
+     /tmp/ccNuqp4f.s:1999   .text.main_service_cpu_load_ticks:0000000000000000 $t
+     /tmp/ccNuqp4f.s:2006   .text.main_service_cpu_load_ticks:0000000000000000 main_service_cpu_load_ticks
+     /tmp/ccNuqp4f.s:2037   .text.main_service_cpu_load_ticks:0000000000000020 $d
+     /tmp/ccNuqp4f.s:2111   .bss.kiss10m:0000000000000000 kiss10m
+     /tmp/ccNuqp4f.s:2104   .bss.digidrop10m:0000000000000000 digidrop10m
+     /tmp/ccNuqp4f.s:2098   .bss.digi10m:0000000000000000 digi10m
+     /tmp/ccNuqp4f.s:2211   .bss.tx10m:0000000000000000 tx10m
+     /tmp/ccNuqp4f.s:2205   .bss.rx10m:0000000000000000 rx10m
                             *COM*:0000000000000001 after_tx_lock
-     /tmp/ccdkLhHv.s:2159   .bss.main_crc_result:0000000000000000 main_crc_result
-     /tmp/ccdkLhHv.s:2262   .data.main_umb_retval:0000000000000000 main_umb_retval
-     /tmp/ccdkLhHv.s:2092   .bss.buffer_len:0000000000000000 buffer_len
-     /tmp/ccdkLhHv.s:2275   .data.retval:0000000000000000 retval
-     /tmp/ccdkLhHv.s:2243   .data.main_symbol_s:0000000000000000 main_symbol_s
-     /tmp/ccdkLhHv.s:2237   .data.main_symbol_f:0000000000000000 main_symbol_f
-     /tmp/ccdkLhHv.s:2191   .bss.main_own_path_ln:0000000000000000 main_own_path_ln
-     /tmp/ccdkLhHv.s:2185   .bss.main_modbus_rtu_master_enabled:0000000000000000 main_modbus_rtu_master_enabled
-     /tmp/ccdkLhHv.s:2172   .bss.main_davis_serial_enabled:0000000000000000 main_davis_serial_enabled
-     /tmp/ccdkLhHv.s:2217   .data.main_kiss_enabled:0000000000000000 main_kiss_enabled
-     /tmp/ccdkLhHv.s:2250   .data.main_ten_second_pool_timer:0000000000000000 main_ten_second_pool_timer
-     /tmp/ccdkLhHv.s:2257   .data.main_two_second_pool_timer:0000000000000000 main_two_second_pool_timer
-     /tmp/ccdkLhHv.s:2231   .data.main_one_second_pool_timer:0000000000000000 main_one_second_pool_timer
-     /tmp/ccdkLhHv.s:2224   .data.main_one_minute_pool_timer:0000000000000000 main_one_minute_pool_timer
-     /tmp/ccdkLhHv.s:2269   .data.main_wx_sensors_pool_timer:0000000000000000 main_wx_sensors_pool_timer
-     /tmp/ccdkLhHv.s:2152   .bss.main_cpu_load:0000000000000000 main_cpu_load
-     /tmp/ccdkLhHv.s:2166   .bss.main_current_cpu_idle_ticks:0000000000000000 main_current_cpu_idle_ticks
-     /tmp/ccdkLhHv.s:2179   .bss.main_idle_cpu_ticks:0000000000000000 main_idle_cpu_ticks
-     /tmp/ccdkLhHv.s:2198   .bss.master_time:0000000000000000 master_time
-     /tmp/ccdkLhHv.s:2132   .bss.main_config_data_rtu:0000000000000000 main_config_data_rtu
-     /tmp/ccdkLhHv.s:2139   .bss.main_config_data_umb:0000000000000000 main_config_data_umb
-     /tmp/ccdkLhHv.s:2146   .bss.main_config_data_wx_sources:0000000000000000 main_config_data_wx_sources
-     /tmp/ccdkLhHv.s:2118   .bss.main_config_data_basic:0000000000000000 main_config_data_basic
-     /tmp/ccdkLhHv.s:2125   .bss.main_config_data_mode:0000000000000000 main_config_data_mode
-     /tmp/ccdkLhHv.s:2088   .bss.buffer_len:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2095   .bss.digi10m:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2101   .bss.digidrop10m:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2107   .bss.kiss10m:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2114   .bss.main_config_data_basic:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2121   .bss.main_config_data_mode:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2128   .bss.main_config_data_rtu:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2135   .bss.main_config_data_umb:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2142   .bss.main_config_data_wx_sources:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2153   .bss.main_cpu_load:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2155   .bss.main_crc_result:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2162   .bss.main_current_cpu_idle_ticks:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2173   .bss.main_davis_serial_enabled:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2175   .bss.main_idle_cpu_ticks:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2186   .bss.main_modbus_rtu_master_enabled:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2192   .bss.main_own_path_ln:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2194   .bss.master_time:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2201   .bss.rx10m:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2208   .bss.tx10m:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2220   .data.main_one_minute_pool_timer:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2227   .data.main_one_second_pool_timer:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2246   .data.main_ten_second_pool_timer:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2253   .data.main_two_second_pool_timer:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2265   .data.main_wx_sensors_pool_timer:0000000000000000 $d
-     /tmp/ccdkLhHv.s:2278   .rodata.main.str1.4:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2159   .bss.main_crc_result:0000000000000000 main_crc_result
+     /tmp/ccNuqp4f.s:2262   .data.main_umb_retval:0000000000000000 main_umb_retval
+     /tmp/ccNuqp4f.s:2092   .bss.buffer_len:0000000000000000 buffer_len
+     /tmp/ccNuqp4f.s:2275   .data.retval:0000000000000000 retval
+     /tmp/ccNuqp4f.s:2243   .data.main_symbol_s:0000000000000000 main_symbol_s
+     /tmp/ccNuqp4f.s:2237   .data.main_symbol_f:0000000000000000 main_symbol_f
+     /tmp/ccNuqp4f.s:2191   .bss.main_own_path_ln:0000000000000000 main_own_path_ln
+     /tmp/ccNuqp4f.s:2185   .bss.main_modbus_rtu_master_enabled:0000000000000000 main_modbus_rtu_master_enabled
+     /tmp/ccNuqp4f.s:2172   .bss.main_davis_serial_enabled:0000000000000000 main_davis_serial_enabled
+     /tmp/ccNuqp4f.s:2217   .data.main_kiss_enabled:0000000000000000 main_kiss_enabled
+     /tmp/ccNuqp4f.s:2250   .data.main_ten_second_pool_timer:0000000000000000 main_ten_second_pool_timer
+     /tmp/ccNuqp4f.s:2257   .data.main_two_second_pool_timer:0000000000000000 main_two_second_pool_timer
+     /tmp/ccNuqp4f.s:2231   .data.main_one_second_pool_timer:0000000000000000 main_one_second_pool_timer
+     /tmp/ccNuqp4f.s:2224   .data.main_one_minute_pool_timer:0000000000000000 main_one_minute_pool_timer
+     /tmp/ccNuqp4f.s:2269   .data.main_wx_sensors_pool_timer:0000000000000000 main_wx_sensors_pool_timer
+     /tmp/ccNuqp4f.s:2152   .bss.main_cpu_load:0000000000000000 main_cpu_load
+     /tmp/ccNuqp4f.s:2166   .bss.main_current_cpu_idle_ticks:0000000000000000 main_current_cpu_idle_ticks
+     /tmp/ccNuqp4f.s:2179   .bss.main_idle_cpu_ticks:0000000000000000 main_idle_cpu_ticks
+     /tmp/ccNuqp4f.s:2198   .bss.master_time:0000000000000000 master_time
+     /tmp/ccNuqp4f.s:2132   .bss.main_config_data_rtu:0000000000000000 main_config_data_rtu
+     /tmp/ccNuqp4f.s:2139   .bss.main_config_data_umb:0000000000000000 main_config_data_umb
+     /tmp/ccNuqp4f.s:2146   .bss.main_config_data_wx_sources:0000000000000000 main_config_data_wx_sources
+     /tmp/ccNuqp4f.s:2118   .bss.main_config_data_basic:0000000000000000 main_config_data_basic
+     /tmp/ccNuqp4f.s:2125   .bss.main_config_data_mode:0000000000000000 main_config_data_mode
+     /tmp/ccNuqp4f.s:2088   .bss.buffer_len:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2095   .bss.digi10m:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2101   .bss.digidrop10m:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2107   .bss.kiss10m:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2114   .bss.main_config_data_basic:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2121   .bss.main_config_data_mode:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2128   .bss.main_config_data_rtu:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2135   .bss.main_config_data_umb:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2142   .bss.main_config_data_wx_sources:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2153   .bss.main_cpu_load:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2155   .bss.main_crc_result:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2162   .bss.main_current_cpu_idle_ticks:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2173   .bss.main_davis_serial_enabled:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2175   .bss.main_idle_cpu_ticks:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2186   .bss.main_modbus_rtu_master_enabled:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2192   .bss.main_own_path_ln:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2194   .bss.master_time:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2201   .bss.rx10m:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2208   .bss.tx10m:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2220   .data.main_one_minute_pool_timer:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2227   .data.main_one_second_pool_timer:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2246   .data.main_ten_second_pool_timer:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2253   .data.main_two_second_pool_timer:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2265   .data.main_wx_sensors_pool_timer:0000000000000000 $d
+     /tmp/ccNuqp4f.s:2278   .rodata.main.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
                            .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11

@@ -375,16 +375,16 @@
  246              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 flash_stm32l4x.c
-     /tmp/ccU4H3TX.s:18     .text.FLASH_GetBank1Status:0000000000000000 $t
-     /tmp/ccU4H3TX.s:25     .text.FLASH_GetBank1Status:0000000000000000 FLASH_GetBank1Status
-     /tmp/ccU4H3TX.s:87     .text.FLASH_GetBank1Status:000000000000004c $d
-     /tmp/ccU4H3TX.s:92     .text.FLASH_ErasePage:0000000000000000 $t
-     /tmp/ccU4H3TX.s:99     .text.FLASH_ErasePage:0000000000000000 FLASH_ErasePage
-     /tmp/ccU4H3TX.s:114    .text.FLASH_PageErase:0000000000000000 $t
-     /tmp/ccU4H3TX.s:121    .text.FLASH_PageErase:0000000000000000 FLASH_PageErase
-     /tmp/ccU4H3TX.s:180    .text.FLASH_PageErase:0000000000000050 $d
-     /tmp/ccU4H3TX.s:185    .text.FLASH_WaitForLastOperation:0000000000000000 $t
-     /tmp/ccU4H3TX.s:192    .text.FLASH_WaitForLastOperation:0000000000000000 FLASH_WaitForLastOperation
+     /tmp/cc1RVJtQ.s:18     .text.FLASH_GetBank1Status:0000000000000000 $t
+     /tmp/cc1RVJtQ.s:25     .text.FLASH_GetBank1Status:0000000000000000 FLASH_GetBank1Status
+     /tmp/cc1RVJtQ.s:87     .text.FLASH_GetBank1Status:000000000000004c $d
+     /tmp/cc1RVJtQ.s:92     .text.FLASH_ErasePage:0000000000000000 $t
+     /tmp/cc1RVJtQ.s:99     .text.FLASH_ErasePage:0000000000000000 FLASH_ErasePage
+     /tmp/cc1RVJtQ.s:114    .text.FLASH_PageErase:0000000000000000 $t
+     /tmp/cc1RVJtQ.s:121    .text.FLASH_PageErase:0000000000000000 FLASH_PageErase
+     /tmp/cc1RVJtQ.s:180    .text.FLASH_PageErase:0000000000000050 $d
+     /tmp/cc1RVJtQ.s:185    .text.FLASH_WaitForLastOperation:0000000000000000 $t
+     /tmp/cc1RVJtQ.s:192    .text.FLASH_WaitForLastOperation:0000000000000000 FLASH_WaitForLastOperation
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
                            .group:0000000000000000 wm4.flash_stm32l4x.h.23.4a4a9761a5d6111672269799f7e14648

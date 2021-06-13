@@ -1560,34 +1560,34 @@
  1052              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 bme280.c
-     /tmp/ccef3pCP.s:18     .text.bme280_reset:0000000000000000 $t
-     /tmp/ccef3pCP.s:25     .text.bme280_reset:0000000000000000 bme280_reset
-     /tmp/ccef3pCP.s:101    .text.bme280_reset:0000000000000050 $d
-     /tmp/ccef3pCP.s:108    .text.bme280_setup:0000000000000000 $t
-     /tmp/ccef3pCP.s:115    .text.bme280_setup:0000000000000000 bme280_setup
-     /tmp/ccef3pCP.s:195    .text.bme280_setup:0000000000000068 $d
-     /tmp/ccef3pCP.s:201    .text.bme280_read_calibration:0000000000000000 $t
-     /tmp/ccef3pCP.s:208    .text.bme280_read_calibration:0000000000000000 bme280_read_calibration
-     /tmp/ccef3pCP.s:384    .text.bme280_read_calibration:00000000000000e8 $d
-     /tmp/ccef3pCP.s:391    .text.bme280_read_raw_data:0000000000000000 $t
-     /tmp/ccef3pCP.s:398    .text.bme280_read_raw_data:0000000000000000 bme280_read_raw_data
-     /tmp/ccef3pCP.s:512    .text.bme280_read_raw_data:0000000000000088 $d
-     /tmp/ccef3pCP.s:519    .text.bme280_get_pressure:0000000000000000 $t
-     /tmp/ccef3pCP.s:526    .text.bme280_get_pressure:0000000000000000 bme280_get_pressure
-     /tmp/ccef3pCP.s:738    .text.bme280_get_pressure:0000000000000110 $d
+     /tmp/cchS4zJD.s:18     .text.bme280_reset:0000000000000000 $t
+     /tmp/cchS4zJD.s:25     .text.bme280_reset:0000000000000000 bme280_reset
+     /tmp/cchS4zJD.s:101    .text.bme280_reset:0000000000000050 $d
+     /tmp/cchS4zJD.s:108    .text.bme280_setup:0000000000000000 $t
+     /tmp/cchS4zJD.s:115    .text.bme280_setup:0000000000000000 bme280_setup
+     /tmp/cchS4zJD.s:195    .text.bme280_setup:0000000000000068 $d
+     /tmp/cchS4zJD.s:201    .text.bme280_read_calibration:0000000000000000 $t
+     /tmp/cchS4zJD.s:208    .text.bme280_read_calibration:0000000000000000 bme280_read_calibration
+     /tmp/cchS4zJD.s:384    .text.bme280_read_calibration:00000000000000e8 $d
+     /tmp/cchS4zJD.s:391    .text.bme280_read_raw_data:0000000000000000 $t
+     /tmp/cchS4zJD.s:398    .text.bme280_read_raw_data:0000000000000000 bme280_read_raw_data
+     /tmp/cchS4zJD.s:512    .text.bme280_read_raw_data:0000000000000088 $d
+     /tmp/cchS4zJD.s:519    .text.bme280_get_pressure:0000000000000000 $t
+     /tmp/cchS4zJD.s:526    .text.bme280_get_pressure:0000000000000000 bme280_get_pressure
+     /tmp/cchS4zJD.s:738    .text.bme280_get_pressure:0000000000000110 $d
                             *COM*:000000000000002a bme280_calibration_data
-     /tmp/ccef3pCP.s:745    .text.bme280_get_temperature:0000000000000000 $t
-     /tmp/ccef3pCP.s:752    .text.bme280_get_temperature:0000000000000000 bme280_get_temperature
-     /tmp/ccef3pCP.s:840    .text.bme280_get_temperature:0000000000000064 $d
-     /tmp/ccef3pCP.s:847    .text.bme280_get_humidity:0000000000000000 $t
-     /tmp/ccef3pCP.s:854    .text.bme280_get_humidity:0000000000000000 bme280_get_humidity
-     /tmp/ccef3pCP.s:1015   .text.bme280_get_humidity:00000000000000b0 $d
-     /tmp/ccef3pCP.s:1042   .bss.t_fine:0000000000000000 t_fine
+     /tmp/cchS4zJD.s:745    .text.bme280_get_temperature:0000000000000000 $t
+     /tmp/cchS4zJD.s:752    .text.bme280_get_temperature:0000000000000000 bme280_get_temperature
+     /tmp/cchS4zJD.s:840    .text.bme280_get_temperature:0000000000000064 $d
+     /tmp/cchS4zJD.s:847    .text.bme280_get_humidity:0000000000000000 $t
+     /tmp/cchS4zJD.s:854    .text.bme280_get_humidity:0000000000000000 bme280_get_humidity
+     /tmp/cchS4zJD.s:1015   .text.bme280_get_humidity:00000000000000b0 $d
+     /tmp/cchS4zJD.s:1042   .bss.t_fine:0000000000000000 t_fine
                             *COM*:0000000000000009 bme280_data_buffer
-     /tmp/ccef3pCP.s:1035   .bss.bme280_sensor_avaliable:0000000000000000 bme280_sensor_avaliable
-     /tmp/ccef3pCP.s:1025   .rodata:0000000000000000 $d
-     /tmp/ccef3pCP.s:1036   .bss.bme280_sensor_avaliable:0000000000000000 $d
-     /tmp/ccef3pCP.s:1038   .bss.t_fine:0000000000000000 $d
+     /tmp/cchS4zJD.s:1035   .bss.bme280_sensor_avaliable:0000000000000000 bme280_sensor_avaliable
+     /tmp/cchS4zJD.s:1025   .rodata:0000000000000000 $d
+     /tmp/cchS4zJD.s:1036   .bss.bme280_sensor_avaliable:0000000000000000 $d
+     /tmp/cchS4zJD.s:1038   .bss.t_fine:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.bme280.h.13.f4d7a41695a048e9616e171ad319eeb7

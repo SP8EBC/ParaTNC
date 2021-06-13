@@ -1213,27 +1213,27 @@
  834              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 digi.c
-     /tmp/ccVlFvzf.s:18     .text.digi_init:0000000000000000 $t
-     /tmp/ccVlFvzf.s:25     .text.digi_init:0000000000000000 digi_init
-     /tmp/ccVlFvzf.s:88     .text.digi_init:0000000000000048 $d
+     /tmp/cc1zXdgX.s:18     .text.digi_init:0000000000000000 $t
+     /tmp/cc1zXdgX.s:25     .text.digi_init:0000000000000000 digi_init
+     /tmp/cc1zXdgX.s:88     .text.digi_init:0000000000000048 $d
                             *COM*:0000000000000001 digi_viscous_counter_sec
                             *COM*:0000000000000002 digi_msg_len
                             *COM*:0000000000000001 digi_mode
                             *COM*:0000000000000001 digi_viscous_delay_sec
-     /tmp/ccVlFvzf.s:96     .text.digi_process:0000000000000000 $t
-     /tmp/ccVlFvzf.s:103    .text.digi_process:0000000000000000 digi_process
-     /tmp/ccVlFvzf.s:552    .text.digi_process:0000000000000294 $d
+     /tmp/cc1zXdgX.s:96     .text.digi_process:0000000000000000 $t
+     /tmp/cc1zXdgX.s:103    .text.digi_process:0000000000000000 digi_process
+     /tmp/cc1zXdgX.s:552    .text.digi_process:0000000000000294 $d
                             *COM*:0000000000000031 digi_path
                             *COM*:0000000000000200 digi_msg
-     /tmp/ccVlFvzf.s:568    .text.digi_check_with_viscous:0000000000000000 $t
-     /tmp/ccVlFvzf.s:575    .text.digi_check_with_viscous:0000000000000000 digi_check_with_viscous
-     /tmp/ccVlFvzf.s:642    .text.digi_check_with_viscous:0000000000000050 $d
-     /tmp/ccVlFvzf.s:651    .text.digi_pool_viscous:0000000000000000 $t
-     /tmp/ccVlFvzf.s:658    .text.digi_pool_viscous:0000000000000000 digi_pool_viscous
-     /tmp/ccVlFvzf.s:779    .text.digi_pool_viscous:0000000000000094 $d
-     /tmp/ccVlFvzf.s:804    .bss.digi_call_len:0000000000000000 digi_call_len
-     /tmp/ccVlFvzf.s:805    .bss.digi_call_len:0000000000000000 $d
-     /tmp/ccVlFvzf.s:807    .rodata.digi_process.str1.4:0000000000000000 $d
+     /tmp/cc1zXdgX.s:568    .text.digi_check_with_viscous:0000000000000000 $t
+     /tmp/cc1zXdgX.s:575    .text.digi_check_with_viscous:0000000000000000 digi_check_with_viscous
+     /tmp/cc1zXdgX.s:642    .text.digi_check_with_viscous:0000000000000050 $d
+     /tmp/cc1zXdgX.s:651    .text.digi_pool_viscous:0000000000000000 $t
+     /tmp/cc1zXdgX.s:658    .text.digi_pool_viscous:0000000000000000 digi_pool_viscous
+     /tmp/cc1zXdgX.s:779    .text.digi_pool_viscous:0000000000000094 $d
+     /tmp/cc1zXdgX.s:804    .bss.digi_call_len:0000000000000000 digi_call_len
+     /tmp/cc1zXdgX.s:805    .bss.digi_call_len:0000000000000000 $d
+     /tmp/cc1zXdgX.s:807    .rodata.digi_process.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
                            .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
