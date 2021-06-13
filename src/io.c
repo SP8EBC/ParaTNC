@@ -62,7 +62,7 @@ void io_ext_watchdog_config(void) {
 		GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 		GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 		GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-		LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
+		LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
 #endif
 }
 
@@ -76,3 +76,37 @@ void io_ext_watchdog_service(void) {
 #endif
 }
 
+//#ifdef STM32F10X_MD_VL
+//void io_5v_isol_sw_cntrl_vbat_s_enable(void) {
+//	//GPIO_SetBits(GPIOB, GPIO_Pin_8);
+//	GPIOB->BSRR |= GPIO_BSRR_BS8;
+//}
+//void io_5v_isol_sw_cntrl_vbat_s_disable(void) {
+//	//GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+//	GPIOB->BSRR |= GPIO_BSRR_BR8;
+//}
+//
+//void io_12v_sw_cntrl_vbat_g_enable(void) {
+//	//GPIO_SetBits(GPIOA, GPIO_Pin_6);
+//	GPIOA->BSRR |= GPIO_BSRR_BS6;
+//
+//}
+//void io_12v_sw_cntrl_vbat_g_disable(void) {
+//	//GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+//	GPIOA->BSRR |= GPIO_BSRR_BR6;
+//
+//}
+//
+//#endif
+//
+//#ifdef STM32L471xx
+//void io_5v_isol_sw_cntrl_vbat_s_enable(void) {
+//}
+//void io_5v_isol_sw_cntrl_vbat_s_disable(void) {
+//}
+//
+//void io_12v_sw_cntrl_vbat_g_enable(void) {
+//}
+//void io_12v_sw_cntrl_vbat_g_disable(void) {
+//}
+//#endif

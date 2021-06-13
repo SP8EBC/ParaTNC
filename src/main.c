@@ -271,30 +271,30 @@ int main(int argc, char* argv[]){
   main_crc_result = configuration_handler_check_crc();
 
   // if first section has wrong CRC and it hasn't been restored before
-  if ((main_crc_result & 0x01) == 0 && (BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+  if ((main_crc_result & 0x01) == 0 && (configuration_get_register() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
 	  // restore default configuration
 	  if (configuration_handler_restore_default_first() == 0) {
 
 		  // if configuration has been restored successfully
-		  BKP->DR3 |= CONFIG_FIRST_RESTORED;
+		  configuration_set_bits_register(CONFIG_FIRST_RESTORED);
 
 		  // set also CRC flag because if restoring is successfull the region has good CRC
-		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+		  configuration_set_bits_register(CONFIG_FIRST_CRC_OK);
 
 	  }
 	  else {
 		  // if not store the flag in the backup register to block
 		  // reinitializing once again in the consecutive restart
-		  BKP->DR3 |= CONFIG_FIRST_FAIL_RESTORING;
+		  configuration_set_bits_register(CONFIG_FIRST_FAIL_RESTORING);
 	  }
 
 
   }
   else {
 	  // if the combined confition is not met check failed restoring flag
-	  if ((BKP->DR3 & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+	  if ((configuration_get_register() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
 		  // a CRC checksum is ok, so first configuration section can be used further
-		  BKP->DR3 |= CONFIG_FIRST_CRC_OK;
+		  configuration_set_bits_register(CONFIG_FIRST_CRC_OK);
 	  }
 	  else {
 		  ;
@@ -302,31 +302,31 @@ int main(int argc, char* argv[]){
   }
 
   // if second section has wrong CRC and it hasn't been restored before
-  if ((main_crc_result & 0x02) == 0 && (BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+  if ((main_crc_result & 0x02) == 0 && (configuration_get_register() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
 	  // restore default configuration
 	  if (configuration_handler_restore_default_second() == 0) {
 
 		  // if configuration has been restored successfully
-		  BKP->DR3 |= CONFIG_SECOND_RESTORED;
+		  configuration_set_bits_register(CONFIG_SECOND_RESTORED);
 
 		  // set also CRC flag as if restoring is successfull the region has good CRC
-		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+		  configuration_set_bits_register(CONFIG_SECOND_CRC_OK);
 
 	  }
 	  else {
 		  // if not store the flag in the backup register
-		  BKP->DR3 |= CONFIG_SECOND_FAIL_RESTORING;
+		  configuration_set_bits_register(CONFIG_SECOND_FAIL_RESTORING);
 
-		  BKP->DR3 &= (0xFFFF ^ CONFIG_SECOND_CRC_OK);
+		  configuration_clear_bits_register(CONFIG_SECOND_CRC_OK);
 	  }
 
 
   }
   else {
 	  // check failed restoring flag
-	  if ((BKP->DR3 & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+	  if ((configuration_get_register() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
 		  // second configuration section has good CRC and can be used further
-		  BKP->DR3 |= CONFIG_SECOND_CRC_OK;
+		  configuration_set_bits_register(CONFIG_SECOND_CRC_OK);
 	  }
 	  else {
 		  ;
@@ -334,7 +334,7 @@ int main(int argc, char* argv[]){
   }
 
   // at this point both sections have either verified CRC or restored values to default
-  if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+  if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) != 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) != 0) {
 	  // if both sections are OK check programming counters
 	  if (config_data_pgm_cntr_first > config_data_pgm_cntr_second) {
 		  // if first section has bigger programing counter use it
@@ -345,11 +345,11 @@ int main(int argc, char* argv[]){
 
 	  }
   }
-  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) != 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) == 0) {
+  else if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) != 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) == 0) {
 	  // if only first region is OK use it
 	  configuration_handler_load_configuration(REGION_FIRST);
   }
-  else if ((BKP->DR3 & CONFIG_FIRST_CRC_OK) == 0 && (BKP->DR3 & CONFIG_SECOND_CRC_OK) != 0) {
+  else if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) == 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) != 0) {
 	  // if only first region is OK use it
 	  configuration_handler_load_configuration(REGION_FIRST);
   }
@@ -627,20 +627,8 @@ int main(int argc, char* argv[]){
   ax25_init(&main_ax25, &main_afsk, 0, 0x00);
   DA_Init();
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
-  // initialize Watchdog output
-  Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
-#endif
-
-#if defined(PARAMETEO)
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
-#endif
+  // configure external watchdog
+  io_ext_watchdog_config();
 
   // initializing the digipeater configuration
   digi_init(main_config_data_mode);
@@ -760,7 +748,8 @@ int main(int argc, char* argv[]){
 
   io_oc_output_low();
 
-  GPIO_ResetBits(GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
+  led_control_led1_upper(false);
+  led_control_led2_bottom(false);
 
   // configuting system timers
   TimerConfig();
@@ -778,20 +767,7 @@ int main(int argc, char* argv[]){
    IWDG_ReloadCounter();
 #endif
 
-#ifdef EXTERNAL_WATCHDOG
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
-
-   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// external watchdog
-
-   GPIOA->ODR ^= GPIO_Pin_12; // Flip the watchdog pin
-#endif
-
-#if defined(PARAMETEO)
-   Configure_GPIO(GPIOA,12,GPPP_OUTPUT_2MHZ);	// external watchdog
-
-   GPIOA->ODR ^= GPIO_Pin_12; // Flip the watchdog pin
-#endif
-#endif
+   io_ext_watchdog_service();
 
   // Infinite loop
   while (1)

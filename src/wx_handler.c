@@ -14,8 +14,15 @@
 #include <rte_rtu.h>
 #include <rte_main.h>
 #include <math.h>
-#include <stm32f10x.h>
 
+#ifdef STM32F10X_MD_VL
+#include <stm32f10x.h>
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_gpio.h>
+#endif
 #include "drivers/analog_anemometer.h"
 
 #include "station_config.h"
@@ -23,6 +30,7 @@
 #include "modbus_rtu/rtu_getters.h"
 #include "modbus_rtu/rtu_return_values.h"
 
+#include "io.h"
 #include "delay.h"
 #include "telemetry.h"
 #include "main.h"
@@ -324,34 +332,50 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 }
 
 void wx_pwr_init(void) {
-	// RELAY_CNTRL
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-#if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-#elif (defined PARATNC_HWREV_C)
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-#else
-#error ("Hardware Revision not chosen.")
+#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
+			// RELAY_CNTRL
+			GPIO_InitTypeDef GPIO_InitStructure;
+			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+		#if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
+			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+		#elif (defined PARATNC_HWREV_C)
+			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+		#else
+		#error ("Hardware Revision not chosen.")
+		#endif
+			GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+		#if (defined PARATNC_HWREV_C)
+			// +12V PWR_CNTRL
+			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+			GPIO_Init(GPIOA, &GPIO_InitStructure);
+		#endif
+
+			wx_pwr_state = WX_PWR_OFF;
+
+			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+
+		#if (defined PARATNC_HWREV_C)
+			// +12V_SW PWR_CNTRL
+			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+		#endif
+
 #endif
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-#if (defined PARATNC_HWREV_C)
-	// +12V PWR_CNTRL
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+#if defined(PARAMETEO)
+			LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+
+			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
+			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
+
 #endif
-
-	wx_pwr_state = WX_PWR_OFF;
-
-	GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-
-#if (defined PARATNC_HWREV_C)
-	// +12V_SW PWR_CNTRL
-	GPIO_ResetBits(GPIOA, GPIO_Pin_6);
-#endif
-
 }
 
 void wx_pwr_periodic_handle(void) {
@@ -380,10 +404,12 @@ void wx_pwr_periodic_handle(void) {
 			wx_pwr_state = WX_PWR_UNDER_RESET;
 
 			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
-			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+			//GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+			io_5v_isol_sw_cntrl_vbat_s_disable();
 
 #ifdef PWR_SWITCH_BOTH
-			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+			io_12v_sw_cntrl_vbat_g_disable();
+			//GPIO_ResetBits(GPIOA, GPIO_Pin_6);
 #endif
 
 			// setting the last_good timers to current value to prevent reset loop
@@ -410,7 +436,8 @@ void wx_pwr_periodic_handle(void) {
 		delay_fixed(100);
 
 		// Turn on the +5V_ISOL (VDD_SW) voltage
-		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+		//GPIO_SetBits(GPIOB, GPIO_Pin_8);
+		io_5v_isol_sw_cntrl_vbat_s_enable();
 
 		// power is off after power-up and needs to be powered on
 		wx_pwr_state = WX_PWR_ON;
@@ -420,10 +447,12 @@ void wx_pwr_periodic_handle(void) {
 	case WX_PWR_UNDER_RESET:
 
 		// Turn on the +5V_ISOL (VDD_SW) voltage
-		GPIO_SetBits(GPIOB, GPIO_Pin_8);
+		//GPIO_SetBits(GPIOB, GPIO_Pin_8);
+		io_5v_isol_sw_cntrl_vbat_s_enable();
 
 #ifdef PWR_SWITCH_BOTH
-		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+		//GPIO_SetBits(GPIOA, GPIO_Pin_6);
+		io_12v_sw_cntrl_vbat_g_enable();
 
 		wx_force_i2c_sensor_reset = 1;
 #endif

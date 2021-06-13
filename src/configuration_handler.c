@@ -5,6 +5,8 @@
  *      Author: mateusz
  */
 
+#include "station_config_target_hw.h"
+
 #include "configuration_handler.h"
 #include "config_data.h"
 #include "config_data_externs.h"
@@ -395,4 +397,53 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 
 uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx) {
 	return -1;
+}
+
+uint32_t configuration_get_register(void) {
+
+	uint32_t out = 0;
+
+#ifdef STM32F10X_MD_VL
+	out = BKP->DR3;
+#endif
+
+#ifdef STM32L471xx
+	out = RTC->BKP3R;
+
+#endif
+
+	return out;
+}
+
+void configuration_set_register(uint32_t value) {
+#ifdef STM32F10X_MD_VL
+	BKP->DR3 = value;
+#endif
+
+#ifdef STM32L471xx
+	RTC->BKP3R = value;
+
+#endif
+}
+
+void configuration_set_bits_register(uint32_t value) {
+#ifdef STM32F10X_MD_VL
+	BKP->DR3 |= value;
+#endif
+
+#ifdef STM32L471xx
+	RTC->BKP3R |= value;
+
+#endif
+}
+
+void configuration_clear_bits_register(uint32_t value) {
+#ifdef STM32F10X_MD_VL
+	BKP->DR3 &= (0xFFFF ^ value);
+#endif
+
+#ifdef STM32L471xx
+	RTC->BKP3R &= (0xFFFFFFFF ^ value);
+
+#endif
 }
