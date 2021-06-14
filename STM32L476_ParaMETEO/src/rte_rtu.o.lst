@@ -116,9 +116,9 @@
   83              		.file 6 "../include/rte_rtu.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 rte_rtu.c
-     /tmp/cciktznF.s:18     .text.rte_rtu_init:0000000000000000 $t
-     /tmp/cciktznF.s:25     .text.rte_rtu_init:0000000000000000 rte_rtu_init
-     /tmp/cciktznF.s:48     .text.rte_rtu_init:0000000000000010 $d
+     /tmp/ccPbwdWr.s:18     .text.rte_rtu_init:0000000000000000 $t
+     /tmp/ccPbwdWr.s:25     .text.rte_rtu_init:0000000000000000 rte_rtu_init
+     /tmp/ccPbwdWr.s:48     .text.rte_rtu_init:0000000000000010 $d
                             *COM*:0000000000000004 rte_rtu_last_modbus_exception_timestamp
                             *COM*:0000000000000004 rte_rtu_last_modbus_rx_error_timestamp
                             *COM*:0000000000000001 rte_rtu_last_modbus_exception
@@ -129,10 +129,10 @@ DEFINED SYMBOLS
                             *COM*:000000000000000a rte_wx_modbus_rtu_f3
                             *COM*:000000000000000a rte_wx_modbus_rtu_f2
                             *COM*:000000000000000a rte_wx_modbus_rtu_f1
-     /tmp/cciktznF.s:75     .bss.rte_rtu_number_of_successfull_serial_comm:0000000000000000 rte_rtu_number_of_successfull_serial_comm
-     /tmp/cciktznF.s:69     .bss.rte_rtu_number_of_serial_io_errors:0000000000000000 rte_rtu_number_of_serial_io_errors
-     /tmp/cciktznF.s:70     .bss.rte_rtu_number_of_serial_io_errors:0000000000000000 $d
-     /tmp/cciktznF.s:72     .bss.rte_rtu_number_of_successfull_serial_comm:0000000000000000 $d
+     /tmp/ccPbwdWr.s:75     .bss.rte_rtu_number_of_successfull_serial_comm:0000000000000000 rte_rtu_number_of_successfull_serial_comm
+     /tmp/ccPbwdWr.s:69     .bss.rte_rtu_number_of_serial_io_errors:0000000000000000 rte_rtu_number_of_serial_io_errors
+     /tmp/ccPbwdWr.s:70     .bss.rte_rtu_number_of_serial_io_errors:0000000000000000 $d
+     /tmp/ccPbwdWr.s:72     .bss.rte_rtu_number_of_successfull_serial_comm:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
                            .group:0000000000000000 wm4.rtu_configuration.h.9.225559723a46d58da796e0ac6cb0b2ac

@@ -1382,12 +1382,12 @@
  208              		.file 7 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 LedConfig.c
-     /tmp/ccLqyflp.s:18     .text.led_init:0000000000000000 $t
-     /tmp/ccLqyflp.s:25     .text.led_init:0000000000000000 led_init
-     /tmp/ccLqyflp.s:89     .text.led_init:0000000000000038 $d
-     /tmp/ccLqyflp.s:94     .text.led_service_blink:0000000000000000 $t
-     /tmp/ccLqyflp.s:101    .text.led_service_blink:0000000000000000 led_service_blink
-     /tmp/ccLqyflp.s:193    .text.led_service_blink:0000000000000070 $d
+     /tmp/ccKI80VM.s:18     .text.led_init:0000000000000000 $t
+     /tmp/ccKI80VM.s:25     .text.led_init:0000000000000000 led_init
+     /tmp/ccKI80VM.s:89     .text.led_init:0000000000000038 $d
+     /tmp/ccKI80VM.s:94     .text.led_service_blink:0000000000000000 $t
+     /tmp/ccKI80VM.s:101    .text.led_service_blink:0000000000000000 led_service_blink
+     /tmp/ccKI80VM.s:193    .text.led_service_blink:0000000000000070 $d
                             *COM*:0000000000000001 led_blinking_led1
                             *COM*:0000000000000001 led_blinking_led2
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421

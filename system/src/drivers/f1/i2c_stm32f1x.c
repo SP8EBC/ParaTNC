@@ -5,10 +5,8 @@
 #include "main.h"
 
 int i2cPinRemap = 0;
-//int i2cClockSpeed = 8;  // w realu tu powinno by� 5 przy moich ustawieniach zegara
 int i2cClockSpeed = 5;
 int i2cCCRegisterValue = 0x78;
-//int i2cRiseRegisterValue = 0x09;	// w realu 6
 int i2cRiseRegisterValue = 0x06;
 
 volatile uint16_t i2c_remote_addr = 0;			// adres zdalnego urz�dzenia

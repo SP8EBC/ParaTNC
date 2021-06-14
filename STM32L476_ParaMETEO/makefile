@@ -66,7 +66,7 @@ all: ParaTNC.elf secondary-outputs
 ParaTNC.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -T STM32L471RETx_FLASH.ld -nostartfiles -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

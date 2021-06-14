@@ -1565,35 +1565,35 @@
  1018              		.file 40 "../include/wx_handler_humidity.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 wx_handler.c
-     /tmp/cc4xjZWR.s:18     .text.wx_check_force_i2c_reset:0000000000000000 $t
-     /tmp/cc4xjZWR.s:25     .text.wx_check_force_i2c_reset:0000000000000000 wx_check_force_i2c_reset
-     /tmp/cc4xjZWR.s:62     .text.wx_check_force_i2c_reset:0000000000000024 $d
-     /tmp/cc4xjZWR.s:68     .text.wx_get_all_measurements:0000000000000000 $t
-     /tmp/cc4xjZWR.s:75     .text.wx_get_all_measurements:0000000000000000 wx_get_all_measurements
-     /tmp/cc4xjZWR.s:178    .text.wx_get_all_measurements:0000000000000084 $d
-     /tmp/cc4xjZWR.s:183    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 $t
-     /tmp/cc4xjZWR.s:190    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 wx_get_bme280_temperature_pressure_humidity
-     /tmp/cc4xjZWR.s:229    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000020 $d
-     /tmp/cc4xjZWR.s:238    .text.wx_pool_anemometer:0000000000000000 $t
-     /tmp/cc4xjZWR.s:245    .text.wx_pool_anemometer:0000000000000000 wx_pool_anemometer
-     /tmp/cc4xjZWR.s:688    .text.wx_pool_anemometer:0000000000000260 $d
-     /tmp/cc4xjZWR.s:707    .text.wx_pwr_init:0000000000000000 $t
-     /tmp/cc4xjZWR.s:714    .text.wx_pwr_init:0000000000000000 wx_pwr_init
-     /tmp/cc4xjZWR.s:754    .text.wx_pwr_init:0000000000000028 $d
-     /tmp/cc4xjZWR.s:759    .text.wx_pwr_periodic_handle:0000000000000000 $t
-     /tmp/cc4xjZWR.s:766    .text.wx_pwr_periodic_handle:0000000000000000 wx_pwr_periodic_handle
-     /tmp/cc4xjZWR.s:926    .text.wx_pwr_periodic_handle:00000000000000cc $d
+     /tmp/ccyIUy5E.s:18     .text.wx_check_force_i2c_reset:0000000000000000 $t
+     /tmp/ccyIUy5E.s:25     .text.wx_check_force_i2c_reset:0000000000000000 wx_check_force_i2c_reset
+     /tmp/ccyIUy5E.s:62     .text.wx_check_force_i2c_reset:0000000000000024 $d
+     /tmp/ccyIUy5E.s:68     .text.wx_get_all_measurements:0000000000000000 $t
+     /tmp/ccyIUy5E.s:75     .text.wx_get_all_measurements:0000000000000000 wx_get_all_measurements
+     /tmp/ccyIUy5E.s:178    .text.wx_get_all_measurements:0000000000000084 $d
+     /tmp/ccyIUy5E.s:183    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 $t
+     /tmp/ccyIUy5E.s:190    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000000 wx_get_bme280_temperature_pressure_humidity
+     /tmp/ccyIUy5E.s:229    .text.wx_get_bme280_temperature_pressure_humidity:0000000000000020 $d
+     /tmp/ccyIUy5E.s:238    .text.wx_pool_anemometer:0000000000000000 $t
+     /tmp/ccyIUy5E.s:245    .text.wx_pool_anemometer:0000000000000000 wx_pool_anemometer
+     /tmp/ccyIUy5E.s:688    .text.wx_pool_anemometer:0000000000000260 $d
+     /tmp/ccyIUy5E.s:707    .text.wx_pwr_init:0000000000000000 $t
+     /tmp/ccyIUy5E.s:714    .text.wx_pwr_init:0000000000000000 wx_pwr_init
+     /tmp/ccyIUy5E.s:754    .text.wx_pwr_init:0000000000000028 $d
+     /tmp/ccyIUy5E.s:759    .text.wx_pwr_periodic_handle:0000000000000000 $t
+     /tmp/ccyIUy5E.s:766    .text.wx_pwr_periodic_handle:0000000000000000 wx_pwr_periodic_handle
+     /tmp/ccyIUy5E.s:926    .text.wx_pwr_periodic_handle:00000000000000cc $d
                             *COM*:0000000000000001 wx_pwr_state
-     /tmp/cc4xjZWR.s:946    .bss.wx_force_i2c_sensor_reset:0000000000000000 wx_force_i2c_sensor_reset
-     /tmp/cc4xjZWR.s:967    .bss.wx_wind_pool_call_counter:0000000000000000 wx_wind_pool_call_counter
-     /tmp/cc4xjZWR.s:953    .bss.wx_last_good_temperature_time:0000000000000000 wx_last_good_temperature_time
-     /tmp/cc4xjZWR.s:960    .bss.wx_last_good_wind_time:0000000000000000 wx_last_good_wind_time
-     /tmp/cc4xjZWR.s:947    .bss.wx_force_i2c_sensor_reset:0000000000000000 $d
-     /tmp/cc4xjZWR.s:949    .bss.wx_last_good_temperature_time:0000000000000000 $d
-     /tmp/cc4xjZWR.s:956    .bss.wx_last_good_wind_time:0000000000000000 $d
-     /tmp/cc4xjZWR.s:963    .bss.wx_wind_pool_call_counter:0000000000000000 $d
-     /tmp/cc4xjZWR.s:970    .rodata.internal:0000000000000000 $d
-     /tmp/cc4xjZWR.s:974    .rodata.internal:0000000000000000 internal
+     /tmp/ccyIUy5E.s:946    .bss.wx_force_i2c_sensor_reset:0000000000000000 wx_force_i2c_sensor_reset
+     /tmp/ccyIUy5E.s:967    .bss.wx_wind_pool_call_counter:0000000000000000 wx_wind_pool_call_counter
+     /tmp/ccyIUy5E.s:953    .bss.wx_last_good_temperature_time:0000000000000000 wx_last_good_temperature_time
+     /tmp/ccyIUy5E.s:960    .bss.wx_last_good_wind_time:0000000000000000 wx_last_good_wind_time
+     /tmp/ccyIUy5E.s:947    .bss.wx_force_i2c_sensor_reset:0000000000000000 $d
+     /tmp/ccyIUy5E.s:949    .bss.wx_last_good_temperature_time:0000000000000000 $d
+     /tmp/ccyIUy5E.s:956    .bss.wx_last_good_wind_time:0000000000000000 $d
+     /tmp/ccyIUy5E.s:963    .bss.wx_wind_pool_call_counter:0000000000000000 $d
+     /tmp/ccyIUy5E.s:970    .rodata.internal:0000000000000000 $d
+     /tmp/ccyIUy5E.s:974    .rodata.internal:0000000000000000 internal
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90

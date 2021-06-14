@@ -3,7 +3,6 @@
 #include "station_config.h"
 #include "station_config_target_hw.h"
 
-//#include <drivers/f1/gpio_conf_stm32f1x.h>
 #include "diag/Trace.h"
 
 #include "main.h" 	// global_time is here

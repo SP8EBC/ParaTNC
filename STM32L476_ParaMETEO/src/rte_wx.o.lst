@@ -432,76 +432,76 @@
  397              		.file 27 "../include/main.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 rte_wx.c
-     /tmp/ccGvVplg.s:18     .text.rte_wx_init:0000000000000000 $t
-     /tmp/ccGvVplg.s:25     .text.rte_wx_init:0000000000000000 rte_wx_init
-     /tmp/ccGvVplg.s:81     .text.rte_wx_init:0000000000000034 $d
+     /tmp/ccUg4cU5.s:18     .text.rte_wx_init:0000000000000000 $t
+     /tmp/ccUg4cU5.s:25     .text.rte_wx_init:0000000000000000 rte_wx_init
+     /tmp/ccUg4cU5.s:81     .text.rte_wx_init:0000000000000034 $d
                             *COM*:0000000000000024 rte_wx_windspeed
                             *COM*:0000000000000024 rte_wx_winddirection
                             *COM*:0000000000000001 rte_wx_pressure_it
                             *COM*:0000000000000010 rte_wx_pressure_history
-     /tmp/ccGvVplg.s:89     .text.rte_wx_update_last_measuremenet_timers:0000000000000000 $t
-     /tmp/ccGvVplg.s:96     .text.rte_wx_update_last_measuremenet_timers:0000000000000000 rte_wx_update_last_measuremenet_timers
-     /tmp/ccGvVplg.s:131    .text.rte_wx_update_last_measuremenet_timers:0000000000000020 $d
-     /tmp/ccGvVplg.s:138    .text.rte_wx_reset_last_measuremenet_timers:0000000000000000 $t
-     /tmp/ccGvVplg.s:145    .text.rte_wx_reset_last_measuremenet_timers:0000000000000000 rte_wx_reset_last_measuremenet_timers
-     /tmp/ccGvVplg.s:178    .text.rte_wx_reset_last_measuremenet_timers:0000000000000020 $d
+     /tmp/ccUg4cU5.s:89     .text.rte_wx_update_last_measuremenet_timers:0000000000000000 $t
+     /tmp/ccUg4cU5.s:96     .text.rte_wx_update_last_measuremenet_timers:0000000000000000 rte_wx_update_last_measuremenet_timers
+     /tmp/ccUg4cU5.s:131    .text.rte_wx_update_last_measuremenet_timers:0000000000000020 $d
+     /tmp/ccUg4cU5.s:138    .text.rte_wx_reset_last_measuremenet_timers:0000000000000000 $t
+     /tmp/ccUg4cU5.s:145    .text.rte_wx_reset_last_measuremenet_timers:0000000000000000 rte_wx_reset_last_measuremenet_timers
+     /tmp/ccUg4cU5.s:178    .text.rte_wx_reset_last_measuremenet_timers:0000000000000020 $d
                             *COM*:0000000000000014 rte_wx_davis_loop_content
-     /tmp/ccGvVplg.s:235    .bss.rte_wx_davis_loop_packet_avaliable:0000000000000000 rte_wx_davis_loop_packet_avaliable
-     /tmp/ccGvVplg.s:240    .bss.rte_wx_davis_station_avaliable:0000000000000000 rte_wx_davis_station_avaliable
-     /tmp/ccGvVplg.s:363    .data.rte_wx_umb_qf:0000000000000000 rte_wx_umb_qf
+     /tmp/ccUg4cU5.s:235    .bss.rte_wx_davis_loop_packet_avaliable:0000000000000000 rte_wx_davis_loop_packet_avaliable
+     /tmp/ccUg4cU5.s:240    .bss.rte_wx_davis_station_avaliable:0000000000000000 rte_wx_davis_station_avaliable
+     /tmp/ccUg4cU5.s:363    .data.rte_wx_umb_qf:0000000000000000 rte_wx_umb_qf
                             *COM*:0000000000000018 rte_wx_umb_channel_values
-     /tmp/ccGvVplg.s:331    .bss.rte_wx_umb_last_status:0000000000000000 rte_wx_umb_last_status
+     /tmp/ccUg4cU5.s:331    .bss.rte_wx_umb_last_status:0000000000000000 rte_wx_umb_last_status
                             *COM*:0000000000000030 rte_wx_umb_context
                             *COM*:000000000000002f rte_wx_umb
-     /tmp/ccGvVplg.s:368    .data.rte_wx_wind_qf:0000000000000000 rte_wx_wind_qf
-     /tmp/ccGvVplg.s:358    .data.rte_wx_bme280_qf:0000000000000000 rte_wx_bme280_qf
-     /tmp/ccGvVplg.s:266    .bss.rte_wx_ms5611_qf:0000000000000000 rte_wx_ms5611_qf
+     /tmp/ccUg4cU5.s:368    .data.rte_wx_wind_qf:0000000000000000 rte_wx_wind_qf
+     /tmp/ccUg4cU5.s:358    .data.rte_wx_bme280_qf:0000000000000000 rte_wx_bme280_qf
+     /tmp/ccUg4cU5.s:266    .bss.rte_wx_ms5611_qf:0000000000000000 rte_wx_ms5611_qf
                             *COM*:0000000000000030 rte_wx_dallas_average
-     /tmp/ccGvVplg.s:245    .bss.rte_wx_error_dallas_qf:0000000000000000 rte_wx_error_dallas_qf
+     /tmp/ccUg4cU5.s:245    .bss.rte_wx_error_dallas_qf:0000000000000000 rte_wx_error_dallas_qf
                             *COM*:0000000000000001 rte_wx_current_dallas_qf
-     /tmp/ccGvVplg.s:255    .bss.rte_wx_humidity_valid:0000000000000000 rte_wx_humidity_valid
-     /tmp/ccGvVplg.s:250    .bss.rte_wx_humidity:0000000000000000 rte_wx_humidity
-     /tmp/ccGvVplg.s:224    .bss.rte_wx_average_winddirection:0000000000000000 rte_wx_average_winddirection
-     /tmp/ccGvVplg.s:261    .bss.rte_wx_max_windspeed:0000000000000000 rte_wx_max_windspeed
-     /tmp/ccGvVplg.s:230    .bss.rte_wx_average_windspeed:0000000000000000 rte_wx_average_windspeed
-     /tmp/ccGvVplg.s:342    .bss.rte_wx_winddirection_last:0000000000000000 rte_wx_winddirection_last
-     /tmp/ccGvVplg.s:336    .bss.rte_wx_winddirection_it:0000000000000000 rte_wx_winddirection_it
-     /tmp/ccGvVplg.s:347    .bss.rte_wx_windspeed_it:0000000000000000 rte_wx_windspeed_it
-     /tmp/ccGvVplg.s:353    .bss.rte_wx_windspeed_pulses:0000000000000000 rte_wx_windspeed_pulses
-     /tmp/ccGvVplg.s:278    .bss.rte_wx_pressure_valid:0000000000000000 rte_wx_pressure_valid
-     /tmp/ccGvVplg.s:272    .bss.rte_wx_pressure:0000000000000000 rte_wx_pressure
-     /tmp/ccGvVplg.s:314    .bss.rte_wx_temperature_internal_valid:0000000000000000 rte_wx_temperature_internal_valid
-     /tmp/ccGvVplg.s:308    .bss.rte_wx_temperature_internal:0000000000000000 rte_wx_temperature_internal
-     /tmp/ccGvVplg.s:320    .bss.rte_wx_temperature_max_external_valid:0000000000000000 rte_wx_temperature_max_external_valid
-     /tmp/ccGvVplg.s:326    .bss.rte_wx_temperature_min_external_valid:0000000000000000 rte_wx_temperature_min_external_valid
-     /tmp/ccGvVplg.s:284    .bss.rte_wx_temperature_average_external_valid:0000000000000000 rte_wx_temperature_average_external_valid
-     /tmp/ccGvVplg.s:296    .bss.rte_wx_temperature_external_slew_rate:0000000000000000 rte_wx_temperature_external_slew_rate
-     /tmp/ccGvVplg.s:302    .bss.rte_wx_temperature_external_valid:0000000000000000 rte_wx_temperature_external_valid
-     /tmp/ccGvVplg.s:290    .bss.rte_wx_temperature_external:0000000000000000 rte_wx_temperature_external
-     /tmp/ccGvVplg.s:221    .bss.rte_wx_average_winddirection:0000000000000000 $d
-     /tmp/ccGvVplg.s:227    .bss.rte_wx_average_windspeed:0000000000000000 $d
-     /tmp/ccGvVplg.s:236    .bss.rte_wx_davis_loop_packet_avaliable:0000000000000000 $d
-     /tmp/ccGvVplg.s:241    .bss.rte_wx_davis_station_avaliable:0000000000000000 $d
-     /tmp/ccGvVplg.s:246    .bss.rte_wx_error_dallas_qf:0000000000000000 $d
-     /tmp/ccGvVplg.s:251    .bss.rte_wx_humidity:0000000000000000 $d
-     /tmp/ccGvVplg.s:256    .bss.rte_wx_humidity_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:258    .bss.rte_wx_max_windspeed:0000000000000000 $d
-     /tmp/ccGvVplg.s:267    .bss.rte_wx_ms5611_qf:0000000000000000 $d
-     /tmp/ccGvVplg.s:269    .bss.rte_wx_pressure:0000000000000000 $d
-     /tmp/ccGvVplg.s:275    .bss.rte_wx_pressure_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:281    .bss.rte_wx_temperature_average_external_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:287    .bss.rte_wx_temperature_external:0000000000000000 $d
-     /tmp/ccGvVplg.s:293    .bss.rte_wx_temperature_external_slew_rate:0000000000000000 $d
-     /tmp/ccGvVplg.s:299    .bss.rte_wx_temperature_external_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:305    .bss.rte_wx_temperature_internal:0000000000000000 $d
-     /tmp/ccGvVplg.s:311    .bss.rte_wx_temperature_internal_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:317    .bss.rte_wx_temperature_max_external_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:323    .bss.rte_wx_temperature_min_external_valid:0000000000000000 $d
-     /tmp/ccGvVplg.s:332    .bss.rte_wx_umb_last_status:0000000000000000 $d
-     /tmp/ccGvVplg.s:337    .bss.rte_wx_winddirection_it:0000000000000000 $d
-     /tmp/ccGvVplg.s:339    .bss.rte_wx_winddirection_last:0000000000000000 $d
-     /tmp/ccGvVplg.s:348    .bss.rte_wx_windspeed_it:0000000000000000 $d
-     /tmp/ccGvVplg.s:350    .bss.rte_wx_windspeed_pulses:0000000000000000 $d
+     /tmp/ccUg4cU5.s:255    .bss.rte_wx_humidity_valid:0000000000000000 rte_wx_humidity_valid
+     /tmp/ccUg4cU5.s:250    .bss.rte_wx_humidity:0000000000000000 rte_wx_humidity
+     /tmp/ccUg4cU5.s:224    .bss.rte_wx_average_winddirection:0000000000000000 rte_wx_average_winddirection
+     /tmp/ccUg4cU5.s:261    .bss.rte_wx_max_windspeed:0000000000000000 rte_wx_max_windspeed
+     /tmp/ccUg4cU5.s:230    .bss.rte_wx_average_windspeed:0000000000000000 rte_wx_average_windspeed
+     /tmp/ccUg4cU5.s:342    .bss.rte_wx_winddirection_last:0000000000000000 rte_wx_winddirection_last
+     /tmp/ccUg4cU5.s:336    .bss.rte_wx_winddirection_it:0000000000000000 rte_wx_winddirection_it
+     /tmp/ccUg4cU5.s:347    .bss.rte_wx_windspeed_it:0000000000000000 rte_wx_windspeed_it
+     /tmp/ccUg4cU5.s:353    .bss.rte_wx_windspeed_pulses:0000000000000000 rte_wx_windspeed_pulses
+     /tmp/ccUg4cU5.s:278    .bss.rte_wx_pressure_valid:0000000000000000 rte_wx_pressure_valid
+     /tmp/ccUg4cU5.s:272    .bss.rte_wx_pressure:0000000000000000 rte_wx_pressure
+     /tmp/ccUg4cU5.s:314    .bss.rte_wx_temperature_internal_valid:0000000000000000 rte_wx_temperature_internal_valid
+     /tmp/ccUg4cU5.s:308    .bss.rte_wx_temperature_internal:0000000000000000 rte_wx_temperature_internal
+     /tmp/ccUg4cU5.s:320    .bss.rte_wx_temperature_max_external_valid:0000000000000000 rte_wx_temperature_max_external_valid
+     /tmp/ccUg4cU5.s:326    .bss.rte_wx_temperature_min_external_valid:0000000000000000 rte_wx_temperature_min_external_valid
+     /tmp/ccUg4cU5.s:284    .bss.rte_wx_temperature_average_external_valid:0000000000000000 rte_wx_temperature_average_external_valid
+     /tmp/ccUg4cU5.s:296    .bss.rte_wx_temperature_external_slew_rate:0000000000000000 rte_wx_temperature_external_slew_rate
+     /tmp/ccUg4cU5.s:302    .bss.rte_wx_temperature_external_valid:0000000000000000 rte_wx_temperature_external_valid
+     /tmp/ccUg4cU5.s:290    .bss.rte_wx_temperature_external:0000000000000000 rte_wx_temperature_external
+     /tmp/ccUg4cU5.s:221    .bss.rte_wx_average_winddirection:0000000000000000 $d
+     /tmp/ccUg4cU5.s:227    .bss.rte_wx_average_windspeed:0000000000000000 $d
+     /tmp/ccUg4cU5.s:236    .bss.rte_wx_davis_loop_packet_avaliable:0000000000000000 $d
+     /tmp/ccUg4cU5.s:241    .bss.rte_wx_davis_station_avaliable:0000000000000000 $d
+     /tmp/ccUg4cU5.s:246    .bss.rte_wx_error_dallas_qf:0000000000000000 $d
+     /tmp/ccUg4cU5.s:251    .bss.rte_wx_humidity:0000000000000000 $d
+     /tmp/ccUg4cU5.s:256    .bss.rte_wx_humidity_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:258    .bss.rte_wx_max_windspeed:0000000000000000 $d
+     /tmp/ccUg4cU5.s:267    .bss.rte_wx_ms5611_qf:0000000000000000 $d
+     /tmp/ccUg4cU5.s:269    .bss.rte_wx_pressure:0000000000000000 $d
+     /tmp/ccUg4cU5.s:275    .bss.rte_wx_pressure_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:281    .bss.rte_wx_temperature_average_external_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:287    .bss.rte_wx_temperature_external:0000000000000000 $d
+     /tmp/ccUg4cU5.s:293    .bss.rte_wx_temperature_external_slew_rate:0000000000000000 $d
+     /tmp/ccUg4cU5.s:299    .bss.rte_wx_temperature_external_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:305    .bss.rte_wx_temperature_internal:0000000000000000 $d
+     /tmp/ccUg4cU5.s:311    .bss.rte_wx_temperature_internal_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:317    .bss.rte_wx_temperature_max_external_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:323    .bss.rte_wx_temperature_min_external_valid:0000000000000000 $d
+     /tmp/ccUg4cU5.s:332    .bss.rte_wx_umb_last_status:0000000000000000 $d
+     /tmp/ccUg4cU5.s:337    .bss.rte_wx_winddirection_it:0000000000000000 $d
+     /tmp/ccUg4cU5.s:339    .bss.rte_wx_winddirection_last:0000000000000000 $d
+     /tmp/ccUg4cU5.s:348    .bss.rte_wx_windspeed_it:0000000000000000 $d
+     /tmp/ccUg4cU5.s:350    .bss.rte_wx_windspeed_pulses:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
