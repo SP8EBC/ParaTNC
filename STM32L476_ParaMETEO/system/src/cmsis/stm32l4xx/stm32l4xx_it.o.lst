@@ -343,70 +343,36 @@
  179 0000 7047     		bx	lr
  180              		.cfi_endproc
  181              	.LFE358:
- 183              		.section	.text.SysTick_Handler,"ax",%progbits
- 184              		.align	1
- 185              		.global	SysTick_Handler
- 186              		.syntax unified
- 187              		.thumb
- 188              		.thumb_func
- 189              		.fpu fpv4-sp-d16
- 191              	SysTick_Handler:
- 192              	.LFB359:
- 180:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** 
- 181:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** /**
- 182:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   * @brief This function handles System tick timer.
- 183:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   */
- 184:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** void SysTick_Handler(void)
- 185:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** {
- 193              		.loc 1 185 0
- 194              		.cfi_startproc
- 195              		@ args = 0, pretend = 0, frame = 0
- 196              		@ frame_needed = 0, uses_anonymous_args = 0
- 197              		@ link register save eliminated.
- 186:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   /* USER CODE BEGIN SysTick_IRQn 0 */
- 187:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** 
- 188:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   /* USER CODE END SysTick_IRQn 0 */
- 189:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   //HAL_IncTick();
- 190:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   /* USER CODE BEGIN SysTick_IRQn 1 */
- 191:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** 
- 192:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c ****   /* USER CODE END SysTick_IRQn 1 */
- 193:../system/src/cmsis/stm32l4xx/stm32l4xx_it.c **** }
- 198              		.loc 1 193 0
- 199 0000 7047     		bx	lr
- 200              		.cfi_endproc
- 201              	.LFE359:
- 203              		.text
- 204              	.Letext0:
- 205              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
- 206              		.file 3 "../system/include/aprs/cfifo.h"
- 207              		.file 4 "../system/include/aprs/afsk.h"
- 208              		.file 5 "../system/include/aprs/ax25.h"
- 209              		.file 6 "../system/include/cmsis/stm32l4xx/core_cm4.h"
- 210              		.file 7 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
- 211              		.file 8 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
- 212              		.file 9 "../system/include/drivers/serial.h"
- 213              		.file 10 "../include/config_data.h"
- 214              		.file 11 "../include/main.h"
+ 183              		.text
+ 184              	.Letext0:
+ 185              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 186              		.file 3 "../system/include/aprs/cfifo.h"
+ 187              		.file 4 "../system/include/aprs/afsk.h"
+ 188              		.file 5 "../system/include/aprs/ax25.h"
+ 189              		.file 6 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 190              		.file 7 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 191              		.file 8 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 192              		.file 9 "../system/include/drivers/serial.h"
+ 193              		.file 10 "../include/config_data.h"
+ 194              		.file 11 "../include/main.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 stm32l4xx_it.c
-     /tmp/cczdSpLQ.s:18     .text.NMI_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:25     .text.NMI_Handler:0000000000000000 NMI_Handler
-     /tmp/cczdSpLQ.s:40     .text.HardFault_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:47     .text.HardFault_Handler:0000000000000000 HardFault_Handler
-     /tmp/cczdSpLQ.s:61     .text.MemManage_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:68     .text.MemManage_Handler:0000000000000000 MemManage_Handler
-     /tmp/cczdSpLQ.s:82     .text.BusFault_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:89     .text.BusFault_Handler:0000000000000000 BusFault_Handler
-     /tmp/cczdSpLQ.s:103    .text.UsageFault_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:110    .text.UsageFault_Handler:0000000000000000 UsageFault_Handler
-     /tmp/cczdSpLQ.s:124    .text.SVC_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:131    .text.SVC_Handler:0000000000000000 SVC_Handler
-     /tmp/cczdSpLQ.s:144    .text.DebugMon_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:151    .text.DebugMon_Handler:0000000000000000 DebugMon_Handler
-     /tmp/cczdSpLQ.s:164    .text.PendSV_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:171    .text.PendSV_Handler:0000000000000000 PendSV_Handler
-     /tmp/cczdSpLQ.s:184    .text.SysTick_Handler:0000000000000000 $t
-     /tmp/cczdSpLQ.s:191    .text.SysTick_Handler:0000000000000000 SysTick_Handler
+     /tmp/cc5u0ZWC.s:18     .text.NMI_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:25     .text.NMI_Handler:0000000000000000 NMI_Handler
+     /tmp/cc5u0ZWC.s:40     .text.HardFault_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:47     .text.HardFault_Handler:0000000000000000 HardFault_Handler
+     /tmp/cc5u0ZWC.s:61     .text.MemManage_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:68     .text.MemManage_Handler:0000000000000000 MemManage_Handler
+     /tmp/cc5u0ZWC.s:82     .text.BusFault_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:89     .text.BusFault_Handler:0000000000000000 BusFault_Handler
+     /tmp/cc5u0ZWC.s:103    .text.UsageFault_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:110    .text.UsageFault_Handler:0000000000000000 UsageFault_Handler
+     /tmp/cc5u0ZWC.s:124    .text.SVC_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:131    .text.SVC_Handler:0000000000000000 SVC_Handler
+     /tmp/cc5u0ZWC.s:144    .text.DebugMon_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:151    .text.DebugMon_Handler:0000000000000000 DebugMon_Handler
+     /tmp/cc5u0ZWC.s:164    .text.PendSV_Handler:0000000000000000 $t
+     /tmp/cc5u0ZWC.s:171    .text.PendSV_Handler:0000000000000000 PendSV_Handler
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
@@ -426,6 +392,6 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
                            .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
 
 NO UNDEFINED SYMBOLS

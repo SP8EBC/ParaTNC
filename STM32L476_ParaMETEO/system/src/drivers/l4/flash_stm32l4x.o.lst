@@ -34,110 +34,114 @@
    8:../system/src/drivers/l4/flash_stm32l4x.c **** #include "./drivers/l4/flash_stm32l4x.h"
    9:../system/src/drivers/l4/flash_stm32l4x.c **** #include "stm32l4xx.h"
   10:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  11:../system/src/drivers/l4/flash_stm32l4x.c **** /**
-  12:../system/src/drivers/l4/flash_stm32l4x.c ****   * @brief  Returns the FLASH Bank1 Status.
-  13:../system/src/drivers/l4/flash_stm32l4x.c ****   * @note   This function can be used for all STM32F10x devices, it is equivalent
-  14:../system/src/drivers/l4/flash_stm32l4x.c ****   *         to FLASH_GetStatus function.
-  15:../system/src/drivers/l4/flash_stm32l4x.c ****   * @param  None
-  16:../system/src/drivers/l4/flash_stm32l4x.c ****   * @retval FLASH Status: The returned value can be: FLASH_BUSY, FLASH_ERROR_PG,
-  17:../system/src/drivers/l4/flash_stm32l4x.c ****   *         FLASH_ERROR_WRP or FLASH_COMPLETE
-  18:../system/src/drivers/l4/flash_stm32l4x.c ****   */
-  19:../system/src/drivers/l4/flash_stm32l4x.c **** FLASH_Status FLASH_GetBank1Status(void)
-  20:../system/src/drivers/l4/flash_stm32l4x.c **** {
-  28              		.loc 1 20 0
+  11:../system/src/drivers/l4/flash_stm32l4x.c **** #define FLASH_KEY1                0x45670123U                          /*!< Flash key1 */
+  12:../system/src/drivers/l4/flash_stm32l4x.c **** #define FLASH_KEY2                0xCDEF89ABU                          /*!< Flash key2: used with F
+  13:../system/src/drivers/l4/flash_stm32l4x.c ****                                                                             to unlock the FLASH reg
+  14:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  15:../system/src/drivers/l4/flash_stm32l4x.c **** /**
+  16:../system/src/drivers/l4/flash_stm32l4x.c ****   * @brief  Returns the FLASH Bank1 Status.
+  17:../system/src/drivers/l4/flash_stm32l4x.c ****   * @note   This function can be used for all STM32F10x devices, it is equivalent
+  18:../system/src/drivers/l4/flash_stm32l4x.c ****   *         to FLASH_GetStatus function.
+  19:../system/src/drivers/l4/flash_stm32l4x.c ****   * @param  None
+  20:../system/src/drivers/l4/flash_stm32l4x.c ****   * @retval FLASH Status: The returned value can be: FLASH_BUSY, FLASH_ERROR_PG,
+  21:../system/src/drivers/l4/flash_stm32l4x.c ****   *         FLASH_ERROR_WRP or FLASH_COMPLETE
+  22:../system/src/drivers/l4/flash_stm32l4x.c ****   */
+  23:../system/src/drivers/l4/flash_stm32l4x.c **** FLASH_Status FLASH_GetBank1Status(void)
+  24:../system/src/drivers/l4/flash_stm32l4x.c **** {
+  28              		.loc 1 24 0
   29              		.cfi_startproc
   30              		@ args = 0, pretend = 0, frame = 0
   31              		@ frame_needed = 0, uses_anonymous_args = 0
   32              		@ link register save eliminated.
   33              	.LVL0:
-  21:../system/src/drivers/l4/flash_stm32l4x.c ****   FLASH_Status flashstatus = FLASH_COMPLETE;
-  22:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  23:../system/src/drivers/l4/flash_stm32l4x.c ****   if((FLASH->SR & FLASH_SR_BSY) == FLASH_SR_BSY)
-  34              		.loc 1 23 0
+  25:../system/src/drivers/l4/flash_stm32l4x.c ****   FLASH_Status flashstatus = FLASH_COMPLETE;
+  26:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  27:../system/src/drivers/l4/flash_stm32l4x.c ****   if((FLASH->SR & FLASH_SR_BSY) == FLASH_SR_BSY)
+  34              		.loc 1 27 0
   35 0000 124B     		ldr	r3, .L8
   36 0002 1B69     		ldr	r3, [r3, #16]
   37 0004 13F4803F 		tst	r3, #65536
   38 0008 15D1     		bne	.L3
-  24:../system/src/drivers/l4/flash_stm32l4x.c ****   {
-  25:../system/src/drivers/l4/flash_stm32l4x.c ****     flashstatus = FLASH_BUSY;
-  26:../system/src/drivers/l4/flash_stm32l4x.c ****   }
-  27:../system/src/drivers/l4/flash_stm32l4x.c ****   else
   28:../system/src/drivers/l4/flash_stm32l4x.c ****   {
-  29:../system/src/drivers/l4/flash_stm32l4x.c ****     if((FLASH->SR & FLASH_SR_FASTERR) != 0)
-  39              		.loc 1 29 0
+  29:../system/src/drivers/l4/flash_stm32l4x.c ****     flashstatus = FLASH_BUSY;
+  30:../system/src/drivers/l4/flash_stm32l4x.c ****   }
+  31:../system/src/drivers/l4/flash_stm32l4x.c ****   else
+  32:../system/src/drivers/l4/flash_stm32l4x.c ****   {
+  33:../system/src/drivers/l4/flash_stm32l4x.c ****     if((FLASH->SR & FLASH_SR_FASTERR) != 0)
+  39              		.loc 1 33 0
   40 000a 104B     		ldr	r3, .L8
   41 000c 1B69     		ldr	r3, [r3, #16]
   42 000e 13F4007F 		tst	r3, #512
   43 0012 12D1     		bne	.L4
-  30:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  31:../system/src/drivers/l4/flash_stm32l4x.c ****       flashstatus = FLASH_ERROR_PG;
-  32:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  33:../system/src/drivers/l4/flash_stm32l4x.c ****     else if ((FLASH->SR & FLASH_SR_FASTERR) != 0)
-  44              		.loc 1 33 0
+  34:../system/src/drivers/l4/flash_stm32l4x.c ****     {
+  35:../system/src/drivers/l4/flash_stm32l4x.c ****       flashstatus = FLASH_ERROR_PG;
+  36:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  37:../system/src/drivers/l4/flash_stm32l4x.c ****     else if ((FLASH->SR & FLASH_SR_FASTERR) != 0)
+  44              		.loc 1 37 0
   45 0014 0D4B     		ldr	r3, .L8
   46 0016 1B69     		ldr	r3, [r3, #16]
   47 0018 13F4007F 		tst	r3, #512
   48 001c 0FD1     		bne	.L5
-  34:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  35:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_PG;
-  36:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  37:../system/src/drivers/l4/flash_stm32l4x.c ****     else if ((FLASH->SR & FLASH_SR_PROGERR) != 0)
-  49              		.loc 1 37 0
+  38:../system/src/drivers/l4/flash_stm32l4x.c ****     {
+  39:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_PG;
+  40:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  41:../system/src/drivers/l4/flash_stm32l4x.c ****     else if ((FLASH->SR & FLASH_SR_PROGERR) != 0)
+  49              		.loc 1 41 0
   50 001e 0B4B     		ldr	r3, .L8
   51 0020 1B69     		ldr	r3, [r3, #16]
   52 0022 13F0080F 		tst	r3, #8
   53 0026 0CD1     		bne	.L6
-  38:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  39:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_PG;
-  40:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  41:../system/src/drivers/l4/flash_stm32l4x.c ****     else
   42:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  43:../system/src/drivers/l4/flash_stm32l4x.c ****       if((FLASH->SR & FLASH_SR_WRPERR) != 0 )
-  54              		.loc 1 43 0
+  43:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_PG;
+  44:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  45:../system/src/drivers/l4/flash_stm32l4x.c ****     else
+  46:../system/src/drivers/l4/flash_stm32l4x.c ****     {
+  47:../system/src/drivers/l4/flash_stm32l4x.c ****       if((FLASH->SR & FLASH_SR_WRPERR) != 0 )
+  54              		.loc 1 47 0
   55 0028 084B     		ldr	r3, .L8
   56 002a 1B69     		ldr	r3, [r3, #16]
   57 002c 13F0100F 		tst	r3, #16
   58 0030 09D0     		beq	.L7
-  44:../system/src/drivers/l4/flash_stm32l4x.c ****       {
-  45:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_WRP;
-  59              		.loc 1 45 0
+  48:../system/src/drivers/l4/flash_stm32l4x.c ****       {
+  49:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_ERROR_WRP;
+  59              		.loc 1 49 0
   60 0032 0320     		movs	r0, #3
   61 0034 7047     		bx	lr
   62              	.L3:
-  25:../system/src/drivers/l4/flash_stm32l4x.c ****   }
-  63              		.loc 1 25 0
+  29:../system/src/drivers/l4/flash_stm32l4x.c ****   }
+  63              		.loc 1 29 0
   64 0036 0120     		movs	r0, #1
   65 0038 7047     		bx	lr
   66              	.L4:
-  31:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  67              		.loc 1 31 0
+  35:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  67              		.loc 1 35 0
   68 003a 0220     		movs	r0, #2
   69 003c 7047     		bx	lr
   70              	.L5:
-  35:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  71              		.loc 1 35 0
+  39:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  71              		.loc 1 39 0
   72 003e 0220     		movs	r0, #2
   73 0040 7047     		bx	lr
   74              	.L6:
-  39:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  75              		.loc 1 39 0
+  43:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  75              		.loc 1 43 0
   76 0042 0220     		movs	r0, #2
   77 0044 7047     		bx	lr
   78              	.L7:
-  46:../system/src/drivers/l4/flash_stm32l4x.c ****       }
-  47:../system/src/drivers/l4/flash_stm32l4x.c ****       else
-  48:../system/src/drivers/l4/flash_stm32l4x.c ****       {
-  49:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_COMPLETE;
-  79              		.loc 1 49 0
+  50:../system/src/drivers/l4/flash_stm32l4x.c ****       }
+  51:../system/src/drivers/l4/flash_stm32l4x.c ****       else
+  52:../system/src/drivers/l4/flash_stm32l4x.c ****       {
+  53:../system/src/drivers/l4/flash_stm32l4x.c ****         flashstatus = FLASH_COMPLETE;
+  79              		.loc 1 53 0
   80 0046 0420     		movs	r0, #4
   81              	.LVL1:
-  50:../system/src/drivers/l4/flash_stm32l4x.c ****       }
-  51:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  52:../system/src/drivers/l4/flash_stm32l4x.c ****   }
-  53:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Return the Flash Status */
-  54:../system/src/drivers/l4/flash_stm32l4x.c ****   return flashstatus;
-  55:../system/src/drivers/l4/flash_stm32l4x.c **** }
-  82              		.loc 1 55 0
+  54:../system/src/drivers/l4/flash_stm32l4x.c ****       }
+  55:../system/src/drivers/l4/flash_stm32l4x.c ****     }
+  56:../system/src/drivers/l4/flash_stm32l4x.c ****   }
+  57:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Return the Flash Status */
+  58:../system/src/drivers/l4/flash_stm32l4x.c ****   return flashstatus;
+  59:../system/src/drivers/l4/flash_stm32l4x.c **** }
+  82              		.loc 1 59 0
   83 0048 7047     		bx	lr
   84              	.L9:
   85 004a 00BF     		.align	2
@@ -154,237 +158,251 @@
   97              		.fpu fpv4-sp-d16
   99              	FLASH_ErasePage:
  100              	.LFB133:
-  56:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  57:../system/src/drivers/l4/flash_stm32l4x.c **** FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
- 101              		.loc 1 57 0
+  60:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  61:../system/src/drivers/l4/flash_stm32l4x.c **** FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
+ 101              		.loc 1 61 0
  102              		.cfi_startproc
  103              		@ args = 0, pretend = 0, frame = 0
  104              		@ frame_needed = 0, uses_anonymous_args = 0
  105              		@ link register save eliminated.
  106              	.LVL2:
- 107              	.LVL3:
-  58:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  59:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  60:../system/src/drivers/l4/flash_stm32l4x.c **** }
- 108              		.loc 1 60 0
- 109 0000 7047     		bx	lr
- 110              		.cfi_endproc
- 111              	.LFE133:
- 113              		.section	.text.FLASH_PageErase,"ax",%progbits
- 114              		.align	1
- 115              		.global	FLASH_PageErase
- 116              		.syntax unified
- 117              		.thumb
- 118              		.thumb_func
- 119              		.fpu fpv4-sp-d16
- 121              	FLASH_PageErase:
- 122              	.LFB134:
-  61:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  62:../system/src/drivers/l4/flash_stm32l4x.c **** /**
-  63:../system/src/drivers/l4/flash_stm32l4x.c ****   * @brief  Erase the specified FLASH memory page.
-  64:../system/src/drivers/l4/flash_stm32l4x.c ****   * @param  Page FLASH page to erase
-  65:../system/src/drivers/l4/flash_stm32l4x.c ****   *         This parameter must be a value between 0 and (max number of pages in the bank - 1)
-  66:../system/src/drivers/l4/flash_stm32l4x.c ****   * @param  Banks Bank(s) where the page will be erased
-  67:../system/src/drivers/l4/flash_stm32l4x.c ****   *          This parameter can be one of the following values:
-  68:../system/src/drivers/l4/flash_stm32l4x.c ****   *            @arg FLASH_BANK_1: Page in bank 1 to be erased
-  69:../system/src/drivers/l4/flash_stm32l4x.c ****   *            @arg FLASH_BANK_2: Page in bank 2 to be erased
-  70:../system/src/drivers/l4/flash_stm32l4x.c ****   * @retval None
-  71:../system/src/drivers/l4/flash_stm32l4x.c ****   */
-  72:../system/src/drivers/l4/flash_stm32l4x.c **** void FLASH_PageErase(uint32_t Page, uint32_t Banks)
-  73:../system/src/drivers/l4/flash_stm32l4x.c **** {
- 123              		.loc 1 73 0
- 124              		.cfi_startproc
- 125              		@ args = 0, pretend = 0, frame = 0
- 126              		@ frame_needed = 0, uses_anonymous_args = 0
- 127              	.LVL4:
- 128 0000 38B5     		push	{r3, r4, r5, lr}
- 129              		.cfi_def_cfa_offset 16
- 130              		.cfi_offset 3, -16
- 131              		.cfi_offset 4, -12
- 132              		.cfi_offset 5, -8
- 133              		.cfi_offset 14, -4
- 134 0002 0446     		mov	r4, r0
- 135 0004 0D46     		mov	r5, r1
-  74:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Check the parameters */
-  75:../system/src/drivers/l4/flash_stm32l4x.c ****   assert_param(IS_FLASH_PAGE(Page));
- 136              		.loc 1 75 0
- 137 0006 FFF7FEFF 		bl	IS_FLASH_PAGE
- 138              	.LVL5:
- 139 000a FFF7FEFF 		bl	assert_param
- 140              	.LVL6:
+  62:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  63:../system/src/drivers/l4/flash_stm32l4x.c **** 	uint32_t Page = 0;
+  64:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  65:../system/src/drivers/l4/flash_stm32l4x.c **** 	uint32_t Banks = 0;
+  66:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  67:../system/src/drivers/l4/flash_stm32l4x.c **** 	// calculate the bank number
+  68:../system/src/drivers/l4/flash_stm32l4x.c **** 	if (Page_Address < 0x08080000) {
+ 107              		.loc 1 68 0
+ 108 0000 164B     		ldr	r3, .L16
+ 109 0002 9842     		cmp	r0, r3
+ 110 0004 22D8     		bhi	.L14
+  69:../system/src/drivers/l4/flash_stm32l4x.c **** 		Banks = FLASH_BANK_1;
+ 111              		.loc 1 69 0
+ 112 0006 0122     		movs	r2, #1
+ 113              	.L11:
+ 114              	.LVL3:
+  70:../system/src/drivers/l4/flash_stm32l4x.c **** 	}
+  71:../system/src/drivers/l4/flash_stm32l4x.c **** 	else {
+  72:../system/src/drivers/l4/flash_stm32l4x.c **** 		Banks = FLASH_BANK_2;
+  73:../system/src/drivers/l4/flash_stm32l4x.c **** 	}
+  74:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  75:../system/src/drivers/l4/flash_stm32l4x.c **** 	Page = Page_Address - 0x08000000 - (0x80000 * (Banks - 1));
+ 115              		.loc 1 75 0
+ 116 0008 02F5FF53 		add	r3, r2, #8160
+ 117 000c 1F33     		adds	r3, r3, #31
+ 118 000e A0EBC343 		sub	r3, r0, r3, lsl #19
+ 119 0012 03F17843 		add	r3, r3, #-134217728
+ 120              	.LVL4:
   76:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  77:../system/src/drivers/l4/flash_stm32l4x.c **** #if defined (STM32L471xx) || defined (STM32L475xx) || defined (STM32L476xx) || defined (STM32L485xx
-  78:../system/src/drivers/l4/flash_stm32l4x.c ****     defined (STM32L496xx) || defined (STM32L4A6xx) || \
-  79:../system/src/drivers/l4/flash_stm32l4x.c ****     defined (STM32L4P5xx) || defined (STM32L4Q5xx) || \
-  80:../system/src/drivers/l4/flash_stm32l4x.c ****     defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx
-  81:../system/src/drivers/l4/flash_stm32l4x.c **** #if defined (STM32L4P5xx) || defined (STM32L4Q5xx) || defined (STM32L4R5xx) || defined (STM32L4R7xx
-  82:../system/src/drivers/l4/flash_stm32l4x.c ****   if(READ_BIT(FLASH->OPTR, FLASH_OPTR_DBANK) == 0U)
-  83:../system/src/drivers/l4/flash_stm32l4x.c ****   {
-  84:../system/src/drivers/l4/flash_stm32l4x.c ****     CLEAR_BIT(FLASH->CR, FLASH_CR_BKER);
-  85:../system/src/drivers/l4/flash_stm32l4x.c ****   }
-  86:../system/src/drivers/l4/flash_stm32l4x.c ****   else
-  87:../system/src/drivers/l4/flash_stm32l4x.c **** #endif
-  88:../system/src/drivers/l4/flash_stm32l4x.c ****   {
-  89:../system/src/drivers/l4/flash_stm32l4x.c **** 
-  90:../system/src/drivers/l4/flash_stm32l4x.c ****     if((Banks & FLASH_BANK_1) != 0U)
- 141              		.loc 1 90 0
- 142 000e 15F0010F 		tst	r5, #1
- 143 0012 16D1     		bne	.L15
-  91:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  92:../system/src/drivers/l4/flash_stm32l4x.c ****       CLEAR_BIT(FLASH->CR, FLASH_CR_BKER);
-  93:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  94:../system/src/drivers/l4/flash_stm32l4x.c ****     else
-  95:../system/src/drivers/l4/flash_stm32l4x.c ****     {
-  96:../system/src/drivers/l4/flash_stm32l4x.c ****       SET_BIT(FLASH->CR, FLASH_CR_BKER);
- 144              		.loc 1 96 0
- 145 0014 0E4A     		ldr	r2, .L16
- 146 0016 5369     		ldr	r3, [r2, #20]
- 147 0018 43F40063 		orr	r3, r3, #2048
- 148 001c 5361     		str	r3, [r2, #20]
- 149              	.L13:
-  97:../system/src/drivers/l4/flash_stm32l4x.c ****     }
-  98:../system/src/drivers/l4/flash_stm32l4x.c ****   }
-  99:../system/src/drivers/l4/flash_stm32l4x.c **** #else
- 100:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Prevent unused argument(s) compilation warning */
- 101:../system/src/drivers/l4/flash_stm32l4x.c ****   UNUSED(Banks);
- 102:../system/src/drivers/l4/flash_stm32l4x.c **** #endif
- 103:../system/src/drivers/l4/flash_stm32l4x.c **** 
- 104:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Proceed to erase the page */
- 105:../system/src/drivers/l4/flash_stm32l4x.c ****   MODIFY_REG(FLASH->CR, FLASH_CR_PNB, ((Page & 0xFFU) << FLASH_CR_PNB_Pos));
- 150              		.loc 1 105 0
- 151 001e 0C4B     		ldr	r3, .L16
- 152 0020 5869     		ldr	r0, [r3, #20]
- 153 0022 20F4FF60 		bic	r0, r0, #2040
- 154 0026 E400     		lsls	r4, r4, #3
- 155              	.LVL7:
- 156 0028 04F4FF64 		and	r4, r4, #2040
- 157 002c 2043     		orrs	r0, r0, r4
- 158 002e 5861     		str	r0, [r3, #20]
- 106:../system/src/drivers/l4/flash_stm32l4x.c ****   SET_BIT(FLASH->CR, FLASH_CR_PER);
- 159              		.loc 1 106 0
- 160 0030 5A69     		ldr	r2, [r3, #20]
- 161 0032 42F00202 		orr	r2, r2, #2
- 162 0036 5A61     		str	r2, [r3, #20]
- 107:../system/src/drivers/l4/flash_stm32l4x.c ****   SET_BIT(FLASH->CR, FLASH_CR_STRT);
- 163              		.loc 1 107 0
- 164 0038 5A69     		ldr	r2, [r3, #20]
- 165 003a 42F48032 		orr	r2, r2, #65536
- 166 003e 5A61     		str	r2, [r3, #20]
- 108:../system/src/drivers/l4/flash_stm32l4x.c **** }
- 167              		.loc 1 108 0
- 168 0040 38BD     		pop	{r3, r4, r5, pc}
- 169              	.LVL8:
- 170              	.L15:
-  92:../system/src/drivers/l4/flash_stm32l4x.c ****     }
- 171              		.loc 1 92 0
- 172 0042 034A     		ldr	r2, .L16
- 173 0044 5369     		ldr	r3, [r2, #20]
- 174 0046 23F40063 		bic	r3, r3, #2048
- 175 004a 5361     		str	r3, [r2, #20]
- 176 004c E7E7     		b	.L13
- 177              	.L17:
- 178 004e 00BF     		.align	2
- 179              	.L16:
- 180 0050 00200240 		.word	1073881088
- 181              		.cfi_endproc
- 182              	.LFE134:
- 184              		.section	.text.FLASH_WaitForLastOperation,"ax",%progbits
- 185              		.align	1
- 186              		.global	FLASH_WaitForLastOperation
- 187              		.syntax unified
- 188              		.thumb
- 189              		.thumb_func
- 190              		.fpu fpv4-sp-d16
- 192              	FLASH_WaitForLastOperation:
- 193              	.LFB135:
- 109:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  77:../system/src/drivers/l4/flash_stm32l4x.c **** 	Page = Page / 2048;
+ 121              		.loc 1 77 0
+ 122 0016 DB0A     		lsrs	r3, r3, #11
+ 123              	.LVL5:
+  78:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  79:../system/src/drivers/l4/flash_stm32l4x.c **** 	#if defined (STM32L471xx) || defined (STM32L475xx) || defined (STM32L476xx) || defined (STM32L485x
+  80:../system/src/drivers/l4/flash_stm32l4x.c **** 	    defined (STM32L496xx) || defined (STM32L4A6xx) || \
+  81:../system/src/drivers/l4/flash_stm32l4x.c **** 	    defined (STM32L4P5xx) || defined (STM32L4Q5xx) || \
+  82:../system/src/drivers/l4/flash_stm32l4x.c **** 	    defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5x
+  83:../system/src/drivers/l4/flash_stm32l4x.c **** 	#if defined (STM32L4P5xx) || defined (STM32L4Q5xx) || defined (STM32L4R5xx) || defined (STM32L4R7x
+  84:../system/src/drivers/l4/flash_stm32l4x.c **** 	  if(READ_BIT(FLASH->OPTR, FLASH_OPTR_DBANK) == 0U)
+  85:../system/src/drivers/l4/flash_stm32l4x.c **** 	  {
+  86:../system/src/drivers/l4/flash_stm32l4x.c **** 	    CLEAR_BIT(FLASH->CR, FLASH_CR_BKER);
+  87:../system/src/drivers/l4/flash_stm32l4x.c **** 	  }
+  88:../system/src/drivers/l4/flash_stm32l4x.c **** 	  else
+  89:../system/src/drivers/l4/flash_stm32l4x.c **** 	#endif
+  90:../system/src/drivers/l4/flash_stm32l4x.c **** 	  {
+  91:../system/src/drivers/l4/flash_stm32l4x.c **** 
+  92:../system/src/drivers/l4/flash_stm32l4x.c **** 	    if((Banks & FLASH_BANK_1) != 0U)
+ 124              		.loc 1 92 0
+ 125 0018 12F0010F 		tst	r2, #1
+ 126 001c 18D1     		bne	.L15
+  93:../system/src/drivers/l4/flash_stm32l4x.c **** 	    {
+  94:../system/src/drivers/l4/flash_stm32l4x.c **** 	      CLEAR_BIT(FLASH->CR, FLASH_CR_BKER);
+  95:../system/src/drivers/l4/flash_stm32l4x.c **** 	    }
+  96:../system/src/drivers/l4/flash_stm32l4x.c **** 	    else
+  97:../system/src/drivers/l4/flash_stm32l4x.c **** 	    {
+  98:../system/src/drivers/l4/flash_stm32l4x.c **** 	      SET_BIT(FLASH->CR, FLASH_CR_BKER);
+ 127              		.loc 1 98 0
+ 128 001e 1049     		ldr	r1, .L16+4
+ 129 0020 4A69     		ldr	r2, [r1, #20]
+ 130              	.LVL6:
+ 131 0022 42F40062 		orr	r2, r2, #2048
+ 132 0026 4A61     		str	r2, [r1, #20]
+ 133              	.L13:
+  99:../system/src/drivers/l4/flash_stm32l4x.c **** 	    }
+ 100:../system/src/drivers/l4/flash_stm32l4x.c **** 	  }
+ 101:../system/src/drivers/l4/flash_stm32l4x.c **** 	#else
+ 102:../system/src/drivers/l4/flash_stm32l4x.c **** 	  /* Prevent unused argument(s) compilation warning */
+ 103:../system/src/drivers/l4/flash_stm32l4x.c **** 	  UNUSED(Banks);
+ 104:../system/src/drivers/l4/flash_stm32l4x.c **** 	#endif
+ 105:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 106:../system/src/drivers/l4/flash_stm32l4x.c **** 	  /* Proceed to erase the page */
+ 107:../system/src/drivers/l4/flash_stm32l4x.c **** 	  MODIFY_REG(FLASH->CR, FLASH_CR_PNB, ((Page & 0xFFU) << FLASH_CR_PNB_Pos));
+ 134              		.loc 1 107 0
+ 135 0028 0D4A     		ldr	r2, .L16+4
+ 136 002a 5169     		ldr	r1, [r2, #20]
+ 137 002c 21F4FF61 		bic	r1, r1, #2040
+ 138 0030 DB00     		lsls	r3, r3, #3
+ 139              	.LVL7:
+ 140 0032 03F4FF63 		and	r3, r3, #2040
+ 141 0036 0B43     		orrs	r3, r3, r1
+ 142 0038 5361     		str	r3, [r2, #20]
+ 108:../system/src/drivers/l4/flash_stm32l4x.c **** 	  SET_BIT(FLASH->CR, FLASH_CR_PER);
+ 143              		.loc 1 108 0
+ 144 003a 5369     		ldr	r3, [r2, #20]
+ 145 003c 43F00203 		orr	r3, r3, #2
+ 146 0040 5361     		str	r3, [r2, #20]
+ 109:../system/src/drivers/l4/flash_stm32l4x.c **** 	  SET_BIT(FLASH->CR, FLASH_CR_STRT);
+ 147              		.loc 1 109 0
+ 148 0042 5369     		ldr	r3, [r2, #20]
+ 149 0044 43F48033 		orr	r3, r3, #65536
+ 150 0048 5361     		str	r3, [r2, #20]
+ 151              	.LVL8:
  110:../system/src/drivers/l4/flash_stm32l4x.c **** 
- 111:../system/src/drivers/l4/flash_stm32l4x.c **** FLASH_Status FLASH_WaitForLastOperation(uint32_t Timeout)
- 112:../system/src/drivers/l4/flash_stm32l4x.c **** {
- 194              		.loc 1 112 0
- 195              		.cfi_startproc
- 196              		@ args = 0, pretend = 0, frame = 0
- 197              		@ frame_needed = 0, uses_anonymous_args = 0
- 198              	.LVL9:
- 199 0000 10B5     		push	{r4, lr}
- 200              		.cfi_def_cfa_offset 8
- 201              		.cfi_offset 4, -8
- 202              		.cfi_offset 14, -4
- 203 0002 0446     		mov	r4, r0
- 204              	.LVL10:
- 113:../system/src/drivers/l4/flash_stm32l4x.c ****   FLASH_Status status = FLASH_COMPLETE;
- 114:../system/src/drivers/l4/flash_stm32l4x.c **** 
- 115:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Check for the Flash Status */
- 116:../system/src/drivers/l4/flash_stm32l4x.c ****   status = FLASH_GetBank1Status();
- 205              		.loc 1 116 0
- 206 0004 FFF7FEFF 		bl	FLASH_GetBank1Status
- 207              	.LVL11:
- 117:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Wait for a Flash operation to complete or a TIMEOUT to occur */
- 118:../system/src/drivers/l4/flash_stm32l4x.c ****   while((status == FLASH_BUSY) && (Timeout != 0x00))
- 208              		.loc 1 118 0
- 209 0008 02E0     		b	.L19
- 210              	.L21:
- 119:../system/src/drivers/l4/flash_stm32l4x.c ****   {
- 120:../system/src/drivers/l4/flash_stm32l4x.c ****     status = FLASH_GetBank1Status();
- 211              		.loc 1 120 0
- 212 000a FFF7FEFF 		bl	FLASH_GetBank1Status
- 213              	.LVL12:
- 121:../system/src/drivers/l4/flash_stm32l4x.c ****     Timeout--;
- 214              		.loc 1 121 0
- 215 000e 013C     		subs	r4, r4, #1
- 216              	.LVL13:
- 217              	.L19:
- 118:../system/src/drivers/l4/flash_stm32l4x.c ****   {
- 218              		.loc 1 118 0
- 219 0010 0128     		cmp	r0, #1
- 220 0012 01D1     		bne	.L20
- 118:../system/src/drivers/l4/flash_stm32l4x.c ****   {
- 221              		.loc 1 118 0 is_stmt 0 discriminator 1
- 222 0014 002C     		cmp	r4, #0
- 223 0016 F8D1     		bne	.L21
- 224              	.L20:
- 122:../system/src/drivers/l4/flash_stm32l4x.c ****   }
- 123:../system/src/drivers/l4/flash_stm32l4x.c ****   if(Timeout == 0x00 )
- 225              		.loc 1 123 0 is_stmt 1
- 226 0018 04B1     		cbz	r4, .L25
- 227              	.LVL14:
- 228              	.L22:
- 124:../system/src/drivers/l4/flash_stm32l4x.c ****   {
- 125:../system/src/drivers/l4/flash_stm32l4x.c ****     status = FLASH_TIMEOUT;
- 126:../system/src/drivers/l4/flash_stm32l4x.c ****   }
- 127:../system/src/drivers/l4/flash_stm32l4x.c ****   /* Return the operation status */
- 128:../system/src/drivers/l4/flash_stm32l4x.c ****   return status;
- 129:../system/src/drivers/l4/flash_stm32l4x.c **** }
- 229              		.loc 1 129 0
- 230 001a 10BD     		pop	{r4, pc}
- 231              	.LVL15:
- 232              	.L25:
- 125:../system/src/drivers/l4/flash_stm32l4x.c ****   }
- 233              		.loc 1 125 0
- 234 001c 0520     		movs	r0, #5
- 235              	.LVL16:
- 236 001e FCE7     		b	.L22
- 237              		.cfi_endproc
- 238              	.LFE135:
- 240              		.text
- 241              	.Letext0:
- 242              		.file 2 "../system/include/./drivers/l4/flash_stm32l4x.h"
- 243              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
- 244              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
- 245              		.file 5 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
- 246              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 111:../system/src/drivers/l4/flash_stm32l4x.c **** }
+ 152              		.loc 1 111 0
+ 153 004a 7047     		bx	lr
+ 154              	.LVL9:
+ 155              	.L14:
+  72:../system/src/drivers/l4/flash_stm32l4x.c **** 	}
+ 156              		.loc 1 72 0
+ 157 004c 0222     		movs	r2, #2
+ 158 004e DBE7     		b	.L11
+ 159              	.LVL10:
+ 160              	.L15:
+  94:../system/src/drivers/l4/flash_stm32l4x.c **** 	    }
+ 161              		.loc 1 94 0
+ 162 0050 0349     		ldr	r1, .L16+4
+ 163 0052 4A69     		ldr	r2, [r1, #20]
+ 164              	.LVL11:
+ 165 0054 22F40062 		bic	r2, r2, #2048
+ 166 0058 4A61     		str	r2, [r1, #20]
+ 167 005a E5E7     		b	.L13
+ 168              	.L17:
+ 169              		.align	2
+ 170              	.L16:
+ 171 005c FFFF0708 		.word	134742015
+ 172 0060 00200240 		.word	1073881088
+ 173              		.cfi_endproc
+ 174              	.LFE133:
+ 176              		.section	.text.FLASH_Unlock,"ax",%progbits
+ 177              		.align	1
+ 178              		.global	FLASH_Unlock
+ 179              		.syntax unified
+ 180              		.thumb
+ 181              		.thumb_func
+ 182              		.fpu fpv4-sp-d16
+ 184              	FLASH_Unlock:
+ 185              	.LFB134:
+ 112:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 113:../system/src/drivers/l4/flash_stm32l4x.c **** void FLASH_Unlock(void) {
+ 186              		.loc 1 113 0
+ 187              		.cfi_startproc
+ 188              		@ args = 0, pretend = 0, frame = 0
+ 189              		@ frame_needed = 0, uses_anonymous_args = 0
+ 190              		@ link register save eliminated.
+ 114:../system/src/drivers/l4/flash_stm32l4x.c **** 	  //HAL_StatusTypeDef status = HAL_OK;
+ 115:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 116:../system/src/drivers/l4/flash_stm32l4x.c **** 	  if(READ_BIT(FLASH->CR, FLASH_CR_LOCK) != 0U)
+ 191              		.loc 1 116 0
+ 192 0000 064B     		ldr	r3, .L21
+ 193 0002 5B69     		ldr	r3, [r3, #20]
+ 194 0004 002B     		cmp	r3, #0
+ 195 0006 00DB     		blt	.L20
+ 196              	.L18:
+ 117:../system/src/drivers/l4/flash_stm32l4x.c **** 	  {
+ 118:../system/src/drivers/l4/flash_stm32l4x.c **** 	    /* Authorize the FLASH Registers access */
+ 119:../system/src/drivers/l4/flash_stm32l4x.c **** 	    WRITE_REG(FLASH->KEYR, FLASH_KEY1);
+ 120:../system/src/drivers/l4/flash_stm32l4x.c **** 	    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+ 121:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 122:../system/src/drivers/l4/flash_stm32l4x.c **** 	    /* Verify Flash is unlocked */
+ 123:../system/src/drivers/l4/flash_stm32l4x.c **** 	    if(READ_BIT(FLASH->CR, FLASH_CR_LOCK) != 0U)
+ 124:../system/src/drivers/l4/flash_stm32l4x.c **** 	    {
+ 125:../system/src/drivers/l4/flash_stm32l4x.c **** 	      //status = HAL_ERROR;
+ 126:../system/src/drivers/l4/flash_stm32l4x.c **** 	    }
+ 127:../system/src/drivers/l4/flash_stm32l4x.c **** 	  }
+ 128:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 129:../system/src/drivers/l4/flash_stm32l4x.c **** 	  //return status;
+ 130:../system/src/drivers/l4/flash_stm32l4x.c **** }
+ 197              		.loc 1 130 0
+ 198 0008 7047     		bx	lr
+ 199              	.L20:
+ 119:../system/src/drivers/l4/flash_stm32l4x.c **** 	    WRITE_REG(FLASH->KEYR, FLASH_KEY2);
+ 200              		.loc 1 119 0
+ 201 000a 044B     		ldr	r3, .L21
+ 202 000c 044A     		ldr	r2, .L21+4
+ 203 000e 9A60     		str	r2, [r3, #8]
+ 120:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 204              		.loc 1 120 0
+ 205 0010 02F18832 		add	r2, r2, #-2004318072
+ 206 0014 9A60     		str	r2, [r3, #8]
+ 123:../system/src/drivers/l4/flash_stm32l4x.c **** 	    {
+ 207              		.loc 1 123 0
+ 208 0016 5B69     		ldr	r3, [r3, #20]
+ 209              		.loc 1 130 0
+ 210 0018 F6E7     		b	.L18
+ 211              	.L22:
+ 212 001a 00BF     		.align	2
+ 213              	.L21:
+ 214 001c 00200240 		.word	1073881088
+ 215 0020 23016745 		.word	1164378403
+ 216              		.cfi_endproc
+ 217              	.LFE134:
+ 219              		.section	.text.FLASH_Lock,"ax",%progbits
+ 220              		.align	1
+ 221              		.global	FLASH_Lock
+ 222              		.syntax unified
+ 223              		.thumb
+ 224              		.thumb_func
+ 225              		.fpu fpv4-sp-d16
+ 227              	FLASH_Lock:
+ 228              	.LFB135:
+ 131:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 132:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 133:../system/src/drivers/l4/flash_stm32l4x.c **** void FLASH_Lock(void) {
+ 229              		.loc 1 133 0
+ 230              		.cfi_startproc
+ 231              		@ args = 0, pretend = 0, frame = 0
+ 232              		@ frame_needed = 0, uses_anonymous_args = 0
+ 233              		@ link register save eliminated.
+ 134:../system/src/drivers/l4/flash_stm32l4x.c **** 	  SET_BIT(FLASH->CR, FLASH_CR_LOCK);
+ 234              		.loc 1 134 0
+ 235 0000 024A     		ldr	r2, .L24
+ 236 0002 5369     		ldr	r3, [r2, #20]
+ 237 0004 43F00043 		orr	r3, r3, #-2147483648
+ 238 0008 5361     		str	r3, [r2, #20]
+ 135:../system/src/drivers/l4/flash_stm32l4x.c **** 
+ 136:../system/src/drivers/l4/flash_stm32l4x.c **** }
+ 239              		.loc 1 136 0
+ 240 000a 7047     		bx	lr
+ 241              	.L25:
+ 242              		.align	2
+ 243              	.L24:
+ 244 000c 00200240 		.word	1073881088
+ 245              		.cfi_endproc
+ 246              	.LFE135:
+ 248              		.text
+ 249              	.Letext0:
+ 250              		.file 2 "../system/include/./drivers/l4/flash_stm32l4x.h"
+ 251              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 252              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 253              		.file 5 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 254              		.file 6 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 flash_stm32l4x.c
-     /tmp/ccR8qaTD.s:18     .text.FLASH_GetBank1Status:0000000000000000 $t
-     /tmp/ccR8qaTD.s:25     .text.FLASH_GetBank1Status:0000000000000000 FLASH_GetBank1Status
-     /tmp/ccR8qaTD.s:87     .text.FLASH_GetBank1Status:000000000000004c $d
-     /tmp/ccR8qaTD.s:92     .text.FLASH_ErasePage:0000000000000000 $t
-     /tmp/ccR8qaTD.s:99     .text.FLASH_ErasePage:0000000000000000 FLASH_ErasePage
-     /tmp/ccR8qaTD.s:114    .text.FLASH_PageErase:0000000000000000 $t
-     /tmp/ccR8qaTD.s:121    .text.FLASH_PageErase:0000000000000000 FLASH_PageErase
-     /tmp/ccR8qaTD.s:180    .text.FLASH_PageErase:0000000000000050 $d
-     /tmp/ccR8qaTD.s:185    .text.FLASH_WaitForLastOperation:0000000000000000 $t
-     /tmp/ccR8qaTD.s:192    .text.FLASH_WaitForLastOperation:0000000000000000 FLASH_WaitForLastOperation
+     /tmp/ccGXUjnt.s:18     .text.FLASH_GetBank1Status:0000000000000000 $t
+     /tmp/ccGXUjnt.s:25     .text.FLASH_GetBank1Status:0000000000000000 FLASH_GetBank1Status
+     /tmp/ccGXUjnt.s:87     .text.FLASH_GetBank1Status:000000000000004c $d
+     /tmp/ccGXUjnt.s:92     .text.FLASH_ErasePage:0000000000000000 $t
+     /tmp/ccGXUjnt.s:99     .text.FLASH_ErasePage:0000000000000000 FLASH_ErasePage
+     /tmp/ccGXUjnt.s:171    .text.FLASH_ErasePage:000000000000005c $d
+     /tmp/ccGXUjnt.s:177    .text.FLASH_Unlock:0000000000000000 $t
+     /tmp/ccGXUjnt.s:184    .text.FLASH_Unlock:0000000000000000 FLASH_Unlock
+     /tmp/ccGXUjnt.s:214    .text.FLASH_Unlock:000000000000001c $d
+     /tmp/ccGXUjnt.s:220    .text.FLASH_Lock:0000000000000000 $t
+     /tmp/ccGXUjnt.s:227    .text.FLASH_Lock:0000000000000000 FLASH_Lock
+     /tmp/ccGXUjnt.s:244    .text.FLASH_Lock:000000000000000c $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
                            .group:0000000000000000 wm4.flash_stm32l4x.h.23.4a4a9761a5d6111672269799f7e14648
@@ -399,6 +417,4 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
                            .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
 
-UNDEFINED SYMBOLS
-IS_FLASH_PAGE
-assert_param
+NO UNDEFINED SYMBOLS

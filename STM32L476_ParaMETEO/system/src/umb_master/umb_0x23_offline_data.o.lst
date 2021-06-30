@@ -585,12 +585,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -689,17 +689,17 @@
  407              		.file 27 "../system/include/aprs/ax25.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 umb_0x23_offline_data.c
-     /tmp/ccbcQ5zo.s:18     .text.umb_0x23_offline_data_request:0000000000000000 $t
-     /tmp/ccbcQ5zo.s:25     .text.umb_0x23_offline_data_request:0000000000000000 umb_0x23_offline_data_request
-     /tmp/ccbcQ5zo.s:91     .text.umb_0x23_offline_data_callback:0000000000000000 $t
-     /tmp/ccbcQ5zo.s:98     .text.umb_0x23_offline_data_callback:0000000000000000 umb_0x23_offline_data_callback
-     /tmp/ccbcQ5zo.s:133    .text.umb_0x23_offline_data_callback:0000000000000020 $d
-     /tmp/ccbcQ5zo.s:153    .text.umb_0x23_offline_data_callback:0000000000000034 $d
-     /tmp/ccbcQ5zo.s:376    .text.umb_0x23_offline_data_callback:0000000000000128 $d
-     /tmp/ccbcQ5zo.s:140    .text.umb_0x23_offline_data_callback:0000000000000027 $d
-     /tmp/ccbcQ5zo.s:140    .text.umb_0x23_offline_data_callback:0000000000000028 $t
-     /tmp/ccbcQ5zo.s:161    .text.umb_0x23_offline_data_callback:000000000000003b $d
-     /tmp/ccbcQ5zo.s:161    .text.umb_0x23_offline_data_callback:000000000000003c $t
+     /tmp/ccsezKjJ.s:18     .text.umb_0x23_offline_data_request:0000000000000000 $t
+     /tmp/ccsezKjJ.s:25     .text.umb_0x23_offline_data_request:0000000000000000 umb_0x23_offline_data_request
+     /tmp/ccsezKjJ.s:91     .text.umb_0x23_offline_data_callback:0000000000000000 $t
+     /tmp/ccsezKjJ.s:98     .text.umb_0x23_offline_data_callback:0000000000000000 umb_0x23_offline_data_callback
+     /tmp/ccsezKjJ.s:133    .text.umb_0x23_offline_data_callback:0000000000000020 $d
+     /tmp/ccsezKjJ.s:153    .text.umb_0x23_offline_data_callback:0000000000000034 $d
+     /tmp/ccsezKjJ.s:376    .text.umb_0x23_offline_data_callback:0000000000000128 $d
+     /tmp/ccsezKjJ.s:140    .text.umb_0x23_offline_data_callback:0000000000000027 $d
+     /tmp/ccsezKjJ.s:140    .text.umb_0x23_offline_data_callback:0000000000000028 $t
+     /tmp/ccsezKjJ.s:161    .text.umb_0x23_offline_data_callback:000000000000003b $d
+     /tmp/ccsezKjJ.s:161    .text.umb_0x23_offline_data_callback:000000000000003c $t
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
@@ -744,7 +744,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
                            .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
                            .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
 
 UNDEFINED SYMBOLS
 rte_wx_umb_channel_values

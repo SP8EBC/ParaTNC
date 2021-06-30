@@ -821,12 +821,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -1988,7 +1988,7 @@
  1400              		.section	.rodata.telemetry_send_status.str1.4,"aMS",%progbits,1
  1401              		.align	2
  1402              	.LC15:
- 1403 0000 32333035 		.ascii	"23052021\000"
+ 1403 0000 33303036 		.ascii	"30062021\000"
  1403      32303231 
  1403      00
  1404 0009 000000   		.space	3
@@ -2045,33 +2045,33 @@
  1442              		.file 25 "../system/include/ve_direct_protocol/parser.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 telemetry.c
-     /tmp/ccCt3QfW.s:18     .text.telemetry_send_chns_description_pv:0000000000000000 $t
-     /tmp/ccCt3QfW.s:25     .text.telemetry_send_chns_description_pv:0000000000000000 telemetry_send_chns_description_pv
-     /tmp/ccCt3QfW.s:288    .text.telemetry_send_chns_description_pv:000000000000018c $d
-     /tmp/ccCt3QfW.s:306    .text.telemetry_send_values_pv:0000000000000000 $t
-     /tmp/ccCt3QfW.s:313    .text.telemetry_send_values_pv:0000000000000000 telemetry_send_values_pv
-     /tmp/ccCt3QfW.s:532    .text.telemetry_send_values_pv:0000000000000164 $d
-     /tmp/ccCt3QfW.s:547    .text.telemetry_send_status_pv:0000000000000000 $t
-     /tmp/ccCt3QfW.s:554    .text.telemetry_send_status_pv:0000000000000000 telemetry_send_status_pv
-     /tmp/ccCt3QfW.s:655    .text.telemetry_send_status_pv:0000000000000094 $d
-     /tmp/ccCt3QfW.s:666    .text.telemetry_send_chns_description:0000000000000000 $t
-     /tmp/ccCt3QfW.s:673    .text.telemetry_send_chns_description:0000000000000000 telemetry_send_chns_description
-     /tmp/ccCt3QfW.s:961    .text.telemetry_send_chns_description:00000000000001a0 $d
-     /tmp/ccCt3QfW.s:979    .text.telemetry_send_values:0000000000000000 $t
-     /tmp/ccCt3QfW.s:986    .text.telemetry_send_values:0000000000000000 telemetry_send_values
-     /tmp/ccCt3QfW.s:1232   .text.telemetry_send_values:0000000000000160 $d
-     /tmp/ccCt3QfW.s:1248   .text.telemetry_send_status:0000000000000000 $t
-     /tmp/ccCt3QfW.s:1255   .text.telemetry_send_status:0000000000000000 telemetry_send_status
-     /tmp/ccCt3QfW.s:1311   .text.telemetry_send_status:0000000000000048 $d
-     /tmp/ccCt3QfW.s:1324   .text.telemetry_send_status_raw_values_modbus:0000000000000000 $t
-     /tmp/ccCt3QfW.s:1331   .text.telemetry_send_status_raw_values_modbus:0000000000000000 telemetry_send_status_raw_values_modbus
-     /tmp/ccCt3QfW.s:1349   .bss.telemetry_counter:0000000000000000 telemetry_counter
-     /tmp/ccCt3QfW.s:1345   .bss.telemetry_counter:0000000000000000 $d
-     /tmp/ccCt3QfW.s:1352   .rodata.telemetry_send_chns_description.str1.4:0000000000000000 $d
-     /tmp/ccCt3QfW.s:1374   .rodata.telemetry_send_chns_description_pv.str1.4:0000000000000000 $d
-     /tmp/ccCt3QfW.s:1401   .rodata.telemetry_send_status.str1.4:0000000000000000 $d
-     /tmp/ccCt3QfW.s:1411   .rodata.telemetry_send_status_pv.str1.4:0000000000000000 $d
-     /tmp/ccCt3QfW.s:1415   .rodata.telemetry_send_values_pv.str1.4:0000000000000000 $d
+     /tmp/ccU5WqXT.s:18     .text.telemetry_send_chns_description_pv:0000000000000000 $t
+     /tmp/ccU5WqXT.s:25     .text.telemetry_send_chns_description_pv:0000000000000000 telemetry_send_chns_description_pv
+     /tmp/ccU5WqXT.s:288    .text.telemetry_send_chns_description_pv:000000000000018c $d
+     /tmp/ccU5WqXT.s:306    .text.telemetry_send_values_pv:0000000000000000 $t
+     /tmp/ccU5WqXT.s:313    .text.telemetry_send_values_pv:0000000000000000 telemetry_send_values_pv
+     /tmp/ccU5WqXT.s:532    .text.telemetry_send_values_pv:0000000000000164 $d
+     /tmp/ccU5WqXT.s:547    .text.telemetry_send_status_pv:0000000000000000 $t
+     /tmp/ccU5WqXT.s:554    .text.telemetry_send_status_pv:0000000000000000 telemetry_send_status_pv
+     /tmp/ccU5WqXT.s:655    .text.telemetry_send_status_pv:0000000000000094 $d
+     /tmp/ccU5WqXT.s:666    .text.telemetry_send_chns_description:0000000000000000 $t
+     /tmp/ccU5WqXT.s:673    .text.telemetry_send_chns_description:0000000000000000 telemetry_send_chns_description
+     /tmp/ccU5WqXT.s:961    .text.telemetry_send_chns_description:00000000000001a0 $d
+     /tmp/ccU5WqXT.s:979    .text.telemetry_send_values:0000000000000000 $t
+     /tmp/ccU5WqXT.s:986    .text.telemetry_send_values:0000000000000000 telemetry_send_values
+     /tmp/ccU5WqXT.s:1232   .text.telemetry_send_values:0000000000000160 $d
+     /tmp/ccU5WqXT.s:1248   .text.telemetry_send_status:0000000000000000 $t
+     /tmp/ccU5WqXT.s:1255   .text.telemetry_send_status:0000000000000000 telemetry_send_status
+     /tmp/ccU5WqXT.s:1311   .text.telemetry_send_status:0000000000000048 $d
+     /tmp/ccU5WqXT.s:1324   .text.telemetry_send_status_raw_values_modbus:0000000000000000 $t
+     /tmp/ccU5WqXT.s:1331   .text.telemetry_send_status_raw_values_modbus:0000000000000000 telemetry_send_status_raw_values_modbus
+     /tmp/ccU5WqXT.s:1349   .bss.telemetry_counter:0000000000000000 telemetry_counter
+     /tmp/ccU5WqXT.s:1345   .bss.telemetry_counter:0000000000000000 $d
+     /tmp/ccU5WqXT.s:1352   .rodata.telemetry_send_chns_description.str1.4:0000000000000000 $d
+     /tmp/ccU5WqXT.s:1374   .rodata.telemetry_send_chns_description_pv.str1.4:0000000000000000 $d
+     /tmp/ccU5WqXT.s:1401   .rodata.telemetry_send_status.str1.4:0000000000000000 $d
+     /tmp/ccU5WqXT.s:1411   .rodata.telemetry_send_status_pv.str1.4:0000000000000000 $d
+     /tmp/ccU5WqXT.s:1415   .rodata.telemetry_send_values_pv.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.config_data.h.20.3fa825aa23b2311026266e3d076368dc
@@ -2114,7 +2114,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
                            .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
                            .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6

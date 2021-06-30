@@ -54,6 +54,7 @@ uint32_t configuration_handler_check_crc(void) {
 	// calculated CRC value
 	uint32_t crc_current = 0;
 
+#ifdef STM32F10X_MD_VL
 	// reset CRC engine
 	CRC_ResetDR();
 
@@ -62,6 +63,23 @@ uint32_t configuration_handler_check_crc(void) {
 
 	// add 0x0 as a placeholder for CRC value
 	crc_current = CRC_CalcCRC(0x0);
+#endif
+
+#ifdef STM32L471xx
+
+	// reset CRC engine
+	LL_CRC_ResetCRCCalculationUnit(CRC);
+
+	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+		// feed the data into CRC engine
+		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+	}
+
+	// placeholder for CRC value itself
+	CRC->DR = 0x00;
+
+	crc_current = CRC->DR;
+#endif
 
 	// expected crc is stored in the last 32b word of the configuration section
 	crc_expected = *(config_section_first_start + CRC_32B_WORD_OFFSET);
@@ -71,6 +89,7 @@ uint32_t configuration_handler_check_crc(void) {
 		out |= 0x01;
 	}
 
+#ifdef STM32F10X_MD_VL
 	// reset the CRC engine
 	CRC_ResetDR();
 
@@ -79,6 +98,22 @@ uint32_t configuration_handler_check_crc(void) {
 
 	// add 0x0 as a placeholder for CRC value
 	crc_current = CRC_CalcCRC((uint32_t)0x0);
+#endif
+
+#ifdef STM32L471xx
+	// reset CRC engine
+	LL_CRC_ResetCRCCalculationUnit(CRC);
+
+	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+		// feed the data into CRC engine
+		LL_CRC_FeedData32(CRC, *(config_section_second_start + i));
+	}
+
+	// placeholder for CRC value itself
+	CRC->DR = 0x00;
+
+	crc_current = CRC->DR;
+#endif
 
 	//crc_expected = *__config_section_second_end;
 
@@ -200,6 +235,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 	// if second is OK it will be used instead (if its programming counter has value three or more).
 	*(uint16_t*)&config_data_pgm_cntr_first = 0x0002u;
 
+#ifdef STM32F10X_MD_VL
 	// resetting CRC engine
 	CRC_ResetDR();
 
@@ -208,6 +244,22 @@ uint32_t configuration_handler_restore_default_first(void) {
 
 	// adding finalizing 0x00
 	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+#endif
+
+#ifdef STM32L471xx
+	// reset CRC engine
+	LL_CRC_ResetCRCCalculationUnit(CRC);
+
+	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+		// feed the data into CRC engine
+		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+	}
+
+	// placeholder for CRC value itself
+	CRC->DR = 0x00;
+
+	target_crc_value = CRC->DR;
+#endif
 
 	// program the CRC value
 	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);
@@ -339,6 +391,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 	// if second is OK it will be used instead (if its programming counter has value three or more).
 	*(uint16_t*)&config_data_pgm_cntr_second = 0x0002u;
 
+#ifdef STM32F10X_MD_VL
 	// resetting CRC engine
 	CRC_ResetDR();
 
@@ -347,6 +400,22 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 	// adding finalizing 0x00
 	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+#endif
+
+#ifdef STM32L471xx
+	// reset CRC engine
+	LL_CRC_ResetCRCCalculationUnit(CRC);
+
+	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+		// feed the data into CRC engine
+		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+	}
+
+	// placeholder for CRC value itself
+	CRC->DR = 0x00;
+
+	target_crc_value = CRC->DR;
+#endif
 
 	// program the CRC value
 	*(uint16_t*)((uint16_t *)config_section_second_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);

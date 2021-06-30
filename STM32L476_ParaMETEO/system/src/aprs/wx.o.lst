@@ -634,13 +634,13 @@
  514              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 wx.c
-     /tmp/ccddBojv.s:24     .text.SendWXFrame:0000000000000000 $t
-     /tmp/ccddBojv.s:31     .text.SendWXFrame:0000000000000000 SendWXFrame
-     /tmp/ccddBojv.s:250    .text.SendWXFrame:0000000000000178 $d
-     /tmp/ccddBojv.s:270    .text.SendWXFrameToBuffer:0000000000000000 $t
-     /tmp/ccddBojv.s:277    .text.SendWXFrameToBuffer:0000000000000000 SendWXFrameToBuffer
-     /tmp/ccddBojv.s:475    .text.SendWXFrameToBuffer:0000000000000158 $d
-     /tmp/ccddBojv.s:492    .rodata.SendWXFrame.str1.4:0000000000000000 $d
+     /tmp/cc3ZOwdw.s:24     .text.SendWXFrame:0000000000000000 $t
+     /tmp/cc3ZOwdw.s:31     .text.SendWXFrame:0000000000000000 SendWXFrame
+     /tmp/cc3ZOwdw.s:250    .text.SendWXFrame:0000000000000178 $d
+     /tmp/cc3ZOwdw.s:270    .text.SendWXFrameToBuffer:0000000000000000 $t
+     /tmp/cc3ZOwdw.s:277    .text.SendWXFrameToBuffer:0000000000000000 SendWXFrameToBuffer
+     /tmp/cc3ZOwdw.s:475    .text.SendWXFrameToBuffer:0000000000000158 $d
+     /tmp/cc3ZOwdw.s:492    .rodata.SendWXFrame.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
@@ -662,7 +662,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
                            .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
                            .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6

@@ -672,13 +672,13 @@
  299 0190 2368     		ldr	r3, [r4]
  300 0192 93F89530 		ldrb	r3, [r3, #149]	@ zero_extendqisi2
  301 0196 032B     		cmp	r3, #3
- 302 0198 00F24D81 		bhi	.L14
+ 302 0198 00F24B81 		bhi	.L14
  303 019c DFE813F0 		tbh	[pc, r3, lsl #1]
  304              	.L16:
  305 01a0 1800     		.2byte	(.L15-.L16)/2
- 306 01a2 3601     		.2byte	(.L17-.L16)/2
- 307 01a4 3D01     		.2byte	(.L18-.L16)/2
- 308 01a6 4401     		.2byte	(.L19-.L16)/2
+ 306 01a2 3401     		.2byte	(.L17-.L16)/2
+ 307 01a4 3B01     		.2byte	(.L18-.L16)/2
+ 308 01a6 4201     		.2byte	(.L19-.L16)/2
  309              		.p2align 1
  310              	.L117:
  311              		.align	2
@@ -697,12 +697,12 @@
  375:../src/main.c ****   case 0:		// _SYMBOL_DIGI
  376:../src/main.c **** 	  main_symbol_f = '/';
  324              		.loc 1 376 0
- 325 01d0 A04B     		ldr	r3, .L118
+ 325 01d0 9F4B     		ldr	r3, .L118
  326 01d2 2F22     		movs	r2, #47
  327 01d4 1A70     		strb	r2, [r3]
  377:../src/main.c **** 	  main_symbol_s = '#';
  328              		.loc 1 377 0
- 329 01d6 A04B     		ldr	r3, .L118+4
+ 329 01d6 9F4B     		ldr	r3, .L118+4
  330 01d8 2322     		movs	r2, #35
  331 01da 1A70     		strb	r2, [r3]
  332              	.L20:
@@ -763,7 +763,7 @@
  348 01f0 4FF47A70 		mov	r0, #1000
  349 01f4 FFF7FEFF 		bl	delay_fixed_with_count
  350              	.LVL43:
- 351 01f8 984B     		ldr	r3, .L118+8
+ 351 01f8 974B     		ldr	r3, .L118+8
  352 01fa 1860     		str	r0, [r3]
  417:../src/main.c **** 
  418:../src/main.c **** #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
@@ -782,7 +782,7 @@
  431:../src/main.c ****   	// USART1 - KISS
  432:../src/main.c **** 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
  353              		.loc 1 432 0
- 354 01fc 984C     		ldr	r4, .L118+12
+ 354 01fc 974C     		ldr	r4, .L118+12
  355 01fe 0025     		movs	r5, #0
  356 0200 6560     		str	r5, [r4, #4]
  433:../src/main.c **** 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
@@ -924,34 +924,34 @@
  487:../src/main.c **** 
  488:../src/main.c ****   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
  439              		.loc 1 488 0
- 440 0284 774B     		ldr	r3, .L118+16
- 441 0286 784A     		ldr	r2, .L118+20
+ 440 0284 764B     		ldr	r3, .L118+16
+ 441 0286 774A     		ldr	r2, .L118+20
  442 0288 1A60     		str	r2, [r3]
  489:../src/main.c ****   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
  443              		.loc 1 489 0
- 444 028a 784B     		ldr	r3, .L118+24
- 445 028c 784A     		ldr	r2, .L118+28
+ 444 028a 774B     		ldr	r3, .L118+24
+ 445 028c 774A     		ldr	r2, .L118+28
  446 028e 1A60     		str	r2, [r3]
  490:../src/main.c **** 
  491:../src/main.c ****   main_target_kiss_baudrate = 9600u;
  447              		.loc 1 491 0
- 448 0290 784B     		ldr	r3, .L118+32
+ 448 0290 774B     		ldr	r3, .L118+32
  449 0292 4FF41652 		mov	r2, #9600
  450 0296 1A60     		str	r2, [r3]
  492:../src/main.c ****   main_target_wx_baudrate = _SERIAL_BAUDRATE;
  451              		.loc 1 492 0
- 452 0298 774B     		ldr	r3, .L118+36
+ 452 0298 764B     		ldr	r3, .L118+36
  453 029a 4FF49642 		mov	r2, #19200
  454 029e 1A60     		str	r2, [r3]
  493:../src/main.c **** 
  494:../src/main.c ****   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
  495:../src/main.c ****   if (main_config_data_mode->victron == 1) {
  455              		.loc 1 495 0
- 456 02a0 764B     		ldr	r3, .L118+40
+ 456 02a0 754B     		ldr	r3, .L118+40
  457 02a2 1B68     		ldr	r3, [r3]
  458 02a4 9A79     		ldrb	r2, [r3, #6]	@ zero_extendqisi2
  459 02a6 B242     		cmp	r2, r6
- 460 02a8 00F0CC80 		beq	.L81
+ 460 02a8 00F0CA80 		beq	.L81
  461              	.L21:
  496:../src/main.c ****     main_target_kiss_baudrate = 19200u;
  497:../src/main.c **** 
@@ -964,7 +964,7 @@
  462              		.loc 1 503 0
  463 02ac 1A79     		ldrb	r2, [r3, #4]	@ zero_extendqisi2
  464 02ae 012A     		cmp	r2, #1
- 465 02b0 00F00281 		beq	.L82
+ 465 02b0 00F00081 		beq	.L82
  504:../src/main.c **** 	  // reinitialize the KISS serial port temporary to davis baudrate
  505:../src/main.c **** 	  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
  506:../src/main.c **** 
@@ -1019,7 +1019,7 @@
  466              		.loc 1 554 0
  467 02b4 DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
  468 02b6 012B     		cmp	r3, #1
- 469 02b8 00F05B81 		beq	.L83
+ 469 02b8 00F05981 		beq	.L83
  555:../src/main.c **** 
  556:../src/main.c **** 	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
  557:../src/main.c **** 
@@ -1041,32 +1041,32 @@
  470              		.loc 1 572 0
  471 02bc 0124     		movs	r4, #1
  472 02be 0394     		str	r4, [sp, #12]
- 473 02c0 6C4B     		ldr	r3, .L118+32
+ 473 02c0 6B4B     		ldr	r3, .L118+32
  474 02c2 1B68     		ldr	r3, [r3]
  475 02c4 0293     		str	r3, [sp, #8]
  476 02c6 4FF40073 		mov	r3, #512
  477 02ca 0193     		str	r3, [sp, #4]
- 478 02cc 6C4A     		ldr	r2, .L118+44
+ 478 02cc 6B4A     		ldr	r2, .L118+44
  479 02ce 0092     		str	r2, [sp]
- 480 02d0 6C4A     		ldr	r2, .L118+48
- 481 02d2 6D49     		ldr	r1, .L118+52
- 482 02d4 6448     		ldr	r0, .L118+20
+ 480 02d0 6B4A     		ldr	r2, .L118+48
+ 481 02d2 6C49     		ldr	r1, .L118+52
+ 482 02d4 6348     		ldr	r0, .L118+20
  483 02d6 FFF7FEFF 		bl	srl_init
  484              	.LVL49:
  573:../src/main.c **** 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer
  485              		.loc 1 573 0
- 486 02da 644B     		ldr	r3, .L118+24
+ 486 02da 634B     		ldr	r3, .L118+24
  487 02dc 1868     		ldr	r0, [r3]
  488 02de 0394     		str	r4, [sp, #12]
- 489 02e0 654B     		ldr	r3, .L118+36
+ 489 02e0 644B     		ldr	r3, .L118+36
  490 02e2 1B68     		ldr	r3, [r3]
  491 02e4 0293     		str	r3, [sp, #8]
  492 02e6 6023     		movs	r3, #96
  493 02e8 0193     		str	r3, [sp, #4]
- 494 02ea 684A     		ldr	r2, .L118+56
+ 494 02ea 674A     		ldr	r2, .L118+56
  495 02ec 0092     		str	r2, [sp]
- 496 02ee 684A     		ldr	r2, .L118+60
- 497 02f0 6849     		ldr	r1, .L118+64
+ 496 02ee 674A     		ldr	r2, .L118+60
+ 497 02f0 6749     		ldr	r1, .L118+64
  498 02f2 FFF7FEFF 		bl	srl_init
  499              	.LVL50:
  500              	.L24:
@@ -1083,7 +1083,7 @@
  584:../src/main.c **** #if defined(PARAMETEO)
  585:../src/main.c ****   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
  501              		.loc 1 585 0
- 502 02f6 5D4B     		ldr	r3, .L118+24
+ 502 02f6 5C4B     		ldr	r3, .L118+24
  503 02f8 1B68     		ldr	r3, [r3]
  504 02fa 4FF48072 		mov	r2, #256
  505 02fe 1A82     		strh	r2, [r3, #16]	@ movhi
@@ -1096,7 +1096,7 @@
  589:../src/main.c ****   // initialize APRS path with zeros
  590:../src/main.c ****   memset (main_own_path, 0x00, sizeof(main_own_path));
  509              		.loc 1 590 0
- 510 0306 644C     		ldr	r4, .L118+68
+ 510 0306 634C     		ldr	r4, .L118+68
  511 0308 1522     		movs	r2, #21
  512 030a 0021     		movs	r1, #0
  513 030c 2046     		mov	r0, r4
@@ -1106,12 +1106,12 @@
  592:../src/main.c ****   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
  593:../src/main.c ****   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
  516              		.loc 1 593 0
- 517 0312 624B     		ldr	r3, .L118+72
+ 517 0312 614B     		ldr	r3, .L118+72
  518 0314 1968     		ldr	r1, [r3]
  519 0316 2046     		mov	r0, r4
  520 0318 FFF7FEFF 		bl	ConfigPath
  521              	.LVL52:
- 522 031c 604B     		ldr	r3, .L118+76
+ 522 031c 5F4B     		ldr	r3, .L118+76
  523 031e 1870     		strb	r0, [r3]
  594:../src/main.c **** 
  595:../src/main.c **** #ifdef INTERNAL_WATCHDOG
@@ -1153,7 +1153,7 @@
  625:../src/main.c ****   // initialize AX25 & APRS stuff
  626:../src/main.c ****   AFSK_Init(&main_afsk);
  530              		.loc 1 626 0
- 531 0328 5E4C     		ldr	r4, .L118+80
+ 531 0328 5D4C     		ldr	r4, .L118+80
  532 032a 2046     		mov	r0, r4
  533 032c FFF7FEFF 		bl	AFSK_Init
  534              	.LVL55:
@@ -1162,7 +1162,7 @@
  536 0330 0023     		movs	r3, #0
  537 0332 1A46     		mov	r2, r3
  538 0334 2146     		mov	r1, r4
- 539 0336 5C48     		ldr	r0, .L118+84
+ 539 0336 5B48     		ldr	r0, .L118+84
  540 0338 FFF7FEFF 		bl	ax25_init
  541              	.LVL56:
  628:../src/main.c ****   DA_Init();
@@ -1179,7 +1179,7 @@
  633:../src/main.c ****   // initializing the digipeater configuration
  634:../src/main.c ****   digi_init(main_config_data_mode);
  548              		.loc 1 634 0
- 549 0344 4D4C     		ldr	r4, .L118+40
+ 549 0344 4C4C     		ldr	r4, .L118+40
  550 0346 2068     		ldr	r0, [r4]
  551 0348 FFF7FEFF 		bl	digi_init
  552              	.LVL59:
@@ -1189,7 +1189,7 @@
  554 034c 2368     		ldr	r3, [r4]
  555 034e 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
  556 0350 13F0010F 		tst	r3, #1
- 557 0354 40F04081 		bne	.L84
+ 557 0354 40F03E81 		bne	.L84
  558              	.L26:
  637:../src/main.c **** #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
  638:../src/main.c **** 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
@@ -1220,11 +1220,11 @@
  660:../src/main.c **** 
  661:../src/main.c **** 	if (main_config_data_mode->wx_ms5611_or_bme == 0) {
  562              		.loc 1 661 0
- 563 035c 474B     		ldr	r3, .L118+40
+ 563 035c 464B     		ldr	r3, .L118+40
  564 035e 1B68     		ldr	r3, [r3]
  565 0360 5B79     		ldrb	r3, [r3, #5]	@ zero_extendqisi2
  566 0362 002B     		cmp	r3, #0
- 567 0364 00F05E81 		beq	.L85
+ 567 0364 00F05C81 		beq	.L85
  662:../src/main.c **** 	 ms5611_reset(&rte_wx_ms5611_qf);
  663:../src/main.c **** 	 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
  664:../src/main.c **** 	 ms5611_trigger_measure(0, 0);
@@ -1232,7 +1232,7 @@
  666:../src/main.c **** 	else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
  568              		.loc 1 666 0
  569 0368 012B     		cmp	r3, #1
- 570 036a 00F06881 		beq	.L86
+ 570 036a 00F06681 		beq	.L86
  571              	.L30:
  667:../src/main.c **** 	 bme280_reset(&rte_wx_bme280_qf);
  668:../src/main.c **** 	 bme280_setup();
@@ -1241,10 +1241,10 @@
  671:../src/main.c **** 
  672:../src/main.c ****  if (main_kiss_enabled == 1) {
  572              		.loc 1 672 0
- 573 036e 4F4B     		ldr	r3, .L118+88
+ 573 036e 4E4B     		ldr	r3, .L118+88
  574 0370 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
  575 0372 012B     		cmp	r3, #1
- 576 0374 00F06C81 		beq	.L87
+ 576 0374 00F06A81 		beq	.L87
  577              	.L31:
  673:../src/main.c **** 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
  674:../src/main.c **** 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, mai
@@ -1294,7 +1294,7 @@
  718:../src/main.c ****   // reinitializing AFSK and AX25 driver
  719:../src/main.c ****   AFSK_Init(&main_afsk);
  578              		.loc 1 719 0
- 579 0378 4A4C     		ldr	r4, .L118+80
+ 579 0378 494C     		ldr	r4, .L118+80
  580 037a 2046     		mov	r0, r4
  581 037c FFF7FEFF 		bl	AFSK_Init
  582              	.LVL61:
@@ -1314,20 +1314,20 @@
  592              	.LVL64:
  724:../src/main.c ****   ax25_init(&main_ax25, &main_afsk, 0, message_callback);
  593              		.loc 1 724 0
- 594 038e 484B     		ldr	r3, .L118+92
+ 594 038e 474B     		ldr	r3, .L118+92
  595 0390 0022     		movs	r2, #0
  596 0392 2146     		mov	r1, r4
- 597 0394 4448     		ldr	r0, .L118+84
+ 597 0394 4348     		ldr	r0, .L118+84
  598 0396 FFF7FEFF 		bl	ax25_init
  599              	.LVL65:
  725:../src/main.c **** 
  726:../src/main.c **** 	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
  600              		.loc 1 726 0
- 601 039a 384B     		ldr	r3, .L118+40
+ 601 039a 374B     		ldr	r3, .L118+40
  602 039c 1968     		ldr	r1, [r3]
  603 039e 4B78     		ldrb	r3, [r1, #1]	@ zero_extendqisi2
  604 03a0 13F0010F 		tst	r3, #1
- 605 03a4 40F08D81 		bne	.L88
+ 605 03a4 40F08B81 		bne	.L88
  606              	.L34:
  727:../src/main.c **** 	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
  728:../src/main.c **** 	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb
@@ -1336,11 +1336,11 @@
  731:../src/main.c ****   // start serial port i/o transaction depending on station configuration
  732:../src/main.c ****   if (main_config_data_mode->victron == 1) {
  607              		.loc 1 732 0
- 608 03a8 344B     		ldr	r3, .L118+40
+ 608 03a8 334B     		ldr	r3, .L118+40
  609 03aa 1B68     		ldr	r3, [r3]
  610 03ac 9B79     		ldrb	r3, [r3, #6]	@ zero_extendqisi2
  611 03ae 012B     		cmp	r3, #1
- 612 03b0 00F09081 		beq	.L89
+ 612 03b0 00F08E81 		beq	.L89
  733:../src/main.c **** 	  // initializing protocol parser
  734:../src/main.c **** 	  ve_direct_parser_init(&rte_pv_struct, &rte_pv_average);
  735:../src/main.c **** 
@@ -1356,7 +1356,7 @@
  745:../src/main.c **** 	  // switching UART to receive mode to be ready for KISS frames from host
  746:../src/main.c **** 	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
  613              		.loc 1 746 0
- 614 03b4 2B4B     		ldr	r3, .L118+16
+ 614 03b4 2A4B     		ldr	r3, .L118+16
  615 03b6 1868     		ldr	r0, [r3]
  616 03b8 0023     		movs	r3, #0
  617 03ba 0293     		str	r3, [sp, #8]
@@ -1475,7 +1475,7 @@
   96:../include/LedConfig.h **** 	else {
   97:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
  632              		.loc 2 97 0
- 633 03d0 384B     		ldr	r3, .L118+96
+ 633 03d0 374B     		ldr	r3, .L118+96
  634 03d2 9A69     		ldr	r2, [r3, #24]
  635 03d4 42F08072 		orr	r2, r2, #16777216
  636 03d8 9A61     		str	r2, [r3, #24]
@@ -1512,22 +1512,22 @@
  756:../src/main.c **** 
  757:../src/main.c ****   if (main_config_data_basic-> beacon_at_bootup == 1)
  652              		.loc 1 757 0
- 653 03e6 2D4B     		ldr	r3, .L118+72
+ 653 03e6 2C4B     		ldr	r3, .L118+72
  654 03e8 1B68     		ldr	r3, [r3]
  655 03ea 93F89730 		ldrb	r3, [r3, #151]	@ zero_extendqisi2
  656 03ee 012B     		cmp	r3, #1
- 657 03f0 00F08481 		beq	.L90
+ 657 03f0 00F08281 		beq	.L90
  658              	.L37:
  758:../src/main.c **** 	  beacon_send_own();
  759:../src/main.c **** 
  760:../src/main.c ****   // initialize UMB transaction
  761:../src/main.c ****   if (main_config_data_mode->wx_umb == 1) {
  659              		.loc 1 761 0
- 660 03f4 214B     		ldr	r3, .L118+40
+ 660 03f4 204B     		ldr	r3, .L118+40
  661 03f6 1B68     		ldr	r3, [r3]
  662 03f8 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
  663 03fa 012B     		cmp	r3, #1
- 664 03fc 00F08181 		beq	.L91
+ 664 03fc 00F07F81 		beq	.L91
  665              	.L38:
  762:../src/main.c **** 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
  763:../src/main.c ****   }
@@ -1535,514 +1535,511 @@
  765:../src/main.c **** #ifdef INTERNAL_WATCHDOG
  766:../src/main.c ****    // reload watchdog counter
  767:../src/main.c ****    IWDG_ReloadCounter();
- 666              		.loc 1 767 0
- 667 0400 FFF7FEFF 		bl	IWDG_ReloadCounter
- 668              	.LVL71:
  768:../src/main.c **** #endif
  769:../src/main.c **** 
  770:../src/main.c ****    io_ext_watchdog_service();
- 669              		.loc 1 770 0
- 670 0404 FFF7FEFF 		bl	io_ext_watchdog_service
- 671              	.LVL72:
+ 666              		.loc 1 770 0
+ 667 0400 FFF7FEFF 		bl	io_ext_watchdog_service
+ 668              	.LVL71:
  211:../src/main.c **** 
- 672              		.loc 1 211 0
- 673 0408 0024     		movs	r4, #0
- 674 040a E1E2     		b	.L39
- 675              	.L17:
+ 669              		.loc 1 211 0
+ 670 0404 0024     		movs	r4, #0
+ 671 0406 E1E2     		b	.L39
+ 672              	.L17:
  380:../src/main.c **** 	  main_symbol_s = '#';
- 676              		.loc 1 380 0
- 677 040c 114B     		ldr	r3, .L118
- 678 040e 3122     		movs	r2, #49
- 679 0410 1A70     		strb	r2, [r3]
+ 673              		.loc 1 380 0
+ 674 0408 114B     		ldr	r3, .L118
+ 675 040a 3122     		movs	r2, #49
+ 676 040c 1A70     		strb	r2, [r3]
  381:../src/main.c **** 	  break;
- 680              		.loc 1 381 0
- 681 0412 114B     		ldr	r3, .L118+4
- 682 0414 2322     		movs	r2, #35
- 683 0416 1A70     		strb	r2, [r3]
+ 677              		.loc 1 381 0
+ 678 040e 114B     		ldr	r3, .L118+4
+ 679 0410 2322     		movs	r2, #35
+ 680 0412 1A70     		strb	r2, [r3]
  382:../src/main.c ****   case 2:		// _SYMBOL_HOUSE
- 684              		.loc 1 382 0
- 685 0418 E0E6     		b	.L20
- 686              	.L18:
+ 681              		.loc 1 382 0
+ 682 0414 E2E6     		b	.L20
+ 683              	.L18:
  384:../src/main.c **** 	  main_symbol_s = '-';
- 687              		.loc 1 384 0
- 688 041a 0E4B     		ldr	r3, .L118
- 689 041c 2F22     		movs	r2, #47
- 690 041e 1A70     		strb	r2, [r3]
+ 684              		.loc 1 384 0
+ 685 0416 0E4B     		ldr	r3, .L118
+ 686 0418 2F22     		movs	r2, #47
+ 687 041a 1A70     		strb	r2, [r3]
  385:../src/main.c **** 	  break;
- 691              		.loc 1 385 0
- 692 0420 0D4B     		ldr	r3, .L118+4
- 693 0422 2D22     		movs	r2, #45
- 694 0424 1A70     		strb	r2, [r3]
+ 688              		.loc 1 385 0
+ 689 041c 0D4B     		ldr	r3, .L118+4
+ 690 041e 2D22     		movs	r2, #45
+ 691 0420 1A70     		strb	r2, [r3]
  386:../src/main.c ****   case 3:		// _SYMBOL_RXIGATE
- 695              		.loc 1 386 0
- 696 0426 D9E6     		b	.L20
- 697              	.L19:
+ 692              		.loc 1 386 0
+ 693 0422 DBE6     		b	.L20
+ 694              	.L19:
  388:../src/main.c **** 	  main_symbol_s = '&';
- 698              		.loc 1 388 0
- 699 0428 0A4B     		ldr	r3, .L118
- 700 042a 4922     		movs	r2, #73
- 701 042c 1A70     		strb	r2, [r3]
+ 695              		.loc 1 388 0
+ 696 0424 0A4B     		ldr	r3, .L118
+ 697 0426 4922     		movs	r2, #73
+ 698 0428 1A70     		strb	r2, [r3]
  389:../src/main.c **** 	  break;
- 702              		.loc 1 389 0
- 703 042e 0A4B     		ldr	r3, .L118+4
- 704 0430 2622     		movs	r2, #38
- 705 0432 1A70     		strb	r2, [r3]
+ 699              		.loc 1 389 0
+ 700 042a 0A4B     		ldr	r3, .L118+4
+ 701 042c 2622     		movs	r2, #38
+ 702 042e 1A70     		strb	r2, [r3]
  390:../src/main.c ****   default:		// _SYMBOL_IGATE
- 706              		.loc 1 390 0
- 707 0434 D2E6     		b	.L20
- 708              	.L14:
+ 703              		.loc 1 390 0
+ 704 0430 D4E6     		b	.L20
+ 705              	.L14:
  392:../src/main.c **** 	  main_symbol_s = '&';
- 709              		.loc 1 392 0
- 710 0436 074B     		ldr	r3, .L118
- 711 0438 5222     		movs	r2, #82
- 712 043a 1A70     		strb	r2, [r3]
+ 706              		.loc 1 392 0
+ 707 0432 074B     		ldr	r3, .L118
+ 708 0434 5222     		movs	r2, #82
+ 709 0436 1A70     		strb	r2, [r3]
  393:../src/main.c **** 	  break;
- 713              		.loc 1 393 0
- 714 043c 064B     		ldr	r3, .L118+4
- 715 043e 2622     		movs	r2, #38
- 716 0440 1A70     		strb	r2, [r3]
+ 710              		.loc 1 393 0
+ 711 0438 064B     		ldr	r3, .L118+4
+ 712 043a 2622     		movs	r2, #38
+ 713 043c 1A70     		strb	r2, [r3]
  394:../src/main.c **** 
- 717              		.loc 1 394 0
- 718 0442 CBE6     		b	.L20
- 719              	.L81:
+ 714              		.loc 1 394 0
+ 715 043e CDE6     		b	.L20
+ 716              	.L81:
  496:../src/main.c **** 
- 720              		.loc 1 496 0
- 721 0444 0B4A     		ldr	r2, .L118+32
- 722 0446 4FF49641 		mov	r1, #19200
- 723 044a 1160     		str	r1, [r2]
+ 717              		.loc 1 496 0
+ 718 0440 0B4A     		ldr	r2, .L118+32
+ 719 0442 4FF49641 		mov	r1, #19200
+ 720 0446 1160     		str	r1, [r2]
  499:../src/main.c ****   }
- 724              		.loc 1 499 0
- 725 044c 174A     		ldr	r2, .L118+88
- 726 044e 1570     		strb	r5, [r2]
- 727 0450 2CE7     		b	.L21
- 728              	.L119:
- 729 0452 00BF     		.align	2
- 730              	.L118:
- 731 0454 00000000 		.word	.LANCHOR2
- 732 0458 00000000 		.word	.LANCHOR3
- 733 045c 00000000 		.word	.LANCHOR4
- 734 0460 00000000 		.word	GPIO_InitTypeDef
- 735 0464 00000000 		.word	main_kiss_srl_ctx_ptr
- 736 0468 00000000 		.word	main_kiss_srl_ctx
- 737 046c 00000000 		.word	main_wx_srl_ctx_ptr
- 738 0470 00000000 		.word	main_wx_srl_ctx
- 739 0474 00000000 		.word	main_target_kiss_baudrate
- 740 0478 00000000 		.word	main_target_wx_baudrate
- 741 047c 00000000 		.word	.LANCHOR5
- 742 0480 00000000 		.word	srl_usart1_tx_buffer
- 743 0484 00000000 		.word	srl_usart1_rx_buffer
- 744 0488 00380140 		.word	1073821696
- 745 048c 00000000 		.word	srl_usart2_tx_buffer
- 746 0490 00000000 		.word	srl_usart2_rx_buffer
- 747 0494 00440040 		.word	1073759232
- 748 0498 00000000 		.word	main_own_path
- 749 049c 00000000 		.word	.LANCHOR1
- 750 04a0 00000000 		.word	.LANCHOR10
- 751 04a4 00000000 		.word	main_afsk
- 752 04a8 00000000 		.word	main_ax25
- 753 04ac 00000000 		.word	.LANCHOR6
- 754 04b0 00000000 		.word	message_callback
- 755 04b4 00080048 		.word	1207961600
- 756              	.L82:
+ 721              		.loc 1 499 0
+ 722 0448 174A     		ldr	r2, .L118+88
+ 723 044a 1570     		strb	r5, [r2]
+ 724 044c 2EE7     		b	.L21
+ 725              	.L119:
+ 726 044e 00BF     		.align	2
+ 727              	.L118:
+ 728 0450 00000000 		.word	.LANCHOR2
+ 729 0454 00000000 		.word	.LANCHOR3
+ 730 0458 00000000 		.word	.LANCHOR4
+ 731 045c 00000000 		.word	GPIO_InitTypeDef
+ 732 0460 00000000 		.word	main_kiss_srl_ctx_ptr
+ 733 0464 00000000 		.word	main_kiss_srl_ctx
+ 734 0468 00000000 		.word	main_wx_srl_ctx_ptr
+ 735 046c 00000000 		.word	main_wx_srl_ctx
+ 736 0470 00000000 		.word	main_target_kiss_baudrate
+ 737 0474 00000000 		.word	main_target_wx_baudrate
+ 738 0478 00000000 		.word	.LANCHOR5
+ 739 047c 00000000 		.word	srl_usart1_tx_buffer
+ 740 0480 00000000 		.word	srl_usart1_rx_buffer
+ 741 0484 00380140 		.word	1073821696
+ 742 0488 00000000 		.word	srl_usart2_tx_buffer
+ 743 048c 00000000 		.word	srl_usart2_rx_buffer
+ 744 0490 00440040 		.word	1073759232
+ 745 0494 00000000 		.word	main_own_path
+ 746 0498 00000000 		.word	.LANCHOR1
+ 747 049c 00000000 		.word	.LANCHOR10
+ 748 04a0 00000000 		.word	main_afsk
+ 749 04a4 00000000 		.word	main_ax25
+ 750 04a8 00000000 		.word	.LANCHOR6
+ 751 04ac 00000000 		.word	message_callback
+ 752 04b0 00080048 		.word	1207961600
+ 753              	.L82:
  505:../src/main.c **** 
- 757              		.loc 1 505 0
- 758 04b8 4FF49643 		mov	r3, #19200
- 759 04bc 9B4A     		ldr	r2, .L120
- 760 04be 1360     		str	r3, [r2]
+ 754              		.loc 1 505 0
+ 755 04b4 4FF49643 		mov	r3, #19200
+ 756 04b8 9B4A     		ldr	r2, .L120
+ 757 04ba 1360     		str	r3, [r2]
  508:../src/main.c **** 
- 761              		.loc 1 508 0
- 762 04c0 9B48     		ldr	r0, .L120+4
- 763 04c2 0022     		movs	r2, #0
- 764 04c4 80F84420 		strb	r2, [r0, #68]
+ 758              		.loc 1 508 0
+ 759 04bc 9B48     		ldr	r0, .L120+4
+ 760 04be 0022     		movs	r2, #0
+ 761 04c0 80F84420 		strb	r2, [r0, #68]
  511:../src/main.c **** 
- 765              		.loc 1 511 0
- 766 04c8 0124     		movs	r4, #1
- 767 04ca 0394     		str	r4, [sp, #12]
- 768 04cc 0293     		str	r3, [sp, #8]
- 769 04ce 4FF40073 		mov	r3, #512
- 770 04d2 0193     		str	r3, [sp, #4]
- 771 04d4 974A     		ldr	r2, .L120+8
- 772 04d6 0092     		str	r2, [sp]
- 773 04d8 974A     		ldr	r2, .L120+12
- 774 04da 9849     		ldr	r1, .L120+16
- 775 04dc FFF7FEFF 		bl	srl_init
- 776              	.LVL73:
+ 762              		.loc 1 511 0
+ 763 04c4 0124     		movs	r4, #1
+ 764 04c6 0394     		str	r4, [sp, #12]
+ 765 04c8 0293     		str	r3, [sp, #8]
+ 766 04ca 4FF40073 		mov	r3, #512
+ 767 04ce 0193     		str	r3, [sp, #4]
+ 768 04d0 974A     		ldr	r2, .L120+8
+ 769 04d2 0092     		str	r2, [sp]
+ 770 04d4 974A     		ldr	r2, .L120+12
+ 771 04d6 9849     		ldr	r1, .L120+16
+ 772 04d8 FFF7FEFF 		bl	srl_init
+ 773              	.LVL72:
  513:../src/main.c **** 
- 777              		.loc 1 513 0
- 778 04e0 974D     		ldr	r5, .L120+20
- 779 04e2 40F6B832 		movw	r2, #3000
- 780 04e6 2146     		mov	r1, r4
- 781 04e8 2868     		ldr	r0, [r5]
- 782 04ea FFF7FEFF 		bl	srl_switch_timeout
- 783              	.LVL74:
+ 774              		.loc 1 513 0
+ 775 04dc 974D     		ldr	r5, .L120+20
+ 776 04de 40F6B832 		movw	r2, #3000
+ 777 04e2 2146     		mov	r1, r4
+ 778 04e4 2868     		ldr	r0, [r5]
+ 779 04e6 FFF7FEFF 		bl	srl_switch_timeout
+ 780              	.LVL73:
  515:../src/main.c **** 
- 784              		.loc 1 515 0
- 785 04ee 2868     		ldr	r0, [r5]
- 786 04f0 FFF7FEFF 		bl	davis_init
- 787              	.LVL75:
+ 781              		.loc 1 515 0
+ 782 04ea 2868     		ldr	r0, [r5]
+ 783 04ec FFF7FEFF 		bl	davis_init
+ 784              	.LVL74:
  518:../src/main.c **** 
- 788              		.loc 1 518 0
- 789 04f4 2046     		mov	r0, r4
- 790 04f6 FFF7FEFF 		bl	davis_wake_up
- 791              	.LVL76:
- 792 04fa B0FA80F0 		clz	r0, r0
- 793 04fe 4009     		lsrs	r0, r0, #5
- 794 0500 904B     		ldr	r3, .L120+24
- 795 0502 1870     		strb	r0, [r3]
+ 785              		.loc 1 518 0
+ 786 04f0 2046     		mov	r0, r4
+ 787 04f2 FFF7FEFF 		bl	davis_wake_up
+ 788              	.LVL75:
+ 789 04f6 B0FA80F0 		clz	r0, r0
+ 790 04fa 4009     		lsrs	r0, r0, #5
+ 791 04fc 904B     		ldr	r3, .L120+24
+ 792 04fe 1870     		strb	r0, [r3]
  521:../src/main.c **** 		  // turn LCD backlight on..
- 796              		.loc 1 521 0
- 797 0504 88B1     		cbz	r0, .L23
+ 793              		.loc 1 521 0
+ 794 0500 88B1     		cbz	r0, .L23
  523:../src/main.c **** 
- 798              		.loc 1 523 0
- 799 0506 2046     		mov	r0, r4
- 800 0508 FFF7FEFF 		bl	davis_control_backlight
- 801              	.LVL77:
+ 795              		.loc 1 523 0
+ 796 0502 2046     		mov	r0, r4
+ 797 0504 FFF7FEFF 		bl	davis_control_backlight
+ 798              	.LVL76:
  526:../src/main.c **** 
- 802              		.loc 1 526 0
- 803 050c 4FF47A70 		mov	r0, #1000
- 804 0510 FFF7FEFF 		bl	delay_fixed
- 805              	.LVL78:
+ 799              		.loc 1 526 0
+ 800 0508 4FF47A70 		mov	r0, #1000
+ 801 050c FFF7FEFF 		bl	delay_fixed
+ 802              	.LVL77:
  529:../src/main.c **** 
- 806              		.loc 1 529 0
- 807 0514 0020     		movs	r0, #0
- 808 0516 FFF7FEFF 		bl	davis_control_backlight
- 809              	.LVL79:
+ 803              		.loc 1 529 0
+ 804 0510 0020     		movs	r0, #0
+ 805 0512 FFF7FEFF 		bl	davis_control_backlight
+ 806              	.LVL78:
  532:../src/main.c **** 
- 810              		.loc 1 532 0
- 811 051a 8B4B     		ldr	r3, .L120+28
- 812 051c 0022     		movs	r2, #0
- 813 051e 1A70     		strb	r2, [r3]
+ 807              		.loc 1 532 0
+ 808 0516 8B4B     		ldr	r3, .L120+28
+ 809 0518 0022     		movs	r2, #0
+ 810 051a 1A70     		strb	r2, [r3]
  537:../src/main.c **** 
- 814              		.loc 1 537 0
- 815 0520 8A4B     		ldr	r3, .L120+32
- 816 0522 1C70     		strb	r4, [r3]
+ 811              		.loc 1 537 0
+ 812 051c 8A4B     		ldr	r3, .L120+32
+ 813 051e 1C70     		strb	r4, [r3]
  540:../src/main.c **** 
- 817              		.loc 1 540 0
- 818 0524 FFF7FEFF 		bl	davis_trigger_rxcheck_packet
- 819              	.LVL80:
- 820 0528 E5E6     		b	.L24
- 821              	.L23:
+ 814              		.loc 1 540 0
+ 815 0520 FFF7FEFF 		bl	davis_trigger_rxcheck_packet
+ 816              	.LVL79:
+ 817 0524 E7E6     		b	.L24
+ 818              	.L23:
  545:../src/main.c **** 		  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
- 822              		.loc 1 545 0
- 823 052a 4FF41653 		mov	r3, #9600
- 824 052e 7F4A     		ldr	r2, .L120
- 825 0530 1360     		str	r3, [r2]
+ 819              		.loc 1 545 0
+ 820 0526 4FF41653 		mov	r3, #9600
+ 821 052a 7F4A     		ldr	r2, .L120
+ 822 052c 1360     		str	r3, [r2]
  546:../src/main.c **** 
- 826              		.loc 1 546 0
- 827 0532 834A     		ldr	r2, .L120+20
- 828 0534 1068     		ldr	r0, [r2]
- 829 0536 0022     		movs	r2, #0
- 830 0538 80F84420 		strb	r2, [r0, #68]
+ 823              		.loc 1 546 0
+ 824 052e 834A     		ldr	r2, .L120+20
+ 825 0530 1068     		ldr	r0, [r2]
+ 826 0532 0022     		movs	r2, #0
+ 827 0534 80F84420 		strb	r2, [r0, #68]
  549:../src/main.c **** 		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffe
- 831              		.loc 1 549 0
- 832 053c 0124     		movs	r4, #1
- 833 053e 0394     		str	r4, [sp, #12]
- 834 0540 0293     		str	r3, [sp, #8]
- 835 0542 4FF40073 		mov	r3, #512
- 836 0546 0193     		str	r3, [sp, #4]
- 837 0548 7A4A     		ldr	r2, .L120+8
- 838 054a 0092     		str	r2, [sp]
- 839 054c 7A4A     		ldr	r2, .L120+12
- 840 054e 7B49     		ldr	r1, .L120+16
- 841 0550 FFF7FEFF 		bl	srl_init
- 842              	.LVL81:
+ 828              		.loc 1 549 0
+ 829 0538 0124     		movs	r4, #1
+ 830 053a 0394     		str	r4, [sp, #12]
+ 831 053c 0293     		str	r3, [sp, #8]
+ 832 053e 4FF40073 		mov	r3, #512
+ 833 0542 0193     		str	r3, [sp, #4]
+ 834 0544 7A4A     		ldr	r2, .L120+8
+ 835 0546 0092     		str	r2, [sp]
+ 836 0548 7A4A     		ldr	r2, .L120+12
+ 837 054a 7B49     		ldr	r1, .L120+16
+ 838 054c FFF7FEFF 		bl	srl_init
+ 839              	.LVL80:
  550:../src/main.c **** 
- 843              		.loc 1 550 0
- 844 0554 0394     		str	r4, [sp, #12]
- 845 0556 7E4B     		ldr	r3, .L120+36
- 846 0558 1B68     		ldr	r3, [r3]
- 847 055a 0293     		str	r3, [sp, #8]
- 848 055c 6023     		movs	r3, #96
- 849 055e 0193     		str	r3, [sp, #4]
- 850 0560 7C4A     		ldr	r2, .L120+40
- 851 0562 0092     		str	r2, [sp]
- 852 0564 7C4A     		ldr	r2, .L120+44
- 853 0566 7D49     		ldr	r1, .L120+48
- 854 0568 7D48     		ldr	r0, .L120+52
- 855 056a 0068     		ldr	r0, [r0]
- 856 056c FFF7FEFF 		bl	srl_init
- 857              	.LVL82:
- 858 0570 C1E6     		b	.L24
- 859              	.L83:
+ 840              		.loc 1 550 0
+ 841 0550 0394     		str	r4, [sp, #12]
+ 842 0552 7E4B     		ldr	r3, .L120+36
+ 843 0554 1B68     		ldr	r3, [r3]
+ 844 0556 0293     		str	r3, [sp, #8]
+ 845 0558 6023     		movs	r3, #96
+ 846 055a 0193     		str	r3, [sp, #4]
+ 847 055c 7C4A     		ldr	r2, .L120+40
+ 848 055e 0092     		str	r2, [sp]
+ 849 0560 7C4A     		ldr	r2, .L120+44
+ 850 0562 7D49     		ldr	r1, .L120+48
+ 851 0564 7D48     		ldr	r0, .L120+52
+ 852 0566 0068     		ldr	r0, [r0]
+ 853 0568 FFF7FEFF 		bl	srl_init
+ 854              	.LVL81:
+ 855 056c C3E6     		b	.L24
+ 856              	.L83:
  556:../src/main.c **** 
- 860              		.loc 1 556 0
- 861 0572 7C4D     		ldr	r5, .L120+56
- 862 0574 2B68     		ldr	r3, [r5]
- 863 0576 7C4A     		ldr	r2, .L120+60
- 864 0578 0121     		movs	r1, #1
- 865 057a 7C48     		ldr	r0, .L120+64
- 866 057c FFF7FEFF 		bl	rtu_serial_init
- 867              	.LVL83:
+ 857              		.loc 1 556 0
+ 858 056e 7C4D     		ldr	r5, .L120+56
+ 859 0570 2B68     		ldr	r3, [r5]
+ 860 0572 7C4A     		ldr	r2, .L120+60
+ 861 0574 0121     		movs	r1, #1
+ 862 0576 7C48     		ldr	r0, .L120+64
+ 863 0578 FFF7FEFF 		bl	rtu_serial_init
+ 864              	.LVL82:
  558:../src/main.c **** 
- 868              		.loc 1 558 0
- 869 0580 2B68     		ldr	r3, [r5]
- 870 0582 1B88     		ldrh	r3, [r3]
- 871 0584 724E     		ldr	r6, .L120+36
- 872 0586 3360     		str	r3, [r6]
+ 865              		.loc 1 558 0
+ 866 057c 2B68     		ldr	r3, [r5]
+ 867 057e 1B88     		ldrh	r3, [r3]
+ 868 0580 724E     		ldr	r6, .L120+36
+ 869 0582 3360     		str	r3, [r6]
  561:../src/main.c **** 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer
- 873              		.loc 1 561 0
- 874 0588 0124     		movs	r4, #1
- 875 058a 0394     		str	r4, [sp, #12]
- 876 058c 674B     		ldr	r3, .L120
- 877 058e 1B68     		ldr	r3, [r3]
- 878 0590 0293     		str	r3, [sp, #8]
- 879 0592 4FF40073 		mov	r3, #512
- 880 0596 0193     		str	r3, [sp, #4]
- 881 0598 664A     		ldr	r2, .L120+8
- 882 059a 0092     		str	r2, [sp]
- 883 059c 664A     		ldr	r2, .L120+12
- 884 059e 6749     		ldr	r1, .L120+16
- 885 05a0 6748     		ldr	r0, .L120+20
- 886 05a2 0068     		ldr	r0, [r0]
- 887 05a4 FFF7FEFF 		bl	srl_init
- 888              	.LVL84:
+ 870              		.loc 1 561 0
+ 871 0584 0124     		movs	r4, #1
+ 872 0586 0394     		str	r4, [sp, #12]
+ 873 0588 674B     		ldr	r3, .L120
+ 874 058a 1B68     		ldr	r3, [r3]
+ 875 058c 0293     		str	r3, [sp, #8]
+ 876 058e 4FF40073 		mov	r3, #512
+ 877 0592 0193     		str	r3, [sp, #4]
+ 878 0594 664A     		ldr	r2, .L120+8
+ 879 0596 0092     		str	r2, [sp]
+ 880 0598 664A     		ldr	r2, .L120+12
+ 881 059a 6749     		ldr	r1, .L120+16
+ 882 059c 6748     		ldr	r0, .L120+20
+ 883 059e 0068     		ldr	r0, [r0]
+ 884 05a0 FFF7FEFF 		bl	srl_init
+ 885              	.LVL83:
  562:../src/main.c **** 	  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
- 889              		.loc 1 562 0
- 890 05a8 2B68     		ldr	r3, [r5]
- 891 05aa 6D4D     		ldr	r5, .L120+52
- 892 05ac DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
- 893 05ae 0393     		str	r3, [sp, #12]
- 894 05b0 3368     		ldr	r3, [r6]
- 895 05b2 0293     		str	r3, [sp, #8]
- 896 05b4 6023     		movs	r3, #96
- 897 05b6 0193     		str	r3, [sp, #4]
- 898 05b8 664A     		ldr	r2, .L120+40
- 899 05ba 0092     		str	r2, [sp]
- 900 05bc 664A     		ldr	r2, .L120+44
- 901 05be 6749     		ldr	r1, .L120+48
- 902 05c0 2868     		ldr	r0, [r5]
- 903 05c2 FFF7FEFF 		bl	srl_init
- 904              	.LVL85:
+ 886              		.loc 1 562 0
+ 887 05a4 2B68     		ldr	r3, [r5]
+ 888 05a6 6D4D     		ldr	r5, .L120+52
+ 889 05a8 DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+ 890 05aa 0393     		str	r3, [sp, #12]
+ 891 05ac 3368     		ldr	r3, [r6]
+ 892 05ae 0293     		str	r3, [sp, #8]
+ 893 05b0 6023     		movs	r3, #96
+ 894 05b2 0193     		str	r3, [sp, #4]
+ 895 05b4 664A     		ldr	r2, .L120+40
+ 896 05b6 0092     		str	r2, [sp]
+ 897 05b8 664A     		ldr	r2, .L120+44
+ 898 05ba 6749     		ldr	r1, .L120+48
+ 899 05bc 2868     		ldr	r0, [r5]
+ 900 05be FFF7FEFF 		bl	srl_init
+ 901              	.LVL84:
  563:../src/main.c **** 
- 905              		.loc 1 563 0
- 906 05c6 2146     		mov	r1, r4
- 907 05c8 2868     		ldr	r0, [r5]
- 908 05ca FFF7FEFF 		bl	srl_switch_tx_delay
- 909              	.LVL86:
+ 902              		.loc 1 563 0
+ 903 05c2 2146     		mov	r1, r4
+ 904 05c4 2868     		ldr	r0, [r5]
+ 905 05c6 FFF7FEFF 		bl	srl_switch_tx_delay
+ 906              	.LVL85:
  566:../src/main.c **** 
- 910              		.loc 1 566 0
- 911 05ce 684B     		ldr	r3, .L120+68
- 912 05d0 1C70     		strb	r4, [r3]
+ 907              		.loc 1 566 0
+ 908 05ca 684B     		ldr	r3, .L120+68
+ 909 05cc 1C70     		strb	r4, [r3]
  568:../src/main.c ****   }
- 913              		.loc 1 568 0
- 914 05d2 FFF7FEFF 		bl	rtu_serial_start
- 915              	.LVL87:
- 916 05d6 8EE6     		b	.L24
- 917              	.L84:
+ 910              		.loc 1 568 0
+ 911 05ce FFF7FEFF 		bl	rtu_serial_start
+ 912              	.LVL86:
+ 913 05d2 90E6     		b	.L24
+ 914              	.L84:
  642:../src/main.c **** #endif
- 918              		.loc 1 642 0
- 919 05d8 664B     		ldr	r3, .L120+72
- 920 05da 0022     		movs	r2, #0
- 921 05dc 4FF40061 		mov	r1, #2048
- 922 05e0 6548     		ldr	r0, .L120+76
- 923 05e2 FFF7FEFF 		bl	dallas_init
- 924              	.LVL88:
+ 915              		.loc 1 642 0
+ 916 05d4 664B     		ldr	r3, .L120+72
+ 917 05d6 0022     		movs	r2, #0
+ 918 05d8 4FF40061 		mov	r1, #2048
+ 919 05dc 6548     		ldr	r0, .L120+76
+ 920 05de FFF7FEFF 		bl	dallas_init
+ 921              	.LVL87:
  645:../src/main.c **** 		  // client initialization
- 925              		.loc 1 645 0
- 926 05e6 2368     		ldr	r3, [r4]
- 927 05e8 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
- 928 05ea 012B     		cmp	r3, #1
- 929 05ec 06D1     		bne	.L27
+ 922              		.loc 1 645 0
+ 923 05e2 2368     		ldr	r3, [r4]
+ 924 05e4 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 925 05e6 012B     		cmp	r3, #1
+ 926 05e8 06D1     		bne	.L27
  647:../src/main.c **** 	  }
- 930              		.loc 1 647 0
- 931 05ee 634B     		ldr	r3, .L120+80
- 932 05f0 1A68     		ldr	r2, [r3]
- 933 05f2 5B4B     		ldr	r3, .L120+52
- 934 05f4 1968     		ldr	r1, [r3]
- 935 05f6 6248     		ldr	r0, .L120+84
- 936 05f8 FFF7FEFF 		bl	umb_master_init
- 937              	.LVL89:
- 938              	.L27:
+ 927              		.loc 1 647 0
+ 928 05ea 634B     		ldr	r3, .L120+80
+ 929 05ec 1A68     		ldr	r2, [r3]
+ 930 05ee 5B4B     		ldr	r3, .L120+52
+ 931 05f0 1968     		ldr	r1, [r3]
+ 932 05f2 6248     		ldr	r0, .L120+84
+ 933 05f4 FFF7FEFF 		bl	umb_master_init
+ 934              	.LVL88:
+ 935              	.L27:
  650:../src/main.c **** 		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
- 939              		.loc 1 650 0
- 940 05fc 614B     		ldr	r3, .L120+88
- 941 05fe 1B68     		ldr	r3, [r3]
- 942 0600 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
- 943 0602 13F0040F 		tst	r3, #4
- 944 0606 06D1     		bne	.L28
+ 936              		.loc 1 650 0
+ 937 05f8 614B     		ldr	r3, .L120+88
+ 938 05fa 1B68     		ldr	r3, [r3]
+ 939 05fc 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 940 05fe 13F0040F 		tst	r3, #4
+ 941 0602 06D1     		bne	.L28
  651:../src/main.c **** 	  }
- 945              		.loc 1 651 0
- 946 0608 0123     		movs	r3, #1
- 947 060a 6422     		movs	r2, #100
- 948 060c 2621     		movs	r1, #38
- 949 060e 0A20     		movs	r0, #10
- 950 0610 FFF7FEFF 		bl	analog_anemometer_init
- 951              	.LVL90:
- 952 0614 A0E6     		b	.L26
- 953              	.L28:
+ 942              		.loc 1 651 0
+ 943 0604 0123     		movs	r3, #1
+ 944 0606 6422     		movs	r2, #100
+ 945 0608 2621     		movs	r1, #38
+ 946 060a 0A20     		movs	r0, #10
+ 947 060c FFF7FEFF 		bl	analog_anemometer_init
+ 948              	.LVL89:
+ 949 0610 A2E6     		b	.L26
+ 950              	.L28:
  654:../src/main.c **** 	  }
- 954              		.loc 1 654 0
- 955 0616 0123     		movs	r3, #1
- 956 0618 6422     		movs	r2, #100
- 957 061a 2621     		movs	r1, #38
- 958 061c 0A20     		movs	r0, #10
- 959 061e FFF7FEFF 		bl	analog_anemometer_init
- 960              	.LVL91:
- 961 0622 99E6     		b	.L26
- 962              	.L85:
+ 951              		.loc 1 654 0
+ 952 0612 0123     		movs	r3, #1
+ 953 0614 6422     		movs	r2, #100
+ 954 0616 2621     		movs	r1, #38
+ 955 0618 0A20     		movs	r0, #10
+ 956 061a FFF7FEFF 		bl	analog_anemometer_init
+ 957              	.LVL90:
+ 958 061e 9BE6     		b	.L26
+ 959              	.L85:
  662:../src/main.c **** 	 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
- 963              		.loc 1 662 0
- 964 0624 584C     		ldr	r4, .L120+92
- 965 0626 2046     		mov	r0, r4
- 966 0628 FFF7FEFF 		bl	ms5611_reset
- 967              	.LVL92:
+ 960              		.loc 1 662 0
+ 961 0620 584C     		ldr	r4, .L120+92
+ 962 0622 2046     		mov	r0, r4
+ 963 0624 FFF7FEFF 		bl	ms5611_reset
+ 964              	.LVL91:
  663:../src/main.c **** 	 ms5611_trigger_measure(0, 0);
- 968              		.loc 1 663 0
- 969 062c 2146     		mov	r1, r4
- 970 062e 5748     		ldr	r0, .L120+96
- 971 0630 FFF7FEFF 		bl	ms5611_read_calibration
- 972              	.LVL93:
+ 965              		.loc 1 663 0
+ 966 0628 2146     		mov	r1, r4
+ 967 062a 5748     		ldr	r0, .L120+96
+ 968 062c FFF7FEFF 		bl	ms5611_read_calibration
+ 969              	.LVL92:
  664:../src/main.c **** 	}
- 973              		.loc 1 664 0
- 974 0634 0021     		movs	r1, #0
- 975 0636 0846     		mov	r0, r1
- 976 0638 FFF7FEFF 		bl	ms5611_trigger_measure
- 977              	.LVL94:
- 978 063c 97E6     		b	.L30
- 979              	.L86:
+ 970              		.loc 1 664 0
+ 971 0630 0021     		movs	r1, #0
+ 972 0632 0846     		mov	r0, r1
+ 973 0634 FFF7FEFF 		bl	ms5611_trigger_measure
+ 974              	.LVL93:
+ 975 0638 99E6     		b	.L30
+ 976              	.L86:
  667:../src/main.c **** 	 bme280_setup();
- 980              		.loc 1 667 0
- 981 063e 5448     		ldr	r0, .L120+100
- 982 0640 FFF7FEFF 		bl	bme280_reset
- 983              	.LVL95:
+ 977              		.loc 1 667 0
+ 978 063a 5448     		ldr	r0, .L120+100
+ 979 063c FFF7FEFF 		bl	bme280_reset
+ 980              	.LVL94:
  668:../src/main.c **** 	 bme280_read_calibration(bme280_calibration_data);
- 984              		.loc 1 668 0
- 985 0644 FFF7FEFF 		bl	bme280_setup
- 986              	.LVL96:
+ 981              		.loc 1 668 0
+ 982 0640 FFF7FEFF 		bl	bme280_setup
+ 983              	.LVL95:
  669:../src/main.c **** 	}
- 987              		.loc 1 669 0
- 988 0648 5248     		ldr	r0, .L120+104
- 989 064a FFF7FEFF 		bl	bme280_read_calibration
- 990              	.LVL97:
- 991 064e 8EE6     		b	.L30
- 992              	.L87:
+ 984              		.loc 1 669 0
+ 985 0644 5248     		ldr	r0, .L120+104
+ 986 0646 FFF7FEFF 		bl	bme280_read_calibration
+ 987              	.LVL96:
+ 988 064a 90E6     		b	.L30
+ 989              	.L87:
  674:../src/main.c **** 
- 993              		.loc 1 674 0
- 994 0650 514B     		ldr	r3, .L120+108
- 995 0652 1A68     		ldr	r2, [r3]
- 996 0654 92F90C30 		ldrsb	r3, [r2, #12]
- 997 0658 92F91410 		ldrsb	r1, [r2, #20]
- 998 065c 1532     		adds	r2, r2, #21
- 999 065e 4F4C     		ldr	r4, .L120+112
- 1000 0660 0492     		str	r2, [sp, #16]
- 1001 0662 4F4A     		ldr	r2, .L120+116
- 1002 0664 92F90020 		ldrsb	r2, [r2]
- 1003 0668 0392     		str	r2, [sp, #12]
- 1004 066a 0291     		str	r1, [sp, #8]
- 1005 066c 4D4A     		ldr	r2, .L120+120
- 1006 066e 0192     		str	r2, [sp, #4]
- 1007 0670 4D4A     		ldr	r2, .L120+124
- 1008 0672 92F90020 		ldrsb	r2, [r2]
- 1009 0676 0092     		str	r2, [sp]
- 1010 0678 4C4A     		ldr	r2, .L120+128
- 1011 067a 4D49     		ldr	r1, .L120+132
- 1012 067c 2046     		mov	r0, r4
- 1013 067e FFF7FEFF 		bl	sprintf
- 1014              	.LVL98:
- 1015 0682 C3B2     		uxtb	r3, r0
- 1016 0684 4B4A     		ldr	r2, .L120+136
- 1017 0686 1370     		strb	r3, [r2]
+ 990              		.loc 1 674 0
+ 991 064c 514B     		ldr	r3, .L120+108
+ 992 064e 1A68     		ldr	r2, [r3]
+ 993 0650 92F90C30 		ldrsb	r3, [r2, #12]
+ 994 0654 92F91410 		ldrsb	r1, [r2, #20]
+ 995 0658 1532     		adds	r2, r2, #21
+ 996 065a 4F4C     		ldr	r4, .L120+112
+ 997 065c 0492     		str	r2, [sp, #16]
+ 998 065e 4F4A     		ldr	r2, .L120+116
+ 999 0660 92F90020 		ldrsb	r2, [r2]
+ 1000 0664 0392     		str	r2, [sp, #12]
+ 1001 0666 0291     		str	r1, [sp, #8]
+ 1002 0668 4D4A     		ldr	r2, .L120+120
+ 1003 066a 0192     		str	r2, [sp, #4]
+ 1004 066c 4D4A     		ldr	r2, .L120+124
+ 1005 066e 92F90020 		ldrsb	r2, [r2]
+ 1006 0672 0092     		str	r2, [sp]
+ 1007 0674 4C4A     		ldr	r2, .L120+128
+ 1008 0676 4D49     		ldr	r1, .L120+132
+ 1009 0678 2046     		mov	r0, r4
+ 1010 067a FFF7FEFF 		bl	sprintf
+ 1011              	.LVL97:
+ 1012 067e C3B2     		uxtb	r3, r0
+ 1013 0680 4B4A     		ldr	r2, .L120+136
+ 1014 0682 1370     		strb	r3, [r2]
  677:../src/main.c **** 
- 1018              		.loc 1 677 0
- 1019 0688 0022     		movs	r2, #0
- 1020 068a E254     		strb	r2, [r4, r3]
+ 1015              		.loc 1 677 0
+ 1016 0684 0022     		movs	r2, #0
+ 1017 0686 E254     		strb	r2, [r4, r3]
  681:../src/main.c **** 
- 1021              		.loc 1 681 0
- 1022 068c 4FF40072 		mov	r2, #512
- 1023 0690 0192     		str	r2, [sp, #4]
- 1024 0692 274A     		ldr	r2, .L120+4
- 1025 0694 5269     		ldr	r2, [r2, #20]
- 1026 0696 0092     		str	r2, [sp]
- 1027 0698 2246     		mov	r2, r4
- 1028 069a 0321     		movs	r1, #3
- 1029 069c 4648     		ldr	r0, .L120+140
- 1030 069e FFF7FEFF 		bl	ax25_sendVia_toBuffer
- 1031              	.LVL99:
- 1032 06a2 0790     		str	r0, [sp, #28]
- 1033              	.L33:
+ 1018              		.loc 1 681 0
+ 1019 0688 4FF40072 		mov	r2, #512
+ 1020 068c 0192     		str	r2, [sp, #4]
+ 1021 068e 274A     		ldr	r2, .L120+4
+ 1022 0690 5269     		ldr	r2, [r2, #20]
+ 1023 0692 0092     		str	r2, [sp]
+ 1024 0694 2246     		mov	r2, r4
+ 1025 0696 0321     		movs	r1, #3
+ 1026 0698 4648     		ldr	r0, .L120+140
+ 1027 069a FFF7FEFF 		bl	ax25_sendVia_toBuffer
+ 1028              	.LVL98:
+ 1029 069e 0790     		str	r0, [sp, #28]
+ 1030              	.L33:
  685:../src/main.c **** 
- 1034              		.loc 1 685 0 discriminator 2
- 1035 06a4 224B     		ldr	r3, .L120+4
- 1036 06a6 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
- 1037 06aa 012B     		cmp	r3, #1
- 1038 06ac 01D0     		beq	.L32
+ 1031              		.loc 1 685 0 discriminator 2
+ 1032 06a0 224B     		ldr	r3, .L120+4
+ 1033 06a2 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
+ 1034 06a6 012B     		cmp	r3, #1
+ 1035 06a8 01D0     		beq	.L32
  685:../src/main.c **** 
- 1039              		.loc 1 685 0 is_stmt 0 discriminator 1
- 1040 06ae 042B     		cmp	r3, #4
- 1041 06b0 F8D1     		bne	.L33
- 1042              	.L32:
+ 1036              		.loc 1 685 0 is_stmt 0 discriminator 1
+ 1037 06aa 042B     		cmp	r3, #4
+ 1038 06ac F8D1     		bne	.L33
+ 1039              	.L32:
  699:../src/main.c **** 
- 1043              		.loc 1 699 0 is_stmt 1
- 1044 06b2 01B2     		sxth	r1, r0
- 1045 06b4 224B     		ldr	r3, .L120+20
- 1046 06b6 1868     		ldr	r0, [r3]
- 1047 06b8 FFF7FEFF 		bl	srl_start_tx
- 1048              	.LVL100:
- 1049 06bc 3F4B     		ldr	r3, .L120+144
- 1050 06be 1870     		strb	r0, [r3]
- 1051 06c0 5AE6     		b	.L31
- 1052              	.L88:
+ 1040              		.loc 1 699 0 is_stmt 1
+ 1041 06ae 01B2     		sxth	r1, r0
+ 1042 06b0 224B     		ldr	r3, .L120+20
+ 1043 06b2 1868     		ldr	r0, [r3]
+ 1044 06b4 FFF7FEFF 		bl	srl_start_tx
+ 1045              	.LVL99:
+ 1046 06b8 3F4B     		ldr	r3, .L120+144
+ 1047 06ba 1870     		strb	r0, [r3]
+ 1048 06bc 5CE6     		b	.L31
+ 1049              	.L88:
  728:../src/main.c **** 	}
- 1053              		.loc 1 728 0
- 1054 06c2 284B     		ldr	r3, .L120+56
- 1055 06c4 1B68     		ldr	r3, [r3]
- 1056 06c6 2D4A     		ldr	r2, .L120+80
- 1057 06c8 1268     		ldr	r2, [r2]
- 1058 06ca 3D48     		ldr	r0, .L120+148
- 1059 06cc 0068     		ldr	r0, [r0]
- 1060 06ce FFF7FEFF 		bl	wx_get_all_measurements
- 1061              	.LVL101:
- 1062 06d2 69E6     		b	.L34
- 1063              	.L89:
+ 1050              		.loc 1 728 0
+ 1051 06be 284B     		ldr	r3, .L120+56
+ 1052 06c0 1B68     		ldr	r3, [r3]
+ 1053 06c2 2D4A     		ldr	r2, .L120+80
+ 1054 06c4 1268     		ldr	r2, [r2]
+ 1055 06c6 3D48     		ldr	r0, .L120+148
+ 1056 06c8 0068     		ldr	r0, [r0]
+ 1057 06ca FFF7FEFF 		bl	wx_get_all_measurements
+ 1058              	.LVL100:
+ 1059 06ce 6BE6     		b	.L34
+ 1060              	.L89:
  734:../src/main.c **** 
- 1064              		.loc 1 734 0
- 1065 06d4 3B49     		ldr	r1, .L120+152
- 1066 06d6 3C48     		ldr	r0, .L120+156
- 1067 06d8 FFF7FEFF 		bl	ve_direct_parser_init
- 1068              	.LVL102:
+ 1061              		.loc 1 734 0
+ 1062 06d0 3B49     		ldr	r1, .L120+152
+ 1063 06d2 3C48     		ldr	r0, .L120+156
+ 1064 06d4 FFF7FEFF 		bl	ve_direct_parser_init
+ 1065              	.LVL101:
  739:../src/main.c **** 
- 1069              		.loc 1 739 0
- 1070 06dc 184C     		ldr	r4, .L120+20
- 1071 06de 3222     		movs	r2, #50
- 1072 06e0 0121     		movs	r1, #1
- 1073 06e2 2068     		ldr	r0, [r4]
- 1074 06e4 FFF7FEFF 		bl	srl_switch_timeout
- 1075              	.LVL103:
+ 1066              		.loc 1 739 0
+ 1067 06d8 184C     		ldr	r4, .L120+20
+ 1068 06da 3222     		movs	r2, #50
+ 1069 06dc 0121     		movs	r1, #1
+ 1070 06de 2068     		ldr	r0, [r4]
+ 1071 06e0 FFF7FEFF 		bl	srl_switch_timeout
+ 1072              	.LVL102:
  742:../src/main.c ****   }
- 1076              		.loc 1 742 0
- 1077 06e8 0022     		movs	r2, #0
- 1078 06ea 0292     		str	r2, [sp, #8]
- 1079 06ec 0192     		str	r2, [sp, #4]
- 1080 06ee 0092     		str	r2, [sp]
- 1081 06f0 1346     		mov	r3, r2
- 1082 06f2 BA21     		movs	r1, #186
- 1083 06f4 2068     		ldr	r0, [r4]
- 1084 06f6 FFF7FEFF 		bl	srl_receive_data
- 1085              	.LVL104:
- 1086 06fa 67E6     		b	.L36
- 1087              	.L90:
+ 1073              		.loc 1 742 0
+ 1074 06e4 0022     		movs	r2, #0
+ 1075 06e6 0292     		str	r2, [sp, #8]
+ 1076 06e8 0192     		str	r2, [sp, #4]
+ 1077 06ea 0092     		str	r2, [sp]
+ 1078 06ec 1346     		mov	r3, r2
+ 1079 06ee BA21     		movs	r1, #186
+ 1080 06f0 2068     		ldr	r0, [r4]
+ 1081 06f2 FFF7FEFF 		bl	srl_receive_data
+ 1082              	.LVL103:
+ 1083 06f6 69E6     		b	.L36
+ 1084              	.L90:
  758:../src/main.c **** 
- 1088              		.loc 1 758 0
- 1089 06fc FFF7FEFF 		bl	beacon_send_own
- 1090              	.LVL105:
- 1091 0700 78E6     		b	.L37
- 1092              	.L91:
+ 1085              		.loc 1 758 0
+ 1086 06f8 FFF7FEFF 		bl	beacon_send_own
+ 1087              	.LVL104:
+ 1088 06fc 7AE6     		b	.L37
+ 1089              	.L91:
  762:../src/main.c ****   }
- 1093              		.loc 1 762 0
- 1094 0702 1E4B     		ldr	r3, .L120+80
- 1095 0704 1A68     		ldr	r2, [r3]
- 1096 0706 1E49     		ldr	r1, .L120+84
- 1097 0708 3048     		ldr	r0, .L120+160
- 1098 070a FFF7FEFF 		bl	umb_0x26_status_request
- 1099              	.LVL106:
- 1100 070e 77E6     		b	.L38
- 1101              	.LVL107:
- 1102              	.L111:
- 1103              	.LBB30:
- 1104              	.LBB31:
- 1105              	.LBB32:
- 1106              	.LBB33:
- 1107              		.file 3 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h"
+ 1090              		.loc 1 762 0
+ 1091 06fe 1E4B     		ldr	r3, .L120+80
+ 1092 0700 1A68     		ldr	r2, [r3]
+ 1093 0702 1E49     		ldr	r1, .L120+84
+ 1094 0704 3048     		ldr	r0, .L120+160
+ 1095 0706 FFF7FEFF 		bl	umb_0x26_status_request
+ 1096              	.LVL105:
+ 1097 070a 79E6     		b	.L38
+ 1098              	.LVL106:
+ 1099              	.L111:
+ 1100              	.LBB30:
+ 1101              	.LBB31:
+ 1102              	.LBB32:
+ 1103              	.LBB33:
+ 1104              		.file 3 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h"
    1:../system/include/cmsis/stm32l4xx/cmsis_gcc.h **** /**************************************************************************//**
    2:../system/include/cmsis/stm32l4xx/cmsis_gcc.h ****  * @file     cmsis_gcc.h
    3:../system/include/cmsis/stm32l4xx/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
@@ -2989,16 +2986,16 @@
  944:../system/include/cmsis/stm32l4xx/cmsis_gcc.h **** __STATIC_FORCEINLINE void __DSB(void)
  945:../system/include/cmsis/stm32l4xx/cmsis_gcc.h **** {
  946:../system/include/cmsis/stm32l4xx/cmsis_gcc.h ****   __ASM volatile ("dsb 0xF":::"memory");
- 1108              		.loc 3 946 0
- 1109              		.syntax unified
- 1110              	@ 946 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h" 1
- 1111 0710 BFF34F8F 		dsb 0xF
- 1112              	@ 0 "" 2
- 1113              		.thumb
- 1114              		.syntax unified
- 1115              	.LBE33:
- 1116              	.LBE32:
- 1117              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 1105              		.loc 3 946 0
+ 1106              		.syntax unified
+ 1107              	@ 946 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h" 1
+ 1108 070c BFF34F8F 		dsb 0xF
+ 1109              	@ 0 "" 2
+ 1110              		.thumb
+ 1111              		.syntax unified
+ 1112              	.LBE33:
+ 1113              	.LBE32:
+ 1114              		.file 4 "../system/include/cmsis/stm32l4xx/core_cm4.h"
    1:../system/include/cmsis/stm32l4xx/core_cm4.h **** /**************************************************************************//**
    2:../system/include/cmsis/stm32l4xx/core_cm4.h ****  * @file     core_cm4.h
    3:../system/include/cmsis/stm32l4xx/core_cm4.h ****  * @brief    CMSIS Cortex-M4 Core Peripheral Access Layer Header File
@@ -4937,90 +4934,90 @@
 1936:../system/include/cmsis/stm32l4xx/core_cm4.h ****                                                                        buffered write are completed
 1937:../system/include/cmsis/stm32l4xx/core_cm4.h ****   SCB->AIRCR  = (uint32_t)((0x5FAUL << SCB_AIRCR_VECTKEY_Pos)    |
 1938:../system/include/cmsis/stm32l4xx/core_cm4.h ****                            (SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) |
- 1118              		.loc 4 1938 0
- 1119 0714 2E49     		ldr	r1, .L120+164
- 1120 0716 CA68     		ldr	r2, [r1, #12]
- 1121 0718 02F4E062 		and	r2, r2, #1792
+ 1115              		.loc 4 1938 0
+ 1116 0710 2E49     		ldr	r1, .L120+164
+ 1117 0712 CA68     		ldr	r2, [r1, #12]
+ 1118 0714 02F4E062 		and	r2, r2, #1792
 1937:../system/include/cmsis/stm32l4xx/core_cm4.h ****                            (SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) |
- 1122              		.loc 4 1937 0
- 1123 071c 2D4B     		ldr	r3, .L120+168
- 1124 071e 1343     		orrs	r3, r3, r2
- 1125 0720 CB60     		str	r3, [r1, #12]
- 1126              	.LBB34:
- 1127              	.LBB35:
- 1128              		.loc 3 946 0
- 1129              		.syntax unified
- 1130              	@ 946 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h" 1
- 1131 0722 BFF34F8F 		dsb 0xF
- 1132              	@ 0 "" 2
- 1133              		.thumb
- 1134              		.syntax unified
- 1135              	.L41:
- 1136              	.LBE35:
- 1137              	.LBE34:
+ 1119              		.loc 4 1937 0
+ 1120 0718 2D4B     		ldr	r3, .L120+168
+ 1121 071a 1343     		orrs	r3, r3, r2
+ 1122 071c CB60     		str	r3, [r1, #12]
+ 1123              	.LBB34:
+ 1124              	.LBB35:
+ 1125              		.loc 3 946 0
+ 1126              		.syntax unified
+ 1127              	@ 946 "../system/include/cmsis/stm32l4xx/cmsis_gcc.h" 1
+ 1128 071e BFF34F8F 		dsb 0xF
+ 1129              	@ 0 "" 2
+ 1130              		.thumb
+ 1131              		.syntax unified
+ 1132              	.L41:
+ 1133              	.LBE35:
+ 1134              	.LBE34:
 1939:../system/include/cmsis/stm32l4xx/core_cm4.h ****                             SCB_AIRCR_SYSRESETREQ_Msk    );         /* Keep priority group unchange
 1940:../system/include/cmsis/stm32l4xx/core_cm4.h ****   __DSB();                                                          /* Ensure completion of memory 
 1941:../system/include/cmsis/stm32l4xx/core_cm4.h **** 
 1942:../system/include/cmsis/stm32l4xx/core_cm4.h ****   for(;;)                                                           /* wait until reset */
 1943:../system/include/cmsis/stm32l4xx/core_cm4.h ****   {
 1944:../system/include/cmsis/stm32l4xx/core_cm4.h ****     __NOP();
- 1138              		.loc 4 1944 0
- 1139              		.syntax unified
- 1140              	@ 1944 "../system/include/cmsis/stm32l4xx/core_cm4.h" 1
- 1141 0726 00BF     		nop
- 1142              	@ 0 "" 2
- 1143              		.thumb
- 1144              		.syntax unified
- 1145 0728 FDE7     		b	.L41
- 1146              	.L121:
- 1147 072a 00BF     		.align	2
- 1148              	.L120:
- 1149 072c 00000000 		.word	main_target_kiss_baudrate
- 1150 0730 00000000 		.word	main_kiss_srl_ctx
- 1151 0734 00000000 		.word	srl_usart1_tx_buffer
- 1152 0738 00000000 		.word	srl_usart1_rx_buffer
- 1153 073c 00380140 		.word	1073821696
- 1154 0740 00000000 		.word	main_kiss_srl_ctx_ptr
- 1155 0744 00000000 		.word	rte_wx_davis_station_avaliable
- 1156 0748 00000000 		.word	.LANCHOR6
- 1157 074c 00000000 		.word	.LANCHOR7
- 1158 0750 00000000 		.word	main_target_wx_baudrate
- 1159 0754 00000000 		.word	srl_usart2_tx_buffer
- 1160 0758 00000000 		.word	srl_usart2_rx_buffer
- 1161 075c 00440040 		.word	1073759232
- 1162 0760 00000000 		.word	main_wx_srl_ctx_ptr
- 1163 0764 00000000 		.word	.LANCHOR8
- 1164 0768 00000000 		.word	main_wx_srl_ctx
- 1165 076c 00000000 		.word	rte_rtu_pool_queue
- 1166 0770 00000000 		.word	.LANCHOR9
- 1167 0774 00000000 		.word	rte_wx_dallas_average
- 1168 0778 00080048 		.word	1207961600
- 1169 077c 00000000 		.word	.LANCHOR11
- 1170 0780 00000000 		.word	rte_wx_umb_context
- 1171 0784 00000000 		.word	.LANCHOR5
- 1172 0788 00000000 		.word	rte_wx_ms5611_qf
- 1173 078c 00000000 		.word	SensorCalData
- 1174 0790 00000000 		.word	rte_wx_bme280_qf
- 1175 0794 00000000 		.word	bme280_calibration_data
- 1176 0798 00000000 		.word	.LANCHOR1
- 1177 079c 00000000 		.word	main_own_aprs_msg
- 1178 07a0 00000000 		.word	.LANCHOR3
- 1179 07a4 00000000 		.word	main_string_longitude
- 1180 07a8 00000000 		.word	.LANCHOR2
- 1181 07ac 00000000 		.word	main_string_latitude
- 1182 07b0 00000000 		.word	.LC0
- 1183 07b4 00000000 		.word	main_own_aprs_msg_len
- 1184 07b8 00000000 		.word	main_own_path
- 1185 07bc 00000000 		.word	.LANCHOR12
- 1186 07c0 00000000 		.word	.LANCHOR13
- 1187 07c4 00000000 		.word	rte_pv_average
- 1188 07c8 00000000 		.word	rte_pv_struct
- 1189 07cc 00000000 		.word	rte_wx_umb
- 1190 07d0 00ED00E0 		.word	-536810240
- 1191 07d4 0400FA05 		.word	100270084
- 1192              	.L44:
- 1193              	.LBE31:
- 1194              	.LBE30:
+ 1135              		.loc 4 1944 0
+ 1136              		.syntax unified
+ 1137              	@ 1944 "../system/include/cmsis/stm32l4xx/core_cm4.h" 1
+ 1138 0722 00BF     		nop
+ 1139              	@ 0 "" 2
+ 1140              		.thumb
+ 1141              		.syntax unified
+ 1142 0724 FDE7     		b	.L41
+ 1143              	.L121:
+ 1144 0726 00BF     		.align	2
+ 1145              	.L120:
+ 1146 0728 00000000 		.word	main_target_kiss_baudrate
+ 1147 072c 00000000 		.word	main_kiss_srl_ctx
+ 1148 0730 00000000 		.word	srl_usart1_tx_buffer
+ 1149 0734 00000000 		.word	srl_usart1_rx_buffer
+ 1150 0738 00380140 		.word	1073821696
+ 1151 073c 00000000 		.word	main_kiss_srl_ctx_ptr
+ 1152 0740 00000000 		.word	rte_wx_davis_station_avaliable
+ 1153 0744 00000000 		.word	.LANCHOR6
+ 1154 0748 00000000 		.word	.LANCHOR7
+ 1155 074c 00000000 		.word	main_target_wx_baudrate
+ 1156 0750 00000000 		.word	srl_usart2_tx_buffer
+ 1157 0754 00000000 		.word	srl_usart2_rx_buffer
+ 1158 0758 00440040 		.word	1073759232
+ 1159 075c 00000000 		.word	main_wx_srl_ctx_ptr
+ 1160 0760 00000000 		.word	.LANCHOR8
+ 1161 0764 00000000 		.word	main_wx_srl_ctx
+ 1162 0768 00000000 		.word	rte_rtu_pool_queue
+ 1163 076c 00000000 		.word	.LANCHOR9
+ 1164 0770 00000000 		.word	rte_wx_dallas_average
+ 1165 0774 00080048 		.word	1207961600
+ 1166 0778 00000000 		.word	.LANCHOR11
+ 1167 077c 00000000 		.word	rte_wx_umb_context
+ 1168 0780 00000000 		.word	.LANCHOR5
+ 1169 0784 00000000 		.word	rte_wx_ms5611_qf
+ 1170 0788 00000000 		.word	SensorCalData
+ 1171 078c 00000000 		.word	rte_wx_bme280_qf
+ 1172 0790 00000000 		.word	bme280_calibration_data
+ 1173 0794 00000000 		.word	.LANCHOR1
+ 1174 0798 00000000 		.word	main_own_aprs_msg
+ 1175 079c 00000000 		.word	.LANCHOR3
+ 1176 07a0 00000000 		.word	main_string_longitude
+ 1177 07a4 00000000 		.word	.LANCHOR2
+ 1178 07a8 00000000 		.word	main_string_latitude
+ 1179 07ac 00000000 		.word	.LC0
+ 1180 07b0 00000000 		.word	main_own_aprs_msg_len
+ 1181 07b4 00000000 		.word	main_own_path
+ 1182 07b8 00000000 		.word	.LANCHOR12
+ 1183 07bc 00000000 		.word	.LANCHOR13
+ 1184 07c0 00000000 		.word	rte_pv_average
+ 1185 07c4 00000000 		.word	rte_pv_struct
+ 1186 07c8 00000000 		.word	rte_wx_umb
+ 1187 07cc 00ED00E0 		.word	-536810240
+ 1188 07d0 0400FA05 		.word	100270084
+ 1189              	.L44:
+ 1190              	.LBE31:
+ 1191              	.LBE30:
  771:../src/main.c **** 
  772:../src/main.c ****   // Infinite loop
  773:../src/main.c ****   while (1)
@@ -5058,53 +5055,53 @@
  805:../src/main.c **** 	  			else {
  806:../src/main.c **** 
  807:../src/main.c **** 					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
- 1195              		.loc 1 807 0
- 1196 07d8 924B     		ldr	r3, .L122
- 1197 07da 1868     		ldr	r0, [r3]
- 1198 07dc FFF7FEFF 		bl	srl_wait_for_tx_completion
- 1199              	.LVL108:
+ 1192              		.loc 1 807 0
+ 1193 07d4 924B     		ldr	r3, .L122
+ 1194 07d6 1868     		ldr	r0, [r3]
+ 1195 07d8 FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 1196              	.LVL107:
  808:../src/main.c **** 
  809:../src/main.c **** 					SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirecti
- 1200              		.loc 1 809 0
- 1201 07e0 914B     		ldr	r3, .L122+4
- 1202 07e2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1203 07e4 914A     		ldr	r2, .L122+8
- 1204 07e6 1288     		ldrh	r2, [r2]
- 1205 07e8 9149     		ldr	r1, .L122+12
- 1206 07ea 0988     		ldrh	r1, [r1]
- 1207 07ec 9148     		ldr	r0, .L122+16
- 1208 07ee 0088     		ldrh	r0, [r0]
- 1209 07f0 07AC     		add	r4, sp, #28
- 1210              	.LVL109:
- 1211 07f2 0294     		str	r4, [sp, #8]
- 1212 07f4 4FF40074 		mov	r4, #512
- 1213 07f8 0194     		str	r4, [sp, #4]
- 1214 07fa 8F4C     		ldr	r4, .L122+20
- 1215 07fc 6469     		ldr	r4, [r4, #20]
- 1216 07fe 0094     		str	r4, [sp]
- 1217 0800 8E4C     		ldr	r4, .L122+24
- 1218 0802 D4ED000A 		vldr.32	s1, [r4]
- 1219 0806 8E4C     		ldr	r4, .L122+28
- 1220 0808 94ED000A 		vldr.32	s0, [r4]
- 1221 080c FFF7FEFF 		bl	SendWXFrameToBuffer
- 1222              	.LVL110:
+ 1197              		.loc 1 809 0
+ 1198 07dc 914B     		ldr	r3, .L122+4
+ 1199 07de 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1200 07e0 914A     		ldr	r2, .L122+8
+ 1201 07e2 1288     		ldrh	r2, [r2]
+ 1202 07e4 9149     		ldr	r1, .L122+12
+ 1203 07e6 0988     		ldrh	r1, [r1]
+ 1204 07e8 9148     		ldr	r0, .L122+16
+ 1205 07ea 0088     		ldrh	r0, [r0]
+ 1206 07ec 07AC     		add	r4, sp, #28
+ 1207              	.LVL108:
+ 1208 07ee 0294     		str	r4, [sp, #8]
+ 1209 07f0 4FF40074 		mov	r4, #512
+ 1210 07f4 0194     		str	r4, [sp, #4]
+ 1211 07f6 8F4C     		ldr	r4, .L122+20
+ 1212 07f8 6469     		ldr	r4, [r4, #20]
+ 1213 07fa 0094     		str	r4, [sp]
+ 1214 07fc 8E4C     		ldr	r4, .L122+24
+ 1215 07fe D4ED000A 		vldr.32	s1, [r4]
+ 1216 0802 8E4C     		ldr	r4, .L122+28
+ 1217 0804 94ED000A 		vldr.32	s0, [r4]
+ 1218 0808 FFF7FEFF 		bl	SendWXFrameToBuffer
+ 1219              	.LVL109:
  810:../src/main.c **** 
  811:../src/main.c **** 					if (main_kiss_enabled == 1) {
- 1223              		.loc 1 811 0
- 1224 0810 8C4B     		ldr	r3, .L122+32
- 1225 0812 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
- 1226 0814 012C     		cmp	r4, #1
- 1227 0816 37D1     		bne	.L77
+ 1220              		.loc 1 811 0
+ 1221 080c 8C4B     		ldr	r3, .L122+32
+ 1222 080e 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+ 1223 0810 012C     		cmp	r4, #1
+ 1224 0812 37D1     		bne	.L77
  812:../src/main.c **** 						srl_start_tx(main_kiss_srl_ctx_ptr, ln);
- 1228              		.loc 1 812 0
- 1229 0818 BDF91C10 		ldrsh	r1, [sp, #28]
- 1230 081c 814B     		ldr	r3, .L122
- 1231 081e 1868     		ldr	r0, [r3]
- 1232 0820 FFF7FEFF 		bl	srl_start_tx
- 1233              	.LVL111:
- 1234 0824 00E0     		b	.L42
- 1235              	.LVL112:
- 1236              	.L75:
+ 1225              		.loc 1 812 0
+ 1226 0814 BDF91C10 		ldrsh	r1, [sp, #28]
+ 1227 0818 814B     		ldr	r3, .L122
+ 1228 081a 1868     		ldr	r0, [r3]
+ 1229 081c FFF7FEFF 		bl	srl_start_tx
+ 1230              	.LVL110:
+ 1231 0820 00E0     		b	.L42
+ 1232              	.LVL111:
+ 1233              	.L75:
  813:../src/main.c **** 					}
  814:../src/main.c **** 	  			}
  815:../src/main.c **** 	  		}
@@ -5113,20 +5110,20 @@
  818:../src/main.c **** 	  	}
  819:../src/main.c **** 	  	else {
  820:../src/main.c **** 	  		button_inhibit = 0;
- 1237              		.loc 1 820 0
- 1238 0826 0024     		movs	r4, #0
- 1239              	.LVL113:
- 1240              	.L42:
+ 1234              		.loc 1 820 0
+ 1235 0822 0024     		movs	r4, #0
+ 1236              	.LVL112:
+ 1237              	.L42:
  821:../src/main.c **** 	  	}
  822:../src/main.c **** 
  823:../src/main.c **** 	  	// if new packet has been received from radio channel
  824:../src/main.c **** 		if(ax25_new_msg_rx_flag == 1) {
- 1241              		.loc 1 824 0
- 1242 0828 874B     		ldr	r3, .L122+36
- 1243 082a 93F90030 		ldrsb	r3, [r3]
- 1244 082e 012B     		cmp	r3, #1
- 1245 0830 2CD0     		beq	.L92
- 1246              	.L45:
+ 1238              		.loc 1 824 0
+ 1239 0824 874B     		ldr	r3, .L122+36
+ 1240 0826 93F90030 		ldrsb	r3, [r3]
+ 1241 082a 012B     		cmp	r3, #1
+ 1242 082c 2CD0     		beq	.L92
+ 1243              	.L45:
  825:../src/main.c **** 			memset(main_kiss_srl_ctx.srl_tx_buf_pointer, 0x00, main_kiss_srl_ctx.srl_tx_buf_ln);
  826:../src/main.c **** 
  827:../src/main.c **** 			if (main_kiss_enabled == 1) {
@@ -5150,12 +5147,12 @@
  845:../src/main.c **** 
  846:../src/main.c **** 		// if Victron VE.direct client is enabled
  847:../src/main.c **** 		if (main_config_data_mode->victron == 1) {
- 1247              		.loc 1 847 0
- 1248 0832 864B     		ldr	r3, .L122+40
- 1249 0834 1B68     		ldr	r3, [r3]
- 1250 0836 9A79     		ldrb	r2, [r3, #6]	@ zero_extendqisi2
- 1251 0838 012A     		cmp	r2, #1
- 1252 083a 55D0     		beq	.L93
+ 1244              		.loc 1 847 0
+ 1245 082e 864B     		ldr	r3, .L122+40
+ 1246 0830 1B68     		ldr	r3, [r3]
+ 1247 0832 9A79     		ldrb	r2, [r3, #6]	@ zero_extendqisi2
+ 1248 0834 012A     		cmp	r2, #1
+ 1249 0836 55D0     		beq	.L93
  848:../src/main.c **** 
  849:../src/main.c **** 			// if new KISS message has been received from the host
  850:../src/main.c **** 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state ==
@@ -5192,10 +5189,10 @@
  881:../src/main.c **** 			}
  882:../src/main.c **** 		}
  883:../src/main.c **** 		else if (main_config_data_mode->wx_umb == 1) {
- 1253              		.loc 1 883 0
- 1254 083c 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
- 1255 083e 012B     		cmp	r3, #1
- 1256 0840 00F07581 		beq	.L94
+ 1250              		.loc 1 883 0
+ 1251 0838 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 1252 083a 012B     		cmp	r3, #1
+ 1253 083c 00F07581 		beq	.L94
  884:../src/main.c **** 			// if some UMB data have been received
  885:../src/main.c **** 			if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
  886:../src/main.c **** 				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb
@@ -5213,18 +5210,18 @@
  898:../src/main.c **** 		else {
  899:../src/main.c **** 			// if new KISS message has been received from the host
  900:../src/main.c **** 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
- 1257              		.loc 1 900 0
- 1258 0844 774B     		ldr	r3, .L122
- 1259 0846 1868     		ldr	r0, [r3]
- 1260 0848 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
- 1261 084c 042B     		cmp	r3, #4
- 1262 084e 04D1     		bne	.L54
- 1263              		.loc 1 900 0 is_stmt 0 discriminator 1
- 1264 0850 7C4B     		ldr	r3, .L122+32
- 1265 0852 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1266 0854 012B     		cmp	r3, #1
- 1267 0856 00F09881 		beq	.L95
- 1268              	.L54:
+ 1254              		.loc 1 900 0
+ 1255 0840 774B     		ldr	r3, .L122
+ 1256 0842 1868     		ldr	r0, [r3]
+ 1257 0844 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
+ 1258 0848 042B     		cmp	r3, #4
+ 1259 084a 04D1     		bne	.L54
+ 1260              		.loc 1 900 0 is_stmt 0 discriminator 1
+ 1261 084c 7C4B     		ldr	r3, .L122+32
+ 1262 084e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1263 0850 012B     		cmp	r3, #1
+ 1264 0852 00F09881 		beq	.L95
+ 1265              	.L54:
  901:../src/main.c **** 				// parse incoming data and then transmit on radio freq
  902:../src/main.c **** 				short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(
  903:../src/main.c **** 				if (res == 0)
@@ -5236,122 +5233,122 @@
  909:../src/main.c **** 
  910:../src/main.c **** 			// if there were an error during receiving frame from host, restart rxing once again
  911:../src/main.c **** 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
- 1269              		.loc 1 911 0 is_stmt 1
- 1270 085a 724B     		ldr	r3, .L122
- 1271 085c 1868     		ldr	r0, [r3]
- 1272 085e 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
- 1273 0862 052B     		cmp	r3, #5
- 1274 0864 49D1     		bne	.L48
- 1275              		.loc 1 911 0 is_stmt 0 discriminator 1
- 1276 0866 774B     		ldr	r3, .L122+32
- 1277 0868 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1278 086a 012B     		cmp	r3, #1
- 1279 086c 45D1     		bne	.L48
+ 1266              		.loc 1 911 0 is_stmt 1
+ 1267 0856 724B     		ldr	r3, .L122
+ 1268 0858 1868     		ldr	r0, [r3]
+ 1269 085a 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
+ 1270 085e 052B     		cmp	r3, #5
+ 1271 0860 49D1     		bne	.L48
+ 1272              		.loc 1 911 0 is_stmt 0 discriminator 1
+ 1273 0862 774B     		ldr	r3, .L122+32
+ 1274 0864 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1275 0866 012B     		cmp	r3, #1
+ 1276 0868 45D1     		bne	.L48
  912:../src/main.c **** 				srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
- 1280              		.loc 1 912 0 is_stmt 1
- 1281 086e 0023     		movs	r3, #0
- 1282 0870 0293     		str	r3, [sp, #8]
- 1283 0872 0193     		str	r3, [sp, #4]
- 1284 0874 0093     		str	r3, [sp]
- 1285 0876 6FF03F03 		mvn	r3, #63
- 1286 087a 1A46     		mov	r2, r3
- 1287 087c 7821     		movs	r1, #120
- 1288 087e FFF7FEFF 		bl	srl_receive_data
- 1289              	.LVL114:
- 1290 0882 3AE0     		b	.L48
- 1291              	.L76:
+ 1277              		.loc 1 912 0 is_stmt 1
+ 1278 086a 0023     		movs	r3, #0
+ 1279 086c 0293     		str	r3, [sp, #8]
+ 1280 086e 0193     		str	r3, [sp, #4]
+ 1281 0870 0093     		str	r3, [sp]
+ 1282 0872 6FF03F03 		mvn	r3, #63
+ 1283 0876 1A46     		mov	r2, r3
+ 1284 0878 7821     		movs	r1, #120
+ 1285 087a FFF7FEFF 		bl	srl_receive_data
+ 1286              	.LVL113:
+ 1287 087e 3AE0     		b	.L48
+ 1288              	.L76:
  817:../src/main.c **** 	  	}
- 1292              		.loc 1 817 0
- 1293 0884 0124     		movs	r4, #1
- 1294              	.LVL115:
- 1295 0886 CFE7     		b	.L42
- 1296              	.L77:
- 1297 0888 0124     		movs	r4, #1
- 1298 088a CDE7     		b	.L42
- 1299              	.LVL116:
- 1300              	.L92:
+ 1289              		.loc 1 817 0
+ 1290 0880 0124     		movs	r4, #1
+ 1291              	.LVL114:
+ 1292 0882 CFE7     		b	.L42
+ 1293              	.L77:
+ 1294 0884 0124     		movs	r4, #1
+ 1295 0886 CDE7     		b	.L42
+ 1296              	.LVL115:
+ 1297              	.L92:
  825:../src/main.c **** 
- 1301              		.loc 1 825 0
- 1302 088c 6A4B     		ldr	r3, .L122+20
- 1303 088e DA8B     		ldrh	r2, [r3, #30]
- 1304 0890 0021     		movs	r1, #0
- 1305 0892 5869     		ldr	r0, [r3, #20]
- 1306 0894 FFF7FEFF 		bl	memset
- 1307              	.LVL117:
+ 1298              		.loc 1 825 0
+ 1299 0888 6A4B     		ldr	r3, .L122+20
+ 1300 088a DA8B     		ldrh	r2, [r3, #30]
+ 1301 088c 0021     		movs	r1, #0
+ 1302 088e 5869     		ldr	r0, [r3, #20]
+ 1303 0890 FFF7FEFF 		bl	memset
+ 1304              	.LVL116:
  827:../src/main.c **** 				// convert message to kiss format and send it to host
- 1308              		.loc 1 827 0
- 1309 0898 6A4B     		ldr	r3, .L122+32
- 1310 089a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1311 089c 012B     		cmp	r3, #1
- 1312 089e 11D0     		beq	.L96
- 1313              	.L46:
+ 1305              		.loc 1 827 0
+ 1306 0894 6A4B     		ldr	r3, .L122+32
+ 1307 0896 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1308 0898 012B     		cmp	r3, #1
+ 1309 089a 11D0     		beq	.L96
+ 1310              	.L46:
  832:../src/main.c **** 
- 1314              		.loc 1 832 0
- 1315 08a0 0025     		movs	r5, #0
- 1316 08a2 6B4B     		ldr	r3, .L122+44
- 1317 08a4 83F81452 		strb	r5, [r3, #532]
+ 1311              		.loc 1 832 0
+ 1312 089c 0025     		movs	r5, #0
+ 1313 089e 6B4B     		ldr	r3, .L122+44
+ 1314 08a0 83F81452 		strb	r5, [r3, #532]
  839:../src/main.c **** 	#endif
- 1318              		.loc 1 839 0
- 1319 08a8 684B     		ldr	r3, .L122+40
- 1320 08aa 1A68     		ldr	r2, [r3]
- 1321 08ac 694B     		ldr	r3, .L122+48
- 1322 08ae 1968     		ldr	r1, [r3]
- 1323 08b0 6948     		ldr	r0, .L122+52
- 1324 08b2 FFF7FEFF 		bl	digi_process
- 1325              	.LVL118:
+ 1315              		.loc 1 839 0
+ 1316 08a4 684B     		ldr	r3, .L122+40
+ 1317 08a6 1A68     		ldr	r2, [r3]
+ 1318 08a8 694B     		ldr	r3, .L122+48
+ 1319 08aa 1968     		ldr	r1, [r3]
+ 1320 08ac 6948     		ldr	r0, .L122+52
+ 1321 08ae FFF7FEFF 		bl	digi_process
+ 1322              	.LVL117:
  842:../src/main.c **** 			rx10m++;
- 1326              		.loc 1 842 0
- 1327 08b6 644B     		ldr	r3, .L122+36
- 1328 08b8 1D70     		strb	r5, [r3]
+ 1323              		.loc 1 842 0
+ 1324 08b2 644B     		ldr	r3, .L122+36
+ 1325 08b4 1D70     		strb	r5, [r3]
  843:../src/main.c **** 		}
- 1329              		.loc 1 843 0
- 1330 08ba 684A     		ldr	r2, .L122+56
- 1331 08bc 1388     		ldrh	r3, [r2]
- 1332 08be 0133     		adds	r3, r3, #1
- 1333 08c0 1380     		strh	r3, [r2]	@ movhi
- 1334 08c2 B6E7     		b	.L45
- 1335              	.L96:
+ 1326              		.loc 1 843 0
+ 1327 08b6 684A     		ldr	r2, .L122+56
+ 1328 08b8 1388     		ldrh	r3, [r2]
+ 1329 08ba 0133     		adds	r3, r3, #1
+ 1330 08bc 1380     		strh	r3, [r2]	@ movhi
+ 1331 08be B6E7     		b	.L45
+ 1332              	.L96:
  829:../src/main.c **** 			}
- 1336              		.loc 1 829 0
- 1337 08c4 574B     		ldr	r3, .L122
- 1338 08c6 1D68     		ldr	r5, [r3]
- 1339 08c8 6348     		ldr	r0, .L122+52
- 1340 08ca B0F85212 		ldrh	r1, [r0, #594]
- 1341 08ce 5A4A     		ldr	r2, .L122+20
- 1342 08d0 0239     		subs	r1, r1, #2
- 1343 08d2 D38B     		ldrh	r3, [r2, #30]
- 1344 08d4 5269     		ldr	r2, [r2, #20]
- 1345 08d6 89B2     		uxth	r1, r1
- 1346 08d8 5230     		adds	r0, r0, #82
- 1347 08da FFF7FEFF 		bl	SendKISSToHost
- 1348              	.LVL119:
- 1349 08de 01B2     		sxth	r1, r0
- 1350 08e0 2846     		mov	r0, r5
- 1351 08e2 FFF7FEFF 		bl	srl_start_tx
- 1352              	.LVL120:
- 1353 08e6 DBE7     		b	.L46
- 1354              	.L93:
+ 1333              		.loc 1 829 0
+ 1334 08c0 574B     		ldr	r3, .L122
+ 1335 08c2 1D68     		ldr	r5, [r3]
+ 1336 08c4 6348     		ldr	r0, .L122+52
+ 1337 08c6 B0F85212 		ldrh	r1, [r0, #594]
+ 1338 08ca 5A4A     		ldr	r2, .L122+20
+ 1339 08cc 0239     		subs	r1, r1, #2
+ 1340 08ce D38B     		ldrh	r3, [r2, #30]
+ 1341 08d0 5269     		ldr	r2, [r2, #20]
+ 1342 08d2 89B2     		uxth	r1, r1
+ 1343 08d4 5230     		adds	r0, r0, #82
+ 1344 08d6 FFF7FEFF 		bl	SendKISSToHost
+ 1345              	.LVL118:
+ 1346 08da 01B2     		sxth	r1, r0
+ 1347 08dc 2846     		mov	r0, r5
+ 1348 08de FFF7FEFF 		bl	srl_start_tx
+ 1349              	.LVL119:
+ 1350 08e2 DBE7     		b	.L46
+ 1351              	.L93:
  850:../src/main.c **** 
- 1355              		.loc 1 850 0
- 1356 08e8 4E4B     		ldr	r3, .L122
- 1357 08ea 1868     		ldr	r0, [r3]
- 1358 08ec 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
- 1359 08f0 043B     		subs	r3, r3, #4
- 1360 08f2 DBB2     		uxtb	r3, r3
- 1361 08f4 012B     		cmp	r3, #1
- 1362 08f6 40F2CF80 		bls	.L97
- 1363              	.L48:
+ 1352              		.loc 1 850 0
+ 1353 08e4 4E4B     		ldr	r3, .L122
+ 1354 08e6 1868     		ldr	r0, [r3]
+ 1355 08e8 90F84430 		ldrb	r3, [r0, #68]	@ zero_extendqisi2
+ 1356 08ec 043B     		subs	r3, r3, #4
+ 1357 08ee DBB2     		uxtb	r3, r3
+ 1358 08f0 012B     		cmp	r3, #1
+ 1359 08f2 40F2CF80 		bls	.L97
+ 1360              	.L48:
  913:../src/main.c **** 			}
  914:../src/main.c **** 		}
  915:../src/main.c **** 
  916:../src/main.c **** 		// if Davis wx station is enabled and it is alive
  917:../src/main.c **** 		if (main_davis_serial_enabled == 1) {
- 1364              		.loc 1 917 0
- 1365 08fa 594B     		ldr	r3, .L122+60
- 1366 08fc 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1367 08fe 012B     		cmp	r3, #1
- 1368 0900 00F06281 		beq	.L98
- 1369              	.L56:
+ 1361              		.loc 1 917 0
+ 1362 08f6 594B     		ldr	r3, .L122+60
+ 1363 08f8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1364 08fa 012B     		cmp	r3, #1
+ 1365 08fc 00F06281 		beq	.L98
+ 1366              	.L56:
  918:../src/main.c **** 
  919:../src/main.c **** 			// pool the Davis wx station driver for LOOP packet
  920:../src/main.c **** 			davis_loop_packet_pooler(&rte_wx_davis_loop_packet_avaliable);
@@ -5361,75 +5358,75 @@
  924:../src/main.c **** 
  925:../src/main.c **** 		// if modbus rtu master is enabled
  926:../src/main.c **** 		if (main_modbus_rtu_master_enabled == 1) {
- 1370              		.loc 1 926 0
- 1371 0904 574B     		ldr	r3, .L122+64
- 1372 0906 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1373 0908 012B     		cmp	r3, #1
- 1374 090a 00F06381 		beq	.L99
- 1375              	.L57:
+ 1367              		.loc 1 926 0
+ 1368 0900 574B     		ldr	r3, .L122+64
+ 1369 0902 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1370 0904 012B     		cmp	r3, #1
+ 1371 0906 00F06381 		beq	.L99
+ 1372              	.L57:
  927:../src/main.c **** 			rtu_serial_pool();
  928:../src/main.c **** 		}
  929:../src/main.c **** 
  930:../src/main.c **** 		// get all meteo measuremenets each 65 seconds. some values may not be
  931:../src/main.c **** 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
  932:../src/main.c **** 		if (main_wx_sensors_pool_timer < 10) {
- 1376              		.loc 1 932 0
- 1377 090e 564B     		ldr	r3, .L122+68
- 1378 0910 1B68     		ldr	r3, [r3]
- 1379 0912 092B     		cmp	r3, #9
- 1380 0914 1FDC     		bgt	.L58
+ 1373              		.loc 1 932 0
+ 1374 090a 564B     		ldr	r3, .L122+68
+ 1375 090c 1B68     		ldr	r3, [r3]
+ 1376 090e 092B     		cmp	r3, #9
+ 1377 0910 1FDC     		bgt	.L58
  933:../src/main.c **** 
  934:../src/main.c **** 			if (main_modbus_rtu_master_enabled == 1) {
- 1381              		.loc 1 934 0
- 1382 0916 534B     		ldr	r3, .L122+64
- 1383 0918 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1384 091a 012B     		cmp	r3, #1
- 1385 091c 00F05D81 		beq	.L100
- 1386              	.L59:
+ 1378              		.loc 1 934 0
+ 1379 0912 534B     		ldr	r3, .L122+64
+ 1380 0914 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1381 0916 012B     		cmp	r3, #1
+ 1382 0918 00F05D81 		beq	.L100
+ 1383              	.L59:
  935:../src/main.c **** 				rtu_serial_start();
  936:../src/main.c **** 			}
  937:../src/main.c **** 
  938:../src/main.c **** 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
- 1387              		.loc 1 938 0
- 1388 0920 4A4B     		ldr	r3, .L122+40
- 1389 0922 1968     		ldr	r1, [r3]
- 1390 0924 4B78     		ldrb	r3, [r1, #1]	@ zero_extendqisi2
- 1391 0926 13F0010F 		tst	r3, #1
- 1392 092a 40F05981 		bne	.L101
- 1393              	.L60:
+ 1384              		.loc 1 938 0
+ 1385 091c 4A4B     		ldr	r3, .L122+40
+ 1386 091e 1968     		ldr	r1, [r3]
+ 1387 0920 4B78     		ldrb	r3, [r1, #1]	@ zero_extendqisi2
+ 1388 0922 13F0010F 		tst	r3, #1
+ 1389 0926 40F05981 		bne	.L101
+ 1390              	.L60:
  939:../src/main.c **** 				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_um
  940:../src/main.c **** 			}
  941:../src/main.c **** 
  942:../src/main.c **** 
  943:../src/main.c **** 			if (main_config_data_mode->wx_umb == 1) {
- 1394              		.loc 1 943 0
- 1395 092e 474B     		ldr	r3, .L122+40
- 1396 0930 1B68     		ldr	r3, [r3]
- 1397 0932 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
- 1398 0934 012B     		cmp	r3, #1
- 1399 0936 00F05C81 		beq	.L102
- 1400              	.L61:
+ 1391              		.loc 1 943 0
+ 1392 092a 474B     		ldr	r3, .L122+40
+ 1393 092c 1B68     		ldr	r3, [r3]
+ 1394 092e 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 1395 0930 012B     		cmp	r3, #1
+ 1396 0932 00F05C81 		beq	.L102
+ 1397              	.L61:
  944:../src/main.c **** 				//
  945:../src/main.c **** 				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
  946:../src/main.c **** 			}
  947:../src/main.c **** 
  948:../src/main.c **** 			if (main_davis_serial_enabled == 1) {
- 1401              		.loc 1 948 0
- 1402 093a 494B     		ldr	r3, .L122+60
- 1403 093c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1404 093e 012B     		cmp	r3, #1
- 1405 0940 00F05E81 		beq	.L103
- 1406              	.L62:
+ 1398              		.loc 1 948 0
+ 1399 0936 494B     		ldr	r3, .L122+60
+ 1400 0938 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1401 093a 012B     		cmp	r3, #1
+ 1402 093c 00F05E81 		beq	.L103
+ 1403              	.L62:
  949:../src/main.c **** 				davis_trigger_rxcheck_packet();
  950:../src/main.c **** 			}
  951:../src/main.c **** 
  952:../src/main.c **** 			if (rte_main_trigger_modbus_status == 1 && main_modbus_rtu_master_enabled == 1) {
- 1407              		.loc 1 952 0
- 1408 0944 494B     		ldr	r3, .L122+72
- 1409 0946 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1410 0948 012B     		cmp	r3, #1
- 1411 094a 00F05C81 		beq	.L104
- 1412              	.L63:
+ 1404              		.loc 1 952 0
+ 1405 0940 494B     		ldr	r3, .L122+72
+ 1406 0942 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1407 0944 012B     		cmp	r3, #1
+ 1408 0946 00F05C81 		beq	.L104
+ 1409              	.L63:
  953:../src/main.c **** 				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_A
  954:../src/main.c **** 
  955:../src/main.c **** 			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg
@@ -5442,20 +5439,20 @@
  962:../src/main.c **** 			}
  963:../src/main.c **** 
  964:../src/main.c **** 			main_wx_sensors_pool_timer = 65500;
- 1413              		.loc 1 964 0
- 1414 094e 464B     		ldr	r3, .L122+68
- 1415 0950 4FF6DC72 		movw	r2, #65500
- 1416 0954 1A60     		str	r2, [r3]
- 1417              	.L58:
+ 1410              		.loc 1 964 0
+ 1411 094a 464B     		ldr	r3, .L122+68
+ 1412 094c 4FF6DC72 		movw	r2, #65500
+ 1413 0950 1A60     		str	r2, [r3]
+ 1414              	.L58:
  965:../src/main.c **** 		}
  966:../src/main.c **** 
  967:../src/main.c **** 		if (main_one_minute_pool_timer < 10) {
- 1418              		.loc 1 967 0
- 1419 0956 464B     		ldr	r3, .L122+76
- 1420 0958 1B68     		ldr	r3, [r3]
- 1421 095a 092B     		cmp	r3, #9
- 1422 095c 40F37281 		ble	.L105
- 1423              	.L64:
+ 1415              		.loc 1 967 0
+ 1416 0952 464B     		ldr	r3, .L122+76
+ 1417 0954 1B68     		ldr	r3, [r3]
+ 1418 0956 092B     		cmp	r3, #9
+ 1419 0958 40F37281 		ble	.L105
+ 1420              	.L64:
  968:../src/main.c **** 
  969:../src/main.c **** 			#ifndef _MUTE_OWN
  970:../src/main.c **** 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
@@ -5465,31 +5462,31 @@
  974:../src/main.c **** 		}
  975:../src/main.c **** 
  976:../src/main.c **** 		if (main_one_second_pool_timer < 10) {
- 1424              		.loc 1 976 0
- 1425 0960 444B     		ldr	r3, .L122+80
- 1426 0962 1B68     		ldr	r3, [r3]
- 1427 0964 092B     		cmp	r3, #9
- 1428 0966 00F37B81 		bgt	.L65
+ 1421              		.loc 1 976 0
+ 1422 095c 444B     		ldr	r3, .L122+80
+ 1423 095e 1B68     		ldr	r3, [r3]
+ 1424 0960 092B     		cmp	r3, #9
+ 1425 0962 00F37B81 		bgt	.L65
  977:../src/main.c **** 
  978:../src/main.c **** 			//digi_pool_viscous();
  979:../src/main.c **** 
  980:../src/main.c **** 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
- 1429              		.loc 1 980 0
- 1430 096a 384B     		ldr	r3, .L122+40
- 1431 096c 1B68     		ldr	r3, [r3]
- 1432 096e 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
- 1433 0970 13F0010F 		tst	r3, #1
- 1434 0974 40F07181 		bne	.L106
- 1435              	.L66:
+ 1426              		.loc 1 980 0
+ 1427 0966 384B     		ldr	r3, .L122+40
+ 1428 0968 1B68     		ldr	r3, [r3]
+ 1429 096a 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 1430 096c 13F0010F 		tst	r3, #1
+ 1431 0970 40F07181 		bne	.L106
+ 1432              	.L66:
  981:../src/main.c **** 				analog_anemometer_direction_handler();
  982:../src/main.c **** 			}
  983:../src/main.c **** 
  984:../src/main.c **** 			main_one_second_pool_timer = 1000;
- 1436              		.loc 1 984 0
- 1437 0978 3E4B     		ldr	r3, .L122+80
- 1438 097a 4FF47A72 		mov	r2, #1000
- 1439 097e 1A60     		str	r2, [r3]
- 1440              	.L67:
+ 1433              		.loc 1 984 0
+ 1434 0974 3E4B     		ldr	r3, .L122+80
+ 1435 0976 4FF47A72 		mov	r2, #1000
+ 1436 097a 1A60     		str	r2, [r3]
+ 1437              	.L67:
  985:../src/main.c **** 		}
  986:../src/main.c **** 		else if (main_one_second_pool_timer < -10) {
  987:../src/main.c **** 
@@ -5501,12 +5498,12 @@
  993:../src/main.c **** 		}
  994:../src/main.c **** 
  995:../src/main.c **** 		if (main_two_second_pool_timer < 10) {
- 1441              		.loc 1 995 0
- 1442 0980 3D4B     		ldr	r3, .L122+84
- 1443 0982 1B68     		ldr	r3, [r3]
- 1444 0984 092B     		cmp	r3, #9
- 1445 0986 40F37D81 		ble	.L107
- 1446              	.L69:
+ 1438              		.loc 1 995 0
+ 1439 097c 3D4B     		ldr	r3, .L122+84
+ 1440 097e 1B68     		ldr	r3, [r3]
+ 1441 0980 092B     		cmp	r3, #9
+ 1442 0982 40F37D81 		ble	.L107
+ 1443              	.L69:
  996:../src/main.c **** 
  997:../src/main.c **** 			wx_check_force_i2c_reset();
  998:../src/main.c **** 
@@ -5520,54 +5517,54 @@
 1006:../src/main.c **** 		}
 1007:../src/main.c **** 
 1008:../src/main.c **** 		if (main_ten_second_pool_timer < 10) {
- 1447              		.loc 1 1008 0
- 1448 098a 3C4B     		ldr	r3, .L122+88
- 1449 098c 1B68     		ldr	r3, [r3]
- 1450 098e 092B     		cmp	r3, #9
- 1451 0990 1EDC     		bgt	.L39
+ 1444              		.loc 1 1008 0
+ 1445 0986 3C4B     		ldr	r3, .L122+88
+ 1446 0988 1B68     		ldr	r3, [r3]
+ 1447 098a 092B     		cmp	r3, #9
+ 1448 098c 1EDC     		bgt	.L39
 1009:../src/main.c **** 
 1010:../src/main.c **** 			if (main_config_data_mode->wx_umb == 1) {
- 1452              		.loc 1 1010 0
- 1453 0992 2E4B     		ldr	r3, .L122+40
- 1454 0994 1B68     		ldr	r3, [r3]
- 1455 0996 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
- 1456 0998 012B     		cmp	r3, #1
- 1457 099a 00F07E81 		beq	.L108
- 1458              	.L71:
+ 1449              		.loc 1 1010 0
+ 1450 098e 2E4B     		ldr	r3, .L122+40
+ 1451 0990 1B68     		ldr	r3, [r3]
+ 1452 0992 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 1453 0994 012B     		cmp	r3, #1
+ 1454 0996 00F07C81 		beq	.L108
+ 1455              	.L71:
 1011:../src/main.c **** 				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 1012:../src/main.c **** 			}
 1013:../src/main.c **** 
 1014:../src/main.c **** 			if (main_config_data_mode->wx_umb == 1) {
- 1459              		.loc 1 1014 0
- 1460 099e 2B4B     		ldr	r3, .L122+40
- 1461 09a0 1B68     		ldr	r3, [r3]
- 1462 09a2 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
- 1463 09a4 012B     		cmp	r3, #1
- 1464 09a6 00F07F81 		beq	.L109
- 1465              	.L72:
+ 1456              		.loc 1 1014 0
+ 1457 099a 2B4B     		ldr	r3, .L122+40
+ 1458 099c 1B68     		ldr	r3, [r3]
+ 1459 099e 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 1460 09a0 012B     		cmp	r3, #1
+ 1461 09a2 00F07D81 		beq	.L109
+ 1462              	.L72:
 1015:../src/main.c **** 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 1016:../src/main.c **** 			}
 1017:../src/main.c **** 
 1018:../src/main.c **** 			wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, mai
- 1466              		.loc 1 1018 0
- 1467 09aa 354B     		ldr	r3, .L122+92
- 1468 09ac 1B68     		ldr	r3, [r3]
- 1469 09ae 354A     		ldr	r2, .L122+96
- 1470 09b0 1268     		ldr	r2, [r2]
- 1471 09b2 2649     		ldr	r1, .L122+40
- 1472 09b4 0968     		ldr	r1, [r1]
- 1473 09b6 3448     		ldr	r0, .L122+100
- 1474 09b8 0068     		ldr	r0, [r0]
- 1475 09ba FFF7FEFF 		bl	wx_pool_anemometer
- 1476              	.LVL121:
+ 1463              		.loc 1 1018 0
+ 1464 09a6 354B     		ldr	r3, .L122+92
+ 1465 09a8 1B68     		ldr	r3, [r3]
+ 1466 09aa 354A     		ldr	r2, .L122+96
+ 1467 09ac 1268     		ldr	r2, [r2]
+ 1468 09ae 2649     		ldr	r1, .L122+40
+ 1469 09b0 0968     		ldr	r1, [r1]
+ 1470 09b2 3448     		ldr	r0, .L122+100
+ 1471 09b4 0068     		ldr	r0, [r0]
+ 1472 09b6 FFF7FEFF 		bl	wx_pool_anemometer
+ 1473              	.LVL120:
 1019:../src/main.c **** 
 1020:../src/main.c **** 			if (main_davis_serial_enabled == 1) {
- 1477              		.loc 1 1020 0
- 1478 09be 284B     		ldr	r3, .L122+60
- 1479 09c0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1480 09c2 012B     		cmp	r3, #1
- 1481 09c4 00F07881 		beq	.L110
- 1482              	.L73:
+ 1474              		.loc 1 1020 0
+ 1475 09ba 284B     		ldr	r3, .L122+60
+ 1476 09bc 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1477 09be 012B     		cmp	r3, #1
+ 1478 09c0 00F07681 		beq	.L110
+ 1479              	.L73:
 1021:../src/main.c **** 
 1022:../src/main.c **** 				// if previous LOOP packet is ready for processing
 1023:../src/main.c **** 				if (rte_wx_davis_loop_packet_avaliable == 1) {
@@ -5579,28 +5576,28 @@
 1029:../src/main.c **** 			}
 1030:../src/main.c **** 
 1031:../src/main.c **** 			main_ten_second_pool_timer = 10000;
- 1483              		.loc 1 1031 0
- 1484 09c8 2C4B     		ldr	r3, .L122+88
- 1485 09ca 42F21072 		movw	r2, #10000
- 1486 09ce 1A60     		str	r2, [r3]
- 1487              	.LVL122:
- 1488              	.L39:
+ 1480              		.loc 1 1031 0
+ 1481 09c4 2C4B     		ldr	r3, .L122+88
+ 1482 09c6 42F21072 		movw	r2, #10000
+ 1483 09ca 1A60     		str	r2, [r3]
+ 1484              	.LVL121:
+ 1485              	.L39:
  776:../src/main.c **** 
- 1489              		.loc 1 776 0
- 1490 09d0 2E4A     		ldr	r2, .L122+104
- 1491 09d2 1368     		ldr	r3, [r2]
- 1492 09d4 0133     		adds	r3, r3, #1
- 1493 09d6 1360     		str	r3, [r2]
+ 1486              		.loc 1 776 0
+ 1487 09cc 2E4A     		ldr	r2, .L122+104
+ 1488 09ce 1368     		ldr	r3, [r2]
+ 1489 09d0 0133     		adds	r3, r3, #1
+ 1490 09d2 1360     		str	r3, [r2]
  778:../src/main.c **** 	    	NVIC_SystemReset();
- 1494              		.loc 1 778 0
- 1495 09d8 2D4B     		ldr	r3, .L122+108
- 1496 09da 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1497 09dc 012B     		cmp	r3, #1
- 1498 09de 3FF497AE 		beq	.L111
- 1499              	.LVL123:
- 1500              	.LBB36:
- 1501              	.LBB37:
- 1502              		.file 5 "../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h"
+ 1491              		.loc 1 778 0
+ 1492 09d4 2D4B     		ldr	r3, .L122+108
+ 1493 09d6 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1494 09d8 012B     		cmp	r3, #1
+ 1495 09da 3FF497AE 		beq	.L111
+ 1496              	.LVL122:
+ 1497              	.LBB36:
+ 1498              	.LBB37:
+ 1499              		.file 5 "../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h"
    1:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h **** /**
    2:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h ****   ******************************************************************************
    3:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h ****   * @file    stm32l4xx_ll_gpio.h
@@ -6479,537 +6476,533 @@
  876:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h **** __STATIC_INLINE uint32_t LL_GPIO_IsInputPinSet(GPIO_TypeDef *GPIOx, uint32_t PinMask)
  877:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h **** {
  878:../system/include/stm32l4-hal-driver/stm32l4xx_ll_gpio.h ****   return ((READ_BIT(GPIOx->IDR, PinMask) == (PinMask)) ? 1UL : 0UL);
- 1503              		.loc 5 878 0
- 1504 09e2 4FF09043 		mov	r3, #1207959552
- 1505 09e6 1B69     		ldr	r3, [r3, #16]
- 1506 09e8 13F0010F 		tst	r3, #1
- 1507 09ec 3FF41BAF 		beq	.L75
- 1508              	.LVL124:
- 1509              	.LBE37:
- 1510              	.LBE36:
+ 1500              		.loc 5 878 0
+ 1501 09de 4FF09043 		mov	r3, #1207959552
+ 1502 09e2 1B69     		ldr	r3, [r3, #16]
+ 1503 09e4 13F0010F 		tst	r3, #1
+ 1504 09e8 3FF41BAF 		beq	.L75
+ 1505              	.LVL123:
+ 1506              	.LBE37:
+ 1507              	.LBE36:
  796:../src/main.c **** 
- 1511              		.loc 1 796 0
- 1512 09f0 284B     		ldr	r3, .L122+112
- 1513 09f2 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
- 1514 09f6 002B     		cmp	r3, #0
- 1515 09f8 7FF444AF 		bne	.L76
+ 1508              		.loc 1 796 0
+ 1509 09ec 284B     		ldr	r3, .L122+112
+ 1510 09ee 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 1511 09f2 002B     		cmp	r3, #0
+ 1512 09f4 7FF444AF 		bne	.L76
  796:../src/main.c **** 
- 1516              		.loc 1 796 0 is_stmt 0 discriminator 1
- 1517 09fc 002C     		cmp	r4, #0
- 1518 09fe 7FF413AF 		bne	.L42
- 1519              	.L43:
+ 1513              		.loc 1 796 0 is_stmt 0 discriminator 1
+ 1514 09f8 002C     		cmp	r4, #0
+ 1515 09fa 7FF413AF 		bne	.L42
+ 1516              	.L43:
  799:../src/main.c **** 
- 1520              		.loc 1 799 0 is_stmt 1 discriminator 1
- 1521 0a02 134B     		ldr	r3, .L122+44
- 1522 0a04 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
- 1523 0a08 002B     		cmp	r3, #0
- 1524 0a0a FAD1     		bne	.L43
+ 1517              		.loc 1 799 0 is_stmt 1 discriminator 1
+ 1518 09fe 134B     		ldr	r3, .L122+44
+ 1519 0a00 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 1520 0a04 002B     		cmp	r3, #0
+ 1521 0a06 FAD1     		bne	.L43
  801:../src/main.c **** 
- 1525              		.loc 1 801 0
- 1526 0a0c 0F4B     		ldr	r3, .L122+40
- 1527 0a0e 1B68     		ldr	r3, [r3]
- 1528 0a10 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
- 1529 0a12 13F0010F 		tst	r3, #1
- 1530 0a16 7FF4DFAE 		bne	.L44
+ 1522              		.loc 1 801 0
+ 1523 0a08 0F4B     		ldr	r3, .L122+40
+ 1524 0a0a 1B68     		ldr	r3, [r3]
+ 1525 0a0c 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 1526 0a0e 13F0010F 		tst	r3, #1
+ 1527 0a12 7FF4DFAE 		bne	.L44
  803:../src/main.c **** 	  			}
- 1531              		.loc 1 803 0
- 1532 0a1a FFF7FEFF 		bl	beacon_send_own
- 1533              	.LVL125:
+ 1528              		.loc 1 803 0
+ 1529 0a16 FFF7FEFF 		bl	beacon_send_own
+ 1530              	.LVL124:
  817:../src/main.c **** 	  	}
- 1534              		.loc 1 817 0
- 1535 0a1e 0124     		movs	r4, #1
- 1536              	.LVL126:
- 1537 0a20 02E7     		b	.L42
- 1538              	.L123:
- 1539 0a22 00BF     		.align	2
- 1540              	.L122:
- 1541 0a24 00000000 		.word	main_kiss_srl_ctx_ptr
- 1542 0a28 00000000 		.word	rte_wx_humidity
- 1543 0a2c 00000000 		.word	rte_wx_average_winddirection
- 1544 0a30 00000000 		.word	rte_wx_max_windspeed
- 1545 0a34 00000000 		.word	rte_wx_average_windspeed
- 1546 0a38 00000000 		.word	main_kiss_srl_ctx
- 1547 0a3c 00000000 		.word	rte_wx_pressure_valid
- 1548 0a40 00000000 		.word	rte_wx_temperature_average_external_valid
- 1549 0a44 00000000 		.word	.LANCHOR6
- 1550 0a48 00000000 		.word	ax25_new_msg_rx_flag
- 1551 0a4c 00000000 		.word	.LANCHOR5
- 1552 0a50 00000000 		.word	main_ax25
- 1553 0a54 00000000 		.word	.LANCHOR1
- 1554 0a58 00000000 		.word	ax25_rxed_frame
- 1555 0a5c 00000000 		.word	.LANCHOR15
- 1556 0a60 00000000 		.word	.LANCHOR7
- 1557 0a64 00000000 		.word	.LANCHOR9
- 1558 0a68 00000000 		.word	.LANCHOR19
- 1559 0a6c 00000000 		.word	rte_main_trigger_modbus_status
- 1560 0a70 00000000 		.word	.LANCHOR20
- 1561 0a74 00000000 		.word	.LANCHOR21
- 1562 0a78 00000000 		.word	.LANCHOR22
- 1563 0a7c 00000000 		.word	.LANCHOR23
- 1564 0a80 00000000 		.word	.LANCHOR8
- 1565 0a84 00000000 		.word	.LANCHOR11
- 1566 0a88 00000000 		.word	.LANCHOR13
- 1567 0a8c 00000000 		.word	.LANCHOR14
- 1568 0a90 00000000 		.word	rte_main_reboot_req
- 1569 0a94 00000000 		.word	main_afsk
- 1570              	.LVL127:
- 1571              	.L97:
+ 1531              		.loc 1 817 0
+ 1532 0a1a 0124     		movs	r4, #1
+ 1533              	.LVL125:
+ 1534 0a1c 02E7     		b	.L42
+ 1535              	.L123:
+ 1536 0a1e 00BF     		.align	2
+ 1537              	.L122:
+ 1538 0a20 00000000 		.word	main_kiss_srl_ctx_ptr
+ 1539 0a24 00000000 		.word	rte_wx_humidity
+ 1540 0a28 00000000 		.word	rte_wx_average_winddirection
+ 1541 0a2c 00000000 		.word	rte_wx_max_windspeed
+ 1542 0a30 00000000 		.word	rte_wx_average_windspeed
+ 1543 0a34 00000000 		.word	main_kiss_srl_ctx
+ 1544 0a38 00000000 		.word	rte_wx_pressure_valid
+ 1545 0a3c 00000000 		.word	rte_wx_temperature_average_external_valid
+ 1546 0a40 00000000 		.word	.LANCHOR6
+ 1547 0a44 00000000 		.word	ax25_new_msg_rx_flag
+ 1548 0a48 00000000 		.word	.LANCHOR5
+ 1549 0a4c 00000000 		.word	main_ax25
+ 1550 0a50 00000000 		.word	.LANCHOR1
+ 1551 0a54 00000000 		.word	ax25_rxed_frame
+ 1552 0a58 00000000 		.word	.LANCHOR15
+ 1553 0a5c 00000000 		.word	.LANCHOR7
+ 1554 0a60 00000000 		.word	.LANCHOR9
+ 1555 0a64 00000000 		.word	.LANCHOR19
+ 1556 0a68 00000000 		.word	rte_main_trigger_modbus_status
+ 1557 0a6c 00000000 		.word	.LANCHOR20
+ 1558 0a70 00000000 		.word	.LANCHOR21
+ 1559 0a74 00000000 		.word	.LANCHOR22
+ 1560 0a78 00000000 		.word	.LANCHOR23
+ 1561 0a7c 00000000 		.word	.LANCHOR8
+ 1562 0a80 00000000 		.word	.LANCHOR11
+ 1563 0a84 00000000 		.word	.LANCHOR13
+ 1564 0a88 00000000 		.word	.LANCHOR14
+ 1565 0a8c 00000000 		.word	rte_main_reboot_req
+ 1566 0a90 00000000 		.word	main_afsk
+ 1567              	.LVL126:
+ 1568              	.L97:
  853:../src/main.c **** 
- 1572              		.loc 1 853 0
- 1573 0a98 FFF7FEFF 		bl	srl_get_rx_buffer
- 1574              	.LVL128:
- 1575 0a9c 8E4E     		ldr	r6, .L124
- 1576 0a9e 3246     		mov	r2, r6
- 1577 0aa0 4FF40071 		mov	r1, #512
- 1578 0aa4 FFF7FEFF 		bl	ve_direct_cut_to_checksum
- 1579              	.LVL129:
+ 1569              		.loc 1 853 0
+ 1570 0a94 FFF7FEFF 		bl	srl_get_rx_buffer
+ 1571              	.LVL127:
+ 1572 0a98 8D4E     		ldr	r6, .L124
+ 1573 0a9a 3246     		mov	r2, r6
+ 1574 0a9c 4FF40071 		mov	r1, #512
+ 1575 0aa0 FFF7FEFF 		bl	ve_direct_cut_to_checksum
+ 1576              	.LVL128:
  856:../src/main.c **** 
- 1580              		.loc 1 856 0
- 1581 0aa8 8C4B     		ldr	r3, .L124+4
- 1582 0aaa 1868     		ldr	r0, [r3]
- 1583 0aac FFF7FEFF 		bl	srl_get_rx_buffer
- 1584              	.LVL130:
- 1585 0ab0 8B4D     		ldr	r5, .L124+8
- 1586 0ab2 2A46     		mov	r2, r5
- 1587 0ab4 3188     		ldrh	r1, [r6]
- 1588 0ab6 FFF7FEFF 		bl	ve_direct_validate_checksum
- 1589              	.LVL131:
+ 1577              		.loc 1 856 0
+ 1578 0aa4 8B4B     		ldr	r3, .L124+4
+ 1579 0aa6 1868     		ldr	r0, [r3]
+ 1580 0aa8 FFF7FEFF 		bl	srl_get_rx_buffer
+ 1581              	.LVL129:
+ 1582 0aac 8A4D     		ldr	r5, .L124+8
+ 1583 0aae 2A46     		mov	r2, r5
+ 1584 0ab0 3188     		ldrh	r1, [r6]
+ 1585 0ab2 FFF7FEFF 		bl	ve_direct_validate_checksum
+ 1586              	.LVL130:
  858:../src/main.c **** 					// parsing data from input serial buffer to
- 1590              		.loc 1 858 0
- 1591 0aba 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
- 1592 0abc DBB2     		uxtb	r3, r3
- 1593 0abe 012B     		cmp	r3, #1
- 1594 0ac0 30D1     		bne	.L49
+ 1587              		.loc 1 858 0
+ 1588 0ab6 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
+ 1589 0ab8 DBB2     		uxtb	r3, r3
+ 1590 0aba 012B     		cmp	r3, #1
+ 1591 0abc 30D1     		bne	.L49
  860:../src/main.c **** 
- 1595              		.loc 1 860 0
- 1596 0ac2 864B     		ldr	r3, .L124+4
- 1597 0ac4 1868     		ldr	r0, [r3]
- 1598 0ac6 FFF7FEFF 		bl	srl_get_rx_buffer
- 1599              	.LVL132:
- 1600 0aca 864A     		ldr	r2, .L124+12
- 1601 0acc 3188     		ldrh	r1, [r6]
- 1602 0ace FFF7FEFF 		bl	ve_direct_parse_to_raw_struct
- 1603              	.LVL133:
- 1604 0ad2 C0B2     		uxtb	r0, r0
- 1605 0ad4 2870     		strb	r0, [r5]
+ 1592              		.loc 1 860 0
+ 1593 0abe 854B     		ldr	r3, .L124+4
+ 1594 0ac0 1868     		ldr	r0, [r3]
+ 1595 0ac2 FFF7FEFF 		bl	srl_get_rx_buffer
+ 1596              	.LVL131:
+ 1597 0ac6 854A     		ldr	r2, .L124+12
+ 1598 0ac8 3188     		ldrh	r1, [r6]
+ 1599 0aca FFF7FEFF 		bl	ve_direct_parse_to_raw_struct
+ 1600              	.LVL132:
+ 1601 0ace C0B2     		uxtb	r0, r0
+ 1602 0ad0 2870     		strb	r0, [r5]
  862:../src/main.c **** 						ve_direct_add_to_average(&rte_pv_struct, &rte_pv_average);
- 1606              		.loc 1 862 0
- 1607 0ad6 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
- 1608 0ad8 CBB9     		cbnz	r3, .L50
+ 1603              		.loc 1 862 0
+ 1604 0ad2 2B78     		ldrb	r3, [r5]	@ zero_extendqisi2
+ 1605 0ad4 CBB9     		cbnz	r3, .L50
  863:../src/main.c **** 
- 1609              		.loc 1 863 0
- 1610 0ada 834E     		ldr	r6, .L124+16
- 1611 0adc 814D     		ldr	r5, .L124+12
- 1612 0ade 3146     		mov	r1, r6
- 1613 0ae0 2846     		mov	r0, r5
- 1614 0ae2 FFF7FEFF 		bl	ve_direct_add_to_average
- 1615              	.LVL134:
+ 1606              		.loc 1 863 0
+ 1607 0ad6 824E     		ldr	r6, .L124+16
+ 1608 0ad8 804D     		ldr	r5, .L124+12
+ 1609 0ada 3146     		mov	r1, r6
+ 1610 0adc 2846     		mov	r0, r5
+ 1611 0ade FFF7FEFF 		bl	ve_direct_add_to_average
+ 1612              	.LVL133:
  865:../src/main.c **** 
- 1616              		.loc 1 865 0
- 1617 0ae6 814B     		ldr	r3, .L124+20
- 1618 0ae8 0093     		str	r3, [sp]
- 1619 0aea 814B     		ldr	r3, .L124+24
- 1620 0aec 814A     		ldr	r2, .L124+28
- 1621 0aee 8249     		ldr	r1, .L124+32
- 1622 0af0 3046     		mov	r0, r6
- 1623 0af2 FFF7FEFF 		bl	ve_direct_get_averages
- 1624              	.LVL135:
+ 1613              		.loc 1 865 0
+ 1614 0ae2 804B     		ldr	r3, .L124+20
+ 1615 0ae4 0093     		str	r3, [sp]
+ 1616 0ae6 804B     		ldr	r3, .L124+24
+ 1617 0ae8 804A     		ldr	r2, .L124+28
+ 1618 0aea 8149     		ldr	r1, .L124+32
+ 1619 0aec 3046     		mov	r0, r6
+ 1620 0aee FFF7FEFF 		bl	ve_direct_get_averages
+ 1621              	.LVL134:
  867:../src/main.c **** 
- 1625              		.loc 1 867 0
- 1626 0af6 8149     		ldr	r1, .L124+36
- 1627 0af8 2846     		mov	r0, r5
- 1628 0afa FFF7FEFF 		bl	ve_direct_set_sys_voltage
- 1629              	.LVL136:
+ 1622              		.loc 1 867 0
+ 1623 0af2 8049     		ldr	r1, .L124+36
+ 1624 0af4 2846     		mov	r0, r5
+ 1625 0af6 FFF7FEFF 		bl	ve_direct_set_sys_voltage
+ 1626              	.LVL135:
  869:../src/main.c **** 
- 1630              		.loc 1 869 0
- 1631 0afe 8049     		ldr	r1, .L124+40
- 1632 0b00 2846     		mov	r0, r5
- 1633 0b02 FFF7FEFF 		bl	ve_direct_store_errors
- 1634              	.LVL137:
+ 1627              		.loc 1 869 0
+ 1628 0afa 7F49     		ldr	r1, .L124+40
+ 1629 0afc 2846     		mov	r0, r5
+ 1630 0afe FFF7FEFF 		bl	ve_direct_store_errors
+ 1631              	.LVL136:
  871:../src/main.c **** 					}
- 1635              		.loc 1 871 0
- 1636 0b06 7F4A     		ldr	r2, .L124+44
- 1637 0b08 1388     		ldrh	r3, [r2]
- 1638 0b0a 0133     		adds	r3, r3, #1
- 1639 0b0c 1380     		strh	r3, [r2]	@ movhi
- 1640              	.L50:
+ 1632              		.loc 1 871 0
+ 1633 0b02 7E4A     		ldr	r2, .L124+44
+ 1634 0b04 1388     		ldrh	r3, [r2]
+ 1635 0b06 0133     		adds	r3, r3, #1
+ 1636 0b08 1380     		strh	r3, [r2]	@ movhi
+ 1637              	.L50:
  880:../src/main.c **** 			}
- 1641              		.loc 1 880 0
- 1642 0b0e 0022     		movs	r2, #0
- 1643 0b10 0292     		str	r2, [sp, #8]
- 1644 0b12 0192     		str	r2, [sp, #4]
- 1645 0b14 0092     		str	r2, [sp]
- 1646 0b16 1346     		mov	r3, r2
- 1647 0b18 BA21     		movs	r1, #186
- 1648 0b1a 7048     		ldr	r0, .L124+4
- 1649 0b1c 0068     		ldr	r0, [r0]
- 1650 0b1e FFF7FEFF 		bl	srl_receive_data
- 1651              	.LVL138:
- 1652 0b22 EAE6     		b	.L48
- 1653              	.L49:
+ 1638              		.loc 1 880 0
+ 1639 0b0a 0022     		movs	r2, #0
+ 1640 0b0c 0292     		str	r2, [sp, #8]
+ 1641 0b0e 0192     		str	r2, [sp, #4]
+ 1642 0b10 0092     		str	r2, [sp]
+ 1643 0b12 1346     		mov	r3, r2
+ 1644 0b14 BA21     		movs	r1, #186
+ 1645 0b16 6F48     		ldr	r0, .L124+4
+ 1646 0b18 0068     		ldr	r0, [r0]
+ 1647 0b1a FFF7FEFF 		bl	srl_receive_data
+ 1648              	.LVL137:
+ 1649 0b1e EAE6     		b	.L48
+ 1650              	.L49:
  875:../src/main.c **** 				}
- 1654              		.loc 1 875 0
- 1655 0b24 784A     		ldr	r2, .L124+48
- 1656 0b26 1388     		ldrh	r3, [r2]
- 1657 0b28 0133     		adds	r3, r3, #1
- 1658 0b2a 1380     		strh	r3, [r2]	@ movhi
- 1659 0b2c EFE7     		b	.L50
- 1660              	.L94:
+ 1651              		.loc 1 875 0
+ 1652 0b20 774A     		ldr	r2, .L124+48
+ 1653 0b22 1388     		ldrh	r3, [r2]
+ 1654 0b24 0133     		adds	r3, r3, #1
+ 1655 0b26 1380     		strh	r3, [r2]	@ movhi
+ 1656 0b28 EFE7     		b	.L50
+ 1657              	.L94:
  885:../src/main.c **** 				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb
- 1661              		.loc 1 885 0
- 1662 0b2e 774B     		ldr	r3, .L124+52
- 1663 0b30 1B68     		ldr	r3, [r3]
- 1664 0b32 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
- 1665 0b36 042B     		cmp	r3, #4
- 1666 0b38 15D0     		beq	.L112
- 1667              	.L52:
+ 1658              		.loc 1 885 0
+ 1659 0b2a 764B     		ldr	r3, .L124+52
+ 1660 0b2c 1B68     		ldr	r3, [r3]
+ 1661 0b2e 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 1662 0b32 042B     		cmp	r3, #4
+ 1663 0b34 15D0     		beq	.L112
+ 1664              	.L52:
  890:../src/main.c **** 				umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, main_config_data_um
- 1668              		.loc 1 890 0
- 1669 0b3a 744B     		ldr	r3, .L124+52
- 1670 0b3c 1B68     		ldr	r3, [r3]
- 1671 0b3e 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
- 1672 0b42 052B     		cmp	r3, #5
- 1673 0b44 18D0     		beq	.L113
- 1674              	.L53:
+ 1665              		.loc 1 890 0
+ 1666 0b36 734B     		ldr	r3, .L124+52
+ 1667 0b38 1B68     		ldr	r3, [r3]
+ 1668 0b3a 93F84430 		ldrb	r3, [r3, #68]	@ zero_extendqisi2
+ 1669 0b3e 052B     		cmp	r3, #5
+ 1670 0b40 18D0     		beq	.L113
+ 1671              	.L53:
  894:../src/main.c **** 				umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, main_config_data_um
- 1675              		.loc 1 894 0
- 1676 0b46 714B     		ldr	r3, .L124+52
- 1677 0b48 1B68     		ldr	r3, [r3]
- 1678 0b4a 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
- 1679 0b4e 012B     		cmp	r3, #1
- 1680 0b50 7FF4D3AE 		bne	.L48
+ 1672              		.loc 1 894 0
+ 1673 0b42 704B     		ldr	r3, .L124+52
+ 1674 0b44 1B68     		ldr	r3, [r3]
+ 1675 0b46 93F84530 		ldrb	r3, [r3, #69]	@ zero_extendqisi2
+ 1676 0b4a 012B     		cmp	r3, #1
+ 1677 0b4c 7FF4D3AE 		bne	.L48
  895:../src/main.c **** 			}
- 1681              		.loc 1 895 0
- 1682 0b54 6E4B     		ldr	r3, .L124+56
- 1683 0b56 1B68     		ldr	r3, [r3]
- 1684 0b58 6E4A     		ldr	r2, .L124+60
- 1685 0b5a 1268     		ldr	r2, [r2]
- 1686 0b5c 0021     		movs	r1, #0
- 1687 0b5e 6E48     		ldr	r0, .L124+64
- 1688 0b60 FFF7FEFF 		bl	umb_pooling_handler
- 1689              	.LVL139:
- 1690 0b64 C9E6     		b	.L48
- 1691              	.L112:
+ 1678              		.loc 1 895 0
+ 1679 0b50 6D4B     		ldr	r3, .L124+56
+ 1680 0b52 1B68     		ldr	r3, [r3]
+ 1681 0b54 6D4A     		ldr	r2, .L124+60
+ 1682 0b56 1268     		ldr	r2, [r2]
+ 1683 0b58 0021     		movs	r1, #0
+ 1684 0b5a 6D48     		ldr	r0, .L124+64
+ 1685 0b5c FFF7FEFF 		bl	umb_pooling_handler
+ 1686              	.LVL138:
+ 1687 0b60 C9E6     		b	.L48
+ 1688              	.L112:
  886:../src/main.c **** 			}
- 1692              		.loc 1 886 0
- 1693 0b66 6A4B     		ldr	r3, .L124+56
- 1694 0b68 1B68     		ldr	r3, [r3]
- 1695 0b6a 6A4A     		ldr	r2, .L124+60
- 1696 0b6c 1268     		ldr	r2, [r2]
- 1697 0b6e 0121     		movs	r1, #1
- 1698 0b70 6948     		ldr	r0, .L124+64
- 1699 0b72 FFF7FEFF 		bl	umb_pooling_handler
- 1700              	.LVL140:
- 1701 0b76 E0E7     		b	.L52
- 1702              	.L113:
+ 1689              		.loc 1 886 0
+ 1690 0b62 694B     		ldr	r3, .L124+56
+ 1691 0b64 1B68     		ldr	r3, [r3]
+ 1692 0b66 694A     		ldr	r2, .L124+60
+ 1693 0b68 1268     		ldr	r2, [r2]
+ 1694 0b6a 0121     		movs	r1, #1
+ 1695 0b6c 6848     		ldr	r0, .L124+64
+ 1696 0b6e FFF7FEFF 		bl	umb_pooling_handler
+ 1697              	.LVL139:
+ 1698 0b72 E0E7     		b	.L52
+ 1699              	.L113:
  891:../src/main.c **** 			}
- 1703              		.loc 1 891 0
- 1704 0b78 654B     		ldr	r3, .L124+56
- 1705 0b7a 1B68     		ldr	r3, [r3]
- 1706 0b7c 654A     		ldr	r2, .L124+60
- 1707 0b7e 1268     		ldr	r2, [r2]
- 1708 0b80 0221     		movs	r1, #2
- 1709 0b82 6548     		ldr	r0, .L124+64
- 1710 0b84 FFF7FEFF 		bl	umb_pooling_handler
- 1711              	.LVL141:
- 1712 0b88 DDE7     		b	.L53
- 1713              	.L95:
- 1714              	.LBB38:
+ 1700              		.loc 1 891 0
+ 1701 0b74 644B     		ldr	r3, .L124+56
+ 1702 0b76 1B68     		ldr	r3, [r3]
+ 1703 0b78 644A     		ldr	r2, .L124+60
+ 1704 0b7a 1268     		ldr	r2, [r2]
+ 1705 0b7c 0221     		movs	r1, #2
+ 1706 0b7e 6448     		ldr	r0, .L124+64
+ 1707 0b80 FFF7FEFF 		bl	umb_pooling_handler
+ 1708              	.LVL140:
+ 1709 0b84 DDE7     		b	.L53
+ 1710              	.L95:
+ 1711              	.LBB38:
  902:../src/main.c **** 				if (res == 0)
- 1715              		.loc 1 902 0
- 1716 0b8a FFF7FEFF 		bl	srl_get_rx_buffer
- 1717              	.LVL142:
- 1718 0b8e 0546     		mov	r5, r0
- 1719 0b90 524B     		ldr	r3, .L124+4
- 1720 0b92 1868     		ldr	r0, [r3]
- 1721 0b94 FFF7FEFF 		bl	srl_get_num_bytes_rxed
- 1722              	.LVL143:
- 1723 0b98 604B     		ldr	r3, .L124+68
- 1724 0b9a 614A     		ldr	r2, .L124+72
- 1725 0b9c 0146     		mov	r1, r0
- 1726 0b9e 2846     		mov	r0, r5
- 1727 0ba0 FFF7FEFF 		bl	ParseReceivedKISS
- 1728              	.LVL144:
+ 1712              		.loc 1 902 0
+ 1713 0b86 FFF7FEFF 		bl	srl_get_rx_buffer
+ 1714              	.LVL141:
+ 1715 0b8a 0546     		mov	r5, r0
+ 1716 0b8c 514B     		ldr	r3, .L124+4
+ 1717 0b8e 1868     		ldr	r0, [r3]
+ 1718 0b90 FFF7FEFF 		bl	srl_get_num_bytes_rxed
+ 1719              	.LVL142:
+ 1720 0b94 5F4B     		ldr	r3, .L124+68
+ 1721 0b96 604A     		ldr	r2, .L124+72
+ 1722 0b98 0146     		mov	r1, r0
+ 1723 0b9a 2846     		mov	r0, r5
+ 1724 0b9c FFF7FEFF 		bl	ParseReceivedKISS
+ 1725              	.LVL143:
  903:../src/main.c **** 					kiss10m++;	// increase kiss messages counter
- 1729              		.loc 1 903 0
- 1730 0ba4 18B9     		cbnz	r0, .L55
+ 1726              		.loc 1 903 0
+ 1727 0ba0 18B9     		cbnz	r0, .L55
  904:../src/main.c **** 
- 1731              		.loc 1 904 0
- 1732 0ba6 5F4A     		ldr	r2, .L124+76
- 1733 0ba8 1388     		ldrh	r3, [r2]
- 1734 0baa 0133     		adds	r3, r3, #1
- 1735 0bac 1380     		strh	r3, [r2]	@ movhi
- 1736              	.L55:
+ 1728              		.loc 1 904 0
+ 1729 0ba2 5E4A     		ldr	r2, .L124+76
+ 1730 0ba4 1388     		ldrh	r3, [r2]
+ 1731 0ba6 0133     		adds	r3, r3, #1
+ 1732 0ba8 1380     		strh	r3, [r2]	@ movhi
+ 1733              	.L55:
  907:../src/main.c **** 			}
- 1737              		.loc 1 907 0
- 1738 0bae 0023     		movs	r3, #0
- 1739 0bb0 0293     		str	r3, [sp, #8]
- 1740 0bb2 0193     		str	r3, [sp, #4]
- 1741 0bb4 0093     		str	r3, [sp]
- 1742 0bb6 6FF03F03 		mvn	r3, #63
- 1743 0bba 1A46     		mov	r2, r3
- 1744 0bbc 7821     		movs	r1, #120
- 1745 0bbe 4748     		ldr	r0, .L124+4
+ 1734              		.loc 1 907 0
+ 1735 0baa 0023     		movs	r3, #0
+ 1736 0bac 0293     		str	r3, [sp, #8]
+ 1737 0bae 0193     		str	r3, [sp, #4]
+ 1738 0bb0 0093     		str	r3, [sp]
+ 1739 0bb2 6FF03F03 		mvn	r3, #63
+ 1740 0bb6 1A46     		mov	r2, r3
+ 1741 0bb8 7821     		movs	r1, #120
+ 1742 0bba 4648     		ldr	r0, .L124+4
+ 1743              	.LVL144:
+ 1744 0bbc 0068     		ldr	r0, [r0]
+ 1745 0bbe FFF7FEFF 		bl	srl_receive_data
  1746              	.LVL145:
- 1747 0bc0 0068     		ldr	r0, [r0]
- 1748 0bc2 FFF7FEFF 		bl	srl_receive_data
- 1749              	.LVL146:
- 1750 0bc6 48E6     		b	.L54
- 1751              	.L98:
- 1752              	.LBE38:
+ 1747 0bc2 48E6     		b	.L54
+ 1748              	.L98:
+ 1749              	.LBE38:
  920:../src/main.c **** 
- 1753              		.loc 1 920 0
- 1754 0bc8 5748     		ldr	r0, .L124+80
- 1755 0bca FFF7FEFF 		bl	davis_loop_packet_pooler
- 1756              	.LVL147:
+ 1750              		.loc 1 920 0
+ 1751 0bc4 5648     		ldr	r0, .L124+80
+ 1752 0bc6 FFF7FEFF 		bl	davis_loop_packet_pooler
+ 1753              	.LVL146:
  922:../src/main.c **** 		}
- 1757              		.loc 1 922 0
- 1758 0bce FFF7FEFF 		bl	davis_rxcheck_packet_pooler
- 1759              	.LVL148:
- 1760 0bd2 97E6     		b	.L56
- 1761              	.L99:
+ 1754              		.loc 1 922 0
+ 1755 0bca FFF7FEFF 		bl	davis_rxcheck_packet_pooler
+ 1756              	.LVL147:
+ 1757 0bce 97E6     		b	.L56
+ 1758              	.L99:
  927:../src/main.c **** 		}
- 1762              		.loc 1 927 0
- 1763 0bd4 FFF7FEFF 		bl	rtu_serial_pool
- 1764              	.LVL149:
- 1765 0bd8 99E6     		b	.L57
- 1766              	.L100:
+ 1759              		.loc 1 927 0
+ 1760 0bd0 FFF7FEFF 		bl	rtu_serial_pool
+ 1761              	.LVL148:
+ 1762 0bd4 99E6     		b	.L57
+ 1763              	.L100:
  935:../src/main.c **** 			}
- 1767              		.loc 1 935 0
- 1768 0bda FFF7FEFF 		bl	rtu_serial_start
- 1769              	.LVL150:
- 1770 0bde 9FE6     		b	.L59
- 1771              	.L101:
+ 1764              		.loc 1 935 0
+ 1765 0bd6 FFF7FEFF 		bl	rtu_serial_start
+ 1766              	.LVL149:
+ 1767 0bda 9FE6     		b	.L59
+ 1768              	.L101:
  939:../src/main.c **** 			}
- 1772              		.loc 1 939 0
- 1773 0be0 524B     		ldr	r3, .L124+84
- 1774 0be2 1B68     		ldr	r3, [r3]
- 1775 0be4 4A4A     		ldr	r2, .L124+56
- 1776 0be6 1268     		ldr	r2, [r2]
- 1777 0be8 5148     		ldr	r0, .L124+88
- 1778 0bea 0068     		ldr	r0, [r0]
- 1779 0bec FFF7FEFF 		bl	wx_get_all_measurements
- 1780              	.LVL151:
- 1781 0bf0 9DE6     		b	.L60
- 1782              	.L102:
+ 1769              		.loc 1 939 0
+ 1770 0bdc 514B     		ldr	r3, .L124+84
+ 1771 0bde 1B68     		ldr	r3, [r3]
+ 1772 0be0 494A     		ldr	r2, .L124+56
+ 1773 0be2 1268     		ldr	r2, [r2]
+ 1774 0be4 5048     		ldr	r0, .L124+88
+ 1775 0be6 0068     		ldr	r0, [r0]
+ 1776 0be8 FFF7FEFF 		bl	wx_get_all_measurements
+ 1777              	.LVL150:
+ 1778 0bec 9DE6     		b	.L60
+ 1779              	.L102:
  945:../src/main.c **** 			}
- 1783              		.loc 1 945 0
- 1784 0bf2 474B     		ldr	r3, .L124+56
- 1785 0bf4 1A68     		ldr	r2, [r3]
- 1786 0bf6 4849     		ldr	r1, .L124+64
- 1787 0bf8 4E48     		ldr	r0, .L124+92
- 1788 0bfa FFF7FEFF 		bl	umb_0x26_status_request
- 1789              	.LVL152:
- 1790 0bfe 9CE6     		b	.L61
- 1791              	.L103:
+ 1780              		.loc 1 945 0
+ 1781 0bee 464B     		ldr	r3, .L124+56
+ 1782 0bf0 1A68     		ldr	r2, [r3]
+ 1783 0bf2 4749     		ldr	r1, .L124+64
+ 1784 0bf4 4D48     		ldr	r0, .L124+92
+ 1785 0bf6 FFF7FEFF 		bl	umb_0x26_status_request
+ 1786              	.LVL151:
+ 1787 0bfa 9CE6     		b	.L61
+ 1788              	.L103:
  949:../src/main.c **** 			}
- 1792              		.loc 1 949 0
- 1793 0c00 FFF7FEFF 		bl	davis_trigger_rxcheck_packet
- 1794              	.LVL153:
- 1795 0c04 9EE6     		b	.L62
- 1796              	.L104:
+ 1789              		.loc 1 949 0
+ 1790 0bfc FFF7FEFF 		bl	davis_trigger_rxcheck_packet
+ 1791              	.LVL152:
+ 1792 0c00 9EE6     		b	.L62
+ 1793              	.L104:
  952:../src/main.c **** 				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_A
- 1797              		.loc 1 952 0 discriminator 1
- 1798 0c06 4C4B     		ldr	r3, .L124+96
- 1799 0c08 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1800 0c0a 012B     		cmp	r3, #1
- 1801 0c0c 7FF49FAE 		bne	.L63
+ 1794              		.loc 1 952 0 discriminator 1
+ 1795 0c02 4B4B     		ldr	r3, .L124+96
+ 1796 0c04 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1797 0c06 012B     		cmp	r3, #1
+ 1798 0c08 7FF49FAE 		bne	.L63
  953:../src/main.c **** 
- 1802              		.loc 1 953 0
- 1803 0c10 4A4D     		ldr	r5, .L124+100
- 1804 0c12 4B4E     		ldr	r6, .L124+104
- 1805 0c14 0096     		str	r6, [sp]
- 1806 0c16 A023     		movs	r3, #160
- 1807 0c18 2A46     		mov	r2, r5
- 1808 0c1a 3C49     		ldr	r1, .L124+52
- 1809 0c1c 0968     		ldr	r1, [r1]
- 1810 0c1e 4948     		ldr	r0, .L124+108
- 1811 0c20 FFF7FEFF 		bl	rtu_serial_get_status_string
- 1812              	.LVL154:
+ 1799              		.loc 1 953 0
+ 1800 0c0c 494D     		ldr	r5, .L124+100
+ 1801 0c0e 4A4E     		ldr	r6, .L124+104
+ 1802 0c10 0096     		str	r6, [sp]
+ 1803 0c12 A023     		movs	r3, #160
+ 1804 0c14 2A46     		mov	r2, r5
+ 1805 0c16 3B49     		ldr	r1, .L124+52
+ 1806 0c18 0968     		ldr	r1, [r1]
+ 1807 0c1a 4848     		ldr	r0, .L124+108
+ 1808 0c1c FFF7FEFF 		bl	rtu_serial_get_status_string
+ 1809              	.LVL153:
  955:../src/main.c **** 
- 1813              		.loc 1 955 0
- 1814 0c24 484B     		ldr	r3, .L124+112
- 1815 0c26 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
- 1816 0c28 3378     		ldrb	r3, [r6]	@ zero_extendqisi2
- 1817 0c2a 0093     		str	r3, [sp]
- 1818 0c2c 2B46     		mov	r3, r5
- 1819 0c2e 4749     		ldr	r1, .L124+116
- 1820 0c30 3B48     		ldr	r0, .L124+72
- 1821 0c32 FFF7FEFF 		bl	ax25_sendVia
- 1822              	.LVL155:
+ 1810              		.loc 1 955 0
+ 1811 0c20 474B     		ldr	r3, .L124+112
+ 1812 0c22 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 1813 0c24 3378     		ldrb	r3, [r6]	@ zero_extendqisi2
+ 1814 0c26 0093     		str	r3, [sp]
+ 1815 0c28 2B46     		mov	r3, r5
+ 1816 0c2a 4649     		ldr	r1, .L124+116
+ 1817 0c2c 3A48     		ldr	r0, .L124+72
+ 1818 0c2e FFF7FEFF 		bl	ax25_sendVia
+ 1819              	.LVL154:
  957:../src/main.c **** 
- 1823              		.loc 1 957 0
- 1824 0c36 3948     		ldr	r0, .L124+68
- 1825 0c38 FFF7FEFF 		bl	afsk_txStart
- 1826              	.LVL156:
+ 1820              		.loc 1 957 0
+ 1821 0c32 3848     		ldr	r0, .L124+68
+ 1822 0c34 FFF7FEFF 		bl	afsk_txStart
+ 1823              	.LVL155:
  959:../src/main.c **** 
- 1827              		.loc 1 959 0
- 1828 0c3c 444B     		ldr	r3, .L124+120
- 1829 0c3e 0022     		movs	r2, #0
- 1830 0c40 1A70     		strb	r2, [r3]
- 1831 0c42 84E6     		b	.L63
- 1832              	.L105:
+ 1824              		.loc 1 959 0
+ 1825 0c38 434B     		ldr	r3, .L124+120
+ 1826 0c3a 0022     		movs	r2, #0
+ 1827 0c3c 1A70     		strb	r2, [r3]
+ 1828 0c3e 84E6     		b	.L63
+ 1829              	.L105:
  970:../src/main.c **** 			#endif
- 1833              		.loc 1 970 0
- 1834 0c44 434B     		ldr	r3, .L124+124
- 1835 0c46 1968     		ldr	r1, [r3]
- 1836 0c48 434B     		ldr	r3, .L124+128
- 1837 0c4a 1868     		ldr	r0, [r3]
- 1838 0c4c FFF7FEFF 		bl	packet_tx_handler
- 1839              	.LVL157:
+ 1830              		.loc 1 970 0
+ 1831 0c40 424B     		ldr	r3, .L124+124
+ 1832 0c42 1968     		ldr	r1, [r3]
+ 1833 0c44 424B     		ldr	r3, .L124+128
+ 1834 0c46 1868     		ldr	r0, [r3]
+ 1835 0c48 FFF7FEFF 		bl	packet_tx_handler
+ 1836              	.LVL156:
  973:../src/main.c **** 		}
- 1840              		.loc 1 973 0
- 1841 0c50 424B     		ldr	r3, .L124+132
- 1842 0c52 4EF66022 		movw	r2, #60000
- 1843 0c56 1A60     		str	r2, [r3]
- 1844 0c58 82E6     		b	.L64
- 1845              	.L106:
+ 1837              		.loc 1 973 0
+ 1838 0c4c 414B     		ldr	r3, .L124+132
+ 1839 0c4e 4EF66022 		movw	r2, #60000
+ 1840 0c52 1A60     		str	r2, [r3]
+ 1841 0c54 82E6     		b	.L64
+ 1842              	.L106:
  981:../src/main.c **** 			}
- 1846              		.loc 1 981 0
- 1847 0c5a FFF7FEFF 		bl	analog_anemometer_direction_handler
- 1848              	.LVL158:
- 1849 0c5e 8BE6     		b	.L66
- 1850              	.L65:
+ 1843              		.loc 1 981 0
+ 1844 0c56 FFF7FEFF 		bl	analog_anemometer_direction_handler
+ 1845              	.LVL157:
+ 1846 0c5a 8BE6     		b	.L66
+ 1847              	.L65:
  986:../src/main.c **** 
- 1851              		.loc 1 986 0
- 1852 0c60 13F10A0F 		cmn	r3, #10
- 1853 0c64 BFF68CAE 		bge	.L67
+ 1848              		.loc 1 986 0
+ 1849 0c5c 13F10A0F 		cmn	r3, #10
+ 1850 0c60 BFF68CAE 		bge	.L67
  988:../src/main.c **** 				analog_anemometer_direction_reset();
- 1854              		.loc 1 988 0
- 1855 0c68 3A4B     		ldr	r3, .L124+124
- 1856 0c6a 1B68     		ldr	r3, [r3]
- 1857 0c6c 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
- 1858 0c6e 13F0010F 		tst	r3, #1
- 1859 0c72 04D1     		bne	.L114
- 1860              	.L68:
+ 1851              		.loc 1 988 0
+ 1852 0c64 394B     		ldr	r3, .L124+124
+ 1853 0c66 1B68     		ldr	r3, [r3]
+ 1854 0c68 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 1855 0c6a 13F0010F 		tst	r3, #1
+ 1856 0c6e 04D1     		bne	.L114
+ 1857              	.L68:
  992:../src/main.c **** 		}
- 1861              		.loc 1 992 0
- 1862 0c74 3A4B     		ldr	r3, .L124+136
- 1863 0c76 4FF47A72 		mov	r2, #1000
- 1864 0c7a 1A60     		str	r2, [r3]
- 1865 0c7c 80E6     		b	.L67
- 1866              	.L114:
+ 1858              		.loc 1 992 0
+ 1859 0c70 394B     		ldr	r3, .L124+136
+ 1860 0c72 4FF47A72 		mov	r2, #1000
+ 1861 0c76 1A60     		str	r2, [r3]
+ 1862 0c78 80E6     		b	.L67
+ 1863              	.L114:
  989:../src/main.c **** 			}
- 1867              		.loc 1 989 0
- 1868 0c7e FFF7FEFF 		bl	analog_anemometer_direction_reset
- 1869              	.LVL159:
- 1870 0c82 F7E7     		b	.L68
- 1871              	.L107:
+ 1864              		.loc 1 989 0
+ 1865 0c7a FFF7FEFF 		bl	analog_anemometer_direction_reset
+ 1866              	.LVL158:
+ 1867 0c7e F7E7     		b	.L68
+ 1868              	.L107:
  997:../src/main.c **** 
- 1872              		.loc 1 997 0
- 1873 0c84 FFF7FEFF 		bl	wx_check_force_i2c_reset
- 1874              	.LVL160:
+ 1869              		.loc 1 997 0
+ 1870 0c80 FFF7FEFF 		bl	wx_check_force_i2c_reset
+ 1871              	.LVL159:
  999:../src/main.c **** 
- 1875              		.loc 1 999 0
- 1876 0c88 FFF7FEFF 		bl	wx_pwr_periodic_handle
- 1877              	.LVL161:
-1002:../src/main.c **** 			#endif
- 1878              		.loc 1 1002 0
- 1879 0c8c FFF7FEFF 		bl	IWDG_ReloadCounter
- 1880              	.LVL162:
+ 1872              		.loc 1 999 0
+ 1873 0c84 FFF7FEFF 		bl	wx_pwr_periodic_handle
+ 1874              	.LVL160:
 1005:../src/main.c **** 		}
- 1881              		.loc 1 1005 0
- 1882 0c90 344B     		ldr	r3, .L124+140
- 1883 0c92 4FF4FA62 		mov	r2, #2000
- 1884 0c96 1A60     		str	r2, [r3]
- 1885 0c98 77E6     		b	.L69
- 1886              	.L108:
+ 1875              		.loc 1 1005 0
+ 1876 0c88 344B     		ldr	r3, .L124+140
+ 1877 0c8a 4FF4FA62 		mov	r2, #2000
+ 1878 0c8e 1A60     		str	r2, [r3]
+ 1879 0c90 79E6     		b	.L69
+ 1880              	.L108:
 1011:../src/main.c **** 			}
- 1887              		.loc 1 1011 0
- 1888 0c9a 1D4B     		ldr	r3, .L124+56
- 1889 0c9c 1A68     		ldr	r2, [r3]
- 1890 0c9e 1E49     		ldr	r1, .L124+64
- 1891 0ca0 2448     		ldr	r0, .L124+92
- 1892 0ca2 FFF7FEFF 		bl	umb_channel_pool
- 1893              	.LVL163:
- 1894 0ca6 7AE6     		b	.L71
- 1895              	.L109:
+ 1881              		.loc 1 1011 0
+ 1882 0c92 1D4B     		ldr	r3, .L124+56
+ 1883 0c94 1A68     		ldr	r2, [r3]
+ 1884 0c96 1E49     		ldr	r1, .L124+64
+ 1885 0c98 2448     		ldr	r0, .L124+92
+ 1886 0c9a FFF7FEFF 		bl	umb_channel_pool
+ 1887              	.LVL161:
+ 1888 0c9e 7CE6     		b	.L71
+ 1889              	.L109:
 1015:../src/main.c **** 			}
- 1896              		.loc 1 1015 0
- 1897 0ca8 1A4B     		ldr	r3, .L124+60
- 1898 0caa 1968     		ldr	r1, [r3]
- 1899 0cac 1A48     		ldr	r0, .L124+64
- 1900 0cae FFF7FEFF 		bl	umb_get_current_qf
- 1901              	.LVL164:
- 1902 0cb2 2D4B     		ldr	r3, .L124+144
- 1903 0cb4 1870     		strb	r0, [r3]
- 1904 0cb6 78E6     		b	.L72
- 1905              	.L110:
+ 1890              		.loc 1 1015 0
+ 1891 0ca0 1A4B     		ldr	r3, .L124+60
+ 1892 0ca2 1968     		ldr	r1, [r3]
+ 1893 0ca4 1A48     		ldr	r0, .L124+64
+ 1894 0ca6 FFF7FEFF 		bl	umb_get_current_qf
+ 1895              	.LVL162:
+ 1896 0caa 2D4B     		ldr	r3, .L124+144
+ 1897 0cac 1870     		strb	r0, [r3]
+ 1898 0cae 7AE6     		b	.L72
+ 1899              	.L110:
 1023:../src/main.c **** 					davis_parsers_loop(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, main_kiss_srl_ctx_ptr->srl_rx_bu
- 1906              		.loc 1 1023 0
- 1907 0cb8 1B4B     		ldr	r3, .L124+80
- 1908 0cba 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1909 0cbc 012B     		cmp	r3, #1
- 1910 0cbe 02D0     		beq	.L115
- 1911              	.L74:
+ 1900              		.loc 1 1023 0
+ 1901 0cb0 1B4B     		ldr	r3, .L124+80
+ 1902 0cb2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1903 0cb4 012B     		cmp	r3, #1
+ 1904 0cb6 02D0     		beq	.L115
+ 1905              	.L74:
 1028:../src/main.c **** 			}
- 1912              		.loc 1 1028 0
- 1913 0cc0 FFF7FEFF 		bl	davis_trigger_loop_packet
- 1914              	.LVL165:
- 1915 0cc4 80E6     		b	.L73
- 1916              	.L115:
+ 1906              		.loc 1 1028 0
+ 1907 0cb8 FFF7FEFF 		bl	davis_trigger_loop_packet
+ 1908              	.LVL163:
+ 1909 0cbc 82E6     		b	.L73
+ 1910              	.L115:
 1024:../src/main.c **** 				}
- 1917              		.loc 1 1024 0
- 1918 0cc6 054B     		ldr	r3, .L124+4
- 1919 0cc8 1B68     		ldr	r3, [r3]
- 1920 0cca 284A     		ldr	r2, .L124+148
- 1921 0ccc 998B     		ldrh	r1, [r3, #28]
- 1922 0cce 9869     		ldr	r0, [r3, #24]
- 1923 0cd0 FFF7FEFF 		bl	davis_parsers_loop
- 1924              	.LVL166:
- 1925 0cd4 F4E7     		b	.L74
- 1926              	.L125:
- 1927 0cd6 00BF     		.align	2
- 1928              	.L124:
- 1929 0cd8 00000000 		.word	.LANCHOR16
- 1930 0cdc 00000000 		.word	main_kiss_srl_ctx_ptr
- 1931 0ce0 00000000 		.word	.LANCHOR12
- 1932 0ce4 00000000 		.word	rte_pv_struct
- 1933 0ce8 00000000 		.word	rte_pv_average
- 1934 0cec 00000000 		.word	rte_pv_load_current
- 1935 0cf0 00000000 		.word	rte_pv_cell_voltage
- 1936 0cf4 00000000 		.word	rte_pv_battery_voltage
- 1937 0cf8 00000000 		.word	rte_pv_battery_current
- 1938 0cfc 00000000 		.word	rte_pv_sys_voltage
- 1939 0d00 00000000 		.word	rte_pv_last_error
- 1940 0d04 00000000 		.word	rte_pv_messages_count
- 1941 0d08 00000000 		.word	rte_pv_corrupted_messages_count
- 1942 0d0c 00000000 		.word	main_wx_srl_ctx_ptr
- 1943 0d10 00000000 		.word	.LANCHOR11
- 1944 0d14 00000000 		.word	.LANCHOR17
- 1945 0d18 00000000 		.word	rte_wx_umb_context
- 1946 0d1c 00000000 		.word	main_afsk
- 1947 0d20 00000000 		.word	main_ax25
- 1948 0d24 00000000 		.word	.LANCHOR18
- 1949 0d28 00000000 		.word	rte_wx_davis_loop_packet_avaliable
- 1950 0d2c 00000000 		.word	.LANCHOR8
- 1951 0d30 00000000 		.word	.LANCHOR13
- 1952 0d34 00000000 		.word	rte_wx_umb
- 1953 0d38 00000000 		.word	.LANCHOR9
- 1954 0d3c 00000000 		.word	main_own_aprs_msg
- 1955 0d40 00000000 		.word	main_own_aprs_msg_len
- 1956 0d44 00000000 		.word	rte_rtu_pool_queue
- 1957 0d48 00000000 		.word	.LANCHOR10
- 1958 0d4c 00000000 		.word	main_own_path
- 1959 0d50 00000000 		.word	rte_main_trigger_modbus_status
- 1960 0d54 00000000 		.word	.LANCHOR5
- 1961 0d58 00000000 		.word	.LANCHOR1
- 1962 0d5c 00000000 		.word	.LANCHOR20
- 1963 0d60 00000000 		.word	.LANCHOR21
- 1964 0d64 00000000 		.word	.LANCHOR22
- 1965 0d68 00000000 		.word	rte_wx_umb_qf
- 1966 0d6c 00000000 		.word	rte_wx_davis_loop_content
- 1967              		.cfi_endproc
- 1968              	.LFE626:
- 1970              		.section	.text.main_get_adc_sample,"ax",%progbits
- 1971              		.align	1
- 1972              		.global	main_get_adc_sample
- 1973              		.syntax unified
- 1974              		.thumb
- 1975              		.thumb_func
- 1976              		.fpu fpv4-sp-d16
- 1978              	main_get_adc_sample:
- 1979              	.LFB627:
+ 1911              		.loc 1 1024 0
+ 1912 0cbe 054B     		ldr	r3, .L124+4
+ 1913 0cc0 1B68     		ldr	r3, [r3]
+ 1914 0cc2 284A     		ldr	r2, .L124+148
+ 1915 0cc4 998B     		ldrh	r1, [r3, #28]
+ 1916 0cc6 9869     		ldr	r0, [r3, #24]
+ 1917 0cc8 FFF7FEFF 		bl	davis_parsers_loop
+ 1918              	.LVL164:
+ 1919 0ccc F4E7     		b	.L74
+ 1920              	.L125:
+ 1921 0cce 00BF     		.align	2
+ 1922              	.L124:
+ 1923 0cd0 00000000 		.word	.LANCHOR16
+ 1924 0cd4 00000000 		.word	main_kiss_srl_ctx_ptr
+ 1925 0cd8 00000000 		.word	.LANCHOR12
+ 1926 0cdc 00000000 		.word	rte_pv_struct
+ 1927 0ce0 00000000 		.word	rte_pv_average
+ 1928 0ce4 00000000 		.word	rte_pv_load_current
+ 1929 0ce8 00000000 		.word	rte_pv_cell_voltage
+ 1930 0cec 00000000 		.word	rte_pv_battery_voltage
+ 1931 0cf0 00000000 		.word	rte_pv_battery_current
+ 1932 0cf4 00000000 		.word	rte_pv_sys_voltage
+ 1933 0cf8 00000000 		.word	rte_pv_last_error
+ 1934 0cfc 00000000 		.word	rte_pv_messages_count
+ 1935 0d00 00000000 		.word	rte_pv_corrupted_messages_count
+ 1936 0d04 00000000 		.word	main_wx_srl_ctx_ptr
+ 1937 0d08 00000000 		.word	.LANCHOR11
+ 1938 0d0c 00000000 		.word	.LANCHOR17
+ 1939 0d10 00000000 		.word	rte_wx_umb_context
+ 1940 0d14 00000000 		.word	main_afsk
+ 1941 0d18 00000000 		.word	main_ax25
+ 1942 0d1c 00000000 		.word	.LANCHOR18
+ 1943 0d20 00000000 		.word	rte_wx_davis_loop_packet_avaliable
+ 1944 0d24 00000000 		.word	.LANCHOR8
+ 1945 0d28 00000000 		.word	.LANCHOR13
+ 1946 0d2c 00000000 		.word	rte_wx_umb
+ 1947 0d30 00000000 		.word	.LANCHOR9
+ 1948 0d34 00000000 		.word	main_own_aprs_msg
+ 1949 0d38 00000000 		.word	main_own_aprs_msg_len
+ 1950 0d3c 00000000 		.word	rte_rtu_pool_queue
+ 1951 0d40 00000000 		.word	.LANCHOR10
+ 1952 0d44 00000000 		.word	main_own_path
+ 1953 0d48 00000000 		.word	rte_main_trigger_modbus_status
+ 1954 0d4c 00000000 		.word	.LANCHOR5
+ 1955 0d50 00000000 		.word	.LANCHOR1
+ 1956 0d54 00000000 		.word	.LANCHOR20
+ 1957 0d58 00000000 		.word	.LANCHOR21
+ 1958 0d5c 00000000 		.word	.LANCHOR22
+ 1959 0d60 00000000 		.word	rte_wx_umb_qf
+ 1960 0d64 00000000 		.word	rte_wx_davis_loop_content
+ 1961              		.cfi_endproc
+ 1962              	.LFE626:
+ 1964              		.section	.text.main_get_adc_sample,"ax",%progbits
+ 1965              		.align	1
+ 1966              		.global	main_get_adc_sample
+ 1967              		.syntax unified
+ 1968              		.thumb
+ 1969              		.thumb_func
+ 1970              		.fpu fpv4-sp-d16
+ 1972              	main_get_adc_sample:
+ 1973              	.LFB627:
 1032:../src/main.c **** 		}
 1033:../src/main.c **** 
 1034:../src/main.c **** 
@@ -7018,344 +7011,344 @@
 1037:../src/main.c **** }
 1038:../src/main.c **** 
 1039:../src/main.c **** uint16_t main_get_adc_sample(void) {
- 1980              		.loc 1 1039 0
- 1981              		.cfi_startproc
- 1982              		@ args = 0, pretend = 0, frame = 0
- 1983              		@ frame_needed = 0, uses_anonymous_args = 0
- 1984              		@ link register save eliminated.
+ 1974              		.loc 1 1039 0
+ 1975              		.cfi_startproc
+ 1976              		@ args = 0, pretend = 0, frame = 0
+ 1977              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1978              		@ link register save eliminated.
 1040:../src/main.c **** 	return (uint16_t) ADC1->DR;
- 1985              		.loc 1 1040 0
- 1986 0000 014B     		ldr	r3, .L127
- 1987 0002 186C     		ldr	r0, [r3, #64]
+ 1979              		.loc 1 1040 0
+ 1980 0000 014B     		ldr	r3, .L127
+ 1981 0002 186C     		ldr	r0, [r3, #64]
 1041:../src/main.c **** }
- 1988              		.loc 1 1041 0
- 1989 0004 80B2     		uxth	r0, r0
- 1990 0006 7047     		bx	lr
- 1991              	.L128:
- 1992              		.align	2
- 1993              	.L127:
- 1994 0008 00000450 		.word	1342439424
- 1995              		.cfi_endproc
- 1996              	.LFE627:
- 1998              		.section	.text.main_service_cpu_load_ticks,"ax",%progbits
- 1999              		.align	1
- 2000              		.global	main_service_cpu_load_ticks
- 2001              		.syntax unified
- 2002              		.thumb
- 2003              		.thumb_func
- 2004              		.fpu fpv4-sp-d16
- 2006              	main_service_cpu_load_ticks:
- 2007              	.LFB628:
+ 1982              		.loc 1 1041 0
+ 1983 0004 80B2     		uxth	r0, r0
+ 1984 0006 7047     		bx	lr
+ 1985              	.L128:
+ 1986              		.align	2
+ 1987              	.L127:
+ 1988 0008 00000450 		.word	1342439424
+ 1989              		.cfi_endproc
+ 1990              	.LFE627:
+ 1992              		.section	.text.main_service_cpu_load_ticks,"ax",%progbits
+ 1993              		.align	1
+ 1994              		.global	main_service_cpu_load_ticks
+ 1995              		.syntax unified
+ 1996              		.thumb
+ 1997              		.thumb_func
+ 1998              		.fpu fpv4-sp-d16
+ 2000              	main_service_cpu_load_ticks:
+ 2001              	.LFB628:
 1042:../src/main.c **** 
 1043:../src/main.c **** void main_service_cpu_load_ticks(void) {
- 2008              		.loc 1 1043 0
- 2009              		.cfi_startproc
- 2010              		@ args = 0, pretend = 0, frame = 0
- 2011              		@ frame_needed = 0, uses_anonymous_args = 0
- 2012              		@ link register save eliminated.
- 2013              	.LVL167:
+ 2002              		.loc 1 1043 0
+ 2003              		.cfi_startproc
+ 2004              		@ args = 0, pretend = 0, frame = 0
+ 2005              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2006              		@ link register save eliminated.
+ 2007              	.LVL165:
 1044:../src/main.c **** 
 1045:../src/main.c **** 	uint32_t cpu_ticks_load = 0;
 1046:../src/main.c **** 
 1047:../src/main.c **** 	// the biggest this result will be the biggest load the CPU is handling
 1048:../src/main.c **** 	cpu_ticks_load = main_idle_cpu_ticks - main_current_cpu_idle_ticks;
- 2014              		.loc 1 1048 0
- 2015 0000 074B     		ldr	r3, .L130
- 2016 0002 1868     		ldr	r0, [r3]
- 2017 0004 0749     		ldr	r1, .L130+4
- 2018 0006 0B68     		ldr	r3, [r1]
- 2019 0008 C21A     		subs	r2, r0, r3
- 2020              	.LVL168:
+ 2008              		.loc 1 1048 0
+ 2009 0000 074B     		ldr	r3, .L130
+ 2010 0002 1868     		ldr	r0, [r3]
+ 2011 0004 0749     		ldr	r1, .L130+4
+ 2012 0006 0B68     		ldr	r3, [r1]
+ 2013 0008 C21A     		subs	r2, r0, r3
+ 2014              	.LVL166:
 1049:../src/main.c **** 
 1050:../src/main.c **** 	// calculate the cpu load
 1051:../src/main.c **** 	main_cpu_load = (int8_t) ((cpu_ticks_load * 100) / main_idle_cpu_ticks);
- 2021              		.loc 1 1051 0
- 2022 000a 6423     		movs	r3, #100
- 2023 000c 03FB02F3 		mul	r3, r3, r2
- 2024 0010 B3FBF0F3 		udiv	r3, r3, r0
- 2025 0014 044A     		ldr	r2, .L130+8
- 2026              	.LVL169:
- 2027 0016 1370     		strb	r3, [r2]
+ 2015              		.loc 1 1051 0
+ 2016 000a 6423     		movs	r3, #100
+ 2017 000c 03FB02F3 		mul	r3, r3, r2
+ 2018 0010 B3FBF0F3 		udiv	r3, r3, r0
+ 2019 0014 044A     		ldr	r2, .L130+8
+ 2020              	.LVL167:
+ 2021 0016 1370     		strb	r3, [r2]
 1052:../src/main.c **** 
 1053:../src/main.c **** 	// reset the tick counter back to zero;
 1054:../src/main.c **** 	main_current_cpu_idle_ticks = 0;
- 2028              		.loc 1 1054 0
- 2029 0018 0023     		movs	r3, #0
- 2030 001a 0B60     		str	r3, [r1]
- 2031              	.LVL170:
+ 2022              		.loc 1 1054 0
+ 2023 0018 0023     		movs	r3, #0
+ 2024 001a 0B60     		str	r3, [r1]
+ 2025              	.LVL168:
 1055:../src/main.c **** }
- 2032              		.loc 1 1055 0
- 2033 001c 7047     		bx	lr
- 2034              	.L131:
- 2035 001e 00BF     		.align	2
- 2036              	.L130:
- 2037 0020 00000000 		.word	.LANCHOR4
- 2038 0024 00000000 		.word	.LANCHOR14
- 2039 0028 00000000 		.word	.LANCHOR24
- 2040              		.cfi_endproc
- 2041              	.LFE628:
- 2043              		.comm	GPIO_InitTypeDef,24,4
- 2044              		.global	kiss10m
- 2045              		.global	digidrop10m
- 2046              		.global	digi10m
- 2047              		.global	tx10m
- 2048              		.global	rx10m
- 2049              		.comm	after_tx_lock,1,1
- 2050              		.global	main_crc_result
- 2051              		.global	main_umb_retval
- 2052              		.global	buffer_len
- 2053              		.global	retval
- 2054              		.global	main_symbol_s
- 2055              		.global	main_symbol_f
- 2056              		.comm	main_string_longitude,9,4
- 2057              		.comm	main_string_latitude,9,4
- 2058              		.comm	main_own_aprs_msg,160,4
- 2059              		.comm	main_own_aprs_msg_len,1,1
- 2060              		.global	main_own_path_ln
- 2061              		.comm	main_own_path,21,4
- 2062              		.comm	main_afsk,1092,4
- 2063              		.comm	main_ax25,536,4
- 2064              		.global	main_modbus_rtu_master_enabled
- 2065              		.global	main_davis_serial_enabled
- 2066              		.global	main_kiss_enabled
- 2067              		.comm	main_target_wx_baudrate,4,4
- 2068              		.comm	main_target_kiss_baudrate,4,4
- 2069              		.comm	main_wx_srl_ctx_ptr,4,4
- 2070              		.comm	main_kiss_srl_ctx_ptr,4,4
- 2071              		.comm	main_wx_srl_ctx,88,4
- 2072              		.comm	main_kiss_srl_ctx,88,4
- 2073              		.global	main_ten_second_pool_timer
- 2074              		.global	main_two_second_pool_timer
- 2075              		.global	main_one_second_pool_timer
- 2076              		.global	main_one_minute_pool_timer
- 2077              		.global	main_wx_sensors_pool_timer
- 2078              		.global	main_cpu_load
- 2079              		.global	main_current_cpu_idle_ticks
- 2080              		.global	main_idle_cpu_ticks
- 2081              		.global	master_time
- 2082              		.global	main_config_data_rtu
- 2083              		.global	main_config_data_umb
- 2084              		.global	main_config_data_wx_sources
- 2085              		.global	main_config_data_basic
- 2086              		.global	main_config_data_mode
- 2087              		.section	.bss.buffer_len,"aw",%nobits
- 2088              		.align	1
- 2089              		.set	.LANCHOR16,. + 0
- 2092              	buffer_len:
+ 2026              		.loc 1 1055 0
+ 2027 001c 7047     		bx	lr
+ 2028              	.L131:
+ 2029 001e 00BF     		.align	2
+ 2030              	.L130:
+ 2031 0020 00000000 		.word	.LANCHOR4
+ 2032 0024 00000000 		.word	.LANCHOR14
+ 2033 0028 00000000 		.word	.LANCHOR24
+ 2034              		.cfi_endproc
+ 2035              	.LFE628:
+ 2037              		.comm	GPIO_InitTypeDef,24,4
+ 2038              		.global	kiss10m
+ 2039              		.global	digidrop10m
+ 2040              		.global	digi10m
+ 2041              		.global	tx10m
+ 2042              		.global	rx10m
+ 2043              		.comm	after_tx_lock,1,1
+ 2044              		.global	main_crc_result
+ 2045              		.global	main_umb_retval
+ 2046              		.global	buffer_len
+ 2047              		.global	retval
+ 2048              		.global	main_symbol_s
+ 2049              		.global	main_symbol_f
+ 2050              		.comm	main_string_longitude,9,4
+ 2051              		.comm	main_string_latitude,9,4
+ 2052              		.comm	main_own_aprs_msg,160,4
+ 2053              		.comm	main_own_aprs_msg_len,1,1
+ 2054              		.global	main_own_path_ln
+ 2055              		.comm	main_own_path,21,4
+ 2056              		.comm	main_afsk,1092,4
+ 2057              		.comm	main_ax25,536,4
+ 2058              		.global	main_modbus_rtu_master_enabled
+ 2059              		.global	main_davis_serial_enabled
+ 2060              		.global	main_kiss_enabled
+ 2061              		.comm	main_target_wx_baudrate,4,4
+ 2062              		.comm	main_target_kiss_baudrate,4,4
+ 2063              		.comm	main_wx_srl_ctx_ptr,4,4
+ 2064              		.comm	main_kiss_srl_ctx_ptr,4,4
+ 2065              		.comm	main_wx_srl_ctx,88,4
+ 2066              		.comm	main_kiss_srl_ctx,88,4
+ 2067              		.global	main_ten_second_pool_timer
+ 2068              		.global	main_two_second_pool_timer
+ 2069              		.global	main_one_second_pool_timer
+ 2070              		.global	main_one_minute_pool_timer
+ 2071              		.global	main_wx_sensors_pool_timer
+ 2072              		.global	main_cpu_load
+ 2073              		.global	main_current_cpu_idle_ticks
+ 2074              		.global	main_idle_cpu_ticks
+ 2075              		.global	master_time
+ 2076              		.global	main_config_data_rtu
+ 2077              		.global	main_config_data_umb
+ 2078              		.global	main_config_data_wx_sources
+ 2079              		.global	main_config_data_basic
+ 2080              		.global	main_config_data_mode
+ 2081              		.section	.bss.buffer_len,"aw",%nobits
+ 2082              		.align	1
+ 2083              		.set	.LANCHOR16,. + 0
+ 2086              	buffer_len:
+ 2087 0000 0000     		.space	2
+ 2088              		.section	.bss.digi10m,"aw",%nobits
+ 2089              		.align	1
+ 2092              	digi10m:
  2093 0000 0000     		.space	2
- 2094              		.section	.bss.digi10m,"aw",%nobits
+ 2094              		.section	.bss.digidrop10m,"aw",%nobits
  2095              		.align	1
- 2098              	digi10m:
+ 2098              	digidrop10m:
  2099 0000 0000     		.space	2
- 2100              		.section	.bss.digidrop10m,"aw",%nobits
+ 2100              		.section	.bss.kiss10m,"aw",%nobits
  2101              		.align	1
- 2104              	digidrop10m:
- 2105 0000 0000     		.space	2
- 2106              		.section	.bss.kiss10m,"aw",%nobits
- 2107              		.align	1
- 2108              		.set	.LANCHOR18,. + 0
- 2111              	kiss10m:
- 2112 0000 0000     		.space	2
- 2113              		.section	.bss.main_config_data_basic,"aw",%nobits
- 2114              		.align	2
- 2115              		.set	.LANCHOR1,. + 0
- 2118              	main_config_data_basic:
- 2119 0000 00000000 		.space	4
- 2120              		.section	.bss.main_config_data_mode,"aw",%nobits
- 2121              		.align	2
- 2122              		.set	.LANCHOR5,. + 0
- 2125              	main_config_data_mode:
- 2126 0000 00000000 		.space	4
- 2127              		.section	.bss.main_config_data_rtu,"aw",%nobits
- 2128              		.align	2
- 2129              		.set	.LANCHOR8,. + 0
- 2132              	main_config_data_rtu:
- 2133 0000 00000000 		.space	4
- 2134              		.section	.bss.main_config_data_umb,"aw",%nobits
- 2135              		.align	2
- 2136              		.set	.LANCHOR11,. + 0
- 2139              	main_config_data_umb:
- 2140 0000 00000000 		.space	4
- 2141              		.section	.bss.main_config_data_wx_sources,"aw",%nobits
- 2142              		.align	2
- 2143              		.set	.LANCHOR13,. + 0
- 2146              	main_config_data_wx_sources:
- 2147 0000 00000000 		.space	4
- 2148              		.section	.bss.main_cpu_load,"aw",%nobits
- 2149              		.set	.LANCHOR24,. + 0
- 2152              	main_cpu_load:
- 2153 0000 00       		.space	1
- 2154              		.section	.bss.main_crc_result,"aw",%nobits
- 2155              		.align	2
- 2156              		.set	.LANCHOR0,. + 0
- 2159              	main_crc_result:
- 2160 0000 00000000 		.space	4
- 2161              		.section	.bss.main_current_cpu_idle_ticks,"aw",%nobits
- 2162              		.align	2
- 2163              		.set	.LANCHOR14,. + 0
- 2166              	main_current_cpu_idle_ticks:
- 2167 0000 00000000 		.space	4
- 2168              		.section	.bss.main_davis_serial_enabled,"aw",%nobits
- 2169              		.set	.LANCHOR7,. + 0
- 2172              	main_davis_serial_enabled:
- 2173 0000 00       		.space	1
- 2174              		.section	.bss.main_idle_cpu_ticks,"aw",%nobits
- 2175              		.align	2
- 2176              		.set	.LANCHOR4,. + 0
- 2179              	main_idle_cpu_ticks:
- 2180 0000 00000000 		.space	4
- 2181              		.section	.bss.main_modbus_rtu_master_enabled,"aw",%nobits
- 2182              		.set	.LANCHOR9,. + 0
- 2185              	main_modbus_rtu_master_enabled:
+ 2102              		.set	.LANCHOR18,. + 0
+ 2105              	kiss10m:
+ 2106 0000 0000     		.space	2
+ 2107              		.section	.bss.main_config_data_basic,"aw",%nobits
+ 2108              		.align	2
+ 2109              		.set	.LANCHOR1,. + 0
+ 2112              	main_config_data_basic:
+ 2113 0000 00000000 		.space	4
+ 2114              		.section	.bss.main_config_data_mode,"aw",%nobits
+ 2115              		.align	2
+ 2116              		.set	.LANCHOR5,. + 0
+ 2119              	main_config_data_mode:
+ 2120 0000 00000000 		.space	4
+ 2121              		.section	.bss.main_config_data_rtu,"aw",%nobits
+ 2122              		.align	2
+ 2123              		.set	.LANCHOR8,. + 0
+ 2126              	main_config_data_rtu:
+ 2127 0000 00000000 		.space	4
+ 2128              		.section	.bss.main_config_data_umb,"aw",%nobits
+ 2129              		.align	2
+ 2130              		.set	.LANCHOR11,. + 0
+ 2133              	main_config_data_umb:
+ 2134 0000 00000000 		.space	4
+ 2135              		.section	.bss.main_config_data_wx_sources,"aw",%nobits
+ 2136              		.align	2
+ 2137              		.set	.LANCHOR13,. + 0
+ 2140              	main_config_data_wx_sources:
+ 2141 0000 00000000 		.space	4
+ 2142              		.section	.bss.main_cpu_load,"aw",%nobits
+ 2143              		.set	.LANCHOR24,. + 0
+ 2146              	main_cpu_load:
+ 2147 0000 00       		.space	1
+ 2148              		.section	.bss.main_crc_result,"aw",%nobits
+ 2149              		.align	2
+ 2150              		.set	.LANCHOR0,. + 0
+ 2153              	main_crc_result:
+ 2154 0000 00000000 		.space	4
+ 2155              		.section	.bss.main_current_cpu_idle_ticks,"aw",%nobits
+ 2156              		.align	2
+ 2157              		.set	.LANCHOR14,. + 0
+ 2160              	main_current_cpu_idle_ticks:
+ 2161 0000 00000000 		.space	4
+ 2162              		.section	.bss.main_davis_serial_enabled,"aw",%nobits
+ 2163              		.set	.LANCHOR7,. + 0
+ 2166              	main_davis_serial_enabled:
+ 2167 0000 00       		.space	1
+ 2168              		.section	.bss.main_idle_cpu_ticks,"aw",%nobits
+ 2169              		.align	2
+ 2170              		.set	.LANCHOR4,. + 0
+ 2173              	main_idle_cpu_ticks:
+ 2174 0000 00000000 		.space	4
+ 2175              		.section	.bss.main_modbus_rtu_master_enabled,"aw",%nobits
+ 2176              		.set	.LANCHOR9,. + 0
+ 2179              	main_modbus_rtu_master_enabled:
+ 2180 0000 00       		.space	1
+ 2181              		.section	.bss.main_own_path_ln,"aw",%nobits
+ 2182              		.set	.LANCHOR10,. + 0
+ 2185              	main_own_path_ln:
  2186 0000 00       		.space	1
- 2187              		.section	.bss.main_own_path_ln,"aw",%nobits
- 2188              		.set	.LANCHOR10,. + 0
- 2191              	main_own_path_ln:
- 2192 0000 00       		.space	1
- 2193              		.section	.bss.master_time,"aw",%nobits
- 2194              		.align	2
- 2195              		.set	.LANCHOR17,. + 0
- 2198              	master_time:
- 2199 0000 00000000 		.space	4
- 2200              		.section	.bss.rx10m,"aw",%nobits
- 2201              		.align	1
- 2202              		.set	.LANCHOR15,. + 0
- 2205              	rx10m:
+ 2187              		.section	.bss.master_time,"aw",%nobits
+ 2188              		.align	2
+ 2189              		.set	.LANCHOR17,. + 0
+ 2192              	master_time:
+ 2193 0000 00000000 		.space	4
+ 2194              		.section	.bss.rx10m,"aw",%nobits
+ 2195              		.align	1
+ 2196              		.set	.LANCHOR15,. + 0
+ 2199              	rx10m:
+ 2200 0000 0000     		.space	2
+ 2201              		.section	.bss.tx10m,"aw",%nobits
+ 2202              		.align	1
+ 2205              	tx10m:
  2206 0000 0000     		.space	2
- 2207              		.section	.bss.tx10m,"aw",%nobits
- 2208              		.align	1
- 2211              	tx10m:
- 2212 0000 0000     		.space	2
- 2213              		.section	.data.main_kiss_enabled,"aw",%progbits
- 2214              		.set	.LANCHOR6,. + 0
- 2217              	main_kiss_enabled:
- 2218 0000 01       		.byte	1
- 2219              		.section	.data.main_one_minute_pool_timer,"aw",%progbits
- 2220              		.align	2
- 2221              		.set	.LANCHOR20,. + 0
- 2224              	main_one_minute_pool_timer:
- 2225 0000 60EA0000 		.word	60000
- 2226              		.section	.data.main_one_second_pool_timer,"aw",%progbits
- 2227              		.align	2
- 2228              		.set	.LANCHOR21,. + 0
- 2231              	main_one_second_pool_timer:
- 2232 0000 E8030000 		.word	1000
- 2233              		.section	.data.main_symbol_f,"aw",%progbits
- 2234              		.set	.LANCHOR2,. + 0
- 2237              	main_symbol_f:
- 2238 0000 2F       		.byte	47
- 2239              		.section	.data.main_symbol_s,"aw",%progbits
- 2240              		.set	.LANCHOR3,. + 0
- 2243              	main_symbol_s:
- 2244 0000 23       		.byte	35
- 2245              		.section	.data.main_ten_second_pool_timer,"aw",%progbits
- 2246              		.align	2
- 2247              		.set	.LANCHOR23,. + 0
- 2250              	main_ten_second_pool_timer:
- 2251 0000 10270000 		.word	10000
- 2252              		.section	.data.main_two_second_pool_timer,"aw",%progbits
- 2253              		.align	2
- 2254              		.set	.LANCHOR22,. + 0
- 2257              	main_two_second_pool_timer:
- 2258 0000 D0070000 		.word	2000
- 2259              		.section	.data.main_umb_retval,"aw",%progbits
- 2262              	main_umb_retval:
- 2263 0000 7F       		.byte	127
- 2264              		.section	.data.main_wx_sensors_pool_timer,"aw",%progbits
- 2265              		.align	2
- 2266              		.set	.LANCHOR19,. + 0
- 2269              	main_wx_sensors_pool_timer:
- 2270 0000 DCFF0000 		.word	65500
- 2271              		.section	.data.retval,"aw",%progbits
- 2272              		.set	.LANCHOR12,. + 0
- 2275              	retval:
- 2276 0000 64       		.byte	100
- 2277              		.section	.rodata.main.str1.4,"aMS",%progbits,1
- 2278              		.align	2
- 2279              	.LC0:
- 2280 0000 3D257325 		.ascii	"=%s%c%c%s%c%c %s\000"
- 2280      63256325 
- 2280      73256325 
- 2280      63202573 
- 2280      00
- 2281              		.text
- 2282              	.Letext0:
- 2283              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
- 2284              		.file 7 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
- 2285              		.file 8 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
- 2286              		.file 9 "../system/include/aprs/cfifo.h"
- 2287              		.file 10 "../system/include/aprs/afsk.h"
- 2288              		.file 11 "../system/include/aprs/ax25.h"
- 2289              		.file 12 "../system/include/drivers/serial.h"
- 2290              		.file 13 "../include/config_data.h"
- 2291              		.file 14 "../include/main.h"
- 2292              		.file 15 "../include/delay.h"
- 2293              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
- 2294              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
- 2295              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
- 2296              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
- 2297              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
- 2298              		.file 21 "../include/config_data_externs.h"
- 2299              		.file 22 "../include/configuration_handler.h"
- 2300              		.file 23 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
- 2301              		.file 24 "../system/include/./drivers/dallas.h"
- 2302              		.file 25 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
- 2303              		.file 26 "../system/include/./drivers/ms5611.h"
- 2304              		.file 27 "../system/include/./umb_master/umb_qf_t.h"
- 2305              		.file 28 "../system/include/./ve_direct_protocol/raw_struct.h"
- 2306              		.file 29 "../system/include/./ve_direct_protocol/average_struct.h"
- 2307              		.file 30 "../system/include/drivers/analog_anemometer.h"
- 2308              		.file 31 "../system/include/davis_vantage/davis_qf_t.h"
- 2309              		.file 32 "../system/include/davis_vantage/davis_loop_t.h"
- 2310              		.file 33 "../system/include/umb_master/umb_frame_t.h"
- 2311              		.file 34 "../system/include/umb_master/umb_retval_t.h"
- 2312              		.file 35 "../system/include/umb_master/umb_state_t.h"
- 2313              		.file 36 "../system/include/umb_master/umb_context_t.h"
- 2314              		.file 37 "../system/include/umb_master/umb_call_reason.h"
- 2315              		.file 38 "../system/include/drivers/bme280.h"
- 2316              		.file 39 "../include/rte_wx.h"
- 2317              		.file 40 "../include/rte_pv.h"
- 2318              		.file 41 "../include/rte_main.h"
- 2319              		.file 42 "../system/include/modbus_rtu/rtu_register_data_t.h"
- 2320              		.file 43 "../system/include/modbus_rtu/rtu_exception_t.h"
- 2321              		.file 44 "../system/include/modbus_rtu/rtu_pool_queue_t.h"
- 2322              		.file 45 "../include/rte_rtu.h"
- 2323              		.file 46 "../include/wx_handler.h"
- 2324              		.file 47 "../system/include/drivers/i2c.h"
- 2325              		.file 48 "../src/../system/include/modbus_rtu/rtu_serial_io.h"
- 2326              		.file 49 "../src/../system/include/davis_vantage/davis.h"
- 2327              		.file 50 "../include/KissCommunication.h"
- 2328              		.file 51 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
- 2329              		.file 52 "../include/float_to_string.h"
- 2330              		.file 53 "../src/io.h"
- 2331              		.file 54 "../include/PathConfig.h"
- 2332              		.file 55 "../system/include/aprs/dac.h"
- 2333              		.file 56 "../system/include/aprs/digi.h"
- 2334              		.file 57 "../include/it_handlers.h"
- 2335              		.file 58 "../system/include/aprs/afsk_pr.h"
- 2336              		.file 59 "../include/TimerConfig.h"
- 2337              		.file 60 "../system/include/umb_master/umb_master.h"
- 2338              		.file 61 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
- 2339              		.file 62 "../system/include/ve_direct_protocol/parser.h"
- 2340              		.file 63 "../system/include/aprs/beacon.h"
- 2341              		.file 64 "../system/include/umb_master/umb_0x26_status.h"
- 2342              		.file 65 "../system/include/aprs/wx.h"
- 2343              		.file 66 "../include/packet_tx_handler.h"
- 2344              		.file 67 "../system/include/umb_master/umb_channel_pool.h"
- 2345              		.file 68 "../src/../system/include/davis_vantage/davis_parsers.h"
+ 2207              		.section	.data.main_kiss_enabled,"aw",%progbits
+ 2208              		.set	.LANCHOR6,. + 0
+ 2211              	main_kiss_enabled:
+ 2212 0000 01       		.byte	1
+ 2213              		.section	.data.main_one_minute_pool_timer,"aw",%progbits
+ 2214              		.align	2
+ 2215              		.set	.LANCHOR20,. + 0
+ 2218              	main_one_minute_pool_timer:
+ 2219 0000 60EA0000 		.word	60000
+ 2220              		.section	.data.main_one_second_pool_timer,"aw",%progbits
+ 2221              		.align	2
+ 2222              		.set	.LANCHOR21,. + 0
+ 2225              	main_one_second_pool_timer:
+ 2226 0000 E8030000 		.word	1000
+ 2227              		.section	.data.main_symbol_f,"aw",%progbits
+ 2228              		.set	.LANCHOR2,. + 0
+ 2231              	main_symbol_f:
+ 2232 0000 2F       		.byte	47
+ 2233              		.section	.data.main_symbol_s,"aw",%progbits
+ 2234              		.set	.LANCHOR3,. + 0
+ 2237              	main_symbol_s:
+ 2238 0000 23       		.byte	35
+ 2239              		.section	.data.main_ten_second_pool_timer,"aw",%progbits
+ 2240              		.align	2
+ 2241              		.set	.LANCHOR23,. + 0
+ 2244              	main_ten_second_pool_timer:
+ 2245 0000 10270000 		.word	10000
+ 2246              		.section	.data.main_two_second_pool_timer,"aw",%progbits
+ 2247              		.align	2
+ 2248              		.set	.LANCHOR22,. + 0
+ 2251              	main_two_second_pool_timer:
+ 2252 0000 D0070000 		.word	2000
+ 2253              		.section	.data.main_umb_retval,"aw",%progbits
+ 2256              	main_umb_retval:
+ 2257 0000 7F       		.byte	127
+ 2258              		.section	.data.main_wx_sensors_pool_timer,"aw",%progbits
+ 2259              		.align	2
+ 2260              		.set	.LANCHOR19,. + 0
+ 2263              	main_wx_sensors_pool_timer:
+ 2264 0000 DCFF0000 		.word	65500
+ 2265              		.section	.data.retval,"aw",%progbits
+ 2266              		.set	.LANCHOR12,. + 0
+ 2269              	retval:
+ 2270 0000 64       		.byte	100
+ 2271              		.section	.rodata.main.str1.4,"aMS",%progbits,1
+ 2272              		.align	2
+ 2273              	.LC0:
+ 2274 0000 3D257325 		.ascii	"=%s%c%c%s%c%c %s\000"
+ 2274      63256325 
+ 2274      73256325 
+ 2274      63202573 
+ 2274      00
+ 2275              		.text
+ 2276              	.Letext0:
+ 2277              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 2278              		.file 7 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 2279              		.file 8 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 2280              		.file 9 "../system/include/aprs/cfifo.h"
+ 2281              		.file 10 "../system/include/aprs/afsk.h"
+ 2282              		.file 11 "../system/include/aprs/ax25.h"
+ 2283              		.file 12 "../system/include/drivers/serial.h"
+ 2284              		.file 13 "../include/config_data.h"
+ 2285              		.file 14 "../include/main.h"
+ 2286              		.file 15 "../include/delay.h"
+ 2287              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 2288              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 2289              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 2290              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 2291              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+ 2292              		.file 21 "../include/config_data_externs.h"
+ 2293              		.file 22 "../include/configuration_handler.h"
+ 2294              		.file 23 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
+ 2295              		.file 24 "../system/include/./drivers/dallas.h"
+ 2296              		.file 25 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 2297              		.file 26 "../system/include/./drivers/ms5611.h"
+ 2298              		.file 27 "../system/include/./umb_master/umb_qf_t.h"
+ 2299              		.file 28 "../system/include/./ve_direct_protocol/raw_struct.h"
+ 2300              		.file 29 "../system/include/./ve_direct_protocol/average_struct.h"
+ 2301              		.file 30 "../system/include/drivers/analog_anemometer.h"
+ 2302              		.file 31 "../system/include/davis_vantage/davis_qf_t.h"
+ 2303              		.file 32 "../system/include/davis_vantage/davis_loop_t.h"
+ 2304              		.file 33 "../system/include/umb_master/umb_frame_t.h"
+ 2305              		.file 34 "../system/include/umb_master/umb_retval_t.h"
+ 2306              		.file 35 "../system/include/umb_master/umb_state_t.h"
+ 2307              		.file 36 "../system/include/umb_master/umb_context_t.h"
+ 2308              		.file 37 "../system/include/umb_master/umb_call_reason.h"
+ 2309              		.file 38 "../system/include/drivers/bme280.h"
+ 2310              		.file 39 "../include/rte_wx.h"
+ 2311              		.file 40 "../include/rte_pv.h"
+ 2312              		.file 41 "../include/rte_main.h"
+ 2313              		.file 42 "../system/include/modbus_rtu/rtu_register_data_t.h"
+ 2314              		.file 43 "../system/include/modbus_rtu/rtu_exception_t.h"
+ 2315              		.file 44 "../system/include/modbus_rtu/rtu_pool_queue_t.h"
+ 2316              		.file 45 "../include/rte_rtu.h"
+ 2317              		.file 46 "../include/wx_handler.h"
+ 2318              		.file 47 "../system/include/drivers/i2c.h"
+ 2319              		.file 48 "../src/../system/include/modbus_rtu/rtu_serial_io.h"
+ 2320              		.file 49 "../src/../system/include/davis_vantage/davis.h"
+ 2321              		.file 50 "../include/KissCommunication.h"
+ 2322              		.file 51 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 2323              		.file 52 "../include/float_to_string.h"
+ 2324              		.file 53 "../src/io.h"
+ 2325              		.file 54 "../include/PathConfig.h"
+ 2326              		.file 55 "../system/include/aprs/dac.h"
+ 2327              		.file 56 "../system/include/aprs/digi.h"
+ 2328              		.file 57 "../include/it_handlers.h"
+ 2329              		.file 58 "../system/include/aprs/afsk_pr.h"
+ 2330              		.file 59 "../include/TimerConfig.h"
+ 2331              		.file 60 "../system/include/umb_master/umb_master.h"
+ 2332              		.file 61 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+ 2333              		.file 62 "../system/include/ve_direct_protocol/parser.h"
+ 2334              		.file 63 "../system/include/aprs/beacon.h"
+ 2335              		.file 64 "../system/include/umb_master/umb_0x26_status.h"
+ 2336              		.file 65 "../system/include/aprs/wx.h"
+ 2337              		.file 66 "../include/packet_tx_handler.h"
+ 2338              		.file 67 "../system/include/umb_master/umb_channel_pool.h"
+ 2339              		.file 68 "../src/../system/include/davis_vantage/davis_parsers.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-     /tmp/cc5cMGi5.s:18     .text.message_callback:0000000000000000 $t
-     /tmp/cc5cMGi5.s:24     .text.message_callback:0000000000000000 message_callback
-     /tmp/cc5cMGi5.s:39     .text.main:0000000000000000 $t
-     /tmp/cc5cMGi5.s:46     .text.main:0000000000000000 main
-     /tmp/cc5cMGi5.s:305    .text.main:00000000000001a0 $d
-     /tmp/cc5cMGi5.s:313    .text.main:00000000000001a8 $d
+     /tmp/ccb5USaA.s:18     .text.message_callback:0000000000000000 $t
+     /tmp/ccb5USaA.s:24     .text.message_callback:0000000000000000 message_callback
+     /tmp/ccb5USaA.s:39     .text.main:0000000000000000 $t
+     /tmp/ccb5USaA.s:46     .text.main:0000000000000000 main
+     /tmp/ccb5USaA.s:305    .text.main:00000000000001a0 $d
+     /tmp/ccb5USaA.s:313    .text.main:00000000000001a8 $d
                             *COM*:00000000000000a0 main_own_aprs_msg
                             *COM*:0000000000000009 main_string_latitude
                             *COM*:0000000000000009 main_string_longitude
-     /tmp/cc5cMGi5.s:325    .text.main:00000000000001d0 $t
-     /tmp/cc5cMGi5.s:731    .text.main:0000000000000454 $d
+     /tmp/ccb5USaA.s:325    .text.main:00000000000001d0 $t
+     /tmp/ccb5USaA.s:728    .text.main:0000000000000450 $d
                             *COM*:0000000000000018 GPIO_InitTypeDef
                             *COM*:0000000000000004 main_kiss_srl_ctx_ptr
                             *COM*:0000000000000058 main_kiss_srl_ctx
@@ -7366,74 +7359,74 @@ DEFINED SYMBOLS
                             *COM*:0000000000000015 main_own_path
                             *COM*:0000000000000444 main_afsk
                             *COM*:0000000000000218 main_ax25
-     /tmp/cc5cMGi5.s:758    .text.main:00000000000004b8 $t
-     /tmp/cc5cMGi5.s:1149   .text.main:000000000000072c $d
+     /tmp/ccb5USaA.s:755    .text.main:00000000000004b4 $t
+     /tmp/ccb5USaA.s:1146   .text.main:0000000000000728 $d
                             *COM*:0000000000000001 main_own_aprs_msg_len
-     /tmp/cc5cMGi5.s:1196   .text.main:00000000000007d8 $t
-     /tmp/cc5cMGi5.s:1541   .text.main:0000000000000a24 $d
-     /tmp/cc5cMGi5.s:1573   .text.main:0000000000000a98 $t
-     /tmp/cc5cMGi5.s:1929   .text.main:0000000000000cd8 $d
-     /tmp/cc5cMGi5.s:1971   .text.main_get_adc_sample:0000000000000000 $t
-     /tmp/cc5cMGi5.s:1978   .text.main_get_adc_sample:0000000000000000 main_get_adc_sample
-     /tmp/cc5cMGi5.s:1994   .text.main_get_adc_sample:0000000000000008 $d
-     /tmp/cc5cMGi5.s:1999   .text.main_service_cpu_load_ticks:0000000000000000 $t
-     /tmp/cc5cMGi5.s:2006   .text.main_service_cpu_load_ticks:0000000000000000 main_service_cpu_load_ticks
-     /tmp/cc5cMGi5.s:2037   .text.main_service_cpu_load_ticks:0000000000000020 $d
-     /tmp/cc5cMGi5.s:2111   .bss.kiss10m:0000000000000000 kiss10m
-     /tmp/cc5cMGi5.s:2104   .bss.digidrop10m:0000000000000000 digidrop10m
-     /tmp/cc5cMGi5.s:2098   .bss.digi10m:0000000000000000 digi10m
-     /tmp/cc5cMGi5.s:2211   .bss.tx10m:0000000000000000 tx10m
-     /tmp/cc5cMGi5.s:2205   .bss.rx10m:0000000000000000 rx10m
+     /tmp/ccb5USaA.s:1193   .text.main:00000000000007d4 $t
+     /tmp/ccb5USaA.s:1538   .text.main:0000000000000a20 $d
+     /tmp/ccb5USaA.s:1570   .text.main:0000000000000a94 $t
+     /tmp/ccb5USaA.s:1923   .text.main:0000000000000cd0 $d
+     /tmp/ccb5USaA.s:1965   .text.main_get_adc_sample:0000000000000000 $t
+     /tmp/ccb5USaA.s:1972   .text.main_get_adc_sample:0000000000000000 main_get_adc_sample
+     /tmp/ccb5USaA.s:1988   .text.main_get_adc_sample:0000000000000008 $d
+     /tmp/ccb5USaA.s:1993   .text.main_service_cpu_load_ticks:0000000000000000 $t
+     /tmp/ccb5USaA.s:2000   .text.main_service_cpu_load_ticks:0000000000000000 main_service_cpu_load_ticks
+     /tmp/ccb5USaA.s:2031   .text.main_service_cpu_load_ticks:0000000000000020 $d
+     /tmp/ccb5USaA.s:2105   .bss.kiss10m:0000000000000000 kiss10m
+     /tmp/ccb5USaA.s:2098   .bss.digidrop10m:0000000000000000 digidrop10m
+     /tmp/ccb5USaA.s:2092   .bss.digi10m:0000000000000000 digi10m
+     /tmp/ccb5USaA.s:2205   .bss.tx10m:0000000000000000 tx10m
+     /tmp/ccb5USaA.s:2199   .bss.rx10m:0000000000000000 rx10m
                             *COM*:0000000000000001 after_tx_lock
-     /tmp/cc5cMGi5.s:2159   .bss.main_crc_result:0000000000000000 main_crc_result
-     /tmp/cc5cMGi5.s:2262   .data.main_umb_retval:0000000000000000 main_umb_retval
-     /tmp/cc5cMGi5.s:2092   .bss.buffer_len:0000000000000000 buffer_len
-     /tmp/cc5cMGi5.s:2275   .data.retval:0000000000000000 retval
-     /tmp/cc5cMGi5.s:2243   .data.main_symbol_s:0000000000000000 main_symbol_s
-     /tmp/cc5cMGi5.s:2237   .data.main_symbol_f:0000000000000000 main_symbol_f
-     /tmp/cc5cMGi5.s:2191   .bss.main_own_path_ln:0000000000000000 main_own_path_ln
-     /tmp/cc5cMGi5.s:2185   .bss.main_modbus_rtu_master_enabled:0000000000000000 main_modbus_rtu_master_enabled
-     /tmp/cc5cMGi5.s:2172   .bss.main_davis_serial_enabled:0000000000000000 main_davis_serial_enabled
-     /tmp/cc5cMGi5.s:2217   .data.main_kiss_enabled:0000000000000000 main_kiss_enabled
-     /tmp/cc5cMGi5.s:2250   .data.main_ten_second_pool_timer:0000000000000000 main_ten_second_pool_timer
-     /tmp/cc5cMGi5.s:2257   .data.main_two_second_pool_timer:0000000000000000 main_two_second_pool_timer
-     /tmp/cc5cMGi5.s:2231   .data.main_one_second_pool_timer:0000000000000000 main_one_second_pool_timer
-     /tmp/cc5cMGi5.s:2224   .data.main_one_minute_pool_timer:0000000000000000 main_one_minute_pool_timer
-     /tmp/cc5cMGi5.s:2269   .data.main_wx_sensors_pool_timer:0000000000000000 main_wx_sensors_pool_timer
-     /tmp/cc5cMGi5.s:2152   .bss.main_cpu_load:0000000000000000 main_cpu_load
-     /tmp/cc5cMGi5.s:2166   .bss.main_current_cpu_idle_ticks:0000000000000000 main_current_cpu_idle_ticks
-     /tmp/cc5cMGi5.s:2179   .bss.main_idle_cpu_ticks:0000000000000000 main_idle_cpu_ticks
-     /tmp/cc5cMGi5.s:2198   .bss.master_time:0000000000000000 master_time
-     /tmp/cc5cMGi5.s:2132   .bss.main_config_data_rtu:0000000000000000 main_config_data_rtu
-     /tmp/cc5cMGi5.s:2139   .bss.main_config_data_umb:0000000000000000 main_config_data_umb
-     /tmp/cc5cMGi5.s:2146   .bss.main_config_data_wx_sources:0000000000000000 main_config_data_wx_sources
-     /tmp/cc5cMGi5.s:2118   .bss.main_config_data_basic:0000000000000000 main_config_data_basic
-     /tmp/cc5cMGi5.s:2125   .bss.main_config_data_mode:0000000000000000 main_config_data_mode
-     /tmp/cc5cMGi5.s:2088   .bss.buffer_len:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2095   .bss.digi10m:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2101   .bss.digidrop10m:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2107   .bss.kiss10m:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2114   .bss.main_config_data_basic:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2121   .bss.main_config_data_mode:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2128   .bss.main_config_data_rtu:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2135   .bss.main_config_data_umb:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2142   .bss.main_config_data_wx_sources:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2153   .bss.main_cpu_load:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2155   .bss.main_crc_result:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2162   .bss.main_current_cpu_idle_ticks:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2173   .bss.main_davis_serial_enabled:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2175   .bss.main_idle_cpu_ticks:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2186   .bss.main_modbus_rtu_master_enabled:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2192   .bss.main_own_path_ln:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2194   .bss.master_time:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2201   .bss.rx10m:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2208   .bss.tx10m:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2220   .data.main_one_minute_pool_timer:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2227   .data.main_one_second_pool_timer:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2246   .data.main_ten_second_pool_timer:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2253   .data.main_two_second_pool_timer:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2265   .data.main_wx_sensors_pool_timer:0000000000000000 $d
-     /tmp/cc5cMGi5.s:2278   .rodata.main.str1.4:0000000000000000 $d
+     /tmp/ccb5USaA.s:2153   .bss.main_crc_result:0000000000000000 main_crc_result
+     /tmp/ccb5USaA.s:2256   .data.main_umb_retval:0000000000000000 main_umb_retval
+     /tmp/ccb5USaA.s:2086   .bss.buffer_len:0000000000000000 buffer_len
+     /tmp/ccb5USaA.s:2269   .data.retval:0000000000000000 retval
+     /tmp/ccb5USaA.s:2237   .data.main_symbol_s:0000000000000000 main_symbol_s
+     /tmp/ccb5USaA.s:2231   .data.main_symbol_f:0000000000000000 main_symbol_f
+     /tmp/ccb5USaA.s:2185   .bss.main_own_path_ln:0000000000000000 main_own_path_ln
+     /tmp/ccb5USaA.s:2179   .bss.main_modbus_rtu_master_enabled:0000000000000000 main_modbus_rtu_master_enabled
+     /tmp/ccb5USaA.s:2166   .bss.main_davis_serial_enabled:0000000000000000 main_davis_serial_enabled
+     /tmp/ccb5USaA.s:2211   .data.main_kiss_enabled:0000000000000000 main_kiss_enabled
+     /tmp/ccb5USaA.s:2244   .data.main_ten_second_pool_timer:0000000000000000 main_ten_second_pool_timer
+     /tmp/ccb5USaA.s:2251   .data.main_two_second_pool_timer:0000000000000000 main_two_second_pool_timer
+     /tmp/ccb5USaA.s:2225   .data.main_one_second_pool_timer:0000000000000000 main_one_second_pool_timer
+     /tmp/ccb5USaA.s:2218   .data.main_one_minute_pool_timer:0000000000000000 main_one_minute_pool_timer
+     /tmp/ccb5USaA.s:2263   .data.main_wx_sensors_pool_timer:0000000000000000 main_wx_sensors_pool_timer
+     /tmp/ccb5USaA.s:2146   .bss.main_cpu_load:0000000000000000 main_cpu_load
+     /tmp/ccb5USaA.s:2160   .bss.main_current_cpu_idle_ticks:0000000000000000 main_current_cpu_idle_ticks
+     /tmp/ccb5USaA.s:2173   .bss.main_idle_cpu_ticks:0000000000000000 main_idle_cpu_ticks
+     /tmp/ccb5USaA.s:2192   .bss.master_time:0000000000000000 master_time
+     /tmp/ccb5USaA.s:2126   .bss.main_config_data_rtu:0000000000000000 main_config_data_rtu
+     /tmp/ccb5USaA.s:2133   .bss.main_config_data_umb:0000000000000000 main_config_data_umb
+     /tmp/ccb5USaA.s:2140   .bss.main_config_data_wx_sources:0000000000000000 main_config_data_wx_sources
+     /tmp/ccb5USaA.s:2112   .bss.main_config_data_basic:0000000000000000 main_config_data_basic
+     /tmp/ccb5USaA.s:2119   .bss.main_config_data_mode:0000000000000000 main_config_data_mode
+     /tmp/ccb5USaA.s:2082   .bss.buffer_len:0000000000000000 $d
+     /tmp/ccb5USaA.s:2089   .bss.digi10m:0000000000000000 $d
+     /tmp/ccb5USaA.s:2095   .bss.digidrop10m:0000000000000000 $d
+     /tmp/ccb5USaA.s:2101   .bss.kiss10m:0000000000000000 $d
+     /tmp/ccb5USaA.s:2108   .bss.main_config_data_basic:0000000000000000 $d
+     /tmp/ccb5USaA.s:2115   .bss.main_config_data_mode:0000000000000000 $d
+     /tmp/ccb5USaA.s:2122   .bss.main_config_data_rtu:0000000000000000 $d
+     /tmp/ccb5USaA.s:2129   .bss.main_config_data_umb:0000000000000000 $d
+     /tmp/ccb5USaA.s:2136   .bss.main_config_data_wx_sources:0000000000000000 $d
+     /tmp/ccb5USaA.s:2147   .bss.main_cpu_load:0000000000000000 $d
+     /tmp/ccb5USaA.s:2149   .bss.main_crc_result:0000000000000000 $d
+     /tmp/ccb5USaA.s:2156   .bss.main_current_cpu_idle_ticks:0000000000000000 $d
+     /tmp/ccb5USaA.s:2167   .bss.main_davis_serial_enabled:0000000000000000 $d
+     /tmp/ccb5USaA.s:2169   .bss.main_idle_cpu_ticks:0000000000000000 $d
+     /tmp/ccb5USaA.s:2180   .bss.main_modbus_rtu_master_enabled:0000000000000000 $d
+     /tmp/ccb5USaA.s:2186   .bss.main_own_path_ln:0000000000000000 $d
+     /tmp/ccb5USaA.s:2188   .bss.master_time:0000000000000000 $d
+     /tmp/ccb5USaA.s:2195   .bss.rx10m:0000000000000000 $d
+     /tmp/ccb5USaA.s:2202   .bss.tx10m:0000000000000000 $d
+     /tmp/ccb5USaA.s:2214   .data.main_one_minute_pool_timer:0000000000000000 $d
+     /tmp/ccb5USaA.s:2221   .data.main_one_second_pool_timer:0000000000000000 $d
+     /tmp/ccb5USaA.s:2240   .data.main_ten_second_pool_timer:0000000000000000 $d
+     /tmp/ccb5USaA.s:2247   .data.main_two_second_pool_timer:0000000000000000 $d
+     /tmp/ccb5USaA.s:2259   .data.main_wx_sensors_pool_timer:0000000000000000 $d
+     /tmp/ccb5USaA.s:2272   .rodata.main.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
                            .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
@@ -7457,7 +7450,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
                            .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.LedConfig.h.9.4d8a7e6bb86dda658c789f8aaf01aaee
                            .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
                            .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
@@ -7552,7 +7545,6 @@ DACStartConfig
 srl_receive_data
 io_oc_output_low
 TimerConfig
-IWDG_ReloadCounter
 io_ext_watchdog_service
 srl_usart1_tx_buffer
 srl_usart1_rx_buffer

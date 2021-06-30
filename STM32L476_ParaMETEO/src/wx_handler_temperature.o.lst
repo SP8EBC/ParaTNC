@@ -705,21 +705,21 @@
  440              		.file 29 "../system/include/modbus_rtu/rtu_getters.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 wx_handler_temperature.c
-     /tmp/ccP4uzNH.s:18     .text.wx_get_temperature_dallas:0000000000000000 $t
-     /tmp/ccP4uzNH.s:25     .text.wx_get_temperature_dallas:0000000000000000 wx_get_temperature_dallas
-     /tmp/ccP4uzNH.s:146    .text.wx_get_temperature_dallas:00000000000000d0 $d
-     /tmp/ccP4uzNH.s:163    .text.wx_get_temperature_ms5611:0000000000000000 $t
-     /tmp/ccP4uzNH.s:170    .text.wx_get_temperature_ms5611:0000000000000000 wx_get_temperature_ms5611
-     /tmp/ccP4uzNH.s:191    .text.wx_get_temperature_ms5611:000000000000000c $d
-     /tmp/ccP4uzNH.s:196    .text.wx_get_temperature_bme280:0000000000000000 $t
-     /tmp/ccP4uzNH.s:203    .text.wx_get_temperature_bme280:0000000000000000 wx_get_temperature_bme280
-     /tmp/ccP4uzNH.s:248    .text.wx_get_temperature_bme280:0000000000000028 $d
-     /tmp/ccP4uzNH.s:254    .text.wx_get_temperature_measurement:0000000000000000 $t
-     /tmp/ccP4uzNH.s:261    .text.wx_get_temperature_measurement:0000000000000000 wx_get_temperature_measurement
-     /tmp/ccP4uzNH.s:283    .text.wx_get_temperature_measurement:0000000000000010 $d
-     /tmp/ccP4uzNH.s:287    .text.wx_get_temperature_measurement:0000000000000014 $t
-     /tmp/ccP4uzNH.s:397    .text.wx_get_temperature_measurement:0000000000000080 $d
-     /tmp/ccP4uzNH.s:410    .data.wx_inhibit_slew_rate_check:0000000000000000 wx_inhibit_slew_rate_check
+     /tmp/cc9eol10.s:18     .text.wx_get_temperature_dallas:0000000000000000 $t
+     /tmp/cc9eol10.s:25     .text.wx_get_temperature_dallas:0000000000000000 wx_get_temperature_dallas
+     /tmp/cc9eol10.s:146    .text.wx_get_temperature_dallas:00000000000000d0 $d
+     /tmp/cc9eol10.s:163    .text.wx_get_temperature_ms5611:0000000000000000 $t
+     /tmp/cc9eol10.s:170    .text.wx_get_temperature_ms5611:0000000000000000 wx_get_temperature_ms5611
+     /tmp/cc9eol10.s:191    .text.wx_get_temperature_ms5611:000000000000000c $d
+     /tmp/cc9eol10.s:196    .text.wx_get_temperature_bme280:0000000000000000 $t
+     /tmp/cc9eol10.s:203    .text.wx_get_temperature_bme280:0000000000000000 wx_get_temperature_bme280
+     /tmp/cc9eol10.s:248    .text.wx_get_temperature_bme280:0000000000000028 $d
+     /tmp/cc9eol10.s:254    .text.wx_get_temperature_measurement:0000000000000000 $t
+     /tmp/cc9eol10.s:261    .text.wx_get_temperature_measurement:0000000000000000 wx_get_temperature_measurement
+     /tmp/cc9eol10.s:283    .text.wx_get_temperature_measurement:0000000000000010 $d
+     /tmp/cc9eol10.s:287    .text.wx_get_temperature_measurement:0000000000000014 $t
+     /tmp/cc9eol10.s:397    .text.wx_get_temperature_measurement:0000000000000080 $d
+     /tmp/cc9eol10.s:410    .data.wx_inhibit_slew_rate_check:0000000000000000 wx_inhibit_slew_rate_check
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.config_data.h.20.3fa825aa23b2311026266e3d076368dc
@@ -765,7 +765,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
                            .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
                            .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
 
 UNDEFINED SYMBOLS

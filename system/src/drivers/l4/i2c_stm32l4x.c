@@ -29,6 +29,9 @@ volatile uint32_t i2cStartTime;
 void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	LL_I2C_InitTypeDef I2C_InitStructure;
 
+	// disabling I2C in case it was enabled before
+	LL_I2C_Disable(I2C1);
+
 	NVIC_EnableIRQ( I2C1_EV_IRQn );
 	NVIC_EnableIRQ( I2C1_ER_IRQn );
 //	if (i2cPinRemap == 0) {
@@ -66,10 +69,6 @@ void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	LL_I2C_EnableIT_NACK(I2C1);
 	LL_I2C_EnableIT_ERR(I2C1);
 
-//	I2C1->CR2 |= I2C_CR2_ITEVTEN;		// w��czenie generowanie przerwania od zdarzen i2c
-//	I2C1->CR2 |= I2C_CR2_ITBUFEN;
-//	I2C1->CR2 |= I2C_CR2_ITERREN;
-
 	i2c_state = I2C_IDLE;
 
 }
@@ -102,6 +101,9 @@ int i2cReinit() {
 
 int i2c_send_data(int addr, uint8_t* data, int null) {
 	int i;
+
+	i2cVariableReset();
+
 	for (i = 0; (i<32 && *(data+i) != '\0'); i++)
 		i2c_tx_data[i]=data[i];
 	if (null == 0x01) {					// je�eli do slave trzeba wys�a� 0x00
@@ -144,16 +146,38 @@ int i2c_send_data(int addr, uint8_t* data, int null) {
 }
 
 int i2c_receive_data(int addr, int num) {
+
+	i2cVariableReset();
+
 	i2c_rx_bytes_number = num;
 	i2c_remote_addr = addr;
 	i2c_trx_data_counter = 0;
 	i2c_rxing = 1;
 
+	// enable periphal and turn on all interrupts
+	i2cStart();
+
+	// set addressing mode
+	LL_I2C_SetMasterAddressingMode(I2C1, LL_I2C_ADDRESSING_MODE_7BIT);
+
+	// set slave address to be sent
+	LL_I2C_SetSlaveAddr(I2C1, addr);
+
+	// set transfer direction
+	LL_I2C_SetTransferRequest(I2C1, LL_I2C_REQUEST_READ);
+
+	// disable reload mode to enable auto-stop after last byte
+	LL_I2C_DisableReloadMode(I2C1);
+
+	// enable auto end
+	LL_I2C_EnableAutoEndMode(I2C1);
+
+	// set transfer size
+	LL_I2C_SetTransferSize(I2C1, num);
+
 	i2cStartTime = master_time;
 
 	i2c_state = I2C_RXING;
-
-	i2cStart();
 
 	I2C1->CR2 |= I2C_CR2_START;		// zadanie warunkow startowych
 	return 0;
@@ -162,9 +186,15 @@ int i2c_receive_data(int addr, int num) {
 
 
 void i2cVariableReset(void) {
-	I2C1->DR = 0x00;
+	//I2C1->DR = 0x00;
 	i2c_trx_data_counter = 0;
 	i2c_tx_queue_len = 0;
+	i2c_rx_bytes_number = 0;
+
+	i2c_rxing = 0;
+	i2c_txing = 0;
+	i2c_tx_queue_len = 0;
+	i2c_trx_data_counter = 0;
 	i2c_rx_bytes_number = 0;
 }
 
@@ -205,26 +235,24 @@ void i2cIrqHandler(void) {
 			// stop the i2c
 			i2cStop();
 		}
-		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2c_txing == 1) {
-		// EV_8
-			if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2c_txing == 1 && i2c_trx_data_counter < i2c_tx_queue_len) {
-			I2C1->DR = i2c_tx_data[i2c_trx_data_counter];
-			i2c_trx_data_counter++;
-			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_BTF);
-			}
-		}
-		if ((I2C1->SR1 & I2C_SR1_RXNE) == I2C_SR1_RXNE && i2c_rxing == 1) {
+//		if ((I2C1->SR1 & I2C_SR1_BTF) == I2C_SR1_BTF && i2c_txing == 1) {
+//		// EV_8
+//			if ((I2C1->SR1 & I2C_SR1_TXE) == I2C_SR1_TXE && i2c_txing == 1 && i2c_trx_data_counter < i2c_tx_queue_len) {
+//			I2C1->DR = i2c_tx_data[i2c_trx_data_counter];
+//			i2c_trx_data_counter++;
+//			I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_BTF);
+//			}
+//		}
+		if ((I2C1->ISR & I2C_ISR_RXNE) == I2C_ISR_RXNE && i2c_rxing == 1) {
 		// EV_7
-			*(i2c_rx_data + i2c_trx_data_counter) = I2C1->DR & I2C_DR_DR;
+			*(i2c_rx_data + i2c_trx_data_counter) = I2C1->RXDR & 0xFF;
 			i2c_trx_data_counter++;
-			if (i2c_rx_bytes_number-i2c_trx_data_counter == 1) {
-				I2C1->CR1 &= (0xFFFFFFFF ^ I2C_CR1_ACK);	//jezeli odebrano przedostatni bajt to trzeba
-															// zgasic bit ACK zeby nastepnie wyslano NACK na koniec
-			}
+//			if (i2c_rx_bytes_number-i2c_trx_data_counter == 1) {
+//				I2C1->CR1 &= (0xFFFFFFFF ^ I2C_CR1_ACK);	//jezeli odebrano przedostatni bajt to trzeba
+//															// zgasic bit ACK zeby nastepnie wyslano NACK na koniec
+//			}
 			if (i2c_rx_bytes_number-i2c_trx_data_counter == 0) {
-				I2C1->CR1 |= I2C_CR1_STOP;		// po odczytaniu z rejestru DR ostatniego bajtu w sekwencji
-												// nast�puje wys�anie warunk�w STOP na magistrale
-				while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
+				while ((I2C1->ISR & I2C_ISR_STOPF) == 0);		// wait for STOP conditions to be generated automativally
 				i2c_rxing = 0;
 				//I2C_Cmd(I2C1, DISABLE);
 				*(i2c_rx_data + i2c_trx_data_counter) = '\0';
@@ -239,43 +267,114 @@ void i2cIrqHandler(void) {
 void i2cErrIrqHandler(void) {
 
 
-	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2c_trx_data_counter == 0 ) {
-		// slave nie odpowiedzia� ack na sw�j adres
-		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
-		I2C1->CR1 |= I2C_CR1_STOP;		// zadawanie warunkow STOP i przerywanie komunikacji
-		while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
-		i2c_error_counter++;				// zwieksza wartosc licznika b��d�w transmisji
-		I2C1->CR1 |= I2C_CR1_START;		// ponawianie komunikacji
+	if (((I2C1->ISR & I2C_ISR_NACKF) == I2C_ISR_NACKF) && i2c_trx_data_counter == 0 &&  i2c_state == I2C_RXING) {
+//		// slave nie odpowiedzia� ack na sw�j adres
+//		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
+//		I2C1->CR1 |= I2C_CR1_STOP;		// zadawanie warunkow STOP i przerywanie komunikacji
+//		while ((I2C1->CR1 & I2C_CR1_STOP) == I2C_CR1_STOP);
+//		i2c_error_counter++;				// zwieksza wartosc licznika b��d�w transmisji
+//		I2C1->CR1 |= I2C_CR1_START;		// ponawianie komunikacji
+
+		i2c_error_counter++;
+
+		// stop the i2c to reset hardware
+		i2cStop();
+
+		// enable periphal and turn on all interrupts
+		i2cStart();
+
+		// set addressing mode
+		LL_I2C_SetMasterAddressingMode(I2C1, LL_I2C_ADDRESSING_MODE_7BIT);
+
+		// set slave address to be sent
+		LL_I2C_SetSlaveAddr(I2C1, i2c_remote_addr);
+
+		// set transfer direction
+		LL_I2C_SetTransferRequest(I2C1, LL_I2C_REQUEST_READ);
+
+		// disable reload mode to enable auto-stop after last byte
+		LL_I2C_DisableReloadMode(I2C1);
+
+		// enable auto end
+		LL_I2C_EnableAutoEndMode(I2C1);
+
+		// set transfer size
+		LL_I2C_SetTransferSize(I2C1, i2c_rx_bytes_number);
+
+		I2C1->CR2 |= I2C_CR2_START;
+
+		i2cStartTime = master_time;
+
+		i2c_state = I2C_RXING;
 
 	}
-	if (((I2C1->SR1 & I2C_SR1_AF) == I2C_SR1_AF) && i2c_trx_data_counter != 0 ) {
+
+	if (((I2C1->ISR & I2C_ISR_NACKF) == I2C_ISR_NACKF) && i2c_trx_data_counter == 0 &&  i2c_state == I2C_TXING) {
+		i2c_error_counter++;
+
+		// stop the i2c to reset hardware
+		i2cStop();
+
+		// enable periphal and turn on all interrupts
+		i2cStart();
+
+		// set addressing mode
+		LL_I2C_SetMasterAddressingMode(I2C1, LL_I2C_ADDRESSING_MODE_7BIT);
+
+		// set slave address to be sent
+		LL_I2C_SetSlaveAddr(I2C1, i2c_remote_addr);
+
+		// set transfer direction
+		LL_I2C_SetTransferRequest(I2C1, LL_I2C_REQUEST_WRITE);
+
+		// disable reload mode to enable auto-stop after last byte
+		LL_I2C_DisableReloadMode(I2C1);
+
+		// enable auto end
+		LL_I2C_EnableAutoEndMode(I2C1);
+
+		// set transfer size
+		LL_I2C_SetTransferSize(I2C1, i2c_tx_queue_len);
+
+		I2C1->CR2 |= I2C_CR2_START;			// zadanie warunkow startowych
+	}
+
+	if (((I2C1->ISR & I2C_ISR_NACKF) == I2C_ISR_NACKF) && i2c_trx_data_counter != 0 ) {
 		//jezeli slave nie odpowiedzia� ack na wys�any do niego bajt danych
-		I2C1->SR1 &= (0xFFFFFFFF ^ I2C_SR1_AF);
+		I2C1->ICR |= I2C_ICR_NACKCF;
 		i2c_error_counter++;
 		i2c_trx_data_counter--;	// zmniejszanie warto�ci licznika danych aby nadac jeszcze raz to samo
 
 	}
 
-	if (((I2C1->SR1 & I2C_SR1_ARLO) == I2C_SR1_ARLO) ) {
+	if (((I2C1->ISR & I2C_ISR_ARLO) == I2C_ISR_ARLO) ) {
+
+		I2C1->ICR |= I2C_ICR_ARLOCF;
 
 		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
 
-	if (((I2C1->SR1 & I2C_SR1_TIMEOUT) == I2C_SR1_TIMEOUT) ) {
+	if (((I2C1->ISR & I2C_ISR_TIMEOUT) == I2C_ISR_TIMEOUT) ) {
+
+		I2C1->ICR |= I2C_ICR_TIMOUTCF;
 
 		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
-	if (((I2C1->SR1 & I2C_SR1_OVR) == I2C_SR1_OVR) ) {
+	if (((I2C1->ISR & I2C_ISR_OVR) == I2C_ISR_OVR) ) {
+
+		I2C1->ICR |= I2C_ICR_OVRCF;
 
 		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
 	}
 
-	if (((I2C1->SR1 & I2C_SR1_BERR) == I2C_SR1_BERR) ) {
+	if (((I2C1->ISR & I2C_ISR_BERR) == I2C_ISR_BERR) ) {
+
+		I2C1->ICR |= I2C_ICR_BERRCF;
 
 		i2c_error_counter = MAX_I2C_ERRORS_PER_COMM + 1;
 
@@ -294,28 +393,27 @@ void i2cErrIrqHandler(void) {
 }
 
 void i2cStop(void) {
-	i2c_rxing = 0;
-	i2c_txing = 0;
-	i2c_tx_queue_len = 0;
-	i2c_trx_data_counter = 0;
-	i2c_rx_bytes_number = 0;
-
-	LL_I2C_Disable(I2C1);
 
 	i2c_state = I2C_IDLE;
 
+	LL_I2C_DisableIT_TX(I2C1);
+	LL_I2C_DisableIT_RX(I2C1);
+	LL_I2C_DisableIT_NACK(I2C1);
+	LL_I2C_DisableIT_ERR(I2C1);
 
-	NVIC_DisableIRQ( I2C1_ER_IRQn );
-	NVIC_DisableIRQ( I2C1_EV_IRQn );
+	LL_I2C_Disable(I2C1);
+
+
 }
 
 void i2cStart(void) {
 
-	I2C_Cmd(I2C1, ENABLE);
+	LL_I2C_Enable(I2C1);
 
-
-	NVIC_EnableIRQ( I2C1_ER_IRQn );
-	NVIC_EnableIRQ( I2C1_EV_IRQn );
+	LL_I2C_EnableIT_TX(I2C1);
+	LL_I2C_EnableIT_RX(I2C1);
+	LL_I2C_EnableIT_NACK(I2C1);
+	LL_I2C_EnableIT_ERR(I2C1);
 
 }
 

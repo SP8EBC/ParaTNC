@@ -2051,12 +2051,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -5064,46 +5064,46 @@
  809              		.file 25 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 it_handlers.c
-     /tmp/ccBjuKfu.s:18     .text.it_handlers_set_priorities:0000000000000000 $t
-     /tmp/ccBjuKfu.s:25     .text.it_handlers_set_priorities:0000000000000000 it_handlers_set_priorities
-     /tmp/ccBjuKfu.s:112    .text.it_handlers_set_priorities:0000000000000040 $d
-     /tmp/ccBjuKfu.s:117    .text.SysTick_Handler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:124    .text.SysTick_Handler:0000000000000000 SysTick_Handler
-     /tmp/ccBjuKfu.s:264    .text.SysTick_Handler:0000000000000094 $d
-     /tmp/ccBjuKfu.s:278    .text.USART1_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:285    .text.USART1_IRQHandler:0000000000000000 USART1_IRQHandler
-     /tmp/ccBjuKfu.s:315    .text.USART1_IRQHandler:0000000000000014 $d
-     /tmp/ccBjuKfu.s:321    .text.USART2_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:328    .text.USART2_IRQHandler:0000000000000000 USART2_IRQHandler
-     /tmp/ccBjuKfu.s:358    .text.USART2_IRQHandler:0000000000000014 $d
-     /tmp/ccBjuKfu.s:364    .text.I2C1_EV_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:371    .text.I2C1_EV_IRQHandler:0000000000000000 I2C1_EV_IRQHandler
-     /tmp/ccBjuKfu.s:399    .text.I2C1_EV_IRQHandler:0000000000000014 $d
-     /tmp/ccBjuKfu.s:404    .text.I2C1_ER_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:411    .text.I2C1_ER_IRQHandler:0000000000000000 I2C1_ER_IRQHandler
-     /tmp/ccBjuKfu.s:430    .text.TIM2_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:437    .text.TIM2_IRQHandler:0000000000000000 TIM2_IRQHandler
-     /tmp/ccBjuKfu.s:465    .text.TIM2_IRQHandler:0000000000000020 $d
-     /tmp/ccBjuKfu.s:470    .text.TIM1_TRG_COM_TIM17_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:477    .text.TIM1_TRG_COM_TIM17_IRQHandler:0000000000000000 TIM1_TRG_COM_TIM17_IRQHandler
-     /tmp/ccBjuKfu.s:510    .text.TIM1_TRG_COM_TIM17_IRQHandler:000000000000001c $d
-     /tmp/ccBjuKfu.s:516    .text.DMA1_Channel7_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:523    .text.DMA1_Channel7_IRQHandler:0000000000000000 DMA1_Channel7_IRQHandler
-     /tmp/ccBjuKfu.s:552    .text.DMA1_Channel7_IRQHandler:0000000000000010 $d
-     /tmp/ccBjuKfu.s:557    .text.TIM4_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:564    .text.TIM4_IRQHandler:0000000000000000 TIM4_IRQHandler
-     /tmp/ccBjuKfu.s:629    .text.TIM4_IRQHandler:000000000000004c $d
-     /tmp/ccBjuKfu.s:640    .text.TIM7_IRQHandler:0000000000000000 $t
-     /tmp/ccBjuKfu.s:647    .text.TIM7_IRQHandler:0000000000000000 TIM7_IRQHandler
-     /tmp/ccBjuKfu.s:750    .text.TIM7_IRQHandler:0000000000000088 $d
+     /tmp/ccumeSy1.s:18     .text.it_handlers_set_priorities:0000000000000000 $t
+     /tmp/ccumeSy1.s:25     .text.it_handlers_set_priorities:0000000000000000 it_handlers_set_priorities
+     /tmp/ccumeSy1.s:112    .text.it_handlers_set_priorities:0000000000000040 $d
+     /tmp/ccumeSy1.s:117    .text.SysTick_Handler:0000000000000000 $t
+     /tmp/ccumeSy1.s:124    .text.SysTick_Handler:0000000000000000 SysTick_Handler
+     /tmp/ccumeSy1.s:264    .text.SysTick_Handler:0000000000000094 $d
+     /tmp/ccumeSy1.s:278    .text.USART1_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:285    .text.USART1_IRQHandler:0000000000000000 USART1_IRQHandler
+     /tmp/ccumeSy1.s:315    .text.USART1_IRQHandler:0000000000000014 $d
+     /tmp/ccumeSy1.s:321    .text.USART2_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:328    .text.USART2_IRQHandler:0000000000000000 USART2_IRQHandler
+     /tmp/ccumeSy1.s:358    .text.USART2_IRQHandler:0000000000000014 $d
+     /tmp/ccumeSy1.s:364    .text.I2C1_EV_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:371    .text.I2C1_EV_IRQHandler:0000000000000000 I2C1_EV_IRQHandler
+     /tmp/ccumeSy1.s:399    .text.I2C1_EV_IRQHandler:0000000000000014 $d
+     /tmp/ccumeSy1.s:404    .text.I2C1_ER_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:411    .text.I2C1_ER_IRQHandler:0000000000000000 I2C1_ER_IRQHandler
+     /tmp/ccumeSy1.s:430    .text.TIM2_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:437    .text.TIM2_IRQHandler:0000000000000000 TIM2_IRQHandler
+     /tmp/ccumeSy1.s:465    .text.TIM2_IRQHandler:0000000000000020 $d
+     /tmp/ccumeSy1.s:470    .text.TIM1_TRG_COM_TIM17_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:477    .text.TIM1_TRG_COM_TIM17_IRQHandler:0000000000000000 TIM1_TRG_COM_TIM17_IRQHandler
+     /tmp/ccumeSy1.s:510    .text.TIM1_TRG_COM_TIM17_IRQHandler:000000000000001c $d
+     /tmp/ccumeSy1.s:516    .text.DMA1_Channel7_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:523    .text.DMA1_Channel7_IRQHandler:0000000000000000 DMA1_Channel7_IRQHandler
+     /tmp/ccumeSy1.s:552    .text.DMA1_Channel7_IRQHandler:0000000000000010 $d
+     /tmp/ccumeSy1.s:557    .text.TIM4_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:564    .text.TIM4_IRQHandler:0000000000000000 TIM4_IRQHandler
+     /tmp/ccumeSy1.s:629    .text.TIM4_IRQHandler:000000000000004c $d
+     /tmp/ccumeSy1.s:640    .text.TIM7_IRQHandler:0000000000000000 $t
+     /tmp/ccumeSy1.s:647    .text.TIM7_IRQHandler:0000000000000000 TIM7_IRQHandler
+     /tmp/ccumeSy1.s:750    .text.TIM7_IRQHandler:0000000000000088 $d
                             *COM*:0000000000000008 AdcBuffer
                             *COM*:0000000000000002 AdcValue
-     /tmp/ccBjuKfu.s:787    .bss.it_handlers_cpu_load_pool:0000000000000000 it_handlers_cpu_load_pool
-     /tmp/ccBjuKfu.s:774    .bss.adc_sample_c2:0000000000000000 adc_sample_c2
-     /tmp/ccBjuKfu.s:781    .bss.adc_sample_count:0000000000000000 adc_sample_count
-     /tmp/ccBjuKfu.s:770    .bss.adc_sample_c2:0000000000000000 $d
-     /tmp/ccBjuKfu.s:777    .bss.adc_sample_count:0000000000000000 $d
-     /tmp/ccBjuKfu.s:788    .bss.it_handlers_cpu_load_pool:0000000000000000 $d
+     /tmp/ccumeSy1.s:787    .bss.it_handlers_cpu_load_pool:0000000000000000 it_handlers_cpu_load_pool
+     /tmp/ccumeSy1.s:774    .bss.adc_sample_c2:0000000000000000 adc_sample_c2
+     /tmp/ccumeSy1.s:781    .bss.adc_sample_count:0000000000000000 adc_sample_count
+     /tmp/ccumeSy1.s:770    .bss.adc_sample_c2:0000000000000000 $d
+     /tmp/ccumeSy1.s:777    .bss.adc_sample_count:0000000000000000 $d
+     /tmp/ccumeSy1.s:788    .bss.it_handlers_cpu_load_pool:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
@@ -5124,7 +5124,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
                            .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.stm32l4xx_ll_tim.h.22.3ad11d579f6c3053b8c8daba8bebe46e
                            .group:0000000000000000 wm4.stm32l4xx_ll_dma.h.22.7288ce0691bde44ea1017c58de45d400
                            .group:0000000000000000 wm4.stm32l4xx_ll_gpio.h.22.6ea69d1eee1200f6e0d48e871aaa811d

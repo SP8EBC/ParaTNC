@@ -63,12 +63,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -389,17 +389,17 @@
  281              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 beacon.c
-     /tmp/ccuVRutt.s:18     .text.beacon_send_own:0000000000000000 $t
-     /tmp/ccuVRutt.s:25     .text.beacon_send_own:0000000000000000 beacon_send_own
-     /tmp/ccuVRutt.s:102    .text.beacon_send_own:000000000000006c $d
-     /tmp/ccuVRutt.s:119    .text.beacon_send_on_startup:0000000000000000 $t
-     /tmp/ccuVRutt.s:126    .text.beacon_send_on_startup:0000000000000000 beacon_send_on_startup
-     /tmp/ccuVRutt.s:179    .text.beacon_send_on_startup:0000000000000040 $d
-     /tmp/ccuVRutt.s:193    .text.beacon_send_from_user_content:0000000000000000 $t
-     /tmp/ccuVRutt.s:200    .text.beacon_send_from_user_content:0000000000000000 beacon_send_from_user_content
-     /tmp/ccuVRutt.s:249    .text.beacon_send_from_user_content:0000000000000030 $d
-     /tmp/ccuVRutt.s:258    .rodata.beacon_send_on_startup.str1.4:0000000000000000 $d
-     /tmp/ccuVRutt.s:262    .rodata.beacon_send_own.str1.4:0000000000000000 $d
+     /tmp/cctq5nFe.s:18     .text.beacon_send_own:0000000000000000 $t
+     /tmp/cctq5nFe.s:25     .text.beacon_send_own:0000000000000000 beacon_send_own
+     /tmp/cctq5nFe.s:102    .text.beacon_send_own:000000000000006c $d
+     /tmp/cctq5nFe.s:119    .text.beacon_send_on_startup:0000000000000000 $t
+     /tmp/cctq5nFe.s:126    .text.beacon_send_on_startup:0000000000000000 beacon_send_on_startup
+     /tmp/cctq5nFe.s:179    .text.beacon_send_on_startup:0000000000000040 $d
+     /tmp/cctq5nFe.s:193    .text.beacon_send_from_user_content:0000000000000000 $t
+     /tmp/cctq5nFe.s:200    .text.beacon_send_from_user_content:0000000000000000 beacon_send_from_user_content
+     /tmp/cctq5nFe.s:249    .text.beacon_send_from_user_content:0000000000000030 $d
+     /tmp/cctq5nFe.s:258    .rodata.beacon_send_on_startup.str1.4:0000000000000000 $d
+     /tmp/cctq5nFe.s:262    .rodata.beacon_send_own.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
@@ -419,7 +419,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
                            .group:0000000000000000 wm4.serial.h.14.eed7cf013c382ed4598746b40f0e2523
                            .group:0000000000000000 wm4.config_data.h.9.6026a38cd2f39158a8fd50707ba1bf90
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
                            .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
                            .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac

@@ -8294,12 +8294,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -8990,58 +8990,58 @@
  1532              		.file 33 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 analog_anemometer.c
-     /tmp/cc0TddDR.s:18     .text.analog_anemometer_init:0000000000000000 $t
-     /tmp/cc0TddDR.s:25     .text.analog_anemometer_init:0000000000000000 analog_anemometer_init
-     /tmp/cc0TddDR.s:265    .text.analog_anemometer_init:0000000000000134 $d
+     /tmp/ccxHTXyy.s:18     .text.analog_anemometer_init:0000000000000000 $t
+     /tmp/ccxHTXyy.s:25     .text.analog_anemometer_init:0000000000000000 analog_anemometer_init
+     /tmp/ccxHTXyy.s:265    .text.analog_anemometer_init:0000000000000134 $d
                             *COM*:0000000000000014 analog_anemometer_windspeed_pulses_time
                             *COM*:0000000000000014 analog_anemometer_time_between_pulses
                             *COM*:0000000000000014 analog_anemometer_direction_timer_values
                             *COM*:000000000000002c DMA_InitStruct
-     /tmp/cc0TddDR.s:287    .text.analog_anemometer_timer_irq:0000000000000000 $t
-     /tmp/cc0TddDR.s:294    .text.analog_anemometer_timer_irq:0000000000000000 analog_anemometer_timer_irq
-     /tmp/cc0TddDR.s:310    .text.analog_anemometer_timer_irq:0000000000000008 $d
-     /tmp/cc0TddDR.s:315    .text.analog_anemometer_dma_irq:0000000000000000 $t
-     /tmp/cc0TddDR.s:322    .text.analog_anemometer_dma_irq:0000000000000000 analog_anemometer_dma_irq
-     /tmp/cc0TddDR.s:754    .text.analog_anemometer_dma_irq:0000000000000218 $d
-     /tmp/cc0TddDR.s:768    .text.analog_anemometer_get_ms_from_pulse:0000000000000000 $t
-     /tmp/cc0TddDR.s:775    .text.analog_anemometer_get_ms_from_pulse:0000000000000000 analog_anemometer_get_ms_from_pulse
-     /tmp/cc0TddDR.s:809    .text.analog_anemometer_get_ms_from_pulse:0000000000000020 $d
-     /tmp/cc0TddDR.s:815    .text.analog_anemometer_direction_sparkfun:0000000000000000 $t
-     /tmp/cc0TddDR.s:822    .text.analog_anemometer_direction_sparkfun:0000000000000000 analog_anemometer_direction_sparkfun
-     /tmp/cc0TddDR.s:878    .text.analog_anemometer_direction_sparkfun:000000000000003c $d
-     /tmp/cc0TddDR.s:883    .text.analog_anemometer_direction_reset:0000000000000000 $t
-     /tmp/cc0TddDR.s:890    .text.analog_anemometer_direction_reset:0000000000000000 analog_anemometer_direction_reset
-     /tmp/cc0TddDR.s:930    .text.analog_anemometer_direction_reset:0000000000000018 $d
-     /tmp/cc0TddDR.s:935    .text.analog_anemometer_direction_handler:0000000000000000 $t
-     /tmp/cc0TddDR.s:942    .text.analog_anemometer_direction_handler:0000000000000000 analog_anemometer_direction_handler
-     /tmp/cc0TddDR.s:1188   .text.analog_anemometer_direction_handler:0000000000000114 $d
-     /tmp/cc0TddDR.s:1210   .text.analog_anemometer_get_qf:0000000000000000 $t
-     /tmp/cc0TddDR.s:1217   .text.analog_anemometer_get_qf:0000000000000000 analog_anemometer_get_qf
-     /tmp/cc0TddDR.s:1350   .text.analog_anemometer_get_qf:0000000000000090 $d
-     /tmp/cc0TddDR.s:1454   .rodata.analog_anemometer_direction_sparkfun_ranges:0000000000000000 analog_anemometer_direction_sparkfun_ranges
-     /tmp/cc0TddDR.s:1441   .data.analog_anemometer_direction_mode:0000000000000000 analog_anemometer_direction_mode
-     /tmp/cc0TddDR.s:1402   .bss.analog_anemometer_last_direction_cnt:0000000000000000 analog_anemometer_last_direction_cnt
-     /tmp/cc0TddDR.s:1447   .data.analog_anemometer_direction_pol:0000000000000000 analog_anemometer_direction_pol
-     /tmp/cc0TddDR.s:1428   .data.analog_anemometer_a_coeff:0000000000000000 analog_anemometer_a_coeff
-     /tmp/cc0TddDR.s:1435   .data.analog_anemometer_b_coeff:0000000000000000 analog_anemometer_b_coeff
-     /tmp/cc0TddDR.s:1383   .bss.analog_anemometer_direction:0000000000000000 analog_anemometer_direction
-     /tmp/cc0TddDR.s:1389   .bss.analog_anemometer_direction_doesnt_work:0000000000000000 analog_anemometer_direction_doesnt_work
-     /tmp/cc0TddDR.s:1377   .bss.analog_anemometer_deboucing_fired:0000000000000000 analog_anemometer_deboucing_fired
-     /tmp/cc0TddDR.s:1415   .bss.analog_anemometer_slew_limit_fired:0000000000000000 analog_anemometer_slew_limit_fired
-     /tmp/cc0TddDR.s:1421   .bss.analog_anemometer_timer_has_been_fired:0000000000000000 analog_anemometer_timer_has_been_fired
-     /tmp/cc0TddDR.s:1409   .bss.analog_anemometer_pulses_per_m_s_constant:0000000000000000 analog_anemometer_pulses_per_m_s_constant
-     /tmp/cc0TddDR.s:1395   .bss.analog_anemometer_direction_timer_values_it:0000000000000000 analog_anemometer_direction_timer_values_it
-     /tmp/cc0TddDR.s:1378   .bss.analog_anemometer_deboucing_fired:0000000000000000 $d
-     /tmp/cc0TddDR.s:1380   .bss.analog_anemometer_direction:0000000000000000 $d
-     /tmp/cc0TddDR.s:1390   .bss.analog_anemometer_direction_doesnt_work:0000000000000000 $d
-     /tmp/cc0TddDR.s:1396   .bss.analog_anemometer_direction_timer_values_it:0000000000000000 $d
-     /tmp/cc0TddDR.s:1398   .bss.analog_anemometer_last_direction_cnt:0000000000000000 $d
-     /tmp/cc0TddDR.s:1405   .bss.analog_anemometer_pulses_per_m_s_constant:0000000000000000 $d
-     /tmp/cc0TddDR.s:1416   .bss.analog_anemometer_slew_limit_fired:0000000000000000 $d
-     /tmp/cc0TddDR.s:1422   .bss.analog_anemometer_timer_has_been_fired:0000000000000000 $d
-     /tmp/cc0TddDR.s:1424   .data.analog_anemometer_a_coeff:0000000000000000 $d
-     /tmp/cc0TddDR.s:1431   .data.analog_anemometer_b_coeff:0000000000000000 $d
-     /tmp/cc0TddDR.s:1450   .rodata.analog_anemometer_direction_sparkfun_ranges:0000000000000000 $d
+     /tmp/ccxHTXyy.s:287    .text.analog_anemometer_timer_irq:0000000000000000 $t
+     /tmp/ccxHTXyy.s:294    .text.analog_anemometer_timer_irq:0000000000000000 analog_anemometer_timer_irq
+     /tmp/ccxHTXyy.s:310    .text.analog_anemometer_timer_irq:0000000000000008 $d
+     /tmp/ccxHTXyy.s:315    .text.analog_anemometer_dma_irq:0000000000000000 $t
+     /tmp/ccxHTXyy.s:322    .text.analog_anemometer_dma_irq:0000000000000000 analog_anemometer_dma_irq
+     /tmp/ccxHTXyy.s:754    .text.analog_anemometer_dma_irq:0000000000000218 $d
+     /tmp/ccxHTXyy.s:768    .text.analog_anemometer_get_ms_from_pulse:0000000000000000 $t
+     /tmp/ccxHTXyy.s:775    .text.analog_anemometer_get_ms_from_pulse:0000000000000000 analog_anemometer_get_ms_from_pulse
+     /tmp/ccxHTXyy.s:809    .text.analog_anemometer_get_ms_from_pulse:0000000000000020 $d
+     /tmp/ccxHTXyy.s:815    .text.analog_anemometer_direction_sparkfun:0000000000000000 $t
+     /tmp/ccxHTXyy.s:822    .text.analog_anemometer_direction_sparkfun:0000000000000000 analog_anemometer_direction_sparkfun
+     /tmp/ccxHTXyy.s:878    .text.analog_anemometer_direction_sparkfun:000000000000003c $d
+     /tmp/ccxHTXyy.s:883    .text.analog_anemometer_direction_reset:0000000000000000 $t
+     /tmp/ccxHTXyy.s:890    .text.analog_anemometer_direction_reset:0000000000000000 analog_anemometer_direction_reset
+     /tmp/ccxHTXyy.s:930    .text.analog_anemometer_direction_reset:0000000000000018 $d
+     /tmp/ccxHTXyy.s:935    .text.analog_anemometer_direction_handler:0000000000000000 $t
+     /tmp/ccxHTXyy.s:942    .text.analog_anemometer_direction_handler:0000000000000000 analog_anemometer_direction_handler
+     /tmp/ccxHTXyy.s:1188   .text.analog_anemometer_direction_handler:0000000000000114 $d
+     /tmp/ccxHTXyy.s:1210   .text.analog_anemometer_get_qf:0000000000000000 $t
+     /tmp/ccxHTXyy.s:1217   .text.analog_anemometer_get_qf:0000000000000000 analog_anemometer_get_qf
+     /tmp/ccxHTXyy.s:1350   .text.analog_anemometer_get_qf:0000000000000090 $d
+     /tmp/ccxHTXyy.s:1454   .rodata.analog_anemometer_direction_sparkfun_ranges:0000000000000000 analog_anemometer_direction_sparkfun_ranges
+     /tmp/ccxHTXyy.s:1441   .data.analog_anemometer_direction_mode:0000000000000000 analog_anemometer_direction_mode
+     /tmp/ccxHTXyy.s:1402   .bss.analog_anemometer_last_direction_cnt:0000000000000000 analog_anemometer_last_direction_cnt
+     /tmp/ccxHTXyy.s:1447   .data.analog_anemometer_direction_pol:0000000000000000 analog_anemometer_direction_pol
+     /tmp/ccxHTXyy.s:1428   .data.analog_anemometer_a_coeff:0000000000000000 analog_anemometer_a_coeff
+     /tmp/ccxHTXyy.s:1435   .data.analog_anemometer_b_coeff:0000000000000000 analog_anemometer_b_coeff
+     /tmp/ccxHTXyy.s:1383   .bss.analog_anemometer_direction:0000000000000000 analog_anemometer_direction
+     /tmp/ccxHTXyy.s:1389   .bss.analog_anemometer_direction_doesnt_work:0000000000000000 analog_anemometer_direction_doesnt_work
+     /tmp/ccxHTXyy.s:1377   .bss.analog_anemometer_deboucing_fired:0000000000000000 analog_anemometer_deboucing_fired
+     /tmp/ccxHTXyy.s:1415   .bss.analog_anemometer_slew_limit_fired:0000000000000000 analog_anemometer_slew_limit_fired
+     /tmp/ccxHTXyy.s:1421   .bss.analog_anemometer_timer_has_been_fired:0000000000000000 analog_anemometer_timer_has_been_fired
+     /tmp/ccxHTXyy.s:1409   .bss.analog_anemometer_pulses_per_m_s_constant:0000000000000000 analog_anemometer_pulses_per_m_s_constant
+     /tmp/ccxHTXyy.s:1395   .bss.analog_anemometer_direction_timer_values_it:0000000000000000 analog_anemometer_direction_timer_values_it
+     /tmp/ccxHTXyy.s:1378   .bss.analog_anemometer_deboucing_fired:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1380   .bss.analog_anemometer_direction:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1390   .bss.analog_anemometer_direction_doesnt_work:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1396   .bss.analog_anemometer_direction_timer_values_it:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1398   .bss.analog_anemometer_last_direction_cnt:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1405   .bss.analog_anemometer_pulses_per_m_s_constant:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1416   .bss.analog_anemometer_slew_limit_fired:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1422   .bss.analog_anemometer_timer_has_been_fired:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1424   .data.analog_anemometer_a_coeff:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1431   .data.analog_anemometer_b_coeff:0000000000000000 $d
+     /tmp/ccxHTXyy.s:1450   .rodata.analog_anemometer_direction_sparkfun_ranges:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.station_config.h.9.d547169434a316afe56104ac612d2109
                            .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
@@ -9090,7 +9090,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
                            .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
                            .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
                            .group:0000000000000000 wm4.wx_handler.h.9.70f7141466ac521f5731794f4f690a16
                            .group:0000000000000000 wm4.LedConfig.h.9.4d8a7e6bb86dda658c789f8aaf01aaee
                            .group:0000000000000000 wm4.stm32l4xx_ll_tim.h.22.3ad11d579f6c3053b8c8daba8bebe46e

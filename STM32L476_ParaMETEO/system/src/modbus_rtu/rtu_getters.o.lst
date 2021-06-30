@@ -452,12 +452,12 @@
    6:../include/main.h **** #include "config_data.h"
    7:../include/main.h **** 
    8:../include/main.h **** #define SW_VER "EA00"
-   9:../include/main.h **** #define SW_DATE "23052021"
+   9:../include/main.h **** #define SW_DATE "30062021"
   10:../include/main.h **** 
   11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
   12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
   13:../include/main.h **** 
-  14:../include/main.h **** #define INTERNAL_WATCHDOG
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
   15:../include/main.h **** #define EXTERNAL_WATCHDOG
   16:../include/main.h **** 
   17:../include/main.h **** #define PWR_SWITCH_BOTH
@@ -3072,40 +3072,40 @@
  1977              		.file 32 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 rtu_getters.c
-     /tmp/ccQeCoHd.s:18     .text.rtu_get_temperature:0000000000000000 $t
-     /tmp/ccQeCoHd.s:25     .text.rtu_get_temperature:0000000000000000 rtu_get_temperature
-     /tmp/ccQeCoHd.s:50     .text.rtu_get_temperature:0000000000000010 $d
-     /tmp/ccQeCoHd.s:56     .text.rtu_get_temperature:0000000000000016 $t
-     /tmp/ccQeCoHd.s:330    .text.rtu_get_temperature:0000000000000154 $d
-     /tmp/ccQeCoHd.s:346    .text.rtu_get_pressure:0000000000000000 $t
-     /tmp/ccQeCoHd.s:353    .text.rtu_get_pressure:0000000000000000 rtu_get_pressure
-     /tmp/ccQeCoHd.s:377    .text.rtu_get_pressure:0000000000000010 $d
-     /tmp/ccQeCoHd.s:383    .text.rtu_get_pressure:0000000000000016 $t
-     /tmp/ccQeCoHd.s:656    .text.rtu_get_pressure:0000000000000154 $d
-     /tmp/ccQeCoHd.s:673    .text.rtu_get_wind_direction:0000000000000000 $t
-     /tmp/ccQeCoHd.s:680    .text.rtu_get_wind_direction:0000000000000000 rtu_get_wind_direction
-     /tmp/ccQeCoHd.s:704    .text.rtu_get_wind_direction:0000000000000010 $d
-     /tmp/ccQeCoHd.s:710    .text.rtu_get_wind_direction:0000000000000016 $t
-     /tmp/ccQeCoHd.s:946    .text.rtu_get_wind_direction:0000000000000110 $d
-     /tmp/ccQeCoHd.s:961    .text.rtu_get_wind_speed:0000000000000000 $t
-     /tmp/ccQeCoHd.s:968    .text.rtu_get_wind_speed:0000000000000000 rtu_get_wind_speed
-     /tmp/ccQeCoHd.s:992    .text.rtu_get_wind_speed:0000000000000010 $d
-     /tmp/ccQeCoHd.s:998    .text.rtu_get_wind_speed:0000000000000016 $t
-     /tmp/ccQeCoHd.s:1238   .text.rtu_get_wind_speed:000000000000010c $d
-     /tmp/ccQeCoHd.s:1253   .text.rtu_get_wind_gusts:0000000000000000 $t
-     /tmp/ccQeCoHd.s:1260   .text.rtu_get_wind_gusts:0000000000000000 rtu_get_wind_gusts
-     /tmp/ccQeCoHd.s:1284   .text.rtu_get_wind_gusts:0000000000000010 $d
-     /tmp/ccQeCoHd.s:1290   .text.rtu_get_wind_gusts:0000000000000016 $t
-     /tmp/ccQeCoHd.s:1530   .text.rtu_get_wind_gusts:000000000000010c $d
-     /tmp/ccQeCoHd.s:1545   .text.rtu_get_humidity:0000000000000000 $t
-     /tmp/ccQeCoHd.s:1552   .text.rtu_get_humidity:0000000000000000 rtu_get_humidity
-     /tmp/ccQeCoHd.s:1582   .text.rtu_get_humidity:0000000000000018 $d
-     /tmp/ccQeCoHd.s:1588   .text.rtu_get_humidity:000000000000001e $t
-     /tmp/ccQeCoHd.s:1846   .text.rtu_get_humidity:0000000000000130 $d
-     /tmp/ccQeCoHd.s:1861   .text.rtu_get_raw_values_string:0000000000000000 $t
-     /tmp/ccQeCoHd.s:1868   .text.rtu_get_raw_values_string:0000000000000000 rtu_get_raw_values_string
-     /tmp/ccQeCoHd.s:1932   .text.rtu_get_raw_values_string:000000000000003c $d
-     /tmp/ccQeCoHd.s:1943   .rodata.rtu_get_raw_values_string.str1.4:0000000000000000 $d
+     /tmp/ccHDXGX2.s:18     .text.rtu_get_temperature:0000000000000000 $t
+     /tmp/ccHDXGX2.s:25     .text.rtu_get_temperature:0000000000000000 rtu_get_temperature
+     /tmp/ccHDXGX2.s:50     .text.rtu_get_temperature:0000000000000010 $d
+     /tmp/ccHDXGX2.s:56     .text.rtu_get_temperature:0000000000000016 $t
+     /tmp/ccHDXGX2.s:330    .text.rtu_get_temperature:0000000000000154 $d
+     /tmp/ccHDXGX2.s:346    .text.rtu_get_pressure:0000000000000000 $t
+     /tmp/ccHDXGX2.s:353    .text.rtu_get_pressure:0000000000000000 rtu_get_pressure
+     /tmp/ccHDXGX2.s:377    .text.rtu_get_pressure:0000000000000010 $d
+     /tmp/ccHDXGX2.s:383    .text.rtu_get_pressure:0000000000000016 $t
+     /tmp/ccHDXGX2.s:656    .text.rtu_get_pressure:0000000000000154 $d
+     /tmp/ccHDXGX2.s:673    .text.rtu_get_wind_direction:0000000000000000 $t
+     /tmp/ccHDXGX2.s:680    .text.rtu_get_wind_direction:0000000000000000 rtu_get_wind_direction
+     /tmp/ccHDXGX2.s:704    .text.rtu_get_wind_direction:0000000000000010 $d
+     /tmp/ccHDXGX2.s:710    .text.rtu_get_wind_direction:0000000000000016 $t
+     /tmp/ccHDXGX2.s:946    .text.rtu_get_wind_direction:0000000000000110 $d
+     /tmp/ccHDXGX2.s:961    .text.rtu_get_wind_speed:0000000000000000 $t
+     /tmp/ccHDXGX2.s:968    .text.rtu_get_wind_speed:0000000000000000 rtu_get_wind_speed
+     /tmp/ccHDXGX2.s:992    .text.rtu_get_wind_speed:0000000000000010 $d
+     /tmp/ccHDXGX2.s:998    .text.rtu_get_wind_speed:0000000000000016 $t
+     /tmp/ccHDXGX2.s:1238   .text.rtu_get_wind_speed:000000000000010c $d
+     /tmp/ccHDXGX2.s:1253   .text.rtu_get_wind_gusts:0000000000000000 $t
+     /tmp/ccHDXGX2.s:1260   .text.rtu_get_wind_gusts:0000000000000000 rtu_get_wind_gusts
+     /tmp/ccHDXGX2.s:1284   .text.rtu_get_wind_gusts:0000000000000010 $d
+     /tmp/ccHDXGX2.s:1290   .text.rtu_get_wind_gusts:0000000000000016 $t
+     /tmp/ccHDXGX2.s:1530   .text.rtu_get_wind_gusts:000000000000010c $d
+     /tmp/ccHDXGX2.s:1545   .text.rtu_get_humidity:0000000000000000 $t
+     /tmp/ccHDXGX2.s:1552   .text.rtu_get_humidity:0000000000000000 rtu_get_humidity
+     /tmp/ccHDXGX2.s:1582   .text.rtu_get_humidity:0000000000000018 $d
+     /tmp/ccHDXGX2.s:1588   .text.rtu_get_humidity:000000000000001e $t
+     /tmp/ccHDXGX2.s:1846   .text.rtu_get_humidity:0000000000000130 $d
+     /tmp/ccHDXGX2.s:1861   .text.rtu_get_raw_values_string:0000000000000000 $t
+     /tmp/ccHDXGX2.s:1868   .text.rtu_get_raw_values_string:0000000000000000 rtu_get_raw_values_string
+     /tmp/ccHDXGX2.s:1932   .text.rtu_get_raw_values_string:000000000000003c $d
+     /tmp/ccHDXGX2.s:1943   .rodata.rtu_get_raw_values_string.str1.4:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
                            .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
@@ -3167,7 +3167,7 @@ DEFINED SYMBOLS
                            .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
                            .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
                            .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
-                           .group:0000000000000000 wm4.main.h.8.3d6ad69e5f061008d8c5cc5f5c9dd15a
+                           .group:0000000000000000 wm4.main.h.8.42cf439a5d154d59d134d46c01c2e721
 
 UNDEFINED SYMBOLS
 rte_rtu_pool_queue
