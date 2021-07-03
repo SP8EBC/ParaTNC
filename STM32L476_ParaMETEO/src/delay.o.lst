@@ -336,27 +336,27 @@
  278              		.file 11 "../include/main.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 delay.c
-     /tmp/ccAQ0FTy.s:18     .text.delay_fixed:0000000000000000 $t
-     /tmp/ccAQ0FTy.s:25     .text.delay_fixed:0000000000000000 delay_fixed
-     /tmp/ccAQ0FTy.s:49     .text.delay_fixed:0000000000000010 $d
-     /tmp/ccAQ0FTy.s:54     .text.delay_fixed_with_count:0000000000000000 $t
-     /tmp/ccAQ0FTy.s:61     .text.delay_fixed_with_count:0000000000000000 delay_fixed_with_count
-     /tmp/ccAQ0FTy.s:94     .text.delay_fixed_with_count:0000000000000018 $d
-     /tmp/ccAQ0FTy.s:99     .text.delay_random:0000000000000000 $t
-     /tmp/ccAQ0FTy.s:106    .text.delay_random:0000000000000000 delay_random
-     /tmp/ccAQ0FTy.s:139    .text.delay_random:000000000000002c $d
-     /tmp/ccAQ0FTy.s:146    .text.delay_set:0000000000000000 $t
-     /tmp/ccAQ0FTy.s:153    .text.delay_set:0000000000000000 delay_set
-     /tmp/ccAQ0FTy.s:186    .text.delay_set:0000000000000024 $d
-     /tmp/ccAQ0FTy.s:192    .text.delay_from_preset:0000000000000000 $t
-     /tmp/ccAQ0FTy.s:199    .text.delay_from_preset:0000000000000000 delay_from_preset
-     /tmp/ccAQ0FTy.s:238    .text.delay_from_preset:0000000000000024 $d
-     /tmp/ccAQ0FTy.s:252    .bss.delay_cnt:0000000000000000 delay_cnt
-     /tmp/ccAQ0FTy.s:265    .bss.preset_use_random:0000000000000000 preset_use_random
-     /tmp/ccAQ0FTy.s:259    .bss.preset_delay_msecs:0000000000000000 preset_delay_msecs
-     /tmp/ccAQ0FTy.s:248    .bss.delay_cnt:0000000000000000 $d
-     /tmp/ccAQ0FTy.s:255    .bss.preset_delay_msecs:0000000000000000 $d
-     /tmp/ccAQ0FTy.s:266    .bss.preset_use_random:0000000000000000 $d
+     /tmp/ccFkWHBS.s:18     .text.delay_fixed:0000000000000000 $t
+     /tmp/ccFkWHBS.s:25     .text.delay_fixed:0000000000000000 delay_fixed
+     /tmp/ccFkWHBS.s:49     .text.delay_fixed:0000000000000010 $d
+     /tmp/ccFkWHBS.s:54     .text.delay_fixed_with_count:0000000000000000 $t
+     /tmp/ccFkWHBS.s:61     .text.delay_fixed_with_count:0000000000000000 delay_fixed_with_count
+     /tmp/ccFkWHBS.s:94     .text.delay_fixed_with_count:0000000000000018 $d
+     /tmp/ccFkWHBS.s:99     .text.delay_random:0000000000000000 $t
+     /tmp/ccFkWHBS.s:106    .text.delay_random:0000000000000000 delay_random
+     /tmp/ccFkWHBS.s:139    .text.delay_random:000000000000002c $d
+     /tmp/ccFkWHBS.s:146    .text.delay_set:0000000000000000 $t
+     /tmp/ccFkWHBS.s:153    .text.delay_set:0000000000000000 delay_set
+     /tmp/ccFkWHBS.s:186    .text.delay_set:0000000000000024 $d
+     /tmp/ccFkWHBS.s:192    .text.delay_from_preset:0000000000000000 $t
+     /tmp/ccFkWHBS.s:199    .text.delay_from_preset:0000000000000000 delay_from_preset
+     /tmp/ccFkWHBS.s:238    .text.delay_from_preset:0000000000000024 $d
+     /tmp/ccFkWHBS.s:252    .bss.delay_cnt:0000000000000000 delay_cnt
+     /tmp/ccFkWHBS.s:265    .bss.preset_use_random:0000000000000000 preset_use_random
+     /tmp/ccFkWHBS.s:259    .bss.preset_delay_msecs:0000000000000000 preset_delay_msecs
+     /tmp/ccFkWHBS.s:248    .bss.delay_cnt:0000000000000000 $d
+     /tmp/ccFkWHBS.s:255    .bss.preset_delay_msecs:0000000000000000 $d
+     /tmp/ccFkWHBS.s:266    .bss.preset_use_random:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f

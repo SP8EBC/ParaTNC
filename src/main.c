@@ -8,6 +8,7 @@
 #endif
 
 #ifdef STM32L471xx
+#include <stm32l4xx_hal_cortex.h>
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_iwdg.h>
 #include <stm32l4xx_ll_rcc.h>
@@ -254,11 +255,26 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
+  if (SystemClock_Config() != 0) {
+	  HAL_NVIC_SystemReset();
+  }
+
+  SystemCoreClockUpdate();
+
   RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN);
   RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);
   RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
   RCC->AHB2ENR |= (RCC_AHB2ENR_ADCEN | RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN);
   RCC->BDCR |= RCC_BDCR_RTCEN;
+
+  /* Set Interrupt Group Priority */
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  // set systick frequency
+  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
+
+  // set systick interrupt priority
+  HAL_NVIC_SetPriority(SysTick_IRQn, 5, 0U);
 #endif
 
   rte_main_reboot_req = 0;

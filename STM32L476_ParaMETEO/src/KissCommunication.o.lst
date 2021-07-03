@@ -1108,28 +1108,28 @@
  819              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 KissCommunication.c
-     /tmp/cc8Vdu08.s:18     .text.updcrc_ccitt:0000000000000000 $t
-     /tmp/cc8Vdu08.s:24     .text.updcrc_ccitt:0000000000000000 updcrc_ccitt
-     /tmp/cc8Vdu08.s:45     .text.updcrc_ccitt:0000000000000010 $d
-     /tmp/cc8Vdu08.s:50     .text.SendKISSToHost:0000000000000000 $t
-     /tmp/cc8Vdu08.s:57     .text.SendKISSToHost:0000000000000000 SendKISSToHost
-     /tmp/cc8Vdu08.s:186    .text.ParseReceivedKISS:0000000000000000 $t
-     /tmp/cc8Vdu08.s:193    .text.ParseReceivedKISS:0000000000000000 ParseReceivedKISS
-     /tmp/cc8Vdu08.s:339    .text.ParseReceivedKISS:0000000000000084 $d
+     /tmp/ccSgqic4.s:18     .text.updcrc_ccitt:0000000000000000 $t
+     /tmp/ccSgqic4.s:24     .text.updcrc_ccitt:0000000000000000 updcrc_ccitt
+     /tmp/ccSgqic4.s:45     .text.updcrc_ccitt:0000000000000010 $d
+     /tmp/ccSgqic4.s:50     .text.SendKISSToHost:0000000000000000 $t
+     /tmp/ccSgqic4.s:57     .text.SendKISSToHost:0000000000000000 SendKISSToHost
+     /tmp/ccSgqic4.s:186    .text.ParseReceivedKISS:0000000000000000 $t
+     /tmp/ccSgqic4.s:193    .text.ParseReceivedKISS:0000000000000000 ParseReceivedKISS
+     /tmp/ccSgqic4.s:339    .text.ParseReceivedKISS:0000000000000084 $d
                             *COM*:000000000000012c kiss_buffer
-     /tmp/cc8Vdu08.s:345    .text.kiss_reset_buffer:0000000000000000 $t
-     /tmp/cc8Vdu08.s:352    .text.kiss_reset_buffer:0000000000000000 kiss_reset_buffer
-     /tmp/cc8Vdu08.s:389    .text.kiss_put_char_nocheck:0000000000000000 $t
-     /tmp/cc8Vdu08.s:396    .text.kiss_put_char_nocheck:0000000000000000 kiss_put_char_nocheck
-     /tmp/cc8Vdu08.s:454    .text.kiss_put_char:0000000000000000 $t
-     /tmp/cc8Vdu08.s:461    .text.kiss_put_char:0000000000000000 kiss_put_char
-     /tmp/cc8Vdu08.s:604    .text.kiss_put_call:0000000000000000 $t
-     /tmp/cc8Vdu08.s:611    .text.kiss_put_call:0000000000000000 kiss_put_call
-     /tmp/cc8Vdu08.s:736    .text.kiss_finalize_buffer:0000000000000000 $t
-     /tmp/cc8Vdu08.s:743    .text.kiss_finalize_buffer:0000000000000000 kiss_finalize_buffer
-     /tmp/cc8Vdu08.s:780    .text.kiss_get_buff_ptr:0000000000000000 $t
-     /tmp/cc8Vdu08.s:787    .text.kiss_get_buff_ptr:0000000000000000 kiss_get_buff_ptr
-     /tmp/cc8Vdu08.s:800    .text.kiss_get_buff_ptr:0000000000000004 $d
+     /tmp/ccSgqic4.s:345    .text.kiss_reset_buffer:0000000000000000 $t
+     /tmp/ccSgqic4.s:352    .text.kiss_reset_buffer:0000000000000000 kiss_reset_buffer
+     /tmp/ccSgqic4.s:389    .text.kiss_put_char_nocheck:0000000000000000 $t
+     /tmp/ccSgqic4.s:396    .text.kiss_put_char_nocheck:0000000000000000 kiss_put_char_nocheck
+     /tmp/ccSgqic4.s:454    .text.kiss_put_char:0000000000000000 $t
+     /tmp/ccSgqic4.s:461    .text.kiss_put_char:0000000000000000 kiss_put_char
+     /tmp/ccSgqic4.s:604    .text.kiss_put_call:0000000000000000 $t
+     /tmp/ccSgqic4.s:611    .text.kiss_put_call:0000000000000000 kiss_put_call
+     /tmp/ccSgqic4.s:736    .text.kiss_finalize_buffer:0000000000000000 $t
+     /tmp/ccSgqic4.s:743    .text.kiss_finalize_buffer:0000000000000000 kiss_finalize_buffer
+     /tmp/ccSgqic4.s:780    .text.kiss_get_buff_ptr:0000000000000000 $t
+     /tmp/ccSgqic4.s:787    .text.kiss_get_buff_ptr:0000000000000000 kiss_get_buff_ptr
+     /tmp/ccSgqic4.s:800    .text.kiss_get_buff_ptr:0000000000000004 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.config.h.2.b965ce3e758b9658e1093b983de98cf3
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f

@@ -24,8 +24,8 @@
   26              		.file 1 "../src/dummy.c"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 dummy.c
-     /tmp/cc8KVfed.s:22     .config_section_third:0000000000000000 dummy
-     /tmp/cc8KVfed.s:19     .config_section_third:0000000000000000 $d
+     /tmp/ccFSeiIt.s:22     .config_section_third:0000000000000000 dummy
+     /tmp/ccFSeiIt.s:19     .config_section_third:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
 
 NO UNDEFINED SYMBOLS

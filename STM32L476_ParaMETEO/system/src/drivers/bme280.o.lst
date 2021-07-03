@@ -1560,34 +1560,34 @@
  1052              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 bme280.c
-     /tmp/cczFWoPd.s:18     .text.bme280_reset:0000000000000000 $t
-     /tmp/cczFWoPd.s:25     .text.bme280_reset:0000000000000000 bme280_reset
-     /tmp/cczFWoPd.s:101    .text.bme280_reset:0000000000000050 $d
-     /tmp/cczFWoPd.s:108    .text.bme280_setup:0000000000000000 $t
-     /tmp/cczFWoPd.s:115    .text.bme280_setup:0000000000000000 bme280_setup
-     /tmp/cczFWoPd.s:195    .text.bme280_setup:0000000000000068 $d
-     /tmp/cczFWoPd.s:201    .text.bme280_read_calibration:0000000000000000 $t
-     /tmp/cczFWoPd.s:208    .text.bme280_read_calibration:0000000000000000 bme280_read_calibration
-     /tmp/cczFWoPd.s:384    .text.bme280_read_calibration:00000000000000e8 $d
-     /tmp/cczFWoPd.s:391    .text.bme280_read_raw_data:0000000000000000 $t
-     /tmp/cczFWoPd.s:398    .text.bme280_read_raw_data:0000000000000000 bme280_read_raw_data
-     /tmp/cczFWoPd.s:512    .text.bme280_read_raw_data:0000000000000088 $d
-     /tmp/cczFWoPd.s:519    .text.bme280_get_pressure:0000000000000000 $t
-     /tmp/cczFWoPd.s:526    .text.bme280_get_pressure:0000000000000000 bme280_get_pressure
-     /tmp/cczFWoPd.s:738    .text.bme280_get_pressure:0000000000000110 $d
+     /tmp/ccAvyXgg.s:18     .text.bme280_reset:0000000000000000 $t
+     /tmp/ccAvyXgg.s:25     .text.bme280_reset:0000000000000000 bme280_reset
+     /tmp/ccAvyXgg.s:101    .text.bme280_reset:0000000000000050 $d
+     /tmp/ccAvyXgg.s:108    .text.bme280_setup:0000000000000000 $t
+     /tmp/ccAvyXgg.s:115    .text.bme280_setup:0000000000000000 bme280_setup
+     /tmp/ccAvyXgg.s:195    .text.bme280_setup:0000000000000068 $d
+     /tmp/ccAvyXgg.s:201    .text.bme280_read_calibration:0000000000000000 $t
+     /tmp/ccAvyXgg.s:208    .text.bme280_read_calibration:0000000000000000 bme280_read_calibration
+     /tmp/ccAvyXgg.s:384    .text.bme280_read_calibration:00000000000000e8 $d
+     /tmp/ccAvyXgg.s:391    .text.bme280_read_raw_data:0000000000000000 $t
+     /tmp/ccAvyXgg.s:398    .text.bme280_read_raw_data:0000000000000000 bme280_read_raw_data
+     /tmp/ccAvyXgg.s:512    .text.bme280_read_raw_data:0000000000000088 $d
+     /tmp/ccAvyXgg.s:519    .text.bme280_get_pressure:0000000000000000 $t
+     /tmp/ccAvyXgg.s:526    .text.bme280_get_pressure:0000000000000000 bme280_get_pressure
+     /tmp/ccAvyXgg.s:738    .text.bme280_get_pressure:0000000000000110 $d
                             *COM*:000000000000002a bme280_calibration_data
-     /tmp/cczFWoPd.s:745    .text.bme280_get_temperature:0000000000000000 $t
-     /tmp/cczFWoPd.s:752    .text.bme280_get_temperature:0000000000000000 bme280_get_temperature
-     /tmp/cczFWoPd.s:840    .text.bme280_get_temperature:0000000000000064 $d
-     /tmp/cczFWoPd.s:847    .text.bme280_get_humidity:0000000000000000 $t
-     /tmp/cczFWoPd.s:854    .text.bme280_get_humidity:0000000000000000 bme280_get_humidity
-     /tmp/cczFWoPd.s:1015   .text.bme280_get_humidity:00000000000000b0 $d
-     /tmp/cczFWoPd.s:1042   .bss.t_fine:0000000000000000 t_fine
+     /tmp/ccAvyXgg.s:745    .text.bme280_get_temperature:0000000000000000 $t
+     /tmp/ccAvyXgg.s:752    .text.bme280_get_temperature:0000000000000000 bme280_get_temperature
+     /tmp/ccAvyXgg.s:840    .text.bme280_get_temperature:0000000000000064 $d
+     /tmp/ccAvyXgg.s:847    .text.bme280_get_humidity:0000000000000000 $t
+     /tmp/ccAvyXgg.s:854    .text.bme280_get_humidity:0000000000000000 bme280_get_humidity
+     /tmp/ccAvyXgg.s:1015   .text.bme280_get_humidity:00000000000000b0 $d
+     /tmp/ccAvyXgg.s:1042   .bss.t_fine:0000000000000000 t_fine
                             *COM*:0000000000000009 bme280_data_buffer
-     /tmp/cczFWoPd.s:1035   .bss.bme280_sensor_avaliable:0000000000000000 bme280_sensor_avaliable
-     /tmp/cczFWoPd.s:1025   .rodata:0000000000000000 $d
-     /tmp/cczFWoPd.s:1036   .bss.bme280_sensor_avaliable:0000000000000000 $d
-     /tmp/cczFWoPd.s:1038   .bss.t_fine:0000000000000000 $d
+     /tmp/ccAvyXgg.s:1035   .bss.bme280_sensor_avaliable:0000000000000000 bme280_sensor_avaliable
+     /tmp/ccAvyXgg.s:1025   .rodata:0000000000000000 $d
+     /tmp/ccAvyXgg.s:1036   .bss.bme280_sensor_avaliable:0000000000000000 $d
+     /tmp/ccAvyXgg.s:1038   .bss.t_fine:0000000000000000 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
                            .group:0000000000000000 wm4.bme280.h.13.f4d7a41695a048e9616e171ad319eeb7

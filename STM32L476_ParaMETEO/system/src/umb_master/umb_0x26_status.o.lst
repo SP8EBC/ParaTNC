@@ -345,11 +345,11 @@
  208              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 umb_0x26_status.c
-     /tmp/ccKSzhhi.s:18     .text.umb_0x26_status_request:0000000000000000 $t
-     /tmp/ccKSzhhi.s:25     .text.umb_0x26_status_request:0000000000000000 umb_0x26_status_request
-     /tmp/ccKSzhhi.s:94     .text.umb_0x26_status_callback:0000000000000000 $t
-     /tmp/ccKSzhhi.s:101    .text.umb_0x26_status_callback:0000000000000000 umb_0x26_status_callback
-     /tmp/ccKSzhhi.s:185    .text.umb_0x26_status_callback:0000000000000040 $d
+     /tmp/cc8lI7MP.s:18     .text.umb_0x26_status_request:0000000000000000 $t
+     /tmp/cc8lI7MP.s:25     .text.umb_0x26_status_request:0000000000000000 umb_0x26_status_request
+     /tmp/cc8lI7MP.s:94     .text.umb_0x26_status_callback:0000000000000000 $t
+     /tmp/cc8lI7MP.s:101    .text.umb_0x26_status_callback:0000000000000000 umb_0x26_status_callback
+     /tmp/cc8lI7MP.s:185    .text.umb_0x26_status_callback:0000000000000040 $d
                            .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
                            .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
                            .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
