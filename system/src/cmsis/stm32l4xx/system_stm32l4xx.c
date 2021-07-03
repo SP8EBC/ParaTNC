@@ -431,6 +431,9 @@ int SystemClock_Config_L4(void)
 //  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV4;
 //  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_48M2CLK|RCC_PLLSAI1_ADC1CLK;
 
+  // configure clock sources for some peripherals
+  RCC->CCIPR |= (RCC_CCIPR_ADCSEL | RCC_CCIPR_CLK48SEL_1);		// system clock selected for ADC
+
   return 0;
 }
 

@@ -60,7 +60,7 @@ void ADCStartConfig(void) {
 	ADC1->CR |= ADC_CR_ADCAL;
 
 	// wait for calibration to finish
-    while(ADC1->CR |= ADC_CR_ADCAL);
+    while((ADC1->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL);
 
     // set the first (and only channel in a conversion sequence)
     ADC1->SQR1 |= (0x4 << 6);
@@ -74,12 +74,6 @@ void ADCStartConfig(void) {
     // start ADC
 	ADC1->CR |= ADC_CR_ADEN;
 
-    //ADC1->SMPR1 = ADC_SAMPLE_TIME0(SAMPLE_TIME_7_5);	// czas pr�bkowania
-//	ADC1->CR1 = ADC_CR1_EOCIE;			/// przerwanie na zako�czenie konwersji
-//	NVIC_EnableIRQ(ADC1_2_IRQn);
-//	NVIC_SetPriority(ADC1_2_IRQn, 3);
-//	ADC1->CR2 |= ADC_CR2_CONT;
-//	ADC1->CR2 |= ADC_CR2_ADON;
 	ADC1->DR;
 
 #endif
