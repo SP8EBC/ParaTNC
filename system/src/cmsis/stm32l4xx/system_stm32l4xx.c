@@ -272,7 +272,7 @@ void SystemInit(void)
   *
   * @retval None
   */
-void SystemCoreClockUpdate(void)
+void SystemCoreClockUpdateL4(void)
 {
   uint32_t tmp, msirange, pllvco, pllsource, pllm, pllr;
 
@@ -344,76 +344,92 @@ void SystemCoreClockUpdate(void)
   * @brief System Clock Configuration
   * @retval None
   */
-int SystemClock_Config(void)
+int SystemClock_Config_L4(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-
   /** Configure LSE Drive Capability
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
+  // set the flash latency
+  FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
-                              |RCC_OSCILLATORTYPE_LSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 1;
-  RCC_OscInitStruct.PLL.PLLN = 12;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV4;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    return -1;
-  }
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-  {
-	return -2;
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
-                              |RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RNG
-                              |RCC_PERIPHCLK_ADC;
-  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
-  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-  PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-  PeriphClkInit.RngClockSelection = RCC_RNGCLKSOURCE_PLLSAI1;
-  PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSE;
-  PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
-  PeriphClkInit.PLLSAI1.PLLSAI1N = 12;
-  PeriphClkInit.PLLSAI1.PLLSAI1P = RCC_PLLP_DIV7;
-  PeriphClkInit.PLLSAI1.PLLSAI1Q = RCC_PLLQ_DIV4;
-  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV4;
-  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_48M2CLK|RCC_PLLSAI1_ADC1CLK;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    return -3;
-  }
-  /** Configure the main internal regulator output voltage
-  */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
-  {
-	return -4;
-  }
+  // turn on high speed external quartz oscilator
+  RCC->CR |= RCC_CR_HSEON;
+
+  // turn of the PLL1 before any configuration change
+  RCC->CR &= (0xFFFFFFFF ^ RCC_CR_PLLON);
+
+  // be sure that PLL is not running
+  while ((RCC->CR & RCC_CR_PLLRDY) != 0);
+
+  // set the clock source for PLL
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
+
+  // R division factor for PLL to /4 (DIV4)
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;
+
+  // Q divistion factor for PLL to /2 (DIV2)
+  RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLQ_Msk));
+
+  // P division factor for PLL to /7 (DIV7)
+  RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLP_Msk));
+
+  // M multiplication factor to 1
+  RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLM_Msk));
+
+  // N multiplication factor to 12
+  RCC->PLLCFGR |= (12 << RCC_PLLCFGR_PLLN_Pos);
+
+  // turn on the PLL
+  RCC->CR |= RCC_CR_PLLON;
+
+  // wait for PLL to startup and lock
+  while ((RCC->CR & RCC_CR_PLLRDY) == 0);
+
+  // turn on all PLL outputs
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLREN;
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLQEN;
+
+  // turn on LSI
+  RCC->CSR |= RCC_CSR_LSION;
+
+  // turn on LSE
+  RCC->BDCR |= RCC_BDCR_LSEON;
+
+  // select PLL as a system clock
+  RCC->CFGR |= RCC_CFGR_SW_PLL;
+
+  // wait for the clock to switch
+  while ((RCC->CFGR & RCC_CFGR_SWS_PLL) != RCC_CFGR_SWS_PLL);
+
+//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+//  {
+//	return -2;
+//  }
+//  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
+//                              |RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
+//                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RNG
+//                              |RCC_PERIPHCLK_ADC;
+//  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
+//  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+//  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
+//  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
+//  PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
+//  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+//  PeriphClkInit.RngClockSelection = RCC_RNGCLKSOURCE_PLLSAI1;
+//  PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSE;
+//  PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
+//  PeriphClkInit.PLLSAI1.PLLSAI1N = 12;
+//  PeriphClkInit.PLLSAI1.PLLSAI1P = RCC_PLLP_DIV7;
+//  PeriphClkInit.PLLSAI1.PLLSAI1Q = RCC_PLLQ_DIV4;
+//  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV4;
+//  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_48M2CLK|RCC_PLLSAI1_ADC1CLK;
 
   return 0;
 }

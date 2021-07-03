@@ -13,6 +13,7 @@
 #include <stm32l4xx_ll_iwdg.h>
 #include <stm32l4xx_ll_rcc.h>
 #include <stm32l4xx_ll_gpio.h>
+#include "cmsis/stm32l4xx/system_stm32l4xx.h"
 #endif
 
 #include <delay.h>
@@ -255,11 +256,13 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
-  if (SystemClock_Config() != 0) {
+  SystemCoreClockUpdateL4();
+
+  if (SystemClock_Config_L4() != 0) {
 	  HAL_NVIC_SystemReset();
   }
 
-  SystemCoreClockUpdate();
+  SystemCoreClockUpdateL4();
 
   RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN);
   RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);
