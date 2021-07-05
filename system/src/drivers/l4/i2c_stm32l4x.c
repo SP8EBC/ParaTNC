@@ -28,22 +28,36 @@ volatile uint32_t i2cStartTime;
 
 void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 	LL_I2C_InitTypeDef I2C_InitStructure;
+	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 	// disabling I2C in case it was enabled before
 	LL_I2C_Disable(I2C1);
 
 	NVIC_EnableIRQ( I2C1_EV_IRQn );
 	NVIC_EnableIRQ( I2C1_ER_IRQn );
-//	if (i2cPinRemap == 0) {
-//		Configure_GPIO(GPIOB,6,AFOD_OUTPUT_2MHZ);		//SCL
-//		Configure_GPIO(GPIOB,7,AFOD_OUTPUT_2MHZ);		//SDA
-//	}
-//	else {
-//		AFIO->MAPR |= AFIO_MAPR_I2C1_REMAP;
-//		Configure_GPIO(GPIOB,8,AFOD_OUTPUT_2MHZ);
-//		Configure_GPIO(GPIOB,9,AFOD_OUTPUT_2MHZ);
-//	}
-	//NVIC_SetPriority(I2C1_EV_IRQn, 1);
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_4;
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SCL
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_4;
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SDA
+
+//    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+//    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+//    GPIO_InitStruct.Pull = GPIO_PULLUP;
+//    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+//    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+//    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 	//I2C_StructInit(&I2C_InitStructure);
 
@@ -51,8 +65,8 @@ void i2cConfigure() {			// funkcja konfiguruje pierwszy kontroler i2c!!!
 
 	/* Konfiguracja I2C */
 	I2C_InitStructure.PeripheralMode = LL_I2C_MODE_I2C;
-	I2C_InitStructure.Timing = 0x0050D9FF;
-	I2C_InitStructure.AnalogFilter = LL_I2C_ANALOGFILTER_ENABLE;
+	I2C_InitStructure.Timing = 0x50418AFE;//0x0050D9FF;
+	I2C_InitStructure.AnalogFilter = LL_I2C_ANALOGFILTER_DISABLE;
 	I2C_InitStructure.DigitalFilter = 0x0;
 	I2C_InitStructure.OwnAddress1 = 0x0;
 	I2C_InitStructure.TypeAcknowledge = LL_I2C_ACK;
@@ -118,7 +132,6 @@ int i2c_send_data(int addr, uint8_t* data, int null) {
 
 	i2cStartTime = master_time;
 
-	i2c_state = I2C_TXING;
 
 	// enable periphal and turn on all interrupts
 	i2cStart();
@@ -127,7 +140,12 @@ int i2c_send_data(int addr, uint8_t* data, int null) {
 	LL_I2C_SetMasterAddressingMode(I2C1, LL_I2C_ADDRESSING_MODE_7BIT);
 
 	// set slave address to be sent
-	LL_I2C_SetSlaveAddr(I2C1, addr);
+	LL_I2C_SetSlaveAddr(I2C1, addr & 0xFE);
+
+	// verify that address has been set correctly
+	if (LL_I2C_GetSlaveAddr(I2C1) != (addr & 0xFE)) {
+		return -1;
+	}
 
 	// set transfer direction
 	LL_I2C_SetTransferRequest(I2C1, LL_I2C_REQUEST_WRITE);
@@ -140,6 +158,8 @@ int i2c_send_data(int addr, uint8_t* data, int null) {
 
 	// set transfer size
 	LL_I2C_SetTransferSize(I2C1, i2c_tx_queue_len);
+
+	i2c_state = I2C_TXING;
 
 	I2C1->CR2 |= I2C_CR2_START;			// zadanie warunkow startowych
 	return 0;
