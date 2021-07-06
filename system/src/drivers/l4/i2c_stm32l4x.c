@@ -449,9 +449,9 @@ void i2cStart(void) {
 void i2cKeepTimeout(void) {
 	if (i2c_state == I2C_RXING || i2c_state == I2C_TXING) {
 		if (master_time - i2cStartTime > I2C_TIMEOUT) {
-//			i2cReinit();
-//			i2cStop();
-//			i2c_state = I2C_ERROR;
+			i2cReinit();
+			i2cStop();
+			i2c_state = I2C_ERROR;
 		}
 	}
 }
