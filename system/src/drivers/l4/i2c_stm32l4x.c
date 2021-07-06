@@ -220,7 +220,12 @@ void i2cVariableReset(void) {
 
 void i2cIrqHandler(void) {
 
-		if ((I2C1->ISR & I2C_ISR_STOPF) == I2C_ISR_STOPF) {
+		if ((I2C1->ISR & I2C_ISR_STOPF) == I2C_ISR_STOPF && i2c_txing == 1 && i2c_trx_data_counter >= i2c_tx_queue_len) {
+			i2cStop();
+
+			i2c_state = I2C_IDLE;
+		}
+		else if ((I2C1->ISR & I2C_ISR_STOPF) == I2C_ISR_STOPF) {
 			i2cStop();
 
 			i2c_state = I2C_ERROR;
@@ -420,6 +425,7 @@ void i2cStop(void) {
 	LL_I2C_DisableIT_RX(I2C1);
 	LL_I2C_DisableIT_NACK(I2C1);
 	LL_I2C_DisableIT_ERR(I2C1);
+	LL_I2C_DisableIT_STOP(I2C1);
 
 	LL_I2C_Disable(I2C1);
 
@@ -434,15 +440,18 @@ void i2cStart(void) {
 	LL_I2C_EnableIT_RX(I2C1);
 	LL_I2C_EnableIT_NACK(I2C1);
 	LL_I2C_EnableIT_ERR(I2C1);
+//	LL_I2C_EnableIT_TXE(I2C1);
+//	LL_I2C_EnableIT_TXIS(I2C1);
+	LL_I2C_EnableIT_STOP(I2C1);
 
 }
 
 void i2cKeepTimeout(void) {
 	if (i2c_state == I2C_RXING || i2c_state == I2C_TXING) {
 		if (master_time - i2cStartTime > I2C_TIMEOUT) {
-			i2cReinit();
-			i2cStop();
-			i2c_state = I2C_ERROR;
+//			i2cReinit();
+//			i2cStop();
+//			i2c_state = I2C_ERROR;
 		}
 	}
 }
