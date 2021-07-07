@@ -448,33 +448,37 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
   	// USART1 - KISS
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
 
 	// USART2 - METEO
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_3;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
 
 #endif
@@ -718,14 +722,20 @@ int main(int argc, char* argv[]){
 			  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
 	#ifdef SERIAL_TX_TEST_MODE
-			  while(main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE);
-	//		  while(srl_rx_state != SRL_RX_DONE);
+			  	  	while(main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE);
 
-			  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
+				#if defined(PARAMETEO)
+			  	 	LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_9);
+				#else
+		  	  		GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
+				#endif
 
 			  if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-				  GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_8);
-
+				#if defined(PARAMETEO)
+			  	 		LL_GPIO_TogglePin(GPIOC, LL_GPIO_PIN_9);
+				#else
+						GPIOC->ODR = (GPIOC->ODR ^ GPIO_Pin_9);
+				#endif
 				  retval = 200;
 			  }
 		  }
@@ -917,7 +927,7 @@ int main(int argc, char* argv[]){
 		else {
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
-				// parse incoming data and then transmit on radio freq
+				// parse i ncoming data and then transmit on radio freq
 				short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
 				if (res == 0)
 					kiss10m++;	// increase kiss messages counter

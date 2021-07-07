@@ -95,6 +95,7 @@ void srl_init(
 
 	ctx->srl_rx_timeout_calc_started = 0;
 	ctx->total_idle_counter = 0;
+	ctx->total_overrun_counter = 0;
 
 	ctx->srl_rx_start_time = 0;
 	ctx->srl_rx_waiting_start_time = 0;
@@ -356,6 +357,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 
 	ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
 	ctx->port->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
+	ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_IDLEIE);
 // 	PORT->CR1 |= USART_CR1_IDLEIE;			// przerwanie od bezczynno�ci szyny RS przy odbiorze
 												// spowodowanej zako�czeniem transmisji przez urz�dzenie
  	return SRL_OK;
@@ -484,27 +486,6 @@ void srl_irq_handler(srl_context_t *ctx) {
 	// local variable to store
 	uint8_t value = 0;
 
-	if ((ctx->port->ISR & USART_ISR_IDLE) == USART_ISR_IDLE) {
-		ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
-
-		ctx->total_idle_counter++;
-	}
-
-	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
-	if ((ctx->port->ISR & USART_ISR_ORE) == USART_ISR_ORE) {
-		switch (ctx->srl_rx_state) {
-			case SRL_RXING:
-				ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
-
-				break;
-			default:
-				// if the UART driver is not receiving actually but hardware controler received any data
-				// it is required to read value of DR register to clear the interrupt
-				ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
-				break;
-		}
-	}
-
 	// if any data has been received by the UART controller
 	if ((ctx->port->ISR & USART_ISR_RXNE) == USART_ISR_RXNE) {
 
@@ -632,6 +613,33 @@ void srl_irq_handler(srl_context_t *ctx) {
 			default: break;
 		}
 
+	}
+
+	if ((ctx->port->ISR & USART_ISR_IDLE) == USART_ISR_IDLE) {
+		ctx->port->ICR |= USART_ICR_IDLECF;
+
+		ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
+
+		ctx->total_idle_counter++;
+	}
+
+	// if overrun happened, a byte hadn't been transferred from DR before the next byte is received
+	if ((ctx->port->ISR & USART_ISR_ORE) == USART_ISR_ORE) {
+		ctx->port->ICR |= USART_ICR_ORECF;
+
+		ctx->total_overrun_counter++;
+
+		switch (ctx->srl_rx_state) {
+			case SRL_RXING:
+				ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
+
+				break;
+			default:
+				// if the UART driver is not receiving actually but hardware controler received any data
+				// it is required to read value of DR register to clear the interrupt
+				ctx->srl_garbage_storage = (uint8_t)ctx->port->RDR;
+				break;
+		}
 	}
 
 	// if one byte was successfully transferred from DR to shift register for transmission over USART

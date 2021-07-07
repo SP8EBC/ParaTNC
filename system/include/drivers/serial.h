@@ -111,6 +111,7 @@ typedef struct srl_context_t {
 
 	srl_error_reason_t srl_rx_error_reason;
 	uint8_t total_idle_counter;
+	uint8_t total_overrun_counter;
 
 	uint8_t srl_enable_echo;
 
