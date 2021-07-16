@@ -273,7 +273,7 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	NVIC_EnableIRQ( DMA1_Channel5_IRQn );
 
 	// direction
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
@@ -534,7 +534,7 @@ int16_t analog_anemometer_direction_handler(void) {
 	LL_TIM_DisableCounter(TIM3);
 
 	// getting current counter value
-	uint16_t current_value = LL_TIM_GetCounter(TIM3);//TIM_GetCounter(TIM3);
+	volatile uint16_t current_value = LL_TIM_GetCounter(TIM3);//TIM_GetCounter(TIM3);
 
 	// if the counter value is zero it means that probably U/f converter isn't running
 	if (current_value == 0) {

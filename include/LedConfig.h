@@ -100,10 +100,10 @@ inline void led_control_led1_upper(bool _in) {
 
 inline void led_control_led2_bottom(bool _in) {
 	if (_in == true) {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
+		GPIOA->BSRR |= GPIO_BSRR_BS5;
 	}
 	else {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
+		GPIOA->BSRR |= GPIO_BSRR_BR5;
 	}
 }
 
@@ -117,11 +117,11 @@ inline void led_flip_led1_upper(void) {
 }
 
 inline void led_flip_led2_bottom(void) {
-	if ((GPIOC->ODR & GPIO_ODR_ODR_9)  == GPIO_ODR_ODR_9) {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
+	if ((GPIOA->ODR & GPIO_ODR_ODR_5)  == GPIO_ODR_ODR_5) {
+		GPIOA->BSRR |= GPIO_BSRR_BR5;
 	}
 	else {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
+		GPIOA->BSRR |= GPIO_BSRR_BS5;
 	}
 }
 
