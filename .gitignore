@@ -6,3 +6,4 @@ Debug/
 Release/
 *.hex
 *.elf
+/STM32L476_ParaMETEO/
