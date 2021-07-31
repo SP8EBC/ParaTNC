@@ -5,8 +5,20 @@
  *      Author: mateusz
  */
 
+#include "station_config_target_hw.h"
+
 #include <delay.h>
+
+#ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
+#endif
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_tim.h>
+#include <stm32l4xx_ll_dma.h>
+#include <stm32l471xx.h>
+#endif
+
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
 #include "drivers/serial.h"
@@ -121,10 +133,6 @@ void I2C1_ER_IRQHandler(void) {
 	i2cErrIrqHandler();
 }
 
-void EXTI4_IRQHandler(void) {
-  EXTI->PR |= EXTI_PR_PR4;
-}
-
 void TIM2_IRQHandler( void ) {
 	TIM2->SR &= ~(1<<0);
 	if (delay_5us > 0)
@@ -141,9 +149,15 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void) {
 	#endif
 }
 
-void DMA1_Channel7_IRQHandler() {
+void DMA1_Channel7_IRQHandler() {		// DMA1_Channel7_IRQn
+#ifdef STM32F10X_MD_VL
 	NVIC_ClearPendingIRQ(DMA1_Channel7_IRQn);
 	DMA_ClearITPendingBit(DMA1_IT_GL7);
+#endif
+
+#ifdef STM32L471xx
+	LL_DMA_ClearFlag_TC5(DMA1);
+#endif
 
 	#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 	analog_anemometer_dma_irq();

@@ -1,7 +1,7 @@
 #ifndef CRC_H_
 #define CRC_H_
 
-#include "stm32f10x_conf.h"
+#include <stdint.h>
 
 #include <macros.h>
 

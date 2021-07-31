@@ -5,9 +5,19 @@
  *      Author: mateusz
  */
 
-#include "drivers/dallas.h"
+#include "station_config_target_hw.h"
+
+#ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
 #include <stm32f10x_gpio.h>
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_gpio.h>
+#endif
+
+#include "drivers/dallas.h"
 #include <string.h>
 
 volatile int delay_5us = 0;
@@ -17,6 +27,7 @@ dallas_struct_t dallas;
 
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average) {
 
+#ifdef STM32F10X_MD_VL
 	GPIO_InitTypeDef GPIO_input;
 	GPIO_InitTypeDef GPIO_output;
 
@@ -34,6 +45,33 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 	dallas.GPIOx = GPIOx;
 	dallas.GPIO_Pin = GPIO_Pin;
 	dallas.GPIO_Pin_input = GPIO_Pin << 1;
+#endif
+
+#ifdef STM32L471xx
+	LL_GPIO_InitTypeDef GPIO_input, GPIO_output;
+
+	GPIO_output.Pin = GPIO_Pin;
+	GPIO_output.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_output.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_output.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	//GPIO_output.Alternate = ;
+	GPIO_output.Pull = LL_GPIO_PULL_NO;
+
+	GPIO_input.Pin = GPIO_Pin << 1;
+	GPIO_input.Mode = LL_GPIO_MODE_INPUT;
+	//GPIO_input.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_input.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	//GPIO_output.Alternate = ;
+	GPIO_input.Pull = LL_GPIO_PULL_NO;
+
+	LL_GPIO_Init(GPIOx, &GPIO_output);
+	LL_GPIO_Init(GPIOx, &GPIO_input);
+
+	dallas.GPIOx = GPIOx;
+	dallas.GPIO_Pin = GPIO_Pin;
+	dallas.GPIO_Pin_input = GPIO_Pin << 1;
+
+#endif
 
 	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
 		average->values[i] = DALLAS_INIT_VALUE;
@@ -48,7 +86,7 @@ void dallas_config_timer(void) {
 	//NVIC_DisableIRQ( TIM3_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM4_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM7_IRQn );			// data transmission initializer
-	NVIC_DisableIRQ( 25 );	// anemometer
+	//NVIC_DisableIRQ( 25 );	// TODO: probably remainder of TX20 driver to be deleted
 
 	NVIC_SetPriority(TIM2_IRQn, 1);
 	TIM2->PSC = 0;
@@ -67,7 +105,7 @@ void dallas_deconfig_timer(void) {
 	//NVIC_EnableIRQ( TIM3_IRQn );	// adc
 	NVIC_EnableIRQ( TIM4_IRQn );	// data transmission initializer
 	NVIC_EnableIRQ( TIM7_IRQn );	// data transmission initializer
-	NVIC_EnableIRQ( 25 ); // anemometer
+	//NVIC_EnableIRQ( 25 ); // TODO: probably remainder of TX20 driver to be deleted
 
 	// reverting back to APRS timings
 	//NVIC_SetPriority(TIM4_IRQn, 1);

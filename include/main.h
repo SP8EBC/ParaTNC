@@ -6,12 +6,12 @@
 #include "config_data.h"
 
 #define SW_VER "EA00"
-#define SW_DATE "23052021"
+#define SW_DATE "30062021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
-#define INTERNAL_WATCHDOG
+//#define INTERNAL_WATCHDOG
 #define EXTERNAL_WATCHDOG
 
 #define PWR_SWITCH_BOTH

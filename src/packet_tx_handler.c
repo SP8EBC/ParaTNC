@@ -16,6 +16,7 @@
 
 #include "main.h"
 #include "delay.h"
+#include "io.h"
 
 #define _TELEM_DESCR_INTERVAL	150
 
@@ -114,7 +115,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
 			#ifdef EXTERNAL_WATCHDOG
-			GPIOA->ODR ^= GPIO_Pin_12;
+			io_ext_watchdog_service();
 			#endif
 
 			packet_tx_meteo_counter = 0;

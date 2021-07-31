@@ -2,8 +2,14 @@
 #define __SERIAL_H
 
 #include "stdint.h"
+#ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
 #include <stm32f10x_usart.h>
+#endif
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_usart.h>
+#endif
 
 #define RX_BUFFER_1_LN 512
 #define TX_BUFFER_1_LN 512
@@ -105,6 +111,7 @@ typedef struct srl_context_t {
 
 	srl_error_reason_t srl_rx_error_reason;
 	uint8_t total_idle_counter;
+	uint8_t total_overrun_counter;
 
 	uint8_t srl_enable_echo;
 

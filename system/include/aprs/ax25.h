@@ -1,9 +1,9 @@
 #ifndef AX25_H_
 #define AX25_H_
 
-#ifndef CCC
-#include "stm32f10x_conf.h"
-#endif
+//#ifndef CCC
+//#include "stm32f10x_conf.h"
+//#endif
 #include <stdbool.h>
 
 #include "cfifo.h"

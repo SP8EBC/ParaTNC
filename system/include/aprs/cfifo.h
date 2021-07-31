@@ -1,6 +1,7 @@
 #ifndef FIFO_H_
 #define FIFO_H_
 
+#include <stdint.h>
 
 typedef struct FIFOBuffer
 {
