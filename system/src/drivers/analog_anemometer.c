@@ -90,6 +90,18 @@ int8_t analog_anemometer_direction_pol = 1;
 
 uint16_t analog_anemometer_last_direction_cnt = 0;
 
+// incremeneted by one if condition below is true
+//
+//			// if the value is greater than maximum one just ignore
+//				if (current_value > UF_MAXIMUM_FREQUENCY) {
+//
+//					// and reinitialize the timer before returning from the function
+//					analog_anemometer_direction_reset();
+//
+//					return rte_wx_winddirection_last;
+//				}
+uint8_t analog_anemometer__direction_freq_too_high = 0;
+
 #ifdef _ANEMOMETER_ANALOGUE
 int8_t  analog_anemometer_direction_mode = DIRECTION_REGULAR;
 #endif
@@ -561,6 +573,8 @@ int16_t analog_anemometer_direction_handler(void) {
 
 		// and reinitialize the timer before returning from the function
 		analog_anemometer_direction_reset();
+
+		analog_anemometer__direction_freq_too_high++;
 
 		return rte_wx_winddirection_last;
 	}
