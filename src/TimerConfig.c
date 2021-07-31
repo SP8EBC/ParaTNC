@@ -5,10 +5,20 @@
  *      Author: mateusz
  */
 
-#include <stm32f10x.h>
-#include <stm32f10x_tim.h>
+
 #include "TimerConfig.h"
 #include "station_config.h"
+#include "station_config_target_hw.h"
+
+#ifdef STM32F10X_MD_VL
+#include <stm32f10x.h>
+#include <stm32f10x_tim.h>
+#endif
+
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#include <stm32l4xx_ll_tim.h>
+#endif
 
 
 #if (_DELAY_BASE > 22)

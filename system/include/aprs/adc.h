@@ -1,9 +1,7 @@
 #ifndef ADC_H_
 #define ADC_H_
 
-#ifndef CCC
-#include "stm32f10x_conf.h"
-#endif
+
 #include <afsk.h>
 
 #ifdef __cplusplus

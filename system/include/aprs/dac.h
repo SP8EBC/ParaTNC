@@ -1,7 +1,7 @@
 #ifndef DAC_H_
 #define DAC_H_
 
-#include "stm32f10x_conf.h"
+//#include "stm32f10x_conf.h"
 #include <afsk.h>
 #ifdef __cplusplus
 extern "C"

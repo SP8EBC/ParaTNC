@@ -1,10 +1,10 @@
 #ifndef AFSK_H_
 #define AFSK_H_
 
-
-#ifndef CCC
-#include "stm32f10x_conf.h"
-#endif
+//
+//#ifndef CCC
+//#include "stm32f10x_conf.h"
+//#endif
 
 #include <stdbool.h>
 

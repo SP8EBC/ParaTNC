@@ -20,9 +20,7 @@
 /* 	MODES OF OPERATION */
 /*  ------------------ */
 
-//#define PARATNC_HWREV_A
-//#define PARATNC_HWREV_B
-#define PARATNC_HWREV_C
+
 
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */
