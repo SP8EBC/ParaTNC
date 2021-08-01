@@ -37,11 +37,13 @@ void ADCStartConfig(void) {
 #ifdef STM32L471xx
 
 	/**
-	 * On STM32L47x/L48x devices, before any conversion of an input channel coming from
-		GPIO pads, it is necessary to configure the corresponding GPIOx_ASCR register in the
-		GPIO, in addition to the I/O configuration in analog mode.
+	 * On STM32L47x/L48x devices each analog GPIO input pin must be connected
+	 * to respective ADC input channel by programming bit within GPIOx_ASCR register in the
+		GPIO. This has to be done independely from configuring I/O in analog mode.
 	 *
 	 */
+
+	volatile int stupid_delay = 0;
 
 	// reset the clock for ADC
 	RCC->AHB2ENR &= (0xFFFFFFFF ^ RCC_AHB2ENR_ADCEN);
@@ -56,6 +58,9 @@ void ADCStartConfig(void) {
 	// start ADC voltage regulator
 	ADC1->CR |= ADC_CR_ADVREGEN;
 
+	// wait for voltage regulator to start
+	for (; stupid_delay < 0x1FFFF; stupid_delay++);
+
 	// start the calibration
 	ADC1->CR |= ADC_CR_ADCAL;
 
@@ -63,7 +68,7 @@ void ADCStartConfig(void) {
     while((ADC1->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL);
 
     // set the first (and only channel in a conversion sequence)
-    ADC1->SQR1 |= (0x4 << 6);
+    ADC1->SQR1 |= (2 << 6);
 
     // set the sampling rate to 12.5 ADC clock cycles
     ADC1->SMPR1 |= 0x2;
@@ -71,8 +76,17 @@ void ADCStartConfig(void) {
     // set continuous conversion
 	ADC1->CFGR |= ADC_CFGR_CONT;
 
-    // start ADC
+	// ignore overrun and overwrite data register content with new conversion result
+	ADC1->CFGR |= ADC_CFGR_OVRMOD;
+
+	// start ADC
 	ADC1->CR |= ADC_CR_ADEN;
+
+	// wait for startup
+    while((ADC1->ISR & ADC_ISR_ADRDY) == 0);
+
+	// start conversion
+	ADC1->CR |= ADC_CR_ADSTART;
 
 	ADC1->DR;
 

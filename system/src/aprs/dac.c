@@ -58,6 +58,28 @@ void DA_Init(void) {
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// PTT
+
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_5;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_0;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_LOW;	// DAC_OUT
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// DAC_OUT
+
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_1;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_0;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);		// ADC_IN
+
+	LL_GPIO_EnablePinAnalogControl(GPIOC, LL_GPIO_PIN_1);
+
+
+
 #endif
 
 }
