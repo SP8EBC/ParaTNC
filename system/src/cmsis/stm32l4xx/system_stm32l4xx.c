@@ -367,6 +367,9 @@ int SystemClock_Config_L4(void)
   // be sure that PLL is not running
   while ((RCC->CR & RCC_CR_PLLRDY) != 0);
 
+  // reset PLLCFGR register
+  RCC->PLLCFGR = 0;
+
   // set the clock source for PLL
   RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 

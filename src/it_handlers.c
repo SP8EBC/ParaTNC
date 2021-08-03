@@ -31,6 +31,7 @@
 #include "LedConfig.h"
 //#include "afsk.h"
 #include "diag/Trace.h"
+#include "io.h"
 
 #include "station_config.h"
 
@@ -183,6 +184,7 @@ void TIM7_IRQHandler(void) {
 	#define ASC2 adc_sample_c2
 	AdcBuffer[ASC] =  ADC1->DR;
 	if(ASC == 3) {
+//		io_ext_watchdog_service();
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
 		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
 		led_control_led1_upper(main_ax25.dcd);

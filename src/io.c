@@ -58,7 +58,7 @@ void io_ext_watchdog_config(void) {
 #ifdef STM32L471xx
 		GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 		GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-		GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
+		GPIO_InitTypeDef.Pin = LL_GPIO_PIN_1;
 		GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 		GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 		GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
@@ -72,7 +72,14 @@ void io_ext_watchdog_service(void) {
 #endif
 
 #ifdef STM32L471xx
-
+	if ((GPIOA->ODR & GPIO_ODR_OD1) == 0) {
+		// set high
+		GPIOA->BSRR |= GPIO_BSRR_BS1;
+	}
+	else {
+		// set low
+		GPIOA->BSRR |= GPIO_BSRR_BR1;
+	}
 #endif
 }
 
