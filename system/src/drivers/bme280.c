@@ -76,7 +76,7 @@ int32_t bme280_reset(bme280_qf_t* qf) {
 
 		// Return with keeping 'ms5611_sensor_abaliable' set to zero which will
 		// disable comms
-		return BME280_SENSOR_NOT_RESPONDING;
+		out =  BME280_SENSOR_NOT_RESPONDING;
 	}
 
 	return out;

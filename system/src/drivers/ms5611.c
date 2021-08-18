@@ -29,6 +29,8 @@ uint8_t ms5611_sensor_avaliable = 0;
 // This function will reset the sensor. It should be ran as a first thing during sensor initialization
 int32_t ms5611_reset(ms5611_qf_t *qf) {
 
+	int out = MS5611_OK;
+
 	// Preparing a buffer with 0x1E command ID which will reset the sensor
 	int txbuf[] = {0x1E, '\0' };
 
@@ -53,10 +55,10 @@ int32_t ms5611_reset(ms5611_qf_t *qf) {
 
 		// Return with keeping 'ms5611_sensor_abaliable' set to zero which will
 		// disable comms
-		return MS5611_SENSOR_NOT_AVALIABLE;
+		out = MS5611_SENSOR_NOT_AVALIABLE;
 	}
 
-	return MS5611_OK;
+	return out;
 }
 
 // Function will read a calibration data from sensor and chceck if the CRC is correct
