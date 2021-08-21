@@ -8,8 +8,8 @@
 #ifndef INCLUDE_CMSIS_STM32L4XX_SYSTEM_STM32L4XX_H_
 #define INCLUDE_CMSIS_STM32L4XX_SYSTEM_STM32L4XX_H_
 
-void SystemCoreClockUpdateL4(void);
-int SystemClock_Config_L4(void);
-
+void system_clock_update_l4(void);		// SystemCoreClockUpdateL4
+int system_clock_configure_l4(void);		// SystemClock_Config_L4
+int system_clock_configure_rtc_l4(void);
 
 #endif /* INCLUDE_CMSIS_STM32L4XX_SYSTEM_STM32L4XX_H_ */

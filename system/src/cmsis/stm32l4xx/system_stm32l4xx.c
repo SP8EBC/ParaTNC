@@ -1,4 +1,8 @@
 /**
+ *
+ * WARNING! This file has been highly modified by // ML during ParaTNC porting
+ * from STM32F100 to STM32L4xx family
+ *
   ******************************************************************************
   * @file    system_stm32l4xx.c
   * @author  MCD Application Team
@@ -110,6 +114,9 @@
 /** @addtogroup STM32L4xx_System_Private_Defines
   * @{
   */
+
+#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0xFFFF
+
 
 #if !defined  (HSE_VALUE)
   #define HSE_VALUE    8000000U  /*!< Value of the External oscillator in Hz */
@@ -272,7 +279,7 @@ void SystemInit(void)
   *
   * @retval None
   */
-void SystemCoreClockUpdateL4(void)
+void system_clock_update_l4(void)
 {
   uint32_t tmp, msirange, pllvco, pllsource, pllm, pllr;
 
@@ -344,12 +351,12 @@ void SystemCoreClockUpdateL4(void)
   * @brief System Clock Configuration
   * @retval None
   */
-int SystemClock_Config_L4(void)
+int system_clock_configure_l4(void)
 {
   /** Configure LSE Drive Capability
   */
-  HAL_PWR_EnableBkUpAccess();
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+  //HAL_PWR_EnableBkUpAccess();
+  //__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
   // set the flash latency
   FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
@@ -399,11 +406,8 @@ int SystemClock_Config_L4(void)
   RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
   RCC->PLLCFGR |= RCC_PLLCFGR_PLLQEN;
 
-  // turn on LSI
+  // turn on LSI (required by IWDG)
   RCC->CSR |= RCC_CSR_LSION;
-
-  // turn on LSE
-  RCC->BDCR |= RCC_BDCR_LSEON;
 
   // select PLL as a system clock
   RCC->CFGR |= RCC_CFGR_SW_PLL;
@@ -411,33 +415,112 @@ int SystemClock_Config_L4(void)
   // wait for the clock to switch
   while ((RCC->CFGR & RCC_CFGR_SWS_PLL) != RCC_CFGR_SWS_PLL);
 
-//  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-//  {
-//	return -2;
-//  }
-//  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
-//                              |RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_USART3
-//                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_RNG
-//                              |RCC_PERIPHCLK_ADC;
-//  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
-//  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-//  PeriphClkInit.Usart3ClockSelection = RCC_USART3CLKSOURCE_PCLK1;
-//  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
-//  PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
-//  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-//  PeriphClkInit.RngClockSelection = RCC_RNGCLKSOURCE_PLLSAI1;
-//  PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSE;
-//  PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
-//  PeriphClkInit.PLLSAI1.PLLSAI1N = 12;
-//  PeriphClkInit.PLLSAI1.PLLSAI1P = RCC_PLLP_DIV7;
-//  PeriphClkInit.PLLSAI1.PLLSAI1Q = RCC_PLLQ_DIV4;
-//  PeriphClkInit.PLLSAI1.PLLSAI1R = RCC_PLLR_DIV4;
-//  PeriphClkInit.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_48M2CLK|RCC_PLLSAI1_ADC1CLK;
-
   // configure clock sources for some peripherals
   RCC->CCIPR |= (RCC_CCIPR_ADCSEL | RCC_CCIPR_CLK48SEL_1);		// system clock selected for ADC
 
   return 0;
+}
+
+int system_clock_configure_rtc_l4(void) {
+
+	int retval = 0;
+
+	volatile uint32_t timeout_counter = 0;
+
+	// check if LSE is working now
+	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;
+
+	// if LSE is not working reinitialize everything
+	if (lse_is_working == 0) {
+
+		// reset backup domain
+		RCC->BDCR |= RCC_BDCR_BDRST;
+
+		// wait for the reset
+		while (timeout_counter < SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT) {
+			// wait a little bit for a reset to be done
+			timeout_counter++;
+		}
+
+		// but clear reset flag before
+		RCC->BDCR &= (0xFFFFFFFF ^ RCC_BDCR_BDRST);
+
+		// enable access to backup domain
+		PWR->CR1 |= PWR_CR1_DBP;
+
+		// set the clock source for RTC clock to LSE
+		RCC->BDCR |= RCC_BDCR_RTCSEL_0;
+
+		// set LSE quartz driving to medium-high
+		RCC->BDCR |= RCC_BDCR_LSEDRV_1;
+
+		// turn on LSE
+		RCC->BDCR |= RCC_BDCR_LSEON;
+
+		// wait for LSE to start
+		while((RCC->BDCR & RCC_BDCR_LSERDY) == 0);
+
+		// starting RTC
+		RCC->BDCR |= RCC_BDCR_RTCEN;
+
+		// enable write access to RTC registers by writing two magic words
+		RTC->WPR = 0xCA;
+		RTC->WPR = 0x53;
+
+		// enter the clock set mode
+		RTC->ISR |= RTC_ISR_INIT;
+
+		// wait for going into clock set mode
+		while((RTC->ISR & RTC_ISR_INITF) == 0);
+
+		// set date
+		RTC->DR = 0x0021A820;
+
+		// set time
+		RTC->TR = 0x00232711;
+
+		// exit RTC set mode
+		RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
+
+		// disable wakeup timer
+		RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
+
+		// wait for wakeup timer to disable
+		while((RTC->ISR & RTC_ISR_WUTWF) == 0);
+
+		// set the source clock for RTC as CK_SPRE
+		RTC->CR |= RTC_CR_WUCKSEL_2;
+
+		// set auto wakeup every 300 seconds
+		RTC->WUTR = 300;
+
+		// start wakeup timer once again
+		RTC->CR |= RTC_CR_WUTE;
+
+		// enabling wakeup interrupt
+		RTC->CR |= RTC_CR_WUTIE;
+	}
+
+	// enable 20th EXTI Line (RTC wakeup timer)
+	EXTI->IMR1 |= EXTI_IMR1_IM20;
+
+	// set 20th EXTI line to rising trigger
+	EXTI->RTSR1 |= EXTI_RTSR1_RT20;
+
+	// by enabling this all pending interrupt will wake up cpu from low-power mode, even from those disabled in NVIC
+	SCB->SCR |= SCB_SCR_SEVONPEND_Msk;
+
+	// enable write access to RTC registers by writing two magic words (in case that backup domain hasn't been reseted
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
+
+	// enable wakeup interrupt
+	NVIC_EnableIRQ(RTC_WKUP_IRQn);
+
+
+	return retval;
 }
 
 
