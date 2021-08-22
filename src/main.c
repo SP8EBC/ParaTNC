@@ -266,9 +266,11 @@ int main(int argc, char* argv[]){
   // enable access to PWR control registers
   RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
 
+  system_clock_update_l4();
+
   system_clock_configure_rtc_l4();
 
-  system_clock_update_l4();
+  system_clock_configure_auto_wakeup_l4(300);
 
   RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN);
   RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);

@@ -482,24 +482,42 @@ int system_clock_configure_rtc_l4(void) {
 		// exit RTC set mode
 		RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
 
-		// disable wakeup timer
-		RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
-
-		// wait for wakeup timer to disable
-		while((RTC->ISR & RTC_ISR_WUTWF) == 0);
-
-		// set the source clock for RTC as CK_SPRE
+		// set the source clock for RTC wakeup as CK_SPRE
 		RTC->CR |= RTC_CR_WUCKSEL_2;
 
-		// set auto wakeup every 300 seconds
-		RTC->WUTR = 300;
 
-		// start wakeup timer once again
-		RTC->CR |= RTC_CR_WUTE;
-
-		// enabling wakeup interrupt
-		RTC->CR |= RTC_CR_WUTIE;
 	}
+
+
+	return retval;
+}
+
+void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
+
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
+	// enable write access to RTC registers by writing two magic words
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+
+	// disable wakeup timer
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
+
+	// wait for wakeup timer to disable
+	while((RTC->ISR & RTC_ISR_WUTWF) == 0);
+
+	// clear wakeup flag
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
+
+	// set auto wakeup timer
+	RTC->WUTR = seconds;
+
+	// start wakeup timer once again
+	RTC->CR |= RTC_CR_WUTE;
+
+	// enabling wakeup interrupt
+	RTC->CR |= RTC_CR_WUTIE;
 
 	// enable 20th EXTI Line (RTC wakeup timer)
 	EXTI->IMR1 |= EXTI_IMR1_IM20;
@@ -510,17 +528,8 @@ int system_clock_configure_rtc_l4(void) {
 	// by enabling this all pending interrupt will wake up cpu from low-power mode, even from those disabled in NVIC
 	SCB->SCR |= SCB_SCR_SEVONPEND_Msk;
 
-	// enable write access to RTC registers by writing two magic words (in case that backup domain hasn't been reseted
-	RTC->WPR = 0xCA;
-	RTC->WPR = 0x53;
-
-	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
-
 	// enable wakeup interrupt
 	NVIC_EnableIRQ(RTC_WKUP_IRQn);
-
-
-	return retval;
 }
 
 
