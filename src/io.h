@@ -22,11 +22,6 @@ void io_oc_output_hiz(void);
 void io_ext_watchdog_config(void);
 void io_ext_watchdog_service(void);
 
-//void io_5v_isol_sw_cntrl_vbat_s_enable(void);
-//void io_5v_isol_sw_cntrl_vbat_s_disable(void);
-//
-//void io_12v_sw_cntrl_vbat_g_enable(void);
-//void io_12v_sw_cntrl_vbat_g_disable(void);
 
 inline void io_5v_isol_sw_cntrl_vbat_s_enable(void) {
 	GPIOB->BSRR |= GPIO_BSRR_BS8;

@@ -20,6 +20,7 @@ C_SRCS += \
 ../src/it_handlers.c \
 ../src/main.c \
 ../src/packet_tx_handler.c \
+../src/pwr_save.c \
 ../src/rte_main.c \
 ../src/rte_pv.c \
 ../src/rte_rtu.c \
@@ -46,6 +47,7 @@ OBJS += \
 ./src/it_handlers.o \
 ./src/main.o \
 ./src/packet_tx_handler.o \
+./src/pwr_save.o \
 ./src/rte_main.o \
 ./src/rte_pv.o \
 ./src/rte_rtu.o \
@@ -72,6 +74,7 @@ C_DEPS += \
 ./src/it_handlers.d \
 ./src/main.d \
 ./src/packet_tx_handler.d \
+./src/pwr_save.d \
 ./src/rte_main.d \
 ./src/rte_pv.d \
 ./src/rte_rtu.d \

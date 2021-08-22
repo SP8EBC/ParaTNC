@@ -37,6 +37,7 @@
 #include "LedConfig.h"
 #include "io.h"
 #include "float_to_string.h"
+#include "pwr_save.h"
 
 #include "it_handlers.h"
 
@@ -82,12 +83,12 @@
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
 
-// backup registers
-// 2 -> 4bit hard-faults | 4bit boot-counter
-// 3 -> hard fault PC LSB
-// 4 -> hard fault PC MSB
-// 5 -> hard fault LR LSB
-// 6 -> hard fault LR MSB
+// backup registers (ParaTNC)
+// 2 -> boot and hard fault count
+// 3 -> controller configuration status
+
+// backup registers (ParaMETEO)
+
 
 #define CONFIG_FIRST_RESTORED 			(1)
 #define CONFIG_FIRST_FAIL_RESTORING	  	(1 << 1)
@@ -428,6 +429,11 @@ int main(int argc, char* argv[]){
 #elif !defined _RANDOM_DELAY
   delay_set(_DELAY_BASE, 0);
 
+#endif
+
+#if defined(STM32L471xx)
+  // initialize all powersaving functions
+  pwr_save_init();
 #endif
 
   // initalizing separated Open Collector output
@@ -805,6 +811,8 @@ int main(int argc, char* argv[]){
 #endif
 
    io_ext_watchdog_service();
+
+   pwr_save_enter_stop2();
 
   // Infinite loop
   while (1)
