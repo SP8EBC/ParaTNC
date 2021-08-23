@@ -87,6 +87,14 @@ void RTC_WKUP_IRQHandler(void) {
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
 
 	EXTI->PR1 |= EXTI_PR1_PIF20;
+
+	system_clock_configure_l4();
+
+	led_flip_led1_upper();
+
+	led_flip_led2_bottom();
+
+	led_control_led1_upper(true);
 }
 #endif
 
@@ -199,7 +207,7 @@ void TIM7_IRQHandler(void) {
 //		io_ext_watchdog_service();
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
 		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
-		led_control_led1_upper(main_ax25.dcd);
+		led_control_led1_upper(main_ax25.dcd);	// TODO
 		ASC = 0;
 
 		if (ASC2++ == 2) {

@@ -87,9 +87,10 @@ void pwr_save_enter_stop2(void) {
 	DBGMCU->CR &= (0xFFFFFFFF ^ (DBGMCU_CR_DBG_SLEEP_Msk | DBGMCU_CR_DBG_STOP_Msk | DBGMCU_CR_DBG_STANDBY_Msk));
 
 	// disabling all IRQs
-	__disable_irq();
+	//__disable_irq();
 
-	asm ("wfe");
+	asm("sev");
+	asm("wfi");
 
 }
 
