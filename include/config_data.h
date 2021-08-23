@@ -15,6 +15,30 @@
  * Please look at 'station_config.h' instead to set all parameters.
  */
 
+/**
+ * This enum is used to configure how the ParaMETEO controller will switch to different powersave modes
+ */
+typedef enum config_data_powersave_mode_t {
+
+	/**
+	 *	Micro will be kept constantly in RUN mode, +5V_S, +5V_R and +4V_G will be kept on.
+	 *	This is suitable if station is powered from mains and needs to be operated as APRS
+	 *	digipeater and/or igate. Wind measurements will be very accurate as anemometer
+	 *	readings will be collected all the time
+	 */
+	PWSAVE_NONE = 0,
+
+	//PWSAVE_
+
+
+}config_data_powersave_mode_t;
+
+typedef struct config_data_powersave_t {
+
+	config_data_powersave_mode_t mode;
+
+}config_data_powersave_t;
+
 typedef struct config_data_mode_t {
 
 #define WX_ENABLED 					(1)
