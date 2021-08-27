@@ -812,8 +812,6 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
-   pwr_save_enter_stop2();
-
   // Infinite loop
   while (1)
     {
