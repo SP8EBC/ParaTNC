@@ -10,7 +10,20 @@
 #include "stm32l4xx.h"
 #include <stdint.h>
 
+#include "pwr_switch.h"
+#include "io.h"
+
 #define IN_STOP2_MODE (1 << 1)
+#define IN_C0_STATE (1 << 2)
+#define IN_C1_STATE (1 << 3)
+#define IN_C2_STATE (1 << 4)
+#define IN_C3_STATE (1 << 5)
+#define IN_M4_STATE (1 << 6)
+#define IN_I5_STATE (1 << 7)
+#define IN_L6_STATE (1 << 8)
+#define IN_L7_STATE (1 << 9)
+
+#define CLEAR_ALL_STATES_BITMASK (0xFF << 2)
 
 #if defined(STM32L471xx)
 
@@ -80,7 +93,7 @@ void pwr_save_enter_stop2(void) {
 	RTC->WPR = 0x53;
 
 	// save an information that STOP2 mode has been applied
-	RTC->BKP4R |= IN_STOP2_MODE;
+	RTC->BKP0R |= IN_STOP2_MODE;
 
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 
@@ -92,6 +105,156 @@ void pwr_save_enter_stop2(void) {
 	asm("sev");
 	asm("wfi");
 
+}
+
+void pwr_save_switch_mode_to_c0(void) {
+
+	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_enable();
+
+	// turn ON +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_enable();
+
+	// turn ON +4V_G
+	io_12v_sw___cntrl_vbat_g_enable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= 0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK;
+
+	// set for C0 mode
+	RTC->BKP0R |= IN_C0_STATE;
+
+}
+
+// in HW-RevB this will disable external VHF radio!!
+void pwr_save_switch_mode_to_c1(void) {
+	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_enable();
+
+	// turn ON +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_enable();
+
+	// turn OFF +4V_G
+	io_12v_sw___cntrl_vbat_g_disable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C0 mode
+	RTC->BKP0R |= IN_C1_STATE;
+}
+
+// this mode is not avaliable in HW Revision B as internal radio
+// is powered from +5V_S and external one is switched on with the same
+// line which controls +4V_G
+void pwr_save_switch_mode_to_c2(void) {
+	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_disable();
+
+	// turn ON +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_enable();
+
+	// turn OFF +4V_G
+	io_12v_sw___cntrl_vbat_g_disable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C2 mode
+	RTC->BKP0R |= IN_C2_STATE;
+}
+
+void pwr_save_switch_mode_to_c3(void) {
+	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_disable();
+
+	// turn ON +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_enable();
+
+	// turn ON +4V_G
+	io_12v_sw___cntrl_vbat_g_enable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	RTC->BKP0R |= IN_C3_STATE;
+}
+
+// in HW-RevB this will keep internal VHF radio module working!
+void pwr_save_switch_mode_to_m4(void) {
+	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_enable();
+
+	// turn OFF +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_disable();
+
+	// turn OFF +4V_G
+	io_12v_sw___cntrl_vbat_g_disable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	RTC->BKP0R |= IN_M4_STATE;
+}
+
+void pwr_save_switch_mode_to_i5(void) {
+	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_disable();
+
+	// turn OFF +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_disable();
+
+	// turn OFF +4V_G
+	io_12v_sw___cntrl_vbat_g_disable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	RTC->BKP0R |= IN_I5_STATE;
+
+}
+
+// this will keep external VHF radio working in HW-RevB
+void pwr_save_switch_mode_to_l6(void) {
+	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_disable();
+
+	// turn OFF +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_disable();
+
+	// turn ON +4V_G
+	io_12v_sw___cntrl_vbat_g_enable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	RTC->BKP0R |= IN_L6_STATE;
+
+	pwr_save_enter_stop2();
+
+}
+
+void pwr_save_switch_mode_to_l7(void) {
+	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+	io_5v_isol_sw___cntrl_vbat_s_disable();
+
+	// turn OFF +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_disable();
+
+	// turn OFF +4V_G
+	io_12v_sw___cntrl_vbat_g_disable();
+
+	// clear all previous powersave indication bits
+	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	RTC->BKP0R |= IN_L7_STATE;
+
+	pwr_save_enter_stop2();
 }
 
 #endif

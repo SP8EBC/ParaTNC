@@ -94,14 +94,15 @@
 
 void pwr_save_init(void);
 void pwr_save_enter_stop2(void);
-void pwr_save_switch_c0(void);
-void pwr_save_switch_c1(void);
-void pwr_save_switch_c2(void);
-void pwr_save_switch_c3(void);
-void pwr_save_switch_m4(void);
-void pwr_save_switch_i5(void);
-void pwr_save_switch_l6(void);
-void pwr_save_switch_l7(void);
+void pwr_save_switch_mode_to_c0(void);
+void pwr_save_switch_mode_to_c1(void);
+void pwr_save_switch_mode_to_c2(void);
+void pwr_save_switch_mode_to_c3(void);
+void pwr_save_switch_mode_to_m4(void);
+void pwr_save_switch_mode_to_i5(void);
+void pwr_save_switch_mode_to_l6(void);
+void pwr_save_switch_mode_to_l7(void);
+void pwr_save_pooling_handler(void);
 
 
 

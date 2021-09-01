@@ -21,6 +21,7 @@ C_SRCS += \
 ../src/main.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
+../src/pwr_switch.c \
 ../src/rte_main.c \
 ../src/rte_pv.c \
 ../src/rte_rtu.c \
@@ -49,6 +50,7 @@ OBJS += \
 ./src/main.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
+./src/pwr_switch.o \
 ./src/rte_main.o \
 ./src/rte_pv.o \
 ./src/rte_rtu.o \
@@ -77,6 +79,7 @@ C_DEPS += \
 ./src/main.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
+./src/pwr_switch.d \
 ./src/rte_main.d \
 ./src/rte_pv.d \
 ./src/rte_rtu.d \

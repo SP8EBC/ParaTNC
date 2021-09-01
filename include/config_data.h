@@ -27,17 +27,13 @@ typedef enum config_data_powersave_mode_t {
 	 *	readings will be collected all the time
 	 */
 	PWSAVE_NONE = 0,
+	PWSAVE_NORMAL = 1,
+	PWSAVE_AGGRESV = 3
 
 	//PWSAVE_
 
 
 }config_data_powersave_mode_t;
-
-typedef struct config_data_powersave_t {
-
-	config_data_powersave_mode_t mode;
-
-}config_data_powersave_t;
 
 typedef struct config_data_mode_t {
 
@@ -66,6 +62,8 @@ typedef struct config_data_mode_t {
 	uint8_t digi_only_ssids;
 
 	uint8_t digi_viscous_delay_sec;
+
+	config_data_powersave_mode_t powersave;
 
 
 } config_data_mode_t;

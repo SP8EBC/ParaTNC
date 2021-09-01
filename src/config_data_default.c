@@ -99,9 +99,17 @@ volatile const config_data_mode_t config_data_mode_default = {
 #endif
 
 #ifdef _DIGI_VISCOUS_DEALY
-		.digi_viscous_delay_sec = _DIGI_VISCOUS_DEALY
+		.digi_viscous_delay_sec = _DIGI_VISCOUS_DEALY,
 #else
-		.digi_viscous_delay_sec = 3
+		.digi_viscous_delay_sec = 3,
+#endif
+
+#if (defined _POWERSAVE_NORMAL)
+		.powersave = PWSAVE_NONE
+#elif (defined _POWERSAVE_AGGRESIVE)
+		.powersave = PWSAVE_AGGRESV
+#else
+		.powersave = PWSAVE_NONE
 #endif
 };
 

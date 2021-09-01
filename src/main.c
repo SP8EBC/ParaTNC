@@ -38,6 +38,7 @@
 #include "io.h"
 #include "float_to_string.h"
 #include "pwr_save.h"
+#include "pwr_switch.h"
 
 #include "it_handlers.h"
 
@@ -84,10 +85,16 @@
 // Zielona dioda -> anemometr albo TX
 
 // backup registers (ParaTNC)
+// 0 ->
 // 2 -> boot and hard fault count
 // 3 -> controller configuration status
+// 4 ->
+// 5 ->
+// 6 ->
 
 // backup registers (ParaMETEO)
+// 0 -> powersave status
+// 3 -> controller configuration status
 
 
 #define CONFIG_FIRST_RESTORED 			(1)
@@ -440,10 +447,10 @@ int main(int argc, char* argv[]){
   io_oc_init();
 
   // initialize sensor power control and switch off supply voltage
-  wx_pwr_init();
+  wx_pwr_switch_init();
 
   // call periodic handle to wait for 1 second and then switch on voltage
-  wx_pwr_periodic_handle();
+  wx_pwr_switch_periodic_handle();
 
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
@@ -676,6 +683,10 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
+
+	  // switch on voltages exclusively for ParaMETEO
+
+	  // initialize dallas one-wire driver for termometer
 	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 #endif
 
@@ -1039,7 +1050,7 @@ int main(int argc, char* argv[]){
 
 			wx_check_force_i2c_reset();
 
-			wx_pwr_periodic_handle();
+			wx_pwr_switch_periodic_handle();
 
 			#ifdef INTERNAL_WATCHDOG
 			IWDG_ReloadCounter();
