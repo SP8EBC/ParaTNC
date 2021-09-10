@@ -105,11 +105,17 @@ volatile const config_data_mode_t config_data_mode_default = {
 #endif
 
 #if (defined _POWERSAVE_NORMAL)
-		.powersave = PWSAVE_NONE
+		.powersave = PWSAVE_NONE,
 #elif (defined _POWERSAVE_AGGRESIVE)
-		.powersave = PWSAVE_AGGRESV
+		.powersave = PWSAVE_AGGRESV,
 #else
-		.powersave = PWSAVE_NONE
+		.powersave = PWSAVE_NONE,
+#endif
+
+#if (defined _GSM)
+		.gsm = 1
+#else
+		.gsm = 0
 #endif
 };
 

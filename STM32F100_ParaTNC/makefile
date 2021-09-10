@@ -13,6 +13,7 @@ RM := rm -rf
 -include system/src/stm32f1-stdperiph/subdir.mk
 -include system/src/newlib/subdir.mk
 -include system/src/modbus_rtu/subdir.mk
+-include system/src/drivers/f1/subdir.mk
 -include system/src/drivers/subdir.mk
 -include system/src/diag/subdir.mk
 -include system/src/davis_vantage/subdir.mk

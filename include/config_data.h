@@ -63,8 +63,11 @@ typedef struct config_data_mode_t {
 
 	uint8_t digi_viscous_delay_sec;
 
+	// only for ParaMETEO
 	config_data_powersave_mode_t powersave;
 
+	// only for ParaMETEO
+	uint8_t gsm;
 
 } config_data_mode_t;
 

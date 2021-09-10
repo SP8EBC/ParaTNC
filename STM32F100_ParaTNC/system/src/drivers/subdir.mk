@@ -8,30 +8,21 @@ C_SRCS += \
 ../system/src/drivers/bme280.c \
 ../system/src/drivers/dallas.c \
 ../system/src/drivers/dma_helper_functions.c \
-../system/src/drivers/gpio_conf.c \
-../system/src/drivers/i2c.c \
-../system/src/drivers/ms5611.c \
-../system/src/drivers/serial.c 
+../system/src/drivers/ms5611.c 
 
 OBJS += \
 ./system/src/drivers/analog_anemometer.o \
 ./system/src/drivers/bme280.o \
 ./system/src/drivers/dallas.o \
 ./system/src/drivers/dma_helper_functions.o \
-./system/src/drivers/gpio_conf.o \
-./system/src/drivers/i2c.o \
-./system/src/drivers/ms5611.o \
-./system/src/drivers/serial.o 
+./system/src/drivers/ms5611.o 
 
 C_DEPS += \
 ./system/src/drivers/analog_anemometer.d \
 ./system/src/drivers/bme280.d \
 ./system/src/drivers/dallas.d \
 ./system/src/drivers/dma_helper_functions.d \
-./system/src/drivers/gpio_conf.d \
-./system/src/drivers/i2c.d \
-./system/src/drivers/ms5611.d \
-./system/src/drivers/serial.d 
+./system/src/drivers/ms5611.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

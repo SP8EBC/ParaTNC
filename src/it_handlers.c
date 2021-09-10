@@ -17,6 +17,8 @@
 #include <stm32l4xx_ll_tim.h>
 #include <stm32l4xx_ll_dma.h>
 #include <stm32l471xx.h>
+#include "cmsis/stm32l4xx/system_stm32l4xx.h"
+#include "pwr_save.h"
 #endif
 
 #include "drivers/dallas.h"
@@ -90,11 +92,11 @@ void RTC_WKUP_IRQHandler(void) {
 
 	system_clock_configure_l4();
 
-	led_flip_led1_upper();
+	pwr_save_exit_from_stop2();
 
-	led_flip_led2_bottom();
+	pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, 1);
 
-	led_control_led1_upper(true);
+
 }
 #endif
 

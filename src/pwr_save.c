@@ -8,10 +8,13 @@
 #include "pwr_save.h"
 
 #include "stm32l4xx.h"
+#include "system_stm32l4xx.h"
 #include <stdint.h>
 
 #include "pwr_switch.h"
 #include "io.h"
+#include "packet_tx_handler.h"
+#include "main.h"
 
 #define IN_STOP2_MODE (1 << 1)
 #define IN_C0_STATE (1 << 2)
@@ -23,9 +26,14 @@
 #define IN_L6_STATE (1 << 8)
 #define IN_L7_STATE (1 << 9)
 
-#define CLEAR_ALL_STATES_BITMASK (0xFF << 2)
+#define ALL_STATES_BITMASK (0xFF << 2)
+
+#define REGISTER RTC->BKP0R
 
 #if defined(STM32L471xx)
+
+int8_t pwr_save_seconds_to_wx = 0;
+int16_t pwr_save_sleep_time_in_seconds = -1;
 
 /**
  * This function initializes everything related to power saving features
@@ -107,7 +115,54 @@ void pwr_save_enter_stop2(void) {
 
 }
 
+/**
+ * This function has to be called within RTC wakepup interrupt.
+ */
+void pwr_save_exit_from_stop2(void) {
+
+	// packet tx timers values
+	packet_tx_counter_values_t timers;
+
+	// check power saving mode set before switching uC to SLEEP2
+	uint16_t powersave_mode = (uint16_t)(REGISTER & ALL_STATES_BITMASK);
+
+	// check if sleep time is valid
+	if (pwr_save_sleep_time_in_seconds <= 0) {
+		// if for some reason the value is not valid change is to something meaningful
+		pwr_save_sleep_time_in_seconds = 60;
+	}
+
+
+	switch(powersave_mode) {
+	case IN_L6_STATE:
+	case IN_L7_STATE:
+
+		// get all timers values
+		packet_tx_get_current_counters(&timers);
+
+		// rewind all timers in packet tx handler as they were no updated when micro was sleeping
+		// sleep shall be always set as wx packet interval minus one minute
+		timers.beacon_counter += (pwr_save_sleep_time_in_seconds / 60);
+		timers.kiss_counter += (pwr_save_sleep_time_in_seconds / 60);
+		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
+		timers.telemetry_desc_counter += (pwr_save_sleep_time_in_seconds / 60);
+
+		// set counters back
+		packet_tx_set_current_counters(&timers);
+
+		break;
+
+	// something is screwed horribly as in all other modes a micro shall not be placed in STOP2 mode
+	default:
+		break;
+	}
+}
+
 void pwr_save_switch_mode_to_c0(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_C0_STATE) {
+		return;
+	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_enable();
@@ -119,15 +174,20 @@ void pwr_save_switch_mode_to_c0(void) {
 	io_12v_sw___cntrl_vbat_g_enable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= 0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK;
+	REGISTER &= 0xFFFFFFFF ^ ALL_STATES_BITMASK;
 
 	// set for C0 mode
-	RTC->BKP0R |= IN_C0_STATE;
+	REGISTER |= IN_C0_STATE;
 
 }
 
 // in HW-RevB this will disable external VHF radio!!
 void pwr_save_switch_mode_to_c1(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_C1_STATE) {
+		return;
+	}
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_enable();
 
@@ -138,16 +198,21 @@ void pwr_save_switch_mode_to_c1(void) {
 	io_12v_sw___cntrl_vbat_g_disable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C0 mode
-	RTC->BKP0R |= IN_C1_STATE;
+	REGISTER |= IN_C1_STATE;
 }
 
 // this mode is not avaliable in HW Revision B as internal radio
 // is powered from +5V_S and external one is switched on with the same
 // line which controls +4V_G
 void pwr_save_switch_mode_to_c2(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
+		return;
+	}
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_disable();
 
@@ -158,13 +223,18 @@ void pwr_save_switch_mode_to_c2(void) {
 	io_12v_sw___cntrl_vbat_g_disable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C2 mode
-	RTC->BKP0R |= IN_C2_STATE;
+	REGISTER |= IN_C2_STATE;
 }
 
 void pwr_save_switch_mode_to_c3(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
+		return;
+	}
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_disable();
 
@@ -175,14 +245,19 @@ void pwr_save_switch_mode_to_c3(void) {
 	io_12v_sw___cntrl_vbat_g_enable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
-	RTC->BKP0R |= IN_C3_STATE;
+	REGISTER |= IN_C3_STATE;
 }
 
 // in HW-RevB this will keep internal VHF radio module working!
 void pwr_save_switch_mode_to_m4(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+		return;
+	}
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_enable();
 
@@ -193,13 +268,18 @@ void pwr_save_switch_mode_to_m4(void) {
 	io_12v_sw___cntrl_vbat_g_disable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
-	RTC->BKP0R |= IN_M4_STATE;
+	REGISTER |= IN_M4_STATE;
 }
 
 void pwr_save_switch_mode_to_i5(void) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
+		return;
+	}
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_disable();
 
@@ -210,15 +290,20 @@ void pwr_save_switch_mode_to_i5(void) {
 	io_12v_sw___cntrl_vbat_g_disable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
-	RTC->BKP0R |= IN_I5_STATE;
+	REGISTER |= IN_I5_STATE;
 
 }
 
 // this will keep external VHF radio working in HW-RevB
-void pwr_save_switch_mode_to_l6(void) {
+void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
+		return;
+	}
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_disable();
 
@@ -229,16 +314,23 @@ void pwr_save_switch_mode_to_l6(void) {
 	io_12v_sw___cntrl_vbat_g_enable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
-	RTC->BKP0R |= IN_L6_STATE;
+	REGISTER |= IN_L6_STATE;
+
+	system_clock_configure_auto_wakeup_l4(sleep_time);
 
 	pwr_save_enter_stop2();
 
 }
 
-void pwr_save_switch_mode_to_l7(void) {
+void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+		return;
+	}
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io_5v_isol_sw___cntrl_vbat_s_disable();
 
@@ -249,12 +341,243 @@ void pwr_save_switch_mode_to_l7(void) {
 	io_12v_sw___cntrl_vbat_g_disable();
 
 	// clear all previous powersave indication bits
-	RTC->BKP0R &= (0xFFFFFFFF ^ CLEAR_ALL_STATES_BITMASK);
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
-	RTC->BKP0R |= IN_L7_STATE;
+	REGISTER |= IN_L7_STATE;
+
+	// configure how long micro should sleep
+	system_clock_configure_auto_wakeup_l4(sleep_time);
+
+	// save how long the micro will sleep - required for handling wakeup event
+	pwr_save_sleep_time_in_seconds = sleep_time;
 
 	pwr_save_enter_stop2();
+}
+
+void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t * timers, int16_t minutes_to_wx) {
+	// this function should be called from 10 seconds pooler
+
+
+	packet_tx_counter_values_t counters;
+
+	// get current counter values
+	packet_tx_get_current_counters(&counters);
+
+	// decrement seconds in last minute
+	if (pwr_save_seconds_to_wx != -1) {
+		pwr_save_seconds_to_wx -= 10;
+	}
+
+	// if there is more than one minute to next frame
+	if (minutes_to_wx > 1) {
+		// reset counter as we dont
+		pwr_save_seconds_to_wx = -1;
+	}
+	else if (minutes_to_wx == 1 && pwr_save_seconds_to_wx == -1) {
+		// if this is the last second to wx frame
+		pwr_save_seconds_to_wx = 60;
+	}
+
+	// handle depends on current powersave configuration
+	switch (config->powersave) {
+		/**
+		 * 	PWSAVE_NONE = 0,
+			PWSAVE_NORMAL = 1,
+			PWSAVE_AGGRESV = 3
+		 */
+		case PWSAVE_NONE : {
+
+			// if weather station is enabled
+			if (config->wx == 1) {
+
+				// if GSM modem is enabled in configuration
+				if (config->gsm == 1) {
+
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX + GSM
+						pwr_save_switch_mode_to_c0();
+					}
+					else {		// WX + GSM
+						pwr_save_switch_mode_to_c0();
+					}
+				}
+				else {
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX
+						pwr_save_switch_mode_to_c1();
+					}
+					else {		// WX
+						if (minutes_to_wx > 1) {
+							// if there is more than one minute to send wx packet
+							pwr_save_switch_mode_to_c2();
+						}
+						else {
+							if (pwr_save_seconds_to_wx <= 30) {
+								pwr_save_switch_mode_to_c1();
+							}
+						}
+					}
+				}
+			}
+			else {		// DIGI
+				// if weather station is not enabled just stay in C2 mode
+				// as this is default state for DIGI operation. Of course
+				// DIGI might not be enabled (which has no sense) but for
+				// sake of simplicity just agree that it is.
+				pwr_save_switch_mode_to_c2();
+			}
+
+			break;
+		}
+
+		case PWSAVE_NORMAL : {
+
+			// if weather station is enabled
+			if (config->wx == 1) {
+
+				// if GSM modem is enabled in configuration
+				if (config->gsm == 1) {
+
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX + GSM
+						// if weather packets are send 5 minutes or less often
+						if (timers->wx_transmit_period >= 5) {
+							if (minutes_to_wx > 1) {
+								pwr_save_switch_mode_to_c2();
+							}
+							else {
+								pwr_save_switch_mode_to_c0();
+							}
+						}
+						else {
+							if (minutes_to_wx > 1) {
+								pwr_save_switch_mode_to_c3();
+							}
+							else {
+								pwr_save_switch_mode_to_c0();
+							}
+						}
+					}
+					else {		// WX + GSM
+						if (minutes_to_wx > 1) {
+							pwr_save_switch_mode_to_m4();
+						}
+						else {
+							pwr_save_switch_mode_to_c0();
+						}
+					}
+				}
+				else {
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX
+						if (minutes_to_wx > 1) {
+							pwr_save_switch_mode_to_c2();
+						}
+						else {
+							pwr_save_switch_mode_to_c1();
+						}
+					}
+					else {		// WX
+						if (minutes_to_wx > 1) {
+							// if there is more than one minute to send wx packet
+							pwr_save_switch_mode_to_m4();
+						}
+						else {
+							if (pwr_save_seconds_to_wx <= 30) {
+								pwr_save_switch_mode_to_c1();
+							}
+						}
+					}
+				}
+			}
+			else {		// DIGI
+				pwr_save_switch_mode_to_c2();
+			}
+
+
+			break;
+		}
+
+		case PWSAVE_AGGRESV : {
+
+			// if weather station is enabled
+			if (config->wx == 1) {
+
+				// if GSM modem is enabled in configuration
+				if (config->gsm == 1) {
+
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX + GSM
+						if (minutes_to_wx > 1) {
+							pwr_save_switch_mode_to_c2();
+						}
+						else {
+							pwr_save_switch_mode_to_c0();
+						}
+
+					}
+					else {		// WX + GSM (only)
+						if (timers->wx_transmit_period > 5) {
+							// if stations is configured to send wx packet less often than every 5 minutes
+
+							if (minutes_to_wx > 1) {
+								// if there is more than one minute to wx packet
+								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+							}
+							else {
+								if (pwr_save_seconds_to_wx <= 30) {
+									// if there is 30 seconds or less to next wx packet
+									pwr_save_switch_mode_to_c0();
+								}
+								else {
+									// if there is 30 to 60 seconds to next wx packet
+									pwr_save_switch_mode_to_m4();
+								}
+							}
+						}
+						else {
+							// if station is configured to sent wx packet in every 5 minutes or more often
+
+							if (minutes_to_wx > 1) {
+								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+							}
+							else {
+								pwr_save_switch_mode_to_c0();
+							}
+						}
+					}
+				}
+				else {
+					// if digipeater is enabled
+					if (config->digi == 1) {		// DIGI + WX
+						if (minutes_to_wx > 1) {
+							pwr_save_switch_mode_to_c2();
+						}
+						else {
+							pwr_save_switch_mode_to_c1();
+						}
+					}
+					else {		// WX
+						if (minutes_to_wx > 1) {
+							// if there is more than one minute to send wx packet
+							pwr_save_switch_mode_to_m4();
+						}
+						else {
+							if (pwr_save_seconds_to_wx <= 30) {
+								pwr_save_switch_mode_to_c1();
+							}
+						}
+					}
+				}
+			}
+			else {		// DIGI
+				pwr_save_switch_mode_to_c2();
+			}
+
+			break;
+		}
+	}
 }
 
 #endif

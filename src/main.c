@@ -392,6 +392,9 @@ int main(int argc, char* argv[]){
 	  configuration_handler_load_configuration(REGION_DEFAULT);
   }
 
+  // set packets intervals
+  packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period);
+
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // disabling access to BKP registers
   RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
@@ -534,6 +537,11 @@ int main(int argc, char* argv[]){
 
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
+
+#if defined(PARAMETEO)
+  // swtich power to M4. turn on sensors but keep GSM modem turned off
+  pwr_save_switch_mode_to_m4();
+#endif
 
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
   if (main_config_data_mode->victron == 1) {
@@ -823,6 +831,11 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
+#if defined(PARAMETEO)
+   // test
+   pwr_save_switch_mode_to_c0();
+#endif
+
   // Infinite loop
   while (1)
     {
@@ -1060,6 +1073,10 @@ int main(int argc, char* argv[]){
 		}
 
 		if (main_ten_second_pool_timer < 10) {
+
+			#ifdef STM32L471xx
+			pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx());
+			#endif
 
 			if (main_config_data_mode->wx_umb == 1) {
 				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);

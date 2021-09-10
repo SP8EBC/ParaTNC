@@ -16,12 +16,11 @@
 //#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 //#define _VICTRON			// Enable support for Victron VE.Direct protocol
 
+#define	_GSM			// only for ParaMETEO
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
 
-//#define PARATNC_HWREV_A
-//#define PARATNC_HWREV_B
 //#define PARATNC_HWREV_C
 #define PARAMETEO
 
@@ -66,23 +65,23 @@
 /******** 	INTERNAL SENSORS CONFIGURATION *****************/
 
 /*************** DATA SOURCES CONFIG ***********************/
-//#define _TEMPERATURE_INTERNAL
+#define _TEMPERATURE_INTERNAL
 //#define _TEMPERATURE_UMB
 //#define _TEMPERATURE_RTU
 //#define _TEMPERATURE_DAVIS
 //
-//#define _PRESSURE_INTERNAL
+#define _PRESSURE_INTERNAL
 //#define _PRESSURE_UMB
 //#define _PRESSURE_RTU
 //#define _PRESSURE_DAVIS
 //
-//#define _HUMIDITY_INTERNAL
+#define _HUMIDITY_INTERNAL
 //#define _HUMIDITY_UMB
 //#define _HUMIDITY_RTU
 //#define _HUMIDITY_DAVIS
 //
 //
-//#define _WIND_INTERNAL
+#define _WIND_INTERNAL
 //#define _WIND_UMB
 //#define _WIND_RTU
 //#define _WIND_FULL_RTU

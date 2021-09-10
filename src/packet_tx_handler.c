@@ -1,3 +1,5 @@
+#include "packet_tx_handler.h"
+
 #include "rte_wx.h"
 #include "rte_pv.h"
 #include "rte_main.h"
@@ -20,13 +22,13 @@
 
 #define _TELEM_DESCR_INTERVAL	150
 
-uint8_t packet_tx_beacon_interval = _BCN_INTERVAL;
+uint8_t packet_tx_beacon_interval = 0;
 uint8_t packet_tx_beacon_counter = 0;
 
 uint8_t packet_tx_error_status_interval = 2;
 uint8_t packet_tx_error_status_counter = 0;
 
-uint8_t packet_tx_meteo_interval = _WX_INTERVAL;
+uint8_t packet_tx_meteo_interval = 0;
 uint8_t packet_tx_meteo_counter = 2;
 
 uint8_t packet_tx_meteo_kiss_interval = 2;
@@ -35,13 +37,20 @@ uint8_t packet_tx_meteo_kiss_counter = 0;
 uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
-uint8_t packet_tx_telemetry_descr_interval = _TELEM_DESCR_INTERVAL;
+uint8_t packet_tx_telemetry_descr_interval = 0;
 uint8_t packet_tx_telemetry_descr_counter = 10;
 
-const uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 38));
-const uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 5));
+uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 38));
+uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 5));
 
 uint8_t packet_tx_more_than_one = 0;
+
+void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval) {
+	packet_tx_meteo_interval = meteo_interval;
+
+	packet_tx_beacon_interval = beacon_interval;
+
+}
 
 /**
  * This function is called from the inside of 'packet_rx_handler' to put an extra wait
@@ -96,7 +105,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		packet_tx_error_status_counter = 0;
 	}
 
-	if (packet_tx_beacon_counter >= packet_tx_beacon_interval) {
+	if (packet_tx_beacon_counter >= packet_tx_beacon_interval && packet_tx_beacon_interval != 0) {
 
 		packet_tx_multi_per_call_handler();
 
@@ -108,7 +117,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	}
 
 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
-		if (packet_tx_meteo_counter >= packet_tx_meteo_interval) {
+		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
 
 			packet_tx_multi_per_call_handler();
 
@@ -324,3 +333,44 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	}
 
 }
+
+void packet_tx_get_current_counters(packet_tx_counter_values_t * out) {
+
+	if (out != 0x00) {
+		out->beacon_counter = packet_tx_beacon_counter;
+		out->wx_counter = packet_tx_meteo_counter;
+		out->telemetry_counter = packet_tx_telemetry_counter;
+		out->telemetry_desc_counter = packet_tx_telemetry_descr_counter;
+		out->kiss_counter = packet_tx_meteo_kiss_counter;
+	}
+}
+
+void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
+	if (in != 0x00) {
+
+		if (in->beacon_counter != 0)
+			packet_tx_beacon_counter = in->beacon_counter;
+
+		if (in->wx_counter != 0)
+			packet_tx_meteo_counter = in->wx_counter;
+
+		if (in->telemetry_counter != 0)
+			packet_tx_telemetry_counter = in->telemetry_counter;
+
+		if (in->telemetry_desc_counter != 0)
+			packet_tx_telemetry_descr_counter = in->telemetry_desc_counter;
+
+		if (in->kiss_counter != 0)
+			packet_tx_meteo_kiss_counter = in->kiss_counter;
+	}
+}
+
+int16_t packet_tx_get_minutes_to_next_wx(void) {
+	if (packet_tx_meteo_interval != 0) {
+		return packet_tx_meteo_interval - packet_tx_meteo_counter;
+	}
+	else {
+		return -1;
+	}
+}
+
