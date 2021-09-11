@@ -65,15 +65,16 @@ void wx_check_force_i2c_reset(void) {
 	if (wx_force_i2c_sensor_reset == 1) {
 		wx_force_i2c_sensor_reset = 0;
 
-#if defined (_SENSOR_BME280)
+		if (main_config_data_mode->wx_ms5611_or_bme == 0) {
+		 ms5611_reset(&rte_wx_ms5611_qf);
+		 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
+		 ms5611_trigger_measure(0, 0);
+		}
+		else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
 		 bme280_reset(&rte_wx_bme280_qf);
 		 bme280_setup();
-#endif
-
-#if defined (_SENSOR_MS5611)
-		 ms5611_reset(&rte_wx_ms5611_qf);
-		 ms5611_trigger_measure(0, 0);
-#endif
+		 bme280_read_calibration(bme280_calibration_data);
+		}
 	}
 
 }
@@ -82,6 +83,11 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	int32_t backup_parameter_result = 0;				// uses during retrieving backup
+
+	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+		// inhibit any measurement when power is not applied to sensors
+		return;
+	}
 
 	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config_rtu);
 	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb, config_rtu);
@@ -170,10 +176,14 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 	uint8_t average_ln;
 
 	int32_t modbus_retval;
+	uint16_t scaled_windspeed = 0;
+
+	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+		// inhibit any measurement when power is not applied to sensors
+		return;
+	}
 
 	wx_wind_pool_call_counter++;
-
-	uint16_t scaled_windspeed = 0;
 
 	// internal sensors
 	if (config_sources->wind == WX_SOURCE_INTERNAL) {

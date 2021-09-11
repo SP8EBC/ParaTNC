@@ -24,7 +24,7 @@ typedef enum analog_wind_qf {
 #define DIRECTION_REGULAR	1
 #define DIRECTION_SPARKFUN	2
 
-#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
+//#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
 
 extern uint16_t analog_anemometer_windspeed_pulses_time[ANALOG_ANEMOMETER_SPEED_PULSES_N];
 extern uint16_t analog_anemometer_time_between_pulses[ANALOG_ANEMOMETER_SPEED_PULSES_N];
@@ -46,6 +46,6 @@ int16_t analog_anemometer_direction_sparkfun(uint32_t timer_value);
 void analog_anemometer_direction_reset(void);
 analog_wind_qf_t analog_anemometer_get_qf(void);
 
-#endif
+//#endif
 
 #endif /* INCLUDE_DRIVERS_ANALOG_ANEMOMETER_H_ */

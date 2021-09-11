@@ -98,22 +98,22 @@
 
 #if defined(STM32L471xx)
 
-void pwr_save_init(void);
+void pwr_save_init(config_data_powersave_mode_t mode);
 void pwr_save_enter_stop2(void);
 void pwr_save_exit_from_stop2(void);
-void pwr_save_switch_mode_to_c0(void);
-void pwr_save_switch_mode_to_c1(void);
+int pwr_save_switch_mode_to_c0(void);
+int pwr_save_switch_mode_to_c1(void);
 void pwr_save_switch_mode_to_c2(void);
 void pwr_save_switch_mode_to_c3(void);
-void pwr_save_switch_mode_to_m4(void);
+int pwr_save_switch_mode_to_m4(void);
 void pwr_save_switch_mode_to_i5(void);
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time);
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time);
 void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t * timers, int16_t minutes_to_wx);		// this should be called from 10 seconds pooler
 
-
-
 #endif
+
+uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void);
 
 
 #endif /* PWR_SAVE_H_ */

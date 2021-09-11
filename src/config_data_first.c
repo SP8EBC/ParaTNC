@@ -109,7 +109,7 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 #endif
 
 #if (defined _POWERSAVE_NORMAL)
-		.powersave = PWSAVE_NONE,
+		.powersave = PWSAVE_NORMAL,
 #elif (defined _POWERSAVE_AGGRESIVE)
 		.powersave = PWSAVE_AGGRESV,
 #else

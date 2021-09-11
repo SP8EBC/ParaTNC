@@ -43,6 +43,24 @@ inline void io_12v_sw___cntrl_vbat_g_disable(void) {
 
 }
 
+inline uint8_t io_get_5v_isol_sw___cntrl_vbat_s(void) {
+	if ((GPIOB->ODR & (1 << 8)) != 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+inline uint8_t io_get_12v_sw___cntrl_vbat_g(void) {
+	if ((GPIOA->ODR & (1 << 6)) != 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
 inline void io___cntrl_vbat_r_enable(void) {
 	;
 }

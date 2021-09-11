@@ -21,6 +21,7 @@
 #include "main.h"
 #include "wx_handler.h"
 #include "LedConfig.h"
+#include "io.h"
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x_tim.h>
@@ -522,6 +523,10 @@ uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time) {
 int16_t analog_anemometer_direction_handler(void) {
 
 	uint16_t downscaled_angle = 0;
+
+	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+		return rte_wx_winddirection_last;
+	}
 
 
 #ifdef STM32F10X_MD_VL

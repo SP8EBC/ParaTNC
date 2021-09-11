@@ -12,6 +12,7 @@
 #include "rte_wx.h"
 #include "wx_handler.h"
 #include "io.h"
+#include "pwr_save.h"
 
 
 #ifdef STM32F10X_MD_VL
@@ -25,10 +26,16 @@
 
 wx_pwr_state_t wx_pwr_state;
 
+#define REGISTER RTC->BKP0R
+
 #define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
 #define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
 
 void wx_pwr_switch_case_under_reset_parameteo() {
+
+	if (pwr_save_get_inhibit_pwr_switch_periodic() == 1)
+		return;
+
 	io_5v_isol_sw___cntrl_vbat_s_enable();
 
 	wx_force_i2c_sensor_reset = 1;
@@ -52,6 +59,9 @@ void wx_pwr_switch_case_under_reset_paratnc() {
 }
 
 void wx_pwr_switch_case_off_parameteo() {
+
+	if (pwr_save_get_inhibit_pwr_switch_periodic() == 1)
+		return;
 
 	// Turn on the +5V_ISOL (VDD_SW) voltage
 	io_5v_isol_sw___cntrl_vbat_s_enable();

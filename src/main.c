@@ -278,8 +278,6 @@ int main(int argc, char* argv[]){
 
   system_clock_configure_rtc_l4();
 
-  system_clock_configure_auto_wakeup_l4(300);
-
   RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN);
   RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);
   RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
@@ -443,7 +441,7 @@ int main(int argc, char* argv[]){
 
 #if defined(STM32L471xx)
   // initialize all powersaving functions
-  pwr_save_init();
+  pwr_save_init(main_config_data_mode->powersave);
 #endif
 
   // initalizing separated Open Collector output
@@ -832,7 +830,6 @@ int main(int argc, char* argv[]){
    io_ext_watchdog_service();
 
 #if defined(PARAMETEO)
-   // test
    pwr_save_switch_mode_to_c0();
 #endif
 

@@ -14,8 +14,15 @@
 #include "pwr_switch.h"
 #include "io.h"
 #include "packet_tx_handler.h"
+#include "wx_handler.h"
 #include "main.h"
 
+#include "drivers/analog_anemometer.h"
+
+
+#define REGISTER RTC->BKP0R
+
+#define INHIBIT_PWR_SWITCH_PERIODIC_H 1
 #define IN_STOP2_MODE (1 << 1)
 #define IN_C0_STATE (1 << 2)
 #define IN_C1_STATE (1 << 3)
@@ -28,18 +35,25 @@
 
 #define ALL_STATES_BITMASK (0xFF << 2)
 
-#define REGISTER RTC->BKP0R
-
 #if defined(STM32L471xx)
 
 int8_t pwr_save_seconds_to_wx = 0;
 int16_t pwr_save_sleep_time_in_seconds = -1;
 
+static void pwr_save_unclock_rtc_backup_regs(void) {
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+}
+
+static void pwr_save_lock_rtc_backup_regs(void) {
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+}
+
 /**
  * This function initializes everything related to power saving features
  * including programming Flash memory option bytes
  */
-void pwr_save_init(void) {
+void pwr_save_init(config_data_powersave_mode_t mode) {
 
 	// make a pointer to option byte
 	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
@@ -82,6 +96,23 @@ void pwr_save_init(void) {
 
 	}
 
+	pwr_save_unclock_rtc_backup_regs();
+
+	// reset a status register
+	REGISTER = 0;
+
+	// switch power switch handler inhibition if it is needed
+	switch (mode) {
+		case PWSAVE_NONE:
+			break;
+		case PWSAVE_NORMAL:
+		case PWSAVE_AGGRESV:
+			REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
+			break;
+	}
+
+	pwr_save_lock_rtc_backup_regs();
+
 }
 
 /**
@@ -100,8 +131,12 @@ void pwr_save_enter_stop2(void) {
 	RTC->WPR = 0xCA;
 	RTC->WPR = 0x53;
 
+	pwr_save_unclock_rtc_backup_regs();
+
 	// save an information that STOP2 mode has been applied
 	RTC->BKP0R |= IN_STOP2_MODE;
+
+	pwr_save_lock_rtc_backup_regs();
 
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 
@@ -158,10 +193,10 @@ void pwr_save_exit_from_stop2(void) {
 	}
 }
 
-void pwr_save_switch_mode_to_c0(void) {
+int pwr_save_switch_mode_to_c0(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C0_STATE) {
-		return;
+		return 0;
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
@@ -173,19 +208,27 @@ void pwr_save_switch_mode_to_c0(void) {
 	// turn ON +4V_G
 	io_12v_sw___cntrl_vbat_g_enable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= 0xFFFFFFFF ^ ALL_STATES_BITMASK;
 
 	// set for C0 mode
 	REGISTER |= IN_C0_STATE;
 
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
+	return 1;
+
 }
 
 // in HW-RevB this will disable external VHF radio!!
-void pwr_save_switch_mode_to_c1(void) {
+int pwr_save_switch_mode_to_c1(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C1_STATE) {
-		return;
+		return 0;
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
@@ -197,11 +240,19 @@ void pwr_save_switch_mode_to_c1(void) {
 	// turn OFF +4V_G
 	io_12v_sw___cntrl_vbat_g_disable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C0 mode
 	REGISTER |= IN_C1_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
+	return 1;
 }
 
 // this mode is not avaliable in HW Revision B as internal radio
@@ -222,11 +273,18 @@ void pwr_save_switch_mode_to_c2(void) {
 	// turn OFF +4V_G
 	io_12v_sw___cntrl_vbat_g_disable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C2 mode
 	REGISTER |= IN_C2_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
 }
 
 void pwr_save_switch_mode_to_c3(void) {
@@ -244,18 +302,25 @@ void pwr_save_switch_mode_to_c3(void) {
 	// turn ON +4V_G
 	io_12v_sw___cntrl_vbat_g_enable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
 	REGISTER |= IN_C3_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
 }
 
 // in HW-RevB this will keep internal VHF radio module working!
-void pwr_save_switch_mode_to_m4(void) {
+int pwr_save_switch_mode_to_m4(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
-		return;
+		return 0;
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
@@ -267,11 +332,19 @@ void pwr_save_switch_mode_to_m4(void) {
 	// turn OFF +4V_G
 	io_12v_sw___cntrl_vbat_g_disable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
 	REGISTER |= IN_M4_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
+	return 1;
 }
 
 void pwr_save_switch_mode_to_i5(void) {
@@ -289,11 +362,17 @@ void pwr_save_switch_mode_to_i5(void) {
 	// turn OFF +4V_G
 	io_12v_sw___cntrl_vbat_g_disable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
 	REGISTER |= IN_I5_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
 
 }
 
@@ -313,15 +392,22 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// turn ON +4V_G
 	io_12v_sw___cntrl_vbat_g_enable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
 	REGISTER |= IN_L6_STATE;
 
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
 	system_clock_configure_auto_wakeup_l4(sleep_time);
 
 	pwr_save_enter_stop2();
+
 
 }
 
@@ -340,11 +426,17 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	// turn OFF +4V_G
 	io_12v_sw___cntrl_vbat_g_disable();
 
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
 	// clear all previous powersave indication bits
 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
 
 	// set for C3 mode
 	REGISTER |= IN_L7_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
 
 	// configure how long micro should sleep
 	system_clock_configure_auto_wakeup_l4(sleep_time);
@@ -358,6 +450,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t * timers, int16_t minutes_to_wx) {
 	// this function should be called from 10 seconds pooler
 
+	int reinit_sensors = 0;
 
 	packet_tx_counter_values_t counters;
 
@@ -396,16 +489,16 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX + GSM
-						pwr_save_switch_mode_to_c0();
+						reinit_sensors = pwr_save_switch_mode_to_c0();
 					}
 					else {		// WX + GSM
-						pwr_save_switch_mode_to_c0();
+						reinit_sensors = pwr_save_switch_mode_to_c0();
 					}
 				}
 				else {
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX
-						pwr_save_switch_mode_to_c1();
+						reinit_sensors = pwr_save_switch_mode_to_c1();
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
@@ -414,7 +507,7 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
-								pwr_save_switch_mode_to_c1();
+								reinit_sensors = pwr_save_switch_mode_to_c1();
 							}
 						}
 					}
@@ -447,7 +540,7 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 								pwr_save_switch_mode_to_c2();
 							}
 							else {
-								pwr_save_switch_mode_to_c0();
+								reinit_sensors = pwr_save_switch_mode_to_c0();
 							}
 						}
 						else {
@@ -455,16 +548,16 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 								pwr_save_switch_mode_to_c3();
 							}
 							else {
-								pwr_save_switch_mode_to_c0();
+								reinit_sensors = pwr_save_switch_mode_to_c0();
 							}
 						}
 					}
 					else {		// WX + GSM
 						if (minutes_to_wx > 1) {
-							pwr_save_switch_mode_to_m4();
+							reinit_sensors = pwr_save_switch_mode_to_m4();
 						}
 						else {
-							pwr_save_switch_mode_to_c0();
+							reinit_sensors = pwr_save_switch_mode_to_c0();
 						}
 					}
 				}
@@ -475,17 +568,17 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 							pwr_save_switch_mode_to_c2();
 						}
 						else {
-							pwr_save_switch_mode_to_c1();
+							reinit_sensors = pwr_save_switch_mode_to_c1();
 						}
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
 							// if there is more than one minute to send wx packet
-							pwr_save_switch_mode_to_m4();
+							reinit_sensors = pwr_save_switch_mode_to_m4();
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
-								pwr_save_switch_mode_to_c1();
+								reinit_sensors = pwr_save_switch_mode_to_c1();
 							}
 						}
 					}
@@ -513,7 +606,7 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 							pwr_save_switch_mode_to_c2();
 						}
 						else {
-							pwr_save_switch_mode_to_c0();
+							reinit_sensors = pwr_save_switch_mode_to_c0();
 						}
 
 					}
@@ -528,11 +621,11 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 							else {
 								if (pwr_save_seconds_to_wx <= 30) {
 									// if there is 30 seconds or less to next wx packet
-									pwr_save_switch_mode_to_c0();
+									reinit_sensors = pwr_save_switch_mode_to_c0();
 								}
 								else {
 									// if there is 30 to 60 seconds to next wx packet
-									pwr_save_switch_mode_to_m4();
+									reinit_sensors = pwr_save_switch_mode_to_m4();
 								}
 							}
 						}
@@ -543,7 +636,7 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
 							else {
-								pwr_save_switch_mode_to_c0();
+								reinit_sensors = pwr_save_switch_mode_to_c0();
 							}
 						}
 					}
@@ -555,17 +648,17 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 							pwr_save_switch_mode_to_c2();
 						}
 						else {
-							pwr_save_switch_mode_to_c1();
+							reinit_sensors = pwr_save_switch_mode_to_c1();
 						}
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
 							// if there is more than one minute to send wx packet
-							pwr_save_switch_mode_to_m4();
+							reinit_sensors= pwr_save_switch_mode_to_m4();
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
-								pwr_save_switch_mode_to_c1();
+								reinit_sensors = pwr_save_switch_mode_to_c1();
 							}
 						}
 					}
@@ -578,7 +671,36 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 			break;
 		}
 	}
+
+	if (reinit_sensors != 0) {
+		// reinitialize all i2c sensors
+		wx_force_i2c_sensor_reset = 1;
+
+		// reset anemometer direction handler
+		analog_anemometer_direction_reset();
+
+		// reset anemometer windspeed handler
+		analog_anemometer_timer_irq();
+	}
+
 }
+
+uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
+
+	if ((REGISTER & INHIBIT_PWR_SWITCH_PERIODIC_H) != 0){
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+#else
+
+uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
+	return 0;
+}
+
 
 #endif
 

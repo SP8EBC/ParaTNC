@@ -365,6 +365,10 @@ int system_clock_configure_l4(void)
   * in the RCC_OscInitTypeDef structure.
   */
 
+  // select MSI as system clock cource
+  // RCC_CFGR_SW_MSI
+  RCC->CFGR &= (0xFFFFFFFF ^ RCC_CFGR_SW_Msk);
+
   // turn on high speed external quartz oscilator
   RCC->CR |= RCC_CR_HSEON;
 

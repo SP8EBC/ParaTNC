@@ -24,9 +24,9 @@ C_SRCS += \
 ../src/pwr_switch.c \
 ../src/rte_main.c \
 ../src/rte_pv.c \
+../src/rte_pwr.c \
 ../src/rte_rtu.c \
 ../src/rte_wx.c \
-../src/rtu_pwr.c \
 ../src/wx_handler.c \
 ../src/wx_handler_humidity.c \
 ../src/wx_handler_pressure.c \
@@ -53,9 +53,9 @@ OBJS += \
 ./src/pwr_switch.o \
 ./src/rte_main.o \
 ./src/rte_pv.o \
+./src/rte_pwr.o \
 ./src/rte_rtu.o \
 ./src/rte_wx.o \
-./src/rtu_pwr.o \
 ./src/wx_handler.o \
 ./src/wx_handler_humidity.o \
 ./src/wx_handler_pressure.o \
@@ -82,9 +82,9 @@ C_DEPS += \
 ./src/pwr_switch.d \
 ./src/rte_main.d \
 ./src/rte_pv.d \
+./src/rte_pwr.d \
 ./src/rte_rtu.d \
 ./src/rte_wx.d \
-./src/rtu_pwr.d \
 ./src/wx_handler.d \
 ./src/wx_handler_humidity.d \
 ./src/wx_handler_pressure.d \
