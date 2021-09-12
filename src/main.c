@@ -391,7 +391,7 @@ int main(int argc, char* argv[]){
   }
 
   // set packets intervals
-  packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period);
+  packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
   // disabling access to BKP registers

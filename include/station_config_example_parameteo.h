@@ -8,15 +8,17 @@
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
+//#define _POWERSAVE_NORMAL
+#define _POWERSAVE_AGGRESIVE
 /*  ------------------ */
 /* 	MODES OF OPERATION */
 
 #define _METEO				// Enable meteo station
-#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI				// Enable WIDE1-1 digipeater
 //#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 //#define _VICTRON			// Enable support for Victron VE.Direct protocol
 
-#define	_GSM			// only for ParaMETEO
+//#define	_GSM			// only for ParaMETEO
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
@@ -51,8 +53,8 @@
 #define _ANEMOMETER_ANALOGUE	// Use analogue/mechanical (like Davis 6410) as an internal anemometr
 #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
 
-//#define _SENSOR_MS5611
-#define _SENSOR_BME280
+#define _SENSOR_MS5611
+//#define _SENSOR_BME280
 
 #define _UMB_SLAVE_ID 	 		1
 #define _UMB_SLAVE_CLASS 		8
@@ -258,9 +260,9 @@
 #else
 #error "Wrong symbol configuration in station_config.h"
 #endif
-#if defined (_METEO) && !defined (_DIGI)
-#define _DIGI
-#endif
+//#if defined (_METEO) && !defined (_DIGI)
+//#define _DIGI
+//#endif
 
 #if defined(PARATNC_HWREV_A) && (defined (_METEO) || defined (_DALLAS_AS_TELEM)) && !defined(_DALLAS_SPLIT_PIN)
 #define _DALLAS_SPLIT_PIN

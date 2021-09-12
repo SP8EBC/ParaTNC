@@ -177,6 +177,7 @@ void pwr_save_exit_from_stop2(void) {
 
 		// rewind all timers in packet tx handler as they were no updated when micro was sleeping
 		// sleep shall be always set as wx packet interval minus one minute
+		timers.wx_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.beacon_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.kiss_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
@@ -641,7 +642,7 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 						}
 					}
 				}
-				else {
+				else {	// gsm is not enabled
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX
 						if (minutes_to_wx > 1) {
@@ -654,11 +655,17 @@ void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t *
 					else {		// WX
 						if (minutes_to_wx > 1) {
 							// if there is more than one minute to send wx packet
-							reinit_sensors= pwr_save_switch_mode_to_m4();
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
-								reinit_sensors = pwr_save_switch_mode_to_c1();
+								pwr_save_switch_mode_to_c1();
+
+								// do not reinitialize everything as reinitialization had been done when switching to m4 mode
+								reinit_sensors = 0;
+							}
+							else {
+								reinit_sensors= pwr_save_switch_mode_to_m4();
 							}
 						}
 					}

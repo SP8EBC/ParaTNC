@@ -45,10 +45,14 @@ uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL
 
 uint8_t packet_tx_more_than_one = 0;
 
-void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval) {
+void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
 	packet_tx_meteo_interval = meteo_interval;
 
 	packet_tx_beacon_interval = beacon_interval;
+
+	// if user selected aggressive powersave mode the meteo counter must be set back to zero
+	// to prevent quirks with waking from sleep mode
+	packet_tx_meteo_counter = 0;
 
 }
 
