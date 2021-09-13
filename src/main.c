@@ -814,9 +814,6 @@ int main(int argc, char* argv[]){
   // configuting system timers
   TimerConfig();
 
-  if (main_config_data_basic-> beacon_at_bootup == 1)
-	  beacon_send_own();
-
   // initialize UMB transaction
   if (main_config_data_mode->wx_umb == 1) {
 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
@@ -832,6 +829,9 @@ int main(int argc, char* argv[]){
 #if defined(PARAMETEO)
    pwr_save_switch_mode_to_c0();
 #endif
+
+   if (main_config_data_basic-> beacon_at_bootup == 1)
+ 	  beacon_send_own();
 
   // Infinite loop
   while (1)
@@ -1072,7 +1072,10 @@ int main(int argc, char* argv[]){
 		if (main_ten_second_pool_timer < 10) {
 
 			#ifdef STM32L471xx
-			pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx());
+			// inhibit any power save switching when modem transmits data
+			if (!main_afsk.sending) {
+				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx());
+			}
 			#endif
 
 			if (main_config_data_mode->wx_umb == 1) {

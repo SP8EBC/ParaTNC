@@ -448,7 +448,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_enter_stop2();
 }
 
-void pwr_save_pooling_handler(config_data_mode_t * config, config_data_basic_t * timers, int16_t minutes_to_wx) {
+void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx) {
 	// this function should be called from 10 seconds pooler
 
 	int reinit_sensors = 0;

@@ -190,8 +190,15 @@ void DMA1_Channel7_IRQHandler() {		// DMA1_Channel7_IRQn
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
 	TIM4->SR &= ~(1<<0);
+#ifdef STM32F10X_MD_VL
 	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 	DAC->SWTRIGR |= 1;
+#endif
+
+#ifdef STM32L471xx
+	DAC->DHR8R2 = AFSK_DAC_ISR(&main_afsk);
+	DAC->SWTRIGR |= 2;
+#endif
 
 	if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
 		led_control_led2_bottom(main_afsk.sending);

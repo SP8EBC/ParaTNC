@@ -97,8 +97,15 @@ void DA_Start() {
 	AD_Stop();
 
 
+#ifdef STM32F10X_MD_VL
 
 	GPIOC->BSRR |= GPIO_BSRR_BS3;	 //// sep
+#endif
+
+#ifdef STM32L471xx
+	GPIOA->BSRR |= GPIO_BSRR_BS4;	 //// sep
+
+#endif
 
 	TIM4->CR1 |= TIM_CR1_CEN;
 
@@ -114,8 +121,15 @@ void DA_Stop() {
 
 	AD_Start();
 
+#ifdef STM32F10X_MD_VL
 
 	GPIOC->BSRR |= GPIO_BSRR_BR3;
+#endif
+
+#ifdef STM32L471xx
+	GPIOA->BSRR |= GPIO_BSRR_BR4;
+
+#endif
 
 //	//Timer2 DISABLE
 	TIM4->CR1 &= ~TIM_CR1_CEN;
