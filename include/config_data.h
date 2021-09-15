@@ -94,6 +94,7 @@ typedef struct config_data_basic_t {
 	// 2 - _SYMBOL_HOUSE			// uncomment if you want house symbol
 	// 3 - _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
 	// 4 - _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
+	// 5 - _SYMBOL_SAILBOAT
 	uint8_t symbol;
 
 	// 0 - no path

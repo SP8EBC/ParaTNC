@@ -37,7 +37,7 @@ uint8_t packet_tx_meteo_kiss_counter = 0;
 uint8_t packet_tx_telemetry_interval = 10;
 uint8_t packet_tx_telemetry_counter = 0;
 
-uint8_t packet_tx_telemetry_descr_interval = 0;
+uint8_t packet_tx_telemetry_descr_interval = 155;	// 155
 uint8_t packet_tx_telemetry_descr_counter = 10;
 
 uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM_DESCR_INTERVAL / 38));
@@ -308,7 +308,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		packet_tx_multi_per_call_handler();
 
 		if (config_mode->victron == 1) {
-			telemetry_send_chns_description_pv(&config_basic);
+			telemetry_send_chns_description_pv(config_basic);
 
 
 			if (rte_pv_battery_voltage == 0) {
@@ -318,7 +318,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
 		else {
-			telemetry_send_chns_description(&config_basic);
+			telemetry_send_chns_description(config_basic);
 
 			packet_tx_multi_per_call_handler();
 

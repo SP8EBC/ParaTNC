@@ -424,6 +424,10 @@ int main(int argc, char* argv[]){
 	  main_symbol_f = 'I';
 	  main_symbol_s = '&';
 	  break;
+  case 5:		// _SYMBOL_SAILBOAT
+	  main_symbol_f = '/';
+	  main_symbol_s = 'Y';
+	  break;
   default:		// _SYMBOL_IGATE
 	  main_symbol_f = 'R';
 	  main_symbol_s = '&';

@@ -399,7 +399,11 @@ void telemetry_send_values(	uint8_t rx_pkts,
 
 void telemetry_send_status(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+#ifdef STM32L471xx
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaMETEO firmware %s-%s by SP8EBC - PV powered, fully outdoor, 3in1 APRS device", SW_VER, SW_DATE);
+#else
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
+#endif
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);

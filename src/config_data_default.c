@@ -156,6 +156,9 @@ volatile const config_data_basic_t config_data_basic_default = {
 #ifdef _SYMBOL_IGATE
 		.symbol = 4,
 #endif
+#ifdef _SYMBOL_SAILBOAT
+		.symbol = 5,
+#endif
 
 #if defined(_WIDE1_PATH)
 		.path_type = 1,

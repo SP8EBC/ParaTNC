@@ -124,7 +124,7 @@
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
-//#define _BCN_ON_STARTUP
+#define _BCN_ON_STARTUP
 
 #define _WX_INTERVAL 4		// WX packet interval in minutes
 #define _BCN_INTERVAL 45	// Own beacon interval in minutes
