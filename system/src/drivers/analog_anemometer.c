@@ -243,6 +243,14 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 
 
 #ifdef STM32L471xx
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_2;
+
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
+
 	// set parameters for TIM4 used for windspeed
 	TIM_InitTypeDef.Prescaler = 23999;
 	TIM_InitTypeDef.Autoreload = 60000;
@@ -265,8 +273,10 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	// configure and activate fourth channel
 	LL_TIM_IC_Init(TIM4, LL_TIM_CHANNEL_CH3, &TIM_IC_InitTypeDef);
 
+	LL_TIM_EnableDMAReq_UPDATE(TIM4);
+
 	// enable DMA request for fourth channel
-	LL_TIM_EnableDMAReq_CC4(TIM4);
+	LL_TIM_EnableDMAReq_CC3(TIM4);
 
 	DMA_InitStruct.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
 	DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)analog_anemometer_windspeed_pulses_time;
@@ -275,11 +285,15 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	DMA_InitStruct.Mode = LL_DMA_MODE_NORMAL;
 	DMA_InitStruct.NbData = ANALOG_ANEMOMETER_SPEED_PULSES_N;
 	DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&TIM4->CCR3;
-	DMA_InitStruct.PeriphOrM2MSrcDataSize = LL_DMA_MDATAALIGN_HALFWORD;
+	DMA_InitStruct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_HALFWORD;
 	DMA_InitStruct.PeriphOrM2MSrcIncMode = LL_DMA_MEMORY_NOINCREMENT;
 	DMA_InitStruct.PeriphRequest = LL_DMA_REQUEST_6; // LL_DMAMUX_REQ_TIM4_CH3
 
 	LL_DMA_Init(DMA1, LL_DMA_CHANNEL_5, &DMA_InitStruct);
+
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_5);
+
+	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
 
 	LL_TIM_EnableCounter(TIM4);
 

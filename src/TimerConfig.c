@@ -38,6 +38,7 @@ void TimerConfig(void) {
 	TIM2->DIER |= 1;
 	NVIC_EnableIRQ( TIM2_IRQn );
 
+#ifdef STM32F10X_MD_VL
 	// 	//////////////////////////////
 	// 	////   konfiguracja TIM4 -- dac  ///
 	// 	//////////////////////////////
@@ -49,6 +50,19 @@ void TimerConfig(void) {
 	// 	TIM4->CR1 |= TIM_CR1_CEN;			/* timer powinien byc uruchamiany tylko przy wysylaniu danych */
 		TIM4->DIER |= 1;
 		NVIC_EnableIRQ( TIM4_IRQn );
+#else
+		// 	//////////////////////////////
+		// 	////   konfiguracja TIM4 -- dac  ///
+		// 	//////////////////////////////
+			//NVIC_SetPriority(TIM4_IRQn, 2);
+			TIM5->PSC = 0;
+			TIM5->ARR = 2499;
+			TIM5->CR1 |= TIM_CR1_DIR;
+			TIM5->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
+		// 	TIM4->CR1 |= TIM_CR1_CEN;			/* timer powinien byc uruchamiany tylko przy wysylaniu danych */
+			TIM5->DIER |= 1;
+			NVIC_EnableIRQ( TIM5_IRQn );
+#endif
 		///////////////////////////////////////////
 		/// konfiguracja TIM7 --adc 	///
 		///////////////////////////////////////////

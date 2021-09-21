@@ -107,8 +107,13 @@ void DA_Start() {
 
 #endif
 
-	TIM4->CR1 |= TIM_CR1_CEN;
+#ifdef STM32F10X_MD_VL
 
+	TIM4->CR1 |= TIM_CR1_CEN;
+#else
+	TIM5->CR1 |= TIM_CR1_CEN;
+
+#endif
 
 #if (!defined(_METEO))
 	GPIO_SetBits(GPIOC, GPIO_Pin_9);
@@ -132,7 +137,12 @@ void DA_Stop() {
 #endif
 
 //	//Timer2 DISABLE
+#ifdef STM32F10X_MD_VL
 	TIM4->CR1 &= ~TIM_CR1_CEN;
+#else
+	TIM5->CR1 &= ~TIM_CR1_CEN;
+
+#endif
 
 #if (!defined(_METEO))
 	GPIO_ResetBits(GPIOC, GPIO_Pin_9);

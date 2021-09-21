@@ -68,7 +68,11 @@ uint8_t it_handlers_cpu_load_pool = 0;
 void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM2_IRQn, 1);				// one-wire delay
 	NVIC_SetPriority(I2C1_EV_IRQn, 2);
+#ifdef STM32F10X_MD_VL
 	NVIC_SetPriority(TIM4_IRQn, 3);				// DAC
+#else
+	NVIC_SetPriority(TIM5_IRQn, 3);
+#endif
 	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
 	// systick
 	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
@@ -172,7 +176,11 @@ void TIM1_TRG_COM_TIM17_IRQHandler(void) {
 	#endif
 }
 
+#ifdef STM32F10X_MD_VL
 void DMA1_Channel7_IRQHandler() {		// DMA1_Channel7_IRQn
+#else
+void DMA1_Channel5_IRQHandler() {		// DMA1_Channel7_IRQn
+#endif
 #ifdef STM32F10X_MD_VL
 	NVIC_ClearPendingIRQ(DMA1_Channel7_IRQn);
 	DMA_ClearITPendingBit(DMA1_IT_GL7);
@@ -187,13 +195,13 @@ void DMA1_Channel7_IRQHandler() {		// DMA1_Channel7_IRQn
 	#endif
 }
 
+#ifdef STM32F10X_MD_VL
 void TIM4_IRQHandler( void ) {
 	// obsluga przerwania cyfra-analog
 	TIM4->SR &= ~(1<<0);
-#ifdef STM32F10X_MD_VL
+
 	DAC->DHR8R1 = AFSK_DAC_ISR(&main_afsk);
 	DAC->SWTRIGR |= 1;
-#endif
 
 #ifdef STM32L471xx
 	DAC->DHR8R2 = AFSK_DAC_ISR(&main_afsk);
@@ -205,6 +213,21 @@ void TIM4_IRQHandler( void ) {
 	}
 
 }
+#else
+void TIM5_IRQHandler( void ) {
+	// obsluga przerwania cyfra-analog
+	TIM5->SR &= ~(1<<0);
+
+
+	DAC->DHR8R2 = AFSK_DAC_ISR(&main_afsk);
+	DAC->SWTRIGR |= 2;
+
+	if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
+		led_control_led2_bottom(main_afsk.sending);
+	}
+
+}
+#endif
 
 void TIM7_IRQHandler(void) {
 // obsluga przetwarzania analog-cyfra. Wersja z oversamplingiem
