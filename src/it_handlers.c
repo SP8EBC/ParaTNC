@@ -239,7 +239,7 @@ void TIM7_IRQHandler(void) {
 //		io_ext_watchdog_service();
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
 		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
-		led_control_led1_upper(main_ax25.dcd);	// TODO
+		led_control_led1_upper(main_ax25.dcd);
 		ASC = 0;
 
 		if (ASC2++ == 2) {
