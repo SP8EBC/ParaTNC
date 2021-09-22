@@ -624,7 +624,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 					}
 					else {		// WX + GSM (only)
-						if (timers->wx_transmit_period > 5) {
+						if (timers->wx_transmit_period >= 5) {
 							// if stations is configured to send wx packet less often than every 5 minutes
 
 							if (minutes_to_wx > 1) {
