@@ -815,6 +815,32 @@ int main(int argc, char* argv[]){
   led_control_led1_upper(false);
   led_control_led2_bottom(false);
 
+#if defined(PARAMETEO)
+   pwr_save_switch_mode_to_c0();
+
+   // sleep a little bit and wait for everything to power up completely
+   delay_fixed(1000);
+
+   led_control_led1_upper(true);
+   led_control_led2_bottom(false);
+
+   delay_fixed(1000);
+
+   led_control_led1_upper(false);
+   led_control_led2_bottom(true);
+
+   delay_fixed(1000);
+
+   led_control_led1_upper(true);
+   led_control_led2_bottom(true);
+
+   delay_fixed(1000);
+
+   led_control_led1_upper(false);
+   led_control_led2_bottom(false);
+
+#endif
+
   // configuting system timers
   TimerConfig();
 
@@ -830,12 +856,9 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
-#if defined(PARAMETEO)
-   pwr_save_switch_mode_to_c0();
-#endif
-
-   if (main_config_data_basic-> beacon_at_bootup == 1)
- 	  beacon_send_own();
+   if (main_config_data_basic-> beacon_at_bootup == 1) {
+	   beacon_send_own();
+   }
 
   // Infinite loop
   while (1)
@@ -853,11 +876,6 @@ int main(int argc, char* argv[]){
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
 	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
-#endif
-#ifdef STM32L471xx
-		    // read the state of a button input
-		  	if (LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0)) {
-#endif
 
 	  		// if modem is not busy on transmitting something and the button is not
 	  		// inhibited
@@ -887,6 +905,8 @@ int main(int argc, char* argv[]){
 	  	else {
 	  		button_inhibit = 0;
 	  	}
+#endif
+
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {

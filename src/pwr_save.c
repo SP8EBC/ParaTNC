@@ -13,6 +13,7 @@
 
 #include "pwr_switch.h"
 #include "io.h"
+#include "LedConfig.h"
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "main.h"
@@ -407,6 +408,13 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	system_clock_configure_auto_wakeup_l4(sleep_time);
 
+	// save how long the micro will sleep - required for handling wakeup event
+	pwr_save_sleep_time_in_seconds = sleep_time;
+
+	// turn off leds to save power
+	led_control_led1_upper(false);
+	led_control_led2_bottom(false);
+
 	pwr_save_enter_stop2();
 
 
@@ -444,6 +452,10 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// save how long the micro will sleep - required for handling wakeup event
 	pwr_save_sleep_time_in_seconds = sleep_time;
+
+	// turn off leds to save power
+	led_control_led1_upper(false);
+	led_control_led2_bottom(false);
 
 	pwr_save_enter_stop2();
 }
