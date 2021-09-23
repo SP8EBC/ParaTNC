@@ -108,6 +108,8 @@ typedef struct config_data_basic_t {
 
 	uint8_t beacon_transmit_period;
 
+	uint8_t wx_double_transmit;
+
 } config_data_basic_t;
 
 typedef enum config_data_wx_sources_enum_t {

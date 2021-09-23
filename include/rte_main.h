@@ -12,5 +12,7 @@ extern uint32_t rte_main_hardfault_lr, rte_main_hardfault_pc;
 extern uint8_t rte_main_trigger_status;
 extern uint8_t rte_main_trigger_modbus_status;
 
+extern uint8_t rte_main_trigger_wx_packet;
+
 
 #endif

@@ -4,7 +4,7 @@
 #include <stm32f10x_rcc.h>
 #include <stm32f10x_iwdg.h>
 #include <stm32f10x.h>
-#include <drivers/gpio_conf_stm32f1x.h>
+#include <drivers/f1/gpio_conf_stm32f1x.h>
 #endif
 
 #ifdef STM32L471xx
@@ -138,7 +138,7 @@ int8_t main_cpu_load = 0;
 int32_t main_wx_sensors_pool_timer = 65500;
 
 // global variable used as a timer to trigger packet sending
-int32_t main_one_minute_pool_timer = 60000;
+int32_t main_one_minute_pool_timer = 45000;
 
 // one second pool interval
 int32_t main_one_second_pool_timer = 1000;
@@ -1094,6 +1094,13 @@ int main(int argc, char* argv[]){
 		}
 
 		if (main_ten_second_pool_timer < 10) {
+
+			if (rte_main_trigger_wx_packet == 1) {
+
+				packet_tx_send_wx_frame();
+
+				rte_main_trigger_wx_packet = 0;
+			}
 
 			#ifdef STM32L471xx
 			// inhibit any power save switching when modem transmits data

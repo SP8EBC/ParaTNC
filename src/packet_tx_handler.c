@@ -45,6 +45,13 @@ uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL
 
 uint8_t packet_tx_more_than_one = 0;
 
+void packet_tx_send_wx_frame(void) {
+	main_wait_for_tx_complete();
+
+	SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+
+}
+
 void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
 	packet_tx_meteo_interval = meteo_interval;
 
@@ -130,6 +137,10 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			#ifdef EXTERNAL_WATCHDOG
 			io_ext_watchdog_service();
 			#endif
+
+			if (main_config_data_basic->wx_double_transmit == 1) {
+				rte_main_trigger_wx_packet = 1;
+			}
 
 			packet_tx_meteo_counter = 0;
 		}

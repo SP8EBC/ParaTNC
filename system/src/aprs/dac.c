@@ -7,7 +7,7 @@
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
-#include "antilib_gpio.h"
+//#include "antilib_gpio.h"
 
 #endif
 

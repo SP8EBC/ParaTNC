@@ -173,9 +173,15 @@ volatile const config_data_basic_t config_data_basic_default = {
 		.beacon_transmit_period = _BCN_INTERVAL,
 
 #ifdef _BCN_ON_STARTUP
-		.beacon_at_bootup = 1
+		.beacon_at_bootup = 1,
 #else
-		.beacon_at_bootup = 0
+		.beacon_at_bootup = 0,
+#endif
+
+#ifdef _WX_DOUBLE_TRANSMIT
+		.wx_double_transmit = 1
+#else
+		.wx_double_transmit = 0
 #endif
 
 };

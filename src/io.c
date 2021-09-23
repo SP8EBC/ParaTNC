@@ -12,7 +12,7 @@
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
-#include <drivers/gpio_conf_stm32f1x.h>
+#include <drivers/f1/gpio_conf_stm32f1x.h>
 #endif
 #ifdef STM32L471xx
 #include <stm32l4xx.h>
