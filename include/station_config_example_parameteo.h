@@ -18,7 +18,9 @@
 //#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 //#define _VICTRON			// Enable support for Victron VE.Direct protocol
 
-//#define	_GSM			// only for ParaMETEO
+#define	_GSM			// only for ParaMETEO
+
+#define _WX_DOUBLE_TRANSMIT
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
@@ -35,7 +37,7 @@
 
 //#define _UMB_MASTER
 //#define _DAVIS_SERIAL
-#define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
+//#define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
 						// (slave ids, registers...) please look into MODBUS RTU CONFIGURATION section of this file
 
 #define _INTERNAL_AS_BACKUP		// if defined ParaTNC will switch to internal sensors in case of
@@ -99,20 +101,21 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "SP8EBC"
-#define _SSID 1
-#define _LAT		4948.82
+#define _CALL "SR9WXZ"
+#define _SSID 0
+#define _LAT		4943.44
 #define _LATNS		'N'
-#define _LON		01903.50
+#define _LON		01912.11
 #define _LONWE		'E'
-#define _COMMENT	"Set Your configuration in this file and rename to station_config.h"
+#define _COMMENT	"WX only = TXPower 2W = Klub Zeglarski Halny, plywajaca keja manewrowa na J. Zywieckim = sp8ebc@interia.pl"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
-#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
+//#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
 //#define _SYMBOL_HOUSE			// uncomment if you want house symbol
 //#define _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
 //#define _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
+#define _SYMBOL_SAILBOAT
 
 // Or you can keep commented all symbol defines and choose custom one based on data from APRS symbols table
 //#define _SYMBOL_F	'/'
@@ -120,13 +123,13 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
+//#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 #define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 4		// WX packet interval in minutes
+#define _WX_INTERVAL 5		// WX packet interval in minutes
 #define _BCN_INTERVAL 45	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
@@ -254,6 +257,10 @@
 	defined (_SYMBOL_IGATE)
 #define _SYMBOL_F	'R'
 #define _SYMBOL_S	'&'
+#elif !defined (_SYMBOL_DIGI) && !defined (_SYMBOL_WIDE1_DIGI) && !defined (_SYMBOL_HOUSE) && !defined (_SYMOL_RXIGATE) &&\
+	!defined (_SYMBOL_IGATE) && defined(_SYMBOL_SAILBOAT)
+#define _SYMBOL_F	'/'
+#define _SYMBOL_S	'Y'
 #elif !defined (_SYMBOL_F) && !defined (_SYMBOL_S)
 #error "Missing symbol configuration in station_config.h"
 #elif defined (_SYMBOL_F) && defined (_SYMBOL_S)
