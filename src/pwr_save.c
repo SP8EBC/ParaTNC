@@ -695,11 +695,14 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		// reinitialize all i2c sensors
 		wx_force_i2c_sensor_reset = 1;
 
-		// reset anemometer direction handler
-		analog_anemometer_direction_reset();
+		// reinitialize everything realted to anemometer
+		analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
 
-		// reset anemometer windspeed handler
-		analog_anemometer_timer_irq();
+//		// reset anemometer direction handler
+//		analog_anemometer_direction_reset();
+//
+//		// reset anemometer windspeed handler
+//		analog_anemometer_timer_irq();
 	}
 
 }

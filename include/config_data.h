@@ -55,6 +55,8 @@ typedef struct config_data_mode_t {
 
 	uint8_t wx_ms5611_or_bme;		// set to one to choose bme, zero to ms5611
 
+	uint8_t wx_anemometer_pulses_constant;		// #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
+
 	uint8_t victron;
 
 	uint8_t digi_viscous;

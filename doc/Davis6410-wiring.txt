@@ -1,0 +1,6 @@
+1 - czarny
+2 - czerwony
+3 - żółty
+4 - zielony
+
+3 z 1 - 1k ohm

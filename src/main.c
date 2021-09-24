@@ -706,10 +706,10 @@ int main(int argc, char* argv[]){
 	  }
 
 	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
-		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+		  analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
 	  }
 	  else {
-		  analog_anemometer_init(_ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED, 38, 100, 1);
+		  analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
 	  }
   }
 

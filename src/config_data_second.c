@@ -84,6 +84,8 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 		.wx_ms5611_or_bme = 0,
 #endif
 
+		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,
+
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,
 #else
