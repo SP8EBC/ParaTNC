@@ -122,6 +122,8 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
+	analog_anemometer_deinit();
+
 	// clear previous low power mode selection
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_LPMS_Msk);
 

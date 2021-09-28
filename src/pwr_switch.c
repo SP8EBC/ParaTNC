@@ -13,6 +13,7 @@
 #include "wx_handler.h"
 #include "io.h"
 #include "pwr_save.h"
+#include "delay.h"
 
 
 #ifdef STM32F10X_MD_VL

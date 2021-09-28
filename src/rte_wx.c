@@ -28,7 +28,7 @@ uint8_t rte_wx_winddirection_it = 0;
 uint16_t rte_wx_winddirection_last = 0;
 uint16_t rte_wx_average_windspeed = 0;
 uint16_t rte_wx_max_windspeed = 0;
-uint16_t rte_wx_average_winddirection = 0;
+int16_t rte_wx_average_winddirection = 0;
 
 int8_t rte_wx_humidity = 0, rte_wx_humidity_valid = 0;
 

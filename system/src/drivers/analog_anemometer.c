@@ -329,6 +329,18 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	return;
 }
 
+void analog_anemometer_deinit(void) {
+#ifdef STM32L471xx
+	LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_5);
+
+	LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_5);
+
+	LL_TIM_DisableCounter(TIM4);
+
+	LL_TIM_DisableCounter(TIM3);
+#endif
+}
+
 void analog_anemometer_timer_irq(void) {
 	analog_anemometer_timer_has_been_fired = 1;
 }

@@ -37,7 +37,7 @@ void analog_anemometer_init(	uint16_t pulses_per_meter_second,
 								uint8_t anemometer_lower_boundary,
 								uint8_t anemometer_upper_boundary,
 								uint8_t direction_polarity);
-
+void analog_anemometer_deinit(void);
 void analog_anemometer_timer_irq(void);
 void analog_anemometer_dma_irq(void);
 uint32_t analog_anemometer_get_ms_from_pulse(uint16_t inter_pulse_time);

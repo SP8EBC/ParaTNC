@@ -11,7 +11,7 @@
 //#define PARATNC_HWREV_A
 //#define PARATNC_HWREV_B
 //#define PARATNC_HWREV_C
-#define PARAMETEO
+//#define PARAMETEO
 
 #ifdef PARAMETEO
 	// those defines and an undef are only required for shitty Eclipse indexer to see anything from STM32L471xx target
