@@ -6,7 +6,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA01"
-#define SW_DATE "28092021"
+#define SW_DATE "01102021"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
