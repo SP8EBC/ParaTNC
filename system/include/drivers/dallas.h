@@ -8,7 +8,9 @@
 #ifndef DALLAS_H
 #define DALLAS_H
 
-#include "station_config_target_hw.h"
+#include <stdint.h>
+
+//#include "station_config_target_hw.h"
 
 /* C++ detection */
 #ifdef __cplusplus
