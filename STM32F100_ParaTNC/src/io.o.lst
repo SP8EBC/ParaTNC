@@ -1,0 +1,313 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"io.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.io_oc_init,"ax",%progbits
+  16              		.align	1
+  17              		.global	io_oc_init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	io_oc_init:
+  24              	.LFB71:
+  25              		.file 1 "../src/io.c"
+   1:../src/io.c   **** /*
+   2:../src/io.c   ****  * io.c
+   3:../src/io.c   ****  *
+   4:../src/io.c   ****  *  Created on: 11.06.2020
+   5:../src/io.c   ****  *      Author: mateusz
+   6:../src/io.c   ****  */
+   7:../src/io.c   **** 
+   8:../src/io.c   **** 
+   9:../src/io.c   **** #include "station_config_target_hw.h"
+  10:../src/io.c   **** 
+  11:../src/io.c   **** #include "io.h"
+  12:../src/io.c   **** 
+  13:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  14:../src/io.c   **** #include <stm32f10x.h>
+  15:../src/io.c   **** #include <drivers/f1/gpio_conf_stm32f1x.h>
+  16:../src/io.c   **** #endif
+  17:../src/io.c   **** #ifdef STM32L471xx
+  18:../src/io.c   **** #include <stm32l4xx.h>
+  19:../src/io.c   **** #include <stm32l4xx_ll_gpio.h>
+  20:../src/io.c   **** #endif
+  21:../src/io.c   **** 
+  22:../src/io.c   **** #include "station_config.h"
+  23:../src/io.c   **** 
+  24:../src/io.c   **** #if defined(PARAMETEO)
+  25:../src/io.c   **** LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+  26:../src/io.c   **** #endif
+  27:../src/io.c   **** 
+  28:../src/io.c   **** void io_oc_init(void) {
+  26              		.loc 1 28 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 00B5     		push	{lr}
+  31              		.cfi_def_cfa_offset 4
+  32              		.cfi_offset 14, -4
+  33 0002 83B0     		sub	sp, sp, #12
+  34              		.cfi_def_cfa_offset 16
+  29:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  30:../src/io.c   **** 	GPIO_InitTypeDef GPIO_InitStructure;
+  31:../src/io.c   **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+  35              		.loc 1 31 0
+  36 0004 4FF40063 		mov	r3, #2048
+  37 0008 ADF80430 		strh	r3, [sp, #4]	@ movhi
+  32:../src/io.c   **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  38              		.loc 1 32 0
+  39 000c 0323     		movs	r3, #3
+  40 000e 8DF80630 		strb	r3, [sp, #6]
+  33:../src/io.c   **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  41              		.loc 1 33 0
+  42 0012 1023     		movs	r3, #16
+  43 0014 8DF80730 		strb	r3, [sp, #7]
+  34:../src/io.c   **** 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+  44              		.loc 1 34 0
+  45 0018 01A9     		add	r1, sp, #4
+  46 001a 0348     		ldr	r0, .L3
+  47 001c FFF7FEFF 		bl	GPIO_Init
+  48              	.LVL0:
+  35:../src/io.c   **** #endif
+  36:../src/io.c   **** }
+  49              		.loc 1 36 0
+  50 0020 03B0     		add	sp, sp, #12
+  51              		.cfi_def_cfa_offset 4
+  52              		@ sp needed
+  53 0022 5DF804FB 		ldr	pc, [sp], #4
+  54              	.L4:
+  55 0026 00BF     		.align	2
+  56              	.L3:
+  57 0028 00080140 		.word	1073809408
+  58              		.cfi_endproc
+  59              	.LFE71:
+  61              		.section	.text.io_oc_output_low,"ax",%progbits
+  62              		.align	1
+  63              		.global	io_oc_output_low
+  64              		.syntax unified
+  65              		.thumb
+  66              		.thumb_func
+  67              		.fpu softvfp
+  69              	io_oc_output_low:
+  70              	.LFB72:
+  37:../src/io.c   **** 
+  38:../src/io.c   **** void io_oc_output_low(void) {
+  71              		.loc 1 38 0
+  72              		.cfi_startproc
+  73              		@ args = 0, pretend = 0, frame = 0
+  74              		@ frame_needed = 0, uses_anonymous_args = 0
+  75 0000 08B5     		push	{r3, lr}
+  76              		.cfi_def_cfa_offset 8
+  77              		.cfi_offset 3, -8
+  78              		.cfi_offset 14, -4
+  39:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  40:../src/io.c   **** 
+  41:../src/io.c   **** 	GPIO_SetBits(GPIOA, GPIO_Pin_11);
+  79              		.loc 1 41 0
+  80 0002 4FF40061 		mov	r1, #2048
+  81 0006 0248     		ldr	r0, .L7
+  82 0008 FFF7FEFF 		bl	GPIO_SetBits
+  83              	.LVL1:
+  42:../src/io.c   **** #endif
+  43:../src/io.c   **** }
+  84              		.loc 1 43 0
+  85 000c 08BD     		pop	{r3, pc}
+  86              	.L8:
+  87 000e 00BF     		.align	2
+  88              	.L7:
+  89 0010 00080140 		.word	1073809408
+  90              		.cfi_endproc
+  91              	.LFE72:
+  93              		.section	.text.io_oc_output_hiz,"ax",%progbits
+  94              		.align	1
+  95              		.global	io_oc_output_hiz
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+  99              		.fpu softvfp
+ 101              	io_oc_output_hiz:
+ 102              	.LFB73:
+  44:../src/io.c   **** 
+  45:../src/io.c   **** void io_oc_output_hiz(void) {
+ 103              		.loc 1 45 0
+ 104              		.cfi_startproc
+ 105              		@ args = 0, pretend = 0, frame = 0
+ 106              		@ frame_needed = 0, uses_anonymous_args = 0
+ 107 0000 08B5     		push	{r3, lr}
+ 108              		.cfi_def_cfa_offset 8
+ 109              		.cfi_offset 3, -8
+ 110              		.cfi_offset 14, -4
+  46:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  47:../src/io.c   **** 
+  48:../src/io.c   **** 	GPIO_ResetBits(GPIOA, GPIO_Pin_11);
+ 111              		.loc 1 48 0
+ 112 0002 4FF40061 		mov	r1, #2048
+ 113 0006 0248     		ldr	r0, .L11
+ 114 0008 FFF7FEFF 		bl	GPIO_ResetBits
+ 115              	.LVL2:
+  49:../src/io.c   **** #endif
+  50:../src/io.c   **** }
+ 116              		.loc 1 50 0
+ 117 000c 08BD     		pop	{r3, pc}
+ 118              	.L12:
+ 119 000e 00BF     		.align	2
+ 120              	.L11:
+ 121 0010 00080140 		.word	1073809408
+ 122              		.cfi_endproc
+ 123              	.LFE73:
+ 125              		.section	.text.io_ext_watchdog_config,"ax",%progbits
+ 126              		.align	1
+ 127              		.global	io_ext_watchdog_config
+ 128              		.syntax unified
+ 129              		.thumb
+ 130              		.thumb_func
+ 131              		.fpu softvfp
+ 133              	io_ext_watchdog_config:
+ 134              	.LFB74:
+  51:../src/io.c   **** 
+  52:../src/io.c   **** void io_ext_watchdog_config(void) {
+ 135              		.loc 1 52 0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+ 139 0000 08B5     		push	{r3, lr}
+ 140              		.cfi_def_cfa_offset 8
+ 141              		.cfi_offset 3, -8
+ 142              		.cfi_offset 14, -4
+  53:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  54:../src/io.c   **** 	  // initialize Watchdog output
+  55:../src/io.c   **** 	  Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
+ 143              		.loc 1 55 0
+ 144 0002 0322     		movs	r2, #3
+ 145 0004 0C21     		movs	r1, #12
+ 146 0006 0248     		ldr	r0, .L15
+ 147 0008 FFF7FEFF 		bl	Configure_GPIO
+ 148              	.LVL3:
+  56:../src/io.c   **** #endif
+  57:../src/io.c   **** 
+  58:../src/io.c   **** #ifdef STM32L471xx
+  59:../src/io.c   **** 		GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+  60:../src/io.c   **** 		GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  61:../src/io.c   **** 		GPIO_InitTypeDef.Pin = LL_GPIO_PIN_1;
+  62:../src/io.c   **** 		GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+  63:../src/io.c   **** 		GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+  64:../src/io.c   **** 		GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+  65:../src/io.c   **** 		LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+  66:../src/io.c   **** #endif
+  67:../src/io.c   **** }
+ 149              		.loc 1 67 0
+ 150 000c 08BD     		pop	{r3, pc}
+ 151              	.L16:
+ 152 000e 00BF     		.align	2
+ 153              	.L15:
+ 154 0010 00080140 		.word	1073809408
+ 155              		.cfi_endproc
+ 156              	.LFE74:
+ 158              		.section	.text.io_ext_watchdog_service,"ax",%progbits
+ 159              		.align	1
+ 160              		.global	io_ext_watchdog_service
+ 161              		.syntax unified
+ 162              		.thumb
+ 163              		.thumb_func
+ 164              		.fpu softvfp
+ 166              	io_ext_watchdog_service:
+ 167              	.LFB75:
+  68:../src/io.c   **** 
+  69:../src/io.c   **** void io_ext_watchdog_service(void) {
+ 168              		.loc 1 69 0
+ 169              		.cfi_startproc
+ 170              		@ args = 0, pretend = 0, frame = 0
+ 171              		@ frame_needed = 0, uses_anonymous_args = 0
+ 172              		@ link register save eliminated.
+  70:../src/io.c   **** #ifdef STM32F10X_MD_VL
+  71:../src/io.c   **** 
+  72:../src/io.c   **** #endif
+  73:../src/io.c   **** 
+  74:../src/io.c   **** #ifdef STM32L471xx
+  75:../src/io.c   **** 	if ((GPIOA->ODR & GPIO_ODR_OD1) == 0) {
+  76:../src/io.c   **** 		// set high
+  77:../src/io.c   **** 		GPIOA->BSRR |= GPIO_BSRR_BS1;
+  78:../src/io.c   **** 	}
+  79:../src/io.c   **** 	else {
+  80:../src/io.c   **** 		// set low
+  81:../src/io.c   **** 		GPIOA->BSRR |= GPIO_BSRR_BR1;
+  82:../src/io.c   **** 	}
+  83:../src/io.c   **** #endif
+  84:../src/io.c   **** }
+ 173              		.loc 1 84 0
+ 174 0000 7047     		bx	lr
+ 175              		.cfi_endproc
+ 176              	.LFE75:
+ 178              		.text
+ 179              	.Letext0:
+ 180              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 181              		.file 3 "../system/include/cmsis/core_cm3.h"
+ 182              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+ 183              		.file 5 "../system/include/cmsis/stm32f10x.h"
+ 184              		.file 6 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+ 185              		.file 7 "../system/include/drivers/f1/gpio_conf_stm32f1x.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 io.c
+     /tmp/ccLUm3UL.s:16     .text.io_oc_init:0000000000000000 $t
+     /tmp/ccLUm3UL.s:23     .text.io_oc_init:0000000000000000 io_oc_init
+     /tmp/ccLUm3UL.s:57     .text.io_oc_init:0000000000000028 $d
+     /tmp/ccLUm3UL.s:62     .text.io_oc_output_low:0000000000000000 $t
+     /tmp/ccLUm3UL.s:69     .text.io_oc_output_low:0000000000000000 io_oc_output_low
+     /tmp/ccLUm3UL.s:89     .text.io_oc_output_low:0000000000000010 $d
+     /tmp/ccLUm3UL.s:94     .text.io_oc_output_hiz:0000000000000000 $t
+     /tmp/ccLUm3UL.s:101    .text.io_oc_output_hiz:0000000000000000 io_oc_output_hiz
+     /tmp/ccLUm3UL.s:121    .text.io_oc_output_hiz:0000000000000010 $d
+     /tmp/ccLUm3UL.s:126    .text.io_ext_watchdog_config:0000000000000000 $t
+     /tmp/ccLUm3UL.s:133    .text.io_ext_watchdog_config:0000000000000000 io_ext_watchdog_config
+     /tmp/ccLUm3UL.s:154    .text.io_ext_watchdog_config:0000000000000010 $d
+     /tmp/ccLUm3UL.s:159    .text.io_ext_watchdog_service:0000000000000000 $t
+     /tmp/ccLUm3UL.s:166    .text.io_ext_watchdog_service:0000000000000000 io_ext_watchdog_service
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.gpio_conf_stm32f1x.h.2.27cf130122f64ee972f9a45626090ff6
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+
+UNDEFINED SYMBOLS
+GPIO_Init
+GPIO_SetBits
+GPIO_ResetBits
+Configure_GPIO

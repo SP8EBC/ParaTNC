@@ -1,0 +1,849 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"pwr_switch.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.wx_pwr_switch_case_under_reset_parameteo,"ax",%progbits
+  16              		.align	1
+  17              		.global	wx_pwr_switch_case_under_reset_parameteo
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	wx_pwr_switch_case_under_reset_parameteo:
+  24              	.LFB100:
+  25              		.file 1 "../src/pwr_switch.c"
+   1:../src/pwr_switch.c **** /*
+   2:../src/pwr_switch.c ****  * pwr_switch.c
+   3:../src/pwr_switch.c ****  *
+   4:../src/pwr_switch.c ****  *  Created on: Aug 31, 2021
+   5:../src/pwr_switch.c ****  *      Author: mateusz
+   6:../src/pwr_switch.c ****  */
+   7:../src/pwr_switch.c **** 
+   8:../src/pwr_switch.c **** #include "pwr_switch.h"
+   9:../src/pwr_switch.c **** 
+  10:../src/pwr_switch.c **** #include "station_config.h"
+  11:../src/pwr_switch.c **** #include "main.h"
+  12:../src/pwr_switch.c **** #include "rte_wx.h"
+  13:../src/pwr_switch.c **** #include "wx_handler.h"
+  14:../src/pwr_switch.c **** #include "io.h"
+  15:../src/pwr_switch.c **** #include "pwr_save.h"
+  16:../src/pwr_switch.c **** #include "delay.h"
+  17:../src/pwr_switch.c **** 
+  18:../src/pwr_switch.c **** 
+  19:../src/pwr_switch.c **** #ifdef STM32F10X_MD_VL
+  20:../src/pwr_switch.c **** #include <stm32f10x.h>
+  21:../src/pwr_switch.c **** #endif
+  22:../src/pwr_switch.c **** 
+  23:../src/pwr_switch.c **** #ifdef STM32L471xx
+  24:../src/pwr_switch.c **** #include <stm32l4xx.h>
+  25:../src/pwr_switch.c **** #include <stm32l4xx_ll_gpio.h>
+  26:../src/pwr_switch.c **** #endif
+  27:../src/pwr_switch.c **** 
+  28:../src/pwr_switch.c **** wx_pwr_state_t wx_pwr_state;
+  29:../src/pwr_switch.c **** 
+  30:../src/pwr_switch.c **** #define REGISTER RTC->BKP0R
+  31:../src/pwr_switch.c **** 
+  32:../src/pwr_switch.c **** #define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
+  33:../src/pwr_switch.c **** #define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
+  34:../src/pwr_switch.c **** 
+  35:../src/pwr_switch.c **** void wx_pwr_switch_case_under_reset_parameteo() {
+  26              		.loc 1 35 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 08B5     		push	{r3, lr}
+  31              		.cfi_def_cfa_offset 8
+  32              		.cfi_offset 3, -8
+  33              		.cfi_offset 14, -4
+  36:../src/pwr_switch.c **** 
+  37:../src/pwr_switch.c **** 	if (pwr_save_get_inhibit_pwr_switch_periodic() == 1)
+  34              		.loc 1 37 0
+  35 0002 FFF7FEFF 		bl	pwr_save_get_inhibit_pwr_switch_periodic
+  36              	.LVL0:
+  37 0006 0128     		cmp	r0, #1
+  38 0008 09D0     		beq	.L1
+  39              	.LBB18:
+  40              	.LBB19:
+  41              		.file 2 "../include/io.h"
+   1:../include/io.h **** /*
+   2:../include/io.h ****  * io.h
+   3:../include/io.h ****  *
+   4:../include/io.h ****  *  Created on: 11.06.2020
+   5:../include/io.h ****  *      Author: mateusz
+   6:../include/io.h ****  */
+   7:../include/io.h **** 
+   8:../include/io.h **** #ifndef IO_H_
+   9:../include/io.h **** #define IO_H_
+  10:../include/io.h **** 
+  11:../include/io.h **** #ifdef STM32F10X_MD_VL
+  12:../include/io.h **** #include <stm32f10x.h>
+  13:../include/io.h **** #endif
+  14:../include/io.h **** #ifdef STM32L471xx
+  15:../include/io.h **** #include <stm32l4xx.h>
+  16:../include/io.h **** #endif
+  17:../include/io.h **** 
+  18:../include/io.h **** void io_oc_init(void);
+  19:../include/io.h **** void io_oc_output_low(void);
+  20:../include/io.h **** void io_oc_output_hiz(void);
+  21:../include/io.h **** 
+  22:../include/io.h **** void io_ext_watchdog_config(void);
+  23:../include/io.h **** void io_ext_watchdog_service(void);
+  24:../include/io.h **** 
+  25:../include/io.h **** 
+  26:../include/io.h **** inline void io_5v_isol_sw___cntrl_vbat_s_enable(void) {
+  27:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VS
+  28:../include/io.h **** 	GPIOB->BSRR |= GPIO_BSRR_BS8;
+  42              		.loc 2 28 0
+  43 000a 054A     		ldr	r2, .L4
+  44 000c 1369     		ldr	r3, [r2, #16]
+  45 000e 43F48073 		orr	r3, r3, #256
+  46 0012 1361     		str	r3, [r2, #16]
+  47              	.LBE19:
+  48              	.LBE18:
+  38:../src/pwr_switch.c **** 		return;
+  39:../src/pwr_switch.c **** 
+  40:../src/pwr_switch.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+  41:../src/pwr_switch.c **** 
+  42:../src/pwr_switch.c **** 	wx_force_i2c_sensor_reset = 1;
+  49              		.loc 1 42 0
+  50 0014 0123     		movs	r3, #1
+  51 0016 034A     		ldr	r2, .L4+4
+  52 0018 1370     		strb	r3, [r2]
+  43:../src/pwr_switch.c **** 
+  44:../src/pwr_switch.c **** 	wx_pwr_state = WX_PWR_ON;
+  53              		.loc 1 44 0
+  54 001a 034A     		ldr	r2, .L4+8
+  55 001c 1370     		strb	r3, [r2]
+  56              	.L1:
+  45:../src/pwr_switch.c **** 
+  46:../src/pwr_switch.c **** }
+  57              		.loc 1 46 0
+  58 001e 08BD     		pop	{r3, pc}
+  59              	.L5:
+  60              		.align	2
+  61              	.L4:
+  62 0020 000C0140 		.word	1073810432
+  63 0024 00000000 		.word	wx_force_i2c_sensor_reset
+  64 0028 00000000 		.word	wx_pwr_state
+  65              		.cfi_endproc
+  66              	.LFE100:
+  68              		.section	.text.wx_pwr_switch_case_under_reset_paratnc,"ax",%progbits
+  69              		.align	1
+  70              		.global	wx_pwr_switch_case_under_reset_paratnc
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  74              		.fpu softvfp
+  76              	wx_pwr_switch_case_under_reset_paratnc:
+  77              	.LFB101:
+  47:../src/pwr_switch.c **** 
+  48:../src/pwr_switch.c **** void wx_pwr_switch_case_under_reset_paratnc() {
+  78              		.loc 1 48 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              		@ link register save eliminated.
+  83              	.LBB20:
+  84              	.LBB21:
+  85              		.loc 2 28 0
+  86 0000 084A     		ldr	r2, .L7
+  87 0002 1369     		ldr	r3, [r2, #16]
+  88 0004 43F48073 		orr	r3, r3, #256
+  89 0008 1361     		str	r3, [r2, #16]
+  90              	.LBE21:
+  91              	.LBE20:
+  92              	.LBB22:
+  93              	.LBB23:
+  29:../include/io.h **** }
+  30:../include/io.h **** inline void io_5v_isol_sw___cntrl_vbat_s_disable(void) {
+  31:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VS
+  32:../include/io.h **** 	GPIOB->BSRR |= GPIO_BSRR_BR8;
+  33:../include/io.h **** }
+  34:../include/io.h **** 
+  35:../include/io.h **** inline void io_12v_sw___cntrl_vbat_g_enable(void) {
+  36:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VG
+  37:../include/io.h **** 	GPIOA->BSRR |= GPIO_BSRR_BS6;
+  94              		.loc 2 37 0
+  95 000a A2F58062 		sub	r2, r2, #1024
+  96 000e 1369     		ldr	r3, [r2, #16]
+  97 0010 43F04003 		orr	r3, r3, #64
+  98 0014 1361     		str	r3, [r2, #16]
+  99              	.LBE23:
+ 100              	.LBE22:
+  49:../src/pwr_switch.c **** 
+  50:../src/pwr_switch.c **** 	// Turn on the +5V_ISOL (VDD_SW) voltage
+  51:../src/pwr_switch.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+  52:../src/pwr_switch.c **** 
+  53:../src/pwr_switch.c **** #ifdef PWR_SWITCH_BOTH
+  54:../src/pwr_switch.c **** 	io_12v_sw___cntrl_vbat_g_enable();
+  55:../src/pwr_switch.c **** 
+  56:../src/pwr_switch.c **** 	wx_force_i2c_sensor_reset = 1;
+ 101              		.loc 1 56 0
+ 102 0016 0123     		movs	r3, #1
+ 103 0018 034A     		ldr	r2, .L7+4
+ 104 001a 1370     		strb	r3, [r2]
+  57:../src/pwr_switch.c **** #endif
+  58:../src/pwr_switch.c **** 
+  59:../src/pwr_switch.c **** 	wx_pwr_state = WX_PWR_ON;
+ 105              		.loc 1 59 0
+ 106 001c 034A     		ldr	r2, .L7+8
+ 107 001e 1370     		strb	r3, [r2]
+  60:../src/pwr_switch.c **** }
+ 108              		.loc 1 60 0
+ 109 0020 7047     		bx	lr
+ 110              	.L8:
+ 111 0022 00BF     		.align	2
+ 112              	.L7:
+ 113 0024 000C0140 		.word	1073810432
+ 114 0028 00000000 		.word	wx_force_i2c_sensor_reset
+ 115 002c 00000000 		.word	wx_pwr_state
+ 116              		.cfi_endproc
+ 117              	.LFE101:
+ 119              		.section	.text.wx_pwr_switch_case_off_parameteo,"ax",%progbits
+ 120              		.align	1
+ 121              		.global	wx_pwr_switch_case_off_parameteo
+ 122              		.syntax unified
+ 123              		.thumb
+ 124              		.thumb_func
+ 125              		.fpu softvfp
+ 127              	wx_pwr_switch_case_off_parameteo:
+ 128              	.LFB102:
+  61:../src/pwr_switch.c **** 
+  62:../src/pwr_switch.c **** void wx_pwr_switch_case_off_parameteo() {
+ 129              		.loc 1 62 0
+ 130              		.cfi_startproc
+ 131              		@ args = 0, pretend = 0, frame = 0
+ 132              		@ frame_needed = 0, uses_anonymous_args = 0
+ 133 0000 08B5     		push	{r3, lr}
+ 134              		.cfi_def_cfa_offset 8
+ 135              		.cfi_offset 3, -8
+ 136              		.cfi_offset 14, -4
+  63:../src/pwr_switch.c **** 
+  64:../src/pwr_switch.c **** 	if (pwr_save_get_inhibit_pwr_switch_periodic() == 1)
+ 137              		.loc 1 64 0
+ 138 0002 FFF7FEFF 		bl	pwr_save_get_inhibit_pwr_switch_periodic
+ 139              	.LVL1:
+ 140 0006 0128     		cmp	r0, #1
+ 141 0008 0FD0     		beq	.L9
+ 142              	.LBB24:
+ 143              	.LBB25:
+  28:../include/io.h **** }
+ 144              		.loc 2 28 0
+ 145 000a 084A     		ldr	r2, .L12
+ 146 000c 1369     		ldr	r3, [r2, #16]
+ 147 000e 43F48073 		orr	r3, r3, #256
+ 148 0012 1361     		str	r3, [r2, #16]
+ 149              	.LBE25:
+ 150              	.LBE24:
+ 151              	.LBB26:
+ 152              	.LBB27:
+ 153              		.loc 2 37 0
+ 154 0014 A2F58062 		sub	r2, r2, #1024
+ 155 0018 1369     		ldr	r3, [r2, #16]
+ 156 001a 43F04003 		orr	r3, r3, #64
+ 157 001e 1361     		str	r3, [r2, #16]
+ 158              	.LBE27:
+ 159              	.LBE26:
+  65:../src/pwr_switch.c **** 		return;
+  66:../src/pwr_switch.c **** 
+  67:../src/pwr_switch.c **** 	// Turn on the +5V_ISOL (VDD_SW) voltage
+  68:../src/pwr_switch.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+  69:../src/pwr_switch.c **** 
+  70:../src/pwr_switch.c **** 	io_12v_sw___cntrl_vbat_g_enable();
+  71:../src/pwr_switch.c **** 
+  72:../src/pwr_switch.c **** 	wx_force_i2c_sensor_reset = 1;
+ 160              		.loc 1 72 0
+ 161 0020 0123     		movs	r3, #1
+ 162 0022 034A     		ldr	r2, .L12+4
+ 163 0024 1370     		strb	r3, [r2]
+  73:../src/pwr_switch.c **** 
+  74:../src/pwr_switch.c **** 	wx_pwr_state = WX_PWR_ON;
+ 164              		.loc 1 74 0
+ 165 0026 034A     		ldr	r2, .L12+8
+ 166 0028 1370     		strb	r3, [r2]
+ 167              	.L9:
+  75:../src/pwr_switch.c **** }
+ 168              		.loc 1 75 0
+ 169 002a 08BD     		pop	{r3, pc}
+ 170              	.L13:
+ 171              		.align	2
+ 172              	.L12:
+ 173 002c 000C0140 		.word	1073810432
+ 174 0030 00000000 		.word	wx_force_i2c_sensor_reset
+ 175 0034 00000000 		.word	wx_pwr_state
+ 176              		.cfi_endproc
+ 177              	.LFE102:
+ 179              		.section	.text.wx_pwr_switch_case_off_paratnc,"ax",%progbits
+ 180              		.align	1
+ 181              		.global	wx_pwr_switch_case_off_paratnc
+ 182              		.syntax unified
+ 183              		.thumb
+ 184              		.thumb_func
+ 185              		.fpu softvfp
+ 187              	wx_pwr_switch_case_off_paratnc:
+ 188              	.LFB103:
+  76:../src/pwr_switch.c **** 
+  77:../src/pwr_switch.c **** void wx_pwr_switch_case_off_paratnc() {
+ 189              		.loc 1 77 0
+ 190              		.cfi_startproc
+ 191              		@ args = 0, pretend = 0, frame = 0
+ 192              		@ frame_needed = 0, uses_anonymous_args = 0
+ 193 0000 08B5     		push	{r3, lr}
+ 194              		.cfi_def_cfa_offset 8
+ 195              		.cfi_offset 3, -8
+ 196              		.cfi_offset 14, -4
+  78:../src/pwr_switch.c **** #if (defined PARATNC_HWREV_C)
+  79:../src/pwr_switch.c **** 		// Turn on the +12V_SW voltage
+  80:../src/pwr_switch.c **** 		GPIO_SetBits(GPIOA, GPIO_Pin_6);
+ 197              		.loc 1 80 0
+ 198 0002 4021     		movs	r1, #64
+ 199 0004 0548     		ldr	r0, .L16
+ 200 0006 FFF7FEFF 		bl	GPIO_SetBits
+ 201              	.LVL2:
+  81:../src/pwr_switch.c **** #endif
+  82:../src/pwr_switch.c **** 
+  83:../src/pwr_switch.c **** 		delay_fixed(100);
+ 202              		.loc 1 83 0
+ 203 000a 6420     		movs	r0, #100
+ 204 000c FFF7FEFF 		bl	delay_fixed
+ 205              	.LVL3:
+ 206              	.LBB28:
+ 207              	.LBB29:
+  28:../include/io.h **** }
+ 208              		.loc 2 28 0
+ 209 0010 034A     		ldr	r2, .L16+4
+ 210 0012 1369     		ldr	r3, [r2, #16]
+ 211 0014 43F48073 		orr	r3, r3, #256
+ 212 0018 1361     		str	r3, [r2, #16]
+ 213              	.LBE29:
+ 214              	.LBE28:
+  84:../src/pwr_switch.c **** 
+  85:../src/pwr_switch.c **** 		// Turn on the +5V_ISOL (VDD_SW) voltage
+  86:../src/pwr_switch.c **** 		//GPIO_SetBits(GPIOB, GPIO_Pin_8);
+  87:../src/pwr_switch.c **** 		io_5v_isol_sw___cntrl_vbat_s_enable();
+  88:../src/pwr_switch.c **** }
+ 215              		.loc 1 88 0
+ 216 001a 08BD     		pop	{r3, pc}
+ 217              	.L17:
+ 218              		.align	2
+ 219              	.L16:
+ 220 001c 00080140 		.word	1073809408
+ 221 0020 000C0140 		.word	1073810432
+ 222              		.cfi_endproc
+ 223              	.LFE103:
+ 225              		.section	.text.wx_pwr_switch_init,"ax",%progbits
+ 226              		.align	1
+ 227              		.global	wx_pwr_switch_init
+ 228              		.syntax unified
+ 229              		.thumb
+ 230              		.thumb_func
+ 231              		.fpu softvfp
+ 233              	wx_pwr_switch_init:
+ 234              	.LFB104:
+  89:../src/pwr_switch.c **** 
+  90:../src/pwr_switch.c **** void wx_pwr_switch_init(void) {
+ 235              		.loc 1 90 0
+ 236              		.cfi_startproc
+ 237              		@ args = 0, pretend = 0, frame = 8
+ 238              		@ frame_needed = 0, uses_anonymous_args = 0
+ 239 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 240              		.cfi_def_cfa_offset 20
+ 241              		.cfi_offset 4, -20
+ 242              		.cfi_offset 5, -16
+ 243              		.cfi_offset 6, -12
+ 244              		.cfi_offset 7, -8
+ 245              		.cfi_offset 14, -4
+ 246 0002 83B0     		sub	sp, sp, #12
+ 247              		.cfi_def_cfa_offset 32
+  91:../src/pwr_switch.c **** #if defined(STM32F10X_MD_VL)
+  92:../src/pwr_switch.c **** 
+  93:../src/pwr_switch.c **** 			// RELAY_CNTRL
+  94:../src/pwr_switch.c **** 			GPIO_InitTypeDef GPIO_InitStructure;
+  95:../src/pwr_switch.c **** 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+ 248              		.loc 1 95 0
+ 249 0004 4FF48077 		mov	r7, #256
+ 250 0008 ADF80470 		strh	r7, [sp, #4]	@ movhi
+  96:../src/pwr_switch.c **** 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 251              		.loc 1 96 0
+ 252 000c 0323     		movs	r3, #3
+ 253 000e 8DF80630 		strb	r3, [sp, #6]
+  97:../src/pwr_switch.c **** 		#if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
+  98:../src/pwr_switch.c **** 			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+  99:../src/pwr_switch.c **** 		#elif (defined PARATNC_HWREV_C)
+ 100:../src/pwr_switch.c **** 			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+ 254              		.loc 1 100 0
+ 255 0012 1023     		movs	r3, #16
+ 256 0014 8DF80730 		strb	r3, [sp, #7]
+ 101:../src/pwr_switch.c **** 		#else
+ 102:../src/pwr_switch.c **** 		#error ("Hardware Revision not chosen.")
+ 103:../src/pwr_switch.c **** 		#endif
+ 104:../src/pwr_switch.c **** 			GPIO_Init(GPIOB, &GPIO_InitStructure);
+ 257              		.loc 1 104 0
+ 258 0018 0C4E     		ldr	r6, .L20
+ 259 001a 01A9     		add	r1, sp, #4
+ 260 001c 3046     		mov	r0, r6
+ 261 001e FFF7FEFF 		bl	GPIO_Init
+ 262              	.LVL4:
+ 105:../src/pwr_switch.c **** 
+ 106:../src/pwr_switch.c **** 		#if (defined PARATNC_HWREV_C)
+ 107:../src/pwr_switch.c **** 			// +12V PWR_CNTRL
+ 108:../src/pwr_switch.c **** 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
+ 263              		.loc 1 108 0
+ 264 0022 4025     		movs	r5, #64
+ 265 0024 ADF80450 		strh	r5, [sp, #4]	@ movhi
+ 109:../src/pwr_switch.c **** 			GPIO_Init(GPIOA, &GPIO_InitStructure);
+ 266              		.loc 1 109 0
+ 267 0028 094C     		ldr	r4, .L20+4
+ 268 002a 01A9     		add	r1, sp, #4
+ 269 002c 2046     		mov	r0, r4
+ 270 002e FFF7FEFF 		bl	GPIO_Init
+ 271              	.LVL5:
+ 110:../src/pwr_switch.c **** 		#endif
+ 111:../src/pwr_switch.c **** 
+ 112:../src/pwr_switch.c **** 			wx_pwr_state = WX_PWR_OFF;
+ 272              		.loc 1 112 0
+ 273 0032 084B     		ldr	r3, .L20+8
+ 274 0034 0022     		movs	r2, #0
+ 275 0036 1A70     		strb	r2, [r3]
+ 113:../src/pwr_switch.c **** 
+ 114:../src/pwr_switch.c **** 			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
+ 276              		.loc 1 114 0
+ 277 0038 3946     		mov	r1, r7
+ 278 003a 3046     		mov	r0, r6
+ 279 003c FFF7FEFF 		bl	GPIO_ResetBits
+ 280              	.LVL6:
+ 115:../src/pwr_switch.c **** 
+ 116:../src/pwr_switch.c **** 		#if (defined PARATNC_HWREV_C)
+ 117:../src/pwr_switch.c **** 			// +12V_SW PWR_CNTRL
+ 118:../src/pwr_switch.c **** 			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
+ 281              		.loc 1 118 0
+ 282 0040 2946     		mov	r1, r5
+ 283 0042 2046     		mov	r0, r4
+ 284 0044 FFF7FEFF 		bl	GPIO_ResetBits
+ 285              	.LVL7:
+ 119:../src/pwr_switch.c **** 		#endif
+ 120:../src/pwr_switch.c **** 
+ 121:../src/pwr_switch.c **** #endif
+ 122:../src/pwr_switch.c **** 
+ 123:../src/pwr_switch.c **** #if defined(STM32L471xx)
+ 124:../src/pwr_switch.c **** 			LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+ 125:../src/pwr_switch.c **** 
+ 126:../src/pwr_switch.c **** 			// PB8 - UC_CNTRL_VS
+ 127:../src/pwr_switch.c **** 			// in ParaMETEO HW-RevB it is connected internally to SENSORS_PWR_CNTRL and +5V_SW_C_PWR_CNTRL
+ 128:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+ 129:../src/pwr_switch.c **** 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+ 130:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
+ 131:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+ 132:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+ 133:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+ 134:../src/pwr_switch.c **** 			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
+ 135:../src/pwr_switch.c **** 
+ 136:../src/pwr_switch.c **** 			// PA6 - UC_CNTRL_VG
+ 137:../src/pwr_switch.c **** 			// in ParaMETEO HW-RevB it is connected internally to GSM_PWR_CNTRL and RADIO_PWR_CNTRL
+ 138:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+ 139:../src/pwr_switch.c **** 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+ 140:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
+ 141:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+ 142:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+ 143:../src/pwr_switch.c **** 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+ 144:../src/pwr_switch.c **** 			LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+ 145:../src/pwr_switch.c **** 
+ 146:../src/pwr_switch.c **** #endif
+ 147:../src/pwr_switch.c **** }
+ 286              		.loc 1 147 0
+ 287 0048 03B0     		add	sp, sp, #12
+ 288              		.cfi_def_cfa_offset 20
+ 289              		@ sp needed
+ 290 004a F0BD     		pop	{r4, r5, r6, r7, pc}
+ 291              	.L21:
+ 292              		.align	2
+ 293              	.L20:
+ 294 004c 000C0140 		.word	1073810432
+ 295 0050 00080140 		.word	1073809408
+ 296 0054 00000000 		.word	wx_pwr_state
+ 297              		.cfi_endproc
+ 298              	.LFE104:
+ 300              		.section	.text.wx_pwr_switch_periodic_handle,"ax",%progbits
+ 301              		.align	1
+ 302              		.global	wx_pwr_switch_periodic_handle
+ 303              		.syntax unified
+ 304              		.thumb
+ 305              		.thumb_func
+ 306              		.fpu softvfp
+ 308              	wx_pwr_switch_periodic_handle:
+ 309              	.LFB105:
+ 148:../src/pwr_switch.c **** 
+ 149:../src/pwr_switch.c **** void wx_pwr_switch_periodic_handle(void) {
+ 310              		.loc 1 149 0
+ 311              		.cfi_startproc
+ 312              		@ args = 0, pretend = 0, frame = 0
+ 313              		@ frame_needed = 0, uses_anonymous_args = 0
+ 314 0000 08B5     		push	{r3, lr}
+ 315              		.cfi_def_cfa_offset 8
+ 316              		.cfi_offset 3, -8
+ 317              		.cfi_offset 14, -4
+ 150:../src/pwr_switch.c **** 
+ 151:../src/pwr_switch.c **** 	// do a last valid measuremenets timestamps only if power is currently applied
+ 152:../src/pwr_switch.c **** 	if (wx_pwr_state == WX_PWR_ON) {
+ 318              		.loc 1 152 0
+ 319 0002 284B     		ldr	r3, .L31
+ 320 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 321 0006 012B     		cmp	r3, #1
+ 322 0008 06D0     		beq	.L30
+ 323              	.L23:
+ 153:../src/pwr_switch.c **** 
+ 154:../src/pwr_switch.c **** 		// the value of 0xFFFFFFFF is a magic word which disables the check for this parameter
+ 155:../src/pwr_switch.c **** 		if (wx_last_good_temperature_time != 0xFFFFFFFF &&
+ 156:../src/pwr_switch.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 157:../src/pwr_switch.c **** 		{
+ 158:../src/pwr_switch.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 159:../src/pwr_switch.c **** 		}
+ 160:../src/pwr_switch.c **** 
+ 161:../src/pwr_switch.c **** 		// as the weather station could be configured not to perform wind measurements at all
+ 162:../src/pwr_switch.c **** 		if (wx_last_good_wind_time != 0xFFFFFFFF &&
+ 163:../src/pwr_switch.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 164:../src/pwr_switch.c **** 		{
+ 165:../src/pwr_switch.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 166:../src/pwr_switch.c **** 
+ 167:../src/pwr_switch.c **** 			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+ 168:../src/pwr_switch.c **** 		}
+ 169:../src/pwr_switch.c **** 
+ 170:../src/pwr_switch.c **** 		if (wx_pwr_state == WX_PWR_UNDER_RESET) {
+ 171:../src/pwr_switch.c **** 			// if timeout watchod expired there is a time to reset the supply voltage
+ 172:../src/pwr_switch.c **** 			wx_pwr_state = WX_PWR_UNDER_RESET;
+ 173:../src/pwr_switch.c **** 
+ 174:../src/pwr_switch.c **** 			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
+ 175:../src/pwr_switch.c **** 			io_5v_isol_sw___cntrl_vbat_s_disable();
+ 176:../src/pwr_switch.c **** 
+ 177:../src/pwr_switch.c **** #ifdef PWR_SWITCH_BOTH
+ 178:../src/pwr_switch.c **** 			io_12v_sw___cntrl_vbat_g_disable();
+ 179:../src/pwr_switch.c **** #endif
+ 180:../src/pwr_switch.c **** 
+ 181:../src/pwr_switch.c **** 			// setting the last_good timers to current value to prevent reset loop
+ 182:../src/pwr_switch.c **** 			wx_last_good_temperature_time = master_time;
+ 183:../src/pwr_switch.c **** 			wx_last_good_wind_time = master_time;
+ 184:../src/pwr_switch.c **** 
+ 185:../src/pwr_switch.c **** 			return;
+ 186:../src/pwr_switch.c **** 		}
+ 187:../src/pwr_switch.c **** 
+ 188:../src/pwr_switch.c **** 	}
+ 189:../src/pwr_switch.c **** 
+ 190:../src/pwr_switch.c **** 	// service actual supply state
+ 191:../src/pwr_switch.c **** 	switch (wx_pwr_state) {
+ 324              		.loc 1 191 0
+ 325 000a 264B     		ldr	r3, .L31
+ 326 000c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 327 000e 002B     		cmp	r3, #0
+ 328 0010 3AD0     		beq	.L27
+ 329 0012 022B     		cmp	r3, #2
+ 330 0014 42D0     		beq	.L28
+ 331              	.L22:
+ 192:../src/pwr_switch.c **** 	case WX_PWR_OFF:
+ 193:../src/pwr_switch.c **** 
+ 194:../src/pwr_switch.c **** 		// one second delay
+ 195:../src/pwr_switch.c **** 		delay_fixed(2000);
+ 196:../src/pwr_switch.c **** 
+ 197:../src/pwr_switch.c **** 		#if (defined STM32F10X_MD_VL)
+ 198:../src/pwr_switch.c **** 		wx_pwr_switch_case_off_paratnc();
+ 199:../src/pwr_switch.c **** 		#endif
+ 200:../src/pwr_switch.c **** 
+ 201:../src/pwr_switch.c **** 		#if (defined STM32L471xx)
+ 202:../src/pwr_switch.c **** 		wx_pwr_switch_case_off_parameteo();
+ 203:../src/pwr_switch.c **** 		#endif
+ 204:../src/pwr_switch.c **** 
+ 205:../src/pwr_switch.c **** 		// power is off after power-up and needs to be powered on
+ 206:../src/pwr_switch.c **** 		wx_pwr_state = WX_PWR_ON;
+ 207:../src/pwr_switch.c **** 		break;
+ 208:../src/pwr_switch.c **** 	case WX_PWR_ON:
+ 209:../src/pwr_switch.c **** 		break;
+ 210:../src/pwr_switch.c **** 	case WX_PWR_UNDER_RESET:
+ 211:../src/pwr_switch.c **** 
+ 212:../src/pwr_switch.c **** 		#if (defined STM32F10X_MD_VL)
+ 213:../src/pwr_switch.c **** 		wx_pwr_switch_case_under_reset_paratnc();
+ 214:../src/pwr_switch.c **** 		#endif
+ 215:../src/pwr_switch.c **** 
+ 216:../src/pwr_switch.c **** 		#if (defined STM32L471xx)
+ 217:../src/pwr_switch.c **** 		wx_pwr_switch_case_under_reset_parameteo();
+ 218:../src/pwr_switch.c **** 		#endif
+ 219:../src/pwr_switch.c **** 
+ 220:../src/pwr_switch.c **** 		break;
+ 221:../src/pwr_switch.c **** 	case WX_PWR_DISABLED:
+ 222:../src/pwr_switch.c **** 		break;
+ 223:../src/pwr_switch.c **** 	}
+ 224:../src/pwr_switch.c **** }
+ 332              		.loc 1 224 0
+ 333 0016 08BD     		pop	{r3, pc}
+ 334              	.L30:
+ 155:../src/pwr_switch.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 335              		.loc 1 155 0
+ 336 0018 234B     		ldr	r3, .L31+4
+ 337 001a 1B68     		ldr	r3, [r3]
+ 338 001c B3F1FF3F 		cmp	r3, #-1
+ 339 0020 08D0     		beq	.L24
+ 156:../src/pwr_switch.c **** 		{
+ 340              		.loc 1 156 0 discriminator 1
+ 341 0022 224A     		ldr	r2, .L31+8
+ 342 0024 1268     		ldr	r2, [r2]
+ 343 0026 D31A     		subs	r3, r2, r3
+ 155:../src/pwr_switch.c **** 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD)
+ 344              		.loc 1 155 0 discriminator 1
+ 345 0028 214A     		ldr	r2, .L31+12
+ 346 002a 9342     		cmp	r3, r2
+ 347 002c 02D9     		bls	.L24
+ 158:../src/pwr_switch.c **** 		}
+ 348              		.loc 1 158 0
+ 349 002e 1D4B     		ldr	r3, .L31
+ 350 0030 0222     		movs	r2, #2
+ 351 0032 1A70     		strb	r2, [r3]
+ 352              	.L24:
+ 162:../src/pwr_switch.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 353              		.loc 1 162 0
+ 354 0034 1F4B     		ldr	r3, .L31+16
+ 355 0036 1B68     		ldr	r3, [r3]
+ 356 0038 B3F1FF3F 		cmp	r3, #-1
+ 357 003c 0BD0     		beq	.L25
+ 163:../src/pwr_switch.c **** 		{
+ 358              		.loc 1 163 0 discriminator 1
+ 359 003e 1B4A     		ldr	r2, .L31+8
+ 360 0040 1268     		ldr	r2, [r2]
+ 361 0042 D31A     		subs	r3, r2, r3
+ 162:../src/pwr_switch.c **** 			master_time - wx_last_good_wind_time >= WX_WATCHDOG_PERIOD)
+ 362              		.loc 1 162 0 discriminator 1
+ 363 0044 1A4A     		ldr	r2, .L31+12
+ 364 0046 9342     		cmp	r3, r2
+ 365 0048 05D9     		bls	.L25
+ 165:../src/pwr_switch.c **** 
+ 366              		.loc 1 165 0
+ 367 004a 164B     		ldr	r3, .L31
+ 368 004c 0222     		movs	r2, #2
+ 369 004e 1A70     		strb	r2, [r3]
+ 167:../src/pwr_switch.c **** 		}
+ 370              		.loc 1 167 0
+ 371 0050 194B     		ldr	r3, .L31+20
+ 372 0052 0322     		movs	r2, #3
+ 373 0054 1A70     		strb	r2, [r3]
+ 374              	.L25:
+ 170:../src/pwr_switch.c **** 			// if timeout watchod expired there is a time to reset the supply voltage
+ 375              		.loc 1 170 0
+ 376 0056 134B     		ldr	r3, .L31
+ 377 0058 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 378 005a 022B     		cmp	r3, #2
+ 379 005c D5D1     		bne	.L23
+ 172:../src/pwr_switch.c **** 
+ 380              		.loc 1 172 0
+ 381 005e 114B     		ldr	r3, .L31
+ 382 0060 0222     		movs	r2, #2
+ 383 0062 1A70     		strb	r2, [r3]
+ 384              	.LBB30:
+ 385              	.LBB31:
+  32:../include/io.h **** }
+ 386              		.loc 2 32 0
+ 387 0064 154A     		ldr	r2, .L31+24
+ 388 0066 1369     		ldr	r3, [r2, #16]
+ 389 0068 43F08073 		orr	r3, r3, #16777216
+ 390 006c 1361     		str	r3, [r2, #16]
+ 391              	.LBE31:
+ 392              	.LBE30:
+ 393              	.LBB32:
+ 394              	.LBB33:
+  38:../include/io.h **** 
+  39:../include/io.h **** }
+  40:../include/io.h **** inline void io_12v_sw___cntrl_vbat_g_disable(void) {
+  41:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VG
+  42:../include/io.h **** 	GPIOA->BSRR |= GPIO_BSRR_BR6;
+ 395              		.loc 2 42 0
+ 396 006e A2F58062 		sub	r2, r2, #1024
+ 397 0072 1369     		ldr	r3, [r2, #16]
+ 398 0074 43F48003 		orr	r3, r3, #4194304
+ 399 0078 1361     		str	r3, [r2, #16]
+ 400              	.LBE33:
+ 401              	.LBE32:
+ 182:../src/pwr_switch.c **** 			wx_last_good_wind_time = master_time;
+ 402              		.loc 1 182 0
+ 403 007a 0C4B     		ldr	r3, .L31+8
+ 404 007c 1B68     		ldr	r3, [r3]
+ 405 007e 0A4A     		ldr	r2, .L31+4
+ 406 0080 1360     		str	r3, [r2]
+ 183:../src/pwr_switch.c **** 
+ 407              		.loc 1 183 0
+ 408 0082 0C4A     		ldr	r2, .L31+16
+ 409 0084 1360     		str	r3, [r2]
+ 185:../src/pwr_switch.c **** 		}
+ 410              		.loc 1 185 0
+ 411 0086 C6E7     		b	.L22
+ 412              	.L27:
+ 195:../src/pwr_switch.c **** 
+ 413              		.loc 1 195 0
+ 414 0088 4FF4FA60 		mov	r0, #2000
+ 415 008c FFF7FEFF 		bl	delay_fixed
+ 416              	.LVL8:
+ 198:../src/pwr_switch.c **** 		#endif
+ 417              		.loc 1 198 0
+ 418 0090 FFF7FEFF 		bl	wx_pwr_switch_case_off_paratnc
+ 419              	.LVL9:
+ 206:../src/pwr_switch.c **** 		break;
+ 420              		.loc 1 206 0
+ 421 0094 034B     		ldr	r3, .L31
+ 422 0096 0122     		movs	r2, #1
+ 423 0098 1A70     		strb	r2, [r3]
+ 207:../src/pwr_switch.c **** 	case WX_PWR_ON:
+ 424              		.loc 1 207 0
+ 425 009a BCE7     		b	.L22
+ 426              	.L28:
+ 213:../src/pwr_switch.c **** 		#endif
+ 427              		.loc 1 213 0
+ 428 009c FFF7FEFF 		bl	wx_pwr_switch_case_under_reset_paratnc
+ 429              	.LVL10:
+ 220:../src/pwr_switch.c **** 	case WX_PWR_DISABLED:
+ 430              		.loc 1 220 0
+ 431 00a0 B9E7     		b	.L22
+ 432              	.L32:
+ 433 00a2 00BF     		.align	2
+ 434              	.L31:
+ 435 00a4 00000000 		.word	wx_pwr_state
+ 436 00a8 00000000 		.word	wx_last_good_temperature_time
+ 437 00ac 00000000 		.word	master_time
+ 438 00b0 8F5F0100 		.word	89999
+ 439 00b4 00000000 		.word	wx_last_good_wind_time
+ 440 00b8 00000000 		.word	rte_wx_wind_qf
+ 441 00bc 000C0140 		.word	1073810432
+ 442              		.cfi_endproc
+ 443              	.LFE105:
+ 445              		.comm	wx_pwr_state,1,1
+ 446              		.text
+ 447              	.Letext0:
+ 448              		.file 3 "../include/pwr_switch.h"
+ 449              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 450              		.file 5 "../system/include/aprs/cfifo.h"
+ 451              		.file 6 "../system/include/aprs/afsk.h"
+ 452              		.file 7 "../system/include/aprs/ax25.h"
+ 453              		.file 8 "../system/include/cmsis/core_cm3.h"
+ 454              		.file 9 "../system/include/cmsis/system_stm32f10x.h"
+ 455              		.file 10 "../system/include/cmsis/stm32f10x.h"
+ 456              		.file 11 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+ 457              		.file 12 "../system/include/drivers/serial.h"
+ 458              		.file 13 "../include/config_data.h"
+ 459              		.file 14 "../include/main.h"
+ 460              		.file 15 "../system/include/drivers/dallas.h"
+ 461              		.file 16 "../system/include/drivers/analog_anemometer.h"
+ 462              		.file 17 "../system/include/davis_vantage/davis_loop_t.h"
+ 463              		.file 18 "../system/include/umb_master/umb_frame_t.h"
+ 464              		.file 19 "../system/include/umb_master/umb_state_t.h"
+ 465              		.file 20 "../system/include/umb_master/umb_context_t.h"
+ 466              		.file 21 "../system/include/umb_master/umb_qf_t.h"
+ 467              		.file 22 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 468              		.file 23 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 469              		.file 24 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 470              		.file 25 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 471              		.file 26 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 472              		.file 27 "../system/include/drivers/ms5611.h"
+ 473              		.file 28 "../system/include/drivers/bme280.h"
+ 474              		.file 29 "../include/rte_wx.h"
+ 475              		.file 30 "../include/wx_handler.h"
+ 476              		.file 31 "../include/delay.h"
+ 477              		.file 32 "../include/pwr_save.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 pwr_switch.c
+     /tmp/ccZfhO5k.s:16     .text.wx_pwr_switch_case_under_reset_parameteo:0000000000000000 $t
+     /tmp/ccZfhO5k.s:23     .text.wx_pwr_switch_case_under_reset_parameteo:0000000000000000 wx_pwr_switch_case_under_reset_parameteo
+     /tmp/ccZfhO5k.s:62     .text.wx_pwr_switch_case_under_reset_parameteo:0000000000000020 $d
+                            *COM*:0000000000000001 wx_pwr_state
+     /tmp/ccZfhO5k.s:69     .text.wx_pwr_switch_case_under_reset_paratnc:0000000000000000 $t
+     /tmp/ccZfhO5k.s:76     .text.wx_pwr_switch_case_under_reset_paratnc:0000000000000000 wx_pwr_switch_case_under_reset_paratnc
+     /tmp/ccZfhO5k.s:113    .text.wx_pwr_switch_case_under_reset_paratnc:0000000000000024 $d
+     /tmp/ccZfhO5k.s:120    .text.wx_pwr_switch_case_off_parameteo:0000000000000000 $t
+     /tmp/ccZfhO5k.s:127    .text.wx_pwr_switch_case_off_parameteo:0000000000000000 wx_pwr_switch_case_off_parameteo
+     /tmp/ccZfhO5k.s:173    .text.wx_pwr_switch_case_off_parameteo:000000000000002c $d
+     /tmp/ccZfhO5k.s:180    .text.wx_pwr_switch_case_off_paratnc:0000000000000000 $t
+     /tmp/ccZfhO5k.s:187    .text.wx_pwr_switch_case_off_paratnc:0000000000000000 wx_pwr_switch_case_off_paratnc
+     /tmp/ccZfhO5k.s:220    .text.wx_pwr_switch_case_off_paratnc:000000000000001c $d
+     /tmp/ccZfhO5k.s:226    .text.wx_pwr_switch_init:0000000000000000 $t
+     /tmp/ccZfhO5k.s:233    .text.wx_pwr_switch_init:0000000000000000 wx_pwr_switch_init
+     /tmp/ccZfhO5k.s:294    .text.wx_pwr_switch_init:000000000000004c $d
+     /tmp/ccZfhO5k.s:301    .text.wx_pwr_switch_periodic_handle:0000000000000000 $t
+     /tmp/ccZfhO5k.s:308    .text.wx_pwr_switch_periodic_handle:0000000000000000 wx_pwr_switch_periodic_handle
+     /tmp/ccZfhO5k.s:435    .text.wx_pwr_switch_periodic_handle:00000000000000a4 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.wx_handler.h.9.c93580273a56e0f9036dfe7a28400494
+
+UNDEFINED SYMBOLS
+pwr_save_get_inhibit_pwr_switch_periodic
+wx_force_i2c_sensor_reset
+GPIO_SetBits
+delay_fixed
+GPIO_Init
+GPIO_ResetBits
+wx_last_good_temperature_time
+master_time
+wx_last_good_wind_time
+rte_wx_wind_qf

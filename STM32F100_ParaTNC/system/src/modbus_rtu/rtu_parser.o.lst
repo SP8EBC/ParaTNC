@@ -1,0 +1,471 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"rtu_parser.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.rtu_parser_03_04_registers,"ax",%progbits
+  16              		.align	1
+  17              		.global	rtu_parser_03_04_registers
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	rtu_parser_03_04_registers:
+  24              	.LFB1:
+  25              		.file 1 "../system/src/modbus_rtu/rtu_parser.c"
+   1:../system/src/modbus_rtu/rtu_parser.c **** /*
+   2:../system/src/modbus_rtu/rtu_parser.c ****  * rtu_parser.c
+   3:../system/src/modbus_rtu/rtu_parser.c ****  *
+   4:../system/src/modbus_rtu/rtu_parser.c ****  *  Created on: 27.08.2020
+   5:../system/src/modbus_rtu/rtu_parser.c ****  *      Author: mateusz
+   6:../system/src/modbus_rtu/rtu_parser.c ****  */
+   7:../system/src/modbus_rtu/rtu_parser.c **** 
+   8:../system/src/modbus_rtu/rtu_parser.c **** #include "./modbus_rtu/rtu_parser.h"
+   9:../system/src/modbus_rtu/rtu_parser.c **** #include "./modbus_rtu/rtu_return_values.h"
+  10:../system/src/modbus_rtu/rtu_parser.c **** 
+  11:../system/src/modbus_rtu/rtu_parser.c **** #define MODBUS_RTU_MIN_03_04_RESP_LN 	7	// one register to read
+  12:../system/src/modbus_rtu/rtu_parser.c **** 
+  13:../system/src/modbus_rtu/rtu_parser.c **** /**
+  14:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:06:56 CET: SR6WXP>AKLPRZ,WIDE2-1,qAS,SQ6NDL:=5038.00N101747.00E# DigiW1 + WX ~ Lotn
+  15:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:06:58 CET: SR6WXP>AKLPRZ,WIDE2-1,qAR,SR9NSK:T#237,023,004,001,000,122,10000110
+  16:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:07:58 CET: SR6WXP>AKLPRZ,WIDE2-1,qAO,SR6NKB:>F1V FFED, F2V 47, F3V 0, F4V 0, F5V 0,
+  17:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:08:59 CET: SR6WXP>AKLPRZ,WIDE2-1,qAR,SR9NSK:!5038.00N/01747.00E_344/006g011t025r...
+  18:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:11:59 CET: SR6WXP>AKLPRZ,WIDE2-1,qAO,SR6NKB:>F1V FFEE, F2V 47, F3V 0, F4V 0, F5V 0,
+  19:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:13:00 CET: SR6WXP>AKLPRZ,WIDE2-1,qAO,SR6NKB:!5038.00N/01747.00E_352/005g009t025r...
+  20:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:16:00 CET: SR6WXP>AKLPRZ,WIDE2-1,qAO,SR6NKB:>F1V FFEE, F2V 47, F3V 0, F4V 0, F5V 0,
+  21:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 03:17:01 CET: SR6WXP>AKLPRZ,WIDE2-1,qAR,SR9NSK:!5038.00N/01747.00E_348/006g008t025r...
+  22:../system/src/modbus_rtu/rtu_parser.c **** * 
+  23:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 05:36:27 CET: SR6WXP>AKLPRZ,WIDE2-1,qAS,SQ6NDL:>F1V FFFA, F2V 46, F3V 0, F4V 0, F5V 0,
+  24:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 05:37:28 CET: SR6WXP>AKLPRZ,WIDE2-1,qAS,SQ6NDL:!5038.00N/01747.00E_339/003g007t027r...
+  25:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 05:37:30 CET: SR6WXP>AKLPRZ,WIDE2-1,qAR,SR9NSK:T#252,026,004,001,000,122,10000110
+  26:../system/src/modbus_rtu/rtu_parser.c **** * 2021-03-21 05:40:30 CET: SR6WXP>AKLPRZ,WIDE2-1,qAS,SQ6NDL:>F1V FFFA, F2V 46, F3V 0, F4V 0, F5V 0,
+  27:../system/src/modbus_rtu/rtu_parser.c **** */
+  28:../system/src/modbus_rtu/rtu_parser.c **** 
+  29:../system/src/modbus_rtu/rtu_parser.c **** int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_register_data_t* output, 
+  26              		.loc 1 29 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  32 0000 70B4     		push	{r4, r5, r6}
+  33              		.cfi_def_cfa_offset 12
+  34              		.cfi_offset 4, -12
+  35              		.cfi_offset 5, -8
+  36              		.cfi_offset 6, -4
+  37              	.LVL1:
+  30:../system/src/modbus_rtu/rtu_parser.c **** 	uint32_t retval = MODBUS_RET_UNINITIALIZED;
+  31:../system/src/modbus_rtu/rtu_parser.c **** 
+  32:../system/src/modbus_rtu/rtu_parser.c **** 	uint16_t data = 0;
+  33:../system/src/modbus_rtu/rtu_parser.c **** 
+  34:../system/src/modbus_rtu/rtu_parser.c **** 	uint8_t slave_address_from_frame = 0;
+  35:../system/src/modbus_rtu/rtu_parser.c **** 
+  36:../system/src/modbus_rtu/rtu_parser.c **** 	// iterator through input table and registers table
+  37:../system/src/modbus_rtu/rtu_parser.c **** 	int j = 3;
+  38:../system/src/modbus_rtu/rtu_parser.c **** 
+  39:../system/src/modbus_rtu/rtu_parser.c **** 	// rewind the input buffer if the first byte is not valid modbus rtu slave address
+  40:../system/src/modbus_rtu/rtu_parser.c **** 	if (*input < 1 || *input > 0xF7) {
+  38              		.loc 1 40 0
+  39 0002 0478     		ldrb	r4, [r0]	@ zero_extendqisi2
+  40 0004 013C     		subs	r4, r4, #1
+  41 0006 E4B2     		uxtb	r4, r4
+  42 0008 F62C     		cmp	r4, #246
+  43 000a 00D9     		bls	.L2
+  41:../system/src/modbus_rtu/rtu_parser.c **** 		// don't loop here and assume that the modbus response is shifted only
+  42:../system/src/modbus_rtu/rtu_parser.c **** 		// by one byte
+  43:../system/src/modbus_rtu/rtu_parser.c **** 		input++;
+  44              		.loc 1 43 0
+  45 000c 0130     		adds	r0, r0, #1
+  46              	.LVL2:
+  47              	.L2:
+  44:../system/src/modbus_rtu/rtu_parser.c **** 	}
+  45:../system/src/modbus_rtu/rtu_parser.c **** 
+  46:../system/src/modbus_rtu/rtu_parser.c **** 	// 7 bytes is the shortest meaningful Modbus RTU frame
+  47:../system/src/modbus_rtu/rtu_parser.c **** 	// with a value of single register
+  48:../system/src/modbus_rtu/rtu_parser.c **** 	if (input_ln < MODBUS_RTU_MIN_03_04_RESP_LN) {
+  48              		.loc 1 48 0
+  49 000e 0629     		cmp	r1, #6
+  50 0010 52D9     		bls	.L8
+  49:../system/src/modbus_rtu/rtu_parser.c **** 		retval = MODBUS_RET_TOO_SHORT;
+  50:../system/src/modbus_rtu/rtu_parser.c **** 	}
+  51:../system/src/modbus_rtu/rtu_parser.c **** 	else {
+  52:../system/src/modbus_rtu/rtu_parser.c **** 		// fetch slave address
+  53:../system/src/modbus_rtu/rtu_parser.c **** 		data = *input;
+  51              		.loc 1 53 0
+  52 0012 0578     		ldrb	r5, [r0]	@ zero_extendqisi2
+  53              	.LVL3:
+  54:../system/src/modbus_rtu/rtu_parser.c **** 
+  55:../system/src/modbus_rtu/rtu_parser.c **** 		// TODO: store slave address
+  56:../system/src/modbus_rtu/rtu_parser.c **** 		slave_address_from_frame = data;
+  57:../system/src/modbus_rtu/rtu_parser.c **** 
+  58:../system/src/modbus_rtu/rtu_parser.c **** 		// fetch function code
+  59:../system/src/modbus_rtu/rtu_parser.c **** 		data = *(input + 1);
+  54              		.loc 1 59 0
+  55 0014 4478     		ldrb	r4, [r0, #1]	@ zero_extendqisi2
+  56 0016 A1B2     		uxth	r1, r4
+  57              	.LVL4:
+  60:../system/src/modbus_rtu/rtu_parser.c **** 
+  61:../system/src/modbus_rtu/rtu_parser.c **** 		// if the exception flag is set
+  62:../system/src/modbus_rtu/rtu_parser.c **** 		if ((data & 0x80) > 0) {
+  58              		.loc 1 62 0
+  59 0018 14F0800F 		tst	r4, #128
+  60 001c 05D1     		bne	.L23
+  63:../system/src/modbus_rtu/rtu_parser.c **** 			// parse the exception value
+  64:../system/src/modbus_rtu/rtu_parser.c **** 			*exception = rtu_exception_from_frame_data(data);
+  65:../system/src/modbus_rtu/rtu_parser.c **** 
+  66:../system/src/modbus_rtu/rtu_parser.c **** 			// and set the return value
+  67:../system/src/modbus_rtu/rtu_parser.c **** 			retval = MODBUS_RET_GOT_EXCEPTION;
+  68:../system/src/modbus_rtu/rtu_parser.c **** 		}
+  69:../system/src/modbus_rtu/rtu_parser.c **** 
+  70:../system/src/modbus_rtu/rtu_parser.c **** 		// check if the function code is correct or not
+  71:../system/src/modbus_rtu/rtu_parser.c **** 		else if (data == 0x03 || data == 0x04) {
+  61              		.loc 1 71 0
+  62 001e 0339     		subs	r1, r1, #3
+  63              	.LVL5:
+  64 0020 89B2     		uxth	r1, r1
+  65              	.LVL6:
+  66 0022 0129     		cmp	r1, #1
+  67 0024 2DD9     		bls	.L24
+  72:../system/src/modbus_rtu/rtu_parser.c **** 
+  73:../system/src/modbus_rtu/rtu_parser.c **** 			// check if this is an answer from the slave we expect
+  74:../system/src/modbus_rtu/rtu_parser.c **** 			if (slave_address_from_frame == output->slave_address) {
+  75:../system/src/modbus_rtu/rtu_parser.c **** 				// fetch the function result lenght in bytes
+  76:../system/src/modbus_rtu/rtu_parser.c **** 				data = *(input + 2);
+  77:../system/src/modbus_rtu/rtu_parser.c **** 
+  78:../system/src/modbus_rtu/rtu_parser.c **** 				// store amount of registers in this response
+  79:../system/src/modbus_rtu/rtu_parser.c **** 				output->number_of_registers = data / 2;
+  80:../system/src/modbus_rtu/rtu_parser.c **** 
+  81:../system/src/modbus_rtu/rtu_parser.c **** 				// get all registers values
+  82:../system/src/modbus_rtu/rtu_parser.c **** 				for (int i = 0; i < output->number_of_registers && i < MODBUS_RTU_MAX_REGISTERS_AT_ONCE; i++) {
+  83:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+  84:../system/src/modbus_rtu/rtu_parser.c **** 
+  85:../system/src/modbus_rtu/rtu_parser.c **** 					// moving to next 16bit word with next register
+  86:../system/src/modbus_rtu/rtu_parser.c **** 					j += 2;
+  87:../system/src/modbus_rtu/rtu_parser.c **** 				}
+  88:../system/src/modbus_rtu/rtu_parser.c **** 				retval = MODBUS_RET_OK;
+  89:../system/src/modbus_rtu/rtu_parser.c **** 			}
+  90:../system/src/modbus_rtu/rtu_parser.c **** 			else {
+  91:../system/src/modbus_rtu/rtu_parser.c **** 				retval = MODBUS_RET_UNEXP_SLAVE_ADR;
+  92:../system/src/modbus_rtu/rtu_parser.c **** 			}
+  93:../system/src/modbus_rtu/rtu_parser.c **** 
+  94:../system/src/modbus_rtu/rtu_parser.c **** 		}
+  95:../system/src/modbus_rtu/rtu_parser.c **** 		else {
+  96:../system/src/modbus_rtu/rtu_parser.c **** 			// if not exit with an error as this isn't
+  97:../system/src/modbus_rtu/rtu_parser.c **** 			// correct parser for this modbus function
+  98:../system/src/modbus_rtu/rtu_parser.c **** 			retval = MODBUS_RET_WRONG_FUNCTION;
+  68              		.loc 1 98 0
+  69 0026 0220     		movs	r0, #2
+  70              	.LVL7:
+  71 0028 47E0     		b	.L3
+  72              	.LVL8:
+  73              	.L23:
+  74              	.LBB5:
+  75              	.LBB6:
+  76              		.file 2 "../system/include/modbus_rtu/rtu_exception_t.h"
+   1:../system/include/modbus_rtu/rtu_exception_t.h **** /*
+   2:../system/include/modbus_rtu/rtu_exception_t.h ****  * rtu_exception_t.h
+   3:../system/include/modbus_rtu/rtu_exception_t.h ****  *
+   4:../system/include/modbus_rtu/rtu_exception_t.h ****  *  Created on: 28.09.2020
+   5:../system/include/modbus_rtu/rtu_exception_t.h ****  *      Author: mateusz
+   6:../system/include/modbus_rtu/rtu_exception_t.h ****  */
+   7:../system/include/modbus_rtu/rtu_exception_t.h **** 
+   8:../system/include/modbus_rtu/rtu_exception_t.h **** #ifndef INCLUDE_MODBUS_RTU_RTU_EXCEPTION_T_H_
+   9:../system/include/modbus_rtu/rtu_exception_t.h **** #define INCLUDE_MODBUS_RTU_RTU_EXCEPTION_T_H_
+  10:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  11:../system/include/modbus_rtu/rtu_exception_t.h **** #include <stdint.h>
+  12:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  13:../system/include/modbus_rtu/rtu_exception_t.h **** typedef enum rtu_exception {
+  14:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  15:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_OK,
+  16:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  17:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_ILLEGAL_FUNCTION,
+  18:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCETPION_ILLEGAL_ADDRESS,
+  19:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_ILLEGAL_VALUE,
+  20:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_SLAVE_FAIL,
+  21:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_ACK,
+  22:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_BUSY,
+  23:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_NACK,
+  24:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_PARITY_ERR,
+  25:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_GW_NAVAIBLE,
+  26:../system/include/modbus_rtu/rtu_exception_t.h **** 	RTU_EXCEPTION_GW_TARGET_NAVAIBLE
+  27:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  28:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  29:../system/include/modbus_rtu/rtu_exception_t.h **** } rtu_exception_t;
+  30:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  31:../system/include/modbus_rtu/rtu_exception_t.h **** inline rtu_exception_t rtu_exception_from_frame_data(uint8_t in) {
+  32:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  33:../system/include/modbus_rtu/rtu_exception_t.h **** 	rtu_exception_t out = RTU_EXCEPTION_OK;
+  34:../system/include/modbus_rtu/rtu_exception_t.h **** 
+  35:../system/include/modbus_rtu/rtu_exception_t.h **** 	if (in == 0x01) {
+  77              		.loc 2 35 0
+  78 002a 012C     		cmp	r4, #1
+  79 002c 13D0     		beq	.L9
+  36:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_ILLEGAL_FUNCTION;
+  37:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  38:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x02) {
+  80              		.loc 2 38 0
+  81 002e 022C     		cmp	r4, #2
+  82 0030 15D0     		beq	.L10
+  39:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCETPION_ILLEGAL_ADDRESS;
+  40:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  41:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x03) {
+  83              		.loc 2 41 0
+  84 0032 032C     		cmp	r4, #3
+  85 0034 15D0     		beq	.L11
+  42:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_ILLEGAL_VALUE;
+  43:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  44:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x04) {
+  86              		.loc 2 44 0
+  87 0036 042C     		cmp	r4, #4
+  88 0038 15D0     		beq	.L12
+  45:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_SLAVE_FAIL;
+  46:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  47:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x05) {
+  89              		.loc 2 47 0
+  90 003a 052C     		cmp	r4, #5
+  91 003c 15D0     		beq	.L13
+  48:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_ACK;
+  49:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  50:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x06) {
+  92              		.loc 2 50 0
+  93 003e 062C     		cmp	r4, #6
+  94 0040 15D0     		beq	.L14
+  51:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_BUSY;
+  52:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  53:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x07) {
+  95              		.loc 2 53 0
+  96 0042 072C     		cmp	r4, #7
+  97 0044 15D0     		beq	.L15
+  54:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_NACK;
+  55:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  56:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x08) {
+  98              		.loc 2 56 0
+  99 0046 082C     		cmp	r4, #8
+ 100 0048 15D0     		beq	.L16
+  57:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_PARITY_ERR;
+  58:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  59:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x0A) {
+ 101              		.loc 2 59 0
+ 102 004a 0A2C     		cmp	r4, #10
+ 103 004c 15D0     		beq	.L17
+  60:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_GW_NAVAIBLE;
+  61:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+  62:../system/include/modbus_rtu/rtu_exception_t.h **** 	else if (in == 0x0B) {
+ 104              		.loc 2 62 0
+ 105 004e 0B2C     		cmp	r4, #11
+ 106 0050 15D0     		beq	.L18
+  33:../system/include/modbus_rtu/rtu_exception_t.h **** 
+ 107              		.loc 2 33 0
+ 108 0052 0022     		movs	r2, #0
+ 109              	.LVL9:
+ 110 0054 00E0     		b	.L5
+ 111              	.LVL10:
+ 112              	.L9:
+  36:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 113              		.loc 2 36 0
+ 114 0056 0122     		movs	r2, #1
+ 115              	.LVL11:
+ 116              	.L5:
+ 117              	.LBE6:
+ 118              	.LBE5:
+  64:../system/src/modbus_rtu/rtu_parser.c **** 
+ 119              		.loc 1 64 0
+ 120 0058 1A70     		strb	r2, [r3]
+ 121              	.LVL12:
+  67:../system/src/modbus_rtu/rtu_parser.c **** 		}
+ 122              		.loc 1 67 0
+ 123 005a 0420     		movs	r0, #4
+ 124              	.LVL13:
+ 125 005c 2DE0     		b	.L3
+ 126              	.LVL14:
+ 127              	.L10:
+ 128              	.LBB8:
+ 129              	.LBB7:
+  39:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 130              		.loc 2 39 0
+ 131 005e 0222     		movs	r2, #2
+ 132              	.LVL15:
+ 133 0060 FAE7     		b	.L5
+ 134              	.LVL16:
+ 135              	.L11:
+  42:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 136              		.loc 2 42 0
+ 137 0062 0322     		movs	r2, #3
+ 138              	.LVL17:
+ 139 0064 F8E7     		b	.L5
+ 140              	.LVL18:
+ 141              	.L12:
+  45:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 142              		.loc 2 45 0
+ 143 0066 0422     		movs	r2, #4
+ 144              	.LVL19:
+ 145 0068 F6E7     		b	.L5
+ 146              	.LVL20:
+ 147              	.L13:
+  48:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 148              		.loc 2 48 0
+ 149 006a 0522     		movs	r2, #5
+ 150              	.LVL21:
+ 151 006c F4E7     		b	.L5
+ 152              	.LVL22:
+ 153              	.L14:
+  51:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 154              		.loc 2 51 0
+ 155 006e 0622     		movs	r2, #6
+ 156              	.LVL23:
+ 157 0070 F2E7     		b	.L5
+ 158              	.LVL24:
+ 159              	.L15:
+  54:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 160              		.loc 2 54 0
+ 161 0072 0722     		movs	r2, #7
+ 162              	.LVL25:
+ 163 0074 F0E7     		b	.L5
+ 164              	.LVL26:
+ 165              	.L16:
+  57:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 166              		.loc 2 57 0
+ 167 0076 0822     		movs	r2, #8
+ 168              	.LVL27:
+ 169 0078 EEE7     		b	.L5
+ 170              	.LVL28:
+ 171              	.L17:
+  60:../system/include/modbus_rtu/rtu_exception_t.h **** 	}
+ 172              		.loc 2 60 0
+ 173 007a 0922     		movs	r2, #9
+ 174              	.LVL29:
+ 175 007c ECE7     		b	.L5
+ 176              	.LVL30:
+ 177              	.L18:
+  63:../system/include/modbus_rtu/rtu_exception_t.h **** 		out = RTU_EXCEPTION_GW_TARGET_NAVAIBLE;
+ 178              		.loc 2 63 0
+ 179 007e 0A22     		movs	r2, #10
+ 180              	.LVL31:
+ 181 0080 EAE7     		b	.L5
+ 182              	.LVL32:
+ 183              	.L24:
+ 184              	.LBE7:
+ 185              	.LBE8:
+  74:../system/src/modbus_rtu/rtu_parser.c **** 				// fetch the function result lenght in bytes
+ 186              		.loc 1 74 0
+ 187 0082 1388     		ldrh	r3, [r2]
+ 188              	.LVL33:
+ 189 0084 AB42     		cmp	r3, r5
+ 190 0086 01D0     		beq	.L25
+  91:../system/src/modbus_rtu/rtu_parser.c **** 			}
+ 191              		.loc 1 91 0
+ 192 0088 0720     		movs	r0, #7
+ 193              	.LVL34:
+ 194 008a 16E0     		b	.L3
+ 195              	.LVL35:
+ 196              	.L25:
+  76:../system/src/modbus_rtu/rtu_parser.c **** 
+ 197              		.loc 1 76 0
+ 198 008c 8478     		ldrb	r4, [r0, #2]	@ zero_extendqisi2
+ 199              	.LVL36:
+  79:../system/src/modbus_rtu/rtu_parser.c **** 
+ 200              		.loc 1 79 0
+ 201 008e 6408     		lsrs	r4, r4, #1
+ 202              	.LVL37:
+ 203 0090 9470     		strb	r4, [r2, #2]
+ 204              	.LVL38:
+ 205              	.LBB9:
+  82:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+ 206              		.loc 1 82 0
+ 207 0092 0023     		movs	r3, #0
+ 208              	.LBE9:
+  37:../system/src/modbus_rtu/rtu_parser.c **** 
+ 209              		.loc 1 37 0
+ 210 0094 0321     		movs	r1, #3
+ 211              	.LBB10:
+  82:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+ 212              		.loc 1 82 0
+ 213 0096 09E0     		b	.L6
+ 214              	.LVL39:
+ 215              	.L7:
+  83:../system/src/modbus_rtu/rtu_parser.c **** 
+ 216              		.loc 1 83 0 discriminator 4
+ 217 0098 465C     		ldrb	r6, [r0, r1]	@ zero_extendqisi2
+ 218 009a 4D1C     		adds	r5, r1, #1
+ 219 009c 455D     		ldrb	r5, [r0, r5]	@ zero_extendqisi2
+ 220 009e 45EA0625 		orr	r5, r5, r6, lsl #8
+ 221 00a2 02EB4306 		add	r6, r2, r3, lsl #1
+ 222 00a6 F580     		strh	r5, [r6, #6]	@ movhi
+  86:../system/src/modbus_rtu/rtu_parser.c **** 				}
+ 223              		.loc 1 86 0 discriminator 4
+ 224 00a8 0231     		adds	r1, r1, #2
+ 225              	.LVL40:
+  82:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+ 226              		.loc 1 82 0 discriminator 4
+ 227 00aa 0133     		adds	r3, r3, #1
+ 228              	.LVL41:
+ 229              	.L6:
+  82:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+ 230              		.loc 1 82 0 is_stmt 0 discriminator 1
+ 231 00ac 9C42     		cmp	r4, r3
+ 232 00ae 06DD     		ble	.L21
+  82:../system/src/modbus_rtu/rtu_parser.c **** 					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
+ 233              		.loc 1 82 0 discriminator 3
+ 234 00b0 012B     		cmp	r3, #1
+ 235 00b2 F1DD     		ble	.L7
+ 236              	.LBE10:
+  88:../system/src/modbus_rtu/rtu_parser.c **** 			}
+ 237              		.loc 1 88 0 is_stmt 1
+ 238 00b4 0020     		movs	r0, #0
+ 239              	.LVL42:
+ 240              	.LBB11:
+ 241 00b6 00E0     		b	.L3
+ 242              	.LVL43:
+ 243              	.L8:
+ 244              	.LBE11:
+  49:../system/src/modbus_rtu/rtu_parser.c **** 	}
+ 245              		.loc 1 49 0
+ 246 00b8 0120     		movs	r0, #1
+ 247              	.LVL44:
+ 248              	.L3:
+  99:../system/src/modbus_rtu/rtu_parser.c **** 		}
+ 100:../system/src/modbus_rtu/rtu_parser.c **** 	}
+ 101:../system/src/modbus_rtu/rtu_parser.c **** 
+ 102:../system/src/modbus_rtu/rtu_parser.c **** 	return retval;
+ 103:../system/src/modbus_rtu/rtu_parser.c **** }
+ 249              		.loc 1 103 0
+ 250 00ba 70BC     		pop	{r4, r5, r6}
+ 251              		.cfi_remember_state
+ 252              		.cfi_restore 6
+ 253              		.cfi_restore 5
+ 254              		.cfi_restore 4
+ 255              		.cfi_def_cfa_offset 0
+ 256 00bc 7047     		bx	lr
+ 257              	.LVL45:
+ 258              	.L21:
+ 259              		.cfi_restore_state
+  88:../system/src/modbus_rtu/rtu_parser.c **** 			}
+ 260              		.loc 1 88 0
+ 261 00be 0020     		movs	r0, #0
+ 262              	.LVL46:
+ 263 00c0 FBE7     		b	.L3
+ 264              		.cfi_endproc
+ 265              	.LFE1:
+ 267              		.text
+ 268              	.Letext0:
+ 269              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 270              		.file 4 "../system/include/modbus_rtu/rtu_register_data_t.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rtu_parser.c
+     /tmp/ccBD3Wr3.s:16     .text.rtu_parser_03_04_registers:0000000000000000 $t
+     /tmp/ccBD3Wr3.s:23     .text.rtu_parser_03_04_registers:0000000000000000 rtu_parser_03_04_registers
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.rtu_configuration.h.9.225559723a46d58da796e0ac6cb0b2ac
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+
+NO UNDEFINED SYMBOLS

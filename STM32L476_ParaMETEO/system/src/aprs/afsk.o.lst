@@ -1,0 +1,1951 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"afsk.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.fifo_isempty,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	fifo_isempty:
+  25              	.LFB0:
+  26              		.file 1 "../system/src/aprs/afsk.c"
+   1:../system/src/aprs/afsk.c **** 
+   2:../system/src/aprs/afsk.c **** #include "afsk.h"
+   3:../system/src/aprs/afsk.c **** 
+   4:../system/src/aprs/afsk.c **** #include <string.h> /* memset */
+   5:../system/src/aprs/afsk.c **** #include <math.h>
+   6:../system/src/aprs/afsk.c **** #include <stdlib.h>
+   7:../system/src/aprs/afsk.c **** 
+   8:../system/src/aprs/afsk.c **** #include <dac.h>
+   9:../system/src/aprs/afsk.c **** #include <ax25.h>
+  10:../system/src/aprs/afsk.c **** 
+  11:../system/src/aprs/afsk.c **** 
+  12:../system/src/aprs/afsk.c **** #define 	BIT_DIFFER(bitline1, bitline2) (((bitline1) ^ (bitline2)) & 0x01)
+  13:../system/src/aprs/afsk.c **** #define 	EDGE_FOUND(bitline)	BIT_DIFFER((bitline), (bitline) >> 1)
+  14:../system/src/aprs/afsk.c **** #define 	SWITCH_TONE(inc)  (((inc) == MARK_INC) ? SPACE_INC : MARK_INC)
+  15:../system/src/aprs/afsk.c **** 
+  16:../system/src/aprs/afsk.c **** #define M_PI 3.1415
+  17:../system/src/aprs/afsk.c **** 
+  18:../system/src/aprs/afsk.c **** static int16_t data[SAMPLEPERBIT];
+  19:../system/src/aprs/afsk.c **** static int16_t corr_mark_i[SAMPLEPERBIT]; /* sin 1200 Hz */
+  20:../system/src/aprs/afsk.c **** static int16_t corr_mark_q[SAMPLEPERBIT]; /* cos 1200 Hz */
+  21:../system/src/aprs/afsk.c **** static int16_t corr_space_i[SAMPLEPERBIT]; /* sin 2200 Hz */
+  22:../system/src/aprs/afsk.c **** static int16_t corr_space_q[SAMPLEPERBIT]; /* cos 2200 Hz */
+  23:../system/src/aprs/afsk.c **** 
+  24:../system/src/aprs/afsk.c **** 
+  25:../system/src/aprs/afsk.c **** static uint8_t ptr=0;
+  26:../system/src/aprs/afsk.c **** 
+  27:../system/src/aprs/afsk.c **** char PersistRand;
+  28:../system/src/aprs/afsk.c **** char DrawCounter;
+  29:../system/src/aprs/afsk.c **** 
+  30:../system/src/aprs/afsk.c **** extern unsigned short tx10m;
+  31:../system/src/aprs/afsk.c **** 
+  32:../system/src/aprs/afsk.c **** 
+  33:../system/src/aprs/afsk.c **** /**
+  34:../system/src/aprs/afsk.c ****  * Sine table for the first quarter of wave.
+  35:../system/src/aprs/afsk.c ****  * The rest of the wave is computed from this first quarter.
+  36:../system/src/aprs/afsk.c ****  * This table is used to generate the modulated data.
+  37:../system/src/aprs/afsk.c ****  */
+  38:../system/src/aprs/afsk.c **** static const uint8_t sin_table[] = {
+  39:../system/src/aprs/afsk.c **** 
+  40:../system/src/aprs/afsk.c **** 	128, 129, 131, 132, 134, 135, 137, 138, 140, 142, 143, 145, 146, 148, 149, 151,
+  41:../system/src/aprs/afsk.c **** 	152, 154, 155, 157, 158, 160, 162, 163, 165, 166, 167, 169, 170, 172, 173, 175,
+  42:../system/src/aprs/afsk.c **** 	176, 178, 179, 181, 182, 183, 185, 186, 188, 189, 190, 192, 193, 194, 196, 197,
+  43:../system/src/aprs/afsk.c **** 	198, 200, 201, 202, 203, 205, 206, 207, 208, 210, 211, 212, 213, 214, 215, 217,
+  44:../system/src/aprs/afsk.c **** 	218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
+  45:../system/src/aprs/afsk.c **** 	234, 234, 235, 236, 237, 238, 238, 239, 240, 241, 241, 242, 243, 243, 244, 245,
+  46:../system/src/aprs/afsk.c **** 	245, 246, 246, 247, 248, 248, 249, 249, 250, 250, 250, 251, 251, 252, 252, 252,
+  47:../system/src/aprs/afsk.c **** 	253, 253, 253, 253, 254, 254, 254, 254, 254, 255, 255, 255, 255, 255, 255, 255,
+  48:../system/src/aprs/afsk.c **** 
+  49:../system/src/aprs/afsk.c **** };
+  50:../system/src/aprs/afsk.c **** 
+  51:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  52:../system/src/aprs/afsk.c **** static bool fifo_isempty(const FIFOBuffer *fb) {
+  27              		.loc 1 52 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  53:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  54:../system/src/aprs/afsk.c **** 
+  55:../system/src/aprs/afsk.c **** 	return fb->head == fb->tail;
+  33              		.loc 1 55 0
+  34 0000 0268     		ldr	r2, [r0]
+  35 0002 4068     		ldr	r0, [r0, #4]
+  36              	.LVL1:
+  56:../system/src/aprs/afsk.c **** 
+  57:../system/src/aprs/afsk.c **** }
+  37              		.loc 1 57 0
+  38 0004 8242     		cmp	r2, r0
+  39 0006 14BF     		ite	ne
+  40 0008 0020     		movne	r0, #0
+  41 000a 0120     		moveq	r0, #1
+  42 000c 7047     		bx	lr
+  43              		.cfi_endproc
+  44              	.LFE0:
+  46              		.section	.text.fifo_isfull,"ax",%progbits
+  47              		.align	1
+  48              		.syntax unified
+  49              		.thumb
+  50              		.thumb_func
+  51              		.fpu fpv4-sp-d16
+  53              	fifo_isfull:
+  54              	.LFB1:
+  58:../system/src/aprs/afsk.c **** 
+  59:../system/src/aprs/afsk.c **** 
+  60:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  61:../system/src/aprs/afsk.c **** static bool fifo_isfull(const FIFOBuffer *fb) {
+  55              		.loc 1 61 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  60              	.LVL2:
+  62:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  63:../system/src/aprs/afsk.c **** 
+  64:../system/src/aprs/afsk.c **** 	return ((fb->head == fb->begin) && (fb->tail == fb->end)) || (fb->tail == fb->head - 1);
+  61              		.loc 1 64 0
+  62 0000 0268     		ldr	r2, [r0]
+  63 0002 8368     		ldr	r3, [r0, #8]
+  64 0004 9A42     		cmp	r2, r3
+  65 0006 06D0     		beq	.L7
+  66              	.L3:
+  67              		.loc 1 64 0 is_stmt 0 discriminator 4
+  68 0008 4268     		ldr	r2, [r0, #4]
+  69 000a 0368     		ldr	r3, [r0]
+  70 000c 013B     		subs	r3, r3, #1
+  71 000e 9A42     		cmp	r2, r3
+  72 0010 07D0     		beq	.L8
+  73              		.loc 1 64 0
+  74 0012 0020     		movs	r0, #0
+  75              	.LVL3:
+  65:../system/src/aprs/afsk.c **** 
+  66:../system/src/aprs/afsk.c **** }
+  76              		.loc 1 66 0 is_stmt 1
+  77 0014 7047     		bx	lr
+  78              	.LVL4:
+  79              	.L7:
+  64:../system/src/aprs/afsk.c **** 
+  80              		.loc 1 64 0 discriminator 1
+  81 0016 4268     		ldr	r2, [r0, #4]
+  82 0018 C368     		ldr	r3, [r0, #12]
+  83 001a 9A42     		cmp	r2, r3
+  84 001c F4D1     		bne	.L3
+  64:../system/src/aprs/afsk.c **** 
+  85              		.loc 1 64 0 is_stmt 0
+  86 001e 0120     		movs	r0, #1
+  87              	.LVL5:
+  88 0020 7047     		bx	lr
+  89              	.LVL6:
+  90              	.L8:
+  91 0022 0120     		movs	r0, #1
+  92              	.LVL7:
+  93 0024 7047     		bx	lr
+  94              		.cfi_endproc
+  95              	.LFE1:
+  97              		.section	.text.fifo_push,"ax",%progbits
+  98              		.align	1
+  99              		.syntax unified
+ 100              		.thumb
+ 101              		.thumb_func
+ 102              		.fpu fpv4-sp-d16
+ 104              	fifo_push:
+ 105              	.LFB2:
+  67:../system/src/aprs/afsk.c **** 
+  68:../system/src/aprs/afsk.c **** 
+  69:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  70:../system/src/aprs/afsk.c **** static void fifo_push(FIFOBuffer *fb, uint8_t c) {
+ 106              		.loc 1 70 0 is_stmt 1
+ 107              		.cfi_startproc
+ 108              		@ args = 0, pretend = 0, frame = 0
+ 109              		@ frame_needed = 0, uses_anonymous_args = 0
+ 110              		@ link register save eliminated.
+ 111              	.LVL8:
+  71:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  72:../system/src/aprs/afsk.c **** 
+  73:../system/src/aprs/afsk.c **** 	/* Write at tail position */
+  74:../system/src/aprs/afsk.c **** 	*(fb->tail) = c;
+ 112              		.loc 1 74 0
+ 113 0000 4368     		ldr	r3, [r0, #4]
+ 114 0002 1970     		strb	r1, [r3]
+  75:../system/src/aprs/afsk.c **** 
+  76:../system/src/aprs/afsk.c **** 	if (fb->tail == fb->end)
+ 115              		.loc 1 76 0
+ 116 0004 4268     		ldr	r2, [r0, #4]
+ 117 0006 C368     		ldr	r3, [r0, #12]
+ 118 0008 9A42     		cmp	r2, r3
+ 119 000a 03D0     		beq	.L12
+  77:../system/src/aprs/afsk.c **** 	{
+  78:../system/src/aprs/afsk.c **** 		/* wrap tail around */
+  79:../system/src/aprs/afsk.c **** 		fb->tail = fb->begin;
+  80:../system/src/aprs/afsk.c **** 	}
+  81:../system/src/aprs/afsk.c **** 	else
+  82:../system/src/aprs/afsk.c **** 	{
+  83:../system/src/aprs/afsk.c **** 		/* Move tail forward */
+  84:../system/src/aprs/afsk.c **** 		fb->tail++;
+ 120              		.loc 1 84 0
+ 121 000c 4368     		ldr	r3, [r0, #4]
+ 122 000e 0133     		adds	r3, r3, #1
+ 123 0010 4360     		str	r3, [r0, #4]
+  85:../system/src/aprs/afsk.c **** 	}
+  86:../system/src/aprs/afsk.c **** 
+  87:../system/src/aprs/afsk.c **** }
+ 124              		.loc 1 87 0
+ 125 0012 7047     		bx	lr
+ 126              	.L12:
+  79:../system/src/aprs/afsk.c **** 	}
+ 127              		.loc 1 79 0
+ 128 0014 8368     		ldr	r3, [r0, #8]
+ 129 0016 4360     		str	r3, [r0, #4]
+ 130 0018 7047     		bx	lr
+ 131              		.cfi_endproc
+ 132              	.LFE2:
+ 134              		.section	.text.fifo_pop,"ax",%progbits
+ 135              		.align	1
+ 136              		.syntax unified
+ 137              		.thumb
+ 138              		.thumb_func
+ 139              		.fpu fpv4-sp-d16
+ 141              	fifo_pop:
+ 142              	.LFB3:
+  88:../system/src/aprs/afsk.c **** 
+  89:../system/src/aprs/afsk.c **** 
+  90:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  91:../system/src/aprs/afsk.c **** static uint8_t fifo_pop(FIFOBuffer *fb) {
+ 143              		.loc 1 91 0
+ 144              		.cfi_startproc
+ 145              		@ args = 0, pretend = 0, frame = 0
+ 146              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147              		@ link register save eliminated.
+ 148              	.LVL9:
+  92:../system/src/aprs/afsk.c **** /**************************************************************************************************
+  93:../system/src/aprs/afsk.c **** 
+  94:../system/src/aprs/afsk.c **** 	if (fb->head == fb->end)
+ 149              		.loc 1 94 0
+ 150 0000 0268     		ldr	r2, [r0]
+ 151 0002 C368     		ldr	r3, [r0, #12]
+ 152 0004 9A42     		cmp	r2, r3
+ 153 0006 04D0     		beq	.L16
+  95:../system/src/aprs/afsk.c **** 	{
+  96:../system/src/aprs/afsk.c **** 		/* wrap head around */
+  97:../system/src/aprs/afsk.c **** 		fb->head = fb->begin;
+  98:../system/src/aprs/afsk.c **** 		return *(fb->end);
+  99:../system/src/aprs/afsk.c **** 	}
+ 100:../system/src/aprs/afsk.c **** 	else
+ 101:../system/src/aprs/afsk.c **** 	{
+ 102:../system/src/aprs/afsk.c **** 		/* move head forward */
+ 103:../system/src/aprs/afsk.c **** 		return *(fb->head++);
+ 154              		.loc 1 103 0
+ 155 0008 0368     		ldr	r3, [r0]
+ 156 000a 5A1C     		adds	r2, r3, #1
+ 157 000c 0260     		str	r2, [r0]
+ 158 000e 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 159              	.LVL10:
+ 104:../system/src/aprs/afsk.c **** 	}
+ 105:../system/src/aprs/afsk.c **** 
+ 106:../system/src/aprs/afsk.c **** }
+ 160              		.loc 1 106 0
+ 161 0010 7047     		bx	lr
+ 162              	.LVL11:
+ 163              	.L16:
+  97:../system/src/aprs/afsk.c **** 		return *(fb->end);
+ 164              		.loc 1 97 0
+ 165 0012 8268     		ldr	r2, [r0, #8]
+ 166 0014 0260     		str	r2, [r0]
+  98:../system/src/aprs/afsk.c **** 	}
+ 167              		.loc 1 98 0
+ 168 0016 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 169              	.LVL12:
+ 170 0018 7047     		bx	lr
+ 171              		.cfi_endproc
+ 172              	.LFE3:
+ 174              		.section	.text.fifo_flush,"ax",%progbits
+ 175              		.align	1
+ 176              		.syntax unified
+ 177              		.thumb
+ 178              		.thumb_func
+ 179              		.fpu fpv4-sp-d16
+ 181              	fifo_flush:
+ 182              	.LFB4:
+ 107:../system/src/aprs/afsk.c **** 
+ 108:../system/src/aprs/afsk.c **** 
+ 109:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 110:../system/src/aprs/afsk.c **** static void fifo_flush(FIFOBuffer *fb) {
+ 183              		.loc 1 110 0
+ 184              		.cfi_startproc
+ 185              		@ args = 0, pretend = 0, frame = 0
+ 186              		@ frame_needed = 0, uses_anonymous_args = 0
+ 187              		@ link register save eliminated.
+ 188              	.LVL13:
+ 111:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 112:../system/src/aprs/afsk.c **** 
+ 113:../system/src/aprs/afsk.c **** 	fb->head = fb->tail;
+ 189              		.loc 1 113 0
+ 190 0000 4368     		ldr	r3, [r0, #4]
+ 191 0002 0360     		str	r3, [r0]
+ 114:../system/src/aprs/afsk.c **** 
+ 115:../system/src/aprs/afsk.c **** }
+ 192              		.loc 1 115 0
+ 193 0004 7047     		bx	lr
+ 194              		.cfi_endproc
+ 195              	.LFE4:
+ 197              		.section	.text.fifo_init,"ax",%progbits
+ 198              		.align	1
+ 199              		.syntax unified
+ 200              		.thumb
+ 201              		.thumb_func
+ 202              		.fpu fpv4-sp-d16
+ 204              	fifo_init:
+ 205              	.LFB5:
+ 116:../system/src/aprs/afsk.c **** 
+ 117:../system/src/aprs/afsk.c **** 
+ 118:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 119:../system/src/aprs/afsk.c **** static void fifo_init(FIFOBuffer *fb, uint8_t *buf, uint16_t size) {
+ 206              		.loc 1 119 0
+ 207              		.cfi_startproc
+ 208              		@ args = 0, pretend = 0, frame = 0
+ 209              		@ frame_needed = 0, uses_anonymous_args = 0
+ 210              		@ link register save eliminated.
+ 211              	.LVL14:
+ 120:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 121:../system/src/aprs/afsk.c **** 
+ 122:../system/src/aprs/afsk.c **** 	fb->head = fb->tail = fb->begin = buf;
+ 212              		.loc 1 122 0
+ 213 0000 8160     		str	r1, [r0, #8]
+ 214 0002 4160     		str	r1, [r0, #4]
+ 215 0004 0160     		str	r1, [r0]
+ 123:../system/src/aprs/afsk.c **** 	fb->end = buf + size - 1;
+ 216              		.loc 1 123 0
+ 217 0006 013A     		subs	r2, r2, #1
+ 218              	.LVL15:
+ 219 0008 1144     		add	r1, r1, r2
+ 220              	.LVL16:
+ 221 000a C160     		str	r1, [r0, #12]
+ 124:../system/src/aprs/afsk.c **** 
+ 125:../system/src/aprs/afsk.c **** }
+ 222              		.loc 1 125 0
+ 223 000c 7047     		bx	lr
+ 224              		.cfi_endproc
+ 225              	.LFE5:
+ 227              		.section	.text.sin_sample,"ax",%progbits
+ 228              		.align	1
+ 229              		.syntax unified
+ 230              		.thumb
+ 231              		.thumb_func
+ 232              		.fpu fpv4-sp-d16
+ 234              	sin_sample:
+ 235              	.LFB6:
+ 126:../system/src/aprs/afsk.c **** 
+ 127:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 128:../system/src/aprs/afsk.c **** static uint8_t sin_sample(uint16_t idx) {
+ 236              		.loc 1 128 0
+ 237              		.cfi_startproc
+ 238              		@ args = 0, pretend = 0, frame = 0
+ 239              		@ frame_needed = 0, uses_anonymous_args = 0
+ 240              		@ link register save eliminated.
+ 241              	.LVL17:
+ 129:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 130:../system/src/aprs/afsk.c **** 
+ 131:../system/src/aprs/afsk.c **** 	uint8_t data;
+ 132:../system/src/aprs/afsk.c **** 	uint16_t new_idx = idx % (SIN_LEN / 2);
+ 242              		.loc 1 132 0
+ 243 0000 C3B2     		uxtb	r3, r0
+ 244              	.LVL18:
+ 133:../system/src/aprs/afsk.c **** 	new_idx = (new_idx >= (SIN_LEN / 4)) ? (SIN_LEN / 2 - new_idx - 1) : new_idx;
+ 245              		.loc 1 133 0
+ 246 0002 7F2B     		cmp	r3, #127
+ 247 0004 02D9     		bls	.L20
+ 248              		.loc 1 133 0 is_stmt 0 discriminator 1
+ 249 0006 C3F1FF03 		rsb	r3, r3, #255
+ 250              	.LVL19:
+ 251 000a 9BB2     		uxth	r3, r3
+ 252              	.L20:
+ 253              	.LVL20:
+ 134:../system/src/aprs/afsk.c **** 
+ 135:../system/src/aprs/afsk.c **** 	data = pgm_read8(&sin_table[new_idx]);
+ 254              		.loc 1 135 0 is_stmt 1 discriminator 4
+ 255 000c 034A     		ldr	r2, .L22
+ 256 000e D35C     		ldrb	r3, [r2, r3]	@ zero_extendqisi2
+ 257              	.LVL21:
+ 136:../system/src/aprs/afsk.c **** 
+ 137:../system/src/aprs/afsk.c **** 	return (idx >= (SIN_LEN / 2)) ? (255 - data) : data;
+ 258              		.loc 1 137 0 discriminator 4
+ 259 0010 FF28     		cmp	r0, #255
+ 260 0012 01D9     		bls	.L21
+ 261              		.loc 1 137 0 is_stmt 0 discriminator 1
+ 262 0014 DB43     		mvns	r3, r3
+ 263              	.LVL22:
+ 264 0016 DBB2     		uxtb	r3, r3
+ 265              	.LVL23:
+ 266              	.L21:
+ 138:../system/src/aprs/afsk.c **** 
+ 139:../system/src/aprs/afsk.c **** }
+ 267              		.loc 1 139 0 is_stmt 1 discriminator 4
+ 268 0018 1846     		mov	r0, r3
+ 269              	.LVL24:
+ 270 001a 7047     		bx	lr
+ 271              	.L23:
+ 272              		.align	2
+ 273              	.L22:
+ 274 001c 00000000 		.word	.LANCHOR0
+ 275              		.cfi_endproc
+ 276              	.LFE6:
+ 278              		.section	.text.hdlc_parse,"ax",%progbits
+ 279              		.align	1
+ 280              		.syntax unified
+ 281              		.thumb
+ 282              		.thumb_func
+ 283              		.fpu fpv4-sp-d16
+ 285              	hdlc_parse:
+ 286              	.LFB7:
+ 140:../system/src/aprs/afsk.c **** 
+ 141:../system/src/aprs/afsk.c **** 
+ 142:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 143:../system/src/aprs/afsk.c **** static bool hdlc_parse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
+ 287              		.loc 1 143 0
+ 288              		.cfi_startproc
+ 289              		@ args = 0, pretend = 0, frame = 0
+ 290              		@ frame_needed = 0, uses_anonymous_args = 0
+ 291              	.LVL25:
+ 292 0000 70B5     		push	{r4, r5, r6, lr}
+ 293              		.cfi_def_cfa_offset 16
+ 294              		.cfi_offset 4, -16
+ 295              		.cfi_offset 5, -12
+ 296              		.cfi_offset 6, -8
+ 297              		.cfi_offset 14, -4
+ 298 0002 0446     		mov	r4, r0
+ 299 0004 1546     		mov	r5, r2
+ 300              	.LVL26:
+ 144:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 145:../system/src/aprs/afsk.c **** 
+ 146:../system/src/aprs/afsk.c **** 	bool ret = true;
+ 147:../system/src/aprs/afsk.c **** 
+ 148:../system/src/aprs/afsk.c **** 	hdlc->demod_bits <<= 1;
+ 301              		.loc 1 148 0
+ 302 0006 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 303 0008 5B00     		lsls	r3, r3, #1
+ 304 000a DBB2     		uxtb	r3, r3
+ 149:../system/src/aprs/afsk.c **** 	hdlc->demod_bits |= bit ? 1 : 0;
+ 305              		.loc 1 149 0
+ 306 000c 49B2     		sxtb	r1, r1
+ 307 000e 1943     		orrs	r1, r1, r3
+ 308              	.LVL27:
+ 309 0010 C9B2     		uxtb	r1, r1
+ 310 0012 0170     		strb	r1, [r0]
+ 150:../system/src/aprs/afsk.c **** 
+ 151:../system/src/aprs/afsk.c **** 	/* HDLC Flag */
+ 152:../system/src/aprs/afsk.c **** 	if (hdlc->demod_bits == HDLC_FLAG)
+ 311              		.loc 1 152 0
+ 312 0014 7E29     		cmp	r1, #126
+ 313 0016 34D0     		beq	.L41
+ 153:../system/src/aprs/afsk.c **** 	{
+ 154:../system/src/aprs/afsk.c **** 		if (!fifo_isfull(fifo))
+ 155:../system/src/aprs/afsk.c **** 		{
+ 156:../system/src/aprs/afsk.c **** 			/* modification by sp8ebc */
+ 157:../system/src/aprs/afsk.c **** 			if(hdlc->s == false && hdlc->raw_dcd == true)
+ 158:../system/src/aprs/afsk.c **** 			hdlc->raw_dcd = false; 
+ 159:../system/src/aprs/afsk.c **** 			/***************************/ 
+ 160:../system/src/aprs/afsk.c **** 			fifo_push(fifo, HDLC_FLAG);
+ 161:../system/src/aprs/afsk.c **** 			hdlc->rxstart = true;
+ 162:../system/src/aprs/afsk.c **** 		}
+ 163:../system/src/aprs/afsk.c **** 		else
+ 164:../system/src/aprs/afsk.c **** 		{
+ 165:../system/src/aprs/afsk.c **** 			ret = false;
+ 166:../system/src/aprs/afsk.c **** 			hdlc->rxstart = false;
+ 167:../system/src/aprs/afsk.c **** 			fifo_flush(fifo);
+ 168:../system/src/aprs/afsk.c **** 		}
+ 169:../system/src/aprs/afsk.c **** 
+ 170:../system/src/aprs/afsk.c **** 		hdlc->currchar = 0;
+ 171:../system/src/aprs/afsk.c **** 		hdlc->bit_idx = 0;
+ 172:../system/src/aprs/afsk.c **** 		hdlc->s = true;	  //
+ 173:../system/src/aprs/afsk.c **** 		return ret;
+ 174:../system/src/aprs/afsk.c **** 	}
+ 175:../system/src/aprs/afsk.c **** 
+ 176:../system/src/aprs/afsk.c **** 	/* Reset */
+ 177:../system/src/aprs/afsk.c **** 	if ((hdlc->demod_bits & HDLC_RESET) == HDLC_RESET)
+ 314              		.loc 1 177 0
+ 315 0018 01F07F03 		and	r3, r1, #127
+ 316 001c 7F2B     		cmp	r3, #127
+ 317 001e 4CD0     		beq	.L42
+ 178:../system/src/aprs/afsk.c **** 	{
+ 179:../system/src/aprs/afsk.c **** 		hdlc->rxstart = false;
+ 180:../system/src/aprs/afsk.c **** 		hdlc->s = false;	//
+ 181:../system/src/aprs/afsk.c **** 		return ret;
+ 182:../system/src/aprs/afsk.c **** 	}
+ 183:../system/src/aprs/afsk.c **** 
+ 184:../system/src/aprs/afsk.c **** 	if (!hdlc->rxstart) return ret;
+ 318              		.loc 1 184 0
+ 319 0020 C678     		ldrb	r6, [r0, #3]	@ zero_extendqisi2
+ 320 0022 002E     		cmp	r6, #0
+ 321 0024 67D0     		beq	.L39
+ 185:../system/src/aprs/afsk.c **** 
+ 186:../system/src/aprs/afsk.c **** 	/* Stuffed bit */
+ 187:../system/src/aprs/afsk.c **** 	if ((hdlc->demod_bits & 0x3f) == 0x3e) return ret;
+ 322              		.loc 1 187 0
+ 323 0026 01F03F03 		and	r3, r1, #63
+ 324 002a 3E2B     		cmp	r3, #62
+ 325 002c 64D0     		beq	.L29
+ 188:../system/src/aprs/afsk.c **** 
+ 189:../system/src/aprs/afsk.c **** 	if (hdlc->demod_bits & 0x01) hdlc->currchar |= 0x80;
+ 326              		.loc 1 189 0
+ 327 002e 11F0010F 		tst	r1, #1
+ 328 0032 03D0     		beq	.L31
+ 329              		.loc 1 189 0 is_stmt 0 discriminator 1
+ 330 0034 8378     		ldrb	r3, [r0, #2]	@ zero_extendqisi2
+ 331 0036 63F07F03 		orn	r3, r3, #127
+ 332 003a 8370     		strb	r3, [r0, #2]
+ 333              	.L31:
+ 190:../system/src/aprs/afsk.c **** 
+ 191:../system/src/aprs/afsk.c **** 	if (++hdlc->bit_idx >= 8)
+ 334              		.loc 1 191 0 is_stmt 1
+ 335 003c 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 336 003e 0133     		adds	r3, r3, #1
+ 337 0040 DBB2     		uxtb	r3, r3
+ 338 0042 6370     		strb	r3, [r4, #1]
+ 339 0044 072B     		cmp	r3, #7
+ 340 0046 52D9     		bls	.L32
+ 192:../system/src/aprs/afsk.c **** 	{
+ 193:../system/src/aprs/afsk.c **** 		if ((hdlc->currchar == HDLC_FLAG || hdlc->currchar == HDLC_RESET || hdlc->currchar == AX25_ESC))
+ 341              		.loc 1 193 0
+ 342 0048 A278     		ldrb	r2, [r4, #2]	@ zero_extendqisi2
+ 343              	.LVL28:
+ 344 004a A2F17E03 		sub	r3, r2, #126
+ 345 004e DBB2     		uxtb	r3, r3
+ 346 0050 012B     		cmp	r3, #1
+ 347 0052 37D9     		bls	.L33
+ 348              		.loc 1 193 0 is_stmt 0 discriminator 1
+ 349 0054 1B2A     		cmp	r2, #27
+ 350 0056 35D0     		beq	.L33
+ 351              	.LVL29:
+ 352              	.L34:
+ 194:../system/src/aprs/afsk.c **** 		{
+ 195:../system/src/aprs/afsk.c **** 			if (!fifo_isfull(fifo))
+ 196:../system/src/aprs/afsk.c **** 			{
+ 197:../system/src/aprs/afsk.c **** 				fifo_push(fifo, AX25_ESC);
+ 198:../system/src/aprs/afsk.c **** 			}
+ 199:../system/src/aprs/afsk.c **** 			else
+ 200:../system/src/aprs/afsk.c **** 			{
+ 201:../system/src/aprs/afsk.c **** 				hdlc->rxstart = false;
+ 202:../system/src/aprs/afsk.c **** 				ret = false;
+ 203:../system/src/aprs/afsk.c **** 				fifo_flush(fifo);
+ 204:../system/src/aprs/afsk.c **** 			}
+ 205:../system/src/aprs/afsk.c **** 		}
+ 206:../system/src/aprs/afsk.c **** 
+ 207:../system/src/aprs/afsk.c **** 		if (!fifo_isfull(fifo))
+ 353              		.loc 1 207 0 is_stmt 1
+ 354 0058 2846     		mov	r0, r5
+ 355 005a FFF7FEFF 		bl	fifo_isfull
+ 356              	.LVL30:
+ 357 005e 0028     		cmp	r0, #0
+ 358 0060 3FD1     		bne	.L36
+ 208:../system/src/aprs/afsk.c **** 		{
+ 209:../system/src/aprs/afsk.c **** 			fifo_push(fifo, hdlc->currchar);
+ 359              		.loc 1 209 0
+ 360 0062 A178     		ldrb	r1, [r4, #2]	@ zero_extendqisi2
+ 361 0064 2846     		mov	r0, r5
+ 362 0066 FFF7FEFF 		bl	fifo_push
+ 363              	.LVL31:
+ 364              	.L37:
+ 210:../system/src/aprs/afsk.c **** 		}
+ 211:../system/src/aprs/afsk.c **** 		else
+ 212:../system/src/aprs/afsk.c **** 		{
+ 213:../system/src/aprs/afsk.c **** 			hdlc->rxstart = false;
+ 214:../system/src/aprs/afsk.c **** 			ret = false;
+ 215:../system/src/aprs/afsk.c **** 			fifo_flush(fifo);
+ 216:../system/src/aprs/afsk.c **** 		}
+ 217:../system/src/aprs/afsk.c **** 		hdlc->currchar = 0;
+ 365              		.loc 1 217 0
+ 366 006a 0023     		movs	r3, #0
+ 367 006c A370     		strb	r3, [r4, #2]
+ 218:../system/src/aprs/afsk.c **** 		hdlc->bit_idx = 0;
+ 368              		.loc 1 218 0
+ 369 006e 6370     		strb	r3, [r4, #1]
+ 219:../system/src/aprs/afsk.c **** 		/*******************************************/
+ 220:../system/src/aprs/afsk.c **** 		if (hdlc->s == true && hdlc->raw_dcd == false)	   //
+ 370              		.loc 1 220 0
+ 371 0070 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 372 0072 1BB1     		cbz	r3, .L38
+ 373              		.loc 1 220 0 is_stmt 0 discriminator 1
+ 374 0074 2379     		ldrb	r3, [r4, #4]	@ zero_extendqisi2
+ 375 0076 0BB9     		cbnz	r3, .L38
+ 221:../system/src/aprs/afsk.c **** 		hdlc->raw_dcd = true;	   //
+ 376              		.loc 1 221 0 is_stmt 1
+ 377 0078 0123     		movs	r3, #1
+ 378 007a 2371     		strb	r3, [r4, #4]
+ 379              	.L38:
+ 222:../system/src/aprs/afsk.c **** 		hdlc->s = false;	  //
+ 380              		.loc 1 222 0
+ 381 007c 0023     		movs	r3, #0
+ 382 007e 6371     		strb	r3, [r4, #5]
+ 383 0080 3AE0     		b	.L29
+ 384              	.LVL32:
+ 385              	.L41:
+ 154:../system/src/aprs/afsk.c **** 		{
+ 386              		.loc 1 154 0
+ 387 0082 1046     		mov	r0, r2
+ 388              	.LVL33:
+ 389 0084 FFF7FEFF 		bl	fifo_isfull
+ 390              	.LVL34:
+ 391 0088 88B9     		cbnz	r0, .L26
+ 157:../system/src/aprs/afsk.c **** 			hdlc->raw_dcd = false; 
+ 392              		.loc 1 157 0
+ 393 008a 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 394 008c 1BB9     		cbnz	r3, .L27
+ 157:../system/src/aprs/afsk.c **** 			hdlc->raw_dcd = false; 
+ 395              		.loc 1 157 0 is_stmt 0 discriminator 1
+ 396 008e 2379     		ldrb	r3, [r4, #4]	@ zero_extendqisi2
+ 397 0090 0BB1     		cbz	r3, .L27
+ 158:../system/src/aprs/afsk.c **** 			/***************************/ 
+ 398              		.loc 1 158 0 is_stmt 1
+ 399 0092 0023     		movs	r3, #0
+ 400 0094 2371     		strb	r3, [r4, #4]
+ 401              	.L27:
+ 160:../system/src/aprs/afsk.c **** 			hdlc->rxstart = true;
+ 402              		.loc 1 160 0
+ 403 0096 7E21     		movs	r1, #126
+ 404 0098 2846     		mov	r0, r5
+ 405 009a FFF7FEFF 		bl	fifo_push
+ 406              	.LVL35:
+ 161:../system/src/aprs/afsk.c **** 		}
+ 407              		.loc 1 161 0
+ 408 009e 0126     		movs	r6, #1
+ 409 00a0 E670     		strb	r6, [r4, #3]
+ 410              	.LVL36:
+ 411              	.L28:
+ 170:../system/src/aprs/afsk.c **** 		hdlc->bit_idx = 0;
+ 412              		.loc 1 170 0
+ 413 00a2 0023     		movs	r3, #0
+ 414 00a4 A370     		strb	r3, [r4, #2]
+ 171:../system/src/aprs/afsk.c **** 		hdlc->s = true;	  //
+ 415              		.loc 1 171 0
+ 416 00a6 6370     		strb	r3, [r4, #1]
+ 172:../system/src/aprs/afsk.c **** 		return ret;
+ 417              		.loc 1 172 0
+ 418 00a8 0123     		movs	r3, #1
+ 419 00aa 6371     		strb	r3, [r4, #5]
+ 173:../system/src/aprs/afsk.c **** 	}
+ 420              		.loc 1 173 0
+ 421 00ac 24E0     		b	.L29
+ 422              	.LVL37:
+ 423              	.L26:
+ 166:../system/src/aprs/afsk.c **** 			fifo_flush(fifo);
+ 424              		.loc 1 166 0
+ 425 00ae 0026     		movs	r6, #0
+ 426 00b0 E670     		strb	r6, [r4, #3]
+ 167:../system/src/aprs/afsk.c **** 		}
+ 427              		.loc 1 167 0
+ 428 00b2 2846     		mov	r0, r5
+ 429 00b4 FFF7FEFF 		bl	fifo_flush
+ 430              	.LVL38:
+ 431 00b8 F3E7     		b	.L28
+ 432              	.LVL39:
+ 433              	.L42:
+ 179:../system/src/aprs/afsk.c **** 		hdlc->s = false;	//
+ 434              		.loc 1 179 0
+ 435 00ba 0023     		movs	r3, #0
+ 436 00bc C370     		strb	r3, [r0, #3]
+ 180:../system/src/aprs/afsk.c **** 		return ret;
+ 437              		.loc 1 180 0
+ 438 00be 4371     		strb	r3, [r0, #5]
+ 181:../system/src/aprs/afsk.c **** 	}
+ 439              		.loc 1 181 0
+ 440 00c0 0126     		movs	r6, #1
+ 441 00c2 19E0     		b	.L29
+ 442              	.LVL40:
+ 443              	.L33:
+ 195:../system/src/aprs/afsk.c **** 			{
+ 444              		.loc 1 195 0
+ 445 00c4 2846     		mov	r0, r5
+ 446              	.LVL41:
+ 447 00c6 FFF7FEFF 		bl	fifo_isfull
+ 448              	.LVL42:
+ 449 00ca 20B9     		cbnz	r0, .L35
+ 197:../system/src/aprs/afsk.c **** 			}
+ 450              		.loc 1 197 0
+ 451 00cc 1B21     		movs	r1, #27
+ 452 00ce 2846     		mov	r0, r5
+ 453 00d0 FFF7FEFF 		bl	fifo_push
+ 454              	.LVL43:
+ 455 00d4 C0E7     		b	.L34
+ 456              	.L35:
+ 201:../system/src/aprs/afsk.c **** 				ret = false;
+ 457              		.loc 1 201 0
+ 458 00d6 0026     		movs	r6, #0
+ 459 00d8 E670     		strb	r6, [r4, #3]
+ 460              	.LVL44:
+ 203:../system/src/aprs/afsk.c **** 			}
+ 461              		.loc 1 203 0
+ 462 00da 2846     		mov	r0, r5
+ 463 00dc FFF7FEFF 		bl	fifo_flush
+ 464              	.LVL45:
+ 465 00e0 BAE7     		b	.L34
+ 466              	.LVL46:
+ 467              	.L36:
+ 213:../system/src/aprs/afsk.c **** 			ret = false;
+ 468              		.loc 1 213 0
+ 469 00e2 0026     		movs	r6, #0
+ 470              	.LVL47:
+ 471 00e4 E670     		strb	r6, [r4, #3]
+ 472              	.LVL48:
+ 215:../system/src/aprs/afsk.c **** 		}
+ 473              		.loc 1 215 0
+ 474 00e6 2846     		mov	r0, r5
+ 475 00e8 FFF7FEFF 		bl	fifo_flush
+ 476              	.LVL49:
+ 477 00ec BDE7     		b	.L37
+ 478              	.LVL50:
+ 479              	.L32:
+ 223:../system/src/aprs/afsk.c **** 		/*******************************************/
+ 224:../system/src/aprs/afsk.c **** 	}
+ 225:../system/src/aprs/afsk.c **** 	else
+ 226:../system/src/aprs/afsk.c **** 	{
+ 227:../system/src/aprs/afsk.c **** 		hdlc->currchar >>= 1;
+ 480              		.loc 1 227 0
+ 481 00ee A378     		ldrb	r3, [r4, #2]	@ zero_extendqisi2
+ 482 00f0 5B08     		lsrs	r3, r3, #1
+ 483 00f2 A370     		strb	r3, [r4, #2]
+ 484 00f4 00E0     		b	.L29
+ 485              	.L39:
+ 184:../system/src/aprs/afsk.c **** 
+ 486              		.loc 1 184 0
+ 487 00f6 0126     		movs	r6, #1
+ 488              	.LVL51:
+ 489              	.L29:
+ 228:../system/src/aprs/afsk.c **** 	}
+ 229:../system/src/aprs/afsk.c **** 
+ 230:../system/src/aprs/afsk.c **** 	return ret;
+ 231:../system/src/aprs/afsk.c **** 
+ 232:../system/src/aprs/afsk.c **** }
+ 490              		.loc 1 232 0
+ 491 00f8 3046     		mov	r0, r6
+ 492 00fa 70BD     		pop	{r4, r5, r6, pc}
+ 493              		.cfi_endproc
+ 494              	.LFE7:
+ 496              		.section	.text.afsk_demod,"ax",%progbits
+ 497              		.align	1
+ 498              		.syntax unified
+ 499              		.thumb
+ 500              		.thumb_func
+ 501              		.fpu fpv4-sp-d16
+ 503              	afsk_demod:
+ 504              	.LFB8:
+ 233:../system/src/aprs/afsk.c **** 
+ 234:../system/src/aprs/afsk.c **** 
+ 235:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 236:../system/src/aprs/afsk.c **** static int afsk_demod(int16_t curr_sample) {
+ 505              		.loc 1 236 0
+ 506              		.cfi_startproc
+ 507              		@ args = 0, pretend = 0, frame = 0
+ 508              		@ frame_needed = 0, uses_anonymous_args = 0
+ 509              		@ link register save eliminated.
+ 510              	.LVL52:
+ 511 0000 F0B4     		push	{r4, r5, r6, r7}
+ 512              		.cfi_def_cfa_offset 16
+ 513              		.cfi_offset 4, -16
+ 514              		.cfi_offset 5, -12
+ 515              		.cfi_offset 6, -8
+ 516              		.cfi_offset 7, -4
+ 517              	.LVL53:
+ 237:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 238:../system/src/aprs/afsk.c **** 
+ 239:../system/src/aprs/afsk.c **** 	uint8_t i;
+ 240:../system/src/aprs/afsk.c **** 	int16_t d;
+ 241:../system/src/aprs/afsk.c **** 	int32_t out_mark_i=0,out_mark_q=0,out_space_i=0,out_space_q=0;
+ 242:../system/src/aprs/afsk.c **** 
+ 243:../system/src/aprs/afsk.c **** 	data[ptr]=curr_sample;
+ 518              		.loc 1 243 0
+ 519 0002 204A     		ldr	r2, .L47
+ 520 0004 1678     		ldrb	r6, [r2]	@ zero_extendqisi2
+ 521 0006 204B     		ldr	r3, .L47+4
+ 522 0008 23F81600 		strh	r0, [r3, r6, lsl #1]	@ movhi
+ 244:../system/src/aprs/afsk.c **** 
+ 245:../system/src/aprs/afsk.c **** 	ptr = (ptr+1)%SAMPLEPERBIT; /* % : Modulo */
+ 523              		.loc 1 245 0
+ 524 000c 0136     		adds	r6, r6, #1
+ 525 000e 7342     		rsbs	r3, r6, #0
+ 526 0010 06F00706 		and	r6, r6, #7
+ 527 0014 03F00703 		and	r3, r3, #7
+ 528 0018 58BF     		it	pl
+ 529 001a 5E42     		rsbpl	r6, r3, #0
+ 530 001c F6B2     		uxtb	r6, r6
+ 531 001e 1670     		strb	r6, [r2]
+ 532              	.LVL54:
+ 241:../system/src/aprs/afsk.c **** 
+ 533              		.loc 1 241 0
+ 534 0020 0021     		movs	r1, #0
+ 535 0022 0D46     		mov	r5, r1
+ 536 0024 0C46     		mov	r4, r1
+ 537 0026 0846     		mov	r0, r1
+ 538              	.LVL55:
+ 246:../system/src/aprs/afsk.c **** 
+ 247:../system/src/aprs/afsk.c **** 	for(i=0;i<SAMPLEPERBIT;i++)
+ 539              		.loc 1 247 0
+ 540 0028 0B46     		mov	r3, r1
+ 541 002a 1BE0     		b	.L44
+ 542              	.LVL56:
+ 543              	.L45:
+ 248:../system/src/aprs/afsk.c **** 	{
+ 249:../system/src/aprs/afsk.c **** 
+ 250:../system/src/aprs/afsk.c **** 		d = data[(ptr+i)%SAMPLEPERBIT];
+ 544              		.loc 1 250 0 discriminator 3
+ 545 002c F218     		adds	r2, r6, r3
+ 546 002e 02F00702 		and	r2, r2, #7
+ 547 0032 154F     		ldr	r7, .L47+4
+ 548 0034 37F91220 		ldrsh	r2, [r7, r2, lsl #1]
+ 549              	.LVL57:
+ 251:../system/src/aprs/afsk.c **** 		out_mark_i += d*corr_mark_i[i];
+ 550              		.loc 1 251 0 discriminator 3
+ 551 0038 144F     		ldr	r7, .L47+8
+ 552 003a 37F91370 		ldrsh	r7, [r7, r3, lsl #1]
+ 553 003e 07FB0200 		mla	r0, r7, r2, r0
+ 554              	.LVL58:
+ 252:../system/src/aprs/afsk.c **** 		out_mark_q += d*corr_mark_q[i];
+ 555              		.loc 1 252 0 discriminator 3
+ 556 0042 134F     		ldr	r7, .L47+12
+ 557 0044 37F91370 		ldrsh	r7, [r7, r3, lsl #1]
+ 558 0048 07FB0244 		mla	r4, r7, r2, r4
+ 559              	.LVL59:
+ 253:../system/src/aprs/afsk.c **** 		out_space_i += d*corr_space_i[i];
+ 560              		.loc 1 253 0 discriminator 3
+ 561 004c 114F     		ldr	r7, .L47+16
+ 562 004e 37F91370 		ldrsh	r7, [r7, r3, lsl #1]
+ 563 0052 07FB0255 		mla	r5, r7, r2, r5
+ 564              	.LVL60:
+ 254:../system/src/aprs/afsk.c **** 		out_space_q += d*corr_space_q[i];
+ 565              		.loc 1 254 0 discriminator 3
+ 566 0056 104F     		ldr	r7, .L47+20
+ 567 0058 37F91370 		ldrsh	r7, [r7, r3, lsl #1]
+ 568 005c 07FB0211 		mla	r1, r7, r2, r1
+ 569              	.LVL61:
+ 247:../system/src/aprs/afsk.c **** 	{
+ 570              		.loc 1 247 0 discriminator 3
+ 571 0060 0133     		adds	r3, r3, #1
+ 572              	.LVL62:
+ 573 0062 DBB2     		uxtb	r3, r3
+ 574              	.LVL63:
+ 575              	.L44:
+ 247:../system/src/aprs/afsk.c **** 	{
+ 576              		.loc 1 247 0 is_stmt 0 discriminator 1
+ 577 0064 072B     		cmp	r3, #7
+ 578 0066 E1D9     		bls	.L45
+ 255:../system/src/aprs/afsk.c **** 	}
+ 256:../system/src/aprs/afsk.c **** 	
+ 257:../system/src/aprs/afsk.c **** 	
+ 258:../system/src/aprs/afsk.c **** 	 
+ 259:../system/src/aprs/afsk.c **** 	return  (out_space_i>>12)*(out_space_i>>12)+
+ 579              		.loc 1 259 0 is_stmt 1
+ 580 0068 2A13     		asrs	r2, r5, #12
+ 260:../system/src/aprs/afsk.c **** 			(out_space_q>>12)*(out_space_q>>12)-
+ 581              		.loc 1 260 0
+ 582 006a 0B13     		asrs	r3, r1, #12
+ 583              	.LVL64:
+ 584 006c 03FB03F3 		mul	r3, r3, r3
+ 259:../system/src/aprs/afsk.c **** 			(out_space_q>>12)*(out_space_q>>12)-
+ 585              		.loc 1 259 0
+ 586 0070 02FB0233 		mla	r3, r2, r2, r3
+ 261:../system/src/aprs/afsk.c **** 			(out_mark_i>>12)*(out_mark_i>>12)-
+ 587              		.loc 1 261 0
+ 588 0074 0013     		asrs	r0, r0, #12
+ 589              	.LVL65:
+ 260:../system/src/aprs/afsk.c **** 			(out_space_q>>12)*(out_space_q>>12)-
+ 590              		.loc 1 260 0
+ 591 0076 00FB1030 		mls	r0, r0, r0, r3
+ 262:../system/src/aprs/afsk.c **** 			(out_mark_q>>12)*(out_mark_q>>12);			  /// wszedzie bylo 11
+ 592              		.loc 1 262 0
+ 593 007a 2413     		asrs	r4, r4, #12
+ 594              	.LVL66:
+ 263:../system/src/aprs/afsk.c **** 
+ 264:../system/src/aprs/afsk.c **** }
+ 595              		.loc 1 264 0
+ 596 007c 04FB1400 		mls	r0, r4, r4, r0
+ 597 0080 F0BC     		pop	{r4, r5, r6, r7}
+ 598              		.cfi_restore 7
+ 599              		.cfi_restore 6
+ 600              		.cfi_restore 5
+ 601              		.cfi_restore 4
+ 602              		.cfi_def_cfa_offset 0
+ 603              	.LVL67:
+ 604 0082 7047     		bx	lr
+ 605              	.L48:
+ 606              		.align	2
+ 607              	.L47:
+ 608 0084 00000000 		.word	.LANCHOR1
+ 609 0088 00000000 		.word	.LANCHOR2
+ 610 008c 00000000 		.word	.LANCHOR3
+ 611 0090 00000000 		.word	.LANCHOR4
+ 612 0094 00000000 		.word	.LANCHOR5
+ 613 0098 00000000 		.word	.LANCHOR6
+ 614              		.cfi_endproc
+ 615              	.LFE8:
+ 617              		.section	.text.AFSK_ADC_ISR,"ax",%progbits
+ 618              		.align	1
+ 619              		.global	AFSK_ADC_ISR
+ 620              		.syntax unified
+ 621              		.thumb
+ 622              		.thumb_func
+ 623              		.fpu fpv4-sp-d16
+ 625              	AFSK_ADC_ISR:
+ 626              	.LFB9:
+ 265:../system/src/aprs/afsk.c **** 
+ 266:../system/src/aprs/afsk.c **** 
+ 267:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 268:../system/src/aprs/afsk.c **** void AFSK_ADC_ISR(Afsk *afsk, int16_t curr_sample) {
+ 627              		.loc 1 268 0
+ 628              		.cfi_startproc
+ 629              		@ args = 0, pretend = 0, frame = 0
+ 630              		@ frame_needed = 0, uses_anonymous_args = 0
+ 631              	.LVL68:
+ 632 0000 10B5     		push	{r4, lr}
+ 633              		.cfi_def_cfa_offset 8
+ 634              		.cfi_offset 4, -8
+ 635              		.cfi_offset 14, -4
+ 636 0002 0446     		mov	r4, r0
+ 269:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 270:../system/src/aprs/afsk.c **** 
+ 271:../system/src/aprs/afsk.c **** 	uint8_t bits;
+ 272:../system/src/aprs/afsk.c **** 	afsk->sampled_bits <<= 1;
+ 637              		.loc 1 272 0
+ 638 0004 037B     		ldrb	r3, [r0, #12]	@ zero_extendqisi2
+ 639 0006 5B00     		lsls	r3, r3, #1
+ 640 0008 0373     		strb	r3, [r0, #12]
+ 273:../system/src/aprs/afsk.c **** 	afsk->sampled_bits |=  (afsk_demod(curr_sample) > 0);
+ 641              		.loc 1 273 0
+ 642 000a 0846     		mov	r0, r1
+ 643              	.LVL69:
+ 644 000c FFF7FEFF 		bl	afsk_demod
+ 645              	.LVL70:
+ 646 0010 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 647 0012 0028     		cmp	r0, #0
+ 648 0014 D4BF     		ite	le
+ 649 0016 1846     		movle	r0, r3
+ 650 0018 43F00100 		orrgt	r0, r3, #1
+ 651 001c 2073     		strb	r0, [r4, #12]
+ 274:../system/src/aprs/afsk.c **** 
+ 275:../system/src/aprs/afsk.c **** 	if (EDGE_FOUND(afsk->sampled_bits))
+ 652              		.loc 1 275 0
+ 653 001e 80EA5003 		eor	r3, r0, r0, lsr #1
+ 654 0022 13F0010F 		tst	r3, #1
+ 655 0026 05D0     		beq	.L50
+ 276:../system/src/aprs/afsk.c **** 	{
+ 277:../system/src/aprs/afsk.c **** 		if (afsk->curr_phase < PHASE_THRES) afsk->curr_phase += PHASE_INC;
+ 656              		.loc 1 277 0
+ 657 0028 94F90D30 		ldrsb	r3, [r4, #13]
+ 658 002c 1F2B     		cmp	r3, #31
+ 659 002e 33DC     		bgt	.L51
+ 660              		.loc 1 277 0 is_stmt 0 discriminator 1
+ 661 0030 0133     		adds	r3, r3, #1
+ 662 0032 6373     		strb	r3, [r4, #13]
+ 663              	.L50:
+ 278:../system/src/aprs/afsk.c **** 		else afsk->curr_phase -= PHASE_INC;
+ 279:../system/src/aprs/afsk.c **** 	}
+ 280:../system/src/aprs/afsk.c **** 
+ 281:../system/src/aprs/afsk.c **** 	afsk->curr_phase += PHASE_BIT;
+ 664              		.loc 1 281 0 is_stmt 1
+ 665 0034 637B     		ldrb	r3, [r4, #13]	@ zero_extendqisi2
+ 666 0036 0833     		adds	r3, r3, #8
+ 667 0038 5BB2     		sxtb	r3, r3
+ 668 003a 6373     		strb	r3, [r4, #13]
+ 282:../system/src/aprs/afsk.c **** 
+ 283:../system/src/aprs/afsk.c **** 	if (afsk->curr_phase >= PHASE_MAX)
+ 669              		.loc 1 283 0
+ 670 003c 3F2B     		cmp	r3, #63
+ 671 003e 2ADD     		ble	.L49
+ 284:../system/src/aprs/afsk.c **** 	{
+ 285:../system/src/aprs/afsk.c **** 		afsk->curr_phase %= PHASE_MAX;
+ 672              		.loc 1 285 0
+ 673 0040 5A42     		rsbs	r2, r3, #0
+ 674 0042 03F03F03 		and	r3, r3, #63
+ 675 0046 02F03F02 		and	r2, r2, #63
+ 676 004a 58BF     		it	pl
+ 677 004c 5342     		rsbpl	r3, r2, #0
+ 678 004e 6373     		strb	r3, [r4, #13]
+ 286:../system/src/aprs/afsk.c **** 
+ 287:../system/src/aprs/afsk.c **** 		afsk->found_bits <<= 1;
+ 679              		.loc 1 287 0
+ 680 0050 A37B     		ldrb	r3, [r4, #14]	@ zero_extendqisi2
+ 681 0052 5B00     		lsls	r3, r3, #1
+ 682 0054 DBB2     		uxtb	r3, r3
+ 683 0056 A373     		strb	r3, [r4, #14]
+ 288:../system/src/aprs/afsk.c **** 
+ 289:../system/src/aprs/afsk.c **** 		bits = afsk->sampled_bits & 0x07;
+ 684              		.loc 1 289 0
+ 685 0058 00F00700 		and	r0, r0, #7
+ 686              	.LVL71:
+ 290:../system/src/aprs/afsk.c **** 
+ 291:../system/src/aprs/afsk.c **** 		if (bits == 0x07 // 111, 3 bits set to 1
+ 292:../system/src/aprs/afsk.c **** 		 || bits == 0x06 // 110, 2 bits
+ 293:../system/src/aprs/afsk.c **** 		 || bits == 0x05 // 101, 2 bits
+ 687              		.loc 1 293 0
+ 688 005c 421F     		subs	r2, r0, #5
+ 689 005e D2B2     		uxtb	r2, r2
+ 291:../system/src/aprs/afsk.c **** 		 || bits == 0x06 // 110, 2 bits
+ 690              		.loc 1 291 0
+ 691 0060 022A     		cmp	r2, #2
+ 692 0062 01D9     		bls	.L53
+ 294:../system/src/aprs/afsk.c **** 		 || bits == 0x03 // 011, 2 bits
+ 693              		.loc 1 294 0
+ 694 0064 0328     		cmp	r0, #3
+ 695 0066 02D1     		bne	.L54
+ 696              	.L53:
+ 295:../system/src/aprs/afsk.c **** 		)
+ 296:../system/src/aprs/afsk.c **** 
+ 297:../system/src/aprs/afsk.c **** 		afsk->found_bits |= 1;
+ 697              		.loc 1 297 0
+ 698 0068 43F00103 		orr	r3, r3, #1
+ 699 006c A373     		strb	r3, [r4, #14]
+ 700              	.L54:
+ 298:../system/src/aprs/afsk.c **** 		if (!hdlc_parse(&afsk->hdlc, !EDGE_FOUND(afsk->found_bits), &afsk->rx_fifo)) afsk->status |= AFSK
+ 701              		.loc 1 298 0
+ 702 006e A17B     		ldrb	r1, [r4, #14]	@ zero_extendqisi2
+ 703 0070 81EA5101 		eor	r1, r1, r1, lsr #1
+ 704 0074 81F00101 		eor	r1, r1, #1
+ 705 0078 04F11002 		add	r2, r4, #16
+ 706 007c 01F00101 		and	r1, r1, #1
+ 707 0080 04F58760 		add	r0, r4, #1080
+ 708              	.LVL72:
+ 709 0084 FFF7FEFF 		bl	hdlc_parse
+ 710              	.LVL73:
+ 711 0088 28B9     		cbnz	r0, .L49
+ 712              		.loc 1 298 0 is_stmt 0 discriminator 1
+ 713 008a D4F83434 		ldr	r3, [r4, #1076]
+ 714 008e 43F00103 		orr	r3, r3, #1
+ 715 0092 C4F83434 		str	r3, [r4, #1076]
+ 716              	.L49:
+ 299:../system/src/aprs/afsk.c **** 
+ 300:../system/src/aprs/afsk.c **** 	}
+ 301:../system/src/aprs/afsk.c **** 
+ 302:../system/src/aprs/afsk.c **** }
+ 717              		.loc 1 302 0 is_stmt 1
+ 718 0096 10BD     		pop	{r4, pc}
+ 719              	.LVL74:
+ 720              	.L51:
+ 278:../system/src/aprs/afsk.c **** 	}
+ 721              		.loc 1 278 0
+ 722 0098 013B     		subs	r3, r3, #1
+ 723 009a 6373     		strb	r3, [r4, #13]
+ 724 009c CAE7     		b	.L50
+ 725              		.cfi_endproc
+ 726              	.LFE9:
+ 728              		.section	.text.afsk_txStart,"ax",%progbits
+ 729              		.align	1
+ 730              		.global	afsk_txStart
+ 731              		.syntax unified
+ 732              		.thumb
+ 733              		.thumb_func
+ 734              		.fpu fpv4-sp-d16
+ 736              	afsk_txStart:
+ 737              	.LFB10:
+ 303:../system/src/aprs/afsk.c **** 
+ 304:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 305:../system/src/aprs/afsk.c **** void afsk_txStart(Afsk *af) {
+ 738              		.loc 1 305 0
+ 739              		.cfi_startproc
+ 740              		@ args = 0, pretend = 0, frame = 0
+ 741              		@ frame_needed = 0, uses_anonymous_args = 0
+ 742              	.LVL75:
+ 743 0000 10B5     		push	{r4, lr}
+ 744              		.cfi_def_cfa_offset 8
+ 745              		.cfi_offset 4, -8
+ 746              		.cfi_offset 14, -4
+ 747 0002 0446     		mov	r4, r0
+ 306:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 307:../system/src/aprs/afsk.c **** 
+ 308:../system/src/aprs/afsk.c **** 	if (!af->sending)
+ 748              		.loc 1 308 0
+ 749 0004 90F83034 		ldrb	r3, [r0, #1072]	@ zero_extendqisi2
+ 750 0008 1BB1     		cbz	r3, .L59
+ 751              	.LVL76:
+ 752              	.L57:
+ 309:../system/src/aprs/afsk.c **** 	{
+ 310:../system/src/aprs/afsk.c **** 		tx10m++;
+ 311:../system/src/aprs/afsk.c **** 		
+ 312:../system/src/aprs/afsk.c **** 		af->phase_inc = MARK_INC;
+ 313:../system/src/aprs/afsk.c **** 		af->phase_acc = 0;
+ 314:../system/src/aprs/afsk.c **** 		af->stuff_cnt = 0;
+ 315:../system/src/aprs/afsk.c **** 		af->sending = true;
+ 316:../system/src/aprs/afsk.c **** 		af->preamble_len = DIV_ROUND(CONFIG_AFSK_PREAMBLE_LEN * BITRATE, 8000);
+ 317:../system/src/aprs/afsk.c **** 		DA_Start();
+ 318:../system/src/aprs/afsk.c **** 	}
+ 319:../system/src/aprs/afsk.c **** //	ATOMIC(af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000));
+ 320:../system/src/aprs/afsk.c **** 	af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000);
+ 753              		.loc 1 320 0
+ 754 000a 0823     		movs	r3, #8
+ 755 000c A4F84234 		strh	r3, [r4, #1090]	@ movhi
+ 321:../system/src/aprs/afsk.c **** 
+ 322:../system/src/aprs/afsk.c **** }
+ 756              		.loc 1 322 0
+ 757 0010 10BD     		pop	{r4, pc}
+ 758              	.LVL77:
+ 759              	.L59:
+ 310:../system/src/aprs/afsk.c **** 		
+ 760              		.loc 1 310 0
+ 761 0012 094A     		ldr	r2, .L60
+ 762 0014 1388     		ldrh	r3, [r2]
+ 763 0016 0133     		adds	r3, r3, #1
+ 764 0018 1380     		strh	r3, [r2]	@ movhi
+ 312:../system/src/aprs/afsk.c **** 		af->phase_acc = 0;
+ 765              		.loc 1 312 0
+ 766 001a 4023     		movs	r3, #64
+ 767 001c 4381     		strh	r3, [r0, #10]	@ movhi
+ 313:../system/src/aprs/afsk.c **** 		af->stuff_cnt = 0;
+ 768              		.loc 1 313 0
+ 769 001e 0023     		movs	r3, #0
+ 770 0020 0381     		strh	r3, [r0, #8]	@ movhi
+ 314:../system/src/aprs/afsk.c **** 		af->sending = true;
+ 771              		.loc 1 314 0
+ 772 0022 8371     		strb	r3, [r0, #6]
+ 315:../system/src/aprs/afsk.c **** 		af->preamble_len = DIV_ROUND(CONFIG_AFSK_PREAMBLE_LEN * BITRATE, 8000);
+ 773              		.loc 1 315 0
+ 774 0024 0123     		movs	r3, #1
+ 775 0026 80F83034 		strb	r3, [r0, #1072]
+ 316:../system/src/aprs/afsk.c **** 		DA_Start();
+ 776              		.loc 1 316 0
+ 777 002a 3C23     		movs	r3, #60
+ 778 002c A0F84034 		strh	r3, [r0, #1088]	@ movhi
+ 317:../system/src/aprs/afsk.c **** 	}
+ 779              		.loc 1 317 0
+ 780 0030 FFF7FEFF 		bl	DA_Start
+ 781              	.LVL78:
+ 782 0034 E9E7     		b	.L57
+ 783              	.L61:
+ 784 0036 00BF     		.align	2
+ 785              	.L60:
+ 786 0038 00000000 		.word	tx10m
+ 787              		.cfi_endproc
+ 788              	.LFE10:
+ 790              		.section	.text.AFSK_DAC_ISR,"ax",%progbits
+ 791              		.align	1
+ 792              		.global	AFSK_DAC_ISR
+ 793              		.syntax unified
+ 794              		.thumb
+ 795              		.thumb_func
+ 796              		.fpu fpv4-sp-d16
+ 798              	AFSK_DAC_ISR:
+ 799              	.LFB11:
+ 323:../system/src/aprs/afsk.c **** 
+ 324:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 325:../system/src/aprs/afsk.c **** uint8_t AFSK_DAC_ISR(Afsk *afsk) {
+ 800              		.loc 1 325 0
+ 801              		.cfi_startproc
+ 802              		@ args = 0, pretend = 0, frame = 0
+ 803              		@ frame_needed = 0, uses_anonymous_args = 0
+ 804              	.LVL79:
+ 805 0000 70B5     		push	{r4, r5, r6, lr}
+ 806              		.cfi_def_cfa_offset 16
+ 807              		.cfi_offset 4, -16
+ 808              		.cfi_offset 5, -12
+ 809              		.cfi_offset 6, -8
+ 810              		.cfi_offset 14, -4
+ 811 0002 0446     		mov	r4, r0
+ 326:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 327:../system/src/aprs/afsk.c **** 
+ 328:../system/src/aprs/afsk.c **** 
+ 329:../system/src/aprs/afsk.c **** 	if (afsk->sample_count == 0)
+ 812              		.loc 1 329 0
+ 813 0004 8378     		ldrb	r3, [r0, #2]	@ zero_extendqisi2
+ 814 0006 002B     		cmp	r3, #0
+ 815 0008 66D1     		bne	.L63
+ 330:../system/src/aprs/afsk.c **** 	{
+ 331:../system/src/aprs/afsk.c **** 		if (afsk->tx_bit == 0)
+ 816              		.loc 1 331 0
+ 817 000a 0579     		ldrb	r5, [r0, #4]	@ zero_extendqisi2
+ 818 000c 6DB1     		cbz	r5, .L83
+ 819              	.LVL80:
+ 820              	.L64:
+ 332:../system/src/aprs/afsk.c **** 		{
+ 333:../system/src/aprs/afsk.c **** 			if (fifo_isempty(&afsk->tx_fifo) && afsk->trailer_len == 0)
+ 334:../system/src/aprs/afsk.c **** 			{
+ 335:../system/src/aprs/afsk.c **** 				DA_Stop();
+ 336:../system/src/aprs/afsk.c **** 				afsk->sending = false;
+ 337:../system/src/aprs/afsk.c **** 				return 0;
+ 338:../system/src/aprs/afsk.c **** 			}
+ 339:../system/src/aprs/afsk.c **** 			else
+ 340:../system/src/aprs/afsk.c **** 			{
+ 341:../system/src/aprs/afsk.c **** 				if (!afsk->bit_stuff) afsk->stuff_cnt = 0;
+ 342:../system/src/aprs/afsk.c **** 
+ 343:../system/src/aprs/afsk.c **** 				afsk->bit_stuff = true;
+ 344:../system/src/aprs/afsk.c **** 
+ 345:../system/src/aprs/afsk.c **** 				if (afsk->preamble_len == 0)
+ 346:../system/src/aprs/afsk.c **** 				{
+ 347:../system/src/aprs/afsk.c **** 
+ 348:../system/src/aprs/afsk.c **** 					if (fifo_isempty(&afsk->tx_fifo))
+ 349:../system/src/aprs/afsk.c **** 					{
+ 350:../system/src/aprs/afsk.c **** 						afsk->trailer_len--;
+ 351:../system/src/aprs/afsk.c **** 						afsk->curr_out = HDLC_FLAG;
+ 352:../system/src/aprs/afsk.c **** 					}
+ 353:../system/src/aprs/afsk.c **** 					else
+ 354:../system/src/aprs/afsk.c **** 					{
+ 355:../system/src/aprs/afsk.c **** 						afsk->curr_out = fifo_pop(&afsk->tx_fifo);
+ 356:../system/src/aprs/afsk.c **** 					}
+ 357:../system/src/aprs/afsk.c **** 				}
+ 358:../system/src/aprs/afsk.c **** 				else
+ 359:../system/src/aprs/afsk.c **** 				{
+ 360:../system/src/aprs/afsk.c **** 					afsk->preamble_len--;
+ 361:../system/src/aprs/afsk.c **** 					afsk->curr_out = HDLC_FLAG;
+ 362:../system/src/aprs/afsk.c **** 				}
+ 363:../system/src/aprs/afsk.c **** 
+ 364:../system/src/aprs/afsk.c **** 				if (afsk->curr_out == AX25_ESC)
+ 365:../system/src/aprs/afsk.c **** 				{
+ 366:../system/src/aprs/afsk.c **** 					if (fifo_isempty(&afsk->tx_fifo))
+ 367:../system/src/aprs/afsk.c **** 					{
+ 368:../system/src/aprs/afsk.c **** 						DA_Stop();
+ 369:../system/src/aprs/afsk.c **** 						afsk->sending = false;
+ 370:../system/src/aprs/afsk.c **** 						return 0;
+ 371:../system/src/aprs/afsk.c **** 					}
+ 372:../system/src/aprs/afsk.c **** 					else
+ 373:../system/src/aprs/afsk.c **** 					{
+ 374:../system/src/aprs/afsk.c **** 						afsk->curr_out = fifo_pop(&afsk->tx_fifo);
+ 375:../system/src/aprs/afsk.c **** 					}
+ 376:../system/src/aprs/afsk.c **** 				}
+ 377:../system/src/aprs/afsk.c **** 				else
+ 378:../system/src/aprs/afsk.c **** 				{
+ 379:../system/src/aprs/afsk.c **** 					if (afsk->curr_out == HDLC_FLAG || afsk->curr_out == HDLC_RESET)
+ 380:../system/src/aprs/afsk.c **** 					{
+ 381:../system/src/aprs/afsk.c **** 						afsk->bit_stuff = false;
+ 382:../system/src/aprs/afsk.c **** 					}
+ 383:../system/src/aprs/afsk.c **** 				}
+ 384:../system/src/aprs/afsk.c **** 			}
+ 385:../system/src/aprs/afsk.c **** 
+ 386:../system/src/aprs/afsk.c **** 			afsk->tx_bit = 0x01;
+ 387:../system/src/aprs/afsk.c **** 		}
+ 388:../system/src/aprs/afsk.c **** 
+ 389:../system/src/aprs/afsk.c **** 		if (afsk->bit_stuff && afsk->stuff_cnt >= BIT_STUFF_LEN)
+ 821              		.loc 1 389 0
+ 822 000e 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 823 0010 002B     		cmp	r3, #0
+ 824 0012 55D0     		beq	.L74
+ 825              		.loc 1 389 0 is_stmt 0 discriminator 1
+ 826 0014 A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+ 827 0016 042B     		cmp	r3, #4
+ 828 0018 52D9     		bls	.L74
+ 390:../system/src/aprs/afsk.c **** 		{
+ 391:../system/src/aprs/afsk.c **** 			afsk->stuff_cnt = 0;
+ 829              		.loc 1 391 0 is_stmt 1
+ 830 001a 0023     		movs	r3, #0
+ 831 001c A371     		strb	r3, [r4, #6]
+ 392:../system/src/aprs/afsk.c **** 			afsk->phase_inc = SWITCH_TONE(afsk->phase_inc);
+ 832              		.loc 1 392 0
+ 833 001e 6389     		ldrh	r3, [r4, #10]
+ 834 0020 402B     		cmp	r3, #64
+ 835 0022 4BD0     		beq	.L84
+ 836 0024 4023     		movs	r3, #64
+ 837              	.L75:
+ 838              		.loc 1 392 0 is_stmt 0 discriminator 4
+ 839 0026 6381     		strh	r3, [r4, #10]	@ movhi
+ 840 0028 54E0     		b	.L76
+ 841              	.LVL81:
+ 842              	.L83:
+ 333:../system/src/aprs/afsk.c **** 			{
+ 843              		.loc 1 333 0 is_stmt 1
+ 844 002a 00F50876 		add	r6, r0, #544
+ 845 002e 3046     		mov	r0, r6
+ 846              	.LVL82:
+ 847 0030 FFF7FEFF 		bl	fifo_isempty
+ 848              	.LVL83:
+ 849 0034 10B1     		cbz	r0, .L65
+ 333:../system/src/aprs/afsk.c **** 			{
+ 850              		.loc 1 333 0 is_stmt 0 discriminator 1
+ 851 0036 B4F84234 		ldrh	r3, [r4, #1090]
+ 852 003a B3B1     		cbz	r3, .L85
+ 853              	.L65:
+ 341:../system/src/aprs/afsk.c **** 
+ 854              		.loc 1 341 0 is_stmt 1
+ 855 003c 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 856 003e 03B9     		cbnz	r3, .L67
+ 341:../system/src/aprs/afsk.c **** 
+ 857              		.loc 1 341 0 is_stmt 0 discriminator 1
+ 858 0040 A371     		strb	r3, [r4, #6]
+ 859              	.L67:
+ 343:../system/src/aprs/afsk.c **** 
+ 860              		.loc 1 343 0 is_stmt 1
+ 861 0042 0123     		movs	r3, #1
+ 862 0044 6371     		strb	r3, [r4, #5]
+ 345:../system/src/aprs/afsk.c **** 				{
+ 863              		.loc 1 345 0
+ 864 0046 B4F84034 		ldrh	r3, [r4, #1088]
+ 865 004a A3B1     		cbz	r3, .L86
+ 360:../system/src/aprs/afsk.c **** 					afsk->curr_out = HDLC_FLAG;
+ 866              		.loc 1 360 0
+ 867 004c 013B     		subs	r3, r3, #1
+ 868 004e A4F84034 		strh	r3, [r4, #1088]	@ movhi
+ 361:../system/src/aprs/afsk.c **** 				}
+ 869              		.loc 1 361 0
+ 870 0052 7E23     		movs	r3, #126
+ 871 0054 E370     		strb	r3, [r4, #3]
+ 872              	.L70:
+ 364:../system/src/aprs/afsk.c **** 				{
+ 873              		.loc 1 364 0
+ 874 0056 E378     		ldrb	r3, [r4, #3]	@ zero_extendqisi2
+ 875 0058 1B2B     		cmp	r3, #27
+ 876 005a 1DD0     		beq	.L87
+ 379:../system/src/aprs/afsk.c **** 					{
+ 877              		.loc 1 379 0
+ 878 005c 7E3B     		subs	r3, r3, #126
+ 879 005e DBB2     		uxtb	r3, r3
+ 880 0060 012B     		cmp	r3, #1
+ 881 0062 28D9     		bls	.L88
+ 882              	.L73:
+ 386:../system/src/aprs/afsk.c **** 		}
+ 883              		.loc 1 386 0
+ 884 0064 0123     		movs	r3, #1
+ 885 0066 2371     		strb	r3, [r4, #4]
+ 886 0068 D1E7     		b	.L64
+ 887              	.L85:
+ 335:../system/src/aprs/afsk.c **** 				afsk->sending = false;
+ 888              		.loc 1 335 0
+ 889 006a FFF7FEFF 		bl	DA_Stop
+ 890              	.LVL84:
+ 336:../system/src/aprs/afsk.c **** 				return 0;
+ 891              		.loc 1 336 0
+ 892 006e 0023     		movs	r3, #0
+ 893 0070 84F83034 		strb	r3, [r4, #1072]
+ 337:../system/src/aprs/afsk.c **** 			}
+ 894              		.loc 1 337 0
+ 895 0074 3CE0     		b	.L66
+ 896              	.L86:
+ 348:../system/src/aprs/afsk.c **** 					{
+ 897              		.loc 1 348 0
+ 898 0076 3046     		mov	r0, r6
+ 899 0078 FFF7FEFF 		bl	fifo_isempty
+ 900              	.LVL85:
+ 901 007c 38B1     		cbz	r0, .L69
+ 350:../system/src/aprs/afsk.c **** 						afsk->curr_out = HDLC_FLAG;
+ 902              		.loc 1 350 0
+ 903 007e B4F84234 		ldrh	r3, [r4, #1090]
+ 904 0082 013B     		subs	r3, r3, #1
+ 905 0084 A4F84234 		strh	r3, [r4, #1090]	@ movhi
+ 351:../system/src/aprs/afsk.c **** 					}
+ 906              		.loc 1 351 0
+ 907 0088 7E23     		movs	r3, #126
+ 908 008a E370     		strb	r3, [r4, #3]
+ 909 008c E3E7     		b	.L70
+ 910              	.L69:
+ 355:../system/src/aprs/afsk.c **** 					}
+ 911              		.loc 1 355 0
+ 912 008e 3046     		mov	r0, r6
+ 913 0090 FFF7FEFF 		bl	fifo_pop
+ 914              	.LVL86:
+ 915 0094 E070     		strb	r0, [r4, #3]
+ 916 0096 DEE7     		b	.L70
+ 917              	.L87:
+ 366:../system/src/aprs/afsk.c **** 					{
+ 918              		.loc 1 366 0
+ 919 0098 3046     		mov	r0, r6
+ 920 009a FFF7FEFF 		bl	fifo_isempty
+ 921              	.LVL87:
+ 922 009e 20B9     		cbnz	r0, .L89
+ 374:../system/src/aprs/afsk.c **** 					}
+ 923              		.loc 1 374 0
+ 924 00a0 3046     		mov	r0, r6
+ 925 00a2 FFF7FEFF 		bl	fifo_pop
+ 926              	.LVL88:
+ 927 00a6 E070     		strb	r0, [r4, #3]
+ 928 00a8 DCE7     		b	.L73
+ 929              	.L89:
+ 368:../system/src/aprs/afsk.c **** 						afsk->sending = false;
+ 930              		.loc 1 368 0
+ 931 00aa FFF7FEFF 		bl	DA_Stop
+ 932              	.LVL89:
+ 369:../system/src/aprs/afsk.c **** 						return 0;
+ 933              		.loc 1 369 0
+ 934 00ae 0023     		movs	r3, #0
+ 935 00b0 84F83034 		strb	r3, [r4, #1072]
+ 370:../system/src/aprs/afsk.c **** 					}
+ 936              		.loc 1 370 0
+ 937 00b4 1CE0     		b	.L66
+ 938              	.L88:
+ 381:../system/src/aprs/afsk.c **** 					}
+ 939              		.loc 1 381 0
+ 940 00b6 0023     		movs	r3, #0
+ 941 00b8 6371     		strb	r3, [r4, #5]
+ 942 00ba D3E7     		b	.L73
+ 943              	.L84:
+ 944              		.loc 1 392 0
+ 945 00bc 7523     		movs	r3, #117
+ 946 00be B2E7     		b	.L75
+ 947              	.L74:
+ 393:../system/src/aprs/afsk.c **** 		}
+ 394:../system/src/aprs/afsk.c **** 		else
+ 395:../system/src/aprs/afsk.c **** 		{
+ 396:../system/src/aprs/afsk.c **** 			if (afsk->curr_out & afsk->tx_bit)
+ 948              		.loc 1 396 0
+ 949 00c0 E278     		ldrb	r2, [r4, #3]	@ zero_extendqisi2
+ 950 00c2 2379     		ldrb	r3, [r4, #4]	@ zero_extendqisi2
+ 951 00c4 1A42     		tst	r2, r3
+ 952 00c6 15D0     		beq	.L77
+ 397:../system/src/aprs/afsk.c **** 			{
+ 398:../system/src/aprs/afsk.c **** 				afsk->stuff_cnt++;
+ 953              		.loc 1 398 0
+ 954 00c8 A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+ 955 00ca 0133     		adds	r3, r3, #1
+ 956 00cc A371     		strb	r3, [r4, #6]
+ 957              	.L78:
+ 399:../system/src/aprs/afsk.c **** 			}
+ 400:../system/src/aprs/afsk.c **** 			else
+ 401:../system/src/aprs/afsk.c **** 			{
+ 402:../system/src/aprs/afsk.c **** 				afsk->stuff_cnt = 0;
+ 403:../system/src/aprs/afsk.c **** 				afsk->phase_inc = SWITCH_TONE(afsk->phase_inc);
+ 404:../system/src/aprs/afsk.c **** 			}
+ 405:../system/src/aprs/afsk.c **** 
+ 406:../system/src/aprs/afsk.c **** 			afsk->tx_bit <<= 1;
+ 958              		.loc 1 406 0
+ 959 00ce 2379     		ldrb	r3, [r4, #4]	@ zero_extendqisi2
+ 960 00d0 5B00     		lsls	r3, r3, #1
+ 961 00d2 2371     		strb	r3, [r4, #4]
+ 962              	.L76:
+ 407:../system/src/aprs/afsk.c **** 		}
+ 408:../system/src/aprs/afsk.c **** 
+ 409:../system/src/aprs/afsk.c **** 		afsk->sample_count = SAMPLEPERBIT;
+ 963              		.loc 1 409 0
+ 964 00d4 0823     		movs	r3, #8
+ 965 00d6 A370     		strb	r3, [r4, #2]
+ 966              	.L63:
+ 410:../system/src/aprs/afsk.c **** 	}
+ 411:../system/src/aprs/afsk.c **** 
+ 412:../system/src/aprs/afsk.c **** 	afsk->phase_acc += afsk->phase_inc;
+ 967              		.loc 1 412 0
+ 968 00d8 6089     		ldrh	r0, [r4, #10]
+ 969 00da 2389     		ldrh	r3, [r4, #8]
+ 970 00dc 1844     		add	r0, r0, r3
+ 413:../system/src/aprs/afsk.c **** 	afsk->phase_acc %= SIN_LEN;
+ 971              		.loc 1 413 0
+ 972 00de C0F30800 		ubfx	r0, r0, #0, #9
+ 973 00e2 2081     		strh	r0, [r4, #8]	@ movhi
+ 414:../system/src/aprs/afsk.c **** 
+ 415:../system/src/aprs/afsk.c **** 	afsk->sample_count--;
+ 974              		.loc 1 415 0
+ 975 00e4 A378     		ldrb	r3, [r4, #2]	@ zero_extendqisi2
+ 976 00e6 013B     		subs	r3, r3, #1
+ 977 00e8 A370     		strb	r3, [r4, #2]
+ 416:../system/src/aprs/afsk.c **** 
+ 417:../system/src/aprs/afsk.c **** 	return sin_sample(afsk->phase_acc);
+ 978              		.loc 1 417 0
+ 979 00ea FFF7FEFF 		bl	sin_sample
+ 980              	.LVL90:
+ 981 00ee 0546     		mov	r5, r0
+ 982              	.L66:
+ 418:../system/src/aprs/afsk.c **** 
+ 419:../system/src/aprs/afsk.c **** }
+ 983              		.loc 1 419 0
+ 984 00f0 2846     		mov	r0, r5
+ 985 00f2 70BD     		pop	{r4, r5, r6, pc}
+ 986              	.LVL91:
+ 987              	.L77:
+ 402:../system/src/aprs/afsk.c **** 				afsk->phase_inc = SWITCH_TONE(afsk->phase_inc);
+ 988              		.loc 1 402 0
+ 989 00f4 0023     		movs	r3, #0
+ 990 00f6 A371     		strb	r3, [r4, #6]
+ 403:../system/src/aprs/afsk.c **** 			}
+ 991              		.loc 1 403 0
+ 992 00f8 6389     		ldrh	r3, [r4, #10]
+ 993 00fa 402B     		cmp	r3, #64
+ 994 00fc 02D0     		beq	.L90
+ 995 00fe 4023     		movs	r3, #64
+ 996              	.L79:
+ 403:../system/src/aprs/afsk.c **** 			}
+ 997              		.loc 1 403 0 is_stmt 0 discriminator 4
+ 998 0100 6381     		strh	r3, [r4, #10]	@ movhi
+ 999 0102 E4E7     		b	.L78
+ 1000              	.L90:
+ 403:../system/src/aprs/afsk.c **** 			}
+ 1001              		.loc 1 403 0
+ 1002 0104 7523     		movs	r3, #117
+ 1003 0106 FBE7     		b	.L79
+ 1004              		.cfi_endproc
+ 1005              	.LFE11:
+ 1007              		.global	__aeabi_i2d
+ 1008              		.global	__aeabi_dmul
+ 1009              		.global	__aeabi_ddiv
+ 1010              		.global	__aeabi_d2iz
+ 1011              		.section	.text.AFSK_Init,"ax",%progbits
+ 1012              		.align	1
+ 1013              		.global	AFSK_Init
+ 1014              		.syntax unified
+ 1015              		.thumb
+ 1016              		.thumb_func
+ 1017              		.fpu fpv4-sp-d16
+ 1019              	AFSK_Init:
+ 1020              	.LFB12:
+ 420:../system/src/aprs/afsk.c **** 
+ 421:../system/src/aprs/afsk.c **** 
+ 422:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 423:../system/src/aprs/afsk.c **** void AFSK_Init(Afsk *afsk) {
+ 1021              		.loc 1 423 0 is_stmt 1
+ 1022              		.cfi_startproc
+ 1023              		@ args = 0, pretend = 0, frame = 0
+ 1024              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1025              	.LVL92:
+ 1026 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1027              		.cfi_def_cfa_offset 24
+ 1028              		.cfi_offset 3, -24
+ 1029              		.cfi_offset 4, -20
+ 1030              		.cfi_offset 5, -16
+ 1031              		.cfi_offset 6, -12
+ 1032              		.cfi_offset 7, -8
+ 1033              		.cfi_offset 14, -4
+ 1034 0002 2DED028B 		vpush.64	{d8}
+ 1035              		.cfi_def_cfa_offset 32
+ 1036              		.cfi_offset 80, -32
+ 1037              		.cfi_offset 81, -28
+ 1038 0006 0546     		mov	r5, r0
+ 424:../system/src/aprs/afsk.c **** /**************************************************************************************************
+ 425:../system/src/aprs/afsk.c **** 
+ 426:../system/src/aprs/afsk.c **** 
+ 427:../system/src/aprs/afsk.c **** 	uint8_t i;
+ 428:../system/src/aprs/afsk.c **** 
+ 429:../system/src/aprs/afsk.c **** 	memset(afsk, 0, sizeof(*afsk));
+ 1039              		.loc 1 429 0
+ 1040 0008 40F24442 		movw	r2, #1092
+ 1041 000c 0021     		movs	r1, #0
+ 1042 000e FFF7FEFF 		bl	memset
+ 1043              	.LVL93:
+ 430:../system/src/aprs/afsk.c **** 
+ 431:../system/src/aprs/afsk.c **** 	fifo_init(&afsk->rx_fifo, afsk->rx_buf, sizeof(afsk->rx_buf));
+ 1044              		.loc 1 431 0
+ 1045 0012 4FF40072 		mov	r2, #512
+ 1046 0016 05F12001 		add	r1, r5, #32
+ 1047 001a 05F11000 		add	r0, r5, #16
+ 1048 001e FFF7FEFF 		bl	fifo_init
+ 1049              	.LVL94:
+ 432:../system/src/aprs/afsk.c **** 	fifo_init(&afsk->tx_fifo, afsk->tx_buf, sizeof(afsk->tx_buf));
+ 1050              		.loc 1 432 0
+ 1051 0022 4FF40072 		mov	r2, #512
+ 1052 0026 05F50C71 		add	r1, r5, #560
+ 1053 002a 05F50870 		add	r0, r5, #544
+ 1054 002e FFF7FEFF 		bl	fifo_init
+ 1055              	.LVL95:
+ 433:../system/src/aprs/afsk.c **** 
+ 434:../system/src/aprs/afsk.c **** 	for (i=0;i<SAMPLEPERBIT;i++)
+ 1056              		.loc 1 434 0
+ 1057 0032 0024     		movs	r4, #0
+ 1058 0034 6BE0     		b	.L92
+ 1059              	.LVL96:
+ 1060              	.L93:
+ 435:../system/src/aprs/afsk.c **** 	{
+ 436:../system/src/aprs/afsk.c **** 		corr_mark_i[i] = 4095*cos(2*M_PI*i/SAMPLEPERBIT*FREQ_MARK/BITRATE);
+ 1061              		.loc 1 436 0 discriminator 3
+ 1062 0036 2046     		mov	r0, r4
+ 1063 0038 FFF7FEFF 		bl	__aeabi_i2d
+ 1064              	.LVL97:
+ 1065 003c 41A3     		adr	r3, .L95+36
+ 1066 003e D3E90023 		ldrd	r2, [r3]
+ 1067 0042 FFF7FEFF 		bl	__aeabi_dmul
+ 1068              	.LVL98:
+ 1069 0046 0022     		movs	r2, #0
+ 1070 0048 4FF07F53 		mov	r3, #1069547520
+ 1071 004c FFF7FEFF 		bl	__aeabi_dmul
+ 1072              	.LVL99:
+ 1073 0050 0646     		mov	r6, r0
+ 1074 0052 0F46     		mov	r7, r1
+ 1075 0054 0022     		movs	r2, #0
+ 1076 0056 364B     		ldr	r3, .L95+16
+ 1077 0058 FFF7FEFF 		bl	__aeabi_dmul
+ 1078              	.LVL100:
+ 1079 005c 0022     		movs	r2, #0
+ 1080 005e 344B     		ldr	r3, .L95+16
+ 1081 0060 FFF7FEFF 		bl	__aeabi_ddiv
+ 1082              	.LVL101:
+ 1083 0064 41EC180B 		vmov	d8, r0, r1
+ 1084 0068 41EC100B 		vmov	d0, r0, r1
+ 1085 006c FFF7FEFF 		bl	cos
+ 1086              	.LVL102:
+ 1087 0070 2BA3     		adr	r3, .L95
+ 1088 0072 D3E90023 		ldrd	r2, [r3]
+ 1089 0076 51EC100B 		vmov	r0, r1, d0
+ 1090 007a FFF7FEFF 		bl	__aeabi_dmul
+ 1091              	.LVL103:
+ 1092 007e FFF7FEFF 		bl	__aeabi_d2iz
+ 1093              	.LVL104:
+ 1094 0082 2C4B     		ldr	r3, .L95+20
+ 1095 0084 23F81400 		strh	r0, [r3, r4, lsl #1]	@ movhi
+ 437:../system/src/aprs/afsk.c **** 		corr_mark_q[i] = 4095*sin(2*M_PI*i/SAMPLEPERBIT*FREQ_MARK/BITRATE);
+ 1096              		.loc 1 437 0 discriminator 3
+ 1097 0088 B0EE480A 		vmov.f32	s0, s16
+ 1098 008c F0EE680A 		vmov.f32	s1, s17
+ 1099 0090 FFF7FEFF 		bl	sin
+ 1100              	.LVL105:
+ 1101 0094 22A3     		adr	r3, .L95
+ 1102 0096 D3E90023 		ldrd	r2, [r3]
+ 1103 009a 51EC100B 		vmov	r0, r1, d0
+ 1104 009e FFF7FEFF 		bl	__aeabi_dmul
+ 1105              	.LVL106:
+ 1106 00a2 FFF7FEFF 		bl	__aeabi_d2iz
+ 1107              	.LVL107:
+ 1108 00a6 244B     		ldr	r3, .L95+24
+ 1109 00a8 23F81400 		strh	r0, [r3, r4, lsl #1]	@ movhi
+ 438:../system/src/aprs/afsk.c **** 		corr_space_i[i] = 4095*cos(2*M_PI*i/SAMPLEPERBIT*FREQ_SPACE/BITRATE);
+ 1110              		.loc 1 438 0 discriminator 3
+ 1111 00ac 1EA3     		adr	r3, .L95+8
+ 1112 00ae D3E90023 		ldrd	r2, [r3]
+ 1113 00b2 3046     		mov	r0, r6
+ 1114 00b4 3946     		mov	r1, r7
+ 1115 00b6 FFF7FEFF 		bl	__aeabi_dmul
+ 1116              	.LVL108:
+ 1117 00ba 0022     		movs	r2, #0
+ 1118 00bc 1C4B     		ldr	r3, .L95+16
+ 1119 00be FFF7FEFF 		bl	__aeabi_ddiv
+ 1120              	.LVL109:
+ 1121 00c2 41EC180B 		vmov	d8, r0, r1
+ 1122 00c6 41EC100B 		vmov	d0, r0, r1
+ 1123 00ca FFF7FEFF 		bl	cos
+ 1124              	.LVL110:
+ 1125 00ce 14A3     		adr	r3, .L95
+ 1126 00d0 D3E90023 		ldrd	r2, [r3]
+ 1127 00d4 51EC100B 		vmov	r0, r1, d0
+ 1128 00d8 FFF7FEFF 		bl	__aeabi_dmul
+ 1129              	.LVL111:
+ 1130 00dc FFF7FEFF 		bl	__aeabi_d2iz
+ 1131              	.LVL112:
+ 1132 00e0 164B     		ldr	r3, .L95+28
+ 1133 00e2 23F81400 		strh	r0, [r3, r4, lsl #1]	@ movhi
+ 439:../system/src/aprs/afsk.c **** 		corr_space_q[i] = 4095*sin(2*M_PI*i/SAMPLEPERBIT*FREQ_SPACE/BITRATE);		 /// 2047 wszedzie bylo
+ 1134              		.loc 1 439 0 discriminator 3
+ 1135 00e6 B0EE480A 		vmov.f32	s0, s16
+ 1136 00ea F0EE680A 		vmov.f32	s1, s17
+ 1137 00ee FFF7FEFF 		bl	sin
+ 1138              	.LVL113:
+ 1139 00f2 0BA3     		adr	r3, .L95
+ 1140 00f4 D3E90023 		ldrd	r2, [r3]
+ 1141 00f8 51EC100B 		vmov	r0, r1, d0
+ 1142 00fc FFF7FEFF 		bl	__aeabi_dmul
+ 1143              	.LVL114:
+ 1144 0100 FFF7FEFF 		bl	__aeabi_d2iz
+ 1145              	.LVL115:
+ 1146 0104 0E4B     		ldr	r3, .L95+32
+ 1147 0106 23F81400 		strh	r0, [r3, r4, lsl #1]	@ movhi
+ 434:../system/src/aprs/afsk.c **** 	{
+ 1148              		.loc 1 434 0 discriminator 3
+ 1149 010a 0134     		adds	r4, r4, #1
+ 1150              	.LVL116:
+ 1151 010c E4B2     		uxtb	r4, r4
+ 1152              	.LVL117:
+ 1153              	.L92:
+ 434:../system/src/aprs/afsk.c **** 	{
+ 1154              		.loc 1 434 0 is_stmt 0 discriminator 1
+ 1155 010e 072C     		cmp	r4, #7
+ 1156 0110 91D9     		bls	.L93
+ 440:../system/src/aprs/afsk.c **** 	}
+ 441:../system/src/aprs/afsk.c **** 
+ 442:../system/src/aprs/afsk.c **** 	afsk->phase_inc = MARK_INC;
+ 1157              		.loc 1 442 0 is_stmt 1
+ 1158 0112 4023     		movs	r3, #64
+ 1159 0114 6B81     		strh	r3, [r5, #10]	@ movhi
+ 443:../system/src/aprs/afsk.c **** 
+ 444:../system/src/aprs/afsk.c **** }
+ 1160              		.loc 1 444 0
+ 1161 0116 BDEC028B 		vldm	sp!, {d8}
+ 1162              		.cfi_restore 80
+ 1163              		.cfi_restore 81
+ 1164              		.cfi_def_cfa_offset 24
+ 1165 011a F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1166              	.LVL118:
+ 1167              	.L96:
+ 1168 011c AFF30080 		.align	3
+ 1169              	.L95:
+ 1170 0120 00000000 		.word	0
+ 1171 0124 00FEAF40 		.word	1085275648
+ 1172 0128 00000000 		.word	0
+ 1173 012c 0030A140 		.word	1084305408
+ 1174 0130 00C09240 		.word	1083359232
+ 1175 0134 00000000 		.word	.LANCHOR3
+ 1176 0138 00000000 		.word	.LANCHOR4
+ 1177 013c 00000000 		.word	.LANCHOR5
+ 1178 0140 00000000 		.word	.LANCHOR6
+ 1179 0144 6F1283C0 		.word	3229815407
+ 1180 0148 CA211940 		.word	1075388874
+ 1181              		.cfi_endproc
+ 1182              	.LFE12:
+ 1184              		.comm	DrawCounter,1,1
+ 1185              		.comm	PersistRand,1,1
+ 1186              		.section	.bss.corr_mark_i,"aw",%nobits
+ 1187              		.align	2
+ 1188              		.set	.LANCHOR3,. + 0
+ 1191              	corr_mark_i:
+ 1192 0000 00000000 		.space	16
+ 1192      00000000 
+ 1192      00000000 
+ 1192      00000000 
+ 1193              		.section	.bss.corr_mark_q,"aw",%nobits
+ 1194              		.align	2
+ 1195              		.set	.LANCHOR4,. + 0
+ 1198              	corr_mark_q:
+ 1199 0000 00000000 		.space	16
+ 1199      00000000 
+ 1199      00000000 
+ 1199      00000000 
+ 1200              		.section	.bss.corr_space_i,"aw",%nobits
+ 1201              		.align	2
+ 1202              		.set	.LANCHOR5,. + 0
+ 1205              	corr_space_i:
+ 1206 0000 00000000 		.space	16
+ 1206      00000000 
+ 1206      00000000 
+ 1206      00000000 
+ 1207              		.section	.bss.corr_space_q,"aw",%nobits
+ 1208              		.align	2
+ 1209              		.set	.LANCHOR6,. + 0
+ 1212              	corr_space_q:
+ 1213 0000 00000000 		.space	16
+ 1213      00000000 
+ 1213      00000000 
+ 1213      00000000 
+ 1214              		.section	.bss.data,"aw",%nobits
+ 1215              		.align	2
+ 1216              		.set	.LANCHOR2,. + 0
+ 1219              	data:
+ 1220 0000 00000000 		.space	16
+ 1220      00000000 
+ 1220      00000000 
+ 1220      00000000 
+ 1221              		.section	.bss.ptr,"aw",%nobits
+ 1222              		.set	.LANCHOR1,. + 0
+ 1225              	ptr:
+ 1226 0000 00       		.space	1
+ 1227              		.section	.rodata.sin_table,"a",%progbits
+ 1228              		.align	2
+ 1229              		.set	.LANCHOR0,. + 0
+ 1232              	sin_table:
+ 1233 0000 80       		.byte	-128
+ 1234 0001 81       		.byte	-127
+ 1235 0002 83       		.byte	-125
+ 1236 0003 84       		.byte	-124
+ 1237 0004 86       		.byte	-122
+ 1238 0005 87       		.byte	-121
+ 1239 0006 89       		.byte	-119
+ 1240 0007 8A       		.byte	-118
+ 1241 0008 8C       		.byte	-116
+ 1242 0009 8E       		.byte	-114
+ 1243 000a 8F       		.byte	-113
+ 1244 000b 91       		.byte	-111
+ 1245 000c 92       		.byte	-110
+ 1246 000d 94       		.byte	-108
+ 1247 000e 95       		.byte	-107
+ 1248 000f 97       		.byte	-105
+ 1249 0010 98       		.byte	-104
+ 1250 0011 9A       		.byte	-102
+ 1251 0012 9B       		.byte	-101
+ 1252 0013 9D       		.byte	-99
+ 1253 0014 9E       		.byte	-98
+ 1254 0015 A0       		.byte	-96
+ 1255 0016 A2       		.byte	-94
+ 1256 0017 A3       		.byte	-93
+ 1257 0018 A5       		.byte	-91
+ 1258 0019 A6       		.byte	-90
+ 1259 001a A7       		.byte	-89
+ 1260 001b A9       		.byte	-87
+ 1261 001c AA       		.byte	-86
+ 1262 001d AC       		.byte	-84
+ 1263 001e AD       		.byte	-83
+ 1264 001f AF       		.byte	-81
+ 1265 0020 B0       		.byte	-80
+ 1266 0021 B2       		.byte	-78
+ 1267 0022 B3       		.byte	-77
+ 1268 0023 B5       		.byte	-75
+ 1269 0024 B6       		.byte	-74
+ 1270 0025 B7       		.byte	-73
+ 1271 0026 B9       		.byte	-71
+ 1272 0027 BA       		.byte	-70
+ 1273 0028 BC       		.byte	-68
+ 1274 0029 BD       		.byte	-67
+ 1275 002a BE       		.byte	-66
+ 1276 002b C0       		.byte	-64
+ 1277 002c C1       		.byte	-63
+ 1278 002d C2       		.byte	-62
+ 1279 002e C4       		.byte	-60
+ 1280 002f C5       		.byte	-59
+ 1281 0030 C6       		.byte	-58
+ 1282 0031 C8       		.byte	-56
+ 1283 0032 C9       		.byte	-55
+ 1284 0033 CA       		.byte	-54
+ 1285 0034 CB       		.byte	-53
+ 1286 0035 CD       		.byte	-51
+ 1287 0036 CE       		.byte	-50
+ 1288 0037 CF       		.byte	-49
+ 1289 0038 D0       		.byte	-48
+ 1290 0039 D2       		.byte	-46
+ 1291 003a D3       		.byte	-45
+ 1292 003b D4       		.byte	-44
+ 1293 003c D5       		.byte	-43
+ 1294 003d D6       		.byte	-42
+ 1295 003e D7       		.byte	-41
+ 1296 003f D9       		.byte	-39
+ 1297 0040 DA       		.byte	-38
+ 1298 0041 DB       		.byte	-37
+ 1299 0042 DC       		.byte	-36
+ 1300 0043 DD       		.byte	-35
+ 1301 0044 DE       		.byte	-34
+ 1302 0045 DF       		.byte	-33
+ 1303 0046 E0       		.byte	-32
+ 1304 0047 E1       		.byte	-31
+ 1305 0048 E2       		.byte	-30
+ 1306 0049 E3       		.byte	-29
+ 1307 004a E4       		.byte	-28
+ 1308 004b E5       		.byte	-27
+ 1309 004c E6       		.byte	-26
+ 1310 004d E7       		.byte	-25
+ 1311 004e E8       		.byte	-24
+ 1312 004f E9       		.byte	-23
+ 1313 0050 EA       		.byte	-22
+ 1314 0051 EA       		.byte	-22
+ 1315 0052 EB       		.byte	-21
+ 1316 0053 EC       		.byte	-20
+ 1317 0054 ED       		.byte	-19
+ 1318 0055 EE       		.byte	-18
+ 1319 0056 EE       		.byte	-18
+ 1320 0057 EF       		.byte	-17
+ 1321 0058 F0       		.byte	-16
+ 1322 0059 F1       		.byte	-15
+ 1323 005a F1       		.byte	-15
+ 1324 005b F2       		.byte	-14
+ 1325 005c F3       		.byte	-13
+ 1326 005d F3       		.byte	-13
+ 1327 005e F4       		.byte	-12
+ 1328 005f F5       		.byte	-11
+ 1329 0060 F5       		.byte	-11
+ 1330 0061 F6       		.byte	-10
+ 1331 0062 F6       		.byte	-10
+ 1332 0063 F7       		.byte	-9
+ 1333 0064 F8       		.byte	-8
+ 1334 0065 F8       		.byte	-8
+ 1335 0066 F9       		.byte	-7
+ 1336 0067 F9       		.byte	-7
+ 1337 0068 FA       		.byte	-6
+ 1338 0069 FA       		.byte	-6
+ 1339 006a FA       		.byte	-6
+ 1340 006b FB       		.byte	-5
+ 1341 006c FB       		.byte	-5
+ 1342 006d FC       		.byte	-4
+ 1343 006e FC       		.byte	-4
+ 1344 006f FC       		.byte	-4
+ 1345 0070 FD       		.byte	-3
+ 1346 0071 FD       		.byte	-3
+ 1347 0072 FD       		.byte	-3
+ 1348 0073 FD       		.byte	-3
+ 1349 0074 FE       		.byte	-2
+ 1350 0075 FE       		.byte	-2
+ 1351 0076 FE       		.byte	-2
+ 1352 0077 FE       		.byte	-2
+ 1353 0078 FE       		.byte	-2
+ 1354 0079 FF       		.byte	-1
+ 1355 007a FF       		.byte	-1
+ 1356 007b FF       		.byte	-1
+ 1357 007c FF       		.byte	-1
+ 1358 007d FF       		.byte	-1
+ 1359 007e FF       		.byte	-1
+ 1360 007f FF       		.byte	-1
+ 1361              		.text
+ 1362              	.Letext0:
+ 1363              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1364              		.file 3 "../system/include/aprs/cfifo.h"
+ 1365              		.file 4 "../system/include/aprs/afsk.h"
+ 1366              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1367              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1368              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1369              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1370              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 1371              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+ 1372              		.file 11 "../system/include/aprs/ax25.h"
+ 1373              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 1374              		.file 13 "../system/include/aprs/dac.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 afsk.c
+     /tmp/ccmrg9wf.s:18     .text.fifo_isempty:0000000000000000 $t
+     /tmp/ccmrg9wf.s:24     .text.fifo_isempty:0000000000000000 fifo_isempty
+     /tmp/ccmrg9wf.s:47     .text.fifo_isfull:0000000000000000 $t
+     /tmp/ccmrg9wf.s:53     .text.fifo_isfull:0000000000000000 fifo_isfull
+     /tmp/ccmrg9wf.s:98     .text.fifo_push:0000000000000000 $t
+     /tmp/ccmrg9wf.s:104    .text.fifo_push:0000000000000000 fifo_push
+     /tmp/ccmrg9wf.s:135    .text.fifo_pop:0000000000000000 $t
+     /tmp/ccmrg9wf.s:141    .text.fifo_pop:0000000000000000 fifo_pop
+     /tmp/ccmrg9wf.s:175    .text.fifo_flush:0000000000000000 $t
+     /tmp/ccmrg9wf.s:181    .text.fifo_flush:0000000000000000 fifo_flush
+     /tmp/ccmrg9wf.s:198    .text.fifo_init:0000000000000000 $t
+     /tmp/ccmrg9wf.s:204    .text.fifo_init:0000000000000000 fifo_init
+     /tmp/ccmrg9wf.s:228    .text.sin_sample:0000000000000000 $t
+     /tmp/ccmrg9wf.s:234    .text.sin_sample:0000000000000000 sin_sample
+     /tmp/ccmrg9wf.s:274    .text.sin_sample:000000000000001c $d
+     /tmp/ccmrg9wf.s:279    .text.hdlc_parse:0000000000000000 $t
+     /tmp/ccmrg9wf.s:285    .text.hdlc_parse:0000000000000000 hdlc_parse
+     /tmp/ccmrg9wf.s:497    .text.afsk_demod:0000000000000000 $t
+     /tmp/ccmrg9wf.s:503    .text.afsk_demod:0000000000000000 afsk_demod
+     /tmp/ccmrg9wf.s:608    .text.afsk_demod:0000000000000084 $d
+     /tmp/ccmrg9wf.s:618    .text.AFSK_ADC_ISR:0000000000000000 $t
+     /tmp/ccmrg9wf.s:625    .text.AFSK_ADC_ISR:0000000000000000 AFSK_ADC_ISR
+     /tmp/ccmrg9wf.s:729    .text.afsk_txStart:0000000000000000 $t
+     /tmp/ccmrg9wf.s:736    .text.afsk_txStart:0000000000000000 afsk_txStart
+     /tmp/ccmrg9wf.s:786    .text.afsk_txStart:0000000000000038 $d
+     /tmp/ccmrg9wf.s:791    .text.AFSK_DAC_ISR:0000000000000000 $t
+     /tmp/ccmrg9wf.s:798    .text.AFSK_DAC_ISR:0000000000000000 AFSK_DAC_ISR
+     /tmp/ccmrg9wf.s:1012   .text.AFSK_Init:0000000000000000 $t
+     /tmp/ccmrg9wf.s:1019   .text.AFSK_Init:0000000000000000 AFSK_Init
+     /tmp/ccmrg9wf.s:1170   .text.AFSK_Init:0000000000000120 $d
+                            *COM*:0000000000000001 DrawCounter
+                            *COM*:0000000000000001 PersistRand
+     /tmp/ccmrg9wf.s:1187   .bss.corr_mark_i:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1191   .bss.corr_mark_i:0000000000000000 corr_mark_i
+     /tmp/ccmrg9wf.s:1194   .bss.corr_mark_q:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1198   .bss.corr_mark_q:0000000000000000 corr_mark_q
+     /tmp/ccmrg9wf.s:1201   .bss.corr_space_i:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1205   .bss.corr_space_i:0000000000000000 corr_space_i
+     /tmp/ccmrg9wf.s:1208   .bss.corr_space_q:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1212   .bss.corr_space_q:0000000000000000 corr_space_q
+     /tmp/ccmrg9wf.s:1215   .bss.data:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1219   .bss.data:0000000000000000 data
+     /tmp/ccmrg9wf.s:1225   .bss.ptr:0000000000000000 ptr
+     /tmp/ccmrg9wf.s:1226   .bss.ptr:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1228   .rodata.sin_table:0000000000000000 $d
+     /tmp/ccmrg9wf.s:1232   .rodata.sin_table:0000000000000000 sin_table
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.stdlib.h.13.4ed386f5c1a80d71e72172885d946ef2
+                           .group:0000000000000000 wm4.alloca.h.8.dfc0c703c47ec3e69746825b17d9e66d
+                           .group:0000000000000000 wm4.stdlib.h.56.d4493cd3736e51e9d56335045f26df45
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+
+UNDEFINED SYMBOLS
+DA_Start
+tx10m
+DA_Stop
+__aeabi_i2d
+__aeabi_dmul
+__aeabi_ddiv
+__aeabi_d2iz
+memset
+cos
+sin

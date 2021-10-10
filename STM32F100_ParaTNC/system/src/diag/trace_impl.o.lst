@@ -1,0 +1,207 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"trace_impl.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.trace_initialize,"ax",%progbits
+  16              		.align	1
+  17              		.global	trace_initialize
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	trace_initialize:
+  24              	.LFB63:
+  25              		.file 1 "../system/src/diag/trace_impl.c"
+   1:../system/src/diag/trace_impl.c **** //
+   2:../system/src/diag/trace_impl.c **** // This file is part of the µOS++ III distribution.
+   3:../system/src/diag/trace_impl.c **** // Copyright (c) 2014 Liviu Ionescu.
+   4:../system/src/diag/trace_impl.c **** //
+   5:../system/src/diag/trace_impl.c **** 
+   6:../system/src/diag/trace_impl.c **** // ----------------------------------------------------------------------------
+   7:../system/src/diag/trace_impl.c **** 
+   8:../system/src/diag/trace_impl.c **** #if defined(TRACE)
+   9:../system/src/diag/trace_impl.c **** 
+  10:../system/src/diag/trace_impl.c **** #include "cmsis_device.h"
+  11:../system/src/diag/trace_impl.c **** #include "diag/Trace.h"
+  12:../system/src/diag/trace_impl.c **** 
+  13:../system/src/diag/trace_impl.c **** // ----------------------------------------------------------------------------
+  14:../system/src/diag/trace_impl.c **** 
+  15:../system/src/diag/trace_impl.c **** // One of these definitions must be passed via the compiler command line
+  16:../system/src/diag/trace_impl.c **** // Note: small Cortex-M0/M0+ might implement a simplified debug interface.
+  17:../system/src/diag/trace_impl.c **** 
+  18:../system/src/diag/trace_impl.c **** //#define OS_USE_TRACE_ITM
+  19:../system/src/diag/trace_impl.c **** //#define OS_USE_TRACE_SEMIHOSTING_DEBUG
+  20:../system/src/diag/trace_impl.c **** //#define OS_USE_TRACE_SEMIHOSTING_STDOUT
+  21:../system/src/diag/trace_impl.c **** 
+  22:../system/src/diag/trace_impl.c **** #if !(defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__))
+  23:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_ITM)
+  24:../system/src/diag/trace_impl.c **** #undef OS_USE_TRACE_ITM
+  25:../system/src/diag/trace_impl.c **** #warning "ITM unavailable"
+  26:../system/src/diag/trace_impl.c **** #endif // defined(OS_USE_TRACE_ITM)
+  27:../system/src/diag/trace_impl.c **** #endif // !(defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__))
+  28:../system/src/diag/trace_impl.c **** 
+  29:../system/src/diag/trace_impl.c **** #if defined(OS_DEBUG_SEMIHOSTING_FAULTS)
+  30:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_SEMIHOSTING_STDOUT) || defined(OS_USE_TRACE_SEMIHOSTING_DEBUG)
+  31:../system/src/diag/trace_impl.c **** #error "Cannot debug semihosting using semihosting trace; use OS_USE_TRACE_ITM"
+  32:../system/src/diag/trace_impl.c **** #endif
+  33:../system/src/diag/trace_impl.c **** #endif
+  34:../system/src/diag/trace_impl.c **** 
+  35:../system/src/diag/trace_impl.c **** // ----------------------------------------------------------------------------
+  36:../system/src/diag/trace_impl.c **** 
+  37:../system/src/diag/trace_impl.c **** // Forward definitions.
+  38:../system/src/diag/trace_impl.c **** 
+  39:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_ITM)
+  40:../system/src/diag/trace_impl.c **** static ssize_t
+  41:../system/src/diag/trace_impl.c **** _trace_write_itm (const char* buf, size_t nbyte);
+  42:../system/src/diag/trace_impl.c **** #endif
+  43:../system/src/diag/trace_impl.c **** 
+  44:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_SEMIHOSTING_STDOUT)
+  45:../system/src/diag/trace_impl.c **** static ssize_t
+  46:../system/src/diag/trace_impl.c **** _trace_write_semihosting_stdout(const char* buf, size_t nbyte);
+  47:../system/src/diag/trace_impl.c **** #endif
+  48:../system/src/diag/trace_impl.c **** 
+  49:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_SEMIHOSTING_DEBUG)
+  50:../system/src/diag/trace_impl.c **** static ssize_t
+  51:../system/src/diag/trace_impl.c **** _trace_write_semihosting_debug(const char* buf, size_t nbyte);
+  52:../system/src/diag/trace_impl.c **** #endif
+  53:../system/src/diag/trace_impl.c **** 
+  54:../system/src/diag/trace_impl.c **** // ----------------------------------------------------------------------------
+  55:../system/src/diag/trace_impl.c **** 
+  56:../system/src/diag/trace_impl.c **** void
+  57:../system/src/diag/trace_impl.c **** trace_initialize(void)
+  58:../system/src/diag/trace_impl.c **** {
+  26              		.loc 1 58 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  59:../system/src/diag/trace_impl.c ****   // For regular ITM / semihosting, no inits required.
+  60:../system/src/diag/trace_impl.c **** }
+  31              		.loc 1 60 0
+  32 0000 7047     		bx	lr
+  33              		.cfi_endproc
+  34              	.LFE63:
+  36              		.section	.text.trace_write,"ax",%progbits
+  37              		.align	1
+  38              		.global	trace_write
+  39              		.syntax unified
+  40              		.thumb
+  41              		.thumb_func
+  42              		.fpu softvfp
+  44              	trace_write:
+  45              	.LFB64:
+  61:../system/src/diag/trace_impl.c **** 
+  62:../system/src/diag/trace_impl.c **** // ----------------------------------------------------------------------------
+  63:../system/src/diag/trace_impl.c **** 
+  64:../system/src/diag/trace_impl.c **** // This function is called from _write() for fd==1 or fd==2 and from some
+  65:../system/src/diag/trace_impl.c **** // of the trace_* functions.
+  66:../system/src/diag/trace_impl.c **** 
+  67:../system/src/diag/trace_impl.c **** ssize_t
+  68:../system/src/diag/trace_impl.c **** trace_write (const char* buf __attribute__((unused)),
+  69:../system/src/diag/trace_impl.c **** 	     size_t nbyte __attribute__((unused)))
+  70:../system/src/diag/trace_impl.c **** {
+  46              		.loc 1 70 0
+  47              		.cfi_startproc
+  48              		@ args = 0, pretend = 0, frame = 0
+  49              		@ frame_needed = 0, uses_anonymous_args = 0
+  50              		@ link register save eliminated.
+  51              	.LVL0:
+  71:../system/src/diag/trace_impl.c **** #if defined(OS_USE_TRACE_ITM)
+  72:../system/src/diag/trace_impl.c ****   return _trace_write_itm (buf, nbyte);
+  73:../system/src/diag/trace_impl.c **** #elif defined(OS_USE_TRACE_SEMIHOSTING_STDOUT)
+  74:../system/src/diag/trace_impl.c ****   return _trace_write_semihosting_stdout(buf, nbyte);
+  75:../system/src/diag/trace_impl.c **** #elif defined(OS_USE_TRACE_SEMIHOSTING_DEBUG)
+  76:../system/src/diag/trace_impl.c ****   return _trace_write_semihosting_debug(buf, nbyte);
+  77:../system/src/diag/trace_impl.c **** #endif
+  78:../system/src/diag/trace_impl.c **** 
+  79:../system/src/diag/trace_impl.c ****   return -1;
+  80:../system/src/diag/trace_impl.c **** }
+  52              		.loc 1 80 0
+  53 0000 4FF0FF30 		mov	r0, #-1
+  54              	.LVL1:
+  55 0004 7047     		bx	lr
+  56              		.cfi_endproc
+  57              	.LFE64:
+  59              		.text
+  60              	.Letext0:
+  61              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  62              		.file 3 "../system/include/cmsis/core_cm3.h"
+  63              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+  64              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  65              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+  66              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/types.h"
+  67              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 trace_impl.c
+     /tmp/cccSvUfp.s:16     .text.trace_initialize:0000000000000000 $t
+     /tmp/cccSvUfp.s:23     .text.trace_initialize:0000000000000000 trace_initialize
+     /tmp/cccSvUfp.s:37     .text.trace_write:0000000000000000 $t
+     /tmp/cccSvUfp.s:44     .text.trace_write:0000000000000000 trace_write
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.unistd.h.9.2709ac388e61c5728907bf928c890ff7
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.137.87f4223e19f53e7620a07a017dcd2e0a
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4.stddef.h.39.79ae3d254e9e71fbd4877f77aa50f4ea
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.unistd.h.170.da6e816043042c61475c2b1f58468b37
+
+NO UNDEFINED SYMBOLS

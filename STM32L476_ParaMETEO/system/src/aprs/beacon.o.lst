@@ -1,0 +1,471 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"beacon.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.beacon_send_own,"ax",%progbits
+  18              		.align	1
+  19              		.global	beacon_send_own
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	beacon_send_own:
+  26              	.LFB354:
+  27              		.file 1 "../system/src/aprs/beacon.c"
+   1:../system/src/aprs/beacon.c **** /*
+   2:../system/src/aprs/beacon.c ****  * beacon.c
+   3:../system/src/aprs/beacon.c ****  *
+   4:../system/src/aprs/beacon.c ****  *  Created on: 01.07.2017
+   5:../system/src/aprs/beacon.c ****  *      Author: mateusz
+   6:../system/src/aprs/beacon.c ****  */
+   7:../system/src/aprs/beacon.c **** 
+   8:../system/src/aprs/beacon.c **** 
+   9:../system/src/aprs/beacon.c **** #include "aprs/beacon.h"
+  10:../system/src/aprs/beacon.c **** #include "main.h"
+  11:../system/src/aprs/beacon.c **** #include "rte_main.h"
+  12:../system/src/aprs/beacon.c **** 
+  13:../system/src/aprs/beacon.c **** #include "station_config.h"
+  14:../system/src/aprs/beacon.c **** 
+  15:../system/src/aprs/beacon.c **** #include <stdio.h>
+  16:../system/src/aprs/beacon.c **** 
+  17:../system/src/aprs/beacon.c **** void beacon_send_own(void) {
+  28              		.loc 1 17 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+  35              		.cfi_offset 14, -4
+  36 0002 86B0     		sub	sp, sp, #24
+  37              		.cfi_def_cfa_offset 32
+  38              	.L2:
+  39              	.LBB6:
+  40              	.LBB7:
+  41              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA01"
+   9:../include/main.h **** #define SW_DATE "01102021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+  64:../include/main.h **** }
+  65:../include/main.h **** 
+  66:../include/main.h **** inline void main_wait_for_tx_complete(void) {
+  67:../include/main.h **** 	while(main_afsk.sending == 1);
+  42              		.loc 2 67 0
+  43 0004 194B     		ldr	r3, .L4
+  44 0006 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+  45 000a 002B     		cmp	r3, #0
+  46 000c FAD1     		bne	.L2
+  47              	.LBE7:
+  48              	.LBE6:
+  18:../system/src/aprs/beacon.c **** 	main_wait_for_tx_complete();
+  19:../system/src/aprs/beacon.c **** 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, mai
+  49              		.loc 1 19 0
+  50 000e 184B     		ldr	r3, .L4+4
+  51 0010 1A68     		ldr	r2, [r3]
+  52 0012 92F90C30 		ldrsb	r3, [r2, #12]
+  53 0016 92F91410 		ldrsb	r1, [r2, #20]
+  54 001a 1532     		adds	r2, r2, #21
+  55 001c 154C     		ldr	r4, .L4+8
+  56 001e 0492     		str	r2, [sp, #16]
+  57 0020 154A     		ldr	r2, .L4+12
+  58 0022 92F90020 		ldrsb	r2, [r2]
+  59 0026 0392     		str	r2, [sp, #12]
+  60 0028 0291     		str	r1, [sp, #8]
+  61 002a 144A     		ldr	r2, .L4+16
+  62 002c 0192     		str	r2, [sp, #4]
+  63 002e 144A     		ldr	r2, .L4+20
+  64 0030 92F90020 		ldrsb	r2, [r2]
+  65 0034 0092     		str	r2, [sp]
+  66 0036 134A     		ldr	r2, .L4+24
+  67 0038 1349     		ldr	r1, .L4+28
+  68 003a 2046     		mov	r0, r4
+  69 003c FFF7FEFF 		bl	sprintf
+  70              	.LVL0:
+  71 0040 C0B2     		uxtb	r0, r0
+  72 0042 124B     		ldr	r3, .L4+32
+  73 0044 1870     		strb	r0, [r3]
+  20:../system/src/aprs/beacon.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+  74              		.loc 1 20 0
+  75 0046 0023     		movs	r3, #0
+  76 0048 2354     		strb	r3, [r4, r0]
+  21:../system/src/aprs/beacon.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+  77              		.loc 1 21 0
+  78 004a 114B     		ldr	r3, .L4+36
+  79 004c 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+  80 004e 0090     		str	r0, [sp]
+  81 0050 2346     		mov	r3, r4
+  82 0052 1049     		ldr	r1, .L4+40
+  83 0054 1048     		ldr	r0, .L4+44
+  84 0056 FFF7FEFF 		bl	ax25_sendVia
+  85              	.LVL1:
+  22:../system/src/aprs/beacon.c **** 	after_tx_lock = 1;
+  86              		.loc 1 22 0
+  87 005a 104B     		ldr	r3, .L4+48
+  88 005c 0122     		movs	r2, #1
+  89 005e 1A70     		strb	r2, [r3]
+  23:../system/src/aprs/beacon.c ****  	afsk_txStart(&main_afsk);
+  90              		.loc 1 23 0
+  91 0060 0248     		ldr	r0, .L4
+  92 0062 FFF7FEFF 		bl	afsk_txStart
+  93              	.LVL2:
+  24:../system/src/aprs/beacon.c **** }
+  94              		.loc 1 24 0
+  95 0066 06B0     		add	sp, sp, #24
+  96              		.cfi_def_cfa_offset 8
+  97              		@ sp needed
+  98 0068 10BD     		pop	{r4, pc}
+  99              	.L5:
+ 100 006a 00BF     		.align	2
+ 101              	.L4:
+ 102 006c 00000000 		.word	main_afsk
+ 103 0070 00000000 		.word	main_config_data_basic
+ 104 0074 00000000 		.word	main_own_aprs_msg
+ 105 0078 00000000 		.word	main_symbol_s
+ 106 007c 00000000 		.word	main_string_longitude
+ 107 0080 00000000 		.word	main_symbol_f
+ 108 0084 00000000 		.word	main_string_latitude
+ 109 0088 00000000 		.word	.LC0
+ 110 008c 00000000 		.word	main_own_aprs_msg_len
+ 111 0090 00000000 		.word	main_own_path_ln
+ 112 0094 00000000 		.word	main_own_path
+ 113 0098 00000000 		.word	main_ax25
+ 114 009c 00000000 		.word	after_tx_lock
+ 115              		.cfi_endproc
+ 116              	.LFE354:
+ 118              		.section	.text.beacon_send_on_startup,"ax",%progbits
+ 119              		.align	1
+ 120              		.global	beacon_send_on_startup
+ 121              		.syntax unified
+ 122              		.thumb
+ 123              		.thumb_func
+ 124              		.fpu fpv4-sp-d16
+ 126              	beacon_send_on_startup:
+ 127              	.LFB355:
+  25:../system/src/aprs/beacon.c **** 
+  26:../system/src/aprs/beacon.c **** void beacon_send_on_startup(void) {
+ 128              		.loc 1 26 0
+ 129              		.cfi_startproc
+ 130              		@ args = 0, pretend = 0, frame = 0
+ 131              		@ frame_needed = 0, uses_anonymous_args = 0
+ 132 0000 10B5     		push	{r4, lr}
+ 133              		.cfi_def_cfa_offset 8
+ 134              		.cfi_offset 4, -8
+ 135              		.cfi_offset 14, -4
+ 136 0002 82B0     		sub	sp, sp, #8
+ 137              		.cfi_def_cfa_offset 16
+  27:../system/src/aprs/beacon.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "> START boot_cnt %#.2x hf_cnt %#.2x", (uint16_
+ 138              		.loc 1 27 0
+ 139 0004 0E4C     		ldr	r4, .L8
+ 140 0006 0F4B     		ldr	r3, .L8+4
+ 141 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 142 000a 0F4A     		ldr	r2, .L8+8
+ 143 000c 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 144 000e 0F49     		ldr	r1, .L8+12
+ 145 0010 2046     		mov	r0, r4
+ 146 0012 FFF7FEFF 		bl	sprintf
+ 147              	.LVL3:
+ 148 0016 C0B2     		uxtb	r0, r0
+ 149 0018 0D4B     		ldr	r3, .L8+16
+ 150 001a 1870     		strb	r0, [r3]
+  28:../system/src/aprs/beacon.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 151              		.loc 1 28 0
+ 152 001c 0023     		movs	r3, #0
+ 153 001e 2354     		strb	r3, [r4, r0]
+  29:../system/src/aprs/beacon.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 154              		.loc 1 29 0
+ 155 0020 0C4B     		ldr	r3, .L8+20
+ 156 0022 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 157 0024 0090     		str	r0, [sp]
+ 158 0026 2346     		mov	r3, r4
+ 159 0028 0B49     		ldr	r1, .L8+24
+ 160 002a 0C48     		ldr	r0, .L8+28
+ 161 002c FFF7FEFF 		bl	ax25_sendVia
+ 162              	.LVL4:
+  30:../system/src/aprs/beacon.c **** 	after_tx_lock = 1;
+ 163              		.loc 1 30 0
+ 164 0030 0B4B     		ldr	r3, .L8+32
+ 165 0032 0122     		movs	r2, #1
+ 166 0034 1A70     		strb	r2, [r3]
+  31:../system/src/aprs/beacon.c ****  	afsk_txStart(&main_afsk);
+ 167              		.loc 1 31 0
+ 168 0036 0B48     		ldr	r0, .L8+36
+ 169 0038 FFF7FEFF 		bl	afsk_txStart
+ 170              	.LVL5:
+  32:../system/src/aprs/beacon.c **** }
+ 171              		.loc 1 32 0
+ 172 003c 02B0     		add	sp, sp, #8
+ 173              		.cfi_def_cfa_offset 8
+ 174              		@ sp needed
+ 175 003e 10BD     		pop	{r4, pc}
+ 176              	.L9:
+ 177              		.align	2
+ 178              	.L8:
+ 179 0040 00000000 		.word	main_own_aprs_msg
+ 180 0044 00000000 		.word	rte_main_hard_faults
+ 181 0048 00000000 		.word	rte_main_boot_cycles
+ 182 004c 00000000 		.word	.LC1
+ 183 0050 00000000 		.word	main_own_aprs_msg_len
+ 184 0054 00000000 		.word	main_own_path_ln
+ 185 0058 00000000 		.word	main_own_path
+ 186 005c 00000000 		.word	main_ax25
+ 187 0060 00000000 		.word	after_tx_lock
+ 188 0064 00000000 		.word	main_afsk
+ 189              		.cfi_endproc
+ 190              	.LFE355:
+ 192              		.section	.text.beacon_send_from_user_content,"ax",%progbits
+ 193              		.align	1
+ 194              		.global	beacon_send_from_user_content
+ 195              		.syntax unified
+ 196              		.thumb
+ 197              		.thumb_func
+ 198              		.fpu fpv4-sp-d16
+ 200              	beacon_send_from_user_content:
+ 201              	.LFB356:
+  33:../system/src/aprs/beacon.c **** 
+  34:../system/src/aprs/beacon.c **** void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
+ 202              		.loc 1 34 0
+ 203              		.cfi_startproc
+ 204              		@ args = 0, pretend = 0, frame = 0
+ 205              		@ frame_needed = 0, uses_anonymous_args = 0
+ 206              	.LVL6:
+ 207 0000 00B5     		push	{lr}
+ 208              		.cfi_def_cfa_offset 4
+ 209              		.cfi_offset 14, -4
+ 210 0002 83B0     		sub	sp, sp, #12
+ 211              		.cfi_def_cfa_offset 16
+ 212 0004 0B46     		mov	r3, r1
+ 213              	.L11:
+ 214              	.LBB8:
+ 215              	.LBB9:
+ 216              		.loc 2 67 0
+ 217 0006 0A4A     		ldr	r2, .L13
+ 218 0008 92F83024 		ldrb	r2, [r2, #1072]	@ zero_extendqisi2
+ 219 000c 002A     		cmp	r2, #0
+ 220 000e FAD1     		bne	.L11
+ 221              	.LBE9:
+ 222              	.LBE8:
+  35:../system/src/aprs/beacon.c **** 	main_wait_for_tx_complete();
+  36:../system/src/aprs/beacon.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, content_ptr, content_ln);
+ 223              		.loc 1 36 0
+ 224 0010 084A     		ldr	r2, .L13+4
+ 225 0012 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 226 0014 0090     		str	r0, [sp]
+ 227 0016 0849     		ldr	r1, .L13+8
+ 228              	.LVL7:
+ 229 0018 0848     		ldr	r0, .L13+12
+ 230              	.LVL8:
+ 231 001a FFF7FEFF 		bl	ax25_sendVia
+ 232              	.LVL9:
+  37:../system/src/aprs/beacon.c **** 	after_tx_lock = 1;
+ 233              		.loc 1 37 0
+ 234 001e 084B     		ldr	r3, .L13+16
+ 235 0020 0122     		movs	r2, #1
+ 236 0022 1A70     		strb	r2, [r3]
+  38:../system/src/aprs/beacon.c ****  	afsk_txStart(&main_afsk);
+ 237              		.loc 1 38 0
+ 238 0024 0248     		ldr	r0, .L13
+ 239 0026 FFF7FEFF 		bl	afsk_txStart
+ 240              	.LVL10:
+  39:../system/src/aprs/beacon.c **** }
+ 241              		.loc 1 39 0
+ 242 002a 03B0     		add	sp, sp, #12
+ 243              		.cfi_def_cfa_offset 4
+ 244              		@ sp needed
+ 245 002c 5DF804FB 		ldr	pc, [sp], #4
+ 246              	.L14:
+ 247              		.align	2
+ 248              	.L13:
+ 249 0030 00000000 		.word	main_afsk
+ 250 0034 00000000 		.word	main_own_path_ln
+ 251 0038 00000000 		.word	main_own_path
+ 252 003c 00000000 		.word	main_ax25
+ 253 0040 00000000 		.word	after_tx_lock
+ 254              		.cfi_endproc
+ 255              	.LFE356:
+ 257              		.section	.rodata.beacon_send_on_startup.str1.4,"aMS",%progbits,1
+ 258              		.align	2
+ 259              	.LC1:
+ 260 0000 3E205354 		.ascii	"> START boot_cnt %#.2x hf_cnt %#.2x\000"
+ 260      41525420 
+ 260      626F6F74 
+ 260      5F636E74 
+ 260      2025232E 
+ 261              		.section	.rodata.beacon_send_own.str1.4,"aMS",%progbits,1
+ 262              		.align	2
+ 263              	.LC0:
+ 264 0000 3D257325 		.ascii	"=%s%c%c%s%c%c %s\000"
+ 264      63256325 
+ 264      73256325 
+ 264      63202573 
+ 264      00
+ 265              		.text
+ 266              	.Letext0:
+ 267              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 268              		.file 4 "../system/include/aprs/cfifo.h"
+ 269              		.file 5 "../system/include/aprs/afsk.h"
+ 270              		.file 6 "../system/include/aprs/ax25.h"
+ 271              		.file 7 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 272              		.file 8 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 273              		.file 9 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 274              		.file 10 "../system/include/drivers/serial.h"
+ 275              		.file 11 "../include/config_data.h"
+ 276              		.file 12 "../include/rte_main.h"
+ 277              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 278              		.file 14 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 279              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 280              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 281              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 beacon.c
+     /tmp/ccVbCaR3.s:18     .text.beacon_send_own:0000000000000000 $t
+     /tmp/ccVbCaR3.s:25     .text.beacon_send_own:0000000000000000 beacon_send_own
+     /tmp/ccVbCaR3.s:102    .text.beacon_send_own:000000000000006c $d
+     /tmp/ccVbCaR3.s:119    .text.beacon_send_on_startup:0000000000000000 $t
+     /tmp/ccVbCaR3.s:126    .text.beacon_send_on_startup:0000000000000000 beacon_send_on_startup
+     /tmp/ccVbCaR3.s:179    .text.beacon_send_on_startup:0000000000000040 $d
+     /tmp/ccVbCaR3.s:193    .text.beacon_send_from_user_content:0000000000000000 $t
+     /tmp/ccVbCaR3.s:200    .text.beacon_send_from_user_content:0000000000000000 beacon_send_from_user_content
+     /tmp/ccVbCaR3.s:249    .text.beacon_send_from_user_content:0000000000000030 $d
+     /tmp/ccVbCaR3.s:258    .rodata.beacon_send_on_startup.str1.4:0000000000000000 $d
+     /tmp/ccVbCaR3.s:262    .rodata.beacon_send_own.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.main.h.8.bc9cddc046c84d80bc9382d177e590b0
+                           .group:0000000000000000 wm4.station_config.h.9.dccf6b17ee2bf87c63fe0b152d34825f
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stdio.h.31.7c0e28c411445f3f9c5b11accf882760
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.187.2ff233552538c6ff9b8575ca8ea52cb3
+                           .group:0000000000000000 wm4.cdefs.h.47.7eec48e1bc15e3b0aff1089c232f5a9c
+                           .group:0000000000000000 wm4.stddef.h.39.ec95e8feac892e292b69dc7ae75b0d64
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+
+UNDEFINED SYMBOLS
+sprintf
+ax25_sendVia
+afsk_txStart
+main_afsk
+main_config_data_basic
+main_own_aprs_msg
+main_symbol_s
+main_string_longitude
+main_symbol_f
+main_string_latitude
+main_own_aprs_msg_len
+main_own_path_ln
+main_own_path
+main_ax25
+after_tx_lock
+rte_main_hard_faults
+rte_main_boot_cycles

@@ -1,0 +1,430 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"wx_handler_humidity.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.wx_get_humidity_bme280,"ax",%progbits
+  16              		.align	1
+  17              		.global	wx_get_humidity_bme280
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	wx_get_humidity_bme280:
+  24              	.LFB85:
+  25              		.file 1 "../src/wx_handler_humidity.c"
+   1:../src/wx_handler_humidity.c **** /*
+   2:../src/wx_handler_humidity.c ****  * wx_handler_humidity.c
+   3:../src/wx_handler_humidity.c ****  *
+   4:../src/wx_handler_humidity.c ****  *  Created on: Apr 15, 2021
+   5:../src/wx_handler_humidity.c ****  *      Author: mateusz
+   6:../src/wx_handler_humidity.c ****  */
+   7:../src/wx_handler_humidity.c **** 
+   8:../src/wx_handler_humidity.c **** #include "wx_handler_humidity.h"
+   9:../src/wx_handler_humidity.c **** #include <wx_handler.h>
+  10:../src/wx_handler_humidity.c **** 
+  11:../src/wx_handler_humidity.c **** #include "rte_wx.h"
+  12:../src/wx_handler_humidity.c **** 
+  13:../src/wx_handler_humidity.c **** #include <modbus_rtu/rtu_getters.h>
+  14:../src/wx_handler_humidity.c **** #include <modbus_rtu/rtu_return_values.h>
+  15:../src/wx_handler_humidity.c **** 
+  16:../src/wx_handler_humidity.c **** int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const co
+  17:../src/wx_handler_humidity.c **** 
+  18:../src/wx_handler_humidity.c **** 	int32_t out = 0;
+  19:../src/wx_handler_humidity.c **** 	int32_t measurement_result = 0;
+  20:../src/wx_handler_humidity.c **** 
+  21:../src/wx_handler_humidity.c **** 	// choose a temperature source from the configuration
+  22:../src/wx_handler_humidity.c **** 	switch(config_sources->humidity) {
+  23:../src/wx_handler_humidity.c **** 		case WX_SOURCE_INTERNAL: {
+  24:../src/wx_handler_humidity.c **** 
+  25:../src/wx_handler_humidity.c **** 			if (config_mode->wx_ms5611_or_bme == 0) {
+  26:../src/wx_handler_humidity.c **** 				// MS5611 is chosen
+  27:../src/wx_handler_humidity.c **** 				//
+  28:../src/wx_handler_humidity.c **** 
+  29:../src/wx_handler_humidity.c **** 				// but MS5611 isn't a humidity sensor
+  30:../src/wx_handler_humidity.c **** 				;
+  31:../src/wx_handler_humidity.c **** 			}
+  32:../src/wx_handler_humidity.c **** 			else {
+  33:../src/wx_handler_humidity.c **** 				// BME280
+  34:../src/wx_handler_humidity.c **** 				measurement_result = wx_get_humidity_bme280(&rte_wx_humidity);
+  35:../src/wx_handler_humidity.c **** 
+  36:../src/wx_handler_humidity.c **** 				// if humidity has been retrieved successfully
+  37:../src/wx_handler_humidity.c **** 				if (measurement_result == BME280_OK) {
+  38:../src/wx_handler_humidity.c **** 					rte_wx_humidity_valid = rte_wx_humidity;
+  39:../src/wx_handler_humidity.c **** 				}
+  40:../src/wx_handler_humidity.c **** 			}
+  41:../src/wx_handler_humidity.c **** 
+  42:../src/wx_handler_humidity.c **** 			break;
+  43:../src/wx_handler_humidity.c **** 		}
+  44:../src/wx_handler_humidity.c **** 		case WX_SOURCE_UMB: {
+  45:../src/wx_handler_humidity.c **** 			break;
+  46:../src/wx_handler_humidity.c **** 		}
+  47:../src/wx_handler_humidity.c **** 		case WX_SOURCE_RTU:
+  48:../src/wx_handler_humidity.c **** 		case WX_SOURCE_FULL_RTU: {
+  49:../src/wx_handler_humidity.c **** 
+  50:../src/wx_handler_humidity.c **** 			// get the value read from RTU registers
+  51:../src/wx_handler_humidity.c **** 			measurement_result = rtu_get_humidity(&rte_wx_humidity, config_rtu);
+  52:../src/wx_handler_humidity.c **** 
+  53:../src/wx_handler_humidity.c **** 			// check
+  54:../src/wx_handler_humidity.c **** 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
+  55:../src/wx_handler_humidity.c **** 
+  56:../src/wx_handler_humidity.c **** 				// set the flag that external temperature is available
+  57:../src/wx_handler_humidity.c **** 				out |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;
+  58:../src/wx_handler_humidity.c **** 
+  59:../src/wx_handler_humidity.c **** 				if (measurement_result == BME280_OK) {
+  60:../src/wx_handler_humidity.c **** 					rte_wx_humidity_valid = rte_wx_humidity;
+  61:../src/wx_handler_humidity.c **** 				}
+  62:../src/wx_handler_humidity.c **** 			}
+  63:../src/wx_handler_humidity.c **** 
+  64:../src/wx_handler_humidity.c **** 			break;
+  65:../src/wx_handler_humidity.c **** 		}
+  66:../src/wx_handler_humidity.c **** 		case WX_SOURCE_DAVIS_SERIAL:
+  67:../src/wx_handler_humidity.c **** 			break;
+  68:../src/wx_handler_humidity.c **** 	}
+  69:../src/wx_handler_humidity.c **** 
+  70:../src/wx_handler_humidity.c **** 	return out;
+  71:../src/wx_handler_humidity.c **** }
+  72:../src/wx_handler_humidity.c **** 
+  73:../src/wx_handler_humidity.c **** int32_t wx_get_humidity_bme280(int8_t * const humidity) {
+  26              		.loc 1 73 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 08B5     		push	{r3, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 3, -8
+  34              		.cfi_offset 14, -4
+  35              	.LVL1:
+  74:../src/wx_handler_humidity.c **** 	int32_t output = 0;
+  75:../src/wx_handler_humidity.c **** 
+  76:../src/wx_handler_humidity.c **** 	if (rte_wx_bme280_qf == BME280_QF_FULL) {
+  36              		.loc 1 76 0
+  37 0002 074B     		ldr	r3, .L6
+  38 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  39 0006 0BB1     		cbz	r3, .L5
+  74:../src/wx_handler_humidity.c **** 	int32_t output = 0;
+  40              		.loc 1 74 0
+  41 0008 0020     		movs	r0, #0
+  42              	.LVL2:
+  43              	.L1:
+  77:../src/wx_handler_humidity.c **** 
+  78:../src/wx_handler_humidity.c **** 		output = bme280_get_humidity(humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
+  79:../src/wx_handler_humidity.c **** 	}
+  80:../src/wx_handler_humidity.c **** 
+  81:../src/wx_handler_humidity.c **** 	return output;
+  82:../src/wx_handler_humidity.c **** }
+  44              		.loc 1 82 0
+  45 000a 08BD     		pop	{r3, pc}
+  46              	.LVL3:
+  47              	.L5:
+  48              	.LBB4:
+  49              	.LBB5:
+  50              		.file 2 "../system/include/drivers/bme280.h"
+   1:../system/include/drivers/bme280.h **** /*
+   2:../system/include/drivers/bme280.h ****  * bma150.h
+   3:../system/include/drivers/bme280.h ****  *
+   4:../system/include/drivers/bme280.h ****  *  Created on: 21.06.2020
+   5:../system/include/drivers/bme280.h ****  *      Author: mateusz
+   6:../system/include/drivers/bme280.h ****  */
+   7:../system/include/drivers/bme280.h **** 
+   8:../system/include/drivers/bme280.h **** #ifndef INCLUDE_DRIVERS_BME280_H_
+   9:../system/include/drivers/bme280.h **** #define INCLUDE_DRIVERS_BME280_H_
+  10:../system/include/drivers/bme280.h **** 
+  11:../system/include/drivers/bme280.h **** #include "stdint.h"
+  12:../system/include/drivers/bme280.h **** 
+  13:../system/include/drivers/bme280.h **** #define BME280_OK						0
+  14:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_RESPONDING	-1
+  15:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_AVALIABLE		-2
+  16:../system/include/drivers/bme280.h **** #define BME280_WRONG_PRESSURE_READOUT	-3
+  17:../system/include/drivers/bme280.h **** #define BME280_WRONG_HUMIDITY_READOUT	-4
+  18:../system/include/drivers/bme280.h **** 
+  19:../system/include/drivers/bme280.h **** #define BME280_LN_CALIBRATION 	41
+  20:../system/include/drivers/bme280.h **** #define BME280_LN_RAW_DATA		8
+  21:../system/include/drivers/bme280.h **** 
+  22:../system/include/drivers/bme280.h **** typedef enum bme280_qf {
+  23:../system/include/drivers/bme280.h **** 	BME280_QF_FULL,
+  24:../system/include/drivers/bme280.h **** 	BME280_QF_NOT_AVAILABLE,
+  25:../system/include/drivers/bme280.h **** 	BME280_QF_HUMIDITY_DEGRADED,
+  26:../system/include/drivers/bme280.h **** 	BME280_QF_PRESSURE_DEGRADED,
+  27:../system/include/drivers/bme280.h **** 	BME280_QF_GEN_DEGRADED,
+  28:../system/include/drivers/bme280.h **** 	BME280_QF_UKNOWN
+  29:../system/include/drivers/bme280.h **** }bme280_qf_t;
+  30:../system/include/drivers/bme280.h **** 
+  31:../system/include/drivers/bme280.h **** extern uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
+  32:../system/include/drivers/bme280.h **** extern uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
+  33:../system/include/drivers/bme280.h **** 
+  34:../system/include/drivers/bme280.h **** int32_t bme280_reset(bme280_qf_t* qf);
+  35:../system/include/drivers/bme280.h **** int32_t bme280_setup(void);
+  36:../system/include/drivers/bme280.h **** int32_t bme280_read_calibration(uint8_t* calibration);
+  37:../system/include/drivers/bme280.h **** int32_t bme280_read_raw_data(uint8_t* raw_data);
+  38:../system/include/drivers/bme280.h **** 
+  39:../system/include/drivers/bme280.h **** int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  40:../system/include/drivers/bme280.h **** int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  41:../system/include/drivers/bme280.h **** int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf);
+  42:../system/include/drivers/bme280.h **** 
+  43:../system/include/drivers/bme280.h **** //#define BME280_CONCAT_BYTES(msb, lsb)            (((uint16_t)msb << 8) | (uint16_t)lsb)
+  44:../system/include/drivers/bme280.h **** 
+  45:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_t(void) {
+  46:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[3] << 12) | (bme280_data_buffer[4] << 4) | (bme280_data_buffer[5] >> 4)
+  47:../system/include/drivers/bme280.h **** }
+  48:../system/include/drivers/bme280.h **** 
+  49:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_p(void) {
+  50:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[0] << 12) | (bme280_data_buffer[1] << 4) | (bme280_data_buffer[2] >> 4)
+  51:../system/include/drivers/bme280.h **** 
+  52:../system/include/drivers/bme280.h **** }
+  53:../system/include/drivers/bme280.h **** 
+  54:../system/include/drivers/bme280.h **** inline uint16_t bme280_get_adc_h(void) {
+  55:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[6] << 8) | (bme280_data_buffer[7] );
+  51              		.loc 2 55 0
+  52 000c 054B     		ldr	r3, .L6+4
+  53 000e 9979     		ldrb	r1, [r3, #6]	@ zero_extendqisi2
+  54 0010 DB79     		ldrb	r3, [r3, #7]	@ zero_extendqisi2
+  55              	.LBE5:
+  56              	.LBE4:
+  78:../src/wx_handler_humidity.c **** 	}
+  57              		.loc 1 78 0
+  58 0012 034A     		ldr	r2, .L6
+  59 0014 43EA0121 		orr	r1, r3, r1, lsl #8
+  60 0018 FFF7FEFF 		bl	bme280_get_humidity
+  61              	.LVL4:
+  62 001c F5E7     		b	.L1
+  63              	.L7:
+  64 001e 00BF     		.align	2
+  65              	.L6:
+  66 0020 00000000 		.word	rte_wx_bme280_qf
+  67 0024 00000000 		.word	bme280_data_buffer
+  68              		.cfi_endproc
+  69              	.LFE85:
+  71              		.section	.text.wx_get_humidity_measurement,"ax",%progbits
+  72              		.align	1
+  73              		.global	wx_get_humidity_measurement
+  74              		.syntax unified
+  75              		.thumb
+  76              		.thumb_func
+  77              		.fpu softvfp
+  79              	wx_get_humidity_measurement:
+  80              	.LFB84:
+  16:../src/wx_handler_humidity.c **** 
+  81              		.loc 1 16 0
+  82              		.cfi_startproc
+  83              		@ args = 0, pretend = 0, frame = 0
+  84              		@ frame_needed = 0, uses_anonymous_args = 0
+  85              	.LVL5:
+  86 0000 08B5     		push	{r3, lr}
+  87              		.cfi_def_cfa_offset 8
+  88              		.cfi_offset 3, -8
+  89              		.cfi_offset 14, -4
+  90              	.LVL6:
+  22:../src/wx_handler_humidity.c **** 		case WX_SOURCE_INTERNAL: {
+  91              		.loc 1 22 0
+  92 0002 8278     		ldrb	r2, [r0, #2]	@ zero_extendqisi2
+  93              	.LVL7:
+  94 0004 012A     		cmp	r2, #1
+  95 0006 0DD0     		beq	.L10
+  96 0008 0AB3     		cbz	r2, .L13
+  97 000a 033A     		subs	r2, r2, #3
+  98 000c 012A     		cmp	r2, #1
+  99 000e 1ED8     		bhi	.L13
+  51:../src/wx_handler_humidity.c **** 
+ 100              		.loc 1 51 0
+ 101 0010 1946     		mov	r1, r3
+ 102              	.LVL8:
+ 103 0012 1248     		ldr	r0, .L21
+ 104              	.LVL9:
+ 105 0014 FFF7FEFF 		bl	rtu_get_humidity
+ 106              	.LVL10:
+  54:../src/wx_handler_humidity.c **** 
+ 107              		.loc 1 54 0
+ 108 0018 0346     		mov	r3, r0
+ 109 001a 88B1     		cbz	r0, .L12
+  54:../src/wx_handler_humidity.c **** 
+ 110              		.loc 1 54 0 is_stmt 0 discriminator 1
+ 111 001c 0628     		cmp	r0, #6
+ 112 001e 0FD0     		beq	.L12
+  18:../src/wx_handler_humidity.c **** 	int32_t measurement_result = 0;
+ 113              		.loc 1 18 0 is_stmt 1
+ 114 0020 0023     		movs	r3, #0
+ 115 0022 15E0     		b	.L8
+ 116              	.LVL11:
+ 117              	.L10:
+  25:../src/wx_handler_humidity.c **** 				// MS5611 is chosen
+ 118              		.loc 1 25 0
+ 119 0024 4B79     		ldrb	r3, [r1, #5]	@ zero_extendqisi2
+ 120              	.LVL12:
+ 121 0026 0BB9     		cbnz	r3, .L20
+  18:../src/wx_handler_humidity.c **** 	int32_t measurement_result = 0;
+ 122              		.loc 1 18 0
+ 123 0028 0023     		movs	r3, #0
+ 124 002a 11E0     		b	.L8
+ 125              	.L20:
+  34:../src/wx_handler_humidity.c **** 
+ 126              		.loc 1 34 0
+ 127 002c 0B48     		ldr	r0, .L21
+ 128              	.LVL13:
+ 129 002e FFF7FEFF 		bl	wx_get_humidity_bme280
+ 130              	.LVL14:
+  37:../src/wx_handler_humidity.c **** 					rte_wx_humidity_valid = rte_wx_humidity;
+ 131              		.loc 1 37 0
+ 132 0032 0346     		mov	r3, r0
+ 133 0034 70B9     		cbnz	r0, .L15
+  38:../src/wx_handler_humidity.c **** 				}
+ 134              		.loc 1 38 0
+ 135 0036 094A     		ldr	r2, .L21
+ 136 0038 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 137 003a 094A     		ldr	r2, .L21+4
+ 138 003c 1170     		strb	r1, [r2]
+ 139 003e 07E0     		b	.L8
+ 140              	.L12:
+ 141              	.LVL15:
+  59:../src/wx_handler_humidity.c **** 					rte_wx_humidity_valid = rte_wx_humidity;
+ 142              		.loc 1 59 0
+ 143 0040 53B9     		cbnz	r3, .L17
+  60:../src/wx_handler_humidity.c **** 				}
+ 144              		.loc 1 60 0
+ 145 0042 064B     		ldr	r3, .L21
+ 146 0044 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 147 0046 064B     		ldr	r3, .L21+4
+ 148 0048 1A70     		strb	r2, [r3]
+  57:../src/wx_handler_humidity.c **** 
+ 149              		.loc 1 57 0
+ 150 004a 0823     		movs	r3, #8
+ 151 004c 00E0     		b	.L8
+ 152              	.LVL16:
+ 153              	.L13:
+  18:../src/wx_handler_humidity.c **** 	int32_t measurement_result = 0;
+ 154              		.loc 1 18 0
+ 155 004e 0023     		movs	r3, #0
+ 156              	.LVL17:
+ 157              	.L8:
+  71:../src/wx_handler_humidity.c **** 
+ 158              		.loc 1 71 0
+ 159 0050 1846     		mov	r0, r3
+ 160 0052 08BD     		pop	{r3, pc}
+ 161              	.LVL18:
+ 162              	.L15:
+  18:../src/wx_handler_humidity.c **** 	int32_t measurement_result = 0;
+ 163              		.loc 1 18 0
+ 164 0054 0023     		movs	r3, #0
+ 165 0056 FBE7     		b	.L8
+ 166              	.LVL19:
+ 167              	.L17:
+  57:../src/wx_handler_humidity.c **** 
+ 168              		.loc 1 57 0
+ 169 0058 0823     		movs	r3, #8
+  70:../src/wx_handler_humidity.c **** }
+ 170              		.loc 1 70 0
+ 171 005a F9E7     		b	.L8
+ 172              	.L22:
+ 173              		.align	2
+ 174              	.L21:
+ 175 005c 00000000 		.word	rte_wx_humidity
+ 176 0060 00000000 		.word	rte_wx_humidity_valid
+ 177              		.cfi_endproc
+ 178              	.LFE84:
+ 180              		.text
+ 181              	.Letext0:
+ 182              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 183              		.file 4 "../include/config_data.h"
+ 184              		.file 5 "../include/wx_handler.h"
+ 185              		.file 6 "../system/include/cmsis/core_cm3.h"
+ 186              		.file 7 "../system/include/cmsis/system_stm32f10x.h"
+ 187              		.file 8 "../system/include/cmsis/stm32f10x.h"
+ 188              		.file 9 "../system/include/drivers/dallas.h"
+ 189              		.file 10 "../system/include/drivers/analog_anemometer.h"
+ 190              		.file 11 "../system/include/davis_vantage/davis_loop_t.h"
+ 191              		.file 12 "../system/include/umb_master/umb_frame_t.h"
+ 192              		.file 13 "../system/include/umb_master/umb_state_t.h"
+ 193              		.file 14 "../system/include/drivers/serial.h"
+ 194              		.file 15 "../system/include/umb_master/umb_context_t.h"
+ 195              		.file 16 "../system/include/umb_master/umb_qf_t.h"
+ 196              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 197              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 198              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 199              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 200              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 201              		.file 22 "../system/include/drivers/ms5611.h"
+ 202              		.file 23 "../include/rte_wx.h"
+ 203              		.file 24 "../system/include/modbus_rtu/rtu_getters.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 wx_handler_humidity.c
+     /tmp/ccWA4plk.s:16     .text.wx_get_humidity_bme280:0000000000000000 $t
+     /tmp/ccWA4plk.s:23     .text.wx_get_humidity_bme280:0000000000000000 wx_get_humidity_bme280
+     /tmp/ccWA4plk.s:66     .text.wx_get_humidity_bme280:0000000000000020 $d
+     /tmp/ccWA4plk.s:72     .text.wx_get_humidity_measurement:0000000000000000 $t
+     /tmp/ccWA4plk.s:79     .text.wx_get_humidity_measurement:0000000000000000 wx_get_humidity_measurement
+     /tmp/ccWA4plk.s:175    .text.wx_get_humidity_measurement:000000000000005c $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.wx_handler.h.9.c93580273a56e0f9036dfe7a28400494
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.a574250aaf0d4f0a93b2db72031afff6
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+
+UNDEFINED SYMBOLS
+bme280_get_humidity
+rte_wx_bme280_qf
+bme280_data_buffer
+rtu_get_humidity
+rte_wx_humidity
+rte_wx_humidity_valid

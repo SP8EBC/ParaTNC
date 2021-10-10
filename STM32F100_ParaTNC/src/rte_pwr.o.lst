@@ -1,0 +1,20 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"rte_pwr.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rte_pwr.c
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+
+NO UNDEFINED SYMBOLS

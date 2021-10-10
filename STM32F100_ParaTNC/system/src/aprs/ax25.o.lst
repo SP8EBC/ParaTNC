@@ -1,0 +1,1921 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"ax25.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.updcrc_ccitt,"ax",%progbits
+  16              		.align	1
+  17              		.syntax unified
+  18              		.thumb
+  19              		.thumb_func
+  20              		.fpu softvfp
+  22              	updcrc_ccitt:
+  23              	.LFB3:
+  24              		.file 1 "../system/include/aprs/crc.h"
+   1:../system/include/aprs/crc.h **** #ifndef CRC_H_
+   2:../system/include/aprs/crc.h **** #define CRC_H_
+   3:../system/include/aprs/crc.h **** 
+   4:../system/include/aprs/crc.h **** #include <stdint.h>
+   5:../system/include/aprs/crc.h **** 
+   6:../system/include/aprs/crc.h **** #include <macros.h>
+   7:../system/include/aprs/crc.h **** 
+   8:../system/include/aprs/crc.h **** extern const uint16_t crc_ccitt_tab[256];
+   9:../system/include/aprs/crc.h **** #ifdef __cplusplus
+  10:../system/include/aprs/crc.h **** extern "C"
+  11:../system/include/aprs/crc.h **** {
+  12:../system/include/aprs/crc.h **** #endif
+  13:../system/include/aprs/crc.h **** /**************************************************************************************************
+  14:../system/include/aprs/crc.h **** static uint16_t updcrc_ccitt(uint8_t c, uint16_t oldcrc) {
+  25              		.loc 1 14 0
+  26              		.cfi_startproc
+  27              		@ args = 0, pretend = 0, frame = 0
+  28              		@ frame_needed = 0, uses_anonymous_args = 0
+  29              		@ link register save eliminated.
+  30              	.LVL0:
+  15:../system/include/aprs/crc.h **** /**************************************************************************************************
+  16:../system/include/aprs/crc.h **** 
+  17:../system/include/aprs/crc.h **** 	return (oldcrc >> 8) ^ pgm_read16(&crc_ccitt_tab[(oldcrc ^ c) & 0xff]);
+  31              		.loc 1 17 0
+  32 0000 4840     		eors	r0, r0, r1
+  33              	.LVL1:
+  34 0002 C0B2     		uxtb	r0, r0
+  35 0004 024B     		ldr	r3, .L2
+  36 0006 33F81000 		ldrh	r0, [r3, r0, lsl #1]
+  18:../system/include/aprs/crc.h **** }
+  37              		.loc 1 18 0
+  38 000a 80EA1120 		eor	r0, r0, r1, lsr #8
+  39 000e 7047     		bx	lr
+  40              	.L3:
+  41              		.align	2
+  42              	.L2:
+  43 0010 00000000 		.word	crc_ccitt_tab
+  44              		.cfi_endproc
+  45              	.LFE3:
+  47              		.section	.text.fifo_isempty,"ax",%progbits
+  48              		.align	1
+  49              		.syntax unified
+  50              		.thumb
+  51              		.thumb_func
+  52              		.fpu softvfp
+  54              	fifo_isempty:
+  55              	.LFB4:
+  56              		.file 2 "../system/src/aprs/ax25.c"
+   1:../system/src/aprs/ax25.c **** 
+   2:../system/src/aprs/ax25.c **** #include "ax25.h"
+   3:../system/src/aprs/ax25.c **** 
+   4:../system/src/aprs/ax25.c **** #include <string.h> /* memset */
+   5:../system/src/aprs/ax25.c **** #include <ctype.h>
+   6:../system/src/aprs/ax25.c **** #include <stdio.h> /* printf */
+   7:../system/src/aprs/ax25.c **** 
+   8:../system/src/aprs/ax25.c **** #include <afsk.h>
+   9:../system/src/aprs/ax25.c **** #include <cfifo.h>
+  10:../system/src/aprs/ax25.c **** #include <crc.h>
+  11:../system/src/aprs/ax25.c **** 
+  12:../system/src/aprs/ax25.c **** #include "station_config.h"
+  13:../system/src/aprs/ax25.c **** 
+  14:../system/src/aprs/ax25.c **** #include "KissCommunication.h"
+  15:../system/src/aprs/ax25.c **** 
+  16:../system/src/aprs/ax25.c **** AX25Msg ax25_rxed_frame;
+  17:../system/src/aprs/ax25.c **** char ax25_new_msg_rx_flag;
+  18:../system/src/aprs/ax25.c **** 
+  19:../system/src/aprs/ax25.c **** 
+  20:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  21:../system/src/aprs/ax25.c **** static bool fifo_isempty(const FIFOBuffer *fb) {
+  57              		.loc 2 21 0
+  58              		.cfi_startproc
+  59              		@ args = 0, pretend = 0, frame = 0
+  60              		@ frame_needed = 0, uses_anonymous_args = 0
+  61              		@ link register save eliminated.
+  62              	.LVL2:
+  22:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  23:../system/src/aprs/ax25.c **** 
+  24:../system/src/aprs/ax25.c **** 	return fb->head == fb->tail;
+  63              		.loc 2 24 0
+  64 0000 0268     		ldr	r2, [r0]
+  65 0002 4068     		ldr	r0, [r0, #4]
+  66              	.LVL3:
+  25:../system/src/aprs/ax25.c **** 
+  26:../system/src/aprs/ax25.c **** }
+  67              		.loc 2 26 0
+  68 0004 8242     		cmp	r2, r0
+  69 0006 14BF     		ite	ne
+  70 0008 0020     		movne	r0, #0
+  71 000a 0120     		moveq	r0, #1
+  72 000c 7047     		bx	lr
+  73              		.cfi_endproc
+  74              	.LFE4:
+  76              		.section	.text.fifo_isfull,"ax",%progbits
+  77              		.align	1
+  78              		.syntax unified
+  79              		.thumb
+  80              		.thumb_func
+  81              		.fpu softvfp
+  83              	fifo_isfull:
+  84              	.LFB5:
+  27:../system/src/aprs/ax25.c **** 
+  28:../system/src/aprs/ax25.c **** 
+  29:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  30:../system/src/aprs/ax25.c **** static bool fifo_isfull(const FIFOBuffer *fb) {
+  85              		.loc 2 30 0
+  86              		.cfi_startproc
+  87              		@ args = 0, pretend = 0, frame = 0
+  88              		@ frame_needed = 0, uses_anonymous_args = 0
+  89              		@ link register save eliminated.
+  90              	.LVL4:
+  31:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  32:../system/src/aprs/ax25.c **** 
+  33:../system/src/aprs/ax25.c **** 	return ((fb->head == fb->begin) && (fb->tail == fb->end)) || (fb->tail == fb->head - 1);
+  91              		.loc 2 33 0
+  92 0000 0268     		ldr	r2, [r0]
+  93 0002 8368     		ldr	r3, [r0, #8]
+  94 0004 9A42     		cmp	r2, r3
+  95 0006 06D0     		beq	.L10
+  96              	.L6:
+  97              		.loc 2 33 0 is_stmt 0 discriminator 4
+  98 0008 4268     		ldr	r2, [r0, #4]
+  99 000a 0368     		ldr	r3, [r0]
+ 100 000c 013B     		subs	r3, r3, #1
+ 101 000e 9A42     		cmp	r2, r3
+ 102 0010 07D0     		beq	.L11
+ 103              		.loc 2 33 0
+ 104 0012 0020     		movs	r0, #0
+ 105              	.LVL5:
+  34:../system/src/aprs/ax25.c **** 
+  35:../system/src/aprs/ax25.c **** }
+ 106              		.loc 2 35 0 is_stmt 1
+ 107 0014 7047     		bx	lr
+ 108              	.LVL6:
+ 109              	.L10:
+  33:../system/src/aprs/ax25.c **** 
+ 110              		.loc 2 33 0 discriminator 1
+ 111 0016 4268     		ldr	r2, [r0, #4]
+ 112 0018 C368     		ldr	r3, [r0, #12]
+ 113 001a 9A42     		cmp	r2, r3
+ 114 001c F4D1     		bne	.L6
+  33:../system/src/aprs/ax25.c **** 
+ 115              		.loc 2 33 0 is_stmt 0
+ 116 001e 0120     		movs	r0, #1
+ 117              	.LVL7:
+ 118 0020 7047     		bx	lr
+ 119              	.LVL8:
+ 120              	.L11:
+ 121 0022 0120     		movs	r0, #1
+ 122              	.LVL9:
+ 123 0024 7047     		bx	lr
+ 124              		.cfi_endproc
+ 125              	.LFE5:
+ 127              		.section	.text.fifo_push,"ax",%progbits
+ 128              		.align	1
+ 129              		.syntax unified
+ 130              		.thumb
+ 131              		.thumb_func
+ 132              		.fpu softvfp
+ 134              	fifo_push:
+ 135              	.LFB6:
+  36:../system/src/aprs/ax25.c **** 
+  37:../system/src/aprs/ax25.c **** 
+  38:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  39:../system/src/aprs/ax25.c **** static void fifo_push(FIFOBuffer *fb, uint8_t c) {
+ 136              		.loc 2 39 0 is_stmt 1
+ 137              		.cfi_startproc
+ 138              		@ args = 0, pretend = 0, frame = 0
+ 139              		@ frame_needed = 0, uses_anonymous_args = 0
+ 140              		@ link register save eliminated.
+ 141              	.LVL10:
+  40:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  41:../system/src/aprs/ax25.c **** 
+  42:../system/src/aprs/ax25.c **** 	/* Write at tail position */
+  43:../system/src/aprs/ax25.c **** 	*(fb->tail) = c;
+ 142              		.loc 2 43 0
+ 143 0000 4368     		ldr	r3, [r0, #4]
+ 144 0002 1970     		strb	r1, [r3]
+  44:../system/src/aprs/ax25.c **** 
+  45:../system/src/aprs/ax25.c **** 	if (fb->tail == fb->end)
+ 145              		.loc 2 45 0
+ 146 0004 4268     		ldr	r2, [r0, #4]
+ 147 0006 C368     		ldr	r3, [r0, #12]
+ 148 0008 9A42     		cmp	r2, r3
+ 149 000a 03D0     		beq	.L15
+  46:../system/src/aprs/ax25.c **** 	{
+  47:../system/src/aprs/ax25.c **** 		/* wrap tail around */
+  48:../system/src/aprs/ax25.c **** 		fb->tail = fb->begin;
+  49:../system/src/aprs/ax25.c **** 	}
+  50:../system/src/aprs/ax25.c **** 	else
+  51:../system/src/aprs/ax25.c **** 	{
+  52:../system/src/aprs/ax25.c **** 		/* Move tail forward */
+  53:../system/src/aprs/ax25.c **** 		fb->tail++;
+ 150              		.loc 2 53 0
+ 151 000c 4368     		ldr	r3, [r0, #4]
+ 152 000e 0133     		adds	r3, r3, #1
+ 153 0010 4360     		str	r3, [r0, #4]
+  54:../system/src/aprs/ax25.c **** 	}
+  55:../system/src/aprs/ax25.c **** 
+  56:../system/src/aprs/ax25.c **** }
+ 154              		.loc 2 56 0
+ 155 0012 7047     		bx	lr
+ 156              	.L15:
+  48:../system/src/aprs/ax25.c **** 	}
+ 157              		.loc 2 48 0
+ 158 0014 8368     		ldr	r3, [r0, #8]
+ 159 0016 4360     		str	r3, [r0, #4]
+ 160 0018 7047     		bx	lr
+ 161              		.cfi_endproc
+ 162              	.LFE6:
+ 164              		.section	.text.fifo_pop,"ax",%progbits
+ 165              		.align	1
+ 166              		.syntax unified
+ 167              		.thumb
+ 168              		.thumb_func
+ 169              		.fpu softvfp
+ 171              	fifo_pop:
+ 172              	.LFB7:
+  57:../system/src/aprs/ax25.c **** 
+  58:../system/src/aprs/ax25.c **** 
+  59:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  60:../system/src/aprs/ax25.c **** static uint8_t fifo_pop(FIFOBuffer *fb) {
+ 173              		.loc 2 60 0
+ 174              		.cfi_startproc
+ 175              		@ args = 0, pretend = 0, frame = 0
+ 176              		@ frame_needed = 0, uses_anonymous_args = 0
+ 177              		@ link register save eliminated.
+ 178              	.LVL11:
+  61:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  62:../system/src/aprs/ax25.c **** 
+  63:../system/src/aprs/ax25.c **** 	if (fb->head == fb->end)
+ 179              		.loc 2 63 0
+ 180 0000 0268     		ldr	r2, [r0]
+ 181 0002 C368     		ldr	r3, [r0, #12]
+ 182 0004 9A42     		cmp	r2, r3
+ 183 0006 04D0     		beq	.L19
+  64:../system/src/aprs/ax25.c **** 	{
+  65:../system/src/aprs/ax25.c **** 		/* wrap head around */
+  66:../system/src/aprs/ax25.c **** 		fb->head = fb->begin;
+  67:../system/src/aprs/ax25.c **** 		return *(fb->end);
+  68:../system/src/aprs/ax25.c **** 	}
+  69:../system/src/aprs/ax25.c **** 	else
+  70:../system/src/aprs/ax25.c **** 	{
+  71:../system/src/aprs/ax25.c **** 		/* move head forward */
+  72:../system/src/aprs/ax25.c **** 		return *(fb->head++);
+ 184              		.loc 2 72 0
+ 185 0008 0368     		ldr	r3, [r0]
+ 186 000a 5A1C     		adds	r2, r3, #1
+ 187 000c 0260     		str	r2, [r0]
+ 188 000e 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 189              	.LVL12:
+  73:../system/src/aprs/ax25.c **** 	}
+  74:../system/src/aprs/ax25.c **** 
+  75:../system/src/aprs/ax25.c **** }
+ 190              		.loc 2 75 0
+ 191 0010 7047     		bx	lr
+ 192              	.LVL13:
+ 193              	.L19:
+  66:../system/src/aprs/ax25.c **** 		return *(fb->end);
+ 194              		.loc 2 66 0
+ 195 0012 8268     		ldr	r2, [r0, #8]
+ 196 0014 0260     		str	r2, [r0]
+  67:../system/src/aprs/ax25.c **** 	}
+ 197              		.loc 2 67 0
+ 198 0016 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 199              	.LVL14:
+ 200 0018 7047     		bx	lr
+ 201              		.cfi_endproc
+ 202              	.LFE7:
+ 204              		.section	.text.fifo_getc,"ax",%progbits
+ 205              		.align	1
+ 206              		.syntax unified
+ 207              		.thumb
+ 208              		.thumb_func
+ 209              		.fpu softvfp
+ 211              	fifo_getc:
+ 212              	.LFB8:
+  76:../system/src/aprs/ax25.c **** 
+  77:../system/src/aprs/ax25.c **** 
+  78:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  79:../system/src/aprs/ax25.c **** static int16_t fifo_getc(FIFOBuffer *fb) {
+ 213              		.loc 2 79 0
+ 214              		.cfi_startproc
+ 215              		@ args = 0, pretend = 0, frame = 0
+ 216              		@ frame_needed = 0, uses_anonymous_args = 0
+ 217              	.LVL15:
+ 218 0000 10B5     		push	{r4, lr}
+ 219              		.cfi_def_cfa_offset 8
+ 220              		.cfi_offset 4, -8
+ 221              		.cfi_offset 14, -4
+ 222 0002 0446     		mov	r4, r0
+  80:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  81:../system/src/aprs/ax25.c **** 
+  82:../system/src/aprs/ax25.c **** 	if (!fifo_isempty(fb)) return fifo_pop(fb);
+ 223              		.loc 2 82 0
+ 224 0004 FFF7FEFF 		bl	fifo_isempty
+ 225              	.LVL16:
+ 226 0008 20B9     		cbnz	r0, .L22
+ 227              		.loc 2 82 0 is_stmt 0 discriminator 1
+ 228 000a 2046     		mov	r0, r4
+ 229 000c FFF7FEFF 		bl	fifo_pop
+ 230              	.LVL17:
+ 231 0010 00B2     		sxth	r0, r0
+ 232              	.L21:
+  83:../system/src/aprs/ax25.c **** 	else return -1;
+  84:../system/src/aprs/ax25.c **** 
+  85:../system/src/aprs/ax25.c **** }
+ 233              		.loc 2 85 0 is_stmt 1
+ 234 0012 10BD     		pop	{r4, pc}
+ 235              	.LVL18:
+ 236              	.L22:
+  83:../system/src/aprs/ax25.c **** 	else return -1;
+ 237              		.loc 2 83 0
+ 238 0014 4FF0FF30 		mov	r0, #-1
+ 239 0018 FBE7     		b	.L21
+ 240              		.cfi_endproc
+ 241              	.LFE8:
+ 243              		.section	.text.fifo_putc,"ax",%progbits
+ 244              		.align	1
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 248              		.fpu softvfp
+ 250              	fifo_putc:
+ 251              	.LFB9:
+  86:../system/src/aprs/ax25.c **** 
+  87:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  88:../system/src/aprs/ax25.c **** static void fifo_putc(uint8_t c, FIFOBuffer *fb) {
+ 252              		.loc 2 88 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 0
+ 255              		@ frame_needed = 0, uses_anonymous_args = 0
+ 256              	.LVL19:
+ 257 0000 38B5     		push	{r3, r4, r5, lr}
+ 258              		.cfi_def_cfa_offset 16
+ 259              		.cfi_offset 3, -16
+ 260              		.cfi_offset 4, -12
+ 261              		.cfi_offset 5, -8
+ 262              		.cfi_offset 14, -4
+ 263 0002 0546     		mov	r5, r0
+ 264 0004 0C46     		mov	r4, r1
+  89:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  90:../system/src/aprs/ax25.c **** 
+  91:../system/src/aprs/ax25.c **** 	if (!fifo_isfull(fb)) fifo_push(fb, c);
+ 265              		.loc 2 91 0
+ 266 0006 0846     		mov	r0, r1
+ 267              	.LVL20:
+ 268 0008 FFF7FEFF 		bl	fifo_isfull
+ 269              	.LVL21:
+ 270 000c 00B1     		cbz	r0, .L27
+ 271              	.L24:
+  92:../system/src/aprs/ax25.c **** 
+  93:../system/src/aprs/ax25.c **** }
+ 272              		.loc 2 93 0
+ 273 000e 38BD     		pop	{r3, r4, r5, pc}
+ 274              	.LVL22:
+ 275              	.L27:
+  91:../system/src/aprs/ax25.c **** 
+ 276              		.loc 2 91 0 discriminator 1
+ 277 0010 2946     		mov	r1, r5
+ 278 0012 2046     		mov	r0, r4
+ 279 0014 FFF7FEFF 		bl	fifo_push
+ 280              	.LVL23:
+ 281              		.loc 2 93 0 discriminator 1
+ 282 0018 F9E7     		b	.L24
+ 283              		.cfi_endproc
+ 284              	.LFE9:
+ 286              		.section	.text.ax25_decode,"ax",%progbits
+ 287              		.align	1
+ 288              		.syntax unified
+ 289              		.thumb
+ 290              		.thumb_func
+ 291              		.fpu softvfp
+ 293              	ax25_decode:
+ 294              	.LFB10:
+  94:../system/src/aprs/ax25.c **** 
+  95:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  96:../system/src/aprs/ax25.c **** static void ax25_decode(AX25Ctx *ctx) {
+ 295              		.loc 2 96 0
+ 296              		.cfi_startproc
+ 297              		@ args = 0, pretend = 0, frame = 0
+ 298              		@ frame_needed = 0, uses_anonymous_args = 0
+ 299              	.LVL24:
+ 300 0000 70B5     		push	{r4, r5, r6, lr}
+ 301              		.cfi_def_cfa_offset 16
+ 302              		.cfi_offset 4, -16
+ 303              		.cfi_offset 5, -12
+ 304              		.cfi_offset 6, -8
+ 305              		.cfi_offset 14, -4
+  97:../system/src/aprs/ax25.c **** /**************************************************************************************************
+  98:../system/src/aprs/ax25.c **** 
+  99:../system/src/aprs/ax25.c **** 	uint16_t i;
+ 100:../system/src/aprs/ax25.c **** 
+ 101:../system/src/aprs/ax25.c **** 	uint8_t *buf = ctx->buf;
+ 306              		.loc 2 101 0
+ 307 0002 0446     		mov	r4, r0
+ 308              	.LVL25:
+ 102:../system/src/aprs/ax25.c **** //
+ 103:../system/src/aprs/ax25.c **** 	for (i = 0; i < ctx->frm_len ;i++)
+ 309              		.loc 2 103 0
+ 310 0004 0023     		movs	r3, #0
+ 311 0006 04E0     		b	.L29
+ 312              	.LVL26:
+ 313              	.L30:
+ 104:../system/src/aprs/ax25.c **** 		*(ax25_rxed_frame.raw_data + i) = *(ctx->buf + i);
+ 314              		.loc 2 104 0 discriminator 3
+ 315 0008 E15C     		ldrb	r1, [r4, r3]	@ zero_extendqisi2
+ 316 000a 524A     		ldr	r2, .L57
+ 317 000c 9954     		strb	r1, [r3, r2]
+ 103:../system/src/aprs/ax25.c **** 		*(ax25_rxed_frame.raw_data + i) = *(ctx->buf + i);
+ 318              		.loc 2 103 0 discriminator 3
+ 319 000e 0133     		adds	r3, r3, #1
+ 320              	.LVL27:
+ 321 0010 9BB2     		uxth	r3, r3
+ 322              	.LVL28:
+ 323              	.L29:
+ 103:../system/src/aprs/ax25.c **** 		*(ax25_rxed_frame.raw_data + i) = *(ctx->buf + i);
+ 324              		.loc 2 103 0 is_stmt 0 discriminator 1
+ 325 0012 B0F80422 		ldrh	r2, [r0, #516]
+ 326 0016 9A42     		cmp	r2, r3
+ 327 0018 F6D8     		bhi	.L30
+ 105:../system/src/aprs/ax25.c **** 	*(ax25_rxed_frame.raw_data + i) = '\0';
+ 328              		.loc 2 105 0 is_stmt 1
+ 329 001a 4E49     		ldr	r1, .L57
+ 330 001c 0022     		movs	r2, #0
+ 331 001e 5A54     		strb	r2, [r3, r1]
+ 106:../system/src/aprs/ax25.c **** //
+ 107:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.raw_msg_len = i;
+ 332              		.loc 2 107 0
+ 333 0020 A1F80032 		strh	r3, [r1, #512]	@ movhi
+ 334              	.LVL29:
+ 101:../system/src/aprs/ax25.c **** //
+ 335              		.loc 2 101 0
+ 336 0024 0146     		mov	r1, r0
+ 108:../system/src/aprs/ax25.c **** 
+ 109:../system/src/aprs/ax25.c **** 	for (i = 0; i < sizeof(ax25_rxed_frame.dst.call);i++)
+ 337              		.loc 2 109 0
+ 338 0026 1346     		mov	r3, r2
+ 339 0028 06E0     		b	.L31
+ 340              	.LVL30:
+ 341              	.L51:
+ 342              	.LBB2:
+ 110:../system/src/aprs/ax25.c **** 	{
+ 111:../system/src/aprs/ax25.c **** 		uint8_t c = (*(buf)++ >> 1);
+ 112:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.dst.call)[i] = (c == ' ') ? '\x0' : c;
+ 343              		.loc 2 112 0 discriminator 1
+ 344 002a 52B2     		sxtb	r2, r2
+ 345              	.LVL31:
+ 346              	.L32:
+ 347              		.loc 2 112 0 is_stmt 0 discriminator 4
+ 348 002c 4A49     		ldr	r1, .L57+4
+ 349              	.LVL32:
+ 350 002e 1944     		add	r1, r1, r3
+ 351 0030 CA71     		strb	r2, [r1, #7]
+ 352              	.LVL33:
+ 353              	.LBE2:
+ 109:../system/src/aprs/ax25.c **** 	{
+ 354              		.loc 2 109 0 is_stmt 1 discriminator 4
+ 355 0032 0133     		adds	r3, r3, #1
+ 356              	.LVL34:
+ 357 0034 9BB2     		uxth	r3, r3
+ 358              	.LVL35:
+ 359              	.LBB3:
+ 111:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.dst.call)[i] = (c == ' ') ? '\x0' : c;
+ 360              		.loc 2 111 0 discriminator 4
+ 361 0036 2146     		mov	r1, r4
+ 362              	.LVL36:
+ 363              	.L31:
+ 364              	.LBE3:
+ 109:../system/src/aprs/ax25.c **** 	{
+ 365              		.loc 2 109 0 discriminator 2
+ 366 0038 052B     		cmp	r3, #5
+ 367 003a 06D8     		bhi	.L50
+ 368              	.LBB4:
+ 111:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.dst.call)[i] = (c == ' ') ? '\x0' : c;
+ 369              		.loc 2 111 0
+ 370 003c 4C1C     		adds	r4, r1, #1
+ 371              	.LVL37:
+ 372 003e 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 373 0040 5208     		lsrs	r2, r2, #1
+ 374              	.LVL38:
+ 375              		.loc 2 112 0
+ 376 0042 202A     		cmp	r2, #32
+ 377 0044 F1D1     		bne	.L51
+ 378 0046 0022     		movs	r2, #0
+ 379              	.LVL39:
+ 380 0048 F0E7     		b	.L32
+ 381              	.LVL40:
+ 382              	.L50:
+ 383              	.LBE4:
+ 113:../system/src/aprs/ax25.c **** 	}
+ 114:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.dst.ssid = (*buf++ >> 1) & 0x0F;
+ 384              		.loc 2 114 0
+ 385 004a 4A1C     		adds	r2, r1, #1
+ 386              	.LVL41:
+ 387 004c 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 388              	.LVL42:
+ 389 004e C3F34303 		ubfx	r3, r3, #1, #4
+ 390 0052 4149     		ldr	r1, .L57+4
+ 391 0054 4B73     		strb	r3, [r1, #13]
+ 392              	.LVL43:
+ 115:../system/src/aprs/ax25.c **** 
+ 116:../system/src/aprs/ax25.c **** 
+ 117:../system/src/aprs/ax25.c **** 	for (i = 0; i < sizeof(ax25_rxed_frame.src.call);i++)
+ 393              		.loc 2 117 0
+ 394 0056 0021     		movs	r1, #0
+ 395 0058 05E0     		b	.L34
+ 396              	.LVL44:
+ 397              	.L53:
+ 398              	.LBB5:
+ 118:../system/src/aprs/ax25.c **** 	{
+ 119:../system/src/aprs/ax25.c **** 		uint8_t c = (*(buf)++ >> 1);
+ 120:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.src.call)[i] = (c == ' ') ? '\x0' : c;
+ 399              		.loc 2 120 0 discriminator 1
+ 400 005a 5BB2     		sxtb	r3, r3
+ 401              	.LVL45:
+ 402              	.L35:
+ 403              		.loc 2 120 0 is_stmt 0 discriminator 4
+ 404 005c 3E4A     		ldr	r2, .L57+4
+ 405              	.LVL46:
+ 406 005e 5354     		strb	r3, [r2, r1]
+ 407              	.LVL47:
+ 408              	.LBE5:
+ 117:../system/src/aprs/ax25.c **** 	{
+ 409              		.loc 2 117 0 is_stmt 1 discriminator 4
+ 410 0060 0131     		adds	r1, r1, #1
+ 411              	.LVL48:
+ 412 0062 89B2     		uxth	r1, r1
+ 413              	.LVL49:
+ 414              	.LBB6:
+ 119:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.src.call)[i] = (c == ' ') ? '\x0' : c;
+ 415              		.loc 2 119 0 discriminator 4
+ 416 0064 2246     		mov	r2, r4
+ 417              	.LVL50:
+ 418              	.L34:
+ 419              	.LBE6:
+ 117:../system/src/aprs/ax25.c **** 	{
+ 420              		.loc 2 117 0 discriminator 2
+ 421 0066 0529     		cmp	r1, #5
+ 422 0068 06D8     		bhi	.L52
+ 423              	.LBB7:
+ 119:../system/src/aprs/ax25.c **** 		(ax25_rxed_frame.src.call)[i] = (c == ' ') ? '\x0' : c;
+ 424              		.loc 2 119 0
+ 425 006a 541C     		adds	r4, r2, #1
+ 426              	.LVL51:
+ 427 006c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 428 006e 5B08     		lsrs	r3, r3, #1
+ 429              	.LVL52:
+ 430              		.loc 2 120 0
+ 431 0070 202B     		cmp	r3, #32
+ 432 0072 F2D1     		bne	.L53
+ 433 0074 0023     		movs	r3, #0
+ 434              	.LVL53:
+ 435 0076 F1E7     		b	.L35
+ 436              	.LVL54:
+ 437              	.L52:
+ 438              	.LBE7:
+ 121:../system/src/aprs/ax25.c **** 	}
+ 122:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.src.ssid = (*buf >> 1) & 0x0F;
+ 439              		.loc 2 122 0
+ 440 0078 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 441 007a C3F34303 		ubfx	r3, r3, #1, #4
+ 442 007e 3649     		ldr	r1, .L57+4
+ 443              	.LVL55:
+ 444 0080 8B71     		strb	r3, [r1, #6]
+ 123:../system/src/aprs/ax25.c **** 
+ 124:../system/src/aprs/ax25.c **** 
+ 125:../system/src/aprs/ax25.c **** 	for (ax25_rxed_frame.rpt_cnt = 0; !(*buf++ & 0x01) && (ax25_rxed_frame.rpt_cnt < (sizeof(ax25_rxed
+ 445              		.loc 2 125 0
+ 446 0082 0023     		movs	r3, #0
+ 447 0084 81F84630 		strb	r3, [r1, #70]
+ 448 0088 2DE0     		b	.L37
+ 449              	.LVL56:
+ 450              	.L47:
+ 451              	.LBB8:
+ 126:../system/src/aprs/ax25.c **** 	{
+ 127:../system/src/aprs/ax25.c **** 
+ 128:../system/src/aprs/ax25.c **** 		for (i = 0; i < sizeof(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call);i++)
+ 129:../system/src/aprs/ax25.c **** 		{
+ 130:../system/src/aprs/ax25.c **** 			uint8_t c = (*(buf)++ >> 1);
+ 131:../system/src/aprs/ax25.c **** 			(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call)[i] = (c == ' ') ? '\x0' : c;
+ 452              		.loc 2 131 0
+ 453 008a 0023     		movs	r3, #0
+ 454              	.LVL57:
+ 455              	.L38:
+ 456              		.loc 2 131 0 is_stmt 0 discriminator 4
+ 457 008c C4EBC406 		rsb	r6, r4, r4, lsl #3
+ 458 0090 3149     		ldr	r1, .L57+4
+ 459 0092 3144     		add	r1, r1, r6
+ 460 0094 1144     		add	r1, r1, r2
+ 461 0096 8B73     		strb	r3, [r1, #14]
+ 462              	.LVL58:
+ 463              	.LBE8:
+ 128:../system/src/aprs/ax25.c **** 		{
+ 464              		.loc 2 128 0 is_stmt 1 discriminator 4
+ 465 0098 0132     		adds	r2, r2, #1
+ 466              	.LVL59:
+ 467 009a 92B2     		uxth	r2, r2
+ 468              	.LVL60:
+ 469              	.LBB9:
+ 130:../system/src/aprs/ax25.c **** 			(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call)[i] = (c == ' ') ? '\x0' : c;
+ 470              		.loc 2 130 0 discriminator 4
+ 471 009c 2B46     		mov	r3, r5
+ 472              	.LVL61:
+ 473              	.L43:
+ 474              	.LBE9:
+ 128:../system/src/aprs/ax25.c **** 		{
+ 475              		.loc 2 128 0 discriminator 2
+ 476 009e 052A     		cmp	r2, #5
+ 477 00a0 06D8     		bhi	.L54
+ 478              	.LBB10:
+ 130:../system/src/aprs/ax25.c **** 			(ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].call)[i] = (c == ' ') ? '\x0' : c;
+ 479              		.loc 2 130 0
+ 480 00a2 5D1C     		adds	r5, r3, #1
+ 481              	.LVL62:
+ 482 00a4 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 483 00a6 5B08     		lsrs	r3, r3, #1
+ 484              	.LVL63:
+ 485              		.loc 2 131 0
+ 486 00a8 202B     		cmp	r3, #32
+ 487 00aa EED0     		beq	.L47
+ 488              		.loc 2 131 0 is_stmt 0 discriminator 1
+ 489 00ac 5BB2     		sxtb	r3, r3
+ 490 00ae EDE7     		b	.L38
+ 491              	.LVL64:
+ 492              	.L54:
+ 493              	.LBE10:
+ 132:../system/src/aprs/ax25.c **** 		}
+ 133:../system/src/aprs/ax25.c **** 		ax25_rxed_frame.rpt_lst[ax25_rxed_frame.rpt_cnt].ssid = (*buf >> 1) & 0x0F;
+ 494              		.loc 2 133 0 is_stmt 1
+ 495 00b0 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 496 00b2 C1F34301 		ubfx	r1, r1, #1, #4
+ 497 00b6 C4EBC405 		rsb	r5, r4, r4, lsl #3
+ 498 00ba 274A     		ldr	r2, .L57+4
+ 499              	.LVL65:
+ 500 00bc 2A44     		add	r2, r2, r5
+ 501 00be 1175     		strb	r1, [r2, #20]
+ 134:../system/src/aprs/ax25.c **** 
+ 135:../system/src/aprs/ax25.c **** 		if ((*buf & 0x80)) (&ax25_rxed_frame)->rpt_flags |= BV(ax25_rxed_frame.rpt_cnt);
+ 502              		.loc 2 135 0
+ 503 00c0 93F90020 		ldrsb	r2, [r3]
+ 504 00c4 002A     		cmp	r2, #0
+ 505 00c6 1ADB     		blt	.L55
+ 136:../system/src/aprs/ax25.c **** 		else (&ax25_rxed_frame)->rpt_flags &= ~BV(ax25_rxed_frame.rpt_cnt);
+ 506              		.loc 2 136 0
+ 507 00c8 0122     		movs	r2, #1
+ 508 00ca 02FA04F1 		lsl	r1, r2, r4
+ 509 00ce 224D     		ldr	r5, .L57+4
+ 510 00d0 95F84720 		ldrb	r2, [r5, #71]	@ zero_extendqisi2
+ 511 00d4 22EA0102 		bic	r2, r2, r1
+ 512 00d8 85F84720 		strb	r2, [r5, #71]
+ 513              	.L41:
+ 125:../system/src/aprs/ax25.c **** 	{
+ 514              		.loc 2 125 0 discriminator 2
+ 515 00dc 0134     		adds	r4, r4, #1
+ 516 00de 1E4A     		ldr	r2, .L57+4
+ 517 00e0 82F84640 		strb	r4, [r2, #70]
+ 518 00e4 1A46     		mov	r2, r3
+ 519              	.LVL66:
+ 520              	.L37:
+ 125:../system/src/aprs/ax25.c **** 	{
+ 521              		.loc 2 125 0 is_stmt 0 discriminator 1
+ 522 00e6 531C     		adds	r3, r2, #1
+ 523              	.LVL67:
+ 524 00e8 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 525 00ea 11F0010F 		tst	r1, #1
+ 526 00ee 10D1     		bne	.L42
+ 125:../system/src/aprs/ax25.c **** 	{
+ 527              		.loc 2 125 0 discriminator 3
+ 528 00f0 1949     		ldr	r1, .L57+4
+ 529 00f2 91F84640 		ldrb	r4, [r1, #70]	@ zero_extendqisi2
+ 530 00f6 072C     		cmp	r4, #7
+ 531 00f8 0BD8     		bhi	.L42
+ 128:../system/src/aprs/ax25.c **** 		{
+ 532              		.loc 2 128 0 is_stmt 1
+ 533 00fa 0022     		movs	r2, #0
+ 534 00fc CFE7     		b	.L43
+ 535              	.L55:
+ 135:../system/src/aprs/ax25.c **** 		else (&ax25_rxed_frame)->rpt_flags &= ~BV(ax25_rxed_frame.rpt_cnt);
+ 536              		.loc 2 135 0 discriminator 1
+ 537 00fe 0122     		movs	r2, #1
+ 538 0100 02FA04F1 		lsl	r1, r2, r4
+ 539 0104 144D     		ldr	r5, .L57+4
+ 540 0106 95F84720 		ldrb	r2, [r5, #71]	@ zero_extendqisi2
+ 541 010a 0A43     		orrs	r2, r2, r1
+ 542 010c 85F84720 		strb	r2, [r5, #71]
+ 543 0110 E4E7     		b	.L41
+ 544              	.L42:
+ 545              	.LVL68:
+ 137:../system/src/aprs/ax25.c **** 
+ 138:../system/src/aprs/ax25.c **** 	}
+ 139:../system/src/aprs/ax25.c **** 
+ 140:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.ctrl = *buf++;
+ 546              		.loc 2 140 0
+ 547 0112 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+ 548              	.LVL69:
+ 549 0114 1049     		ldr	r1, .L57+4
+ 550 0116 A1F84830 		strh	r3, [r1, #72]	@ movhi
+ 141:../system/src/aprs/ax25.c **** 	if (ax25_rxed_frame.ctrl != AX25_CTRL_UI) return;
+ 551              		.loc 2 141 0
+ 552 011a 032B     		cmp	r3, #3
+ 553 011c 00D0     		beq	.L56
+ 554              	.LVL70:
+ 555              	.L28:
+ 142:../system/src/aprs/ax25.c **** 
+ 143:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.pid = *buf++;
+ 144:../system/src/aprs/ax25.c **** 	if (ax25_rxed_frame.pid != AX25_PID_NOLAYER3) return;
+ 145:../system/src/aprs/ax25.c **** 
+ 146:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.len = ctx->frm_len - 2 - (buf - ctx->buf);
+ 147:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.info = buf;
+ 148:../system/src/aprs/ax25.c **** 
+ 149:../system/src/aprs/ax25.c **** 
+ 150:../system/src/aprs/ax25.c **** 	if (ctx->hook) {
+ 151:../system/src/aprs/ax25.c **** 		ax25_new_msg_rx_flag = 1;
+ 152:../system/src/aprs/ax25.c **** //		ctx->dcd = false;
+ 153:../system/src/aprs/ax25.c **** 	 	ctx->hook(&ax25_rxed_frame);
+ 154:../system/src/aprs/ax25.c **** 	}
+ 155:../system/src/aprs/ax25.c **** 	/*
+ 156:../system/src/aprs/ax25.c **** 		insert your code here
+ 157:../system/src/aprs/ax25.c **** 	*/
+ 158:../system/src/aprs/ax25.c **** 	
+ 159:../system/src/aprs/ax25.c **** 	/*
+ 160:../system/src/aprs/ax25.c **** 		end
+ 161:../system/src/aprs/ax25.c **** 	*/
+ 162:../system/src/aprs/ax25.c **** 
+ 163:../system/src/aprs/ax25.c **** }
+ 556              		.loc 2 163 0
+ 557 011e 70BD     		pop	{r4, r5, r6, pc}
+ 558              	.LVL71:
+ 559              	.L56:
+ 143:../system/src/aprs/ax25.c **** 	if (ax25_rxed_frame.pid != AX25_PID_NOLAYER3) return;
+ 560              		.loc 2 143 0
+ 561 0120 D11C     		adds	r1, r2, #3
+ 562              	.LVL72:
+ 563 0122 9378     		ldrb	r3, [r2, #2]	@ zero_extendqisi2
+ 564 0124 0C4A     		ldr	r2, .L57+4
+ 565 0126 82F84A30 		strb	r3, [r2, #74]
+ 144:../system/src/aprs/ax25.c **** 
+ 566              		.loc 2 144 0
+ 567 012a F02B     		cmp	r3, #240
+ 568 012c F7D1     		bne	.L28
+ 146:../system/src/aprs/ax25.c **** 	ax25_rxed_frame.info = buf;
+ 569              		.loc 2 146 0
+ 570 012e B0F80432 		ldrh	r3, [r0, #516]
+ 571 0132 0A1A     		subs	r2, r1, r0
+ 572 0134 9B1A     		subs	r3, r3, r2
+ 573 0136 023B     		subs	r3, r3, #2
+ 574 0138 074A     		ldr	r2, .L57+4
+ 575 013a A2F85030 		strh	r3, [r2, #80]	@ movhi
+ 147:../system/src/aprs/ax25.c **** 
+ 576              		.loc 2 147 0
+ 577 013e D164     		str	r1, [r2, #76]
+ 150:../system/src/aprs/ax25.c **** 		ax25_new_msg_rx_flag = 1;
+ 578              		.loc 2 150 0
+ 579 0140 D0F80C32 		ldr	r3, [r0, #524]
+ 580 0144 002B     		cmp	r3, #0
+ 581 0146 EAD0     		beq	.L28
+ 151:../system/src/aprs/ax25.c **** //		ctx->dcd = false;
+ 582              		.loc 2 151 0
+ 583 0148 044A     		ldr	r2, .L57+8
+ 584 014a 0121     		movs	r1, #1
+ 585              	.LVL73:
+ 586 014c 1170     		strb	r1, [r2]
+ 153:../system/src/aprs/ax25.c **** 	}
+ 587              		.loc 2 153 0
+ 588 014e 0248     		ldr	r0, .L57+4
+ 589              	.LVL74:
+ 590 0150 9847     		blx	r3
+ 591              	.LVL75:
+ 592 0152 E4E7     		b	.L28
+ 593              	.L58:
+ 594              		.align	2
+ 595              	.L57:
+ 596 0154 52000000 		.word	ax25_rxed_frame+82
+ 597 0158 00000000 		.word	ax25_rxed_frame
+ 598 015c 00000000 		.word	ax25_new_msg_rx_flag
+ 599              		.cfi_endproc
+ 600              	.LFE10:
+ 602              		.section	.text.ax25_poll,"ax",%progbits
+ 603              		.align	1
+ 604              		.global	ax25_poll
+ 605              		.syntax unified
+ 606              		.thumb
+ 607              		.thumb_func
+ 608              		.fpu softvfp
+ 610              	ax25_poll:
+ 611              	.LFB11:
+ 164:../system/src/aprs/ax25.c **** 
+ 165:../system/src/aprs/ax25.c **** 
+ 166:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 167:../system/src/aprs/ax25.c **** void ax25_poll(AX25Ctx *ctx) {
+ 612              		.loc 2 167 0
+ 613              		.cfi_startproc
+ 614              		@ args = 0, pretend = 0, frame = 0
+ 615              		@ frame_needed = 0, uses_anonymous_args = 0
+ 616              	.LVL76:
+ 617 0000 38B5     		push	{r3, r4, r5, lr}
+ 618              		.cfi_def_cfa_offset 16
+ 619              		.cfi_offset 3, -16
+ 620              		.cfi_offset 4, -12
+ 621              		.cfi_offset 5, -8
+ 622              		.cfi_offset 14, -4
+ 623 0002 0446     		mov	r4, r0
+ 168:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 169:../system/src/aprs/ax25.c **** 
+ 170:../system/src/aprs/ax25.c **** 	int16_t c;
+ 171:../system/src/aprs/ax25.c **** 
+ 172:../system/src/aprs/ax25.c **** while ((c = fifo_getc(&ctx->afsk->rx_fifo)) != -1)
+ 624              		.loc 2 172 0
+ 625 0004 47E0     		b	.L60
+ 626              	.LVL77:
+ 627              	.L75:
+ 173:../system/src/aprs/ax25.c **** 	{
+ 174:../system/src/aprs/ax25.c **** 
+ 175:../system/src/aprs/ax25.c **** 		if (!ctx->escape && c == HDLC_FLAG)
+ 176:../system/src/aprs/ax25.c **** 		{
+ 177:../system/src/aprs/ax25.c **** 
+ 178:../system/src/aprs/ax25.c **** 			if (ctx->frm_len >= AX25_MIN_FRAME_LEN)
+ 628              		.loc 2 178 0
+ 629 0006 B4F80432 		ldrh	r3, [r4, #516]
+ 630 000a 112B     		cmp	r3, #17
+ 631 000c 05D9     		bls	.L62
+ 179:../system/src/aprs/ax25.c **** 			{
+ 180:../system/src/aprs/ax25.c **** 				if (ctx->crc_in == AX25_CRC_CORRECT)
+ 632              		.loc 2 180 0
+ 633 000e B4F80622 		ldrh	r2, [r4, #518]
+ 634 0012 4FF2B803 		movw	r3, #61624
+ 635 0016 9A42     		cmp	r2, r3
+ 636 0018 0ED0     		beq	.L73
+ 637              	.LVL78:
+ 638              	.L62:
+ 181:../system/src/aprs/ax25.c **** 				{
+ 182:../system/src/aprs/ax25.c **** 
+ 183:../system/src/aprs/ax25.c **** 					if (ctx->raw)
+ 184:../system/src/aprs/ax25.c **** 					{
+ 185:../system/src/aprs/ax25.c **** 						if (ctx->hook)
+ 186:../system/src/aprs/ax25.c **** 						{
+ 187:../system/src/aprs/ax25.c **** 							ctx->hook(NULL);
+ 188:../system/src/aprs/ax25.c **** 						}
+ 189:../system/src/aprs/ax25.c **** 					}
+ 190:../system/src/aprs/ax25.c **** 					else
+ 191:../system/src/aprs/ax25.c **** 					{
+ 192:../system/src/aprs/ax25.c **** 						ax25_decode(ctx);
+ 193:../system/src/aprs/ax25.c **** 					}
+ 194:../system/src/aprs/ax25.c **** 
+ 195:../system/src/aprs/ax25.c **** 				}
+ 196:../system/src/aprs/ax25.c **** 			}
+ 197:../system/src/aprs/ax25.c **** 
+ 198:../system/src/aprs/ax25.c **** 			ctx->sync = true;
+ 639              		.loc 2 198 0
+ 640 001a 0123     		movs	r3, #1
+ 641 001c 84F81132 		strb	r3, [r4, #529]
+ 199:../system/src/aprs/ax25.c **** 			ctx->crc_in = CRC_CCITT_INIT_VAL;
+ 642              		.loc 2 199 0
+ 643 0020 4FF6FF73 		movw	r3, #65535
+ 644 0024 A4F80632 		strh	r3, [r4, #518]	@ movhi
+ 200:../system/src/aprs/ax25.c **** 			ctx->frm_len = 0;
+ 645              		.loc 2 200 0
+ 646 0028 0023     		movs	r3, #0
+ 647 002a A4F80432 		strh	r3, [r4, #516]	@ movhi
+ 201:../system/src/aprs/ax25.c **** 
+ 202:../system/src/aprs/ax25.c **** 			ctx->dcd_state = 0;
+ 648              		.loc 2 202 0
+ 649 002e 84F81332 		strb	r3, [r4, #531]
+ 203:../system/src/aprs/ax25.c **** 			ctx->dcd = false;	 ///// bylo false
+ 650              		.loc 2 203 0
+ 651 0032 84F81432 		strb	r3, [r4, #532]
+ 204:../system/src/aprs/ax25.c **** 			continue;
+ 652              		.loc 2 204 0
+ 653 0036 2EE0     		b	.L60
+ 654              	.LVL79:
+ 655              	.L73:
+ 183:../system/src/aprs/ax25.c **** 					{
+ 656              		.loc 2 183 0
+ 657 0038 94F81032 		ldrb	r3, [r4, #528]	@ zero_extendqisi2
+ 658 003c 33B1     		cbz	r3, .L63
+ 185:../system/src/aprs/ax25.c **** 						{
+ 659              		.loc 2 185 0
+ 660 003e D4F80C32 		ldr	r3, [r4, #524]
+ 661 0042 002B     		cmp	r3, #0
+ 662 0044 E9D0     		beq	.L62
+ 187:../system/src/aprs/ax25.c **** 						}
+ 663              		.loc 2 187 0
+ 664 0046 0020     		movs	r0, #0
+ 665              	.LVL80:
+ 666 0048 9847     		blx	r3
+ 667              	.LVL81:
+ 668 004a E6E7     		b	.L62
+ 669              	.LVL82:
+ 670              	.L63:
+ 192:../system/src/aprs/ax25.c **** 					}
+ 671              		.loc 2 192 0
+ 672 004c 2046     		mov	r0, r4
+ 673              	.LVL83:
+ 674 004e FFF7FEFF 		bl	ax25_decode
+ 675              	.LVL84:
+ 676 0052 E2E7     		b	.L62
+ 677              	.LVL85:
+ 678              	.L76:
+ 205:../system/src/aprs/ax25.c **** 
+ 206:../system/src/aprs/ax25.c **** 		}
+ 207:../system/src/aprs/ax25.c **** 
+ 208:../system/src/aprs/ax25.c **** 		if (!ctx->escape && c == HDLC_RESET)
+ 209:../system/src/aprs/ax25.c **** 		{
+ 210:../system/src/aprs/ax25.c **** 			ctx->sync = false;
+ 679              		.loc 2 210 0
+ 680 0054 84F81132 		strb	r3, [r4, #529]
+ 211:../system/src/aprs/ax25.c **** 			ctx->dcd = false;
+ 681              		.loc 2 211 0
+ 682 0058 84F81432 		strb	r3, [r4, #532]
+ 212:../system/src/aprs/ax25.c **** 			continue;
+ 683              		.loc 2 212 0
+ 684 005c 1BE0     		b	.L60
+ 685              	.L77:
+ 213:../system/src/aprs/ax25.c **** 		}
+ 214:../system/src/aprs/ax25.c **** 
+ 215:../system/src/aprs/ax25.c **** 		if (!ctx->escape && c == AX25_ESC)
+ 216:../system/src/aprs/ax25.c **** 		{
+ 217:../system/src/aprs/ax25.c **** 			ctx->escape = true;
+ 686              		.loc 2 217 0
+ 687 005e 0123     		movs	r3, #1
+ 688 0060 84F81232 		strb	r3, [r4, #530]
+ 218:../system/src/aprs/ax25.c **** 			continue;
+ 689              		.loc 2 218 0
+ 690 0064 17E0     		b	.L60
+ 691              	.LVL86:
+ 692              	.L78:
+ 219:../system/src/aprs/ax25.c **** 		}
+ 220:../system/src/aprs/ax25.c **** 
+ 221:../system/src/aprs/ax25.c **** 		if (ctx->sync)
+ 222:../system/src/aprs/ax25.c **** 		{
+ 223:../system/src/aprs/ax25.c **** 			if (ctx->frm_len < CONFIG_AX25_FRAME_BUF_LEN)
+ 224:../system/src/aprs/ax25.c **** 			{
+ 225:../system/src/aprs/ax25.c **** 				ctx->buf[ctx->frm_len++] = c;
+ 226:../system/src/aprs/ax25.c **** 				ctx->crc_in = updcrc_ccitt(c, ctx->crc_in);
+ 227:../system/src/aprs/ax25.c **** 				/* Begin of Destination-ADDR based DCD*/ 
+ 228:../system/src/aprs/ax25.c **** 				if (ctx->buf[6] == 0x60 && ctx->buf[0] == 0x82) {
+ 693              		.loc 2 228 0 discriminator 1
+ 694 0066 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 695 0068 822B     		cmp	r3, #130
+ 696 006a 3FD1     		bne	.L69
+ 229:../system/src/aprs/ax25.c **** 					ctx->dcd = true;
+ 697              		.loc 2 229 0
+ 698 006c 0123     		movs	r3, #1
+ 699 006e 84F81432 		strb	r3, [r4, #532]
+ 700 0072 3BE0     		b	.L69
+ 701              	.L79:
+ 230:../system/src/aprs/ax25.c **** 				}
+ 231:../system/src/aprs/ax25.c **** 				/* End */ 
+ 232:../system/src/aprs/ax25.c **** 				if (ctx->dcd_state == 1 && c == AX25_PID_NOLAYER3) {
+ 702              		.loc 2 232 0 discriminator 1
+ 703 0074 F02D     		cmp	r5, #240
+ 704 0076 3DD1     		bne	.L70
+ 233:../system/src/aprs/ax25.c **** 					ctx->dcd_state ++;
+ 705              		.loc 2 233 0
+ 706 0078 0133     		adds	r3, r3, #1
+ 707 007a 84F81332 		strb	r3, [r4, #531]
+ 234:../system/src/aprs/ax25.c **** 					ctx->dcd = true;
+ 708              		.loc 2 234 0
+ 709 007e 0123     		movs	r3, #1
+ 710 0080 84F81432 		strb	r3, [r4, #532]
+ 711 0084 36E0     		b	.L70
+ 712              	.LVL87:
+ 713              	.L68:
+ 235:../system/src/aprs/ax25.c **** 				}
+ 236:../system/src/aprs/ax25.c **** 
+ 237:../system/src/aprs/ax25.c **** 				if (ctx->dcd_state == 0 && c == AX25_CTRL_UI) {
+ 238:../system/src/aprs/ax25.c **** 					ctx->dcd_state ++;
+ 239:../system/src/aprs/ax25.c **** 				}
+ 240:../system/src/aprs/ax25.c **** 			}
+ 241:../system/src/aprs/ax25.c **** 			else
+ 242:../system/src/aprs/ax25.c **** 			{
+ 243:../system/src/aprs/ax25.c **** 				ctx->sync = false;
+ 714              		.loc 2 243 0
+ 715 0086 0023     		movs	r3, #0
+ 716 0088 84F81132 		strb	r3, [r4, #529]
+ 244:../system/src/aprs/ax25.c **** 				ctx->dcd = false;
+ 717              		.loc 2 244 0
+ 718 008c 84F81432 		strb	r3, [r4, #532]
+ 719              	.LVL88:
+ 720              	.L67:
+ 245:../system/src/aprs/ax25.c **** 			}
+ 246:../system/src/aprs/ax25.c **** 		}
+ 247:../system/src/aprs/ax25.c **** 
+ 248:../system/src/aprs/ax25.c **** 		ctx->escape = false;
+ 721              		.loc 2 248 0
+ 722 0090 0023     		movs	r3, #0
+ 723 0092 84F81232 		strb	r3, [r4, #530]
+ 724              	.L60:
+ 172:../system/src/aprs/ax25.c **** 	{
+ 725              		.loc 2 172 0
+ 726 0096 D4F80002 		ldr	r0, [r4, #512]
+ 727 009a 1030     		adds	r0, r0, #16
+ 728 009c FFF7FEFF 		bl	fifo_getc
+ 729              	.LVL89:
+ 730 00a0 0546     		mov	r5, r0
+ 731              	.LVL90:
+ 732 00a2 B0F1FF3F 		cmp	r0, #-1
+ 733 00a6 2FD0     		beq	.L74
+ 175:../system/src/aprs/ax25.c **** 		{
+ 734              		.loc 2 175 0
+ 735 00a8 94F81232 		ldrb	r3, [r4, #530]	@ zero_extendqisi2
+ 736 00ac 0BB9     		cbnz	r3, .L61
+ 175:../system/src/aprs/ax25.c **** 		{
+ 737              		.loc 2 175 0 is_stmt 0 discriminator 1
+ 738 00ae 7E2D     		cmp	r5, #126
+ 739 00b0 A9D0     		beq	.L75
+ 740              	.L61:
+ 208:../system/src/aprs/ax25.c **** 		{
+ 741              		.loc 2 208 0 is_stmt 1
+ 742 00b2 0BB9     		cbnz	r3, .L65
+ 208:../system/src/aprs/ax25.c **** 		{
+ 743              		.loc 2 208 0 is_stmt 0 discriminator 1
+ 744 00b4 7F2D     		cmp	r5, #127
+ 745 00b6 CDD0     		beq	.L76
+ 746              	.L65:
+ 215:../system/src/aprs/ax25.c **** 		{
+ 747              		.loc 2 215 0 is_stmt 1
+ 748 00b8 0BB9     		cbnz	r3, .L66
+ 215:../system/src/aprs/ax25.c **** 		{
+ 749              		.loc 2 215 0 is_stmt 0 discriminator 1
+ 750 00ba 1B2D     		cmp	r5, #27
+ 751 00bc CFD0     		beq	.L77
+ 752              	.L66:
+ 221:../system/src/aprs/ax25.c **** 		{
+ 753              		.loc 2 221 0 is_stmt 1
+ 754 00be 94F81132 		ldrb	r3, [r4, #529]	@ zero_extendqisi2
+ 755 00c2 002B     		cmp	r3, #0
+ 756 00c4 E4D0     		beq	.L67
+ 223:../system/src/aprs/ax25.c **** 			{
+ 757              		.loc 2 223 0
+ 758 00c6 B4F80432 		ldrh	r3, [r4, #516]
+ 759 00ca B3F5007F 		cmp	r3, #512
+ 760 00ce DAD2     		bcs	.L68
+ 225:../system/src/aprs/ax25.c **** 				ctx->crc_in = updcrc_ccitt(c, ctx->crc_in);
+ 761              		.loc 2 225 0
+ 762 00d0 5A1C     		adds	r2, r3, #1
+ 763 00d2 A4F80422 		strh	r2, [r4, #516]	@ movhi
+ 764 00d6 E8B2     		uxtb	r0, r5
+ 765              	.LVL91:
+ 766 00d8 E054     		strb	r0, [r4, r3]
+ 226:../system/src/aprs/ax25.c **** 				/* Begin of Destination-ADDR based DCD*/ 
+ 767              		.loc 2 226 0
+ 768 00da B4F80612 		ldrh	r1, [r4, #518]
+ 769 00de FFF7FEFF 		bl	updcrc_ccitt
+ 770              	.LVL92:
+ 771 00e2 A4F80602 		strh	r0, [r4, #518]	@ movhi
+ 228:../system/src/aprs/ax25.c **** 					ctx->dcd = true;
+ 772              		.loc 2 228 0
+ 773 00e6 A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+ 774 00e8 602B     		cmp	r3, #96
+ 775 00ea BCD0     		beq	.L78
+ 776              	.L69:
+ 232:../system/src/aprs/ax25.c **** 					ctx->dcd_state ++;
+ 777              		.loc 2 232 0
+ 778 00ec 94F81332 		ldrb	r3, [r4, #531]	@ zero_extendqisi2
+ 779 00f0 012B     		cmp	r3, #1
+ 780 00f2 BFD0     		beq	.L79
+ 781              	.L70:
+ 237:../system/src/aprs/ax25.c **** 					ctx->dcd_state ++;
+ 782              		.loc 2 237 0
+ 783 00f4 94F81332 		ldrb	r3, [r4, #531]	@ zero_extendqisi2
+ 784 00f8 002B     		cmp	r3, #0
+ 785 00fa C9D1     		bne	.L67
+ 237:../system/src/aprs/ax25.c **** 					ctx->dcd_state ++;
+ 786              		.loc 2 237 0 is_stmt 0 discriminator 1
+ 787 00fc 032D     		cmp	r5, #3
+ 788 00fe C7D1     		bne	.L67
+ 238:../system/src/aprs/ax25.c **** 				}
+ 789              		.loc 2 238 0 is_stmt 1
+ 790 0100 0133     		adds	r3, r3, #1
+ 791 0102 84F81332 		strb	r3, [r4, #531]
+ 792 0106 C3E7     		b	.L67
+ 793              	.LVL93:
+ 794              	.L74:
+ 249:../system/src/aprs/ax25.c **** 
+ 250:../system/src/aprs/ax25.c **** 	}
+ 251:../system/src/aprs/ax25.c **** 
+ 252:../system/src/aprs/ax25.c **** }
+ 795              		.loc 2 252 0
+ 796 0108 38BD     		pop	{r3, r4, r5, pc}
+ 797              		.cfi_endproc
+ 798              	.LFE11:
+ 800              		.section	.text.ax25_putchar,"ax",%progbits
+ 801              		.align	1
+ 802              		.global	ax25_putchar
+ 803              		.syntax unified
+ 804              		.thumb
+ 805              		.thumb_func
+ 806              		.fpu softvfp
+ 808              	ax25_putchar:
+ 809              	.LFB12:
+ 253:../system/src/aprs/ax25.c **** 
+ 254:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 255:../system/src/aprs/ax25.c **** void ax25_putchar(AX25Ctx *ctx, uint8_t c) {
+ 810              		.loc 2 255 0
+ 811              		.cfi_startproc
+ 812              		@ args = 0, pretend = 0, frame = 0
+ 813              		@ frame_needed = 0, uses_anonymous_args = 0
+ 814              	.LVL94:
+ 815 0000 38B5     		push	{r3, r4, r5, lr}
+ 816              		.cfi_def_cfa_offset 16
+ 817              		.cfi_offset 3, -16
+ 818              		.cfi_offset 4, -12
+ 819              		.cfi_offset 5, -8
+ 820              		.cfi_offset 14, -4
+ 821 0002 0546     		mov	r5, r0
+ 822 0004 0C46     		mov	r4, r1
+ 256:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 257:../system/src/aprs/ax25.c **** 
+ 258:../system/src/aprs/ax25.c **** 	if (c == HDLC_FLAG || c == HDLC_RESET || c == AX25_ESC)
+ 823              		.loc 2 258 0
+ 824 0006 A1F17E03 		sub	r3, r1, #126
+ 825 000a DBB2     		uxtb	r3, r3
+ 826 000c 012B     		cmp	r3, #1
+ 827 000e 01D9     		bls	.L81
+ 828              		.loc 2 258 0 is_stmt 0 discriminator 1
+ 829 0010 1B29     		cmp	r1, #27
+ 830 0012 06D1     		bne	.L82
+ 831              	.L81:
+ 259:../system/src/aprs/ax25.c **** 	{
+ 260:../system/src/aprs/ax25.c **** 		fifo_putc(AX25_ESC, &ctx->afsk->tx_fifo);
+ 832              		.loc 2 260 0 is_stmt 1
+ 833 0014 D5F80012 		ldr	r1, [r5, #512]
+ 834              	.LVL95:
+ 835 0018 01F50871 		add	r1, r1, #544
+ 836 001c 1B20     		movs	r0, #27
+ 837              	.LVL96:
+ 838 001e FFF7FEFF 		bl	fifo_putc
+ 839              	.LVL97:
+ 840              	.L82:
+ 261:../system/src/aprs/ax25.c **** 	}
+ 262:../system/src/aprs/ax25.c **** 
+ 263:../system/src/aprs/ax25.c **** 	ctx->crc_out = updcrc_ccitt(c, ctx->crc_out);
+ 841              		.loc 2 263 0
+ 842 0022 B5F80812 		ldrh	r1, [r5, #520]
+ 843 0026 2046     		mov	r0, r4
+ 844 0028 FFF7FEFF 		bl	updcrc_ccitt
+ 845              	.LVL98:
+ 846 002c A5F80802 		strh	r0, [r5, #520]	@ movhi
+ 264:../system/src/aprs/ax25.c **** 	fifo_putc(c, &ctx->afsk->tx_fifo);
+ 847              		.loc 2 264 0
+ 848 0030 D5F80012 		ldr	r1, [r5, #512]
+ 849 0034 01F50871 		add	r1, r1, #544
+ 850 0038 2046     		mov	r0, r4
+ 851 003a FFF7FEFF 		bl	fifo_putc
+ 852              	.LVL99:
+ 265:../system/src/aprs/ax25.c **** 
+ 266:../system/src/aprs/ax25.c **** }
+ 853              		.loc 2 266 0
+ 854 003e 38BD     		pop	{r3, r4, r5, pc}
+ 855              		.cfi_endproc
+ 856              	.LFE12:
+ 858              		.section	.text.ax25_sendCall,"ax",%progbits
+ 859              		.align	1
+ 860              		.syntax unified
+ 861              		.thumb
+ 862              		.thumb_func
+ 863              		.fpu softvfp
+ 865              	ax25_sendCall:
+ 866              	.LFB13:
+ 267:../system/src/aprs/ax25.c **** 
+ 268:../system/src/aprs/ax25.c **** 
+ 269:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 270:../system/src/aprs/ax25.c **** static void ax25_sendCall(AX25Ctx *ctx, const AX25Call *addr, bool last) {
+ 867              		.loc 2 270 0
+ 868              		.cfi_startproc
+ 869              		@ args = 0, pretend = 0, frame = 0
+ 870              		@ frame_needed = 0, uses_anonymous_args = 0
+ 871              	.LVL100:
+ 872 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 873              		.cfi_def_cfa_offset 24
+ 874              		.cfi_offset 4, -24
+ 875              		.cfi_offset 5, -20
+ 876              		.cfi_offset 6, -16
+ 877              		.cfi_offset 7, -12
+ 878              		.cfi_offset 8, -8
+ 879              		.cfi_offset 14, -4
+ 880 0004 0646     		mov	r6, r0
+ 881 0006 0F46     		mov	r7, r1
+ 882 0008 9046     		mov	r8, r2
+ 271:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 272:../system/src/aprs/ax25.c **** 
+ 273:../system/src/aprs/ax25.c **** //#ifdef _DBG_TRACE
+ 274:../system/src/aprs/ax25.c **** //				trace_printf("ax25_sendCall:call=%s\r\n", addr->call);
+ 275:../system/src/aprs/ax25.c **** //#endif
+ 276:../system/src/aprs/ax25.c **** 
+ 277:../system/src/aprs/ax25.c **** 	uint16_t i;
+ 278:../system/src/aprs/ax25.c **** 	uint8_t ssid;
+ 279:../system/src/aprs/ax25.c **** 	uint16_t len = MIN(sizeof(addr->call), strlen(addr->call));
+ 883              		.loc 2 279 0
+ 884 000a 0846     		mov	r0, r1
+ 885              	.LVL101:
+ 886 000c FFF7FEFF 		bl	strlen
+ 887              	.LVL102:
+ 888 0010 0628     		cmp	r0, #6
+ 889 0012 02D9     		bls	.L94
+ 890 0014 0625     		movs	r5, #6
+ 891              	.L85:
+ 892              	.LVL103:
+ 280:../system/src/aprs/ax25.c **** 
+ 281:../system/src/aprs/ax25.c **** 
+ 282:../system/src/aprs/ax25.c **** 	for (i = 0; i < len; i++)
+ 893              		.loc 2 282 0 discriminator 4
+ 894 0016 0024     		movs	r4, #0
+ 895 0018 0EE0     		b	.L86
+ 896              	.LVL104:
+ 897              	.L94:
+ 279:../system/src/aprs/ax25.c **** 
+ 898              		.loc 2 279 0 discriminator 1
+ 899 001a 3846     		mov	r0, r7
+ 900 001c FFF7FEFF 		bl	strlen
+ 901              	.LVL105:
+ 902 0020 85B2     		uxth	r5, r0
+ 903 0022 F8E7     		b	.L85
+ 904              	.LVL106:
+ 905              	.L87:
+ 906              	.LBB11:
+ 283:../system/src/aprs/ax25.c **** 	{
+ 284:../system/src/aprs/ax25.c **** 		uint8_t c = addr->call[i];
+ 907              		.loc 2 284 0 discriminator 3
+ 908 0024 3957     		ldrsb	r1, [r7, r4]
+ 909 0026 C9B2     		uxtb	r1, r1
+ 910              	.LVL107:
+ 285:../system/src/aprs/ax25.c **** //		c = toupper(c);	  /////////////////////////////////////////////
+ 286:../system/src/aprs/ax25.c **** 		ax25_putchar(ctx, c << 1);
+ 911              		.loc 2 286 0 discriminator 3
+ 912 0028 4900     		lsls	r1, r1, #1
+ 913              	.LVL108:
+ 914 002a 01F0FE01 		and	r1, r1, #254
+ 915 002e 3046     		mov	r0, r6
+ 916 0030 FFF7FEFF 		bl	ax25_putchar
+ 917              	.LVL109:
+ 918              	.LBE11:
+ 282:../system/src/aprs/ax25.c **** 	{
+ 919              		.loc 2 282 0 discriminator 3
+ 920 0034 0134     		adds	r4, r4, #1
+ 921              	.LVL110:
+ 922 0036 A4B2     		uxth	r4, r4
+ 923              	.LVL111:
+ 924              	.L86:
+ 282:../system/src/aprs/ax25.c **** 	{
+ 925              		.loc 2 282 0 is_stmt 0 discriminator 1
+ 926 0038 AC42     		cmp	r4, r5
+ 927 003a F3D3     		bcc	.L87
+ 287:../system/src/aprs/ax25.c **** 	}
+ 288:../system/src/aprs/ax25.c **** 
+ 289:../system/src/aprs/ax25.c **** 	if (len < sizeof(addr->call))
+ 928              		.loc 2 289 0 is_stmt 1
+ 929 003c 052D     		cmp	r5, #5
+ 930 003e 0BD8     		bhi	.L89
+ 290:../system/src/aprs/ax25.c **** 	{
+ 291:../system/src/aprs/ax25.c **** 		for (i = 0; i < sizeof(addr->call) - len; i++)
+ 931              		.loc 2 291 0
+ 932 0040 0024     		movs	r4, #0
+ 933              	.LVL112:
+ 934 0042 05E0     		b	.L88
+ 935              	.LVL113:
+ 936              	.L90:
+ 292:../system/src/aprs/ax25.c **** 		{
+ 293:../system/src/aprs/ax25.c **** 			ax25_putchar(ctx, ' ' << 1);
+ 937              		.loc 2 293 0 discriminator 3
+ 938 0044 4021     		movs	r1, #64
+ 939 0046 3046     		mov	r0, r6
+ 940 0048 FFF7FEFF 		bl	ax25_putchar
+ 941              	.LVL114:
+ 291:../system/src/aprs/ax25.c **** 		{
+ 942              		.loc 2 291 0 discriminator 3
+ 943 004c 0134     		adds	r4, r4, #1
+ 944              	.LVL115:
+ 945 004e A4B2     		uxth	r4, r4
+ 946              	.LVL116:
+ 947              	.L88:
+ 291:../system/src/aprs/ax25.c **** 		{
+ 948              		.loc 2 291 0 is_stmt 0 discriminator 1
+ 949 0050 C5F10603 		rsb	r3, r5, #6
+ 950 0054 9C42     		cmp	r4, r3
+ 951 0056 F5D3     		bcc	.L90
+ 952              	.L89:
+ 294:../system/src/aprs/ax25.c **** 		}
+ 295:../system/src/aprs/ax25.c **** 	}
+ 296:../system/src/aprs/ax25.c **** 
+ 297:../system/src/aprs/ax25.c **** 	ssid = 0x60 | (addr->ssid << 1) | (last ? 0x01 : 0);
+ 953              		.loc 2 297 0 is_stmt 1
+ 954 0058 B979     		ldrb	r1, [r7, #6]	@ zero_extendqisi2
+ 955 005a 4900     		lsls	r1, r1, #1
+ 956 005c 41F06001 		orr	r1, r1, #96
+ 957 0060 49B2     		sxtb	r1, r1
+ 958 0062 4FFA88F8 		sxtb	r8, r8
+ 959 0066 41EA0801 		orr	r1, r1, r8
+ 960              	.LVL117:
+ 298:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, ssid);
+ 961              		.loc 2 298 0
+ 962 006a C9B2     		uxtb	r1, r1
+ 963 006c 3046     		mov	r0, r6
+ 964 006e FFF7FEFF 		bl	ax25_putchar
+ 965              	.LVL118:
+ 299:../system/src/aprs/ax25.c **** 
+ 300:../system/src/aprs/ax25.c **** }
+ 966              		.loc 2 300 0
+ 967 0072 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 968              		.cfi_endproc
+ 969              	.LFE13:
+ 971              		.section	.text.ax25_sendVia,"ax",%progbits
+ 972              		.align	1
+ 973              		.global	ax25_sendVia
+ 974              		.syntax unified
+ 975              		.thumb
+ 976              		.thumb_func
+ 977              		.fpu softvfp
+ 979              	ax25_sendVia:
+ 980              	.LFB14:
+ 301:../system/src/aprs/ax25.c **** 
+ 302:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 303:../system/src/aprs/ax25.c **** void ax25_sendVia(AX25Ctx *ctx, const AX25Call *path, uint16_t path_len, const void *_buf, uint16_t
+ 981              		.loc 2 303 0
+ 982              		.cfi_startproc
+ 983              		@ args = 4, pretend = 0, frame = 0
+ 984              		@ frame_needed = 0, uses_anonymous_args = 0
+ 985              	.LVL119:
+ 986 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 987              		.cfi_def_cfa_offset 32
+ 988              		.cfi_offset 3, -32
+ 989              		.cfi_offset 4, -28
+ 990              		.cfi_offset 5, -24
+ 991              		.cfi_offset 6, -20
+ 992              		.cfi_offset 7, -16
+ 993              		.cfi_offset 8, -12
+ 994              		.cfi_offset 9, -8
+ 995              		.cfi_offset 14, -4
+ 996 0004 0546     		mov	r5, r0
+ 997 0006 8946     		mov	r9, r1
+ 998 0008 9046     		mov	r8, r2
+ 999 000a 1F46     		mov	r7, r3
+ 1000 000c BDF82060 		ldrh	r6, [sp, #32]
+ 1001              	.LVL120:
+ 304:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 305:../system/src/aprs/ax25.c **** 
+ 306:../system/src/aprs/ax25.c **** 	uint16_t i;
+ 307:../system/src/aprs/ax25.c **** 	uint8_t crcl,crch;
+ 308:../system/src/aprs/ax25.c **** 	const uint8_t *buf = (const uint8_t *)_buf;
+ 309:../system/src/aprs/ax25.c **** 
+ 310:../system/src/aprs/ax25.c **** 	ctx->crc_out = CRC_CCITT_INIT_VAL;
+ 1002              		.loc 2 310 0
+ 1003 0010 4FF6FF73 		movw	r3, #65535
+ 1004              	.LVL121:
+ 1005 0014 A0F80832 		strh	r3, [r0, #520]	@ movhi
+ 311:../system/src/aprs/ax25.c **** 
+ 312:../system/src/aprs/ax25.c **** 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
+ 1006              		.loc 2 312 0
+ 1007 0018 D0F80012 		ldr	r1, [r0, #512]
+ 1008              	.LVL122:
+ 1009 001c 01F50871 		add	r1, r1, #544
+ 1010 0020 7E20     		movs	r0, #126
+ 1011              	.LVL123:
+ 1012 0022 FFF7FEFF 		bl	fifo_putc
+ 1013              	.LVL124:
+ 313:../system/src/aprs/ax25.c **** 
+ 314:../system/src/aprs/ax25.c **** 	for (i = 0; i < path_len; i++)
+ 1014              		.loc 2 314 0
+ 1015 0026 0024     		movs	r4, #0
+ 1016 0028 0DE0     		b	.L96
+ 1017              	.LVL125:
+ 1018              	.L97:
+ 315:../system/src/aprs/ax25.c **** 	{
+ 316:../system/src/aprs/ax25.c **** 		ax25_sendCall(ctx, &path[i], (i == path_len - 1));
+ 1019              		.loc 2 316 0 discriminator 3
+ 1020 002a C4EBC401 		rsb	r1, r4, r4, lsl #3
+ 1021 002e 08F1FF32 		add	r2, r8, #-1
+ 1022 0032 9442     		cmp	r4, r2
+ 1023 0034 14BF     		ite	ne
+ 1024 0036 0022     		movne	r2, #0
+ 1025 0038 0122     		moveq	r2, #1
+ 1026 003a 4944     		add	r1, r1, r9
+ 1027 003c 2846     		mov	r0, r5
+ 1028 003e FFF7FEFF 		bl	ax25_sendCall
+ 1029              	.LVL126:
+ 314:../system/src/aprs/ax25.c **** 	{
+ 1030              		.loc 2 314 0 discriminator 3
+ 1031 0042 0134     		adds	r4, r4, #1
+ 1032              	.LVL127:
+ 1033 0044 A4B2     		uxth	r4, r4
+ 1034              	.LVL128:
+ 1035              	.L96:
+ 314:../system/src/aprs/ax25.c **** 	{
+ 1036              		.loc 2 314 0 is_stmt 0 discriminator 1
+ 1037 0046 4445     		cmp	r4, r8
+ 1038 0048 EFD3     		bcc	.L97
+ 317:../system/src/aprs/ax25.c **** 	}
+ 318:../system/src/aprs/ax25.c **** 
+ 319:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, AX25_CTRL_UI);
+ 1039              		.loc 2 319 0 is_stmt 1
+ 1040 004a 0321     		movs	r1, #3
+ 1041 004c 2846     		mov	r0, r5
+ 1042 004e FFF7FEFF 		bl	ax25_putchar
+ 1043              	.LVL129:
+ 320:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, AX25_PID_NOLAYER3);
+ 1044              		.loc 2 320 0
+ 1045 0052 F021     		movs	r1, #240
+ 1046 0054 2846     		mov	r0, r5
+ 1047 0056 FFF7FEFF 		bl	ax25_putchar
+ 1048              	.LVL130:
+ 321:../system/src/aprs/ax25.c **** 
+ 322:../system/src/aprs/ax25.c **** 	while (len--)
+ 1049              		.loc 2 322 0
+ 1050 005a 06E0     		b	.L98
+ 1051              	.LVL131:
+ 1052              	.L99:
+ 323:../system/src/aprs/ax25.c **** 	{
+ 324:../system/src/aprs/ax25.c **** 		ax25_putchar(ctx, *buf++);
+ 1053              		.loc 2 324 0
+ 1054 005c 7E1C     		adds	r6, r7, #1
+ 1055              	.LVL132:
+ 1056 005e 3978     		ldrb	r1, [r7]	@ zero_extendqisi2
+ 1057 0060 2846     		mov	r0, r5
+ 1058 0062 FFF7FEFF 		bl	ax25_putchar
+ 1059              	.LVL133:
+ 1060 0066 3746     		mov	r7, r6
+ 322:../system/src/aprs/ax25.c **** 	{
+ 1061              		.loc 2 322 0
+ 1062 0068 2646     		mov	r6, r4
+ 1063              	.LVL134:
+ 1064              	.L98:
+ 1065 006a 731E     		subs	r3, r6, #1
+ 1066 006c 9CB2     		uxth	r4, r3
+ 1067              	.LVL135:
+ 1068 006e 002E     		cmp	r6, #0
+ 1069 0070 F4D1     		bne	.L99
+ 325:../system/src/aprs/ax25.c **** 	}
+ 326:../system/src/aprs/ax25.c **** 
+ 327:../system/src/aprs/ax25.c **** 	crcl = (ctx->crc_out & 0xff) ^ 0xff;
+ 1070              		.loc 2 327 0
+ 1071 0072 B5F80832 		ldrh	r3, [r5, #520]
+ 1072 0076 D943     		mvns	r1, r3
+ 1073              	.LVL136:
+ 328:../system/src/aprs/ax25.c **** 	crch = (ctx->crc_out >> 8) ^ 0xff;
+ 1074              		.loc 2 328 0
+ 1075 0078 6FEA1323 		mvn	r3, r3, lsr #8
+ 1076 007c DCB2     		uxtb	r4, r3
+ 1077              	.LVL137:
+ 329:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, crcl);
+ 1078              		.loc 2 329 0
+ 1079 007e C9B2     		uxtb	r1, r1
+ 1080 0080 2846     		mov	r0, r5
+ 1081 0082 FFF7FEFF 		bl	ax25_putchar
+ 1082              	.LVL138:
+ 330:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, crch);
+ 1083              		.loc 2 330 0
+ 1084 0086 2146     		mov	r1, r4
+ 1085 0088 2846     		mov	r0, r5
+ 1086 008a FFF7FEFF 		bl	ax25_putchar
+ 1087              	.LVL139:
+ 331:../system/src/aprs/ax25.c **** 
+ 332:../system/src/aprs/ax25.c **** 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
+ 1088              		.loc 2 332 0
+ 1089 008e D5F80012 		ldr	r1, [r5, #512]
+ 1090 0092 01F50871 		add	r1, r1, #544
+ 1091 0096 7E20     		movs	r0, #126
+ 1092 0098 FFF7FEFF 		bl	fifo_putc
+ 1093              	.LVL140:
+ 333:../system/src/aprs/ax25.c **** 
+ 334:../system/src/aprs/ax25.c **** }
+ 1094              		.loc 2 334 0
+ 1095 009c BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 1096              		.cfi_endproc
+ 1097              	.LFE14:
+ 1099              		.section	.text.ax25_sendVia_toBuffer,"ax",%progbits
+ 1100              		.align	1
+ 1101              		.global	ax25_sendVia_toBuffer
+ 1102              		.syntax unified
+ 1103              		.thumb
+ 1104              		.thumb_func
+ 1105              		.fpu softvfp
+ 1107              	ax25_sendVia_toBuffer:
+ 1108              	.LFB15:
+ 335:../system/src/aprs/ax25.c **** 
+ 336:../system/src/aprs/ax25.c **** uint16_t ax25_sendVia_toBuffer(const AX25Call *path, uint16_t path_len, const void *payload, uint16
+ 1109              		.loc 2 336 0
+ 1110              		.cfi_startproc
+ 1111              		@ args = 8, pretend = 0, frame = 8
+ 1112              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1113              	.LVL141:
+ 1114 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 1115              		.cfi_def_cfa_offset 32
+ 1116              		.cfi_offset 4, -32
+ 1117              		.cfi_offset 5, -28
+ 1118              		.cfi_offset 6, -24
+ 1119              		.cfi_offset 7, -20
+ 1120              		.cfi_offset 8, -16
+ 1121              		.cfi_offset 9, -12
+ 1122              		.cfi_offset 10, -8
+ 1123              		.cfi_offset 14, -4
+ 1124 0004 84B0     		sub	sp, sp, #16
+ 1125              		.cfi_def_cfa_offset 48
+ 1126 0006 8246     		mov	r10, r0
+ 1127 0008 8946     		mov	r9, r1
+ 1128 000a 1646     		mov	r6, r2
+ 1129 000c 1D46     		mov	r5, r3
+ 1130 000e 0C9F     		ldr	r7, [sp, #48]
+ 1131 0010 BDF83480 		ldrh	r8, [sp, #52]
+ 337:../system/src/aprs/ax25.c **** 
+ 338:../system/src/aprs/ax25.c **** 	uint16_t i;
+ 339:../system/src/aprs/ax25.c **** 	uint16_t crc = CRC_CCITT_INIT_VAL;
+ 1132              		.loc 2 339 0
+ 1133 0014 4FF6FF73 		movw	r3, #65535
+ 1134              	.LVL142:
+ 1135 0018 ADF80E30 		strh	r3, [sp, #14]	@ movhi
+ 1136              	.LVL143:
+ 340:../system/src/aprs/ax25.c **** 	const uint8_t *buf = (const uint8_t *)payload;
+ 341:../system/src/aprs/ax25.c **** 
+ 342:../system/src/aprs/ax25.c **** 	uint16_t return_val = 0;
+ 1137              		.loc 2 342 0
+ 1138 001c 0024     		movs	r4, #0
+ 1139 001e 04AA     		add	r2, sp, #16
+ 1140              	.LVL144:
+ 1141 0020 22F8044D 		strh	r4, [r2, #-4]!	@ movhi
+ 343:../system/src/aprs/ax25.c **** 
+ 344:../system/src/aprs/ax25.c **** 	kiss_reset_buffer(output_buf, output_size, &return_val);
+ 1142              		.loc 2 344 0
+ 1143 0024 4146     		mov	r1, r8
+ 1144              	.LVL145:
+ 1145 0026 3846     		mov	r0, r7
+ 1146              	.LVL146:
+ 1147 0028 FFF7FEFF 		bl	kiss_reset_buffer
+ 1148              	.LVL147:
+ 345:../system/src/aprs/ax25.c **** 
+ 346:../system/src/aprs/ax25.c **** 	for (i = 0; i < path_len; i++)
+ 1149              		.loc 2 346 0
+ 1150 002c 13E0     		b	.L102
+ 1151              	.LVL148:
+ 1152              	.L103:
+ 347:../system/src/aprs/ax25.c **** 	{
+ 348:../system/src/aprs/ax25.c **** 		kiss_put_call(&path[i], (i == path_len - 1), output_buf, output_size, &return_val, &crc);
+ 1153              		.loc 2 348 0 discriminator 3
+ 1154 002e C4EBC400 		rsb	r0, r4, r4, lsl #3
+ 1155 0032 09F1FF31 		add	r1, r9, #-1
+ 1156 0036 0DF10E03 		add	r3, sp, #14
+ 1157 003a 0193     		str	r3, [sp, #4]
+ 1158 003c 03AB     		add	r3, sp, #12
+ 1159 003e 0093     		str	r3, [sp]
+ 1160 0040 4346     		mov	r3, r8
+ 1161 0042 3A46     		mov	r2, r7
+ 1162 0044 8C42     		cmp	r4, r1
+ 1163 0046 14BF     		ite	ne
+ 1164 0048 0021     		movne	r1, #0
+ 1165 004a 0121     		moveq	r1, #1
+ 1166 004c 5044     		add	r0, r0, r10
+ 1167 004e FFF7FEFF 		bl	kiss_put_call
+ 1168              	.LVL149:
+ 346:../system/src/aprs/ax25.c **** 	{
+ 1169              		.loc 2 346 0 discriminator 3
+ 1170 0052 0134     		adds	r4, r4, #1
+ 1171              	.LVL150:
+ 1172 0054 A4B2     		uxth	r4, r4
+ 1173              	.LVL151:
+ 1174              	.L102:
+ 346:../system/src/aprs/ax25.c **** 	{
+ 1175              		.loc 2 346 0 is_stmt 0 discriminator 1
+ 1176 0056 4C45     		cmp	r4, r9
+ 1177 0058 E9D3     		bcc	.L103
+ 349:../system/src/aprs/ax25.c **** 	}
+ 350:../system/src/aprs/ax25.c **** 
+ 351:../system/src/aprs/ax25.c **** 	kiss_put_char(AX25_CTRL_UI, output_buf, output_size, &return_val, &crc);
+ 1178              		.loc 2 351 0 is_stmt 1
+ 1179 005a 0DF10E04 		add	r4, sp, #14
+ 1180              	.LVL152:
+ 1181 005e 0094     		str	r4, [sp]
+ 1182 0060 03AB     		add	r3, sp, #12
+ 1183 0062 4246     		mov	r2, r8
+ 1184 0064 3946     		mov	r1, r7
+ 1185 0066 0320     		movs	r0, #3
+ 1186 0068 FFF7FEFF 		bl	kiss_put_char
+ 1187              	.LVL153:
+ 352:../system/src/aprs/ax25.c **** 	kiss_put_char(AX25_PID_NOLAYER3, output_buf, output_size, &return_val, &crc);
+ 1188              		.loc 2 352 0
+ 1189 006c 0094     		str	r4, [sp]
+ 1190 006e 03AB     		add	r3, sp, #12
+ 1191 0070 4246     		mov	r2, r8
+ 1192 0072 3946     		mov	r1, r7
+ 1193 0074 F020     		movs	r0, #240
+ 1194 0076 FFF7FEFF 		bl	kiss_put_char
+ 1195              	.LVL154:
+ 353:../system/src/aprs/ax25.c **** 
+ 354:../system/src/aprs/ax25.c **** 	while (payload_len--)
+ 1196              		.loc 2 354 0
+ 1197 007a 0BE0     		b	.L104
+ 1198              	.LVL155:
+ 1199              	.L105:
+ 355:../system/src/aprs/ax25.c **** 	{
+ 356:../system/src/aprs/ax25.c **** 		kiss_put_char(*buf++, output_buf, output_size, &return_val, &crc);
+ 1200              		.loc 2 356 0
+ 1201 007c 751C     		adds	r5, r6, #1
+ 1202              	.LVL156:
+ 1203 007e 3078     		ldrb	r0, [r6]	@ zero_extendqisi2
+ 1204 0080 0DF10E03 		add	r3, sp, #14
+ 1205 0084 0093     		str	r3, [sp]
+ 1206 0086 03AB     		add	r3, sp, #12
+ 1207 0088 4246     		mov	r2, r8
+ 1208 008a 3946     		mov	r1, r7
+ 1209 008c FFF7FEFF 		bl	kiss_put_char
+ 1210              	.LVL157:
+ 1211 0090 2E46     		mov	r6, r5
+ 354:../system/src/aprs/ax25.c **** 	{
+ 1212              		.loc 2 354 0
+ 1213 0092 2546     		mov	r5, r4
+ 1214              	.LVL158:
+ 1215              	.L104:
+ 1216 0094 6B1E     		subs	r3, r5, #1
+ 1217 0096 9CB2     		uxth	r4, r3
+ 1218              	.LVL159:
+ 1219 0098 002D     		cmp	r5, #0
+ 1220 009a EFD1     		bne	.L105
+ 357:../system/src/aprs/ax25.c **** 	}
+ 358:../system/src/aprs/ax25.c **** 
+ 359:../system/src/aprs/ax25.c **** 	kiss_finalize_buffer(output_buf, output_size, &return_val);
+ 1221              		.loc 2 359 0
+ 1222 009c 03AA     		add	r2, sp, #12
+ 1223 009e 4146     		mov	r1, r8
+ 1224 00a0 3846     		mov	r0, r7
+ 1225 00a2 FFF7FEFF 		bl	kiss_finalize_buffer
+ 1226              	.LVL160:
+ 360:../system/src/aprs/ax25.c **** 
+ 361:../system/src/aprs/ax25.c **** 	return return_val;
+ 362:../system/src/aprs/ax25.c **** }
+ 1227              		.loc 2 362 0
+ 1228 00a6 BDF80C00 		ldrh	r0, [sp, #12]
+ 1229 00aa 04B0     		add	sp, sp, #16
+ 1230              		.cfi_def_cfa_offset 32
+ 1231              		@ sp needed
+ 1232 00ac BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 1233              		.cfi_endproc
+ 1234              	.LFE15:
+ 1236              		.section	.text.ax25_sendRaw,"ax",%progbits
+ 1237              		.align	1
+ 1238              		.global	ax25_sendRaw
+ 1239              		.syntax unified
+ 1240              		.thumb
+ 1241              		.thumb_func
+ 1242              		.fpu softvfp
+ 1244              	ax25_sendRaw:
+ 1245              	.LFB16:
+ 363:../system/src/aprs/ax25.c **** 
+ 364:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 365:../system/src/aprs/ax25.c **** void ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len) {
+ 1246              		.loc 2 365 0
+ 1247              		.cfi_startproc
+ 1248              		@ args = 0, pretend = 0, frame = 0
+ 1249              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1250              	.LVL161:
+ 1251 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1252              		.cfi_def_cfa_offset 24
+ 1253              		.cfi_offset 3, -24
+ 1254              		.cfi_offset 4, -20
+ 1255              		.cfi_offset 5, -16
+ 1256              		.cfi_offset 6, -12
+ 1257              		.cfi_offset 7, -8
+ 1258              		.cfi_offset 14, -4
+ 1259 0002 0746     		mov	r7, r0
+ 1260 0004 0E46     		mov	r6, r1
+ 1261 0006 1546     		mov	r5, r2
+ 1262              	.LVL162:
+ 366:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 367:../system/src/aprs/ax25.c **** 
+ 368:../system/src/aprs/ax25.c **** 	const uint8_t *buf = (const uint8_t *)_buf;
+ 369:../system/src/aprs/ax25.c **** 	uint8_t crcl,crch;
+ 370:../system/src/aprs/ax25.c **** 	ctx->crc_out = CRC_CCITT_INIT_VAL;
+ 1263              		.loc 2 370 0
+ 1264 0008 4FF6FF73 		movw	r3, #65535
+ 1265 000c A0F80832 		strh	r3, [r0, #520]	@ movhi
+ 371:../system/src/aprs/ax25.c **** 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
+ 1266              		.loc 2 371 0
+ 1267 0010 D0F80012 		ldr	r1, [r0, #512]
+ 1268              	.LVL163:
+ 1269 0014 01F50871 		add	r1, r1, #544
+ 1270 0018 7E20     		movs	r0, #126
+ 1271              	.LVL164:
+ 1272 001a FFF7FEFF 		bl	fifo_putc
+ 1273              	.LVL165:
+ 372:../system/src/aprs/ax25.c **** 
+ 373:../system/src/aprs/ax25.c **** 	while (len--) ax25_putchar(ctx, *buf++);
+ 1274              		.loc 2 373 0
+ 1275 001e 06E0     		b	.L108
+ 1276              	.LVL166:
+ 1277              	.L109:
+ 1278              		.loc 2 373 0 is_stmt 0 discriminator 2
+ 1279 0020 751C     		adds	r5, r6, #1
+ 1280              	.LVL167:
+ 1281 0022 3178     		ldrb	r1, [r6]	@ zero_extendqisi2
+ 1282 0024 3846     		mov	r0, r7
+ 1283 0026 FFF7FEFF 		bl	ax25_putchar
+ 1284              	.LVL168:
+ 1285 002a 2E46     		mov	r6, r5
+ 1286 002c 2546     		mov	r5, r4
+ 1287              	.LVL169:
+ 1288              	.L108:
+ 1289              		.loc 2 373 0 discriminator 1
+ 1290 002e 6B1E     		subs	r3, r5, #1
+ 1291 0030 9CB2     		uxth	r4, r3
+ 1292              	.LVL170:
+ 1293 0032 002D     		cmp	r5, #0
+ 1294 0034 F4D1     		bne	.L109
+ 374:../system/src/aprs/ax25.c **** 
+ 375:../system/src/aprs/ax25.c **** 	crcl = (ctx->crc_out & 0xff) ^ 0xff;
+ 1295              		.loc 2 375 0 is_stmt 1
+ 1296 0036 B7F80832 		ldrh	r3, [r7, #520]
+ 1297 003a D943     		mvns	r1, r3
+ 1298              	.LVL171:
+ 376:../system/src/aprs/ax25.c **** 	crch = (ctx->crc_out >> 8) ^ 0xff;
+ 1299              		.loc 2 376 0
+ 1300 003c 6FEA1323 		mvn	r3, r3, lsr #8
+ 1301 0040 DCB2     		uxtb	r4, r3
+ 1302              	.LVL172:
+ 377:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, crcl);
+ 1303              		.loc 2 377 0
+ 1304 0042 C9B2     		uxtb	r1, r1
+ 1305 0044 3846     		mov	r0, r7
+ 1306 0046 FFF7FEFF 		bl	ax25_putchar
+ 1307              	.LVL173:
+ 378:../system/src/aprs/ax25.c **** 	ax25_putchar(ctx, crch);
+ 1308              		.loc 2 378 0
+ 1309 004a 2146     		mov	r1, r4
+ 1310 004c 3846     		mov	r0, r7
+ 1311 004e FFF7FEFF 		bl	ax25_putchar
+ 1312              	.LVL174:
+ 379:../system/src/aprs/ax25.c **** 
+ 380:../system/src/aprs/ax25.c **** 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
+ 1313              		.loc 2 380 0
+ 1314 0052 D7F80012 		ldr	r1, [r7, #512]
+ 1315 0056 01F50871 		add	r1, r1, #544
+ 1316 005a 7E20     		movs	r0, #126
+ 1317 005c FFF7FEFF 		bl	fifo_putc
+ 1318              	.LVL175:
+ 381:../system/src/aprs/ax25.c **** 
+ 382:../system/src/aprs/ax25.c **** }
+ 1319              		.loc 2 382 0
+ 1320 0060 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1321              		.cfi_endproc
+ 1322              	.LFE16:
+ 1324              		.section	.text.ax25_init,"ax",%progbits
+ 1325              		.align	1
+ 1326              		.global	ax25_init
+ 1327              		.syntax unified
+ 1328              		.thumb
+ 1329              		.thumb_func
+ 1330              		.fpu softvfp
+ 1332              	ax25_init:
+ 1333              	.LFB17:
+ 383:../system/src/aprs/ax25.c **** 
+ 384:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 385:../system/src/aprs/ax25.c **** void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook) {
+ 1334              		.loc 2 385 0
+ 1335              		.cfi_startproc
+ 1336              		@ args = 0, pretend = 0, frame = 0
+ 1337              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1338              	.LVL176:
+ 1339 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1340              		.cfi_def_cfa_offset 24
+ 1341              		.cfi_offset 3, -24
+ 1342              		.cfi_offset 4, -20
+ 1343              		.cfi_offset 5, -16
+ 1344              		.cfi_offset 6, -12
+ 1345              		.cfi_offset 7, -8
+ 1346              		.cfi_offset 14, -4
+ 1347 0002 0446     		mov	r4, r0
+ 1348 0004 0F46     		mov	r7, r1
+ 1349 0006 1646     		mov	r6, r2
+ 1350 0008 1D46     		mov	r5, r3
+ 386:../system/src/aprs/ax25.c **** /**************************************************************************************************
+ 387:../system/src/aprs/ax25.c **** 
+ 388:../system/src/aprs/ax25.c **** 	memset(ctx, 0, sizeof(*ctx));
+ 1351              		.loc 2 388 0
+ 1352 000a 4FF40672 		mov	r2, #536
+ 1353              	.LVL177:
+ 1354 000e 0021     		movs	r1, #0
+ 1355              	.LVL178:
+ 1356 0010 FFF7FEFF 		bl	memset
+ 1357              	.LVL179:
+ 389:../system/src/aprs/ax25.c **** 
+ 390:../system/src/aprs/ax25.c **** 	ctx->afsk = afsk;
+ 1358              		.loc 2 390 0
+ 1359 0014 C4F80072 		str	r7, [r4, #512]
+ 391:../system/src/aprs/ax25.c **** 	ctx->raw = raw;
+ 1360              		.loc 2 391 0
+ 1361 0018 84F81062 		strb	r6, [r4, #528]
+ 392:../system/src/aprs/ax25.c **** 	ctx->hook = hook;
+ 1362              		.loc 2 392 0
+ 1363 001c C4F80C52 		str	r5, [r4, #524]
+ 393:../system/src/aprs/ax25.c **** 	ctx->crc_in = ctx->crc_out = CRC_CCITT_INIT_VAL;
+ 1364              		.loc 2 393 0
+ 1365 0020 4FF6FF73 		movw	r3, #65535
+ 1366 0024 A4F80832 		strh	r3, [r4, #520]	@ movhi
+ 1367 0028 A4F80632 		strh	r3, [r4, #518]	@ movhi
+ 394:../system/src/aprs/ax25.c **** 
+ 395:../system/src/aprs/ax25.c **** 
+ 396:../system/src/aprs/ax25.c **** }
+ 1368              		.loc 2 396 0
+ 1369 002c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1370              		.cfi_endproc
+ 1371              	.LFE17:
+ 1373              		.comm	ax25_new_msg_rx_flag,1,1
+ 1374              		.comm	ax25_rxed_frame,596,4
+ 1375              		.text
+ 1376              	.Letext0:
+ 1377              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1378              		.file 4 "../system/include/aprs/cfifo.h"
+ 1379              		.file 5 "../system/include/aprs/afsk.h"
+ 1380              		.file 6 "../system/include/aprs/ax25.h"
+ 1381              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1382              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1383              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1384              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1385              		.file 11 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/ctype.h"
+ 1386              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 1387              		.file 13 "../include/KissCommunication.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 ax25.c
+     /tmp/ccG7nDc2.s:16     .text.updcrc_ccitt:0000000000000000 $t
+     /tmp/ccG7nDc2.s:22     .text.updcrc_ccitt:0000000000000000 updcrc_ccitt
+     /tmp/ccG7nDc2.s:43     .text.updcrc_ccitt:0000000000000010 $d
+     /tmp/ccG7nDc2.s:48     .text.fifo_isempty:0000000000000000 $t
+     /tmp/ccG7nDc2.s:54     .text.fifo_isempty:0000000000000000 fifo_isempty
+     /tmp/ccG7nDc2.s:77     .text.fifo_isfull:0000000000000000 $t
+     /tmp/ccG7nDc2.s:83     .text.fifo_isfull:0000000000000000 fifo_isfull
+     /tmp/ccG7nDc2.s:128    .text.fifo_push:0000000000000000 $t
+     /tmp/ccG7nDc2.s:134    .text.fifo_push:0000000000000000 fifo_push
+     /tmp/ccG7nDc2.s:165    .text.fifo_pop:0000000000000000 $t
+     /tmp/ccG7nDc2.s:171    .text.fifo_pop:0000000000000000 fifo_pop
+     /tmp/ccG7nDc2.s:205    .text.fifo_getc:0000000000000000 $t
+     /tmp/ccG7nDc2.s:211    .text.fifo_getc:0000000000000000 fifo_getc
+     /tmp/ccG7nDc2.s:244    .text.fifo_putc:0000000000000000 $t
+     /tmp/ccG7nDc2.s:250    .text.fifo_putc:0000000000000000 fifo_putc
+     /tmp/ccG7nDc2.s:287    .text.ax25_decode:0000000000000000 $t
+     /tmp/ccG7nDc2.s:293    .text.ax25_decode:0000000000000000 ax25_decode
+     /tmp/ccG7nDc2.s:596    .text.ax25_decode:0000000000000154 $d
+                            *COM*:0000000000000254 ax25_rxed_frame
+                            *COM*:0000000000000001 ax25_new_msg_rx_flag
+     /tmp/ccG7nDc2.s:603    .text.ax25_poll:0000000000000000 $t
+     /tmp/ccG7nDc2.s:610    .text.ax25_poll:0000000000000000 ax25_poll
+     /tmp/ccG7nDc2.s:801    .text.ax25_putchar:0000000000000000 $t
+     /tmp/ccG7nDc2.s:808    .text.ax25_putchar:0000000000000000 ax25_putchar
+     /tmp/ccG7nDc2.s:859    .text.ax25_sendCall:0000000000000000 $t
+     /tmp/ccG7nDc2.s:865    .text.ax25_sendCall:0000000000000000 ax25_sendCall
+     /tmp/ccG7nDc2.s:972    .text.ax25_sendVia:0000000000000000 $t
+     /tmp/ccG7nDc2.s:979    .text.ax25_sendVia:0000000000000000 ax25_sendVia
+     /tmp/ccG7nDc2.s:1100   .text.ax25_sendVia_toBuffer:0000000000000000 $t
+     /tmp/ccG7nDc2.s:1107   .text.ax25_sendVia_toBuffer:0000000000000000 ax25_sendVia_toBuffer
+     /tmp/ccG7nDc2.s:1237   .text.ax25_sendRaw:0000000000000000 $t
+     /tmp/ccG7nDc2.s:1244   .text.ax25_sendRaw:0000000000000000 ax25_sendRaw
+     /tmp/ccG7nDc2.s:1325   .text.ax25_init:0000000000000000 $t
+     /tmp/ccG7nDc2.s:1332   .text.ax25_init:0000000000000000 ax25_init
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.ctype.h.2.56b1b2226dd0fb45614b0e18787c61f7
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.KissCommunication.h.17.f1e76db053f07badac1040f3bea74fb3
+
+UNDEFINED SYMBOLS
+crc_ccitt_tab
+strlen
+kiss_reset_buffer
+kiss_put_call
+kiss_put_char
+kiss_finalize_buffer
+memset

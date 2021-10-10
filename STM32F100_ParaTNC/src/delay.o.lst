@@ -1,0 +1,398 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"delay.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.delay_fixed,"ax",%progbits
+  16              		.align	1
+  17              		.global	delay_fixed
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	delay_fixed:
+  24              	.LFB70:
+  25              		.file 1 "../src/delay.c"
+   1:../src/delay.c **** /*
+   2:../src/delay.c ****  * delay.c
+   3:../src/delay.c ****  *
+   4:../src/delay.c ****  *  Created on: 26.01.2019
+   5:../src/delay.c ****  *      Author: mateusz
+   6:../src/delay.c ****  */
+   7:../src/delay.c **** 
+   8:../src/delay.c **** #include "main.h"
+   9:../src/delay.c **** 
+  10:../src/delay.c **** uint16_t preset_delay_msecs = 0;
+  11:../src/delay.c **** uint8_t preset_use_random = 0;
+  12:../src/delay.c **** 
+  13:../src/delay.c **** // counter decrement in Systick handler
+  14:../src/delay.c **** volatile uint16_t delay_cnt = 0;
+  15:../src/delay.c **** 
+  16:../src/delay.c **** void delay_fixed(uint16_t delay_in_msecs) {
+  26              		.loc 1 16 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  17:../src/delay.c **** 
+  18:../src/delay.c **** 	delay_cnt = delay_in_msecs;
+  32              		.loc 1 18 0
+  33 0000 034B     		ldr	r3, .L3
+  34 0002 1880     		strh	r0, [r3]	@ movhi
+  35              	.L2:
+  19:../src/delay.c **** 
+  20:../src/delay.c **** 	while(delay_cnt > 0);
+  36              		.loc 1 20 0 discriminator 1
+  37 0004 024B     		ldr	r3, .L3
+  38 0006 1B88     		ldrh	r3, [r3]
+  39 0008 9BB2     		uxth	r3, r3
+  40 000a 002B     		cmp	r3, #0
+  41 000c FAD1     		bne	.L2
+  21:../src/delay.c **** 
+  22:../src/delay.c **** 	return;
+  23:../src/delay.c **** 
+  24:../src/delay.c **** }
+  42              		.loc 1 24 0
+  43 000e 7047     		bx	lr
+  44              	.L4:
+  45              		.align	2
+  46              	.L3:
+  47 0010 00000000 		.word	.LANCHOR0
+  48              		.cfi_endproc
+  49              	.LFE70:
+  51              		.section	.text.delay_fixed_with_count,"ax",%progbits
+  52              		.align	1
+  53              		.global	delay_fixed_with_count
+  54              		.syntax unified
+  55              		.thumb
+  56              		.thumb_func
+  57              		.fpu softvfp
+  59              	delay_fixed_with_count:
+  60              	.LFB71:
+  25:../src/delay.c **** 
+  26:../src/delay.c **** uint32_t delay_fixed_with_count(uint16_t delay_in_msecs) {
+  61              		.loc 1 26 0
+  62              		.cfi_startproc
+  63              		@ args = 0, pretend = 0, frame = 0
+  64              		@ frame_needed = 0, uses_anonymous_args = 0
+  65              		@ link register save eliminated.
+  66              	.LVL1:
+  27:../src/delay.c **** 
+  28:../src/delay.c **** 	uint32_t ret = 0;
+  29:../src/delay.c **** 
+  30:../src/delay.c **** 	delay_cnt = delay_in_msecs;
+  67              		.loc 1 30 0
+  68 0000 054B     		ldr	r3, .L8
+  69 0002 1880     		strh	r0, [r3]	@ movhi
+  28:../src/delay.c **** 
+  70              		.loc 1 28 0
+  71 0004 0020     		movs	r0, #0
+  72              	.LVL2:
+  31:../src/delay.c **** 
+  32:../src/delay.c **** 	while(delay_cnt > 0) {
+  73              		.loc 1 32 0
+  74 0006 00E0     		b	.L6
+  75              	.LVL3:
+  76              	.L7:
+  33:../src/delay.c **** 		ret++;
+  77              		.loc 1 33 0
+  78 0008 0130     		adds	r0, r0, #1
+  79              	.LVL4:
+  80              	.L6:
+  32:../src/delay.c **** 		ret++;
+  81              		.loc 1 32 0
+  82 000a 034B     		ldr	r3, .L8
+  83 000c 1B88     		ldrh	r3, [r3]
+  84 000e 9BB2     		uxth	r3, r3
+  85 0010 002B     		cmp	r3, #0
+  86 0012 F9D1     		bne	.L7
+  34:../src/delay.c **** 	}
+  35:../src/delay.c **** 
+  36:../src/delay.c **** 	return ret;
+  37:../src/delay.c **** }
+  87              		.loc 1 37 0
+  88 0014 7047     		bx	lr
+  89              	.L9:
+  90 0016 00BF     		.align	2
+  91              	.L8:
+  92 0018 00000000 		.word	.LANCHOR0
+  93              		.cfi_endproc
+  94              	.LFE71:
+  96              		.section	.text.delay_random,"ax",%progbits
+  97              		.align	1
+  98              		.global	delay_random
+  99              		.syntax unified
+ 100              		.thumb
+ 101              		.thumb_func
+ 102              		.fpu softvfp
+ 104              	delay_random:
+ 105              	.LFB72:
+  38:../src/delay.c **** 
+  39:../src/delay.c **** void delay_random(void) {
+ 106              		.loc 1 39 0
+ 107              		.cfi_startproc
+ 108              		@ args = 0, pretend = 0, frame = 0
+ 109              		@ frame_needed = 0, uses_anonymous_args = 0
+ 110 0000 08B5     		push	{r3, lr}
+ 111              		.cfi_def_cfa_offset 8
+ 112              		.cfi_offset 3, -8
+ 113              		.cfi_offset 14, -4
+  40:../src/delay.c **** 
+  41:../src/delay.c **** 	uint16_t sample = main_get_adc_sample();
+ 114              		.loc 1 41 0
+ 115 0002 FFF7FEFF 		bl	main_get_adc_sample
+ 116              	.LVL5:
+  42:../src/delay.c **** 
+  43:../src/delay.c **** 	// random element of delay value could vary from 0 to 300msecs in 20msec steps
+  44:../src/delay.c **** 	delay_cnt = (uint16_t)(preset_delay_msecs / 4) + (sample % 15) * 20;
+ 117              		.loc 1 44 0
+ 118 0006 094B     		ldr	r3, .L12
+ 119 0008 1A88     		ldrh	r2, [r3]
+ 120 000a 094B     		ldr	r3, .L12+4
+ 121 000c A3FB0013 		umull	r1, r3, r3, r0
+ 122 0010 DB08     		lsrs	r3, r3, #3
+ 123 0012 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 124 0016 C01A     		subs	r0, r0, r3
+ 125              	.LVL6:
+ 126 0018 00EB8000 		add	r0, r0, r0, lsl #2
+ 127 001c 8300     		lsls	r3, r0, #2
+ 128 001e 03EB9203 		add	r3, r3, r2, lsr #2
+ 129 0022 9BB2     		uxth	r3, r3
+ 130 0024 034A     		ldr	r2, .L12+8
+ 131 0026 1380     		strh	r3, [r2]	@ movhi
+  45:../src/delay.c **** 
+  46:../src/delay.c **** }
+ 132              		.loc 1 46 0
+ 133 0028 08BD     		pop	{r3, pc}
+ 134              	.L13:
+ 135 002a 00BF     		.align	2
+ 136              	.L12:
+ 137 002c 00000000 		.word	.LANCHOR1
+ 138 0030 89888888 		.word	-2004318071
+ 139 0034 00000000 		.word	.LANCHOR0
+ 140              		.cfi_endproc
+ 141              	.LFE72:
+ 143              		.section	.text.delay_set,"ax",%progbits
+ 144              		.align	1
+ 145              		.global	delay_set
+ 146              		.syntax unified
+ 147              		.thumb
+ 148              		.thumb_func
+ 149              		.fpu softvfp
+ 151              	delay_set:
+ 152              	.LFB73:
+  47:../src/delay.c **** 
+  48:../src/delay.c **** void delay_set(uint16_t delay_in_msecs, uint8_t randomize) {
+ 153              		.loc 1 48 0
+ 154              		.cfi_startproc
+ 155              		@ args = 0, pretend = 0, frame = 0
+ 156              		@ frame_needed = 0, uses_anonymous_args = 0
+ 157              		@ link register save eliminated.
+ 158              	.LVL7:
+  49:../src/delay.c **** 	preset_delay_msecs = delay_in_msecs * 50;
+ 159              		.loc 1 49 0
+ 160 0000 00EB8000 		add	r0, r0, r0, lsl #2
+ 161              	.LVL8:
+ 162 0004 00EB8000 		add	r0, r0, r0, lsl #2
+ 163 0008 4300     		lsls	r3, r0, #1
+ 164 000a 064A     		ldr	r2, .L18
+ 165 000c 1380     		strh	r3, [r2]	@ movhi
+  50:../src/delay.c **** 
+  51:../src/delay.c **** 	if (randomize == 1) {
+ 166              		.loc 1 51 0
+ 167 000e 0129     		cmp	r1, #1
+ 168 0010 03D0     		beq	.L17
+  52:../src/delay.c **** 		preset_use_random = 1;
+  53:../src/delay.c **** 	}
+  54:../src/delay.c **** 	else {
+  55:../src/delay.c **** 		preset_use_random = 0;
+ 169              		.loc 1 55 0
+ 170 0012 054B     		ldr	r3, .L18+4
+ 171 0014 0022     		movs	r2, #0
+ 172 0016 1A70     		strb	r2, [r3]
+  56:../src/delay.c **** 	}
+  57:../src/delay.c **** }
+ 173              		.loc 1 57 0
+ 174 0018 7047     		bx	lr
+ 175              	.L17:
+  52:../src/delay.c **** 		preset_use_random = 1;
+ 176              		.loc 1 52 0
+ 177 001a 034B     		ldr	r3, .L18+4
+ 178 001c 0122     		movs	r2, #1
+ 179 001e 1A70     		strb	r2, [r3]
+ 180 0020 7047     		bx	lr
+ 181              	.L19:
+ 182 0022 00BF     		.align	2
+ 183              	.L18:
+ 184 0024 00000000 		.word	.LANCHOR1
+ 185 0028 00000000 		.word	.LANCHOR2
+ 186              		.cfi_endproc
+ 187              	.LFE73:
+ 189              		.section	.text.delay_from_preset,"ax",%progbits
+ 190              		.align	1
+ 191              		.global	delay_from_preset
+ 192              		.syntax unified
+ 193              		.thumb
+ 194              		.thumb_func
+ 195              		.fpu softvfp
+ 197              	delay_from_preset:
+ 198              	.LFB74:
+  58:../src/delay.c **** 
+  59:../src/delay.c **** void delay_from_preset(void) {
+ 199              		.loc 1 59 0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 0
+ 202              		@ frame_needed = 0, uses_anonymous_args = 0
+ 203 0000 08B5     		push	{r3, lr}
+ 204              		.cfi_def_cfa_offset 8
+ 205              		.cfi_offset 3, -8
+ 206              		.cfi_offset 14, -4
+  60:../src/delay.c **** 
+  61:../src/delay.c **** 	delay_cnt = preset_delay_msecs;
+ 207              		.loc 1 61 0
+ 208 0002 084B     		ldr	r3, .L25
+ 209 0004 1A88     		ldrh	r2, [r3]
+ 210 0006 084B     		ldr	r3, .L25+4
+ 211 0008 1A80     		strh	r2, [r3]	@ movhi
+ 212              	.L21:
+  62:../src/delay.c **** 
+  63:../src/delay.c **** 	while(delay_cnt > (uint16_t)0);
+ 213              		.loc 1 63 0 discriminator 1
+ 214 000a 074B     		ldr	r3, .L25+4
+ 215 000c 1B88     		ldrh	r3, [r3]
+ 216 000e 9BB2     		uxth	r3, r3
+ 217 0010 002B     		cmp	r3, #0
+ 218 0012 FAD1     		bne	.L21
+  64:../src/delay.c **** 
+  65:../src/delay.c **** 	if (preset_use_random == 1) {
+ 219              		.loc 1 65 0
+ 220 0014 054B     		ldr	r3, .L25+8
+ 221 0016 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 222 0018 012B     		cmp	r3, #1
+ 223 001a 00D0     		beq	.L24
+ 224              	.L20:
+  66:../src/delay.c **** 		delay_random();
+  67:../src/delay.c **** 	}
+  68:../src/delay.c **** 
+  69:../src/delay.c **** 
+  70:../src/delay.c **** }
+ 225              		.loc 1 70 0
+ 226 001c 08BD     		pop	{r3, pc}
+ 227              	.L24:
+  66:../src/delay.c **** 		delay_random();
+ 228              		.loc 1 66 0
+ 229 001e FFF7FEFF 		bl	delay_random
+ 230              	.LVL9:
+ 231              		.loc 1 70 0
+ 232 0022 FBE7     		b	.L20
+ 233              	.L26:
+ 234              		.align	2
+ 235              	.L25:
+ 236 0024 00000000 		.word	.LANCHOR1
+ 237 0028 00000000 		.word	.LANCHOR0
+ 238 002c 00000000 		.word	.LANCHOR2
+ 239              		.cfi_endproc
+ 240              	.LFE74:
+ 242              		.global	delay_cnt
+ 243              		.global	preset_use_random
+ 244              		.global	preset_delay_msecs
+ 245              		.section	.bss.delay_cnt,"aw",%nobits
+ 246              		.align	1
+ 247              		.set	.LANCHOR0,. + 0
+ 250              	delay_cnt:
+ 251 0000 0000     		.space	2
+ 252              		.section	.bss.preset_delay_msecs,"aw",%nobits
+ 253              		.align	1
+ 254              		.set	.LANCHOR1,. + 0
+ 257              	preset_delay_msecs:
+ 258 0000 0000     		.space	2
+ 259              		.section	.bss.preset_use_random,"aw",%nobits
+ 260              		.set	.LANCHOR2,. + 0
+ 263              	preset_use_random:
+ 264 0000 00       		.space	1
+ 265              		.text
+ 266              	.Letext0:
+ 267              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 268              		.file 3 "../system/include/aprs/cfifo.h"
+ 269              		.file 4 "../system/include/aprs/afsk.h"
+ 270              		.file 5 "../system/include/aprs/ax25.h"
+ 271              		.file 6 "../system/include/cmsis/core_cm3.h"
+ 272              		.file 7 "../system/include/cmsis/system_stm32f10x.h"
+ 273              		.file 8 "../system/include/cmsis/stm32f10x.h"
+ 274              		.file 9 "../system/include/drivers/serial.h"
+ 275              		.file 10 "../include/config_data.h"
+ 276              		.file 11 "../include/main.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 delay.c
+     /tmp/ccyI8vCZ.s:16     .text.delay_fixed:0000000000000000 $t
+     /tmp/ccyI8vCZ.s:23     .text.delay_fixed:0000000000000000 delay_fixed
+     /tmp/ccyI8vCZ.s:47     .text.delay_fixed:0000000000000010 $d
+     /tmp/ccyI8vCZ.s:52     .text.delay_fixed_with_count:0000000000000000 $t
+     /tmp/ccyI8vCZ.s:59     .text.delay_fixed_with_count:0000000000000000 delay_fixed_with_count
+     /tmp/ccyI8vCZ.s:92     .text.delay_fixed_with_count:0000000000000018 $d
+     /tmp/ccyI8vCZ.s:97     .text.delay_random:0000000000000000 $t
+     /tmp/ccyI8vCZ.s:104    .text.delay_random:0000000000000000 delay_random
+     /tmp/ccyI8vCZ.s:137    .text.delay_random:000000000000002c $d
+     /tmp/ccyI8vCZ.s:144    .text.delay_set:0000000000000000 $t
+     /tmp/ccyI8vCZ.s:151    .text.delay_set:0000000000000000 delay_set
+     /tmp/ccyI8vCZ.s:184    .text.delay_set:0000000000000024 $d
+     /tmp/ccyI8vCZ.s:190    .text.delay_from_preset:0000000000000000 $t
+     /tmp/ccyI8vCZ.s:197    .text.delay_from_preset:0000000000000000 delay_from_preset
+     /tmp/ccyI8vCZ.s:236    .text.delay_from_preset:0000000000000024 $d
+     /tmp/ccyI8vCZ.s:250    .bss.delay_cnt:0000000000000000 delay_cnt
+     /tmp/ccyI8vCZ.s:263    .bss.preset_use_random:0000000000000000 preset_use_random
+     /tmp/ccyI8vCZ.s:257    .bss.preset_delay_msecs:0000000000000000 preset_delay_msecs
+     /tmp/ccyI8vCZ.s:246    .bss.delay_cnt:0000000000000000 $d
+     /tmp/ccyI8vCZ.s:253    .bss.preset_delay_msecs:0000000000000000 $d
+     /tmp/ccyI8vCZ.s:264    .bss.preset_use_random:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+
+UNDEFINED SYMBOLS
+main_get_adc_sample

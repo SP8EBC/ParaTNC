@@ -1,0 +1,1186 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"davis_parsers.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.davis_parsers_check_crc,"ax",%progbits
+  16              		.align	1
+  17              		.global	davis_parsers_check_crc
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	davis_parsers_check_crc:
+  24              	.LFB6:
+  25              		.file 1 "../system/src/davis_vantage/davis_parsers.c"
+   1:../system/src/davis_vantage/davis_parsers.c **** /*
+   2:../system/src/davis_vantage/davis_parsers.c ****  * davis_parsers.c
+   3:../system/src/davis_vantage/davis_parsers.c ****  *
+   4:../system/src/davis_vantage/davis_parsers.c ****  *  Created on: 10.08.2020
+   5:../system/src/davis_vantage/davis_parsers.c ****  *      Author: mateusz
+   6:../system/src/davis_vantage/davis_parsers.c ****  */
+   7:../system/src/davis_vantage/davis_parsers.c **** 
+   8:../system/src/davis_vantage/davis_parsers.c **** #include "davis_vantage/davis_parsers.h"
+   9:../system/src/davis_vantage/davis_parsers.c **** 
+  10:../system/src/davis_vantage/davis_parsers.c **** #include <string.h>
+  11:../system/src/davis_vantage/davis_parsers.c **** #include <stdio.h>
+  12:../system/src/davis_vantage/davis_parsers.c **** 
+  13:../system/src/davis_vantage/davis_parsers.c **** #define DAVIS_QUERY_ABOUT_LOOP2
+  14:../system/src/davis_vantage/davis_parsers.c **** 
+  15:../system/src/davis_vantage/davis_parsers.c **** const uint16_t crc_table [] = {
+  16:../system/src/davis_vantage/davis_parsers.c **** 
+  17:../system/src/davis_vantage/davis_parsers.c **** 	0x0,	0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+  18:../system/src/davis_vantage/davis_parsers.c **** 	0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+  19:../system/src/davis_vantage/davis_parsers.c **** 	0x1231, 0x210, 	0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+  20:../system/src/davis_vantage/davis_parsers.c **** 	0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+  21:../system/src/davis_vantage/davis_parsers.c **** 	0x2462, 0x3443, 0x420, 	0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+  22:../system/src/davis_vantage/davis_parsers.c **** 	0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+  23:../system/src/davis_vantage/davis_parsers.c **** 	0x3653, 0x2672, 0x1611, 0x630, 	0x76d7, 0x66f6, 0x5695, 0x46b4,
+  24:../system/src/davis_vantage/davis_parsers.c **** 	0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+  25:../system/src/davis_vantage/davis_parsers.c **** 	0x48c4, 0x58e5, 0x6886, 0x78a7, 0x840, 	0x1861, 0x2802, 0x3823,
+  26:../system/src/davis_vantage/davis_parsers.c **** 	0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+  27:../system/src/davis_vantage/davis_parsers.c **** 	0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0xa50, 	0x3a33, 0x2a12,
+  28:../system/src/davis_vantage/davis_parsers.c **** 	0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+  29:../system/src/davis_vantage/davis_parsers.c **** 	0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0xc60, 	0x1c41,
+  30:../system/src/davis_vantage/davis_parsers.c **** 	0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+  31:../system/src/davis_vantage/davis_parsers.c **** 	0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0xe70,
+  32:../system/src/davis_vantage/davis_parsers.c **** 	0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+  33:../system/src/davis_vantage/davis_parsers.c **** 	0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+  34:../system/src/davis_vantage/davis_parsers.c **** 	0x1080, 0xa1, 	0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+  35:../system/src/davis_vantage/davis_parsers.c **** 	0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+  36:../system/src/davis_vantage/davis_parsers.c **** 	0x2b1, 	0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+  37:../system/src/davis_vantage/davis_parsers.c **** 	0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+  38:../system/src/davis_vantage/davis_parsers.c **** 	0x34e2, 0x24c3, 0x14a0, 0x481, 	0x7466, 0x6447, 0x5424, 0x4405,
+  39:../system/src/davis_vantage/davis_parsers.c **** 	0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+  40:../system/src/davis_vantage/davis_parsers.c **** 	0x26d3, 0x36f2, 0x691, 	0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+  41:../system/src/davis_vantage/davis_parsers.c **** 	0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+  42:../system/src/davis_vantage/davis_parsers.c **** 	0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x8e1, 	0x3882, 0x28a3,
+  43:../system/src/davis_vantage/davis_parsers.c **** 	0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+  44:../system/src/davis_vantage/davis_parsers.c **** 	0x4a75, 0x5a54, 0x6a37, 0x7a16, 0xaf1,  0x1ad0, 0x2ab3, 0x3a92,
+  45:../system/src/davis_vantage/davis_parsers.c **** 	0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+  46:../system/src/davis_vantage/davis_parsers.c **** 	0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0xcc1,
+  47:../system/src/davis_vantage/davis_parsers.c **** 	0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+  48:../system/src/davis_vantage/davis_parsers.c **** 	0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0xed1, 0x1ef0
+  49:../system/src/davis_vantage/davis_parsers.c **** };
+  50:../system/src/davis_vantage/davis_parsers.c **** 
+  51:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_PACAKET_LN 99
+  52:../system/src/davis_vantage/davis_parsers.c **** #define RX_CHECK_MIN_LN_WITH_ACK	16
+  53:../system/src/davis_vantage/davis_parsers.c **** 
+  54:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_CRC_OFFSET 				0x61
+  55:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_BAROMETER_OFFSET 			7
+  56:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_INSIDE_TEMPERATURE_OFFSET	9
+  57:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_OUTSIDE_TEMPERATURE_OFFSET		12
+  58:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_WINDSPEED_OFFSET			14
+  59:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_TEN_MIN_WINDSPEED_OFFSET	15
+  60:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_WIND_DIRECTION_OFFSET		16
+  61:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_OUTSIDE_HUMIDITY			33
+  62:../system/src/davis_vantage/davis_parsers.c **** #define LOOP_DAY_RAIN_OFFSET			50
+  63:../system/src/davis_vantage/davis_parsers.c **** 
+  64:../system/src/davis_vantage/davis_parsers.c **** #define LOOP2_CRC_OFFSET					0x61
+  65:../system/src/davis_vantage/davis_parsers.c **** #define LOOP2_WIND_DIRECTION				16
+  66:../system/src/davis_vantage/davis_parsers.c **** #define LOOP2_TEN_MINUTES_AVG_WINDSPEED		18
+  67:../system/src/davis_vantage/davis_parsers.c **** #define LOOP2_TWO_MINUTES_AVG_WINDSPEED		20
+  68:../system/src/davis_vantage/davis_parsers.c **** #define LOOP2_TEN_MINUTES_GUST				22
+  69:../system/src/davis_vantage/davis_parsers.c **** 
+  70:../system/src/davis_vantage/davis_parsers.c **** uint32_t davis_parsers_loop(uint8_t* input, uint16_t input_ln, davis_loop_t* output) {
+  71:../system/src/davis_vantage/davis_parsers.c **** 
+  72:../system/src/davis_vantage/davis_parsers.c **** 	uint32_t retval = DAVIS_PARSERS_OK;
+  73:../system/src/davis_vantage/davis_parsers.c **** 
+  74:../system/src/davis_vantage/davis_parsers.c **** #ifdef DAVIS_QUERY_ABOUT_LOOP2
+  75:../system/src/davis_vantage/davis_parsers.c **** 	retval = davis_parsers_loop2(input, input_ln, output);
+  76:../system/src/davis_vantage/davis_parsers.c **** #else
+  77:../system/src/davis_vantage/davis_parsers.c **** 	// crc stored in the frame
+  78:../system/src/davis_vantage/davis_parsers.c **** 	uint16_t crc_from_frame = 0;
+  79:../system/src/davis_vantage/davis_parsers.c **** 
+  80:../system/src/davis_vantage/davis_parsers.c **** 	// calculated crc checksum
+  81:../system/src/davis_vantage/davis_parsers.c **** 	uint16_t calculated_crc = 0;
+  82:../system/src/davis_vantage/davis_parsers.c **** 
+  83:../system/src/davis_vantage/davis_parsers.c **** 	// check if input buffer consist at least as many characters as the LOOP packet has
+  84:../system/src/davis_vantage/davis_parsers.c **** 	if (input_ln < LOOP_PACAKET_LN) {
+  85:../system/src/davis_vantage/davis_parsers.c **** 		// return with an error state, don't consider consecutive content of a frame
+  86:../system/src/davis_vantage/davis_parsers.c **** 		// as it is for sure incorrect
+  87:../system/src/davis_vantage/davis_parsers.c **** 		retval = DAVIS_PARSERS_TOO_SHORT_FRAME;
+  88:../system/src/davis_vantage/davis_parsers.c **** 	}
+  89:../system/src/davis_vantage/davis_parsers.c **** 	else {
+  90:../system/src/davis_vantage/davis_parsers.c **** 		// check if first character in the buffer is ACK (0x06) send for the LOOP packet
+  91:../system/src/davis_vantage/davis_parsers.c **** 		if (*input == 0x06) {
+  92:../system/src/davis_vantage/davis_parsers.c **** 			// if yes rewind the buffer to the next character
+  93:../system/src/davis_vantage/davis_parsers.c **** 			input += 1;
+  94:../system/src/davis_vantage/davis_parsers.c **** 		}
+  95:../system/src/davis_vantage/davis_parsers.c **** 		else if (*input == 'L') {
+  96:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_OK;
+  97:../system/src/davis_vantage/davis_parsers.c **** 		}
+  98:../system/src/davis_vantage/davis_parsers.c **** 		else {
+  99:../system/src/davis_vantage/davis_parsers.c **** 			// correct LOOP packet shall start from either 0x06 (if it is glued
+ 100:../system/src/davis_vantage/davis_parsers.c **** 			// to ACK) or 'L'. If it starts from something else it means that
+ 101:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_WRONG_CONTENT;
+ 102:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 103:../system/src/davis_vantage/davis_parsers.c **** 
+ 104:../system/src/davis_vantage/davis_parsers.c **** 		if (retval == DAVIS_PARSERS_OK) {
+ 105:../system/src/davis_vantage/davis_parsers.c **** 			// retrieve the CRC value from the frame content (sent in MSB, totally opposite from the rest of
+ 106:../system/src/davis_vantage/davis_parsers.c **** 			crc_from_frame = *(input + LOOP_CRC_OFFSET + 1) | (*(input + LOOP_CRC_OFFSET)) << 8;
+ 107:../system/src/davis_vantage/davis_parsers.c **** 
+ 108:../system/src/davis_vantage/davis_parsers.c **** 			// calculate the CRC locally excluding the last 2 bytes which consists the CRC value.
+ 109:../system/src/davis_vantage/davis_parsers.c **** 			// the another way of performing this calculation is to include the last 2 bytes (CRC itself)
+ 110:../system/src/davis_vantage/davis_parsers.c **** 			// and check if the result equals '0' what indicates that data is not corrupted.
+ 111:../system/src/davis_vantage/davis_parsers.c **** 			calculated_crc = davis_parsers_check_crc(input, LOOP_PACAKET_LN - 2);
+ 112:../system/src/davis_vantage/davis_parsers.c **** 
+ 113:../system/src/davis_vantage/davis_parsers.c **** 			// check if calculated CRC is the same as recevied from the sation
+ 114:../system/src/davis_vantage/davis_parsers.c **** 			if (calculated_crc == crc_from_frame) {
+ 115:../system/src/davis_vantage/davis_parsers.c **** 				// continue only if both CRC matches
+ 116:../system/src/davis_vantage/davis_parsers.c **** 
+ 117:../system/src/davis_vantage/davis_parsers.c **** 				// fetch the pressure
+ 118:../system/src/davis_vantage/davis_parsers.c **** 				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1) << 
+ 119:../system/src/davis_vantage/davis_parsers.c **** 
+ 120:../system/src/davis_vantage/davis_parsers.c **** 				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_
+ 121:../system/src/davis_vantage/davis_parsers.c **** 
+ 122:../system/src/davis_vantage/davis_parsers.c **** 				output->outside_temperature = *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_OUTSI
+ 123:../system/src/davis_vantage/davis_parsers.c **** 
+ 124:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_speed = *(input + LOOP_WINDSPEED_OFFSET);
+ 125:../system/src/davis_vantage/davis_parsers.c **** 
+ 126:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_speed_10min_average = *(input + LOOP_TEN_MIN_WINDSPEED_OFFSET);
+ 127:../system/src/davis_vantage/davis_parsers.c **** 
+ 128:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET) | *(input + LOOP_WIND_DIRECTION_
+ 129:../system/src/davis_vantage/davis_parsers.c **** 
+ 130:../system/src/davis_vantage/davis_parsers.c **** 				output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
+ 131:../system/src/davis_vantage/davis_parsers.c **** 
+ 132:../system/src/davis_vantage/davis_parsers.c **** 				output->day_rain = *(input + LOOP_DAY_RAIN_OFFSET);
+ 133:../system/src/davis_vantage/davis_parsers.c **** 
+ 134:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 135:../system/src/davis_vantage/davis_parsers.c **** 			else {
+ 136:../system/src/davis_vantage/davis_parsers.c **** 				// if CRCs differs treat the frame as corrupted and
+ 137:../system/src/davis_vantage/davis_parsers.c **** 				retval = DAVIS_PARSERS_CORRUPTED_CRC;
+ 138:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 139:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 140:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 141:../system/src/davis_vantage/davis_parsers.c **** #endif
+ 142:../system/src/davis_vantage/davis_parsers.c **** 
+ 143:../system/src/davis_vantage/davis_parsers.c **** 
+ 144:../system/src/davis_vantage/davis_parsers.c **** 
+ 145:../system/src/davis_vantage/davis_parsers.c **** 	return retval;
+ 146:../system/src/davis_vantage/davis_parsers.c **** }
+ 147:../system/src/davis_vantage/davis_parsers.c **** 
+ 148:../system/src/davis_vantage/davis_parsers.c **** uint32_t davis_parsers_loop2(uint8_t* input, uint16_t input_ln, davis_loop_t* output) {
+ 149:../system/src/davis_vantage/davis_parsers.c **** 
+ 150:../system/src/davis_vantage/davis_parsers.c **** 	uint32_t retval = DAVIS_PARSERS_OK;
+ 151:../system/src/davis_vantage/davis_parsers.c **** 
+ 152:../system/src/davis_vantage/davis_parsers.c **** 	// crc stored in the frame
+ 153:../system/src/davis_vantage/davis_parsers.c **** 	uint16_t crc_from_frame = 0;
+ 154:../system/src/davis_vantage/davis_parsers.c **** 
+ 155:../system/src/davis_vantage/davis_parsers.c **** 	// calculated crc checksum
+ 156:../system/src/davis_vantage/davis_parsers.c **** 	uint16_t calculated_crc = 0;
+ 157:../system/src/davis_vantage/davis_parsers.c **** 
+ 158:../system/src/davis_vantage/davis_parsers.c **** 	// check if input buffer consist at least as many characters as the LOOP packet has
+ 159:../system/src/davis_vantage/davis_parsers.c **** 	if (input_ln < LOOP_PACAKET_LN) {
+ 160:../system/src/davis_vantage/davis_parsers.c **** 		// return with an error state, don't consider consecutive content of a frame
+ 161:../system/src/davis_vantage/davis_parsers.c **** 		// as it is for sure incorrect
+ 162:../system/src/davis_vantage/davis_parsers.c **** 		retval = DAVIS_PARSERS_TOO_SHORT_FRAME;
+ 163:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 164:../system/src/davis_vantage/davis_parsers.c **** 	else {
+ 165:../system/src/davis_vantage/davis_parsers.c **** 
+ 166:../system/src/davis_vantage/davis_parsers.c **** 		if (*input == 0x06 && *(input + 1) == 'L') {
+ 167:../system/src/davis_vantage/davis_parsers.c **** 			// if yes rewind the buffer to the next character
+ 168:../system/src/davis_vantage/davis_parsers.c **** 			input += 1;
+ 169:../system/src/davis_vantage/davis_parsers.c **** 
+ 170:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_OK;
+ 171:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 172:../system/src/davis_vantage/davis_parsers.c **** 		else if (*input == 'L') {
+ 173:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_OK;
+ 174:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 175:../system/src/davis_vantage/davis_parsers.c **** 		else {
+ 176:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_WRONG_CONTENT;
+ 177:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 178:../system/src/davis_vantage/davis_parsers.c **** 
+ 179:../system/src/davis_vantage/davis_parsers.c **** 		if (retval == DAVIS_PARSERS_OK) {
+ 180:../system/src/davis_vantage/davis_parsers.c **** 
+ 181:../system/src/davis_vantage/davis_parsers.c **** 			// retrieve the CRC value from the frame content (sent in MSB, totally opposite from the rest of
+ 182:../system/src/davis_vantage/davis_parsers.c **** 			crc_from_frame = *(input + LOOP_CRC_OFFSET + 1) | (*(input + LOOP_CRC_OFFSET)) << 8;
+ 183:../system/src/davis_vantage/davis_parsers.c **** 
+ 184:../system/src/davis_vantage/davis_parsers.c **** 			// calculate the CRC locally excluding the last 2 bytes which consists the CRC value.
+ 185:../system/src/davis_vantage/davis_parsers.c **** 			// the another way of performing this calculation is to include the last 2 bytes (CRC itself)
+ 186:../system/src/davis_vantage/davis_parsers.c **** 			// and check if the result equals '0' what indicates that data is not corrupted.
+ 187:../system/src/davis_vantage/davis_parsers.c **** 			calculated_crc = davis_parsers_check_crc(input, LOOP_PACAKET_LN - 2);
+ 188:../system/src/davis_vantage/davis_parsers.c **** 
+ 189:../system/src/davis_vantage/davis_parsers.c **** 			if (calculated_crc == crc_from_frame) {
+ 190:../system/src/davis_vantage/davis_parsers.c **** 
+ 191:../system/src/davis_vantage/davis_parsers.c **** 				// fetch the pressure
+ 192:../system/src/davis_vantage/davis_parsers.c **** 				output->barometer = *(input + LOOP_BAROMETER_OFFSET) | *(input + LOOP_BAROMETER_OFFSET + 1) << 
+ 193:../system/src/davis_vantage/davis_parsers.c **** 
+ 194:../system/src/davis_vantage/davis_parsers.c **** 				output->inside_temperature = *(input + LOOP_INSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_INSIDE_
+ 195:../system/src/davis_vantage/davis_parsers.c **** 
+ 196:../system/src/davis_vantage/davis_parsers.c **** 				output->outside_temperature = *(input + LOOP_OUTSIDE_TEMPERATURE_OFFSET) | *(input + LOOP_OUTSI
+ 197:../system/src/davis_vantage/davis_parsers.c **** 
+ 198:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_speed = *(input + LOOP2_TWO_MINUTES_AVG_WINDSPEED) | *(input + LOOP2_TWO_MINUTES_A
+ 199:../system/src/davis_vantage/davis_parsers.c **** 
+ 200:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_speed_10min_average = *(input + LOOP2_TEN_MINUTES_AVG_WINDSPEED) | *(input + LOOP2
+ 201:../system/src/davis_vantage/davis_parsers.c **** 
+ 202:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_gusts_10min = *(input + LOOP2_TEN_MINUTES_GUST) | *(input + LOOP2_TEN_MINUTES_GUST
+ 203:../system/src/davis_vantage/davis_parsers.c **** 
+ 204:../system/src/davis_vantage/davis_parsers.c **** 				output->wind_direction = *(input + LOOP_WIND_DIRECTION_OFFSET) | *(input + LOOP_WIND_DIRECTION_
+ 205:../system/src/davis_vantage/davis_parsers.c **** 
+ 206:../system/src/davis_vantage/davis_parsers.c **** 				output->outside_humidity = *(input + LOOP_OUTSIDE_HUMIDITY);
+ 207:../system/src/davis_vantage/davis_parsers.c **** 
+ 208:../system/src/davis_vantage/davis_parsers.c **** 				output->day_rain = *(input + LOOP_DAY_RAIN_OFFSET);
+ 209:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 210:../system/src/davis_vantage/davis_parsers.c **** 			else {
+ 211:../system/src/davis_vantage/davis_parsers.c **** 				// if CRCs differs treat the frame as corrupted and
+ 212:../system/src/davis_vantage/davis_parsers.c **** 				retval = DAVIS_PARSERS_CORRUPTED_CRC;
+ 213:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 214:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 215:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 216:../system/src/davis_vantage/davis_parsers.c **** 
+ 217:../system/src/davis_vantage/davis_parsers.c **** 	return retval;
+ 218:../system/src/davis_vantage/davis_parsers.c **** }
+ 219:../system/src/davis_vantage/davis_parsers.c **** 
+ 220:../system/src/davis_vantage/davis_parsers.c **** 
+ 221:../system/src/davis_vantage/davis_parsers.c **** uint32_t davis_parsers_check_crc(uint8_t* input, uint16_t input_ln) {
+  26              		.loc 1 221 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  32              	.LBB4:
+ 222:../system/src/davis_vantage/davis_parsers.c **** 
+ 223:../system/src/davis_vantage/davis_parsers.c **** 	//uint32_t retval = 0;
+ 224:../system/src/davis_vantage/davis_parsers.c **** 
+ 225:../system/src/davis_vantage/davis_parsers.c **** 	uint16_t crc = 0;
+ 226:../system/src/davis_vantage/davis_parsers.c **** 
+ 227:../system/src/davis_vantage/davis_parsers.c **** 	for (int i = 0; i < input_ln; i++) {
+  33              		.loc 1 227 0
+  34 0000 0022     		movs	r2, #0
+  35              	.LBE4:
+ 225:../system/src/davis_vantage/davis_parsers.c **** 
+  36              		.loc 1 225 0
+  37 0002 1346     		mov	r3, r2
+  38              	.LVL1:
+  39              	.LBB5:
+  40              		.loc 1 227 0
+  41 0004 9142     		cmp	r1, r2
+  42 0006 0FDD     		ble	.L8
+  43              	.LBE5:
+ 221:../system/src/davis_vantage/davis_parsers.c **** 
+  44              		.loc 1 221 0
+  45 0008 30B4     		push	{r4, r5}
+  46              		.cfi_def_cfa_offset 8
+  47              		.cfi_offset 4, -8
+  48              		.cfi_offset 5, -4
+  49              	.LVL2:
+  50              	.L3:
+  51              	.LBB6:
+ 228:../system/src/davis_vantage/davis_parsers.c **** 		crc = crc_table [(crc >> 8) ^ *(input + i)] ^ (crc << 8);
+  52              		.loc 1 228 0 discriminator 3
+  53 000a 845C     		ldrb	r4, [r0, r2]	@ zero_extendqisi2
+  54 000c 84EA1324 		eor	r4, r4, r3, lsr #8
+  55 0010 064D     		ldr	r5, .L9
+  56 0012 35F91440 		ldrsh	r4, [r5, r4, lsl #1]
+  57 0016 84EA0323 		eor	r3, r4, r3, lsl #8
+  58 001a 9BB2     		uxth	r3, r3
+  59              	.LVL3:
+ 227:../system/src/davis_vantage/davis_parsers.c **** 		crc = crc_table [(crc >> 8) ^ *(input + i)] ^ (crc << 8);
+  60              		.loc 1 227 0 discriminator 3
+  61 001c 0132     		adds	r2, r2, #1
+  62              	.LVL4:
+  63 001e 9142     		cmp	r1, r2
+  64 0020 F3DC     		bgt	.L3
+  65              	.LBE6:
+ 229:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 230:../system/src/davis_vantage/davis_parsers.c **** 
+ 231:../system/src/davis_vantage/davis_parsers.c **** 	return crc;
+ 232:../system/src/davis_vantage/davis_parsers.c **** }
+  66              		.loc 1 232 0
+  67 0022 1846     		mov	r0, r3
+  68              	.LVL5:
+  69 0024 30BC     		pop	{r4, r5}
+  70              		.cfi_restore 5
+  71              		.cfi_restore 4
+  72              		.cfi_def_cfa_offset 0
+  73 0026 7047     		bx	lr
+  74              	.LVL6:
+  75              	.L8:
+  76 0028 1046     		mov	r0, r2
+  77              	.LVL7:
+  78 002a 7047     		bx	lr
+  79              	.L10:
+  80              		.align	2
+  81              	.L9:
+  82 002c 00000000 		.word	.LANCHOR0
+  83              		.cfi_endproc
+  84              	.LFE6:
+  86              		.section	.text.davis_parsers_loop2,"ax",%progbits
+  87              		.align	1
+  88              		.global	davis_parsers_loop2
+  89              		.syntax unified
+  90              		.thumb
+  91              		.thumb_func
+  92              		.fpu softvfp
+  94              	davis_parsers_loop2:
+  95              	.LFB5:
+ 148:../system/src/davis_vantage/davis_parsers.c **** 
+  96              		.loc 1 148 0
+  97              		.cfi_startproc
+  98              		@ args = 0, pretend = 0, frame = 0
+  99              		@ frame_needed = 0, uses_anonymous_args = 0
+ 100              	.LVL8:
+ 159:../system/src/davis_vantage/davis_parsers.c **** 		// return with an error state, don't consider consecutive content of a frame
+ 101              		.loc 1 159 0
+ 102 0000 6229     		cmp	r1, #98
+ 103 0002 44D9     		bls	.L15
+ 148:../system/src/davis_vantage/davis_parsers.c **** 
+ 104              		.loc 1 148 0
+ 105 0004 70B5     		push	{r4, r5, r6, lr}
+ 106              		.cfi_def_cfa_offset 16
+ 107              		.cfi_offset 4, -16
+ 108              		.cfi_offset 5, -12
+ 109              		.cfi_offset 6, -8
+ 110              		.cfi_offset 14, -4
+ 111 0006 0446     		mov	r4, r0
+ 112 0008 1546     		mov	r5, r2
+ 166:../system/src/davis_vantage/davis_parsers.c **** 			// if yes rewind the buffer to the next character
+ 113              		.loc 1 166 0
+ 114 000a 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 115 000c 062B     		cmp	r3, #6
+ 116 000e 39D0     		beq	.L22
+ 117              	.LVL9:
+ 118              	.L13:
+ 172:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_OK;
+ 119              		.loc 1 172 0
+ 120 0010 4C2B     		cmp	r3, #76
+ 121 0012 3FD1     		bne	.L16
+ 122              	.LVL10:
+ 123              	.L14:
+ 182:../system/src/davis_vantage/davis_parsers.c **** 
+ 124              		.loc 1 182 0
+ 125 0014 94F86260 		ldrb	r6, [r4, #98]	@ zero_extendqisi2
+ 126 0018 94F86130 		ldrb	r3, [r4, #97]	@ zero_extendqisi2
+ 127 001c 46EA0326 		orr	r6, r6, r3, lsl #8
+ 128              	.LVL11:
+ 187:../system/src/davis_vantage/davis_parsers.c **** 
+ 129              		.loc 1 187 0
+ 130 0020 6121     		movs	r1, #97
+ 131              	.LVL12:
+ 132 0022 2046     		mov	r0, r4
+ 133 0024 FFF7FEFF 		bl	davis_parsers_check_crc
+ 134              	.LVL13:
+ 135 0028 80B2     		uxth	r0, r0
+ 136              	.LVL14:
+ 189:../system/src/davis_vantage/davis_parsers.c **** 
+ 137              		.loc 1 189 0
+ 138 002a 8642     		cmp	r6, r0
+ 139 002c 35D1     		bne	.L17
+ 192:../system/src/davis_vantage/davis_parsers.c **** 
+ 140              		.loc 1 192 0
+ 141 002e E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 142 0030 227A     		ldrb	r2, [r4, #8]	@ zero_extendqisi2
+ 143 0032 43EA0223 		orr	r3, r3, r2, lsl #8
+ 144 0036 2B80     		strh	r3, [r5]	@ movhi
+ 194:../system/src/davis_vantage/davis_parsers.c **** 
+ 145              		.loc 1 194 0
+ 146 0038 637A     		ldrb	r3, [r4, #9]	@ zero_extendqisi2
+ 147 003a A27A     		ldrb	r2, [r4, #10]	@ zero_extendqisi2
+ 148 003c 43EA0223 		orr	r3, r3, r2, lsl #8
+ 149 0040 6B80     		strh	r3, [r5, #2]	@ movhi
+ 196:../system/src/davis_vantage/davis_parsers.c **** 
+ 150              		.loc 1 196 0
+ 151 0042 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 152 0044 627B     		ldrb	r2, [r4, #13]	@ zero_extendqisi2
+ 153 0046 43EA0223 		orr	r3, r3, r2, lsl #8
+ 154 004a AB80     		strh	r3, [r5, #4]	@ movhi
+ 198:../system/src/davis_vantage/davis_parsers.c **** 
+ 155              		.loc 1 198 0
+ 156 004c 237D     		ldrb	r3, [r4, #20]	@ zero_extendqisi2
+ 157 004e 627D     		ldrb	r2, [r4, #21]	@ zero_extendqisi2
+ 158 0050 43EA0223 		orr	r3, r3, r2, lsl #8
+ 159 0054 EB80     		strh	r3, [r5, #6]	@ movhi
+ 200:../system/src/davis_vantage/davis_parsers.c **** 
+ 160              		.loc 1 200 0
+ 161 0056 A37C     		ldrb	r3, [r4, #18]	@ zero_extendqisi2
+ 162 0058 E27C     		ldrb	r2, [r4, #19]	@ zero_extendqisi2
+ 163 005a 43EA0223 		orr	r3, r3, r2, lsl #8
+ 164 005e 2B81     		strh	r3, [r5, #8]	@ movhi
+ 202:../system/src/davis_vantage/davis_parsers.c **** 
+ 165              		.loc 1 202 0
+ 166 0060 A37D     		ldrb	r3, [r4, #22]	@ zero_extendqisi2
+ 167 0062 E27D     		ldrb	r2, [r4, #23]	@ zero_extendqisi2
+ 168 0064 43EA0223 		orr	r3, r3, r2, lsl #8
+ 169 0068 6B81     		strh	r3, [r5, #10]	@ movhi
+ 204:../system/src/davis_vantage/davis_parsers.c **** 
+ 170              		.loc 1 204 0
+ 171 006a 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 172 006c 627C     		ldrb	r2, [r4, #17]	@ zero_extendqisi2
+ 173 006e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 174 0072 AB81     		strh	r3, [r5, #12]	@ movhi
+ 206:../system/src/davis_vantage/davis_parsers.c **** 
+ 175              		.loc 1 206 0
+ 176 0074 94F82130 		ldrb	r3, [r4, #33]	@ zero_extendqisi2
+ 177 0078 AB73     		strb	r3, [r5, #14]
+ 208:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 178              		.loc 1 208 0
+ 179 007a 94F83230 		ldrb	r3, [r4, #50]	@ zero_extendqisi2
+ 180 007e 2B82     		strh	r3, [r5, #16]	@ movhi
+ 181 0080 0020     		movs	r0, #0
+ 182              	.LVL15:
+ 183 0082 09E0     		b	.L11
+ 184              	.LVL16:
+ 185              	.L22:
+ 166:../system/src/davis_vantage/davis_parsers.c **** 			// if yes rewind the buffer to the next character
+ 186              		.loc 1 166 0 discriminator 1
+ 187 0084 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
+ 188              	.LVL17:
+ 189 0086 4C2A     		cmp	r2, #76
+ 190 0088 C2D1     		bne	.L13
+ 168:../system/src/davis_vantage/davis_parsers.c **** 
+ 191              		.loc 1 168 0
+ 192 008a 0134     		adds	r4, r4, #1
+ 193              	.LVL18:
+ 194 008c C2E7     		b	.L14
+ 195              	.LVL19:
+ 196              	.L15:
+ 197              		.cfi_def_cfa_offset 0
+ 198              		.cfi_restore 4
+ 199              		.cfi_restore 5
+ 200              		.cfi_restore 6
+ 201              		.cfi_restore 14
+ 162:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 202              		.loc 1 162 0
+ 203 008e 4FF0FF30 		mov	r0, #-1
+ 204              	.LVL20:
+ 218:../system/src/davis_vantage/davis_parsers.c **** 
+ 205              		.loc 1 218 0
+ 206 0092 7047     		bx	lr
+ 207              	.LVL21:
+ 208              	.L16:
+ 209              		.cfi_def_cfa_offset 16
+ 210              		.cfi_offset 4, -16
+ 211              		.cfi_offset 5, -12
+ 212              		.cfi_offset 6, -8
+ 213              		.cfi_offset 14, -4
+ 176:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 214              		.loc 1 176 0
+ 215 0094 6FF00200 		mvn	r0, #2
+ 216              	.LVL22:
+ 217              	.L11:
+ 218:../system/src/davis_vantage/davis_parsers.c **** 
+ 218              		.loc 1 218 0
+ 219 0098 70BD     		pop	{r4, r5, r6, pc}
+ 220              	.LVL23:
+ 221              	.L17:
+ 212:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 222              		.loc 1 212 0
+ 223 009a 6FF00100 		mvn	r0, #1
+ 224              	.LVL24:
+ 217:../system/src/davis_vantage/davis_parsers.c **** }
+ 225              		.loc 1 217 0
+ 226 009e FBE7     		b	.L11
+ 227              		.cfi_endproc
+ 228              	.LFE5:
+ 230              		.section	.text.davis_parsers_loop,"ax",%progbits
+ 231              		.align	1
+ 232              		.global	davis_parsers_loop
+ 233              		.syntax unified
+ 234              		.thumb
+ 235              		.thumb_func
+ 236              		.fpu softvfp
+ 238              	davis_parsers_loop:
+ 239              	.LFB4:
+  70:../system/src/davis_vantage/davis_parsers.c **** 
+ 240              		.loc 1 70 0
+ 241              		.cfi_startproc
+ 242              		@ args = 0, pretend = 0, frame = 0
+ 243              		@ frame_needed = 0, uses_anonymous_args = 0
+ 244              	.LVL25:
+ 245 0000 08B5     		push	{r3, lr}
+ 246              		.cfi_def_cfa_offset 8
+ 247              		.cfi_offset 3, -8
+ 248              		.cfi_offset 14, -4
+ 249              	.LVL26:
+  75:../system/src/davis_vantage/davis_parsers.c **** #else
+ 250              		.loc 1 75 0
+ 251 0002 FFF7FEFF 		bl	davis_parsers_loop2
+ 252              	.LVL27:
+ 146:../system/src/davis_vantage/davis_parsers.c **** 
+ 253              		.loc 1 146 0
+ 254 0006 08BD     		pop	{r3, pc}
+ 255              		.cfi_endproc
+ 256              	.LFE4:
+ 258              		.section	.text.davis_parsers_rxcheck,"ax",%progbits
+ 259              		.align	1
+ 260              		.global	davis_parsers_rxcheck
+ 261              		.syntax unified
+ 262              		.thumb
+ 263              		.thumb_func
+ 264              		.fpu softvfp
+ 266              	davis_parsers_rxcheck:
+ 267              	.LFB7:
+ 233:../system/src/davis_vantage/davis_parsers.c **** 
+ 234:../system/src/davis_vantage/davis_parsers.c **** uint32_t davis_parsers_rxcheck(	uint8_t* input,
+ 235:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t input_ln,
+ 236:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t* total_packet_received,
+ 237:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t* total_packet_missed,
+ 238:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t* resynchronizations,
+ 239:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t* packets_in_the_row,
+ 240:../system/src/davis_vantage/davis_parsers.c **** 									uint16_t* crc_errors)
+ 241:../system/src/davis_vantage/davis_parsers.c **** {
+ 268              		.loc 1 241 0
+ 269              		.cfi_startproc
+ 270              		@ args = 12, pretend = 0, frame = 8
+ 271              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272              	.LVL28:
+ 273 0000 2DE9D043 		push	{r4, r6, r7, r8, r9, lr}
+ 274              		.cfi_def_cfa_offset 24
+ 275              		.cfi_offset 4, -24
+ 276              		.cfi_offset 6, -20
+ 277              		.cfi_offset 7, -16
+ 278              		.cfi_offset 8, -12
+ 279              		.cfi_offset 9, -8
+ 280              		.cfi_offset 14, -4
+ 281 0004 82B0     		sub	sp, sp, #8
+ 282              		.cfi_def_cfa_offset 32
+ 283              	.LVL29:
+ 242:../system/src/davis_vantage/davis_parsers.c **** 	// 	Default:0x2000030c <srl_usart1_rx_buffer> "\n\rOK\n\r0 24840 61 0 0\n\r"
+ 243:../system/src/davis_vantage/davis_parsers.c **** 	uint32_t retval = DAVIS_PARSERS_OK;
+ 244:../system/src/davis_vantage/davis_parsers.c **** 
+ 245:../system/src/davis_vantage/davis_parsers.c **** 	int i = 0;
+ 246:../system/src/davis_vantage/davis_parsers.c **** 
+ 247:../system/src/davis_vantage/davis_parsers.c **** 	int itnermediate_val = 0;
+ 284              		.loc 1 247 0
+ 285 0006 0024     		movs	r4, #0
+ 286 0008 0194     		str	r4, [sp, #4]
+ 287              	.LVL30:
+ 248:../system/src/davis_vantage/davis_parsers.c **** 
+ 249:../system/src/davis_vantage/davis_parsers.c **** 	// return value of sscanf
+ 250:../system/src/davis_vantage/davis_parsers.c **** 	int position = 0;
+ 251:../system/src/davis_vantage/davis_parsers.c **** 
+ 252:../system/src/davis_vantage/davis_parsers.c **** 	volatile char * chr_ptr = 0;
+ 253:../system/src/davis_vantage/davis_parsers.c **** 
+ 254:../system/src/davis_vantage/davis_parsers.c **** 	// check if a string given as an input begins with a newline
+ 255:../system/src/davis_vantage/davis_parsers.c **** 	if ((*input = '\n') && (*(input + 1) == '\r')) {
+ 288              		.loc 1 255 0
+ 289 000a 0A24     		movs	r4, #10
+ 290 000c 0470     		strb	r4, [r0]
+ 291 000e 4478     		ldrb	r4, [r0, #1]	@ zero_extendqisi2
+ 292 0010 0D2C     		cmp	r4, #13
+ 293 0012 03D0     		beq	.L44
+ 243:../system/src/davis_vantage/davis_parsers.c **** 
+ 294              		.loc 1 243 0
+ 295 0014 0020     		movs	r0, #0
+ 296              	.LVL31:
+ 297              	.L25:
+ 256:../system/src/davis_vantage/davis_parsers.c **** 
+ 257:../system/src/davis_vantage/davis_parsers.c **** 		// check the lenght of an input string
+ 258:../system/src/davis_vantage/davis_parsers.c **** 		if (strnlen(input, input_ln) > RX_CHECK_MIN_LN_WITH_ACK) {
+ 259:../system/src/davis_vantage/davis_parsers.c **** 			// if it seems that this is valid RX check frame FF it
+ 260:../system/src/davis_vantage/davis_parsers.c **** 			// to the first ASCII digit
+ 261:../system/src/davis_vantage/davis_parsers.c **** 			for (i = 0; i < input_ln; i++) {
+ 262:../system/src/davis_vantage/davis_parsers.c **** 				if (is_digit(*(input +i)) != 0) {
+ 263:../system/src/davis_vantage/davis_parsers.c **** 					break;
+ 264:../system/src/davis_vantage/davis_parsers.c **** 				}
+ 265:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 266:../system/src/davis_vantage/davis_parsers.c **** 
+ 267:../system/src/davis_vantage/davis_parsers.c **** 			// check if the fast forward loop reach the end of an string
+ 268:../system/src/davis_vantage/davis_parsers.c **** 			if (i < input_ln) {
+ 269:../system/src/davis_vantage/davis_parsers.c **** 				// if not try to get all values
+ 270:../system/src/davis_vantage/davis_parsers.c **** 
+ 271:../system/src/davis_vantage/davis_parsers.c **** 				chr_ptr = strtok(input + i, " ");
+ 272:../system/src/davis_vantage/davis_parsers.c **** 
+ 273:../system/src/davis_vantage/davis_parsers.c **** 				// zero the 'i' value which now be used to count elements in input string
+ 274:../system/src/davis_vantage/davis_parsers.c **** 				i = 0;
+ 275:../system/src/davis_vantage/davis_parsers.c **** 
+ 276:../system/src/davis_vantage/davis_parsers.c **** 				// iterate through all subsequent elements
+ 277:../system/src/davis_vantage/davis_parsers.c **** 				while (chr_ptr != 0) {
+ 278:../system/src/davis_vantage/davis_parsers.c **** 
+ 279:../system/src/davis_vantage/davis_parsers.c **** 					// convert from string to integer
+ 280:../system/src/davis_vantage/davis_parsers.c **** 					position = sscanf(chr_ptr, "%d", &itnermediate_val);
+ 281:../system/src/davis_vantage/davis_parsers.c **** 
+ 282:../system/src/davis_vantage/davis_parsers.c **** 					chr_ptr = strtok(0, " ");
+ 283:../system/src/davis_vantage/davis_parsers.c **** 
+ 284:../system/src/davis_vantage/davis_parsers.c **** 					switch (i) {
+ 285:../system/src/davis_vantage/davis_parsers.c **** 						case 0:
+ 286:../system/src/davis_vantage/davis_parsers.c **** 							*total_packet_received = (uint16_t)itnermediate_val;
+ 287:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 288:../system/src/davis_vantage/davis_parsers.c **** 						case 1:
+ 289:../system/src/davis_vantage/davis_parsers.c **** 							*total_packet_missed = (uint16_t)itnermediate_val;
+ 290:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 291:../system/src/davis_vantage/davis_parsers.c **** 						case 2:
+ 292:../system/src/davis_vantage/davis_parsers.c **** 							*resynchronizations = (uint16_t)itnermediate_val;
+ 293:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 294:../system/src/davis_vantage/davis_parsers.c **** 						case 3:
+ 295:../system/src/davis_vantage/davis_parsers.c **** 							*packets_in_the_row = (uint16_t)itnermediate_val;
+ 296:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 297:../system/src/davis_vantage/davis_parsers.c **** 						case 4:
+ 298:../system/src/davis_vantage/davis_parsers.c **** 							*crc_errors = (uint16_t)itnermediate_val;
+ 299:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 300:../system/src/davis_vantage/davis_parsers.c **** 						default: break;
+ 301:../system/src/davis_vantage/davis_parsers.c **** 					}
+ 302:../system/src/davis_vantage/davis_parsers.c **** 
+ 303:../system/src/davis_vantage/davis_parsers.c **** 					// increment the elements counter
+ 304:../system/src/davis_vantage/davis_parsers.c **** 					i++;
+ 305:../system/src/davis_vantage/davis_parsers.c **** 
+ 306:../system/src/davis_vantage/davis_parsers.c **** 					// exit if we reach the last element from the string
+ 307:../system/src/davis_vantage/davis_parsers.c **** 					if (i > 4)
+ 308:../system/src/davis_vantage/davis_parsers.c **** 						break;
+ 309:../system/src/davis_vantage/davis_parsers.c **** 
+ 310:../system/src/davis_vantage/davis_parsers.c **** 				}
+ 311:../system/src/davis_vantage/davis_parsers.c **** 
+ 312:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 313:../system/src/davis_vantage/davis_parsers.c **** 			else {
+ 314:../system/src/davis_vantage/davis_parsers.c **** 				// if yes this isn't a valid
+ 315:../system/src/davis_vantage/davis_parsers.c **** 				retval = DAVIS_PARSERS_WRONG_CONTENT;
+ 316:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 317:../system/src/davis_vantage/davis_parsers.c **** 
+ 318:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 319:../system/src/davis_vantage/davis_parsers.c **** 		else {
+ 320:../system/src/davis_vantage/davis_parsers.c **** 			retval = DAVIS_PARSERS_WRONG_CONTENT;
+ 321:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 322:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 323:../system/src/davis_vantage/davis_parsers.c **** 	else {
+ 324:../system/src/davis_vantage/davis_parsers.c **** 
+ 325:../system/src/davis_vantage/davis_parsers.c **** 	}
+ 326:../system/src/davis_vantage/davis_parsers.c **** 
+ 327:../system/src/davis_vantage/davis_parsers.c **** 	return retval;
+ 328:../system/src/davis_vantage/davis_parsers.c **** 
+ 329:../system/src/davis_vantage/davis_parsers.c **** }
+ 298              		.loc 1 329 0
+ 299 0016 02B0     		add	sp, sp, #8
+ 300              		.cfi_remember_state
+ 301              		.cfi_def_cfa_offset 24
+ 302              		@ sp needed
+ 303 0018 BDE8D083 		pop	{r4, r6, r7, r8, r9, pc}
+ 304              	.LVL32:
+ 305              	.L44:
+ 306              		.cfi_restore_state
+ 307 001c 9846     		mov	r8, r3
+ 308 001e 1746     		mov	r7, r2
+ 309 0020 0E46     		mov	r6, r1
+ 310 0022 8146     		mov	r9, r0
+ 258:../system/src/davis_vantage/davis_parsers.c **** 			// if it seems that this is valid RX check frame FF it
+ 311              		.loc 1 258 0
+ 312 0024 FFF7FEFF 		bl	strnlen
+ 313              	.LVL33:
+ 314 0028 1028     		cmp	r0, #16
+ 315 002a 0BD9     		bls	.L45
+ 261:../system/src/davis_vantage/davis_parsers.c **** 				if (is_digit(*(input +i)) != 0) {
+ 316              		.loc 1 261 0
+ 317 002c 0020     		movs	r0, #0
+ 318              	.LVL34:
+ 319              	.L27:
+ 261:../system/src/davis_vantage/davis_parsers.c **** 				if (is_digit(*(input +i)) != 0) {
+ 320              		.loc 1 261 0 is_stmt 0 discriminator 1
+ 321 002e 3346     		mov	r3, r6
+ 322 0030 8642     		cmp	r6, r0
+ 323 0032 0ADD     		ble	.L28
+ 262:../system/src/davis_vantage/davis_parsers.c **** 					break;
+ 324              		.loc 1 262 0 is_stmt 1
+ 325 0034 19F80040 		ldrb	r4, [r9, r0]	@ zero_extendqisi2
+ 326              	.LVL35:
+ 327              	.LBB7:
+ 328              	.LBB8:
+ 329              		.file 2 "../system/include/davis_vantage/davis_parsers.h"
+   1:../system/include/davis_vantage/davis_parsers.h **** /*
+   2:../system/include/davis_vantage/davis_parsers.h ****  * davis_parsers.h
+   3:../system/include/davis_vantage/davis_parsers.h ****  *
+   4:../system/include/davis_vantage/davis_parsers.h ****  *  Created on: 10.08.2020
+   5:../system/include/davis_vantage/davis_parsers.h ****  *      Author: mateusz
+   6:../system/include/davis_vantage/davis_parsers.h ****  */
+   7:../system/include/davis_vantage/davis_parsers.h **** 
+   8:../system/include/davis_vantage/davis_parsers.h **** #ifndef INCLUDE_DAVIS_VANTAGE_DAVIS_PARSERS_H_
+   9:../system/include/davis_vantage/davis_parsers.h **** #define INCLUDE_DAVIS_VANTAGE_DAVIS_PARSERS_H_
+  10:../system/include/davis_vantage/davis_parsers.h **** 
+  11:../system/include/davis_vantage/davis_parsers.h **** #include <stdint.h>
+  12:../system/include/davis_vantage/davis_parsers.h **** 
+  13:../system/include/davis_vantage/davis_parsers.h **** #include "davis_loop_t.h"
+  14:../system/include/davis_vantage/davis_parsers.h **** 
+  15:../system/include/davis_vantage/davis_parsers.h **** #define DAVIS_PARSERS_OK				0
+  16:../system/include/davis_vantage/davis_parsers.h **** #define DAVIS_PARSERS_TOO_SHORT_FRAME 	-1
+  17:../system/include/davis_vantage/davis_parsers.h **** #define DAVIS_PARSERS_CORRUPTED_CRC		-2
+  18:../system/include/davis_vantage/davis_parsers.h **** #define DAVIS_PARSERS_WRONG_CONTENT		-3
+  19:../system/include/davis_vantage/davis_parsers.h **** 
+  20:../system/include/davis_vantage/davis_parsers.h **** inline static uint8_t is_digit(char c) {
+  21:../system/include/davis_vantage/davis_parsers.h **** 	if (c >= 0x30 && c <= 0x39)
+ 330              		.loc 2 21 0
+ 331 0038 303C     		subs	r4, r4, #48
+ 332              	.LVL36:
+ 333 003a E4B2     		uxtb	r4, r4
+ 334              	.LVL37:
+ 335 003c 092C     		cmp	r4, #9
+ 336 003e 04D9     		bls	.L28
+ 337              	.LVL38:
+ 338              	.LBE8:
+ 339              	.LBE7:
+ 261:../system/src/davis_vantage/davis_parsers.c **** 				if (is_digit(*(input +i)) != 0) {
+ 340              		.loc 1 261 0
+ 341 0040 0130     		adds	r0, r0, #1
+ 342              	.LVL39:
+ 343 0042 F4E7     		b	.L27
+ 344              	.LVL40:
+ 345              	.L45:
+ 320:../system/src/davis_vantage/davis_parsers.c **** 		}
+ 346              		.loc 1 320 0
+ 347 0044 6FF00200 		mvn	r0, #2
+ 348 0048 E5E7     		b	.L25
+ 349              	.LVL41:
+ 350              	.L28:
+ 268:../system/src/davis_vantage/davis_parsers.c **** 				// if not try to get all values
+ 351              		.loc 1 268 0
+ 352 004a 8342     		cmp	r3, r0
+ 353 004c 38DD     		ble	.L41
+ 271:../system/src/davis_vantage/davis_parsers.c **** 
+ 354              		.loc 1 271 0
+ 355 004e 1F49     		ldr	r1, .L46
+ 356 0050 4844     		add	r0, r0, r9
+ 357              	.LVL42:
+ 358 0052 FFF7FEFF 		bl	strtok
+ 359              	.LVL43:
+ 274:../system/src/davis_vantage/davis_parsers.c **** 
+ 360              		.loc 1 274 0
+ 361 0056 0024     		movs	r4, #0
+ 277:../system/src/davis_vantage/davis_parsers.c **** 
+ 362              		.loc 1 277 0
+ 363 0058 05E0     		b	.L30
+ 364              	.LVL44:
+ 365              	.L32:
+ 286:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 366              		.loc 1 286 0
+ 367 005a BDF80430 		ldrh	r3, [sp, #4]
+ 368 005e 3B80     		strh	r3, [r7]	@ movhi
+ 369              	.L31:
+ 304:../system/src/davis_vantage/davis_parsers.c **** 
+ 370              		.loc 1 304 0
+ 371 0060 0134     		adds	r4, r4, #1
+ 372              	.LVL45:
+ 307:../system/src/davis_vantage/davis_parsers.c **** 						break;
+ 373              		.loc 1 307 0
+ 374 0062 042C     		cmp	r4, #4
+ 375 0064 2FDC     		bgt	.L42
+ 376              	.LVL46:
+ 377              	.L30:
+ 277:../system/src/davis_vantage/davis_parsers.c **** 
+ 378              		.loc 1 277 0
+ 379 0066 0028     		cmp	r0, #0
+ 380 0068 D5D0     		beq	.L25
+ 280:../system/src/davis_vantage/davis_parsers.c **** 
+ 381              		.loc 1 280 0
+ 382 006a 01AA     		add	r2, sp, #4
+ 383 006c 1849     		ldr	r1, .L46+4
+ 384 006e FFF7FEFF 		bl	sscanf
+ 385              	.LVL47:
+ 282:../system/src/davis_vantage/davis_parsers.c **** 
+ 386              		.loc 1 282 0
+ 387 0072 1649     		ldr	r1, .L46
+ 388 0074 0020     		movs	r0, #0
+ 389 0076 FFF7FEFF 		bl	strtok
+ 390              	.LVL48:
+ 284:../system/src/davis_vantage/davis_parsers.c **** 						case 0:
+ 391              		.loc 1 284 0
+ 392 007a 042C     		cmp	r4, #4
+ 393 007c F0D8     		bhi	.L31
+ 394 007e 01A3     		adr	r3, .L33
+ 395 0080 53F824F0 		ldr	pc, [r3, r4, lsl #2]
+ 396              		.p2align 2
+ 397              	.L33:
+ 398 0084 5B000000 		.word	.L32+1
+ 399 0088 99000000 		.word	.L34+1
+ 400 008c A3000000 		.word	.L35+1
+ 401 0090 AD000000 		.word	.L36+1
+ 402 0094 B7000000 		.word	.L37+1
+ 403              		.p2align 1
+ 404              	.L34:
+ 289:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 405              		.loc 1 289 0
+ 406 0098 BDF80430 		ldrh	r3, [sp, #4]
+ 407 009c A8F80030 		strh	r3, [r8]	@ movhi
+ 290:../system/src/davis_vantage/davis_parsers.c **** 						case 2:
+ 408              		.loc 1 290 0
+ 409 00a0 DEE7     		b	.L31
+ 410              	.L35:
+ 292:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 411              		.loc 1 292 0
+ 412 00a2 BDF80430 		ldrh	r3, [sp, #4]
+ 413 00a6 089A     		ldr	r2, [sp, #32]
+ 414 00a8 1380     		strh	r3, [r2]	@ movhi
+ 293:../system/src/davis_vantage/davis_parsers.c **** 						case 3:
+ 415              		.loc 1 293 0
+ 416 00aa D9E7     		b	.L31
+ 417              	.L36:
+ 295:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 418              		.loc 1 295 0
+ 419 00ac BDF80430 		ldrh	r3, [sp, #4]
+ 420 00b0 099A     		ldr	r2, [sp, #36]
+ 421 00b2 1380     		strh	r3, [r2]	@ movhi
+ 296:../system/src/davis_vantage/davis_parsers.c **** 						case 4:
+ 422              		.loc 1 296 0
+ 423 00b4 D4E7     		b	.L31
+ 424              	.L37:
+ 298:../system/src/davis_vantage/davis_parsers.c **** 							break;
+ 425              		.loc 1 298 0
+ 426 00b6 BDF80430 		ldrh	r3, [sp, #4]
+ 427 00ba 0A9A     		ldr	r2, [sp, #40]
+ 428 00bc 1380     		strh	r3, [r2]	@ movhi
+ 299:../system/src/davis_vantage/davis_parsers.c **** 						default: break;
+ 429              		.loc 1 299 0
+ 430 00be CFE7     		b	.L31
+ 431              	.LVL49:
+ 432              	.L41:
+ 315:../system/src/davis_vantage/davis_parsers.c **** 			}
+ 433              		.loc 1 315 0
+ 434 00c0 6FF00200 		mvn	r0, #2
+ 435              	.LVL50:
+ 436 00c4 A7E7     		b	.L25
+ 437              	.LVL51:
+ 438              	.L42:
+ 243:../system/src/davis_vantage/davis_parsers.c **** 
+ 439              		.loc 1 243 0
+ 440 00c6 0020     		movs	r0, #0
+ 441              	.LVL52:
+ 327:../system/src/davis_vantage/davis_parsers.c **** 
+ 442              		.loc 1 327 0
+ 443 00c8 A5E7     		b	.L25
+ 444              	.L47:
+ 445 00ca 00BF     		.align	2
+ 446              	.L46:
+ 447 00cc 00000000 		.word	.LC0
+ 448 00d0 04000000 		.word	.LC1
+ 449              		.cfi_endproc
+ 450              	.LFE7:
+ 452              		.global	crc_table
+ 453              		.section	.rodata.crc_table,"a",%progbits
+ 454              		.align	2
+ 455              		.set	.LANCHOR0,. + 0
+ 458              	crc_table:
+ 459 0000 0000     		.short	0
+ 460 0002 2110     		.short	4129
+ 461 0004 4220     		.short	8258
+ 462 0006 6330     		.short	12387
+ 463 0008 8440     		.short	16516
+ 464 000a A550     		.short	20645
+ 465 000c C660     		.short	24774
+ 466 000e E770     		.short	28903
+ 467 0010 0881     		.short	-32504
+ 468 0012 2991     		.short	-28375
+ 469 0014 4AA1     		.short	-24246
+ 470 0016 6BB1     		.short	-20117
+ 471 0018 8CC1     		.short	-15988
+ 472 001a ADD1     		.short	-11859
+ 473 001c CEE1     		.short	-7730
+ 474 001e EFF1     		.short	-3601
+ 475 0020 3112     		.short	4657
+ 476 0022 1002     		.short	528
+ 477 0024 7332     		.short	12915
+ 478 0026 5222     		.short	8786
+ 479 0028 B552     		.short	21173
+ 480 002a 9442     		.short	17044
+ 481 002c F772     		.short	29431
+ 482 002e D662     		.short	25302
+ 483 0030 3993     		.short	-27847
+ 484 0032 1883     		.short	-31976
+ 485 0034 7BB3     		.short	-19589
+ 486 0036 5AA3     		.short	-23718
+ 487 0038 BDD3     		.short	-11331
+ 488 003a 9CC3     		.short	-15460
+ 489 003c FFF3     		.short	-3073
+ 490 003e DEE3     		.short	-7202
+ 491 0040 6224     		.short	9314
+ 492 0042 4334     		.short	13379
+ 493 0044 2004     		.short	1056
+ 494 0046 0114     		.short	5121
+ 495 0048 E664     		.short	25830
+ 496 004a C774     		.short	29895
+ 497 004c A444     		.short	17572
+ 498 004e 8554     		.short	21637
+ 499 0050 6AA5     		.short	-23190
+ 500 0052 4BB5     		.short	-19125
+ 501 0054 2885     		.short	-31448
+ 502 0056 0995     		.short	-27383
+ 503 0058 EEE5     		.short	-6674
+ 504 005a CFF5     		.short	-2609
+ 505 005c ACC5     		.short	-14932
+ 506 005e 8DD5     		.short	-10867
+ 507 0060 5336     		.short	13907
+ 508 0062 7226     		.short	9842
+ 509 0064 1116     		.short	5649
+ 510 0066 3006     		.short	1584
+ 511 0068 D776     		.short	30423
+ 512 006a F666     		.short	26358
+ 513 006c 9556     		.short	22165
+ 514 006e B446     		.short	18100
+ 515 0070 5BB7     		.short	-18597
+ 516 0072 7AA7     		.short	-22662
+ 517 0074 1997     		.short	-26855
+ 518 0076 3887     		.short	-30920
+ 519 0078 DFF7     		.short	-2081
+ 520 007a FEE7     		.short	-6146
+ 521 007c 9DD7     		.short	-10339
+ 522 007e BCC7     		.short	-14404
+ 523 0080 C448     		.short	18628
+ 524 0082 E558     		.short	22757
+ 525 0084 8668     		.short	26758
+ 526 0086 A778     		.short	30887
+ 527 0088 4008     		.short	2112
+ 528 008a 6118     		.short	6241
+ 529 008c 0228     		.short	10242
+ 530 008e 2338     		.short	14371
+ 531 0090 CCC9     		.short	-13876
+ 532 0092 EDD9     		.short	-9747
+ 533 0094 8EE9     		.short	-5746
+ 534 0096 AFF9     		.short	-1617
+ 535 0098 4889     		.short	-30392
+ 536 009a 6999     		.short	-26263
+ 537 009c 0AA9     		.short	-22262
+ 538 009e 2BB9     		.short	-18133
+ 539 00a0 F55A     		.short	23285
+ 540 00a2 D44A     		.short	19156
+ 541 00a4 B77A     		.short	31415
+ 542 00a6 966A     		.short	27286
+ 543 00a8 711A     		.short	6769
+ 544 00aa 500A     		.short	2640
+ 545 00ac 333A     		.short	14899
+ 546 00ae 122A     		.short	10770
+ 547 00b0 FDDB     		.short	-9219
+ 548 00b2 DCCB     		.short	-13348
+ 549 00b4 BFFB     		.short	-1089
+ 550 00b6 9EEB     		.short	-5218
+ 551 00b8 799B     		.short	-25735
+ 552 00ba 588B     		.short	-29864
+ 553 00bc 3BBB     		.short	-17605
+ 554 00be 1AAB     		.short	-21734
+ 555 00c0 A66C     		.short	27814
+ 556 00c2 877C     		.short	31879
+ 557 00c4 E44C     		.short	19684
+ 558 00c6 C55C     		.short	23749
+ 559 00c8 222C     		.short	11298
+ 560 00ca 033C     		.short	15363
+ 561 00cc 600C     		.short	3168
+ 562 00ce 411C     		.short	7233
+ 563 00d0 AEED     		.short	-4690
+ 564 00d2 8FFD     		.short	-625
+ 565 00d4 ECCD     		.short	-12820
+ 566 00d6 CDDD     		.short	-8755
+ 567 00d8 2AAD     		.short	-21206
+ 568 00da 0BBD     		.short	-17141
+ 569 00dc 688D     		.short	-29336
+ 570 00de 499D     		.short	-25271
+ 571 00e0 977E     		.short	32407
+ 572 00e2 B66E     		.short	28342
+ 573 00e4 D55E     		.short	24277
+ 574 00e6 F44E     		.short	20212
+ 575 00e8 133E     		.short	15891
+ 576 00ea 322E     		.short	11826
+ 577 00ec 511E     		.short	7761
+ 578 00ee 700E     		.short	3696
+ 579 00f0 9FFF     		.short	-97
+ 580 00f2 BEEF     		.short	-4162
+ 581 00f4 DDDF     		.short	-8227
+ 582 00f6 FCCF     		.short	-12292
+ 583 00f8 1BBF     		.short	-16613
+ 584 00fa 3AAF     		.short	-20678
+ 585 00fc 599F     		.short	-24743
+ 586 00fe 788F     		.short	-28808
+ 587 0100 8891     		.short	-28280
+ 588 0102 A981     		.short	-32343
+ 589 0104 CAB1     		.short	-20022
+ 590 0106 EBA1     		.short	-24085
+ 591 0108 0CD1     		.short	-12020
+ 592 010a 2DC1     		.short	-16083
+ 593 010c 4EF1     		.short	-3762
+ 594 010e 6FE1     		.short	-7825
+ 595 0110 8010     		.short	4224
+ 596 0112 A100     		.short	161
+ 597 0114 C230     		.short	12482
+ 598 0116 E320     		.short	8419
+ 599 0118 0450     		.short	20484
+ 600 011a 2540     		.short	16421
+ 601 011c 4670     		.short	28742
+ 602 011e 6760     		.short	24679
+ 603 0120 B983     		.short	-31815
+ 604 0122 9893     		.short	-27752
+ 605 0124 FBA3     		.short	-23557
+ 606 0126 DAB3     		.short	-19494
+ 607 0128 3DC3     		.short	-15555
+ 608 012a 1CD3     		.short	-11492
+ 609 012c 7FE3     		.short	-7297
+ 610 012e 5EF3     		.short	-3234
+ 611 0130 B102     		.short	689
+ 612 0132 9012     		.short	4752
+ 613 0134 F322     		.short	8947
+ 614 0136 D232     		.short	13010
+ 615 0138 3542     		.short	16949
+ 616 013a 1452     		.short	21012
+ 617 013c 7762     		.short	25207
+ 618 013e 5672     		.short	29270
+ 619 0140 EAB5     		.short	-18966
+ 620 0142 CBA5     		.short	-23093
+ 621 0144 A895     		.short	-27224
+ 622 0146 8985     		.short	-31351
+ 623 0148 6EF5     		.short	-2706
+ 624 014a 4FE5     		.short	-6833
+ 625 014c 2CD5     		.short	-10964
+ 626 014e 0DC5     		.short	-15091
+ 627 0150 E234     		.short	13538
+ 628 0152 C324     		.short	9411
+ 629 0154 A014     		.short	5280
+ 630 0156 8104     		.short	1153
+ 631 0158 6674     		.short	29798
+ 632 015a 4764     		.short	25671
+ 633 015c 2454     		.short	21540
+ 634 015e 0544     		.short	17413
+ 635 0160 DBA7     		.short	-22565
+ 636 0162 FAB7     		.short	-18438
+ 637 0164 9987     		.short	-30823
+ 638 0166 B897     		.short	-26696
+ 639 0168 5FE7     		.short	-6305
+ 640 016a 7EF7     		.short	-2178
+ 641 016c 1DC7     		.short	-14563
+ 642 016e 3CD7     		.short	-10436
+ 643 0170 D326     		.short	9939
+ 644 0172 F236     		.short	14066
+ 645 0174 9106     		.short	1681
+ 646 0176 B016     		.short	5808
+ 647 0178 5766     		.short	26199
+ 648 017a 7676     		.short	30326
+ 649 017c 1546     		.short	17941
+ 650 017e 3456     		.short	22068
+ 651 0180 4CD9     		.short	-9908
+ 652 0182 6DC9     		.short	-13971
+ 653 0184 0EF9     		.short	-1778
+ 654 0186 2FE9     		.short	-5841
+ 655 0188 C899     		.short	-26168
+ 656 018a E989     		.short	-30231
+ 657 018c 8AB9     		.short	-18038
+ 658 018e ABA9     		.short	-22101
+ 659 0190 4458     		.short	22596
+ 660 0192 6548     		.short	18533
+ 661 0194 0678     		.short	30726
+ 662 0196 2768     		.short	26663
+ 663 0198 C018     		.short	6336
+ 664 019a E108     		.short	2273
+ 665 019c 8238     		.short	14466
+ 666 019e A328     		.short	10403
+ 667 01a0 7DCB     		.short	-13443
+ 668 01a2 5CDB     		.short	-9380
+ 669 01a4 3FEB     		.short	-5313
+ 670 01a6 1EFB     		.short	-1250
+ 671 01a8 F98B     		.short	-29703
+ 672 01aa D89B     		.short	-25640
+ 673 01ac BBAB     		.short	-21573
+ 674 01ae 9ABB     		.short	-17510
+ 675 01b0 754A     		.short	19061
+ 676 01b2 545A     		.short	23124
+ 677 01b4 376A     		.short	27191
+ 678 01b6 167A     		.short	31254
+ 679 01b8 F10A     		.short	2801
+ 680 01ba D01A     		.short	6864
+ 681 01bc B32A     		.short	10931
+ 682 01be 923A     		.short	14994
+ 683 01c0 2EFD     		.short	-722
+ 684 01c2 0FED     		.short	-4849
+ 685 01c4 6CDD     		.short	-8852
+ 686 01c6 4DCD     		.short	-12979
+ 687 01c8 AABD     		.short	-16982
+ 688 01ca 8BAD     		.short	-21109
+ 689 01cc E89D     		.short	-25112
+ 690 01ce C98D     		.short	-29239
+ 691 01d0 267C     		.short	31782
+ 692 01d2 076C     		.short	27655
+ 693 01d4 645C     		.short	23652
+ 694 01d6 454C     		.short	19525
+ 695 01d8 A23C     		.short	15522
+ 696 01da 832C     		.short	11395
+ 697 01dc E01C     		.short	7392
+ 698 01de C10C     		.short	3265
+ 699 01e0 1FEF     		.short	-4321
+ 700 01e2 3EFF     		.short	-194
+ 701 01e4 5DCF     		.short	-12451
+ 702 01e6 7CDF     		.short	-8324
+ 703 01e8 9BAF     		.short	-20581
+ 704 01ea BABF     		.short	-16454
+ 705 01ec D98F     		.short	-28711
+ 706 01ee F89F     		.short	-24584
+ 707 01f0 176E     		.short	28183
+ 708 01f2 367E     		.short	32310
+ 709 01f4 554E     		.short	20053
+ 710 01f6 745E     		.short	24180
+ 711 01f8 932E     		.short	11923
+ 712 01fa B23E     		.short	16050
+ 713 01fc D10E     		.short	3793
+ 714 01fe F01E     		.short	7920
+ 715              		.section	.rodata.davis_parsers_rxcheck.str1.4,"aMS",%progbits,1
+ 716              		.align	2
+ 717              	.LC0:
+ 718 0000 2000     		.ascii	" \000"
+ 719 0002 0000     		.space	2
+ 720              	.LC1:
+ 721 0004 256400   		.ascii	"%d\000"
+ 722              		.text
+ 723              	.Letext0:
+ 724              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 725              		.file 4 "../system/include/davis_vantage/davis_loop_t.h"
+ 726              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 727              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 728              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 729              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 730              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 731              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 davis_parsers.c
+     /tmp/cccqIo2B.s:16     .text.davis_parsers_check_crc:0000000000000000 $t
+     /tmp/cccqIo2B.s:23     .text.davis_parsers_check_crc:0000000000000000 davis_parsers_check_crc
+     /tmp/cccqIo2B.s:82     .text.davis_parsers_check_crc:000000000000002c $d
+     /tmp/cccqIo2B.s:87     .text.davis_parsers_loop2:0000000000000000 $t
+     /tmp/cccqIo2B.s:94     .text.davis_parsers_loop2:0000000000000000 davis_parsers_loop2
+     /tmp/cccqIo2B.s:231    .text.davis_parsers_loop:0000000000000000 $t
+     /tmp/cccqIo2B.s:238    .text.davis_parsers_loop:0000000000000000 davis_parsers_loop
+     /tmp/cccqIo2B.s:259    .text.davis_parsers_rxcheck:0000000000000000 $t
+     /tmp/cccqIo2B.s:266    .text.davis_parsers_rxcheck:0000000000000000 davis_parsers_rxcheck
+     /tmp/cccqIo2B.s:398    .text.davis_parsers_rxcheck:0000000000000084 $d
+     /tmp/cccqIo2B.s:403    .text.davis_parsers_rxcheck:0000000000000098 $t
+     /tmp/cccqIo2B.s:447    .text.davis_parsers_rxcheck:00000000000000cc $d
+     /tmp/cccqIo2B.s:458    .rodata.crc_table:0000000000000000 crc_table
+     /tmp/cccqIo2B.s:454    .rodata.crc_table:0000000000000000 $d
+     /tmp/cccqIo2B.s:716    .rodata.davis_parsers_rxcheck.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.davis_parsers.h.15.1cf20b7725fbc6387ea18eb1ec35046c
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+
+UNDEFINED SYMBOLS
+strnlen
+strtok
+sscanf

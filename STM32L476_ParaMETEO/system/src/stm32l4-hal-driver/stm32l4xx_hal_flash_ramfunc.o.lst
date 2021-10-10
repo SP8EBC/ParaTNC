@@ -1,0 +1,262 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"stm32l4xx_hal_flash_ramfunc.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.RamFunc,"ax",%progbits
+  18              		.align	1
+  19              		.global	HAL_FLASHEx_EnableRunPowerDown
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	HAL_FLASHEx_EnableRunPowerDown:
+  26              	.LFB317:
+  27              		.file 1 "../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c"
+   1:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /**
+   2:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   ******************************************************************************
+   3:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @file    stm32l4xx_hal_flash_ramfunc.c
+   4:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @author  MCD Application Team
+   5:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @brief   FLASH RAMFUNC driver.
+   6:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *          This file provides a Flash firmware functions which should be
+   7:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *          executed from internal SRAM
+   8:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *            + FLASH HalfPage Programming
+   9:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *            + FLASH Power Down in Run mode
+  10:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *
+  11:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *  @verbatim
+  12:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   ==============================================================================
+  13:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****                    ##### Flash RAM functions #####
+  14:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   ==============================================================================
+  15:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  16:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     *** ARM Compiler ***
+  17:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     --------------------
+  18:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     [..] RAM functions are defined using the toolchain options.
+  19:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          Functions that are executed in RAM should reside in a separate
+  20:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          source module. Using the 'Options for File' dialog you can simply change
+  21:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          the 'Code / Const' area of a module to a memory space in physical RAM.
+  22:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          Available memory areas are declared in the 'Target' tab of the
+  23:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          Options for Target' dialog.
+  24:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  25:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     *** ICCARM Compiler ***
+  26:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     -----------------------
+  27:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     [..] RAM functions are defined using a specific toolchain keyword "__ramfunc".
+  28:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  29:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     *** GNU Compiler ***
+  30:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     --------------------
+  31:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     [..] RAM functions are defined using a specific toolchain attribute
+  32:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****          "__attribute__((section(".RamFunc")))".
+  33:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  34:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   @endverbatim
+  35:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   ******************************************************************************
+  36:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @attention
+  37:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *
+  38:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
+  39:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * All rights reserved.</center></h2>
+  40:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *
+  41:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * This software component is licensed by ST under BSD 3-Clause license,
+  42:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * the "License"; You may not use this file except in compliance with the
+  43:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * License. You may obtain a copy of the License at:
+  44:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *                       opensource.org/licenses/BSD-3-Clause
+  45:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   *
+  46:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   ******************************************************************************
+  47:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  48:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  49:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Includes ------------------------------------------------------------------*/
+  50:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** #include "stm32l4xx_hal.h"
+  51:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  52:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /** @addtogroup STM32L4xx_HAL_Driver
+  53:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @{
+  54:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  55:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  56:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /** @defgroup FLASH_RAMFUNC FLASH_RAMFUNC
+  57:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @brief FLASH functions executed from RAM
+  58:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @{
+  59:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  60:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  61:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** #ifdef HAL_FLASH_MODULE_ENABLED
+  62:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  63:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Private typedef -----------------------------------------------------------*/
+  64:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Private define ------------------------------------------------------------*/
+  65:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Private macro -------------------------------------------------------------*/
+  66:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Private variables ---------------------------------------------------------*/
+  67:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Private function prototypes -----------------------------------------------*/
+  68:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /* Exported functions -------------------------------------------------------*/
+  69:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  70:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /** @defgroup FLASH_RAMFUNC_Exported_Functions FLASH in RAM function Exported Functions
+  71:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @{
+  72:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  73:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  74:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /** @defgroup FLASH_RAMFUNC_Exported_Functions_Group1 Peripheral features functions
+  75:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****  *  @brief   Data transfers functions
+  76:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****  *
+  77:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** @verbatim
+  78:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****  ===============================================================================
+  79:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****                       ##### ramfunc functions #####
+  80:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****  ===============================================================================
+  81:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     [..]
+  82:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****     This subsection provides a set of functions that should be executed from RAM.
+  83:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  84:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** @endverbatim
+  85:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @{
+  86:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  87:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  88:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /**
+  89:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @brief   Enable the Power down in Run Mode
+  90:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @note    This function should be called and executed from SRAM memory
+  91:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @retval  HAL status
+  92:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+  93:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_EnableRunPowerDown(void)
+  94:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** {
+  28              		.loc 1 94 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  95:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   /* Enable the Power Down in Run mode*/
+  96:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   __HAL_FLASH_POWER_DOWN_ENABLE();
+  33              		.loc 1 96 0
+  34 0000 054B     		ldr	r3, .L2
+  35 0002 064A     		ldr	r2, .L2+4
+  36 0004 5A60     		str	r2, [r3, #4]
+  37 0006 064A     		ldr	r2, .L2+8
+  38 0008 5A60     		str	r2, [r3, #4]
+  39 000a 1A68     		ldr	r2, [r3]
+  40 000c 42F40052 		orr	r2, r2, #8192
+  41 0010 1A60     		str	r2, [r3]
+  97:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+  98:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   return HAL_OK;
+  99:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+ 100:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** }
+  42              		.loc 1 100 0
+  43 0012 0020     		movs	r0, #0
+  44 0014 7047     		bx	lr
+  45              	.L3:
+  46 0016 00BF     		.align	2
+  47              	.L2:
+  48 0018 00200240 		.word	1073881088
+  49 001c 37261504 		.word	68494903
+  50 0020 FDFCFBFA 		.word	-84148995
+  51              		.cfi_endproc
+  52              	.LFE317:
+  54              		.align	1
+  55              		.global	HAL_FLASHEx_DisableRunPowerDown
+  56              		.syntax unified
+  57              		.thumb
+  58              		.thumb_func
+  59              		.fpu fpv4-sp-d16
+  61              	HAL_FLASHEx_DisableRunPowerDown:
+  62              	.LFB318:
+ 101:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+ 102:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** /**
+ 103:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @brief   Disable the Power down in Run Mode
+ 104:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @note    This function should be called and executed from SRAM memory
+ 105:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   * @retval  HAL status
+ 106:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   */
+ 107:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** __RAM_FUNC HAL_StatusTypeDef HAL_FLASHEx_DisableRunPowerDown(void)
+ 108:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** {
+  63              		.loc 1 108 0
+  64              		.cfi_startproc
+  65              		@ args = 0, pretend = 0, frame = 0
+  66              		@ frame_needed = 0, uses_anonymous_args = 0
+  67              		@ link register save eliminated.
+ 109:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   /* Disable the Power Down in Run mode*/
+ 110:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   __HAL_FLASH_POWER_DOWN_DISABLE();
+  68              		.loc 1 110 0
+  69 0024 054B     		ldr	r3, .L5
+  70 0026 064A     		ldr	r2, .L5+4
+  71 0028 5A60     		str	r2, [r3, #4]
+  72 002a 064A     		ldr	r2, .L5+8
+  73 002c 5A60     		str	r2, [r3, #4]
+  74 002e 1A68     		ldr	r2, [r3]
+  75 0030 22F40052 		bic	r2, r2, #8192
+  76 0034 1A60     		str	r2, [r3]
+ 111:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** 
+ 112:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c ****   return HAL_OK;
+ 113:../system/src/stm32l4-hal-driver/stm32l4xx_hal_flash_ramfunc.c **** }
+  77              		.loc 1 113 0
+  78 0036 0020     		movs	r0, #0
+  79 0038 7047     		bx	lr
+  80              	.L6:
+  81 003a 00BF     		.align	2
+  82              	.L5:
+  83 003c 00200240 		.word	1073881088
+  84 0040 37261504 		.word	68494903
+  85 0044 FDFCFBFA 		.word	-84148995
+  86              		.cfi_endproc
+  87              	.LFE318:
+  89              		.text
+  90              	.Letext0:
+  91              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  92              		.file 3 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+  93              		.file 4 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+  94              		.file 5 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+  95              		.file 6 "../system/include/stm32l4-hal-driver/stm32l4xx_hal_def.h"
+  96              		.file 7 "../system/include/stm32l4-hal-driver/stm32l4xx_hal_flash.h"
+  97              		.file 8 "../system/include/stm32l4-hal-driver/stm32l4xx_hal.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 stm32l4xx_hal_flash_ramfunc.c
+     /tmp/ccIxHQCp.s:18     .RamFunc:0000000000000000 $t
+     /tmp/ccIxHQCp.s:25     .RamFunc:0000000000000000 HAL_FLASHEx_EnableRunPowerDown
+     /tmp/ccIxHQCp.s:48     .RamFunc:0000000000000018 $d
+     /tmp/ccIxHQCp.s:54     .RamFunc:0000000000000024 $t
+     /tmp/ccIxHQCp.s:61     .RamFunc:0000000000000024 HAL_FLASHEx_DisableRunPowerDown
+     /tmp/ccIxHQCp.s:83     .RamFunc:000000000000003c $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stm32l4xx_hal_conf.h.24.9ebdf529a64add7ef5197540a829be93
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32_hal_legacy.h.23.c14bec61d389910444dd6f90923a87b3
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4.stm32l4xx_hal_def.h.58.ba9880fce6c06e05c42ff3652190ba19
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rcc.h.158.28a9a8aed9528254d5d00c542977dfd6
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rcc_ex.h.22.da7044b74af98b061fec57b6c981623c
+                           .group:0000000000000000 wm4.stm32l4xx_hal_gpio.h.22.cdd02b3dd2d28ab2a58b80abaa62239c
+                           .group:0000000000000000 wm4.stm32l4xx_hal_gpio_ex.h.22.e3066224621c54896e68c044cff2946f
+                           .group:0000000000000000 wm4.stm32l4xx_hal_dma.h.22.13f7e03251508cf372ae373347b36e9b
+                           .group:0000000000000000 wm4.stm32l4xx_hal_cortex.h.22.cb70b059ea6d04d060ca379a6d57d1fd
+                           .group:0000000000000000 wm4.stm32l4xx_ll_adc.h.22.1a01db9155ec232fb5933b76785afed0
+                           .group:0000000000000000 wm4.stm32l4xx_hal_adc.h.321.ee3f28f76fc70066e4cbbd758e576892
+                           .group:0000000000000000 wm4.stm32l4xx_hal_adc_ex.h.22.fb5e6d418a426c9b079c9adc15fee3b1
+                           .group:0000000000000000 wm4.stm32l4xx_hal_crc.h.22.e28f2dff7c14319a60cfaa8412b63a14
+                           .group:0000000000000000 wm4.stm32l4xx_hal_crc_ex.h.22.58aa3be0563eedff5893c4b663184cf2
+                           .group:0000000000000000 wm4.stm32l4xx_hal_dac.h.22.74749bf4f9405a5fbfaaf1cc4c06eba3
+                           .group:0000000000000000 wm4.stm32l4xx_hal_dac_ex.h.22.4e3cedba5893653c1d8ca689fa739e33
+                           .group:0000000000000000 wm4.stm32l4xx_hal_exti.h.22.d0c18acb1f51146e775f234290c1ac27
+                           .group:0000000000000000 wm4.stm32l4xx_hal_flash.h.22.80f6973ea14060a68f7ca21c1dd39289
+                           .group:0000000000000000 wm4.stm32l4xx_hal_flash.h.847.7bdb45d9d57728034960e0aaf38df4fb
+                           .group:0000000000000000 wm4.stm32l4xx_hal_i2c.h.22.5cbc76724b1dba5416e985e397b92828
+                           .group:0000000000000000 wm4.stm32l4xx_hal_i2c_ex.h.22.4c81bf9806badb3d50f1da26b08d305a
+                           .group:0000000000000000 wm4.stm32l4xx_hal_i2c.h.715.a3aff164d469153c75cf623f9ff49d7a
+                           .group:0000000000000000 wm4.stm32l4xx_hal_iwdg.h.22.7e954cf06602114b3daf58f5ffbb9e50
+                           .group:0000000000000000 wm4.stm32l4xx_hal_pwr.h.22.0049bff0a26f90119451fdfe5f426c51
+                           .group:0000000000000000 wm4.stm32l4xx_hal_pwr_ex.h.22.3d1049b6827a186d471882b21e35998d
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rng.h.22.3da3130b715b6ad6f9d8d49653bdfddb
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rtc.h.22.21d64301309237f9b9255a8c80902f7c
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rtc_ex.h.22.6c248c3dbae3d1f0fefc4b9faaa2cd0b
+                           .group:0000000000000000 wm4.stm32l4xx_hal_rtc.h.977.b3b3c98b50a30362b61b120ec4fce236
+                           .group:0000000000000000 wm4.stm32l4xx_hal_tim.h.22.6c7398a1c55179e1de4bfd7d5a7564ac
+                           .group:0000000000000000 wm4.stm32l4xx_hal_tim_ex.h.22.1a7b532f5010a085c12eee7e9c7b0c21
+                           .group:0000000000000000 wm4.stm32l4xx_hal_uart.h.22.5f632bd044c516c02fe0b49488f063f8
+                           .group:0000000000000000 wm4.stm32l4xx_hal_uart_ex.h.22.de11c23890d64b2968c97dd6f5dae21a
+                           .group:0000000000000000 wm4.stm32l4xx_hal.h.76.993cab68f7f350dd05a21a919b3be96f
+
+NO UNDEFINED SYMBOLS

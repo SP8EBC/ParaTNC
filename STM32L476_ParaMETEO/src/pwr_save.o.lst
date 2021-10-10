@@ -1,0 +1,2478 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"pwr_save.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.pwr_save_unclock_rtc_backup_regs,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	pwr_save_unclock_rtc_backup_regs:
+  25              	.LFB390:
+  26              		.file 1 "../src/pwr_save.c"
+   1:../src/pwr_save.c **** /*
+   2:../src/pwr_save.c ****  * pwr_save.c
+   3:../src/pwr_save.c ****  *
+   4:../src/pwr_save.c ****  *  Created on: Aug 22, 2021
+   5:../src/pwr_save.c ****  *      Author: mateusz
+   6:../src/pwr_save.c ****  */
+   7:../src/pwr_save.c **** 
+   8:../src/pwr_save.c **** #include "pwr_save.h"
+   9:../src/pwr_save.c **** 
+  10:../src/pwr_save.c **** #include "stm32l4xx.h"
+  11:../src/pwr_save.c **** #include "system_stm32l4xx.h"
+  12:../src/pwr_save.c **** #include <stdint.h>
+  13:../src/pwr_save.c **** 
+  14:../src/pwr_save.c **** #include "pwr_switch.h"
+  15:../src/pwr_save.c **** #include "io.h"
+  16:../src/pwr_save.c **** #include "LedConfig.h"
+  17:../src/pwr_save.c **** #include "packet_tx_handler.h"
+  18:../src/pwr_save.c **** #include "wx_handler.h"
+  19:../src/pwr_save.c **** #include "main.h"
+  20:../src/pwr_save.c **** 
+  21:../src/pwr_save.c **** #include "drivers/analog_anemometer.h"
+  22:../src/pwr_save.c **** 
+  23:../src/pwr_save.c **** 
+  24:../src/pwr_save.c **** #define REGISTER RTC->BKP0R
+  25:../src/pwr_save.c **** 
+  26:../src/pwr_save.c **** #define INHIBIT_PWR_SWITCH_PERIODIC_H 1
+  27:../src/pwr_save.c **** #define IN_STOP2_MODE (1 << 1)
+  28:../src/pwr_save.c **** #define IN_C0_STATE (1 << 2)
+  29:../src/pwr_save.c **** #define IN_C1_STATE (1 << 3)
+  30:../src/pwr_save.c **** #define IN_C2_STATE (1 << 4)
+  31:../src/pwr_save.c **** #define IN_C3_STATE (1 << 5)
+  32:../src/pwr_save.c **** #define IN_M4_STATE (1 << 6)
+  33:../src/pwr_save.c **** #define IN_I5_STATE (1 << 7)
+  34:../src/pwr_save.c **** #define IN_L6_STATE (1 << 8)
+  35:../src/pwr_save.c **** #define IN_L7_STATE (1 << 9)
+  36:../src/pwr_save.c **** 
+  37:../src/pwr_save.c **** #define ALL_STATES_BITMASK (0xFF << 2)
+  38:../src/pwr_save.c **** 
+  39:../src/pwr_save.c **** #if defined(STM32L471xx)
+  40:../src/pwr_save.c **** 
+  41:../src/pwr_save.c **** int8_t pwr_save_seconds_to_wx = 0;
+  42:../src/pwr_save.c **** int16_t pwr_save_sleep_time_in_seconds = -1;
+  43:../src/pwr_save.c **** 
+  44:../src/pwr_save.c **** static void pwr_save_unclock_rtc_backup_regs(void) {
+  27              		.loc 1 44 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  45:../src/pwr_save.c **** 	// enable access to backup domain
+  46:../src/pwr_save.c **** 	PWR->CR1 |= PWR_CR1_DBP;
+  32              		.loc 1 46 0
+  33 0000 024A     		ldr	r2, .L2
+  34 0002 1368     		ldr	r3, [r2]
+  35 0004 43F48073 		orr	r3, r3, #256
+  36 0008 1360     		str	r3, [r2]
+  47:../src/pwr_save.c **** }
+  37              		.loc 1 47 0
+  38 000a 7047     		bx	lr
+  39              	.L3:
+  40              		.align	2
+  41              	.L2:
+  42 000c 00700040 		.word	1073770496
+  43              		.cfi_endproc
+  44              	.LFE390:
+  46              		.section	.text.pwr_save_lock_rtc_backup_regs,"ax",%progbits
+  47              		.align	1
+  48              		.syntax unified
+  49              		.thumb
+  50              		.thumb_func
+  51              		.fpu fpv4-sp-d16
+  53              	pwr_save_lock_rtc_backup_regs:
+  54              	.LFB391:
+  48:../src/pwr_save.c **** 
+  49:../src/pwr_save.c **** static void pwr_save_lock_rtc_backup_regs(void) {
+  55              		.loc 1 49 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  50:../src/pwr_save.c **** 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+  60              		.loc 1 50 0
+  61 0000 024A     		ldr	r2, .L5
+  62 0002 1368     		ldr	r3, [r2]
+  63 0004 23F48073 		bic	r3, r3, #256
+  64 0008 1360     		str	r3, [r2]
+  51:../src/pwr_save.c **** }
+  65              		.loc 1 51 0
+  66 000a 7047     		bx	lr
+  67              	.L6:
+  68              		.align	2
+  69              	.L5:
+  70 000c 00700040 		.word	1073770496
+  71              		.cfi_endproc
+  72              	.LFE391:
+  74              		.section	.text.pwr_save_init,"ax",%progbits
+  75              		.align	1
+  76              		.global	pwr_save_init
+  77              		.syntax unified
+  78              		.thumb
+  79              		.thumb_func
+  80              		.fpu fpv4-sp-d16
+  82              	pwr_save_init:
+  83              	.LFB392:
+  52:../src/pwr_save.c **** 
+  53:../src/pwr_save.c **** /**
+  54:../src/pwr_save.c ****  * This function initializes everything related to power saving features
+  55:../src/pwr_save.c ****  * including programming Flash memory option bytes
+  56:../src/pwr_save.c ****  */
+  57:../src/pwr_save.c **** void pwr_save_init(config_data_powersave_mode_t mode) {
+  84              		.loc 1 57 0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 0
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  88              	.LVL0:
+  89 0000 10B5     		push	{r4, lr}
+  90              		.cfi_def_cfa_offset 8
+  91              		.cfi_offset 4, -8
+  92              		.cfi_offset 14, -4
+  93 0002 0446     		mov	r4, r0
+  94              	.LVL1:
+  58:../src/pwr_save.c **** 
+  59:../src/pwr_save.c **** 	// make a pointer to option byte
+  60:../src/pwr_save.c **** 	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
+  61:../src/pwr_save.c **** 
+  62:../src/pwr_save.c **** 	// content of option byte read from the flash memory
+  63:../src/pwr_save.c **** 	uint32_t option_byte_content = *option_byte;
+  95              		.loc 1 63 0
+  96 0004 1F4B     		ldr	r3, .L15
+  97 0006 1B68     		ldr	r3, [r3]
+  98              	.LVL2:
+  64:../src/pwr_save.c **** 
+  65:../src/pwr_save.c **** 	// definition of bitmask
+  66:../src/pwr_save.c **** 	#define IWDG_STBY_STOP (0x3 << 17)
+  67:../src/pwr_save.c **** 
+  68:../src/pwr_save.c **** 	// check if IWDG_STDBY and IWDG_STOP is not set in ''User and read protection option bytes''
+  69:../src/pwr_save.c **** 	// at 0x1FFF7800
+  70:../src/pwr_save.c **** 	if ((option_byte_content & IWDG_STBY_STOP) == IWDG_STBY_STOP) {
+  99              		.loc 1 70 0
+ 100 0008 03F4C023 		and	r3, r3, #393216
+ 101              	.LVL3:
+ 102 000c B3F5C02F 		cmp	r3, #393216
+ 103 0010 10D0     		beq	.L14
+ 104              	.L8:
+  71:../src/pwr_save.c **** 
+  72:../src/pwr_save.c **** 		// unlock write/erase operations on flash memory
+  73:../src/pwr_save.c **** 		FLASH->KEYR = 0x45670123;
+  74:../src/pwr_save.c **** 		FLASH->KEYR = 0xCDEF89AB;
+  75:../src/pwr_save.c **** 
+  76:../src/pwr_save.c **** 		// wait for any possible flash operation to finish (rather impossible here, but ST manual recomme
+  77:../src/pwr_save.c **** 		while((FLASH->SR & FLASH_SR_BSY) != 0);
+  78:../src/pwr_save.c **** 
+  79:../src/pwr_save.c **** 		// unlock operations on option bytes
+  80:../src/pwr_save.c **** 		FLASH->OPTKEYR = 0x08192A3B;
+  81:../src/pwr_save.c **** 		FLASH->OPTKEYR = 0x4C5D6E7F;
+  82:../src/pwr_save.c **** 
+  83:../src/pwr_save.c **** 		// set the flash option register (in RAM!!)
+  84:../src/pwr_save.c **** 		FLASH->OPTR &= (0xFFFFFFFF ^ (FLASH_OPTR_IWDG_STDBY | FLASH_OPTR_IWDG_STOP));
+  85:../src/pwr_save.c **** 
+  86:../src/pwr_save.c **** 		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
+  87:../src/pwr_save.c **** 		FLASH->CR |= FLASH_CR_OPTSTRT;
+  88:../src/pwr_save.c **** 
+  89:../src/pwr_save.c **** 		// wait for option bytes to be updated
+  90:../src/pwr_save.c **** 		while((FLASH->SR & FLASH_SR_BSY) != 0);
+  91:../src/pwr_save.c **** 
+  92:../src/pwr_save.c **** 		// lock flash memory
+  93:../src/pwr_save.c **** 		FLASH-> CR |= FLASH_CR_LOCK;
+  94:../src/pwr_save.c **** 
+  95:../src/pwr_save.c **** 		// forcre reloading option bytes
+  96:../src/pwr_save.c **** 		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
+  97:../src/pwr_save.c **** 
+  98:../src/pwr_save.c **** 	}
+  99:../src/pwr_save.c **** 
+ 100:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 105              		.loc 1 100 0
+ 106 0012 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 107              	.LVL4:
+ 101:../src/pwr_save.c **** 
+ 102:../src/pwr_save.c **** 	// reset a status register
+ 103:../src/pwr_save.c **** 	REGISTER = 0;
+ 108              		.loc 1 103 0
+ 109 0016 1C4B     		ldr	r3, .L15+4
+ 110 0018 0022     		movs	r2, #0
+ 111 001a 1A65     		str	r2, [r3, #80]
+ 104:../src/pwr_save.c **** 
+ 105:../src/pwr_save.c **** 	// switch power switch handler inhibition if it is needed
+ 106:../src/pwr_save.c **** 	switch (mode) {
+ 112              		.loc 1 106 0
+ 113 001c 012C     		cmp	r4, #1
+ 114 001e 01D0     		beq	.L12
+ 115 0020 032C     		cmp	r4, #3
+ 116 0022 04D1     		bne	.L11
+ 117              	.L12:
+ 107:../src/pwr_save.c **** 		case PWSAVE_NONE:
+ 108:../src/pwr_save.c **** 			break;
+ 109:../src/pwr_save.c **** 		case PWSAVE_NORMAL:
+ 110:../src/pwr_save.c **** 		case PWSAVE_AGGRESV:
+ 111:../src/pwr_save.c **** 			REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
+ 118              		.loc 1 111 0
+ 119 0024 184A     		ldr	r2, .L15+4
+ 120 0026 136D     		ldr	r3, [r2, #80]
+ 121 0028 43F00103 		orr	r3, r3, #1
+ 122 002c 1365     		str	r3, [r2, #80]
+ 123              	.L11:
+ 112:../src/pwr_save.c **** 			break;
+ 113:../src/pwr_save.c **** 	}
+ 114:../src/pwr_save.c **** 
+ 115:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 124              		.loc 1 115 0
+ 125 002e FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 126              	.LVL5:
+ 116:../src/pwr_save.c **** 
+ 117:../src/pwr_save.c **** }
+ 127              		.loc 1 117 0
+ 128 0032 10BD     		pop	{r4, pc}
+ 129              	.LVL6:
+ 130              	.L14:
+  73:../src/pwr_save.c **** 		FLASH->KEYR = 0xCDEF89AB;
+ 131              		.loc 1 73 0
+ 132 0034 154B     		ldr	r3, .L15+8
+ 133 0036 164A     		ldr	r2, .L15+12
+ 134 0038 9A60     		str	r2, [r3, #8]
+  74:../src/pwr_save.c **** 
+ 135              		.loc 1 74 0
+ 136 003a 02F18832 		add	r2, r2, #-2004318072
+ 137 003e 9A60     		str	r2, [r3, #8]
+ 138              	.L9:
+  77:../src/pwr_save.c **** 
+ 139              		.loc 1 77 0 discriminator 1
+ 140 0040 124B     		ldr	r3, .L15+8
+ 141 0042 1B69     		ldr	r3, [r3, #16]
+ 142 0044 13F4803F 		tst	r3, #65536
+ 143 0048 FAD1     		bne	.L9
+  80:../src/pwr_save.c **** 		FLASH->OPTKEYR = 0x4C5D6E7F;
+ 144              		.loc 1 80 0
+ 145 004a 104B     		ldr	r3, .L15+8
+ 146 004c 114A     		ldr	r2, .L15+16
+ 147 004e DA60     		str	r2, [r3, #12]
+  81:../src/pwr_save.c **** 
+ 148              		.loc 1 81 0
+ 149 0050 02F14432 		add	r2, r2, #1145324612
+ 150 0054 DA60     		str	r2, [r3, #12]
+  84:../src/pwr_save.c **** 
+ 151              		.loc 1 84 0
+ 152 0056 1A6A     		ldr	r2, [r3, #32]
+ 153 0058 22F4C022 		bic	r2, r2, #393216
+ 154 005c 1A62     		str	r2, [r3, #32]
+  87:../src/pwr_save.c **** 
+ 155              		.loc 1 87 0
+ 156 005e 5A69     		ldr	r2, [r3, #20]
+ 157 0060 42F40032 		orr	r2, r2, #131072
+ 158 0064 5A61     		str	r2, [r3, #20]
+ 159              	.L10:
+  90:../src/pwr_save.c **** 
+ 160              		.loc 1 90 0 discriminator 1
+ 161 0066 094B     		ldr	r3, .L15+8
+ 162 0068 1B69     		ldr	r3, [r3, #16]
+ 163 006a 13F4803F 		tst	r3, #65536
+ 164 006e FAD1     		bne	.L10
+  93:../src/pwr_save.c **** 
+ 165              		.loc 1 93 0
+ 166 0070 064B     		ldr	r3, .L15+8
+ 167 0072 5A69     		ldr	r2, [r3, #20]
+ 168 0074 42F00042 		orr	r2, r2, #-2147483648
+ 169 0078 5A61     		str	r2, [r3, #20]
+  96:../src/pwr_save.c **** 
+ 170              		.loc 1 96 0
+ 171 007a 5A69     		ldr	r2, [r3, #20]
+ 172 007c 42F00062 		orr	r2, r2, #134217728
+ 173 0080 5A61     		str	r2, [r3, #20]
+ 174 0082 C6E7     		b	.L8
+ 175              	.L16:
+ 176              		.align	2
+ 177              	.L15:
+ 178 0084 0078FF1F 		.word	536836096
+ 179 0088 00280040 		.word	1073752064
+ 180 008c 00200240 		.word	1073881088
+ 181 0090 23016745 		.word	1164378403
+ 182 0094 3B2A1908 		.word	135866939
+ 183              		.cfi_endproc
+ 184              	.LFE392:
+ 186              		.section	.text.pwr_save_enter_stop2,"ax",%progbits
+ 187              		.align	1
+ 188              		.global	pwr_save_enter_stop2
+ 189              		.syntax unified
+ 190              		.thumb
+ 191              		.thumb_func
+ 192              		.fpu fpv4-sp-d16
+ 194              	pwr_save_enter_stop2:
+ 195              	.LFB393:
+ 118:../src/pwr_save.c **** 
+ 119:../src/pwr_save.c **** /**
+ 120:../src/pwr_save.c ****  * Entering STOP2 power save mode. In this mode all clocks except LSI and LSE are disabled. StaticR
+ 121:../src/pwr_save.c ****  * is preserved, optionally GPIO and few other peripherals can be kept power up depending on config
+ 122:../src/pwr_save.c ****  */
+ 123:../src/pwr_save.c **** void pwr_save_enter_stop2(void) {
+ 196              		.loc 1 123 0
+ 197              		.cfi_startproc
+ 198              		@ args = 0, pretend = 0, frame = 0
+ 199              		@ frame_needed = 0, uses_anonymous_args = 0
+ 200 0000 10B5     		push	{r4, lr}
+ 201              		.cfi_def_cfa_offset 8
+ 202              		.cfi_offset 4, -8
+ 203              		.cfi_offset 14, -4
+ 124:../src/pwr_save.c **** 
+ 125:../src/pwr_save.c **** 	analog_anemometer_deinit();
+ 204              		.loc 1 125 0
+ 205 0002 FFF7FEFF 		bl	analog_anemometer_deinit
+ 206              	.LVL7:
+ 126:../src/pwr_save.c **** 
+ 127:../src/pwr_save.c **** 	// clear previous low power mode selection
+ 128:../src/pwr_save.c **** 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_LPMS_Msk);
+ 207              		.loc 1 128 0
+ 208 0006 114B     		ldr	r3, .L19
+ 209 0008 1A68     		ldr	r2, [r3]
+ 210 000a 22F00702 		bic	r2, r2, #7
+ 211 000e 1A60     		str	r2, [r3]
+ 129:../src/pwr_save.c **** 
+ 130:../src/pwr_save.c **** 	// select STOP2
+ 131:../src/pwr_save.c **** 	PWR->CR1 |= PWR_CR1_LPMS_STOP2;
+ 212              		.loc 1 131 0
+ 213 0010 1A68     		ldr	r2, [r3]
+ 214 0012 42F00202 		orr	r2, r2, #2
+ 215 0016 1A60     		str	r2, [r3]
+ 132:../src/pwr_save.c **** 
+ 133:../src/pwr_save.c **** 	// enable write access to RTC registers by writing two magic words
+ 134:../src/pwr_save.c **** 	RTC->WPR = 0xCA;
+ 216              		.loc 1 134 0
+ 217 0018 0D4C     		ldr	r4, .L19+4
+ 218 001a CA23     		movs	r3, #202
+ 219 001c 6362     		str	r3, [r4, #36]
+ 135:../src/pwr_save.c **** 	RTC->WPR = 0x53;
+ 220              		.loc 1 135 0
+ 221 001e 5323     		movs	r3, #83
+ 222 0020 6362     		str	r3, [r4, #36]
+ 136:../src/pwr_save.c **** 
+ 137:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 223              		.loc 1 137 0
+ 224 0022 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 225              	.LVL8:
+ 138:../src/pwr_save.c **** 
+ 139:../src/pwr_save.c **** 	// save an information that STOP2 mode has been applied
+ 140:../src/pwr_save.c **** 	RTC->BKP0R |= IN_STOP2_MODE;
+ 226              		.loc 1 140 0
+ 227 0026 236D     		ldr	r3, [r4, #80]
+ 228 0028 43F00203 		orr	r3, r3, #2
+ 229 002c 2365     		str	r3, [r4, #80]
+ 141:../src/pwr_save.c **** 
+ 142:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 230              		.loc 1 142 0
+ 231 002e FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 232              	.LVL9:
+ 143:../src/pwr_save.c **** 
+ 144:../src/pwr_save.c **** 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+ 233              		.loc 1 144 0
+ 234 0032 084A     		ldr	r2, .L19+8
+ 235 0034 1369     		ldr	r3, [r2, #16]
+ 236 0036 43F00403 		orr	r3, r3, #4
+ 237 003a 1361     		str	r3, [r2, #16]
+ 145:../src/pwr_save.c **** 
+ 146:../src/pwr_save.c **** 	DBGMCU->CR &= (0xFFFFFFFF ^ (DBGMCU_CR_DBG_SLEEP_Msk | DBGMCU_CR_DBG_STOP_Msk | DBGMCU_CR_DBG_STAN
+ 238              		.loc 1 146 0
+ 239 003c 064A     		ldr	r2, .L19+12
+ 240 003e 5368     		ldr	r3, [r2, #4]
+ 241 0040 23F00703 		bic	r3, r3, #7
+ 242 0044 5360     		str	r3, [r2, #4]
+ 147:../src/pwr_save.c **** 
+ 148:../src/pwr_save.c **** 	// disabling all IRQs
+ 149:../src/pwr_save.c **** 	//__disable_irq();
+ 150:../src/pwr_save.c **** 
+ 151:../src/pwr_save.c **** 	asm("sev");
+ 243              		.loc 1 151 0
+ 244              		.syntax unified
+ 245              	@ 151 "../src/pwr_save.c" 1
+ 246 0046 40BF     		sev
+ 247              	@ 0 "" 2
+ 152:../src/pwr_save.c **** 	asm("wfi");
+ 248              		.loc 1 152 0
+ 249              	@ 152 "../src/pwr_save.c" 1
+ 250 0048 30BF     		wfi
+ 251              	@ 0 "" 2
+ 153:../src/pwr_save.c **** 
+ 154:../src/pwr_save.c **** }
+ 252              		.loc 1 154 0
+ 253              		.thumb
+ 254              		.syntax unified
+ 255 004a 10BD     		pop	{r4, pc}
+ 256              	.L20:
+ 257              		.align	2
+ 258              	.L19:
+ 259 004c 00700040 		.word	1073770496
+ 260 0050 00280040 		.word	1073752064
+ 261 0054 00ED00E0 		.word	-536810240
+ 262 0058 002004E0 		.word	-536600576
+ 263              		.cfi_endproc
+ 264              	.LFE393:
+ 266              		.section	.text.pwr_save_exit_from_stop2,"ax",%progbits
+ 267              		.align	1
+ 268              		.global	pwr_save_exit_from_stop2
+ 269              		.syntax unified
+ 270              		.thumb
+ 271              		.thumb_func
+ 272              		.fpu fpv4-sp-d16
+ 274              	pwr_save_exit_from_stop2:
+ 275              	.LFB394:
+ 155:../src/pwr_save.c **** 
+ 156:../src/pwr_save.c **** /**
+ 157:../src/pwr_save.c ****  * This function has to be called within RTC wakepup interrupt.
+ 158:../src/pwr_save.c ****  */
+ 159:../src/pwr_save.c **** void pwr_save_exit_from_stop2(void) {
+ 276              		.loc 1 159 0
+ 277              		.cfi_startproc
+ 278              		@ args = 0, pretend = 0, frame = 8
+ 279              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160:../src/pwr_save.c **** 
+ 161:../src/pwr_save.c **** 	// packet tx timers values
+ 162:../src/pwr_save.c **** 	packet_tx_counter_values_t timers;
+ 163:../src/pwr_save.c **** 
+ 164:../src/pwr_save.c **** 	// check power saving mode set before switching uC to SLEEP2
+ 165:../src/pwr_save.c **** 	uint16_t powersave_mode = (uint16_t)(REGISTER & ALL_STATES_BITMASK);
+ 280              		.loc 1 165 0
+ 281 0000 214B     		ldr	r3, .L29
+ 282 0002 1B6D     		ldr	r3, [r3, #80]
+ 283 0004 03F47F73 		and	r3, r3, #1020
+ 284              	.LVL10:
+ 166:../src/pwr_save.c **** 
+ 167:../src/pwr_save.c **** 	// check if sleep time is valid
+ 168:../src/pwr_save.c **** 	if (pwr_save_sleep_time_in_seconds <= 0) {
+ 285              		.loc 1 168 0
+ 286 0008 204A     		ldr	r2, .L29+4
+ 287 000a B2F90020 		ldrsh	r2, [r2]
+ 288 000e 002A     		cmp	r2, #0
+ 289 0010 06DD     		ble	.L28
+ 290              	.L22:
+ 169:../src/pwr_save.c **** 		// if for some reason the value is not valid change is to something meaningful
+ 170:../src/pwr_save.c **** 		pwr_save_sleep_time_in_seconds = 60;
+ 171:../src/pwr_save.c **** 	}
+ 172:../src/pwr_save.c **** 
+ 173:../src/pwr_save.c **** 
+ 174:../src/pwr_save.c **** 	switch(powersave_mode) {
+ 291              		.loc 1 174 0
+ 292 0012 B3F5807F 		cmp	r3, #256
+ 293 0016 07D0     		beq	.L24
+ 294 0018 B3F5007F 		cmp	r3, #512
+ 295 001c 04D0     		beq	.L24
+ 296 001e 7047     		bx	lr
+ 297              	.L28:
+ 170:../src/pwr_save.c **** 	}
+ 298              		.loc 1 170 0
+ 299 0020 1A4A     		ldr	r2, .L29+4
+ 300 0022 3C21     		movs	r1, #60
+ 301 0024 1180     		strh	r1, [r2]	@ movhi
+ 302 0026 F4E7     		b	.L22
+ 303              	.L24:
+ 159:../src/pwr_save.c **** 
+ 304              		.loc 1 159 0
+ 305 0028 00B5     		push	{lr}
+ 306              		.cfi_def_cfa_offset 4
+ 307              		.cfi_offset 14, -4
+ 308 002a 83B0     		sub	sp, sp, #12
+ 309              		.cfi_def_cfa_offset 16
+ 175:../src/pwr_save.c **** 	case IN_L6_STATE:
+ 176:../src/pwr_save.c **** 	case IN_L7_STATE:
+ 177:../src/pwr_save.c **** 
+ 178:../src/pwr_save.c **** 		// get all timers values
+ 179:../src/pwr_save.c **** 		packet_tx_get_current_counters(&timers);
+ 310              		.loc 1 179 0
+ 311 002c 6846     		mov	r0, sp
+ 312 002e FFF7FEFF 		bl	packet_tx_get_current_counters
+ 313              	.LVL11:
+ 180:../src/pwr_save.c **** 
+ 181:../src/pwr_save.c **** 		// rewind all timers in packet tx handler as they were no updated when micro was sleeping
+ 182:../src/pwr_save.c **** 		// sleep shall be always set as wx packet interval minus one minute
+ 183:../src/pwr_save.c **** 		timers.wx_counter += (pwr_save_sleep_time_in_seconds / 60);
+ 314              		.loc 1 183 0
+ 315 0032 164B     		ldr	r3, .L29+4
+ 316 0034 B3F90020 		ldrsh	r2, [r3]
+ 317 0038 154B     		ldr	r3, .L29+8
+ 318 003a 83FB0213 		smull	r1, r3, r3, r2
+ 319 003e 9918     		adds	r1, r3, r2
+ 320 0040 D317     		asrs	r3, r2, #31
+ 321 0042 C3EB6113 		rsb	r3, r3, r1, asr #5
+ 322 0046 DBB2     		uxtb	r3, r3
+ 323 0048 9DF80120 		ldrb	r2, [sp, #1]	@ zero_extendqisi2
+ 324 004c 1A44     		add	r2, r2, r3
+ 325 004e 8DF80120 		strb	r2, [sp, #1]
+ 184:../src/pwr_save.c **** 		timers.beacon_counter += (pwr_save_sleep_time_in_seconds / 60);
+ 326              		.loc 1 184 0
+ 327 0052 9DF80020 		ldrb	r2, [sp]	@ zero_extendqisi2
+ 328 0056 1A44     		add	r2, r2, r3
+ 329 0058 8DF80020 		strb	r2, [sp]
+ 185:../src/pwr_save.c **** 		timers.kiss_counter += (pwr_save_sleep_time_in_seconds / 60);
+ 330              		.loc 1 185 0
+ 331 005c 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 332 0060 1A44     		add	r2, r2, r3
+ 333 0062 8DF80420 		strb	r2, [sp, #4]
+ 186:../src/pwr_save.c **** 		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
+ 334              		.loc 1 186 0
+ 335 0066 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
+ 336 006a 1A44     		add	r2, r2, r3
+ 337 006c 8DF80220 		strb	r2, [sp, #2]
+ 187:../src/pwr_save.c **** 		timers.telemetry_desc_counter += (pwr_save_sleep_time_in_seconds / 60);
+ 338              		.loc 1 187 0
+ 339 0070 9DF80320 		ldrb	r2, [sp, #3]	@ zero_extendqisi2
+ 340 0074 1344     		add	r3, r3, r2
+ 341 0076 8DF80330 		strb	r3, [sp, #3]
+ 188:../src/pwr_save.c **** 
+ 189:../src/pwr_save.c **** 		// set counters back
+ 190:../src/pwr_save.c **** 		packet_tx_set_current_counters(&timers);
+ 342              		.loc 1 190 0
+ 343 007a 6846     		mov	r0, sp
+ 344 007c FFF7FEFF 		bl	packet_tx_set_current_counters
+ 345              	.LVL12:
+ 191:../src/pwr_save.c **** 
+ 192:../src/pwr_save.c **** 		break;
+ 193:../src/pwr_save.c **** 
+ 194:../src/pwr_save.c **** 	// something is screwed horribly as in all other modes a micro shall not be placed in STOP2 mode
+ 195:../src/pwr_save.c **** 	default:
+ 196:../src/pwr_save.c **** 		break;
+ 197:../src/pwr_save.c **** 	}
+ 198:../src/pwr_save.c **** }
+ 346              		.loc 1 198 0
+ 347 0080 03B0     		add	sp, sp, #12
+ 348              		.cfi_def_cfa_offset 4
+ 349              		@ sp needed
+ 350 0082 5DF804FB 		ldr	pc, [sp], #4
+ 351              	.L30:
+ 352 0086 00BF     		.align	2
+ 353              	.L29:
+ 354 0088 00280040 		.word	1073752064
+ 355 008c 00000000 		.word	.LANCHOR0
+ 356 0090 89888888 		.word	-2004318071
+ 357              		.cfi_endproc
+ 358              	.LFE394:
+ 360              		.section	.text.pwr_save_switch_mode_to_c0,"ax",%progbits
+ 361              		.align	1
+ 362              		.global	pwr_save_switch_mode_to_c0
+ 363              		.syntax unified
+ 364              		.thumb
+ 365              		.thumb_func
+ 366              		.fpu fpv4-sp-d16
+ 368              	pwr_save_switch_mode_to_c0:
+ 369              	.LFB395:
+ 199:../src/pwr_save.c **** 
+ 200:../src/pwr_save.c **** int pwr_save_switch_mode_to_c0(void) {
+ 370              		.loc 1 200 0
+ 371              		.cfi_startproc
+ 372              		@ args = 0, pretend = 0, frame = 0
+ 373              		@ frame_needed = 0, uses_anonymous_args = 0
+ 374 0000 08B5     		push	{r3, lr}
+ 375              		.cfi_def_cfa_offset 8
+ 376              		.cfi_offset 3, -8
+ 377              		.cfi_offset 14, -4
+ 201:../src/pwr_save.c **** 
+ 202:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C0_STATE) {
+ 378              		.loc 1 202 0
+ 379 0002 114B     		ldr	r3, .L35
+ 380 0004 1B6D     		ldr	r3, [r3, #80]
+ 381 0006 03F47F73 		and	r3, r3, #1020
+ 382 000a 042B     		cmp	r3, #4
+ 383 000c 19D0     		beq	.L33
+ 384              	.LBB58:
+ 385              	.LBB59:
+ 386              		.file 2 "../include/io.h"
+   1:../include/io.h **** /*
+   2:../include/io.h ****  * io.h
+   3:../include/io.h ****  *
+   4:../include/io.h ****  *  Created on: 11.06.2020
+   5:../include/io.h ****  *      Author: mateusz
+   6:../include/io.h ****  */
+   7:../include/io.h **** 
+   8:../include/io.h **** #ifndef IO_H_
+   9:../include/io.h **** #define IO_H_
+  10:../include/io.h **** 
+  11:../include/io.h **** #ifdef STM32F10X_MD_VL
+  12:../include/io.h **** #include <stm32f10x.h>
+  13:../include/io.h **** #endif
+  14:../include/io.h **** #ifdef STM32L471xx
+  15:../include/io.h **** #include <stm32l4xx.h>
+  16:../include/io.h **** #endif
+  17:../include/io.h **** 
+  18:../include/io.h **** void io_oc_init(void);
+  19:../include/io.h **** void io_oc_output_low(void);
+  20:../include/io.h **** void io_oc_output_hiz(void);
+  21:../include/io.h **** 
+  22:../include/io.h **** void io_ext_watchdog_config(void);
+  23:../include/io.h **** void io_ext_watchdog_service(void);
+  24:../include/io.h **** 
+  25:../include/io.h **** 
+  26:../include/io.h **** inline void io_5v_isol_sw___cntrl_vbat_s_enable(void) {
+  27:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VS
+  28:../include/io.h **** 	GPIOB->BSRR |= GPIO_BSRR_BS8;
+ 387              		.loc 2 28 0
+ 388 000e 0F4A     		ldr	r2, .L35+4
+ 389 0010 9369     		ldr	r3, [r2, #24]
+ 390 0012 43F48073 		orr	r3, r3, #256
+ 391 0016 9361     		str	r3, [r2, #24]
+ 392              	.LBE59:
+ 393              	.LBE58:
+ 394              	.LBB60:
+ 395              	.LBB61:
+  29:../include/io.h **** }
+  30:../include/io.h **** inline void io_5v_isol_sw___cntrl_vbat_s_disable(void) {
+  31:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VS
+  32:../include/io.h **** 	GPIOB->BSRR |= GPIO_BSRR_BR8;
+  33:../include/io.h **** }
+  34:../include/io.h **** 
+  35:../include/io.h **** inline void io_12v_sw___cntrl_vbat_g_enable(void) {
+  36:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VG
+  37:../include/io.h **** 	GPIOA->BSRR |= GPIO_BSRR_BS6;
+ 396              		.loc 2 37 0
+ 397 0018 4FF09042 		mov	r2, #1207959552
+ 398 001c 9369     		ldr	r3, [r2, #24]
+ 399 001e 43F04003 		orr	r3, r3, #64
+ 400 0022 9361     		str	r3, [r2, #24]
+ 401              	.LBE61:
+ 402              	.LBE60:
+ 203:../src/pwr_save.c **** 		return 0;
+ 204:../src/pwr_save.c **** 	}
+ 205:../src/pwr_save.c **** 
+ 206:../src/pwr_save.c **** 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+ 207:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+ 208:../src/pwr_save.c **** 
+ 209:../src/pwr_save.c **** 	// turn ON +5V_R and VBATT_SW_R
+ 210:../src/pwr_save.c **** 	io___cntrl_vbat_r_enable();
+ 211:../src/pwr_save.c **** 
+ 212:../src/pwr_save.c **** 	// turn ON +4V_G
+ 213:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_enable();
+ 214:../src/pwr_save.c **** 
+ 215:../src/pwr_save.c **** 	// unlock access to backup registers
+ 216:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 403              		.loc 1 216 0
+ 404 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 405              	.LVL13:
+ 217:../src/pwr_save.c **** 
+ 218:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 219:../src/pwr_save.c **** 	REGISTER &= 0xFFFFFFFF ^ ALL_STATES_BITMASK;
+ 406              		.loc 1 219 0
+ 407 0028 074B     		ldr	r3, .L35
+ 408 002a 1A6D     		ldr	r2, [r3, #80]
+ 409 002c 22F47F72 		bic	r2, r2, #1020
+ 410 0030 1A65     		str	r2, [r3, #80]
+ 220:../src/pwr_save.c **** 
+ 221:../src/pwr_save.c **** 	// set for C0 mode
+ 222:../src/pwr_save.c **** 	REGISTER |= IN_C0_STATE;
+ 411              		.loc 1 222 0
+ 412 0032 1A6D     		ldr	r2, [r3, #80]
+ 413 0034 42F00402 		orr	r2, r2, #4
+ 414 0038 1A65     		str	r2, [r3, #80]
+ 223:../src/pwr_save.c **** 
+ 224:../src/pwr_save.c **** 	// lock access to backup
+ 225:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 415              		.loc 1 225 0
+ 416 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 417              	.LVL14:
+ 226:../src/pwr_save.c **** 
+ 227:../src/pwr_save.c **** 	return 1;
+ 418              		.loc 1 227 0
+ 419 003e 0120     		movs	r0, #1
+ 420              	.L31:
+ 228:../src/pwr_save.c **** 
+ 229:../src/pwr_save.c **** }
+ 421              		.loc 1 229 0
+ 422 0040 08BD     		pop	{r3, pc}
+ 423              	.L33:
+ 203:../src/pwr_save.c **** 	}
+ 424              		.loc 1 203 0
+ 425 0042 0020     		movs	r0, #0
+ 426 0044 FCE7     		b	.L31
+ 427              	.L36:
+ 428 0046 00BF     		.align	2
+ 429              	.L35:
+ 430 0048 00280040 		.word	1073752064
+ 431 004c 00040048 		.word	1207960576
+ 432              		.cfi_endproc
+ 433              	.LFE395:
+ 435              		.section	.text.pwr_save_switch_mode_to_c1,"ax",%progbits
+ 436              		.align	1
+ 437              		.global	pwr_save_switch_mode_to_c1
+ 438              		.syntax unified
+ 439              		.thumb
+ 440              		.thumb_func
+ 441              		.fpu fpv4-sp-d16
+ 443              	pwr_save_switch_mode_to_c1:
+ 444              	.LFB396:
+ 230:../src/pwr_save.c **** 
+ 231:../src/pwr_save.c **** // in HW-RevB this will disable external VHF radio!!
+ 232:../src/pwr_save.c **** int pwr_save_switch_mode_to_c1(void) {
+ 445              		.loc 1 232 0
+ 446              		.cfi_startproc
+ 447              		@ args = 0, pretend = 0, frame = 0
+ 448              		@ frame_needed = 0, uses_anonymous_args = 0
+ 449 0000 08B5     		push	{r3, lr}
+ 450              		.cfi_def_cfa_offset 8
+ 451              		.cfi_offset 3, -8
+ 452              		.cfi_offset 14, -4
+ 233:../src/pwr_save.c **** 
+ 234:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C1_STATE) {
+ 453              		.loc 1 234 0
+ 454 0002 114B     		ldr	r3, .L41
+ 455 0004 1B6D     		ldr	r3, [r3, #80]
+ 456 0006 03F47F73 		and	r3, r3, #1020
+ 457 000a 082B     		cmp	r3, #8
+ 458 000c 19D0     		beq	.L39
+ 459              	.LBB62:
+ 460              	.LBB63:
+  28:../include/io.h **** }
+ 461              		.loc 2 28 0
+ 462 000e 0F4A     		ldr	r2, .L41+4
+ 463 0010 9369     		ldr	r3, [r2, #24]
+ 464 0012 43F48073 		orr	r3, r3, #256
+ 465 0016 9361     		str	r3, [r2, #24]
+ 466              	.LBE63:
+ 467              	.LBE62:
+ 468              	.LBB64:
+ 469              	.LBB65:
+  38:../include/io.h **** 
+  39:../include/io.h **** }
+  40:../include/io.h **** inline void io_12v_sw___cntrl_vbat_g_disable(void) {
+  41:../include/io.h **** 	// ParaMETEO - UC_CNTRL_VG
+  42:../include/io.h **** 	GPIOA->BSRR |= GPIO_BSRR_BR6;
+ 470              		.loc 2 42 0
+ 471 0018 4FF09042 		mov	r2, #1207959552
+ 472 001c 9369     		ldr	r3, [r2, #24]
+ 473 001e 43F48003 		orr	r3, r3, #4194304
+ 474 0022 9361     		str	r3, [r2, #24]
+ 475              	.LBE65:
+ 476              	.LBE64:
+ 235:../src/pwr_save.c **** 		return 0;
+ 236:../src/pwr_save.c **** 	}
+ 237:../src/pwr_save.c **** 
+ 238:../src/pwr_save.c **** 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+ 239:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+ 240:../src/pwr_save.c **** 
+ 241:../src/pwr_save.c **** 	// turn ON +5V_R and VBATT_SW_R
+ 242:../src/pwr_save.c **** 	io___cntrl_vbat_r_enable();
+ 243:../src/pwr_save.c **** 
+ 244:../src/pwr_save.c **** 	// turn OFF +4V_G
+ 245:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_disable();
+ 246:../src/pwr_save.c **** 
+ 247:../src/pwr_save.c **** 	// unlock access to backup registers
+ 248:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 477              		.loc 1 248 0
+ 478 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 479              	.LVL15:
+ 249:../src/pwr_save.c **** 
+ 250:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 251:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 480              		.loc 1 251 0
+ 481 0028 074B     		ldr	r3, .L41
+ 482 002a 1A6D     		ldr	r2, [r3, #80]
+ 483 002c 22F47F72 		bic	r2, r2, #1020
+ 484 0030 1A65     		str	r2, [r3, #80]
+ 252:../src/pwr_save.c **** 
+ 253:../src/pwr_save.c **** 	// set for C0 mode
+ 254:../src/pwr_save.c **** 	REGISTER |= IN_C1_STATE;
+ 485              		.loc 1 254 0
+ 486 0032 1A6D     		ldr	r2, [r3, #80]
+ 487 0034 42F00802 		orr	r2, r2, #8
+ 488 0038 1A65     		str	r2, [r3, #80]
+ 255:../src/pwr_save.c **** 
+ 256:../src/pwr_save.c **** 	// lock access to backup
+ 257:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 489              		.loc 1 257 0
+ 490 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 491              	.LVL16:
+ 258:../src/pwr_save.c **** 
+ 259:../src/pwr_save.c **** 	return 1;
+ 492              		.loc 1 259 0
+ 493 003e 0120     		movs	r0, #1
+ 494              	.L37:
+ 260:../src/pwr_save.c **** }
+ 495              		.loc 1 260 0
+ 496 0040 08BD     		pop	{r3, pc}
+ 497              	.L39:
+ 235:../src/pwr_save.c **** 	}
+ 498              		.loc 1 235 0
+ 499 0042 0020     		movs	r0, #0
+ 500 0044 FCE7     		b	.L37
+ 501              	.L42:
+ 502 0046 00BF     		.align	2
+ 503              	.L41:
+ 504 0048 00280040 		.word	1073752064
+ 505 004c 00040048 		.word	1207960576
+ 506              		.cfi_endproc
+ 507              	.LFE396:
+ 509              		.section	.text.pwr_save_switch_mode_to_c2,"ax",%progbits
+ 510              		.align	1
+ 511              		.global	pwr_save_switch_mode_to_c2
+ 512              		.syntax unified
+ 513              		.thumb
+ 514              		.thumb_func
+ 515              		.fpu fpv4-sp-d16
+ 517              	pwr_save_switch_mode_to_c2:
+ 518              	.LFB397:
+ 261:../src/pwr_save.c **** 
+ 262:../src/pwr_save.c **** // this mode is not avaliable in HW Revision B as internal radio
+ 263:../src/pwr_save.c **** // is powered from +5V_S and external one is switched on with the same
+ 264:../src/pwr_save.c **** // line which controls +4V_G
+ 265:../src/pwr_save.c **** void pwr_save_switch_mode_to_c2(void) {
+ 519              		.loc 1 265 0
+ 520              		.cfi_startproc
+ 521              		@ args = 0, pretend = 0, frame = 0
+ 522              		@ frame_needed = 0, uses_anonymous_args = 0
+ 523 0000 08B5     		push	{r3, lr}
+ 524              		.cfi_def_cfa_offset 8
+ 525              		.cfi_offset 3, -8
+ 526              		.cfi_offset 14, -4
+ 266:../src/pwr_save.c **** 
+ 267:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
+ 527              		.loc 1 267 0
+ 528 0002 0F4B     		ldr	r3, .L46
+ 529 0004 1B6D     		ldr	r3, [r3, #80]
+ 530 0006 03F47F73 		and	r3, r3, #1020
+ 531 000a 102B     		cmp	r3, #16
+ 532 000c 17D0     		beq	.L43
+ 533              	.LBB66:
+ 534              	.LBB67:
+  32:../include/io.h **** }
+ 535              		.loc 2 32 0
+ 536 000e 0D4A     		ldr	r2, .L46+4
+ 537 0010 9369     		ldr	r3, [r2, #24]
+ 538 0012 43F08073 		orr	r3, r3, #16777216
+ 539 0016 9361     		str	r3, [r2, #24]
+ 540              	.LBE67:
+ 541              	.LBE66:
+ 542              	.LBB68:
+ 543              	.LBB69:
+ 544              		.loc 2 42 0
+ 545 0018 4FF09042 		mov	r2, #1207959552
+ 546 001c 9369     		ldr	r3, [r2, #24]
+ 547 001e 43F48003 		orr	r3, r3, #4194304
+ 548 0022 9361     		str	r3, [r2, #24]
+ 549              	.LBE69:
+ 550              	.LBE68:
+ 268:../src/pwr_save.c **** 		return;
+ 269:../src/pwr_save.c **** 	}
+ 270:../src/pwr_save.c **** 
+ 271:../src/pwr_save.c **** 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+ 272:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_disable();
+ 273:../src/pwr_save.c **** 
+ 274:../src/pwr_save.c **** 	// turn ON +5V_R and VBATT_SW_R
+ 275:../src/pwr_save.c **** 	io___cntrl_vbat_r_enable();
+ 276:../src/pwr_save.c **** 
+ 277:../src/pwr_save.c **** 	// turn OFF +4V_G
+ 278:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_disable();
+ 279:../src/pwr_save.c **** 
+ 280:../src/pwr_save.c **** 	// unlock access to backup registers
+ 281:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 551              		.loc 1 281 0
+ 552 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 553              	.LVL17:
+ 282:../src/pwr_save.c **** 
+ 283:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 284:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 554              		.loc 1 284 0
+ 555 0028 054B     		ldr	r3, .L46
+ 556 002a 1A6D     		ldr	r2, [r3, #80]
+ 557 002c 22F47F72 		bic	r2, r2, #1020
+ 558 0030 1A65     		str	r2, [r3, #80]
+ 285:../src/pwr_save.c **** 
+ 286:../src/pwr_save.c **** 	// set for C2 mode
+ 287:../src/pwr_save.c **** 	REGISTER |= IN_C2_STATE;
+ 559              		.loc 1 287 0
+ 560 0032 1A6D     		ldr	r2, [r3, #80]
+ 561 0034 42F01002 		orr	r2, r2, #16
+ 562 0038 1A65     		str	r2, [r3, #80]
+ 288:../src/pwr_save.c **** 
+ 289:../src/pwr_save.c **** 	// lock access to backup
+ 290:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 563              		.loc 1 290 0
+ 564 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 565              	.LVL18:
+ 566              	.L43:
+ 291:../src/pwr_save.c **** 
+ 292:../src/pwr_save.c **** }
+ 567              		.loc 1 292 0
+ 568 003e 08BD     		pop	{r3, pc}
+ 569              	.L47:
+ 570              		.align	2
+ 571              	.L46:
+ 572 0040 00280040 		.word	1073752064
+ 573 0044 00040048 		.word	1207960576
+ 574              		.cfi_endproc
+ 575              	.LFE397:
+ 577              		.section	.text.pwr_save_switch_mode_to_c3,"ax",%progbits
+ 578              		.align	1
+ 579              		.global	pwr_save_switch_mode_to_c3
+ 580              		.syntax unified
+ 581              		.thumb
+ 582              		.thumb_func
+ 583              		.fpu fpv4-sp-d16
+ 585              	pwr_save_switch_mode_to_c3:
+ 586              	.LFB398:
+ 293:../src/pwr_save.c **** 
+ 294:../src/pwr_save.c **** void pwr_save_switch_mode_to_c3(void) {
+ 587              		.loc 1 294 0
+ 588              		.cfi_startproc
+ 589              		@ args = 0, pretend = 0, frame = 0
+ 590              		@ frame_needed = 0, uses_anonymous_args = 0
+ 591 0000 08B5     		push	{r3, lr}
+ 592              		.cfi_def_cfa_offset 8
+ 593              		.cfi_offset 3, -8
+ 594              		.cfi_offset 14, -4
+ 295:../src/pwr_save.c **** 
+ 296:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
+ 595              		.loc 1 296 0
+ 596 0002 0F4B     		ldr	r3, .L51
+ 597 0004 1B6D     		ldr	r3, [r3, #80]
+ 598 0006 03F47F73 		and	r3, r3, #1020
+ 599 000a 202B     		cmp	r3, #32
+ 600 000c 17D0     		beq	.L48
+ 601              	.LBB70:
+ 602              	.LBB71:
+  32:../include/io.h **** }
+ 603              		.loc 2 32 0
+ 604 000e 0D4A     		ldr	r2, .L51+4
+ 605 0010 9369     		ldr	r3, [r2, #24]
+ 606 0012 43F08073 		orr	r3, r3, #16777216
+ 607 0016 9361     		str	r3, [r2, #24]
+ 608              	.LBE71:
+ 609              	.LBE70:
+ 610              	.LBB72:
+ 611              	.LBB73:
+  37:../include/io.h **** 
+ 612              		.loc 2 37 0
+ 613 0018 4FF09042 		mov	r2, #1207959552
+ 614 001c 9369     		ldr	r3, [r2, #24]
+ 615 001e 43F04003 		orr	r3, r3, #64
+ 616 0022 9361     		str	r3, [r2, #24]
+ 617              	.LBE73:
+ 618              	.LBE72:
+ 297:../src/pwr_save.c **** 		return;
+ 298:../src/pwr_save.c **** 	}
+ 299:../src/pwr_save.c **** 
+ 300:../src/pwr_save.c **** 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+ 301:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_disable();
+ 302:../src/pwr_save.c **** 
+ 303:../src/pwr_save.c **** 	// turn ON +5V_R and VBATT_SW_R
+ 304:../src/pwr_save.c **** 	io___cntrl_vbat_r_enable();
+ 305:../src/pwr_save.c **** 
+ 306:../src/pwr_save.c **** 	// turn ON +4V_G
+ 307:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_enable();
+ 308:../src/pwr_save.c **** 
+ 309:../src/pwr_save.c **** 	// unlock access to backup registers
+ 310:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 619              		.loc 1 310 0
+ 620 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 621              	.LVL19:
+ 311:../src/pwr_save.c **** 
+ 312:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 313:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 622              		.loc 1 313 0
+ 623 0028 054B     		ldr	r3, .L51
+ 624 002a 1A6D     		ldr	r2, [r3, #80]
+ 625 002c 22F47F72 		bic	r2, r2, #1020
+ 626 0030 1A65     		str	r2, [r3, #80]
+ 314:../src/pwr_save.c **** 
+ 315:../src/pwr_save.c **** 	// set for C3 mode
+ 316:../src/pwr_save.c **** 	REGISTER |= IN_C3_STATE;
+ 627              		.loc 1 316 0
+ 628 0032 1A6D     		ldr	r2, [r3, #80]
+ 629 0034 42F02002 		orr	r2, r2, #32
+ 630 0038 1A65     		str	r2, [r3, #80]
+ 317:../src/pwr_save.c **** 
+ 318:../src/pwr_save.c **** 	// lock access to backup
+ 319:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 631              		.loc 1 319 0
+ 632 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 633              	.LVL20:
+ 634              	.L48:
+ 320:../src/pwr_save.c **** 
+ 321:../src/pwr_save.c **** }
+ 635              		.loc 1 321 0
+ 636 003e 08BD     		pop	{r3, pc}
+ 637              	.L52:
+ 638              		.align	2
+ 639              	.L51:
+ 640 0040 00280040 		.word	1073752064
+ 641 0044 00040048 		.word	1207960576
+ 642              		.cfi_endproc
+ 643              	.LFE398:
+ 645              		.section	.text.pwr_save_switch_mode_to_m4,"ax",%progbits
+ 646              		.align	1
+ 647              		.global	pwr_save_switch_mode_to_m4
+ 648              		.syntax unified
+ 649              		.thumb
+ 650              		.thumb_func
+ 651              		.fpu fpv4-sp-d16
+ 653              	pwr_save_switch_mode_to_m4:
+ 654              	.LFB399:
+ 322:../src/pwr_save.c **** 
+ 323:../src/pwr_save.c **** // in HW-RevB this will keep internal VHF radio module working!
+ 324:../src/pwr_save.c **** int pwr_save_switch_mode_to_m4(void) {
+ 655              		.loc 1 324 0
+ 656              		.cfi_startproc
+ 657              		@ args = 0, pretend = 0, frame = 0
+ 658              		@ frame_needed = 0, uses_anonymous_args = 0
+ 659 0000 08B5     		push	{r3, lr}
+ 660              		.cfi_def_cfa_offset 8
+ 661              		.cfi_offset 3, -8
+ 662              		.cfi_offset 14, -4
+ 325:../src/pwr_save.c **** 
+ 326:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+ 663              		.loc 1 326 0
+ 664 0002 114B     		ldr	r3, .L57
+ 665 0004 1B6D     		ldr	r3, [r3, #80]
+ 666 0006 03F47F73 		and	r3, r3, #1020
+ 667 000a 402B     		cmp	r3, #64
+ 668 000c 19D0     		beq	.L55
+ 669              	.LBB74:
+ 670              	.LBB75:
+  28:../include/io.h **** }
+ 671              		.loc 2 28 0
+ 672 000e 0F4A     		ldr	r2, .L57+4
+ 673 0010 9369     		ldr	r3, [r2, #24]
+ 674 0012 43F48073 		orr	r3, r3, #256
+ 675 0016 9361     		str	r3, [r2, #24]
+ 676              	.LBE75:
+ 677              	.LBE74:
+ 678              	.LBB76:
+ 679              	.LBB77:
+ 680              		.loc 2 42 0
+ 681 0018 4FF09042 		mov	r2, #1207959552
+ 682 001c 9369     		ldr	r3, [r2, #24]
+ 683 001e 43F48003 		orr	r3, r3, #4194304
+ 684 0022 9361     		str	r3, [r2, #24]
+ 685              	.LBE77:
+ 686              	.LBE76:
+ 327:../src/pwr_save.c **** 		return 0;
+ 328:../src/pwr_save.c **** 	}
+ 329:../src/pwr_save.c **** 
+ 330:../src/pwr_save.c **** 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+ 331:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_enable();
+ 332:../src/pwr_save.c **** 
+ 333:../src/pwr_save.c **** 	// turn OFF +5V_R and VBATT_SW_R
+ 334:../src/pwr_save.c **** 	io___cntrl_vbat_r_disable();
+ 335:../src/pwr_save.c **** 
+ 336:../src/pwr_save.c **** 	// turn OFF +4V_G
+ 337:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_disable();
+ 338:../src/pwr_save.c **** 
+ 339:../src/pwr_save.c **** 	// unlock access to backup registers
+ 340:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 687              		.loc 1 340 0
+ 688 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 689              	.LVL21:
+ 341:../src/pwr_save.c **** 
+ 342:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 343:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 690              		.loc 1 343 0
+ 691 0028 074B     		ldr	r3, .L57
+ 692 002a 1A6D     		ldr	r2, [r3, #80]
+ 693 002c 22F47F72 		bic	r2, r2, #1020
+ 694 0030 1A65     		str	r2, [r3, #80]
+ 344:../src/pwr_save.c **** 
+ 345:../src/pwr_save.c **** 	// set for C3 mode
+ 346:../src/pwr_save.c **** 	REGISTER |= IN_M4_STATE;
+ 695              		.loc 1 346 0
+ 696 0032 1A6D     		ldr	r2, [r3, #80]
+ 697 0034 42F04002 		orr	r2, r2, #64
+ 698 0038 1A65     		str	r2, [r3, #80]
+ 347:../src/pwr_save.c **** 
+ 348:../src/pwr_save.c **** 	// lock access to backup
+ 349:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 699              		.loc 1 349 0
+ 700 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 701              	.LVL22:
+ 350:../src/pwr_save.c **** 
+ 351:../src/pwr_save.c **** 	return 1;
+ 702              		.loc 1 351 0
+ 703 003e 0120     		movs	r0, #1
+ 704              	.L53:
+ 352:../src/pwr_save.c **** }
+ 705              		.loc 1 352 0
+ 706 0040 08BD     		pop	{r3, pc}
+ 707              	.L55:
+ 327:../src/pwr_save.c **** 	}
+ 708              		.loc 1 327 0
+ 709 0042 0020     		movs	r0, #0
+ 710 0044 FCE7     		b	.L53
+ 711              	.L58:
+ 712 0046 00BF     		.align	2
+ 713              	.L57:
+ 714 0048 00280040 		.word	1073752064
+ 715 004c 00040048 		.word	1207960576
+ 716              		.cfi_endproc
+ 717              	.LFE399:
+ 719              		.section	.text.pwr_save_switch_mode_to_i5,"ax",%progbits
+ 720              		.align	1
+ 721              		.global	pwr_save_switch_mode_to_i5
+ 722              		.syntax unified
+ 723              		.thumb
+ 724              		.thumb_func
+ 725              		.fpu fpv4-sp-d16
+ 727              	pwr_save_switch_mode_to_i5:
+ 728              	.LFB400:
+ 353:../src/pwr_save.c **** 
+ 354:../src/pwr_save.c **** void pwr_save_switch_mode_to_i5(void) {
+ 729              		.loc 1 354 0
+ 730              		.cfi_startproc
+ 731              		@ args = 0, pretend = 0, frame = 0
+ 732              		@ frame_needed = 0, uses_anonymous_args = 0
+ 733 0000 08B5     		push	{r3, lr}
+ 734              		.cfi_def_cfa_offset 8
+ 735              		.cfi_offset 3, -8
+ 736              		.cfi_offset 14, -4
+ 355:../src/pwr_save.c **** 
+ 356:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
+ 737              		.loc 1 356 0
+ 738 0002 0F4B     		ldr	r3, .L62
+ 739 0004 1B6D     		ldr	r3, [r3, #80]
+ 740 0006 03F47F73 		and	r3, r3, #1020
+ 741 000a 802B     		cmp	r3, #128
+ 742 000c 17D0     		beq	.L59
+ 743              	.LBB78:
+ 744              	.LBB79:
+  32:../include/io.h **** }
+ 745              		.loc 2 32 0
+ 746 000e 0D4A     		ldr	r2, .L62+4
+ 747 0010 9369     		ldr	r3, [r2, #24]
+ 748 0012 43F08073 		orr	r3, r3, #16777216
+ 749 0016 9361     		str	r3, [r2, #24]
+ 750              	.LBE79:
+ 751              	.LBE78:
+ 752              	.LBB80:
+ 753              	.LBB81:
+ 754              		.loc 2 42 0
+ 755 0018 4FF09042 		mov	r2, #1207959552
+ 756 001c 9369     		ldr	r3, [r2, #24]
+ 757 001e 43F48003 		orr	r3, r3, #4194304
+ 758 0022 9361     		str	r3, [r2, #24]
+ 759              	.LBE81:
+ 760              	.LBE80:
+ 357:../src/pwr_save.c **** 		return;
+ 358:../src/pwr_save.c **** 	}
+ 359:../src/pwr_save.c **** 
+ 360:../src/pwr_save.c **** 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+ 361:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_disable();
+ 362:../src/pwr_save.c **** 
+ 363:../src/pwr_save.c **** 	// turn OFF +5V_R and VBATT_SW_R
+ 364:../src/pwr_save.c **** 	io___cntrl_vbat_r_disable();
+ 365:../src/pwr_save.c **** 
+ 366:../src/pwr_save.c **** 	// turn OFF +4V_G
+ 367:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_disable();
+ 368:../src/pwr_save.c **** 
+ 369:../src/pwr_save.c **** 	// unlock access to backup registers
+ 370:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 761              		.loc 1 370 0
+ 762 0024 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 763              	.LVL23:
+ 371:../src/pwr_save.c **** 
+ 372:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 373:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 764              		.loc 1 373 0
+ 765 0028 054B     		ldr	r3, .L62
+ 766 002a 1A6D     		ldr	r2, [r3, #80]
+ 767 002c 22F47F72 		bic	r2, r2, #1020
+ 768 0030 1A65     		str	r2, [r3, #80]
+ 374:../src/pwr_save.c **** 
+ 375:../src/pwr_save.c **** 	// set for C3 mode
+ 376:../src/pwr_save.c **** 	REGISTER |= IN_I5_STATE;
+ 769              		.loc 1 376 0
+ 770 0032 1A6D     		ldr	r2, [r3, #80]
+ 771 0034 42F08002 		orr	r2, r2, #128
+ 772 0038 1A65     		str	r2, [r3, #80]
+ 377:../src/pwr_save.c **** 
+ 378:../src/pwr_save.c **** 	// lock access to backup
+ 379:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 773              		.loc 1 379 0
+ 774 003a FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 775              	.LVL24:
+ 776              	.L59:
+ 380:../src/pwr_save.c **** 
+ 381:../src/pwr_save.c **** }
+ 777              		.loc 1 381 0
+ 778 003e 08BD     		pop	{r3, pc}
+ 779              	.L63:
+ 780              		.align	2
+ 781              	.L62:
+ 782 0040 00280040 		.word	1073752064
+ 783 0044 00040048 		.word	1207960576
+ 784              		.cfi_endproc
+ 785              	.LFE400:
+ 787              		.section	.text.pwr_save_switch_mode_to_l6,"ax",%progbits
+ 788              		.align	1
+ 789              		.global	pwr_save_switch_mode_to_l6
+ 790              		.syntax unified
+ 791              		.thumb
+ 792              		.thumb_func
+ 793              		.fpu fpv4-sp-d16
+ 795              	pwr_save_switch_mode_to_l6:
+ 796              	.LFB401:
+ 382:../src/pwr_save.c **** 
+ 383:../src/pwr_save.c **** // this will keep external VHF radio working in HW-RevB
+ 384:../src/pwr_save.c **** void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
+ 797              		.loc 1 384 0
+ 798              		.cfi_startproc
+ 799              		@ args = 0, pretend = 0, frame = 0
+ 800              		@ frame_needed = 0, uses_anonymous_args = 0
+ 801              	.LVL25:
+ 385:../src/pwr_save.c **** 
+ 386:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
+ 802              		.loc 1 386 0
+ 803 0000 194B     		ldr	r3, .L70
+ 804 0002 1B6D     		ldr	r3, [r3, #80]
+ 805 0004 03F47F73 		and	r3, r3, #1020
+ 806 0008 B3F5807F 		cmp	r3, #256
+ 807 000c 2AD0     		beq	.L67
+ 384:../src/pwr_save.c **** 
+ 808              		.loc 1 384 0
+ 809 000e 10B5     		push	{r4, lr}
+ 810              		.cfi_def_cfa_offset 8
+ 811              		.cfi_offset 4, -8
+ 812              		.cfi_offset 14, -4
+ 813 0010 0446     		mov	r4, r0
+ 814              	.LBB82:
+ 815              	.LBB83:
+  32:../include/io.h **** }
+ 816              		.loc 2 32 0
+ 817 0012 164A     		ldr	r2, .L70+4
+ 818 0014 9369     		ldr	r3, [r2, #24]
+ 819 0016 43F08073 		orr	r3, r3, #16777216
+ 820 001a 9361     		str	r3, [r2, #24]
+ 821              	.LBE83:
+ 822              	.LBE82:
+ 823              	.LBB84:
+ 824              	.LBB85:
+  37:../include/io.h **** 
+ 825              		.loc 2 37 0
+ 826 001c 4FF09042 		mov	r2, #1207959552
+ 827 0020 9369     		ldr	r3, [r2, #24]
+ 828 0022 43F04003 		orr	r3, r3, #64
+ 829 0026 9361     		str	r3, [r2, #24]
+ 830              	.LBE85:
+ 831              	.LBE84:
+ 387:../src/pwr_save.c **** 		return;
+ 388:../src/pwr_save.c **** 	}
+ 389:../src/pwr_save.c **** 
+ 390:../src/pwr_save.c **** 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+ 391:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_disable();
+ 392:../src/pwr_save.c **** 
+ 393:../src/pwr_save.c **** 	// turn OFF +5V_R and VBATT_SW_R
+ 394:../src/pwr_save.c **** 	io___cntrl_vbat_r_disable();
+ 395:../src/pwr_save.c **** 
+ 396:../src/pwr_save.c **** 	// turn ON +4V_G
+ 397:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_enable();
+ 398:../src/pwr_save.c **** 
+ 399:../src/pwr_save.c **** 	// unlock access to backup registers
+ 400:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 832              		.loc 1 400 0
+ 833 0028 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 834              	.LVL26:
+ 401:../src/pwr_save.c **** 
+ 402:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 403:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 835              		.loc 1 403 0
+ 836 002c 0E4B     		ldr	r3, .L70
+ 837 002e 1A6D     		ldr	r2, [r3, #80]
+ 838 0030 22F47F72 		bic	r2, r2, #1020
+ 839 0034 1A65     		str	r2, [r3, #80]
+ 404:../src/pwr_save.c **** 
+ 405:../src/pwr_save.c **** 	// set for C3 mode
+ 406:../src/pwr_save.c **** 	REGISTER |= IN_L6_STATE;
+ 840              		.loc 1 406 0
+ 841 0036 1A6D     		ldr	r2, [r3, #80]
+ 842 0038 42F48072 		orr	r2, r2, #256
+ 843 003c 1A65     		str	r2, [r3, #80]
+ 407:../src/pwr_save.c **** 
+ 408:../src/pwr_save.c **** 	// lock access to backup
+ 409:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 844              		.loc 1 409 0
+ 845 003e FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 846              	.LVL27:
+ 410:../src/pwr_save.c **** 
+ 411:../src/pwr_save.c **** 	system_clock_configure_auto_wakeup_l4(sleep_time);
+ 847              		.loc 1 411 0
+ 848 0042 2046     		mov	r0, r4
+ 849 0044 FFF7FEFF 		bl	system_clock_configure_auto_wakeup_l4
+ 850              	.LVL28:
+ 412:../src/pwr_save.c **** 
+ 413:../src/pwr_save.c **** 	// save how long the micro will sleep - required for handling wakeup event
+ 414:../src/pwr_save.c **** 	pwr_save_sleep_time_in_seconds = sleep_time;
+ 851              		.loc 1 414 0
+ 852 0048 094B     		ldr	r3, .L70+8
+ 853 004a 1C80     		strh	r4, [r3]	@ movhi
+ 854              	.LVL29:
+ 855              	.LBB86:
+ 856              	.LBB87:
+ 857              		.file 3 "../include/LedConfig.h"
+   1:../include/LedConfig.h **** /*
+   2:../include/LedConfig.h ****  * LedConfig.h
+   3:../include/LedConfig.h ****  *
+   4:../include/LedConfig.h ****  *  Created on: 05.07.2017
+   5:../include/LedConfig.h ****  *      Author: mateusz
+   6:../include/LedConfig.h ****  */
+   7:../include/LedConfig.h **** 
+   8:../include/LedConfig.h **** #ifndef LEDCONFIG_H_
+   9:../include/LedConfig.h **** #define LEDCONFIG_H_
+  10:../include/LedConfig.h **** 
+  11:../include/LedConfig.h **** // PC8 - LED1 - upper
+  12:../include/LedConfig.h **** // PC9 - LED2 - lower
+  13:../include/LedConfig.h **** 
+  14:../include/LedConfig.h **** #ifdef STM32F10X_MD_VL
+  15:../include/LedConfig.h **** #include <stm32f10x.h>
+  16:../include/LedConfig.h **** #endif
+  17:../include/LedConfig.h **** #ifdef STM32L471xx
+  18:../include/LedConfig.h **** #include <stm32l4xx.h>
+  19:../include/LedConfig.h **** #include <stm32l4xx_ll_gpio.h>
+  20:../include/LedConfig.h **** #endif
+  21:../include/LedConfig.h **** 
+  22:../include/LedConfig.h **** #include <stdint.h>
+  23:../include/LedConfig.h **** #include <stdbool.h>
+  24:../include/LedConfig.h **** 
+  25:../include/LedConfig.h **** #define BLINK_DURATION_MSEC 		20 * BLINK_MSEC_PER_SVC_CALL
+  26:../include/LedConfig.h **** #define BLINK_MSEC_PER_SVC_CALL 	10
+  27:../include/LedConfig.h **** 
+  28:../include/LedConfig.h **** /* C++ detection */
+  29:../include/LedConfig.h **** #ifdef __cplusplus
+  30:../include/LedConfig.h **** extern "C" {
+  31:../include/LedConfig.h **** #endif
+  32:../include/LedConfig.h **** 
+  33:../include/LedConfig.h **** extern uint8_t led_blinking_led2;
+  34:../include/LedConfig.h **** extern uint8_t led_blinking_led1;
+  35:../include/LedConfig.h **** 
+  36:../include/LedConfig.h **** void led_config(void);
+  37:../include/LedConfig.h **** void led_init(void);
+  38:../include/LedConfig.h **** void led_service_blink(void);
+  39:../include/LedConfig.h **** 
+  40:../include/LedConfig.h **** #ifdef STM32F10X_MD_VL
+  41:../include/LedConfig.h **** inline void led_control_led1_upper(bool _in) {
+  42:../include/LedConfig.h **** 	if (_in == true) {
+  43:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS8;
+  44:../include/LedConfig.h **** 	}
+  45:../include/LedConfig.h **** 	else {
+  46:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
+  47:../include/LedConfig.h **** 	}
+  48:../include/LedConfig.h **** }
+  49:../include/LedConfig.h **** 
+  50:../include/LedConfig.h **** inline void led_control_led2_bottom(bool _in) {
+  51:../include/LedConfig.h **** 	if (_in == true) {
+  52:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS9;
+  53:../include/LedConfig.h **** 	}
+  54:../include/LedConfig.h **** 	else {
+  55:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+  56:../include/LedConfig.h **** 	}
+  57:../include/LedConfig.h **** }
+  58:../include/LedConfig.h **** 
+  59:../include/LedConfig.h **** inline void led_flip_led1_upper(void) {
+  60:../include/LedConfig.h **** 	if ((GPIOC->ODR & GPIO_ODR_ODR8)  == GPIO_ODR_ODR8) {
+  61:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
+  62:../include/LedConfig.h **** 	}
+  63:../include/LedConfig.h **** 	else {
+  64:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS8;
+  65:../include/LedConfig.h **** 	}
+  66:../include/LedConfig.h **** }
+  67:../include/LedConfig.h **** 
+  68:../include/LedConfig.h **** inline void led_flip_led2_bottom(void) {
+  69:../include/LedConfig.h **** 	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
+  70:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+  71:../include/LedConfig.h **** 	}
+  72:../include/LedConfig.h **** 	else {
+  73:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS9;
+  74:../include/LedConfig.h **** 	}
+  75:../include/LedConfig.h **** }
+  76:../include/LedConfig.h **** 
+  77:../include/LedConfig.h **** inline void led_blink_led1_upper(void) {
+  78:../include/LedConfig.h **** 	led_blinking_led1 = BLINK_DURATION_MSEC;
+  79:../include/LedConfig.h **** 
+  80:../include/LedConfig.h **** 	led_flip_led1_upper();
+  81:../include/LedConfig.h **** }
+  82:../include/LedConfig.h **** 
+  83:../include/LedConfig.h **** inline void led_blink_led2_botoom(void) {
+  84:../include/LedConfig.h **** 	led_blinking_led2 = BLINK_DURATION_MSEC;
+  85:../include/LedConfig.h **** 
+  86:../include/LedConfig.h **** 	led_flip_led2_bottom();
+  87:../include/LedConfig.h **** 
+  88:../include/LedConfig.h **** }
+  89:../include/LedConfig.h **** #endif
+  90:../include/LedConfig.h **** 
+  91:../include/LedConfig.h **** #ifdef STM32L471xx
+  92:../include/LedConfig.h **** inline void led_control_led1_upper(bool _in) {
+  93:../include/LedConfig.h **** 	if (_in == true) {
+  94:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS8;
+  95:../include/LedConfig.h **** 	}
+  96:../include/LedConfig.h **** 	else {
+  97:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
+ 858              		.loc 3 97 0
+ 859 004c 094B     		ldr	r3, .L70+12
+ 860 004e 9A69     		ldr	r2, [r3, #24]
+ 861 0050 42F08072 		orr	r2, r2, #16777216
+ 862 0054 9A61     		str	r2, [r3, #24]
+ 863              	.LVL30:
+ 864              	.LBE87:
+ 865              	.LBE86:
+ 866              	.LBB88:
+ 867              	.LBB89:
+  98:../include/LedConfig.h **** 	}
+  99:../include/LedConfig.h **** }
+ 100:../include/LedConfig.h **** 
+ 101:../include/LedConfig.h **** inline void led_control_led2_bottom(bool _in) {
+ 102:../include/LedConfig.h **** 	if (_in == true) {
+ 103:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS9;
+ 104:../include/LedConfig.h **** 	}
+ 105:../include/LedConfig.h **** 	else {
+ 106:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+ 868              		.loc 3 106 0
+ 869 0056 9A69     		ldr	r2, [r3, #24]
+ 870 0058 42F00072 		orr	r2, r2, #33554432
+ 871 005c 9A61     		str	r2, [r3, #24]
+ 872              	.LVL31:
+ 873              	.LBE89:
+ 874              	.LBE88:
+ 415:../src/pwr_save.c **** 
+ 416:../src/pwr_save.c **** 	// turn off leds to save power
+ 417:../src/pwr_save.c **** 	led_control_led1_upper(false);
+ 418:../src/pwr_save.c **** 	led_control_led2_bottom(false);
+ 419:../src/pwr_save.c **** 
+ 420:../src/pwr_save.c **** 	pwr_save_enter_stop2();
+ 875              		.loc 1 420 0
+ 876 005e FFF7FEFF 		bl	pwr_save_enter_stop2
+ 877              	.LVL32:
+ 421:../src/pwr_save.c **** 
+ 422:../src/pwr_save.c **** 
+ 423:../src/pwr_save.c **** }
+ 878              		.loc 1 423 0
+ 879 0062 10BD     		pop	{r4, pc}
+ 880              	.LVL33:
+ 881              	.L67:
+ 882              		.cfi_def_cfa_offset 0
+ 883              		.cfi_restore 4
+ 884              		.cfi_restore 14
+ 885 0064 7047     		bx	lr
+ 886              	.L71:
+ 887 0066 00BF     		.align	2
+ 888              	.L70:
+ 889 0068 00280040 		.word	1073752064
+ 890 006c 00040048 		.word	1207960576
+ 891 0070 00000000 		.word	.LANCHOR0
+ 892 0074 00080048 		.word	1207961600
+ 893              		.cfi_endproc
+ 894              	.LFE401:
+ 896              		.section	.text.pwr_save_switch_mode_to_l7,"ax",%progbits
+ 897              		.align	1
+ 898              		.global	pwr_save_switch_mode_to_l7
+ 899              		.syntax unified
+ 900              		.thumb
+ 901              		.thumb_func
+ 902              		.fpu fpv4-sp-d16
+ 904              	pwr_save_switch_mode_to_l7:
+ 905              	.LFB402:
+ 424:../src/pwr_save.c **** 
+ 425:../src/pwr_save.c **** void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+ 906              		.loc 1 425 0
+ 907              		.cfi_startproc
+ 908              		@ args = 0, pretend = 0, frame = 0
+ 909              		@ frame_needed = 0, uses_anonymous_args = 0
+ 910              	.LVL34:
+ 426:../src/pwr_save.c **** 
+ 427:../src/pwr_save.c **** 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+ 911              		.loc 1 427 0
+ 912 0000 194B     		ldr	r3, .L78
+ 913 0002 1B6D     		ldr	r3, [r3, #80]
+ 914 0004 03F47F73 		and	r3, r3, #1020
+ 915 0008 B3F5007F 		cmp	r3, #512
+ 916 000c 2AD0     		beq	.L75
+ 425:../src/pwr_save.c **** 
+ 917              		.loc 1 425 0
+ 918 000e 10B5     		push	{r4, lr}
+ 919              		.cfi_def_cfa_offset 8
+ 920              		.cfi_offset 4, -8
+ 921              		.cfi_offset 14, -4
+ 922 0010 0446     		mov	r4, r0
+ 923              	.LBB90:
+ 924              	.LBB91:
+  32:../include/io.h **** }
+ 925              		.loc 2 32 0
+ 926 0012 164A     		ldr	r2, .L78+4
+ 927 0014 9369     		ldr	r3, [r2, #24]
+ 928 0016 43F08073 		orr	r3, r3, #16777216
+ 929 001a 9361     		str	r3, [r2, #24]
+ 930              	.LBE91:
+ 931              	.LBE90:
+ 932              	.LBB92:
+ 933              	.LBB93:
+ 934              		.loc 2 42 0
+ 935 001c 4FF09042 		mov	r2, #1207959552
+ 936 0020 9369     		ldr	r3, [r2, #24]
+ 937 0022 43F48003 		orr	r3, r3, #4194304
+ 938 0026 9361     		str	r3, [r2, #24]
+ 939              	.LBE93:
+ 940              	.LBE92:
+ 428:../src/pwr_save.c **** 		return;
+ 429:../src/pwr_save.c **** 	}
+ 430:../src/pwr_save.c **** 
+ 431:../src/pwr_save.c **** 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
+ 432:../src/pwr_save.c **** 	io_5v_isol_sw___cntrl_vbat_s_disable();
+ 433:../src/pwr_save.c **** 
+ 434:../src/pwr_save.c **** 	// turn OFF +5V_R and VBATT_SW_R
+ 435:../src/pwr_save.c **** 	io___cntrl_vbat_r_disable();
+ 436:../src/pwr_save.c **** 
+ 437:../src/pwr_save.c **** 	// turn OFF +4V_G
+ 438:../src/pwr_save.c **** 	io_12v_sw___cntrl_vbat_g_disable();
+ 439:../src/pwr_save.c **** 
+ 440:../src/pwr_save.c **** 	// unlock access to backup registers
+ 441:../src/pwr_save.c **** 	pwr_save_unclock_rtc_backup_regs();
+ 941              		.loc 1 441 0
+ 942 0028 FFF7FEFF 		bl	pwr_save_unclock_rtc_backup_regs
+ 943              	.LVL35:
+ 442:../src/pwr_save.c **** 
+ 443:../src/pwr_save.c **** 	// clear all previous powersave indication bits
+ 444:../src/pwr_save.c **** 	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+ 944              		.loc 1 444 0
+ 945 002c 0E4B     		ldr	r3, .L78
+ 946 002e 1A6D     		ldr	r2, [r3, #80]
+ 947 0030 22F47F72 		bic	r2, r2, #1020
+ 948 0034 1A65     		str	r2, [r3, #80]
+ 445:../src/pwr_save.c **** 
+ 446:../src/pwr_save.c **** 	// set for C3 mode
+ 447:../src/pwr_save.c **** 	REGISTER |= IN_L7_STATE;
+ 949              		.loc 1 447 0
+ 950 0036 1A6D     		ldr	r2, [r3, #80]
+ 951 0038 42F40072 		orr	r2, r2, #512
+ 952 003c 1A65     		str	r2, [r3, #80]
+ 448:../src/pwr_save.c **** 
+ 449:../src/pwr_save.c **** 	// lock access to backup
+ 450:../src/pwr_save.c **** 	pwr_save_lock_rtc_backup_regs();
+ 953              		.loc 1 450 0
+ 954 003e FFF7FEFF 		bl	pwr_save_lock_rtc_backup_regs
+ 955              	.LVL36:
+ 451:../src/pwr_save.c **** 
+ 452:../src/pwr_save.c **** 	// configure how long micro should sleep
+ 453:../src/pwr_save.c **** 	system_clock_configure_auto_wakeup_l4(sleep_time);
+ 956              		.loc 1 453 0
+ 957 0042 2046     		mov	r0, r4
+ 958 0044 FFF7FEFF 		bl	system_clock_configure_auto_wakeup_l4
+ 959              	.LVL37:
+ 454:../src/pwr_save.c **** 
+ 455:../src/pwr_save.c **** 	// save how long the micro will sleep - required for handling wakeup event
+ 456:../src/pwr_save.c **** 	pwr_save_sleep_time_in_seconds = sleep_time;
+ 960              		.loc 1 456 0
+ 961 0048 094B     		ldr	r3, .L78+8
+ 962 004a 1C80     		strh	r4, [r3]	@ movhi
+ 963              	.LVL38:
+ 964              	.LBB94:
+ 965              	.LBB95:
+  97:../include/LedConfig.h **** 	}
+ 966              		.loc 3 97 0
+ 967 004c 094B     		ldr	r3, .L78+12
+ 968 004e 9A69     		ldr	r2, [r3, #24]
+ 969 0050 42F08072 		orr	r2, r2, #16777216
+ 970 0054 9A61     		str	r2, [r3, #24]
+ 971              	.LVL39:
+ 972              	.LBE95:
+ 973              	.LBE94:
+ 974              	.LBB96:
+ 975              	.LBB97:
+ 976              		.loc 3 106 0
+ 977 0056 9A69     		ldr	r2, [r3, #24]
+ 978 0058 42F00072 		orr	r2, r2, #33554432
+ 979 005c 9A61     		str	r2, [r3, #24]
+ 980              	.LVL40:
+ 981              	.LBE97:
+ 982              	.LBE96:
+ 457:../src/pwr_save.c **** 
+ 458:../src/pwr_save.c **** 	// turn off leds to save power
+ 459:../src/pwr_save.c **** 	led_control_led1_upper(false);
+ 460:../src/pwr_save.c **** 	led_control_led2_bottom(false);
+ 461:../src/pwr_save.c **** 
+ 462:../src/pwr_save.c **** 	pwr_save_enter_stop2();
+ 983              		.loc 1 462 0
+ 984 005e FFF7FEFF 		bl	pwr_save_enter_stop2
+ 985              	.LVL41:
+ 463:../src/pwr_save.c **** }
+ 986              		.loc 1 463 0
+ 987 0062 10BD     		pop	{r4, pc}
+ 988              	.LVL42:
+ 989              	.L75:
+ 990              		.cfi_def_cfa_offset 0
+ 991              		.cfi_restore 4
+ 992              		.cfi_restore 14
+ 993 0064 7047     		bx	lr
+ 994              	.L79:
+ 995 0066 00BF     		.align	2
+ 996              	.L78:
+ 997 0068 00280040 		.word	1073752064
+ 998 006c 00040048 		.word	1207960576
+ 999 0070 00000000 		.word	.LANCHOR0
+ 1000 0074 00080048 		.word	1207961600
+ 1001              		.cfi_endproc
+ 1002              	.LFE402:
+ 1004              		.section	.text.pwr_save_pooling_handler,"ax",%progbits
+ 1005              		.align	1
+ 1006              		.global	pwr_save_pooling_handler
+ 1007              		.syntax unified
+ 1008              		.thumb
+ 1009              		.thumb_func
+ 1010              		.fpu fpv4-sp-d16
+ 1012              	pwr_save_pooling_handler:
+ 1013              	.LFB403:
+ 464:../src/pwr_save.c **** 
+ 465:../src/pwr_save.c **** void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers
+ 1014              		.loc 1 465 0
+ 1015              		.cfi_startproc
+ 1016              		@ args = 0, pretend = 0, frame = 8
+ 1017              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1018              	.LVL43:
+ 1019 0000 70B5     		push	{r4, r5, r6, lr}
+ 1020              		.cfi_def_cfa_offset 16
+ 1021              		.cfi_offset 4, -16
+ 1022              		.cfi_offset 5, -12
+ 1023              		.cfi_offset 6, -8
+ 1024              		.cfi_offset 14, -4
+ 1025 0002 82B0     		sub	sp, sp, #8
+ 1026              		.cfi_def_cfa_offset 24
+ 1027 0004 0446     		mov	r4, r0
+ 1028 0006 0E46     		mov	r6, r1
+ 1029 0008 1546     		mov	r5, r2
+ 1030              	.LVL44:
+ 466:../src/pwr_save.c **** 	// this function should be called from 10 seconds pooler
+ 467:../src/pwr_save.c **** 
+ 468:../src/pwr_save.c **** 	int reinit_sensors = 0;
+ 469:../src/pwr_save.c **** 
+ 470:../src/pwr_save.c **** 	packet_tx_counter_values_t counters;
+ 471:../src/pwr_save.c **** 
+ 472:../src/pwr_save.c **** 	// get current counter values
+ 473:../src/pwr_save.c **** 	packet_tx_get_current_counters(&counters);
+ 1031              		.loc 1 473 0
+ 1032 000a 6846     		mov	r0, sp
+ 1033              	.LVL45:
+ 1034 000c FFF7FEFF 		bl	packet_tx_get_current_counters
+ 1035              	.LVL46:
+ 474:../src/pwr_save.c **** 
+ 475:../src/pwr_save.c **** 	// decrement seconds in last minute
+ 476:../src/pwr_save.c **** 	if (pwr_save_seconds_to_wx != -1) {
+ 1036              		.loc 1 476 0
+ 1037 0010 774B     		ldr	r3, .L131
+ 1038 0012 93F90030 		ldrsb	r3, [r3]
+ 1039 0016 B3F1FF3F 		cmp	r3, #-1
+ 1040 001a 02D0     		beq	.L81
+ 477:../src/pwr_save.c **** 		pwr_save_seconds_to_wx -= 10;
+ 1041              		.loc 1 477 0
+ 1042 001c 0A3B     		subs	r3, r3, #10
+ 1043 001e 744A     		ldr	r2, .L131
+ 1044 0020 1370     		strb	r3, [r2]
+ 1045              	.L81:
+ 478:../src/pwr_save.c **** 	}
+ 479:../src/pwr_save.c **** 
+ 480:../src/pwr_save.c **** 	// if there is more than one minute to next frame
+ 481:../src/pwr_save.c **** 	if (minutes_to_wx > 1) {
+ 1046              		.loc 1 481 0
+ 1047 0022 012D     		cmp	r5, #1
+ 1048 0024 0ADD     		ble	.L82
+ 482:../src/pwr_save.c **** 		// reset counter as we dont
+ 483:../src/pwr_save.c **** 		pwr_save_seconds_to_wx = -1;
+ 1049              		.loc 1 483 0
+ 1050 0026 724B     		ldr	r3, .L131
+ 1051 0028 FF22     		movs	r2, #255
+ 1052 002a 1A70     		strb	r2, [r3]
+ 1053              	.L83:
+ 484:../src/pwr_save.c **** 	}
+ 485:../src/pwr_save.c **** 	else if (minutes_to_wx == 1 && pwr_save_seconds_to_wx == -1) {
+ 486:../src/pwr_save.c **** 		// if this is the last second to wx frame
+ 487:../src/pwr_save.c **** 		pwr_save_seconds_to_wx = 60;
+ 488:../src/pwr_save.c **** 	}
+ 489:../src/pwr_save.c **** 
+ 490:../src/pwr_save.c **** 	// handle depends on current powersave configuration
+ 491:../src/pwr_save.c **** 	switch (config->powersave) {
+ 1054              		.loc 1 491 0
+ 1055 002c E37A     		ldrb	r3, [r4, #11]	@ zero_extendqisi2
+ 1056 002e 012B     		cmp	r3, #1
+ 1057 0030 41D0     		beq	.L85
+ 1058 0032 7BB1     		cbz	r3, .L86
+ 1059 0034 032B     		cmp	r3, #3
+ 1060 0036 7ED0     		beq	.L87
+ 1061              	.LVL47:
+ 1062              	.L80:
+ 492:../src/pwr_save.c **** 		/**
+ 493:../src/pwr_save.c **** 		 * 	PWSAVE_NONE = 0,
+ 494:../src/pwr_save.c **** 			PWSAVE_NORMAL = 1,
+ 495:../src/pwr_save.c **** 			PWSAVE_AGGRESV = 3
+ 496:../src/pwr_save.c **** 		 */
+ 497:../src/pwr_save.c **** 		case PWSAVE_NONE : {
+ 498:../src/pwr_save.c **** 
+ 499:../src/pwr_save.c **** 			// if weather station is enabled
+ 500:../src/pwr_save.c **** 			if (config->wx == 1) {
+ 501:../src/pwr_save.c **** 
+ 502:../src/pwr_save.c **** 				// if GSM modem is enabled in configuration
+ 503:../src/pwr_save.c **** 				if (config->gsm == 1) {
+ 504:../src/pwr_save.c **** 
+ 505:../src/pwr_save.c **** 					// if digipeater is enabled
+ 506:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX + GSM
+ 507:../src/pwr_save.c **** 						reinit_sensors = pwr_save_switch_mode_to_c0();
+ 508:../src/pwr_save.c **** 					}
+ 509:../src/pwr_save.c **** 					else {		// WX + GSM
+ 510:../src/pwr_save.c **** 						reinit_sensors = pwr_save_switch_mode_to_c0();
+ 511:../src/pwr_save.c **** 					}
+ 512:../src/pwr_save.c **** 				}
+ 513:../src/pwr_save.c **** 				else {
+ 514:../src/pwr_save.c **** 					// if digipeater is enabled
+ 515:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX
+ 516:../src/pwr_save.c **** 						reinit_sensors = pwr_save_switch_mode_to_c1();
+ 517:../src/pwr_save.c **** 					}
+ 518:../src/pwr_save.c **** 					else {		// WX
+ 519:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 520:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 521:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 522:../src/pwr_save.c **** 						}
+ 523:../src/pwr_save.c **** 						else {
+ 524:../src/pwr_save.c **** 							if (pwr_save_seconds_to_wx <= 30) {
+ 525:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c1();
+ 526:../src/pwr_save.c **** 							}
+ 527:../src/pwr_save.c **** 						}
+ 528:../src/pwr_save.c **** 					}
+ 529:../src/pwr_save.c **** 				}
+ 530:../src/pwr_save.c **** 			}
+ 531:../src/pwr_save.c **** 			else {		// DIGI
+ 532:../src/pwr_save.c **** 				// if weather station is not enabled just stay in C2 mode
+ 533:../src/pwr_save.c **** 				// as this is default state for DIGI operation. Of course
+ 534:../src/pwr_save.c **** 				// DIGI might not be enabled (which has no sense) but for
+ 535:../src/pwr_save.c **** 				// sake of simplicity just agree that it is.
+ 536:../src/pwr_save.c **** 				pwr_save_switch_mode_to_c2();
+ 537:../src/pwr_save.c **** 			}
+ 538:../src/pwr_save.c **** 
+ 539:../src/pwr_save.c **** 			break;
+ 540:../src/pwr_save.c **** 		}
+ 541:../src/pwr_save.c **** 
+ 542:../src/pwr_save.c **** 		case PWSAVE_NORMAL : {
+ 543:../src/pwr_save.c **** 
+ 544:../src/pwr_save.c **** 			// if weather station is enabled
+ 545:../src/pwr_save.c **** 			if (config->wx == 1) {
+ 546:../src/pwr_save.c **** 
+ 547:../src/pwr_save.c **** 				// if GSM modem is enabled in configuration
+ 548:../src/pwr_save.c **** 				if (config->gsm == 1) {
+ 549:../src/pwr_save.c **** 
+ 550:../src/pwr_save.c **** 					// if digipeater is enabled
+ 551:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX + GSM
+ 552:../src/pwr_save.c **** 						// if weather packets are send 5 minutes or less often
+ 553:../src/pwr_save.c **** 						if (timers->wx_transmit_period >= 5) {
+ 554:../src/pwr_save.c **** 							if (minutes_to_wx > 1) {
+ 555:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c2();
+ 556:../src/pwr_save.c **** 							}
+ 557:../src/pwr_save.c **** 							else {
+ 558:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c0();
+ 559:../src/pwr_save.c **** 							}
+ 560:../src/pwr_save.c **** 						}
+ 561:../src/pwr_save.c **** 						else {
+ 562:../src/pwr_save.c **** 							if (minutes_to_wx > 1) {
+ 563:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c3();
+ 564:../src/pwr_save.c **** 							}
+ 565:../src/pwr_save.c **** 							else {
+ 566:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c0();
+ 567:../src/pwr_save.c **** 							}
+ 568:../src/pwr_save.c **** 						}
+ 569:../src/pwr_save.c **** 					}
+ 570:../src/pwr_save.c **** 					else {		// WX + GSM
+ 571:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 572:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_m4();
+ 573:../src/pwr_save.c **** 						}
+ 574:../src/pwr_save.c **** 						else {
+ 575:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_c0();
+ 576:../src/pwr_save.c **** 						}
+ 577:../src/pwr_save.c **** 					}
+ 578:../src/pwr_save.c **** 				}
+ 579:../src/pwr_save.c **** 				else {
+ 580:../src/pwr_save.c **** 					// if digipeater is enabled
+ 581:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX
+ 582:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 583:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 584:../src/pwr_save.c **** 						}
+ 585:../src/pwr_save.c **** 						else {
+ 586:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_c1();
+ 587:../src/pwr_save.c **** 						}
+ 588:../src/pwr_save.c **** 					}
+ 589:../src/pwr_save.c **** 					else {		// WX
+ 590:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 591:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 592:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_m4();
+ 593:../src/pwr_save.c **** 						}
+ 594:../src/pwr_save.c **** 						else {
+ 595:../src/pwr_save.c **** 							if (pwr_save_seconds_to_wx <= 30) {
+ 596:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c1();
+ 597:../src/pwr_save.c **** 							}
+ 598:../src/pwr_save.c **** 						}
+ 599:../src/pwr_save.c **** 					}
+ 600:../src/pwr_save.c **** 				}
+ 601:../src/pwr_save.c **** 			}
+ 602:../src/pwr_save.c **** 			else {		// DIGI
+ 603:../src/pwr_save.c **** 				pwr_save_switch_mode_to_c2();
+ 604:../src/pwr_save.c **** 			}
+ 605:../src/pwr_save.c **** 
+ 606:../src/pwr_save.c **** 
+ 607:../src/pwr_save.c **** 			break;
+ 608:../src/pwr_save.c **** 		}
+ 609:../src/pwr_save.c **** 
+ 610:../src/pwr_save.c **** 		case PWSAVE_AGGRESV : {
+ 611:../src/pwr_save.c **** 
+ 612:../src/pwr_save.c **** 			// if weather station is enabled
+ 613:../src/pwr_save.c **** 			if (config->wx == 1) {
+ 614:../src/pwr_save.c **** 
+ 615:../src/pwr_save.c **** 				// if GSM modem is enabled in configuration
+ 616:../src/pwr_save.c **** 				if (config->gsm == 1) {
+ 617:../src/pwr_save.c **** 
+ 618:../src/pwr_save.c **** 					// if digipeater is enabled
+ 619:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX + GSM
+ 620:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 621:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 622:../src/pwr_save.c **** 						}
+ 623:../src/pwr_save.c **** 						else {
+ 624:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_c0();
+ 625:../src/pwr_save.c **** 						}
+ 626:../src/pwr_save.c **** 
+ 627:../src/pwr_save.c **** 					}
+ 628:../src/pwr_save.c **** 					else {		// WX + GSM (only)
+ 629:../src/pwr_save.c **** 						if (timers->wx_transmit_period >= 5) {
+ 630:../src/pwr_save.c **** 							// if stations is configured to send wx packet less often than every 5 minutes
+ 631:../src/pwr_save.c **** 
+ 632:../src/pwr_save.c **** 							if (minutes_to_wx > 1) {
+ 633:../src/pwr_save.c **** 								// if there is more than one minute to wx packet
+ 634:../src/pwr_save.c **** 								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+ 635:../src/pwr_save.c **** 							}
+ 636:../src/pwr_save.c **** 							else {
+ 637:../src/pwr_save.c **** 								if (pwr_save_seconds_to_wx <= 30) {
+ 638:../src/pwr_save.c **** 									// if there is 30 seconds or less to next wx packet
+ 639:../src/pwr_save.c **** 									reinit_sensors = pwr_save_switch_mode_to_c0();
+ 640:../src/pwr_save.c **** 								}
+ 641:../src/pwr_save.c **** 								else {
+ 642:../src/pwr_save.c **** 									// if there is 30 to 60 seconds to next wx packet
+ 643:../src/pwr_save.c **** 									reinit_sensors = pwr_save_switch_mode_to_m4();
+ 644:../src/pwr_save.c **** 								}
+ 645:../src/pwr_save.c **** 							}
+ 646:../src/pwr_save.c **** 						}
+ 647:../src/pwr_save.c **** 						else {
+ 648:../src/pwr_save.c **** 							// if station is configured to sent wx packet in every 5 minutes or more often
+ 649:../src/pwr_save.c **** 
+ 650:../src/pwr_save.c **** 							if (minutes_to_wx > 1) {
+ 651:../src/pwr_save.c **** 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+ 652:../src/pwr_save.c **** 							}
+ 653:../src/pwr_save.c **** 							else {
+ 654:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c0();
+ 655:../src/pwr_save.c **** 							}
+ 656:../src/pwr_save.c **** 						}
+ 657:../src/pwr_save.c **** 					}
+ 658:../src/pwr_save.c **** 				}
+ 659:../src/pwr_save.c **** 				else {	// gsm is not enabled
+ 660:../src/pwr_save.c **** 					// if digipeater is enabled
+ 661:../src/pwr_save.c **** 					if (config->digi == 1) {		// DIGI + WX
+ 662:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 663:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 664:../src/pwr_save.c **** 						}
+ 665:../src/pwr_save.c **** 						else {
+ 666:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_c1();
+ 667:../src/pwr_save.c **** 						}
+ 668:../src/pwr_save.c **** 					}
+ 669:../src/pwr_save.c **** 					else {		// WX
+ 670:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 671:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 672:../src/pwr_save.c **** 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
+ 673:../src/pwr_save.c **** 						}
+ 674:../src/pwr_save.c **** 						else {
+ 675:../src/pwr_save.c **** 							if (pwr_save_seconds_to_wx <= 30) {
+ 676:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c1();
+ 677:../src/pwr_save.c **** 
+ 678:../src/pwr_save.c **** 								// do not reinitialize everything as reinitialization had been done when switching to m4 mo
+ 679:../src/pwr_save.c **** 								reinit_sensors = 0;
+ 680:../src/pwr_save.c **** 							}
+ 681:../src/pwr_save.c **** 							else {
+ 682:../src/pwr_save.c **** 								reinit_sensors= pwr_save_switch_mode_to_m4();
+ 683:../src/pwr_save.c **** 							}
+ 684:../src/pwr_save.c **** 						}
+ 685:../src/pwr_save.c **** 					}
+ 686:../src/pwr_save.c **** 				}
+ 687:../src/pwr_save.c **** 			}
+ 688:../src/pwr_save.c **** 			else {		// DIGI
+ 689:../src/pwr_save.c **** 				pwr_save_switch_mode_to_c2();
+ 690:../src/pwr_save.c **** 			}
+ 691:../src/pwr_save.c **** 
+ 692:../src/pwr_save.c **** 			break;
+ 693:../src/pwr_save.c **** 		}
+ 694:../src/pwr_save.c **** 	}
+ 695:../src/pwr_save.c **** 
+ 696:../src/pwr_save.c **** 	if (reinit_sensors != 0) {
+ 697:../src/pwr_save.c **** 		// reinitialize all i2c sensors
+ 698:../src/pwr_save.c **** 		wx_force_i2c_sensor_reset = 1;
+ 699:../src/pwr_save.c **** 
+ 700:../src/pwr_save.c **** 		// reinitialize everything realted to anemometer
+ 701:../src/pwr_save.c **** 		analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
+ 702:../src/pwr_save.c **** 
+ 703:../src/pwr_save.c **** //		// reset anemometer direction handler
+ 704:../src/pwr_save.c **** //		analog_anemometer_direction_reset();
+ 705:../src/pwr_save.c **** //
+ 706:../src/pwr_save.c **** //		// reset anemometer windspeed handler
+ 707:../src/pwr_save.c **** //		analog_anemometer_timer_irq();
+ 708:../src/pwr_save.c **** 	}
+ 709:../src/pwr_save.c **** 
+ 710:../src/pwr_save.c **** }
+ 1063              		.loc 1 710 0
+ 1064 0038 02B0     		add	sp, sp, #8
+ 1065              		.cfi_remember_state
+ 1066              		.cfi_def_cfa_offset 16
+ 1067              		@ sp needed
+ 1068 003a 70BD     		pop	{r4, r5, r6, pc}
+ 1069              	.LVL48:
+ 1070              	.L82:
+ 1071              		.cfi_restore_state
+ 485:../src/pwr_save.c **** 		// if this is the last second to wx frame
+ 1072              		.loc 1 485 0
+ 1073 003c 012D     		cmp	r5, #1
+ 1074 003e F5D1     		bne	.L83
+ 485:../src/pwr_save.c **** 		// if this is the last second to wx frame
+ 1075              		.loc 1 485 0 is_stmt 0 discriminator 1
+ 1076 0040 6B4B     		ldr	r3, .L131
+ 1077 0042 93F90030 		ldrsb	r3, [r3]
+ 1078 0046 B3F1FF3F 		cmp	r3, #-1
+ 1079 004a EFD1     		bne	.L83
+ 487:../src/pwr_save.c **** 	}
+ 1080              		.loc 1 487 0 is_stmt 1
+ 1081 004c 684B     		ldr	r3, .L131
+ 1082 004e 3C22     		movs	r2, #60
+ 1083 0050 1A70     		strb	r2, [r3]
+ 1084 0052 EBE7     		b	.L83
+ 1085              	.L86:
+ 500:../src/pwr_save.c **** 
+ 1086              		.loc 1 500 0
+ 1087 0054 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 1088 0056 012B     		cmp	r3, #1
+ 1089 0058 2AD1     		bne	.L88
+ 503:../src/pwr_save.c **** 
+ 1090              		.loc 1 503 0
+ 1091 005a 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 1092 005c 012B     		cmp	r3, #1
+ 1093 005e 0CD0     		beq	.L117
+ 515:../src/pwr_save.c **** 						reinit_sensors = pwr_save_switch_mode_to_c1();
+ 1094              		.loc 1 515 0
+ 1095 0060 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1096 0062 012B     		cmp	r3, #1
+ 1097 0064 1ED0     		beq	.L118
+ 519:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 1098              		.loc 1 519 0
+ 1099 0066 012D     		cmp	r5, #1
+ 1100 0068 1FDC     		bgt	.L119
+ 524:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c1();
+ 1101              		.loc 1 524 0
+ 1102 006a 614B     		ldr	r3, .L131
+ 1103 006c 93F90030 		ldrsb	r3, [r3]
+ 1104 0070 1E2B     		cmp	r3, #30
+ 1105 0072 E1DC     		bgt	.L80
+ 525:../src/pwr_save.c **** 							}
+ 1106              		.loc 1 525 0
+ 1107 0074 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1108              	.LVL49:
+ 1109 0078 04E0     		b	.L91
+ 1110              	.LVL50:
+ 1111              	.L117:
+ 506:../src/pwr_save.c **** 						reinit_sensors = pwr_save_switch_mode_to_c0();
+ 1112              		.loc 1 506 0
+ 1113 007a 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1114 007c 012B     		cmp	r3, #1
+ 1115 007e 0ED0     		beq	.L120
+ 510:../src/pwr_save.c **** 					}
+ 1116              		.loc 1 510 0
+ 1117 0080 FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1118              	.LVL51:
+ 1119              	.L91:
+ 696:../src/pwr_save.c **** 		// reinitialize all i2c sensors
+ 1120              		.loc 1 696 0
+ 1121 0084 0028     		cmp	r0, #0
+ 1122 0086 D7D0     		beq	.L80
+ 698:../src/pwr_save.c **** 
+ 1123              		.loc 1 698 0
+ 1124 0088 0123     		movs	r3, #1
+ 1125 008a 5A4A     		ldr	r2, .L131+4
+ 1126 008c 1370     		strb	r3, [r2]
+ 701:../src/pwr_save.c **** 
+ 1127              		.loc 1 701 0
+ 1128 008e 5A4A     		ldr	r2, .L131+8
+ 1129 0090 1068     		ldr	r0, [r2]
+ 1130              	.LVL52:
+ 1131 0092 6422     		movs	r2, #100
+ 1132 0094 2621     		movs	r1, #38
+ 1133 0096 8079     		ldrb	r0, [r0, #6]	@ zero_extendqisi2
+ 1134 0098 FFF7FEFF 		bl	analog_anemometer_init
+ 1135              	.LVL53:
+ 1136              		.loc 1 710 0
+ 1137 009c CCE7     		b	.L80
+ 1138              	.LVL54:
+ 1139              	.L120:
+ 507:../src/pwr_save.c **** 					}
+ 1140              		.loc 1 507 0
+ 1141 009e FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1142              	.LVL55:
+ 1143 00a2 EFE7     		b	.L91
+ 1144              	.LVL56:
+ 1145              	.L118:
+ 516:../src/pwr_save.c **** 					}
+ 1146              		.loc 1 516 0
+ 1147 00a4 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1148              	.LVL57:
+ 1149 00a8 ECE7     		b	.L91
+ 1150              	.LVL58:
+ 1151              	.L119:
+ 521:../src/pwr_save.c **** 						}
+ 1152              		.loc 1 521 0
+ 1153 00aa FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1154              	.LVL59:
+ 1155 00ae C3E7     		b	.L80
+ 1156              	.L88:
+ 536:../src/pwr_save.c **** 			}
+ 1157              		.loc 1 536 0
+ 1158 00b0 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1159              	.LVL60:
+ 1160 00b4 C0E7     		b	.L80
+ 1161              	.L85:
+ 545:../src/pwr_save.c **** 
+ 1162              		.loc 1 545 0
+ 1163 00b6 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 1164 00b8 012B     		cmp	r3, #1
+ 1165 00ba 39D1     		bne	.L94
+ 548:../src/pwr_save.c **** 
+ 1166              		.loc 1 548 0
+ 1167 00bc 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 1168 00be 012B     		cmp	r3, #1
+ 1169 00c0 0CD0     		beq	.L121
+ 581:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 1170              		.loc 1 581 0
+ 1171 00c2 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1172 00c4 012B     		cmp	r3, #1
+ 1173 00c6 28D0     		beq	.L122
+ 590:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 1174              		.loc 1 590 0
+ 1175 00c8 012D     		cmp	r5, #1
+ 1176 00ca 2EDC     		bgt	.L123
+ 595:../src/pwr_save.c **** 								reinit_sensors = pwr_save_switch_mode_to_c1();
+ 1177              		.loc 1 595 0
+ 1178 00cc 484B     		ldr	r3, .L131
+ 1179 00ce 93F90030 		ldrsb	r3, [r3]
+ 1180 00d2 1E2B     		cmp	r3, #30
+ 1181 00d4 B0DC     		bgt	.L80
+ 596:../src/pwr_save.c **** 							}
+ 1182              		.loc 1 596 0
+ 1183 00d6 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1184              	.LVL61:
+ 1185 00da D3E7     		b	.L91
+ 1186              	.LVL62:
+ 1187              	.L121:
+ 551:../src/pwr_save.c **** 						// if weather packets are send 5 minutes or less often
+ 1188              		.loc 1 551 0
+ 1189 00dc 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1190 00de 012B     		cmp	r3, #1
+ 1191 00e0 04D0     		beq	.L124
+ 571:../src/pwr_save.c **** 							reinit_sensors = pwr_save_switch_mode_to_m4();
+ 1192              		.loc 1 571 0
+ 1193 00e2 012D     		cmp	r5, #1
+ 1194 00e4 16DD     		ble	.L100
+ 572:../src/pwr_save.c **** 						}
+ 1195              		.loc 1 572 0
+ 1196 00e6 FFF7FEFF 		bl	pwr_save_switch_mode_to_m4
+ 1197              	.LVL63:
+ 1198 00ea CBE7     		b	.L91
+ 1199              	.LVL64:
+ 1200              	.L124:
+ 553:../src/pwr_save.c **** 							if (minutes_to_wx > 1) {
+ 1201              		.loc 1 553 0
+ 1202 00ec 96F89830 		ldrb	r3, [r6, #152]	@ zero_extendqisi2
+ 1203 00f0 042B     		cmp	r3, #4
+ 1204 00f2 07D9     		bls	.L97
+ 554:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c2();
+ 1205              		.loc 1 554 0
+ 1206 00f4 012D     		cmp	r5, #1
+ 1207 00f6 02DD     		ble	.L98
+ 555:../src/pwr_save.c **** 							}
+ 1208              		.loc 1 555 0
+ 1209 00f8 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1210              	.LVL65:
+ 1211 00fc 9CE7     		b	.L80
+ 1212              	.L98:
+ 558:../src/pwr_save.c **** 							}
+ 1213              		.loc 1 558 0
+ 1214 00fe FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1215              	.LVL66:
+ 1216 0102 BFE7     		b	.L91
+ 1217              	.LVL67:
+ 1218              	.L97:
+ 562:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c3();
+ 1219              		.loc 1 562 0
+ 1220 0104 012D     		cmp	r5, #1
+ 1221 0106 02DD     		ble	.L99
+ 563:../src/pwr_save.c **** 							}
+ 1222              		.loc 1 563 0
+ 1223 0108 FFF7FEFF 		bl	pwr_save_switch_mode_to_c3
+ 1224              	.LVL68:
+ 1225 010c 94E7     		b	.L80
+ 1226              	.L99:
+ 566:../src/pwr_save.c **** 							}
+ 1227              		.loc 1 566 0
+ 1228 010e FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1229              	.LVL69:
+ 1230 0112 B7E7     		b	.L91
+ 1231              	.LVL70:
+ 1232              	.L100:
+ 575:../src/pwr_save.c **** 						}
+ 1233              		.loc 1 575 0
+ 1234 0114 FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1235              	.LVL71:
+ 1236 0118 B4E7     		b	.L91
+ 1237              	.LVL72:
+ 1238              	.L122:
+ 582:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 1239              		.loc 1 582 0
+ 1240 011a 012D     		cmp	r5, #1
+ 1241 011c 02DD     		ble	.L102
+ 583:../src/pwr_save.c **** 						}
+ 1242              		.loc 1 583 0
+ 1243 011e FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1244              	.LVL73:
+ 1245 0122 89E7     		b	.L80
+ 1246              	.L102:
+ 586:../src/pwr_save.c **** 						}
+ 1247              		.loc 1 586 0
+ 1248 0124 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1249              	.LVL74:
+ 1250 0128 ACE7     		b	.L91
+ 1251              	.LVL75:
+ 1252              	.L123:
+ 592:../src/pwr_save.c **** 						}
+ 1253              		.loc 1 592 0
+ 1254 012a FFF7FEFF 		bl	pwr_save_switch_mode_to_m4
+ 1255              	.LVL76:
+ 1256 012e A9E7     		b	.L91
+ 1257              	.LVL77:
+ 1258              	.L94:
+ 603:../src/pwr_save.c **** 			}
+ 1259              		.loc 1 603 0
+ 1260 0130 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1261              	.LVL78:
+ 1262 0134 80E7     		b	.L80
+ 1263              	.L87:
+ 613:../src/pwr_save.c **** 
+ 1264              		.loc 1 613 0
+ 1265 0136 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 1266 0138 012B     		cmp	r3, #1
+ 1267 013a 55D1     		bne	.L104
+ 616:../src/pwr_save.c **** 
+ 1268              		.loc 1 616 0
+ 1269 013c 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 1270 013e 012B     		cmp	r3, #1
+ 1271 0140 0CD0     		beq	.L125
+ 661:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 1272              		.loc 1 661 0
+ 1273 0142 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1274 0144 012B     		cmp	r3, #1
+ 1275 0146 3AD0     		beq	.L126
+ 670:../src/pwr_save.c **** 							// if there is more than one minute to send wx packet
+ 1276              		.loc 1 670 0
+ 1277 0148 012D     		cmp	r5, #1
+ 1278 014a 40DC     		bgt	.L127
+ 675:../src/pwr_save.c **** 								pwr_save_switch_mode_to_c1();
+ 1279              		.loc 1 675 0
+ 1280 014c 284B     		ldr	r3, .L131
+ 1281 014e 93F90030 		ldrsb	r3, [r3]
+ 1282 0152 1E2B     		cmp	r3, #30
+ 1283 0154 45DD     		ble	.L128
+ 682:../src/pwr_save.c **** 							}
+ 1284              		.loc 1 682 0
+ 1285 0156 FFF7FEFF 		bl	pwr_save_switch_mode_to_m4
+ 1286              	.LVL79:
+ 1287 015a 93E7     		b	.L91
+ 1288              	.LVL80:
+ 1289              	.L125:
+ 619:../src/pwr_save.c **** 						if (minutes_to_wx > 1) {
+ 1290              		.loc 1 619 0
+ 1291 015c 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 1292 015e 012B     		cmp	r3, #1
+ 1293 0160 0DD0     		beq	.L129
+ 629:../src/pwr_save.c **** 							// if stations is configured to send wx packet less often than every 5 minutes
+ 1294              		.loc 1 629 0
+ 1295 0162 96F89830 		ldrb	r3, [r6, #152]	@ zero_extendqisi2
+ 1296 0166 042B     		cmp	r3, #4
+ 1297 0168 1CD9     		bls	.L108
+ 632:../src/pwr_save.c **** 								// if there is more than one minute to wx packet
+ 1298              		.loc 1 632 0
+ 1299 016a 012D     		cmp	r5, #1
+ 1300 016c 0FDC     		bgt	.L130
+ 637:../src/pwr_save.c **** 									// if there is 30 seconds or less to next wx packet
+ 1301              		.loc 1 637 0
+ 1302 016e 204B     		ldr	r3, .L131
+ 1303 0170 93F90030 		ldrsb	r3, [r3]
+ 1304 0174 1E2B     		cmp	r3, #30
+ 1305 0176 12DC     		bgt	.L110
+ 639:../src/pwr_save.c **** 								}
+ 1306              		.loc 1 639 0
+ 1307 0178 FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1308              	.LVL81:
+ 1309 017c 82E7     		b	.L91
+ 1310              	.LVL82:
+ 1311              	.L129:
+ 620:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 1312              		.loc 1 620 0
+ 1313 017e 012D     		cmp	r5, #1
+ 1314 0180 02DD     		ble	.L107
+ 621:../src/pwr_save.c **** 						}
+ 1315              		.loc 1 621 0
+ 1316 0182 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1317              	.LVL83:
+ 1318 0186 57E7     		b	.L80
+ 1319              	.L107:
+ 624:../src/pwr_save.c **** 						}
+ 1320              		.loc 1 624 0
+ 1321 0188 FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1322              	.LVL84:
+ 1323 018c 7AE7     		b	.L91
+ 1324              	.LVL85:
+ 1325              	.L130:
+ 634:../src/pwr_save.c **** 							}
+ 1326              		.loc 1 634 0
+ 1327 018e 013B     		subs	r3, r3, #1
+ 1328 0190 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1329 0194 9A00     		lsls	r2, r3, #2
+ 1330 0196 90B2     		uxth	r0, r2
+ 1331 0198 FFF7FEFF 		bl	pwr_save_switch_mode_to_l7
+ 1332              	.LVL86:
+ 1333 019c 4CE7     		b	.L80
+ 1334              	.L110:
+ 643:../src/pwr_save.c **** 								}
+ 1335              		.loc 1 643 0
+ 1336 019e FFF7FEFF 		bl	pwr_save_switch_mode_to_m4
+ 1337              	.LVL87:
+ 1338 01a2 6FE7     		b	.L91
+ 1339              	.LVL88:
+ 1340              	.L108:
+ 650:../src/pwr_save.c **** 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+ 1341              		.loc 1 650 0
+ 1342 01a4 012D     		cmp	r5, #1
+ 1343 01a6 07DD     		ble	.L111
+ 651:../src/pwr_save.c **** 							}
+ 1344              		.loc 1 651 0
+ 1345 01a8 013B     		subs	r3, r3, #1
+ 1346 01aa C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1347 01ae 9A00     		lsls	r2, r3, #2
+ 1348 01b0 90B2     		uxth	r0, r2
+ 1349 01b2 FFF7FEFF 		bl	pwr_save_switch_mode_to_l6
+ 1350              	.LVL89:
+ 1351 01b6 3FE7     		b	.L80
+ 1352              	.L111:
+ 654:../src/pwr_save.c **** 							}
+ 1353              		.loc 1 654 0
+ 1354 01b8 FFF7FEFF 		bl	pwr_save_switch_mode_to_c0
+ 1355              	.LVL90:
+ 1356 01bc 62E7     		b	.L91
+ 1357              	.LVL91:
+ 1358              	.L126:
+ 662:../src/pwr_save.c **** 							pwr_save_switch_mode_to_c2();
+ 1359              		.loc 1 662 0
+ 1360 01be 012D     		cmp	r5, #1
+ 1361 01c0 02DD     		ble	.L113
+ 663:../src/pwr_save.c **** 						}
+ 1362              		.loc 1 663 0
+ 1363 01c2 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1364              	.LVL92:
+ 1365 01c6 37E7     		b	.L80
+ 1366              	.L113:
+ 666:../src/pwr_save.c **** 						}
+ 1367              		.loc 1 666 0
+ 1368 01c8 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1369              	.LVL93:
+ 1370 01cc 5AE7     		b	.L91
+ 1371              	.LVL94:
+ 1372              	.L127:
+ 672:../src/pwr_save.c **** 						}
+ 1373              		.loc 1 672 0
+ 1374 01ce 96F89830 		ldrb	r3, [r6, #152]	@ zero_extendqisi2
+ 1375 01d2 013B     		subs	r3, r3, #1
+ 1376 01d4 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1377 01d8 9800     		lsls	r0, r3, #2
+ 1378 01da 80B2     		uxth	r0, r0
+ 1379 01dc FFF7FEFF 		bl	pwr_save_switch_mode_to_l7
+ 1380              	.LVL95:
+ 1381 01e0 2AE7     		b	.L80
+ 1382              	.L128:
+ 676:../src/pwr_save.c **** 
+ 1383              		.loc 1 676 0
+ 1384 01e2 FFF7FEFF 		bl	pwr_save_switch_mode_to_c1
+ 1385              	.LVL96:
+ 1386 01e6 27E7     		b	.L80
+ 1387              	.L104:
+ 689:../src/pwr_save.c **** 			}
+ 1388              		.loc 1 689 0
+ 1389 01e8 FFF7FEFF 		bl	pwr_save_switch_mode_to_c2
+ 1390              	.LVL97:
+ 1391 01ec 24E7     		b	.L80
+ 1392              	.L132:
+ 1393 01ee 00BF     		.align	2
+ 1394              	.L131:
+ 1395 01f0 00000000 		.word	.LANCHOR1
+ 1396 01f4 00000000 		.word	wx_force_i2c_sensor_reset
+ 1397 01f8 00000000 		.word	main_config_data_mode
+ 1398              		.cfi_endproc
+ 1399              	.LFE403:
+ 1401              		.section	.text.pwr_save_get_inhibit_pwr_switch_periodic,"ax",%progbits
+ 1402              		.align	1
+ 1403              		.global	pwr_save_get_inhibit_pwr_switch_periodic
+ 1404              		.syntax unified
+ 1405              		.thumb
+ 1406              		.thumb_func
+ 1407              		.fpu fpv4-sp-d16
+ 1409              	pwr_save_get_inhibit_pwr_switch_periodic:
+ 1410              	.LFB404:
+ 711:../src/pwr_save.c **** 
+ 712:../src/pwr_save.c **** uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
+ 1411              		.loc 1 712 0
+ 1412              		.cfi_startproc
+ 1413              		@ args = 0, pretend = 0, frame = 0
+ 1414              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1415              		@ link register save eliminated.
+ 713:../src/pwr_save.c **** 
+ 714:../src/pwr_save.c **** 	if ((REGISTER & INHIBIT_PWR_SWITCH_PERIODIC_H) != 0){
+ 1416              		.loc 1 714 0
+ 1417 0000 044B     		ldr	r3, .L137
+ 1418 0002 1B6D     		ldr	r3, [r3, #80]
+ 1419 0004 13F0010F 		tst	r3, #1
+ 1420 0008 01D1     		bne	.L136
+ 715:../src/pwr_save.c **** 		return 1;
+ 716:../src/pwr_save.c **** 	}
+ 717:../src/pwr_save.c **** 	else {
+ 718:../src/pwr_save.c **** 		return 0;
+ 1421              		.loc 1 718 0
+ 1422 000a 0020     		movs	r0, #0
+ 719:../src/pwr_save.c **** 	}
+ 720:../src/pwr_save.c **** }
+ 1423              		.loc 1 720 0
+ 1424 000c 7047     		bx	lr
+ 1425              	.L136:
+ 715:../src/pwr_save.c **** 		return 1;
+ 1426              		.loc 1 715 0
+ 1427 000e 0120     		movs	r0, #1
+ 1428 0010 7047     		bx	lr
+ 1429              	.L138:
+ 1430 0012 00BF     		.align	2
+ 1431              	.L137:
+ 1432 0014 00280040 		.word	1073752064
+ 1433              		.cfi_endproc
+ 1434              	.LFE404:
+ 1436              		.global	pwr_save_sleep_time_in_seconds
+ 1437              		.global	pwr_save_seconds_to_wx
+ 1438              		.section	.bss.pwr_save_seconds_to_wx,"aw",%nobits
+ 1439              		.set	.LANCHOR1,. + 0
+ 1442              	pwr_save_seconds_to_wx:
+ 1443 0000 00       		.space	1
+ 1444              		.section	.data.pwr_save_sleep_time_in_seconds,"aw",%progbits
+ 1445              		.align	1
+ 1446              		.set	.LANCHOR0,. + 0
+ 1449              	pwr_save_sleep_time_in_seconds:
+ 1450 0000 FFFF     		.short	-1
+ 1451              		.text
+ 1452              	.Letext0:
+ 1453              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1454              		.file 5 "../include/config_data.h"
+ 1455              		.file 6 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 1456              		.file 7 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 1457              		.file 8 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 1458              		.file 9 "../include/packet_tx_handler.h"
+ 1459              		.file 10 "../include/wx_handler.h"
+ 1460              		.file 11 "../system/include/aprs/cfifo.h"
+ 1461              		.file 12 "../system/include/aprs/afsk.h"
+ 1462              		.file 13 "../system/include/aprs/ax25.h"
+ 1463              		.file 14 "../system/include/drivers/serial.h"
+ 1464              		.file 15 "../include/main.h"
+ 1465              		.file 16 "../system/include/drivers/analog_anemometer.h"
+ 1466              		.file 17 "../system/include/cmsis/stm32l4xx/system_stm32l4xx.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 pwr_save.c
+     /tmp/ccxfgUaz.s:18     .text.pwr_save_unclock_rtc_backup_regs:0000000000000000 $t
+     /tmp/ccxfgUaz.s:24     .text.pwr_save_unclock_rtc_backup_regs:0000000000000000 pwr_save_unclock_rtc_backup_regs
+     /tmp/ccxfgUaz.s:42     .text.pwr_save_unclock_rtc_backup_regs:000000000000000c $d
+     /tmp/ccxfgUaz.s:47     .text.pwr_save_lock_rtc_backup_regs:0000000000000000 $t
+     /tmp/ccxfgUaz.s:53     .text.pwr_save_lock_rtc_backup_regs:0000000000000000 pwr_save_lock_rtc_backup_regs
+     /tmp/ccxfgUaz.s:70     .text.pwr_save_lock_rtc_backup_regs:000000000000000c $d
+     /tmp/ccxfgUaz.s:75     .text.pwr_save_init:0000000000000000 $t
+     /tmp/ccxfgUaz.s:82     .text.pwr_save_init:0000000000000000 pwr_save_init
+     /tmp/ccxfgUaz.s:178    .text.pwr_save_init:0000000000000084 $d
+     /tmp/ccxfgUaz.s:187    .text.pwr_save_enter_stop2:0000000000000000 $t
+     /tmp/ccxfgUaz.s:194    .text.pwr_save_enter_stop2:0000000000000000 pwr_save_enter_stop2
+     /tmp/ccxfgUaz.s:259    .text.pwr_save_enter_stop2:000000000000004c $d
+     /tmp/ccxfgUaz.s:267    .text.pwr_save_exit_from_stop2:0000000000000000 $t
+     /tmp/ccxfgUaz.s:274    .text.pwr_save_exit_from_stop2:0000000000000000 pwr_save_exit_from_stop2
+     /tmp/ccxfgUaz.s:354    .text.pwr_save_exit_from_stop2:0000000000000088 $d
+     /tmp/ccxfgUaz.s:361    .text.pwr_save_switch_mode_to_c0:0000000000000000 $t
+     /tmp/ccxfgUaz.s:368    .text.pwr_save_switch_mode_to_c0:0000000000000000 pwr_save_switch_mode_to_c0
+     /tmp/ccxfgUaz.s:430    .text.pwr_save_switch_mode_to_c0:0000000000000048 $d
+     /tmp/ccxfgUaz.s:436    .text.pwr_save_switch_mode_to_c1:0000000000000000 $t
+     /tmp/ccxfgUaz.s:443    .text.pwr_save_switch_mode_to_c1:0000000000000000 pwr_save_switch_mode_to_c1
+     /tmp/ccxfgUaz.s:504    .text.pwr_save_switch_mode_to_c1:0000000000000048 $d
+     /tmp/ccxfgUaz.s:510    .text.pwr_save_switch_mode_to_c2:0000000000000000 $t
+     /tmp/ccxfgUaz.s:517    .text.pwr_save_switch_mode_to_c2:0000000000000000 pwr_save_switch_mode_to_c2
+     /tmp/ccxfgUaz.s:572    .text.pwr_save_switch_mode_to_c2:0000000000000040 $d
+     /tmp/ccxfgUaz.s:578    .text.pwr_save_switch_mode_to_c3:0000000000000000 $t
+     /tmp/ccxfgUaz.s:585    .text.pwr_save_switch_mode_to_c3:0000000000000000 pwr_save_switch_mode_to_c3
+     /tmp/ccxfgUaz.s:640    .text.pwr_save_switch_mode_to_c3:0000000000000040 $d
+     /tmp/ccxfgUaz.s:646    .text.pwr_save_switch_mode_to_m4:0000000000000000 $t
+     /tmp/ccxfgUaz.s:653    .text.pwr_save_switch_mode_to_m4:0000000000000000 pwr_save_switch_mode_to_m4
+     /tmp/ccxfgUaz.s:714    .text.pwr_save_switch_mode_to_m4:0000000000000048 $d
+     /tmp/ccxfgUaz.s:720    .text.pwr_save_switch_mode_to_i5:0000000000000000 $t
+     /tmp/ccxfgUaz.s:727    .text.pwr_save_switch_mode_to_i5:0000000000000000 pwr_save_switch_mode_to_i5
+     /tmp/ccxfgUaz.s:782    .text.pwr_save_switch_mode_to_i5:0000000000000040 $d
+     /tmp/ccxfgUaz.s:788    .text.pwr_save_switch_mode_to_l6:0000000000000000 $t
+     /tmp/ccxfgUaz.s:795    .text.pwr_save_switch_mode_to_l6:0000000000000000 pwr_save_switch_mode_to_l6
+     /tmp/ccxfgUaz.s:889    .text.pwr_save_switch_mode_to_l6:0000000000000068 $d
+     /tmp/ccxfgUaz.s:897    .text.pwr_save_switch_mode_to_l7:0000000000000000 $t
+     /tmp/ccxfgUaz.s:904    .text.pwr_save_switch_mode_to_l7:0000000000000000 pwr_save_switch_mode_to_l7
+     /tmp/ccxfgUaz.s:997    .text.pwr_save_switch_mode_to_l7:0000000000000068 $d
+     /tmp/ccxfgUaz.s:1005   .text.pwr_save_pooling_handler:0000000000000000 $t
+     /tmp/ccxfgUaz.s:1012   .text.pwr_save_pooling_handler:0000000000000000 pwr_save_pooling_handler
+     /tmp/ccxfgUaz.s:1395   .text.pwr_save_pooling_handler:00000000000001f0 $d
+     /tmp/ccxfgUaz.s:1402   .text.pwr_save_get_inhibit_pwr_switch_periodic:0000000000000000 $t
+     /tmp/ccxfgUaz.s:1409   .text.pwr_save_get_inhibit_pwr_switch_periodic:0000000000000000 pwr_save_get_inhibit_pwr_switch_periodic
+     /tmp/ccxfgUaz.s:1432   .text.pwr_save_get_inhibit_pwr_switch_periodic:0000000000000014 $d
+     /tmp/ccxfgUaz.s:1449   .data.pwr_save_sleep_time_in_seconds:0000000000000000 pwr_save_sleep_time_in_seconds
+     /tmp/ccxfgUaz.s:1442   .bss.pwr_save_seconds_to_wx:0000000000000000 pwr_save_seconds_to_wx
+     /tmp/ccxfgUaz.s:1443   .bss.pwr_save_seconds_to_wx:0000000000000000 $d
+     /tmp/ccxfgUaz.s:1445   .data.pwr_save_sleep_time_in_seconds:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_gpio.h.22.6ea69d1eee1200f6e0d48e871aaa811d
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.LedConfig.h.25.e34280313dd460b98fa028e633c9dc70
+                           .group:0000000000000000 wm4.wx_handler.h.9.c93580273a56e0f9036dfe7a28400494
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.main.h.8.bc9cddc046c84d80bc9382d177e590b0
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+
+UNDEFINED SYMBOLS
+analog_anemometer_deinit
+packet_tx_get_current_counters
+packet_tx_set_current_counters
+system_clock_configure_auto_wakeup_l4
+analog_anemometer_init
+wx_force_i2c_sensor_reset
+main_config_data_mode

@@ -1,0 +1,123 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"gpio_conf_stm32f1x.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.Configure_GPIO,"ax",%progbits
+  16              		.align	1
+  17              		.global	Configure_GPIO
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	Configure_GPIO:
+  24              	.LFB63:
+  25              		.file 1 "../system/src/drivers/f1/gpio_conf_stm32f1x.c"
+   1:../system/src/drivers/f1/gpio_conf_stm32f1x.c **** #include <drivers/f1/gpio_conf_stm32f1x.h>
+   2:../system/src/drivers/f1/gpio_conf_stm32f1x.c **** 
+   3:../system/src/drivers/f1/gpio_conf_stm32f1x.c **** void Configure_GPIO(GPIO_TypeDef* gpio, uint8_t pin, uint8_t conf){
+  26              		.loc 1 3 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+  32 0000 10B4     		push	{r4}
+  33              		.cfi_def_cfa_offset 4
+  34              		.cfi_offset 4, -4
+   4:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     volatile uint32_t *crPointer;
+   5:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****  
+   6:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     if(pin < 8)
+  35              		.loc 1 6 0
+  36 0002 0729     		cmp	r1, #7
+  37 0004 02D9     		bls	.L3
+   7:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****         crPointer = &gpio->CRL;
+   8:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     else {
+   9:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****         crPointer = &gpio->CRH;
+  38              		.loc 1 9 0
+  39 0006 0430     		adds	r0, r0, #4
+  40              	.LVL1:
+  10:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****         pin -= 8;
+  41              		.loc 1 10 0
+  42 0008 0839     		subs	r1, r1, #8
+  43              	.LVL2:
+  44 000a C9B2     		uxtb	r1, r1
+  45              	.LVL3:
+  46              	.L3:
+  11:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     }
+  12:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****  
+  13:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     *crPointer &= ~( 0xF << (pin * 4));
+  47              		.loc 1 13 0
+  48 000c 0368     		ldr	r3, [r0]
+  49 000e 8900     		lsls	r1, r1, #2
+  50              	.LVL4:
+  51 0010 0F24     		movs	r4, #15
+  52 0012 8C40     		lsls	r4, r4, r1
+  53 0014 23EA0403 		bic	r3, r3, r4
+  54 0018 0360     		str	r3, [r0]
+  14:../system/src/drivers/f1/gpio_conf_stm32f1x.c ****     *crPointer |= conf << (pin * 4);
+  55              		.loc 1 14 0
+  56 001a 0368     		ldr	r3, [r0]
+  57 001c 02FA01F1 		lsl	r1, r2, r1
+  58 0020 1943     		orrs	r1, r1, r3
+  59 0022 0160     		str	r1, [r0]
+  15:../system/src/drivers/f1/gpio_conf_stm32f1x.c **** }
+  60              		.loc 1 15 0
+  61 0024 10BC     		pop	{r4}
+  62              		.cfi_restore 4
+  63              		.cfi_def_cfa_offset 0
+  64 0026 7047     		bx	lr
+  65              		.cfi_endproc
+  66              	.LFE63:
+  68              		.text
+  69              	.Letext0:
+  70              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  71              		.file 3 "../system/include/cmsis/core_cm3.h"
+  72              		.file 4 "../system/include/cmsis/system_stm32f10x.h"
+  73              		.file 5 "../system/include/cmsis/stm32f10x.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 gpio_conf_stm32f1x.c
+     /tmp/ccb48w4T.s:16     .text.Configure_GPIO:0000000000000000 $t
+     /tmp/ccb48w4T.s:23     .text.Configure_GPIO:0000000000000000 Configure_GPIO
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.gpio_conf_stm32f1x.h.8.5b4892fe7325115d0e690443be01192e
+
+NO UNDEFINED SYMBOLS

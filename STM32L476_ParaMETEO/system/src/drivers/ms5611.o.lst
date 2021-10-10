@@ -1,0 +1,1904 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"ms5611.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.ms5611_reset,"ax",%progbits
+  18              		.align	1
+  19              		.global	ms5611_reset
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	ms5611_reset:
+  26              	.LFB398:
+  27              		.file 1 "../system/src/drivers/ms5611.c"
+   1:../system/src/drivers/ms5611.c **** #include "drivers/ms5611.h"
+   2:../system/src/drivers/ms5611.c **** #include "drivers/i2c.h"
+   3:../system/src/drivers/ms5611.c **** #include "../include/delay.h"
+   4:../system/src/drivers/ms5611.c **** #include "station_config.h"
+   5:../system/src/drivers/ms5611.c **** 
+   6:../system/src/drivers/ms5611.c **** #include "rte_wx.h"
+   7:../system/src/drivers/ms5611.c **** 
+   8:../system/src/drivers/ms5611.c **** // adres do zapisu: 0xEC
+   9:../system/src/drivers/ms5611.c **** // adres do oczytu: 0xED
+  10:../system/src/drivers/ms5611.c **** 
+  11:../system/src/drivers/ms5611.c **** char state;	// zmienna sygnalizuj�ca przebieg pomiaru..
+  12:../system/src/drivers/ms5611.c **** 			// 0: zmierz temperature
+  13:../system/src/drivers/ms5611.c **** 			// 1: odczytaj temperature i zmierz ci�nienie
+  14:../system/src/drivers/ms5611.c **** 			// 2: odczytaj ci�nienie i zmierz temperature
+  15:../system/src/drivers/ms5611.c **** 			// sekwencja stan�w 0 -> 1 -> 2 -> 1 -> 2 -> 1 (...)
+  16:../system/src/drivers/ms5611.c **** 
+  17:../system/src/drivers/ms5611.c **** #define TX_ADDR 0xEE
+  18:../system/src/drivers/ms5611.c **** #define RX_ADDR 0xEF
+  19:../system/src/drivers/ms5611.c **** 
+  20:../system/src/drivers/ms5611.c **** // An array to store Calibration data
+  21:../system/src/drivers/ms5611.c **** int32_t SensorCalData[8];
+  22:../system/src/drivers/ms5611.c **** double SensorDT = 0.0;
+  23:../system/src/drivers/ms5611.c **** 
+  24:../system/src/drivers/ms5611.c **** // This variable is set on bootup if the sensor is detected and correct calibration data have been 
+  25:../system/src/drivers/ms5611.c **** // If the initialization function will fail the driver will disable communication completely and no
+  26:../system/src/drivers/ms5611.c **** // measuremenets will be returned
+  27:../system/src/drivers/ms5611.c **** uint8_t ms5611_sensor_avaliable = 0;
+  28:../system/src/drivers/ms5611.c **** 
+  29:../system/src/drivers/ms5611.c **** // This function will reset the sensor. It should be ran as a first thing during sensor initializat
+  30:../system/src/drivers/ms5611.c **** int32_t ms5611_reset(ms5611_qf_t *qf) {
+  28              		.loc 1 30 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 82B0     		sub	sp, sp, #8
+  38              		.cfi_def_cfa_offset 16
+  39 0004 0446     		mov	r4, r0
+  40              	.LVL1:
+  31:../system/src/drivers/ms5611.c **** 
+  32:../system/src/drivers/ms5611.c **** 	int out = MS5611_OK;
+  33:../system/src/drivers/ms5611.c **** 
+  34:../system/src/drivers/ms5611.c **** 	// Preparing a buffer with 0x1E command ID which will reset the sensor
+  35:../system/src/drivers/ms5611.c **** 	int txbuf[] = {0x1E, '\0' };
+  41              		.loc 1 35 0
+  42 0006 1E23     		movs	r3, #30
+  43 0008 0093     		str	r3, [sp]
+  44 000a 0022     		movs	r2, #0
+  45 000c 0192     		str	r2, [sp, #4]
+  36:../system/src/drivers/ms5611.c **** 
+  37:../system/src/drivers/ms5611.c **** 	// Send a data to sensor
+  38:../system/src/drivers/ms5611.c **** 	i2c_send_data(TX_ADDR, txbuf, 0);
+  46              		.loc 1 38 0
+  47 000e 6946     		mov	r1, sp
+  48 0010 EE20     		movs	r0, #238
+  49              	.LVL2:
+  50 0012 FFF7FEFF 		bl	i2c_send_data
+  51              	.LVL3:
+  52              	.L3:
+  39:../system/src/drivers/ms5611.c **** 
+  40:../system/src/drivers/ms5611.c **** 	// Wait until the transmission will finish or fail (due to timeout or any other error)
+  41:../system/src/drivers/ms5611.c **** 	while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+  53              		.loc 1 41 0 discriminator 2
+  54 0016 0C4B     		ldr	r3, .L7
+  55 0018 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  56 001a 23B1     		cbz	r3, .L2
+  57              		.loc 1 41 0 is_stmt 0 discriminator 1
+  58 001c 0A4B     		ldr	r3, .L7
+  59 001e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  60 0020 DBB2     		uxtb	r3, r3
+  61 0022 032B     		cmp	r3, #3
+  62 0024 F7D1     		bne	.L3
+  63              	.L2:
+  42:../system/src/drivers/ms5611.c **** 
+  43:../system/src/drivers/ms5611.c **** 	// If reset was successfull enable a driver
+  44:../system/src/drivers/ms5611.c **** 	if (i2c_state == I2C_IDLE) {
+  64              		.loc 1 44 0 is_stmt 1
+  65 0026 084B     		ldr	r3, .L7
+  66 0028 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  67 002a 43B9     		cbnz	r3, .L4
+  45:../system/src/drivers/ms5611.c **** 		// Enable sensor comms
+  46:../system/src/drivers/ms5611.c **** 		ms5611_sensor_avaliable = 1;
+  68              		.loc 1 46 0
+  69 002c 074B     		ldr	r3, .L7+4
+  70 002e 0122     		movs	r2, #1
+  71 0030 1A70     		strb	r2, [r3]
+  47:../system/src/drivers/ms5611.c **** 
+  48:../system/src/drivers/ms5611.c **** 		// wait for sensor reset
+  49:../system/src/drivers/ms5611.c **** 		delay_fixed(50);
+  72              		.loc 1 49 0
+  73 0032 3220     		movs	r0, #50
+  74 0034 FFF7FEFF 		bl	delay_fixed
+  75              	.LVL4:
+  32:../system/src/drivers/ms5611.c **** 
+  76              		.loc 1 32 0
+  77 0038 0020     		movs	r0, #0
+  78              	.LVL5:
+  79              	.L1:
+  50:../system/src/drivers/ms5611.c **** 
+  51:../system/src/drivers/ms5611.c **** 	}
+  52:../system/src/drivers/ms5611.c **** 	else {
+  53:../system/src/drivers/ms5611.c **** 		// Set Quality Factor to unavaliable
+  54:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_NOT_AVALIABLE;
+  55:../system/src/drivers/ms5611.c **** 
+  56:../system/src/drivers/ms5611.c **** 		// Return with keeping 'ms5611_sensor_abaliable' set to zero which will
+  57:../system/src/drivers/ms5611.c **** 		// disable comms
+  58:../system/src/drivers/ms5611.c **** 		out = MS5611_SENSOR_NOT_AVALIABLE;
+  59:../system/src/drivers/ms5611.c **** 	}
+  60:../system/src/drivers/ms5611.c **** 
+  61:../system/src/drivers/ms5611.c **** 	return out;
+  62:../system/src/drivers/ms5611.c **** }
+  80              		.loc 1 62 0
+  81 003a 02B0     		add	sp, sp, #8
+  82              		.cfi_remember_state
+  83              		.cfi_def_cfa_offset 8
+  84              		@ sp needed
+  85 003c 10BD     		pop	{r4, pc}
+  86              	.LVL6:
+  87              	.L4:
+  88              		.cfi_restore_state
+  54:../system/src/drivers/ms5611.c **** 
+  89              		.loc 1 54 0
+  90 003e 0223     		movs	r3, #2
+  91 0040 2370     		strb	r3, [r4]
+  92              	.LVL7:
+  58:../system/src/drivers/ms5611.c **** 	}
+  93              		.loc 1 58 0
+  94 0042 4FF0FF30 		mov	r0, #-1
+  61:../system/src/drivers/ms5611.c **** }
+  95              		.loc 1 61 0
+  96 0046 F8E7     		b	.L1
+  97              	.L8:
+  98              		.align	2
+  99              	.L7:
+ 100 0048 00000000 		.word	i2c_state
+ 101 004c 00000000 		.word	.LANCHOR0
+ 102              		.cfi_endproc
+ 103              	.LFE398:
+ 105              		.section	.text.ms5611_trigger_measure,"ax",%progbits
+ 106              		.align	1
+ 107              		.global	ms5611_trigger_measure
+ 108              		.syntax unified
+ 109              		.thumb
+ 110              		.thumb_func
+ 111              		.fpu fpv4-sp-d16
+ 113              	ms5611_trigger_measure:
+ 114              	.LFB400:
+  63:../system/src/drivers/ms5611.c **** 
+  64:../system/src/drivers/ms5611.c **** // Function will read a calibration data from sensor and chceck if the CRC is correct
+  65:../system/src/drivers/ms5611.c **** int32_t ms5611_read_calibration(int32_t* cal_data, ms5611_qf_t *out) {
+  66:../system/src/drivers/ms5611.c **** 
+  67:../system/src/drivers/ms5611.c **** 	// Check if sensor is avaliable
+  68:../system/src/drivers/ms5611.c **** 	if (ms5611_sensor_avaliable == 0) {
+  69:../system/src/drivers/ms5611.c **** 		// If not stop further actions
+  70:../system/src/drivers/ms5611.c **** 		*out = MS5611_QF_NOT_AVALIABLE;
+  71:../system/src/drivers/ms5611.c **** 
+  72:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+  73:../system/src/drivers/ms5611.c **** 	}
+  74:../system/src/drivers/ms5611.c **** 
+  75:../system/src/drivers/ms5611.c **** 	int i,j;
+  76:../system/src/drivers/ms5611.c **** 	int txbuf[2];	
+  77:../system/src/drivers/ms5611.c **** 	j = 0;
+  78:../system/src/drivers/ms5611.c **** 
+  79:../system/src/drivers/ms5611.c **** 	// Reading calibration constants one after another. Each constant is uint16_t, so a loop iterator
+  80:../system/src/drivers/ms5611.c **** 	// is incremeneted by 2
+  81:../system/src/drivers/ms5611.c **** 	for (i=0; i<=0xE; i+=2) {
+  82:../system/src/drivers/ms5611.c **** 
+  83:../system/src/drivers/ms5611.c **** 		// 0xA0 is an address of first calibration constant in PROM
+  84:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0xA0 + i;
+  85:../system/src/drivers/ms5611.c **** 		txbuf[1] = '\0'; 
+  86:../system/src/drivers/ms5611.c **** 
+  87:../system/src/drivers/ms5611.c **** 		// Transmitting a command
+  88:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR, txbuf, 0);
+  89:../system/src/drivers/ms5611.c **** 
+  90:../system/src/drivers/ms5611.c **** 		// Waiting to transmission completion or failure
+  91:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+  92:../system/src/drivers/ms5611.c **** 
+  93:../system/src/drivers/ms5611.c **** 		// Check if transmission was successfull
+  94:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+  95:../system/src/drivers/ms5611.c **** 			// If not break calibtaion reading but don't touch 'sensor_avaliable'
+  96:../system/src/drivers/ms5611.c **** 			// so function could be called once again.
+  97:../system/src/drivers/ms5611.c **** 			*out = MS5611_QF_NOT_AVALIABLE;
+  98:../system/src/drivers/ms5611.c **** 
+  99:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 100:../system/src/drivers/ms5611.c **** 		}
+ 101:../system/src/drivers/ms5611.c **** 
+ 102:../system/src/drivers/ms5611.c **** 		// Receiving the data with calibration coefficient.
+ 103:../system/src/drivers/ms5611.c **** 		i2c_receive_data(RX_ADDR, 2);
+ 104:../system/src/drivers/ms5611.c **** 
+ 105:../system/src/drivers/ms5611.c **** 		// Waiting until receiving will be completed
+ 106:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 107:../system/src/drivers/ms5611.c **** 
+ 108:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 109:../system/src/drivers/ms5611.c **** 			*out = MS5611_QF_NOT_AVALIABLE;
+ 110:../system/src/drivers/ms5611.c **** 
+ 111:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 112:../system/src/drivers/ms5611.c **** 		}
+ 113:../system/src/drivers/ms5611.c **** 
+ 114:../system/src/drivers/ms5611.c **** 		// Storing calibration coefficient into target array
+ 115:../system/src/drivers/ms5611.c **** 		*(cal_data + j) = ((i2c_rx_data[0] << 8) | i2c_rx_data[1]);
+ 116:../system/src/drivers/ms5611.c **** 
+ 117:../system/src/drivers/ms5611.c **** 		// increase an iterator used to walk through target array
+ 118:../system/src/drivers/ms5611.c **** 		j++;
+ 119:../system/src/drivers/ms5611.c **** 	}
+ 120:../system/src/drivers/ms5611.c **** 
+ 121:../system/src/drivers/ms5611.c **** 	// Getting a CRC4 value from received data
+ 122:../system/src/drivers/ms5611.c **** 	uint8_t rxed_crc = cal_data[7] & 0xF;
+ 123:../system/src/drivers/ms5611.c **** 
+ 124:../system/src/drivers/ms5611.c **** 	// Calculating a CRC4 locally
+ 125:../system/src/drivers/ms5611.c **** 	uint8_t calculated_crc = crc4(cal_data);
+ 126:../system/src/drivers/ms5611.c **** 
+ 127:../system/src/drivers/ms5611.c **** 	if (rxed_crc == calculated_crc)					// sprawdzanie poprawno�ci odebranych danych
+ 128:../system/src/drivers/ms5611.c **** 		return 0;
+ 129:../system/src/drivers/ms5611.c **** 	else
+ 130:../system/src/drivers/ms5611.c **** 		return -1;
+ 131:../system/src/drivers/ms5611.c **** }
+ 132:../system/src/drivers/ms5611.c **** 
+ 133:../system/src/drivers/ms5611.c **** // This is main function to trigger and receive raw value of measuremenets
+ 134:../system/src/drivers/ms5611.c **** int32_t ms5611_trigger_measure(int param_to_meas, int32_t* out) {
+ 115              		.loc 1 134 0
+ 116              		.cfi_startproc
+ 117              		@ args = 0, pretend = 0, frame = 8
+ 118              		@ frame_needed = 0, uses_anonymous_args = 0
+ 119              	.LVL8:
+ 120 0000 10B5     		push	{r4, lr}
+ 121              		.cfi_def_cfa_offset 8
+ 122              		.cfi_offset 4, -8
+ 123              		.cfi_offset 14, -4
+ 124 0002 82B0     		sub	sp, sp, #8
+ 125              		.cfi_def_cfa_offset 16
+ 135:../system/src/drivers/ms5611.c **** 	int txbuf[] = { 0x00, 0x00};
+ 126              		.loc 1 135 0
+ 127 0004 0023     		movs	r3, #0
+ 128 0006 0093     		str	r3, [sp]
+ 129 0008 0193     		str	r3, [sp, #4]
+ 136:../system/src/drivers/ms5611.c **** 
+ 137:../system/src/drivers/ms5611.c **** 	if (ms5611_sensor_avaliable == 0) {
+ 130              		.loc 1 137 0
+ 131 000a 634B     		ldr	r3, .L41
+ 132 000c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 133 000e 002B     		cmp	r3, #0
+ 134 0010 00F0AD80 		beq	.L27
+ 135 0014 0C46     		mov	r4, r1
+ 138:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 139:../system/src/drivers/ms5611.c **** 	}
+ 140:../system/src/drivers/ms5611.c **** 
+ 141:../system/src/drivers/ms5611.c **** 	if(param_to_meas == 0x00) {
+ 136              		.loc 1 141 0
+ 137 0016 0028     		cmp	r0, #0
+ 138 0018 4AD0     		beq	.L37
+ 142:../system/src/drivers/ms5611.c **** 		////////////////////////////////////////////
+ 143:../system/src/drivers/ms5611.c **** 		//// TRIGGERING TEMPERATURE MESUREMENET ////
+ 144:../system/src/drivers/ms5611.c **** 		////////////////////////////////////////////
+ 145:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0x54;						// oversampling 1024
+ 146:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+ 147:../system/src/drivers/ms5611.c **** 
+ 148:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 149:../system/src/drivers/ms5611.c **** 
+ 150:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_IDLE)
+ 151:../system/src/drivers/ms5611.c **** 			return MS5611_OK;
+ 152:../system/src/drivers/ms5611.c **** 		else
+ 153:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 154:../system/src/drivers/ms5611.c **** 	}
+ 155:../system/src/drivers/ms5611.c **** 	else if(param_to_meas == 0x01) {
+ 139              		.loc 1 155 0
+ 140 001a 0128     		cmp	r0, #1
+ 141 001c 5ED0     		beq	.L38
+ 156:../system/src/drivers/ms5611.c **** 		/////////////////////////////
+ 157:../system/src/drivers/ms5611.c **** 		//// READING TEMPERATURE ////
+ 158:../system/src/drivers/ms5611.c **** 		/////////////////////////////
+ 159:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0x00;
+ 160:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0x01);
+ 161:../system/src/drivers/ms5611.c **** 
+ 162:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 163:../system/src/drivers/ms5611.c **** 
+ 164:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 165:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 166:../system/src/drivers/ms5611.c **** 		}
+ 167:../system/src/drivers/ms5611.c **** 
+ 168:../system/src/drivers/ms5611.c **** 		i2c_receive_data(RX_ADDR, 3);
+ 169:../system/src/drivers/ms5611.c **** 
+ 170:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 171:../system/src/drivers/ms5611.c **** 
+ 172:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 173:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 174:../system/src/drivers/ms5611.c **** 		}
+ 175:../system/src/drivers/ms5611.c **** 
+ 176:../system/src/drivers/ms5611.c **** 		*out = ((i2c_rx_data[0] << 16) | (i2c_rx_data[1] << 8) | i2c_rx_data[2]);
+ 177:../system/src/drivers/ms5611.c **** 		////////////////////////////////////////////
+ 178:../system/src/drivers/ms5611.c **** 		//// TRIGGERING PRESSURE MEASUREMENET   ////
+ 179:../system/src/drivers/ms5611.c **** 		////////////////////////////////////////////
+ 180:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0x44;
+ 181:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0);
+ 182:../system/src/drivers/ms5611.c **** 
+ 183:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 184:../system/src/drivers/ms5611.c **** 
+ 185:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 186:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 187:../system/src/drivers/ms5611.c **** 		}
+ 188:../system/src/drivers/ms5611.c **** 
+ 189:../system/src/drivers/ms5611.c **** 		return MS5611_OK;
+ 190:../system/src/drivers/ms5611.c **** 	}
+ 191:../system/src/drivers/ms5611.c **** 	else if(param_to_meas == 0x02) {					// pomiar D2
+ 142              		.loc 1 191 0
+ 143 001e 0228     		cmp	r0, #2
+ 144 0020 40F0B180 		bne	.L32
+ 192:../system/src/drivers/ms5611.c **** 		//////////////////////////
+ 193:../system/src/drivers/ms5611.c **** 		//// READING PRESSURE ////
+ 194:../system/src/drivers/ms5611.c **** 		//////////////////////////
+ 195:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0x00;
+ 196:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0x01);			// wys�anie rozkazu odczytu wyniku
+ 145              		.loc 1 196 0
+ 146 0024 0122     		movs	r2, #1
+ 147 0026 6946     		mov	r1, sp
+ 148              	.LVL9:
+ 149 0028 EE20     		movs	r0, #238
+ 150              	.LVL10:
+ 151 002a FFF7FEFF 		bl	i2c_send_data
+ 152              	.LVL11:
+ 153              	.L22:
+ 197:../system/src/drivers/ms5611.c **** 
+ 198:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 154              		.loc 1 198 0 discriminator 2
+ 155 002e 5B4B     		ldr	r3, .L41+4
+ 156 0030 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 157 0032 23B1     		cbz	r3, .L21
+ 158              		.loc 1 198 0 is_stmt 0 discriminator 1
+ 159 0034 594B     		ldr	r3, .L41+4
+ 160 0036 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 161 0038 DBB2     		uxtb	r3, r3
+ 162 003a 032B     		cmp	r3, #3
+ 163 003c F7D1     		bne	.L22
+ 164              	.L21:
+ 199:../system/src/drivers/ms5611.c **** 
+ 200:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 165              		.loc 1 200 0 is_stmt 1
+ 166 003e 574B     		ldr	r3, .L41+4
+ 167 0040 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 168 0042 DBB2     		uxtb	r3, r3
+ 169 0044 032B     		cmp	r3, #3
+ 170 0046 00F0A180 		beq	.L33
+ 201:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 202:../system/src/drivers/ms5611.c **** 		}
+ 203:../system/src/drivers/ms5611.c **** 
+ 204:../system/src/drivers/ms5611.c **** 		i2c_receive_data(RX_ADDR, 3);
+ 171              		.loc 1 204 0
+ 172 004a 0321     		movs	r1, #3
+ 173 004c EF20     		movs	r0, #239
+ 174 004e FFF7FEFF 		bl	i2c_receive_data
+ 175              	.LVL12:
+ 176              	.L24:
+ 205:../system/src/drivers/ms5611.c **** 
+ 206:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 177              		.loc 1 206 0 discriminator 2
+ 178 0052 524B     		ldr	r3, .L41+4
+ 179 0054 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 180 0056 23B1     		cbz	r3, .L23
+ 181              		.loc 1 206 0 is_stmt 0 discriminator 1
+ 182 0058 504B     		ldr	r3, .L41+4
+ 183 005a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 184 005c DBB2     		uxtb	r3, r3
+ 185 005e 032B     		cmp	r3, #3
+ 186 0060 F7D1     		bne	.L24
+ 187              	.L23:
+ 207:../system/src/drivers/ms5611.c **** 
+ 208:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 188              		.loc 1 208 0 is_stmt 1
+ 189 0062 4E4B     		ldr	r3, .L41+4
+ 190 0064 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 191 0066 DBB2     		uxtb	r3, r3
+ 192 0068 032B     		cmp	r3, #3
+ 193 006a 00F09280 		beq	.L34
+ 209:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 210:../system/src/drivers/ms5611.c **** 		}
+ 211:../system/src/drivers/ms5611.c **** 
+ 212:../system/src/drivers/ms5611.c **** 		*out = ((i2c_rx_data[0] << 16) | (i2c_rx_data[1] << 8) | i2c_rx_data[2]);
+ 194              		.loc 1 212 0
+ 195 006e 4C4A     		ldr	r2, .L41+8
+ 196 0070 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 197 0072 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+ 198 0074 1B02     		lsls	r3, r3, #8
+ 199 0076 43EA0143 		orr	r3, r3, r1, lsl #16
+ 200 007a 9278     		ldrb	r2, [r2, #2]	@ zero_extendqisi2
+ 201 007c 1343     		orrs	r3, r3, r2
+ 202 007e 2360     		str	r3, [r4]
+ 213:../system/src/drivers/ms5611.c **** 		/////////////////////////////////////////////
+ 214:../system/src/drivers/ms5611.c **** 		//// TRIGGERING TEMPERATURE MEASUREMENET ////
+ 215:../system/src/drivers/ms5611.c **** 		/////////////////////////////////////////////
+ 216:../system/src/drivers/ms5611.c **** 		txbuf[0] = 0x54;
+ 203              		.loc 1 216 0
+ 204 0080 02A9     		add	r1, sp, #8
+ 205 0082 5423     		movs	r3, #84
+ 206 0084 41F8083D 		str	r3, [r1, #-8]!
+ 217:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0);
+ 207              		.loc 1 217 0
+ 208 0088 0022     		movs	r2, #0
+ 209 008a EE20     		movs	r0, #238
+ 210 008c FFF7FEFF 		bl	i2c_send_data
+ 211              	.LVL13:
+ 212              	.L26:
+ 218:../system/src/drivers/ms5611.c **** 
+ 219:../system/src/drivers/ms5611.c **** 		while (i2c_state != I2C_IDLE && i2c_state != I2C_ERROR);
+ 213              		.loc 1 219 0 discriminator 2
+ 214 0090 424B     		ldr	r3, .L41+4
+ 215 0092 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 216 0094 23B1     		cbz	r3, .L25
+ 217              		.loc 1 219 0 is_stmt 0 discriminator 1
+ 218 0096 414B     		ldr	r3, .L41+4
+ 219 0098 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 220 009a DBB2     		uxtb	r3, r3
+ 221 009c 032B     		cmp	r3, #3
+ 222 009e F7D1     		bne	.L26
+ 223              	.L25:
+ 220:../system/src/drivers/ms5611.c **** 
+ 221:../system/src/drivers/ms5611.c **** 		if (i2c_state == I2C_ERROR) {
+ 224              		.loc 1 221 0 is_stmt 1
+ 225 00a0 3E4B     		ldr	r3, .L41+4
+ 226 00a2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 227 00a4 DBB2     		uxtb	r3, r3
+ 228 00a6 032B     		cmp	r3, #3
+ 229 00a8 5ED0     		beq	.L39
+ 222:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 223:../system/src/drivers/ms5611.c **** 		}
+ 224:../system/src/drivers/ms5611.c **** 
+ 225:../system/src/drivers/ms5611.c **** 		return MS5611_OK;
+ 230              		.loc 1 225 0
+ 231 00aa 0020     		movs	r0, #0
+ 232              	.LVL14:
+ 233              	.L9:
+ 226:../system/src/drivers/ms5611.c **** 	}
+ 227:../system/src/drivers/ms5611.c **** 
+ 228:../system/src/drivers/ms5611.c **** 	return MS5611_WRONG_PARAM_VALUE;
+ 229:../system/src/drivers/ms5611.c **** }
+ 234              		.loc 1 229 0
+ 235 00ac 02B0     		add	sp, sp, #8
+ 236              		.cfi_remember_state
+ 237              		.cfi_def_cfa_offset 8
+ 238              		@ sp needed
+ 239 00ae 10BD     		pop	{r4, pc}
+ 240              	.LVL15:
+ 241              	.L37:
+ 242              		.cfi_restore_state
+ 145:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0);				// wys�anie rozkazu rozpocz�cia pomiaru
+ 243              		.loc 1 145 0
+ 244 00b0 02A9     		add	r1, sp, #8
+ 245              	.LVL16:
+ 246 00b2 5423     		movs	r3, #84
+ 247 00b4 41F8083D 		str	r3, [r1, #-8]!
+ 146:../system/src/drivers/ms5611.c **** 
+ 248              		.loc 1 146 0
+ 249 00b8 0022     		movs	r2, #0
+ 250 00ba EE20     		movs	r0, #238
+ 251              	.LVL17:
+ 252 00bc FFF7FEFF 		bl	i2c_send_data
+ 253              	.LVL18:
+ 254              	.L13:
+ 148:../system/src/drivers/ms5611.c **** 
+ 255              		.loc 1 148 0 discriminator 2
+ 256 00c0 364B     		ldr	r3, .L41+4
+ 257 00c2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 258 00c4 23B1     		cbz	r3, .L12
+ 148:../system/src/drivers/ms5611.c **** 
+ 259              		.loc 1 148 0 is_stmt 0 discriminator 1
+ 260 00c6 354B     		ldr	r3, .L41+4
+ 261 00c8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 262 00ca DBB2     		uxtb	r3, r3
+ 263 00cc 032B     		cmp	r3, #3
+ 264 00ce F7D1     		bne	.L13
+ 265              	.L12:
+ 150:../system/src/drivers/ms5611.c **** 			return MS5611_OK;
+ 266              		.loc 1 150 0 is_stmt 1
+ 267 00d0 324B     		ldr	r3, .L41+4
+ 268 00d2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 269 00d4 002B     		cmp	r3, #0
+ 270 00d6 4DD1     		bne	.L28
+ 151:../system/src/drivers/ms5611.c **** 		else
+ 271              		.loc 1 151 0
+ 272 00d8 0020     		movs	r0, #0
+ 273 00da E7E7     		b	.L9
+ 274              	.LVL19:
+ 275              	.L38:
+ 160:../system/src/drivers/ms5611.c **** 
+ 276              		.loc 1 160 0
+ 277 00dc 0122     		movs	r2, #1
+ 278 00de 6946     		mov	r1, sp
+ 279              	.LVL20:
+ 280 00e0 EE20     		movs	r0, #238
+ 281              	.LVL21:
+ 282 00e2 FFF7FEFF 		bl	i2c_send_data
+ 283              	.LVL22:
+ 284              	.L16:
+ 162:../system/src/drivers/ms5611.c **** 
+ 285              		.loc 1 162 0 discriminator 2
+ 286 00e6 2D4B     		ldr	r3, .L41+4
+ 287 00e8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 288 00ea 23B1     		cbz	r3, .L15
+ 162:../system/src/drivers/ms5611.c **** 
+ 289              		.loc 1 162 0 is_stmt 0 discriminator 1
+ 290 00ec 2B4B     		ldr	r3, .L41+4
+ 291 00ee 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 292 00f0 DBB2     		uxtb	r3, r3
+ 293 00f2 032B     		cmp	r3, #3
+ 294 00f4 F7D1     		bne	.L16
+ 295              	.L15:
+ 164:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 296              		.loc 1 164 0 is_stmt 1
+ 297 00f6 294B     		ldr	r3, .L41+4
+ 298 00f8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 299 00fa DBB2     		uxtb	r3, r3
+ 300 00fc 032B     		cmp	r3, #3
+ 301 00fe 3CD0     		beq	.L29
+ 168:../system/src/drivers/ms5611.c **** 
+ 302              		.loc 1 168 0
+ 303 0100 0321     		movs	r1, #3
+ 304 0102 EF20     		movs	r0, #239
+ 305 0104 FFF7FEFF 		bl	i2c_receive_data
+ 306              	.LVL23:
+ 307              	.L18:
+ 170:../system/src/drivers/ms5611.c **** 
+ 308              		.loc 1 170 0 discriminator 2
+ 309 0108 244B     		ldr	r3, .L41+4
+ 310 010a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 311 010c 23B1     		cbz	r3, .L17
+ 170:../system/src/drivers/ms5611.c **** 
+ 312              		.loc 1 170 0 is_stmt 0 discriminator 1
+ 313 010e 234B     		ldr	r3, .L41+4
+ 314 0110 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 315 0112 DBB2     		uxtb	r3, r3
+ 316 0114 032B     		cmp	r3, #3
+ 317 0116 F7D1     		bne	.L18
+ 318              	.L17:
+ 172:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 319              		.loc 1 172 0 is_stmt 1
+ 320 0118 204B     		ldr	r3, .L41+4
+ 321 011a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 322 011c DBB2     		uxtb	r3, r3
+ 323 011e 032B     		cmp	r3, #3
+ 324 0120 2ED0     		beq	.L30
+ 176:../system/src/drivers/ms5611.c **** 		////////////////////////////////////////////
+ 325              		.loc 1 176 0
+ 326 0122 1F4A     		ldr	r2, .L41+8
+ 327 0124 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 328 0126 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+ 329 0128 1B02     		lsls	r3, r3, #8
+ 330 012a 43EA0143 		orr	r3, r3, r1, lsl #16
+ 331 012e 9278     		ldrb	r2, [r2, #2]	@ zero_extendqisi2
+ 332 0130 1343     		orrs	r3, r3, r2
+ 333 0132 2360     		str	r3, [r4]
+ 180:../system/src/drivers/ms5611.c **** 		i2c_send_data(TX_ADDR,txbuf, 0);
+ 334              		.loc 1 180 0
+ 335 0134 02A9     		add	r1, sp, #8
+ 336 0136 4423     		movs	r3, #68
+ 337 0138 41F8083D 		str	r3, [r1, #-8]!
+ 181:../system/src/drivers/ms5611.c **** 
+ 338              		.loc 1 181 0
+ 339 013c 0022     		movs	r2, #0
+ 340 013e EE20     		movs	r0, #238
+ 341 0140 FFF7FEFF 		bl	i2c_send_data
+ 342              	.LVL24:
+ 343              	.L20:
+ 183:../system/src/drivers/ms5611.c **** 
+ 344              		.loc 1 183 0 discriminator 2
+ 345 0144 154B     		ldr	r3, .L41+4
+ 346 0146 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 347 0148 23B1     		cbz	r3, .L19
+ 183:../system/src/drivers/ms5611.c **** 
+ 348              		.loc 1 183 0 is_stmt 0 discriminator 1
+ 349 014a 144B     		ldr	r3, .L41+4
+ 350 014c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 351 014e DBB2     		uxtb	r3, r3
+ 352 0150 032B     		cmp	r3, #3
+ 353 0152 F7D1     		bne	.L20
+ 354              	.L19:
+ 185:../system/src/drivers/ms5611.c **** 			return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 355              		.loc 1 185 0 is_stmt 1
+ 356 0154 114B     		ldr	r3, .L41+4
+ 357 0156 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 358 0158 DBB2     		uxtb	r3, r3
+ 359 015a 032B     		cmp	r3, #3
+ 360 015c 01D0     		beq	.L40
+ 189:../system/src/drivers/ms5611.c **** 	}
+ 361              		.loc 1 189 0
+ 362 015e 0020     		movs	r0, #0
+ 363 0160 A4E7     		b	.L9
+ 364              	.L40:
+ 186:../system/src/drivers/ms5611.c **** 		}
+ 365              		.loc 1 186 0
+ 366 0162 6FF00100 		mvn	r0, #1
+ 367 0166 A1E7     		b	.L9
+ 368              	.L39:
+ 222:../system/src/drivers/ms5611.c **** 		}
+ 369              		.loc 1 222 0
+ 370 0168 6FF00100 		mvn	r0, #1
+ 371 016c 9EE7     		b	.L9
+ 372              	.LVL25:
+ 373              	.L27:
+ 138:../system/src/drivers/ms5611.c **** 	}
+ 374              		.loc 1 138 0
+ 375 016e 4FF0FF30 		mov	r0, #-1
+ 376              	.LVL26:
+ 377 0172 9BE7     		b	.L9
+ 378              	.LVL27:
+ 379              	.L28:
+ 153:../system/src/drivers/ms5611.c **** 	}
+ 380              		.loc 1 153 0
+ 381 0174 6FF00100 		mvn	r0, #1
+ 382 0178 98E7     		b	.L9
+ 383              	.L29:
+ 165:../system/src/drivers/ms5611.c **** 		}
+ 384              		.loc 1 165 0
+ 385 017a 6FF00100 		mvn	r0, #1
+ 386 017e 95E7     		b	.L9
+ 387              	.L30:
+ 173:../system/src/drivers/ms5611.c **** 		}
+ 388              		.loc 1 173 0
+ 389 0180 6FF00100 		mvn	r0, #1
+ 390 0184 92E7     		b	.L9
+ 391              	.LVL28:
+ 392              	.L32:
+ 228:../system/src/drivers/ms5611.c **** }
+ 393              		.loc 1 228 0
+ 394 0186 6FF00200 		mvn	r0, #2
+ 395              	.LVL29:
+ 396 018a 8FE7     		b	.L9
+ 397              	.LVL30:
+ 398              	.L33:
+ 201:../system/src/drivers/ms5611.c **** 		}
+ 399              		.loc 1 201 0
+ 400 018c 6FF00100 		mvn	r0, #1
+ 401 0190 8CE7     		b	.L9
+ 402              	.L34:
+ 209:../system/src/drivers/ms5611.c **** 		}
+ 403              		.loc 1 209 0
+ 404 0192 6FF00100 		mvn	r0, #1
+ 405 0196 89E7     		b	.L9
+ 406              	.L42:
+ 407              		.align	2
+ 408              	.L41:
+ 409 0198 00000000 		.word	.LANCHOR0
+ 410 019c 00000000 		.word	i2c_state
+ 411 01a0 00000000 		.word	i2c_rx_data
+ 412              		.cfi_endproc
+ 413              	.LFE400:
+ 415              		.global	__aeabi_i2d
+ 416              		.global	__aeabi_dmul
+ 417              		.global	__aeabi_dsub
+ 418              		.global	__aeabi_ddiv
+ 419              		.global	__aeabi_dadd
+ 420              		.global	__aeabi_d2f
+ 421              		.section	.text.ms5611_get_temperature,"ax",%progbits
+ 422              		.align	1
+ 423              		.global	ms5611_get_temperature
+ 424              		.syntax unified
+ 425              		.thumb
+ 426              		.thumb_func
+ 427              		.fpu fpv4-sp-d16
+ 429              	ms5611_get_temperature:
+ 430              	.LFB401:
+ 230:../system/src/drivers/ms5611.c **** 
+ 231:../system/src/drivers/ms5611.c **** // This function will get the physical value of measured temperature
+ 232:../system/src/drivers/ms5611.c **** int32_t ms5611_get_temperature(float* out, ms5611_qf_t *qf) {
+ 431              		.loc 1 232 0
+ 432              		.cfi_startproc
+ 433              		@ args = 0, pretend = 0, frame = 8
+ 434              		@ frame_needed = 0, uses_anonymous_args = 0
+ 435              	.LVL31:
+ 436 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 437              		.cfi_def_cfa_offset 36
+ 438              		.cfi_offset 4, -36
+ 439              		.cfi_offset 5, -32
+ 440              		.cfi_offset 6, -28
+ 441              		.cfi_offset 7, -24
+ 442              		.cfi_offset 8, -20
+ 443              		.cfi_offset 9, -16
+ 444              		.cfi_offset 10, -12
+ 445              		.cfi_offset 11, -8
+ 446              		.cfi_offset 14, -4
+ 447 0004 2DED048B 		vpush.64	{d8, d9}
+ 448              		.cfi_def_cfa_offset 52
+ 449              		.cfi_offset 80, -52
+ 450              		.cfi_offset 81, -48
+ 451              		.cfi_offset 82, -44
+ 452              		.cfi_offset 83, -40
+ 453 0008 83B0     		sub	sp, sp, #12
+ 454              		.cfi_def_cfa_offset 64
+ 233:../system/src/drivers/ms5611.c **** 	int32_t raw = 0;
+ 455              		.loc 1 233 0
+ 456 000a 0023     		movs	r3, #0
+ 457 000c 0193     		str	r3, [sp, #4]
+ 458              	.LVL32:
+ 234:../system/src/drivers/ms5611.c **** 
+ 235:../system/src/drivers/ms5611.c **** 	double raw_temp, dt, temp;
+ 236:../system/src/drivers/ms5611.c **** 	float output;
+ 237:../system/src/drivers/ms5611.c **** 
+ 238:../system/src/drivers/ms5611.c **** 	int32_t return_val = 0;
+ 239:../system/src/drivers/ms5611.c **** 
+ 240:../system/src/drivers/ms5611.c **** 	// Check if sensor is avaliable
+ 241:../system/src/drivers/ms5611.c **** 	if (ms5611_sensor_avaliable == 0) {
+ 459              		.loc 1 241 0
+ 460 000e 464B     		ldr	r3, .L55+24
+ 461 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 462 0012 002B     		cmp	r3, #0
+ 463 0014 6DD0     		beq	.L53
+ 464 0016 0C46     		mov	r4, r1
+ 465 0018 0546     		mov	r5, r0
+ 242:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_NOT_AVALIABLE;
+ 243:../system/src/drivers/ms5611.c **** 
+ 244:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 245:../system/src/drivers/ms5611.c **** 	}
+ 246:../system/src/drivers/ms5611.c **** 
+ 247:../system/src/drivers/ms5611.c **** 	// Read temperature value and trigger pressure meas in the same time
+ 248:../system/src/drivers/ms5611.c **** 	return_val = ms5611_trigger_measure(0x01, &raw);
+ 466              		.loc 1 248 0
+ 467 001a 01A9     		add	r1, sp, #4
+ 468              	.LVL33:
+ 469 001c 0120     		movs	r0, #1
+ 470              	.LVL34:
+ 471 001e FFF7FEFF 		bl	ms5611_trigger_measure
+ 472              	.LVL35:
+ 249:../system/src/drivers/ms5611.c **** 
+ 250:../system/src/drivers/ms5611.c **** 	if (return_val != MS5611_OK) {
+ 473              		.loc 1 250 0
+ 474 0022 8246     		mov	r10, r0
+ 475 0024 0028     		cmp	r0, #0
+ 476 0026 69D1     		bne	.L54
+ 251:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_NOT_AVALIABLE;
+ 252:../system/src/drivers/ms5611.c **** 
+ 253:../system/src/drivers/ms5611.c **** 		return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 254:../system/src/drivers/ms5611.c **** 	}
+ 255:../system/src/drivers/ms5611.c **** 
+ 256:../system/src/drivers/ms5611.c **** 	// copy conversion result to local float variable
+ 257:../system/src/drivers/ms5611.c **** 	raw_temp = raw;
+ 477              		.loc 1 257 0
+ 478 0028 0198     		ldr	r0, [sp, #4]
+ 479              	.LVL36:
+ 480 002a FFF7FEFF 		bl	__aeabi_i2d
+ 481              	.LVL37:
+ 482 002e 0646     		mov	r6, r0
+ 483 0030 0F46     		mov	r7, r1
+ 484              	.LVL38:
+ 258:../system/src/drivers/ms5611.c **** 
+ 259:../system/src/drivers/ms5611.c **** 	// use calibation coefficient to convert to physical value
+ 260:../system/src/drivers/ms5611.c **** 	dt = raw_temp - SensorCalData[5] * pow(2,8);
+ 485              		.loc 1 260 0
+ 486 0032 DFF80CB1 		ldr	fp, .L55+48
+ 487 0036 DBF81480 		ldr	r8, [fp, #20]
+ 488 003a 9FED358B 		vldr.64	d8, .L55
+ 489 003e 9FED361B 		vldr.64	d1, .L55+8
+ 490 0042 B0EE480A 		vmov.f32	s0, s16
+ 491 0046 F0EE680A 		vmov.f32	s1, s17
+ 492 004a FFF7FEFF 		bl	pow
+ 493              	.LVL39:
+ 494 004e B0EE409A 		vmov.f32	s18, s0
+ 495 0052 F0EE609A 		vmov.f32	s19, s1
+ 496 0056 4046     		mov	r0, r8
+ 497 0058 FFF7FEFF 		bl	__aeabi_i2d
+ 498              	.LVL40:
+ 499 005c 53EC192B 		vmov	r2, r3, d9
+ 500 0060 FFF7FEFF 		bl	__aeabi_dmul
+ 501              	.LVL41:
+ 502 0064 0246     		mov	r2, r0
+ 503 0066 0B46     		mov	r3, r1
+ 504 0068 3046     		mov	r0, r6
+ 505 006a 3946     		mov	r1, r7
+ 506 006c FFF7FEFF 		bl	__aeabi_dsub
+ 507              	.LVL42:
+ 508 0070 8046     		mov	r8, r0
+ 509 0072 8946     		mov	r9, r1
+ 510              	.LVL43:
+ 261:../system/src/drivers/ms5611.c **** 	temp = 2000 + dt * SensorCalData[5] / pow(2,23);
+ 511              		.loc 1 261 0
+ 512 0074 DBF81400 		ldr	r0, [fp, #20]
+ 513 0078 FFF7FEFF 		bl	__aeabi_i2d
+ 514              	.LVL44:
+ 515 007c 4246     		mov	r2, r8
+ 516 007e 4B46     		mov	r3, r9
+ 517 0080 FFF7FEFF 		bl	__aeabi_dmul
+ 518              	.LVL45:
+ 519 0084 0646     		mov	r6, r0
+ 520              	.LVL46:
+ 521 0086 0F46     		mov	r7, r1
+ 522 0088 9FED251B 		vldr.64	d1, .L55+16
+ 523 008c B0EE480A 		vmov.f32	s0, s16
+ 524 0090 F0EE680A 		vmov.f32	s1, s17
+ 525 0094 FFF7FEFF 		bl	pow
+ 526              	.LVL47:
+ 527 0098 53EC102B 		vmov	r2, r3, d0
+ 528 009c 3046     		mov	r0, r6
+ 529 009e 3946     		mov	r1, r7
+ 530 00a0 FFF7FEFF 		bl	__aeabi_ddiv
+ 531              	.LVL48:
+ 532 00a4 0022     		movs	r2, #0
+ 533 00a6 214B     		ldr	r3, .L55+28
+ 534 00a8 FFF7FEFF 		bl	__aeabi_dadd
+ 535              	.LVL49:
+ 262:../system/src/drivers/ms5611.c **** 	output = (float)temp;
+ 536              		.loc 1 262 0
+ 537 00ac FFF7FEFF 		bl	__aeabi_d2f
+ 538              	.LVL50:
+ 263:../system/src/drivers/ms5611.c **** 	output /= 100;
+ 539              		.loc 1 263 0
+ 540 00b0 9FED1F7A 		vldr.32	s14, .L55+32
+ 541 00b4 07EE900A 		vmov	s15, r0
+ 542 00b8 C7EE877A 		vdiv.f32	s15, s15, s14
+ 543              	.LVL51:
+ 264:../system/src/drivers/ms5611.c **** 	SensorDT = dt;
+ 544              		.loc 1 264 0
+ 545 00bc 1D4B     		ldr	r3, .L55+36
+ 546 00be C3E90089 		strd	r8, [r3]
+ 265:../system/src/drivers/ms5611.c **** 
+ 266:../system/src/drivers/ms5611.c **** 	// store physical value in output variable
+ 267:../system/src/drivers/ms5611.c **** 	*out = output;
+ 547              		.loc 1 267 0
+ 548 00c2 C5ED007A 		vstr.32	s15, [r5]
+ 268:../system/src/drivers/ms5611.c **** 
+ 269:../system/src/drivers/ms5611.c **** 	// Check if the physical value of temperature lies within the range which reflects
+ 270:../system/src/drivers/ms5611.c **** 	// the achievable in reality values. This check is done to protect against situation
+ 271:../system/src/drivers/ms5611.c **** 	// when the sensor is responsible on an i2c bus, but the measured values are
+ 272:../system/src/drivers/ms5611.c **** 	// incorrect due to sensor damage or reading the value before the measurement is
+ 273:../system/src/drivers/ms5611.c **** 	// done.
+ 274:../system/src/drivers/ms5611.c **** 	if (output > MS5611_MIN_TEMPERATURE_OK && output < MS5611_MAX_TEMPERATURE_OK) {
+ 549              		.loc 1 274 0
+ 550 00c6 9FED1C7A 		vldr.32	s14, .L55+40
+ 551 00ca F4EEC77A 		vcmpe.f32	s15, s14
+ 552 00ce F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 553 00d2 18DD     		ble	.L47
+ 554              		.loc 1 274 0 is_stmt 0 discriminator 1
+ 555 00d4 9FED197A 		vldr.32	s14, .L55+44
+ 556 00d8 F4EEC77A 		vcmpe.f32	s15, s14
+ 557 00dc F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 558 00e0 11D5     		bpl	.L47
+ 275:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_FULL;
+ 559              		.loc 1 275 0 is_stmt 1
+ 560 00e2 0123     		movs	r3, #1
+ 561 00e4 2370     		strb	r3, [r4]
+ 562              	.LVL52:
+ 563              	.L43:
+ 276:../system/src/drivers/ms5611.c **** 		return MS5611_OK;
+ 277:../system/src/drivers/ms5611.c **** 	}
+ 278:../system/src/drivers/ms5611.c **** 	else {
+ 279:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_DEGRADATED;
+ 280:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 281:../system/src/drivers/ms5611.c **** 	}
+ 282:../system/src/drivers/ms5611.c **** 
+ 283:../system/src/drivers/ms5611.c **** 
+ 284:../system/src/drivers/ms5611.c **** 
+ 285:../system/src/drivers/ms5611.c **** }
+ 564              		.loc 1 285 0
+ 565 00e6 5046     		mov	r0, r10
+ 566 00e8 03B0     		add	sp, sp, #12
+ 567              		.cfi_remember_state
+ 568              		.cfi_def_cfa_offset 52
+ 569              		@ sp needed
+ 570 00ea BDEC048B 		vldm	sp!, {d8-d9}
+ 571              		.cfi_restore 82
+ 572              		.cfi_restore 83
+ 573              		.cfi_restore 80
+ 574              		.cfi_restore 81
+ 575              		.cfi_def_cfa_offset 36
+ 576 00ee BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 577              	.LVL53:
+ 578              	.L53:
+ 579              		.cfi_restore_state
+ 242:../system/src/drivers/ms5611.c **** 
+ 580              		.loc 1 242 0
+ 581 00f2 0223     		movs	r3, #2
+ 582 00f4 0B70     		strb	r3, [r1]
+ 244:../system/src/drivers/ms5611.c **** 	}
+ 583              		.loc 1 244 0
+ 584 00f6 4FF0FF3A 		mov	r10, #-1
+ 585 00fa F4E7     		b	.L43
+ 586              	.LVL54:
+ 587              	.L54:
+ 251:../system/src/drivers/ms5611.c **** 
+ 588              		.loc 1 251 0
+ 589 00fc 0223     		movs	r3, #2
+ 590 00fe 2370     		strb	r3, [r4]
+ 253:../system/src/drivers/ms5611.c **** 	}
+ 591              		.loc 1 253 0
+ 592 0100 6FF0010A 		mvn	r10, #1
+ 593 0104 EFE7     		b	.L43
+ 594              	.LVL55:
+ 595              	.L47:
+ 279:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 596              		.loc 1 279 0
+ 597 0106 0323     		movs	r3, #3
+ 598 0108 2370     		strb	r3, [r4]
+ 280:../system/src/drivers/ms5611.c **** 	}
+ 599              		.loc 1 280 0
+ 600 010a 4FF0FF3A 		mov	r10, #-1
+ 601              	.LVL56:
+ 602 010e EAE7     		b	.L43
+ 603              	.L56:
+ 604              		.align	3
+ 605              	.L55:
+ 606 0110 00000000 		.word	0
+ 607 0114 00000040 		.word	1073741824
+ 608 0118 00000000 		.word	0
+ 609 011c 00002040 		.word	1075838976
+ 610 0120 00000000 		.word	0
+ 611 0124 00003740 		.word	1077346304
+ 612 0128 00000000 		.word	.LANCHOR0
+ 613 012c 00409F40 		.word	1084178432
+ 614 0130 0000C842 		.word	1120403456
+ 615 0134 00000000 		.word	.LANCHOR1
+ 616 0138 000020C2 		.word	3256877056
+ 617 013c 00008C42 		.word	1116471296
+ 618 0140 00000000 		.word	SensorCalData
+ 619              		.cfi_endproc
+ 620              	.LFE401:
+ 622              		.global	__aeabi_d2lz
+ 623              		.global	__aeabi_l2d
+ 624              		.section	.text.ms5611_get_pressure,"ax",%progbits
+ 625              		.align	1
+ 626              		.global	ms5611_get_pressure
+ 627              		.syntax unified
+ 628              		.thumb
+ 629              		.thumb_func
+ 630              		.fpu fpv4-sp-d16
+ 632              	ms5611_get_pressure:
+ 633              	.LFB402:
+ 286:../system/src/drivers/ms5611.c **** 
+ 287:../system/src/drivers/ms5611.c **** // This function will get the physical vale of pressure and then trigger temperature meas.
+ 288:../system/src/drivers/ms5611.c **** int32_t ms5611_get_pressure(float* out, ms5611_qf_t *qf) {
+ 634              		.loc 1 288 0
+ 635              		.cfi_startproc
+ 636              		@ args = 0, pretend = 0, frame = 32
+ 637              		@ frame_needed = 0, uses_anonymous_args = 0
+ 638              	.LVL57:
+ 639 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 640              		.cfi_def_cfa_offset 36
+ 641              		.cfi_offset 4, -36
+ 642              		.cfi_offset 5, -32
+ 643              		.cfi_offset 6, -28
+ 644              		.cfi_offset 7, -24
+ 645              		.cfi_offset 8, -20
+ 646              		.cfi_offset 9, -16
+ 647              		.cfi_offset 10, -12
+ 648              		.cfi_offset 11, -8
+ 649              		.cfi_offset 14, -4
+ 650 0004 2DED068B 		vpush.64	{d8, d9, d10}
+ 651              		.cfi_def_cfa_offset 60
+ 652              		.cfi_offset 80, -60
+ 653              		.cfi_offset 81, -56
+ 654              		.cfi_offset 82, -52
+ 655              		.cfi_offset 83, -48
+ 656              		.cfi_offset 84, -44
+ 657              		.cfi_offset 85, -40
+ 658 0008 89B0     		sub	sp, sp, #36
+ 659              		.cfi_def_cfa_offset 96
+ 289:../system/src/drivers/ms5611.c **** 	int32_t raw = 0;
+ 660              		.loc 1 289 0
+ 661 000a 0023     		movs	r3, #0
+ 662 000c 0793     		str	r3, [sp, #28]
+ 663              	.LVL58:
+ 290:../system/src/drivers/ms5611.c **** 
+ 291:../system/src/drivers/ms5611.c **** 	int32_t return_val = 0;
+ 292:../system/src/drivers/ms5611.c **** 
+ 293:../system/src/drivers/ms5611.c **** 	long long int raw_p, off, sens, p;	// int64_t
+ 294:../system/src/drivers/ms5611.c **** 	float output_p;
+ 295:../system/src/drivers/ms5611.c **** 
+ 296:../system/src/drivers/ms5611.c **** 	// Check if sensor is avaliable
+ 297:../system/src/drivers/ms5611.c **** 	if (ms5611_sensor_avaliable == 0) {
+ 664              		.loc 1 297 0
+ 665 000e 884B     		ldr	r3, .L69+48
+ 666 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 667 0012 002B     		cmp	r3, #0
+ 668 0014 00F0DF80 		beq	.L67
+ 669 0018 0C46     		mov	r4, r1
+ 670 001a 0546     		mov	r5, r0
+ 298:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_NOT_AVALIABLE;
+ 299:../system/src/drivers/ms5611.c **** 
+ 300:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 301:../system/src/drivers/ms5611.c **** 	}
+ 302:../system/src/drivers/ms5611.c **** 
+ 303:../system/src/drivers/ms5611.c **** 	return_val = ms5611_trigger_measure(0x02, &raw);
+ 671              		.loc 1 303 0
+ 672 001c 07A9     		add	r1, sp, #28
+ 673              	.LVL59:
+ 674 001e 0220     		movs	r0, #2
+ 675              	.LVL60:
+ 676 0020 FFF7FEFF 		bl	ms5611_trigger_measure
+ 677              	.LVL61:
+ 304:../system/src/drivers/ms5611.c **** 
+ 305:../system/src/drivers/ms5611.c **** 	if (return_val != MS5611_OK) {
+ 678              		.loc 1 305 0
+ 679 0024 0190     		str	r0, [sp, #4]
+ 680 0026 0028     		cmp	r0, #0
+ 681 0028 40F0DB80 		bne	.L68
+ 306:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_NOT_AVALIABLE;
+ 307:../system/src/drivers/ms5611.c **** 		//ms5611_sensor_avaliable = 0;
+ 308:../system/src/drivers/ms5611.c **** 
+ 309:../system/src/drivers/ms5611.c **** 		return MS5611_TIMEOUT_DURING_MEASURMENT;
+ 310:../system/src/drivers/ms5611.c **** 	}
+ 311:../system/src/drivers/ms5611.c **** 
+ 312:../system/src/drivers/ms5611.c **** 	 raw_p = raw;
+ 682              		.loc 1 312 0
+ 683 002c 079E     		ldr	r6, [sp, #28]
+ 684 002e 4FEAE67B 		asr	fp, r6, #31
+ 313:../system/src/drivers/ms5611.c **** 
+ 314:../system/src/drivers/ms5611.c **** 	off = SensorCalData[2] * pow(2,16) + (SensorCalData[4] * SensorDT) / pow(2,7);
+ 685              		.loc 1 314 0
+ 686 0032 804F     		ldr	r7, .L69+52
+ 687 0034 D7F80880 		ldr	r8, [r7, #8]
+ 688 0038 9FED718B 		vldr.64	d8, .L69
+ 689 003c 9FED721B 		vldr.64	d1, .L69+8
+ 690 0040 B0EE480A 		vmov.f32	s0, s16
+ 691 0044 F0EE680A 		vmov.f32	s1, s17
+ 692 0048 FFF7FEFF 		bl	pow
+ 693              	.LVL62:
+ 694 004c B0EE409A 		vmov.f32	s18, s0
+ 695 0050 F0EE609A 		vmov.f32	s19, s1
+ 696 0054 4046     		mov	r0, r8
+ 697 0056 FFF7FEFF 		bl	__aeabi_i2d
+ 698              	.LVL63:
+ 699 005a 53EC192B 		vmov	r2, r3, d9
+ 700 005e FFF7FEFF 		bl	__aeabi_dmul
+ 701              	.LVL64:
+ 702 0062 CDE90201 		strd	r0, [sp, #8]
+ 703 0066 3869     		ldr	r0, [r7, #16]
+ 704 0068 FFF7FEFF 		bl	__aeabi_i2d
+ 705              	.LVL65:
+ 706 006c 724B     		ldr	r3, .L69+56
+ 707 006e D3E90023 		ldrd	r2, [r3]
+ 708 0072 FFF7FEFF 		bl	__aeabi_dmul
+ 709              	.LVL66:
+ 710 0076 8046     		mov	r8, r0
+ 711 0078 8946     		mov	r9, r1
+ 712 007a 9FED651B 		vldr.64	d1, .L69+16
+ 713 007e B0EE480A 		vmov.f32	s0, s16
+ 714 0082 F0EE680A 		vmov.f32	s1, s17
+ 715 0086 FFF7FEFF 		bl	pow
+ 716              	.LVL67:
+ 717 008a 53EC102B 		vmov	r2, r3, d0
+ 718 008e 4046     		mov	r0, r8
+ 719 0090 4946     		mov	r1, r9
+ 720 0092 FFF7FEFF 		bl	__aeabi_ddiv
+ 721              	.LVL68:
+ 722 0096 0246     		mov	r2, r0
+ 723 0098 0B46     		mov	r3, r1
+ 724 009a DDE90201 		ldrd	r0, [sp, #8]
+ 725 009e FFF7FEFF 		bl	__aeabi_dadd
+ 726              	.LVL69:
+ 727 00a2 FFF7FEFF 		bl	__aeabi_d2lz
+ 728              	.LVL70:
+ 729 00a6 CDE90201 		strd	r0, [sp, #8]
+ 730              	.LVL71:
+ 315:../system/src/drivers/ms5611.c **** 	sens = SensorCalData[1] * pow(2,15) + (SensorCalData[3] * SensorDT) / pow(2,8);
+ 731              		.loc 1 315 0
+ 732 00aa D7F80480 		ldr	r8, [r7, #4]
+ 733 00ae 9FED5A9B 		vldr.64	d9, .L69+24
+ 734 00b2 B0EE491A 		vmov.f32	s2, s18
+ 735 00b6 F0EE691A 		vmov.f32	s3, s19
+ 736 00ba B0EE480A 		vmov.f32	s0, s16
+ 737 00be F0EE680A 		vmov.f32	s1, s17
+ 738 00c2 FFF7FEFF 		bl	pow
+ 739              	.LVL72:
+ 740 00c6 B0EE40AA 		vmov.f32	s20, s0
+ 741 00ca F0EE60AA 		vmov.f32	s21, s1
+ 742 00ce 4046     		mov	r0, r8
+ 743 00d0 FFF7FEFF 		bl	__aeabi_i2d
+ 744              	.LVL73:
+ 745 00d4 53EC1A2B 		vmov	r2, r3, d10
+ 746 00d8 FFF7FEFF 		bl	__aeabi_dmul
+ 747              	.LVL74:
+ 748 00dc CDE90401 		strd	r0, [sp, #16]
+ 749 00e0 F868     		ldr	r0, [r7, #12]
+ 750 00e2 FFF7FEFF 		bl	__aeabi_i2d
+ 751              	.LVL75:
+ 752 00e6 544B     		ldr	r3, .L69+56
+ 753 00e8 D3E90023 		ldrd	r2, [r3]
+ 754 00ec FFF7FEFF 		bl	__aeabi_dmul
+ 755              	.LVL76:
+ 756 00f0 8046     		mov	r8, r0
+ 757 00f2 8946     		mov	r9, r1
+ 758 00f4 9FED4A1B 		vldr.64	d1, .L69+32
+ 759 00f8 B0EE480A 		vmov.f32	s0, s16
+ 760 00fc F0EE680A 		vmov.f32	s1, s17
+ 761 0100 FFF7FEFF 		bl	pow
+ 762              	.LVL77:
+ 763 0104 53EC102B 		vmov	r2, r3, d0
+ 764 0108 4046     		mov	r0, r8
+ 765 010a 4946     		mov	r1, r9
+ 766 010c FFF7FEFF 		bl	__aeabi_ddiv
+ 767              	.LVL78:
+ 768 0110 0246     		mov	r2, r0
+ 769 0112 0B46     		mov	r3, r1
+ 770 0114 DDE90401 		ldrd	r0, [sp, #16]
+ 771 0118 FFF7FEFF 		bl	__aeabi_dadd
+ 772              	.LVL79:
+ 773 011c FFF7FEFF 		bl	__aeabi_d2lz
+ 774              	.LVL80:
+ 316:../system/src/drivers/ms5611.c **** 	p = (raw_p * sens / pow(2,21) - off) / pow(2,15);
+ 775              		.loc 1 316 0
+ 776 0120 06FB01F1 		mul	r1, r6, r1
+ 777              	.LVL81:
+ 778 0124 00FB0B11 		mla	r1, r0, fp, r1
+ 779 0128 A6FB0067 		umull	r6, r7, r6, r0
+ 780 012c 0F44     		add	r7, r7, r1
+ 781 012e 9FED3E1B 		vldr.64	d1, .L69+40
+ 782 0132 B0EE480A 		vmov.f32	s0, s16
+ 783 0136 F0EE680A 		vmov.f32	s1, s17
+ 784 013a FFF7FEFF 		bl	pow
+ 785              	.LVL82:
+ 786 013e 59EC108B 		vmov	r8, r9, d0
+ 787 0142 3046     		mov	r0, r6
+ 788 0144 3946     		mov	r1, r7
+ 789 0146 FFF7FEFF 		bl	__aeabi_l2d
+ 790              	.LVL83:
+ 791 014a 4246     		mov	r2, r8
+ 792 014c 4B46     		mov	r3, r9
+ 793 014e FFF7FEFF 		bl	__aeabi_ddiv
+ 794              	.LVL84:
+ 795 0152 0646     		mov	r6, r0
+ 796 0154 0F46     		mov	r7, r1
+ 797 0156 DDE90201 		ldrd	r0, [sp, #8]
+ 798 015a FFF7FEFF 		bl	__aeabi_l2d
+ 799              	.LVL85:
+ 800 015e 0246     		mov	r2, r0
+ 801 0160 0B46     		mov	r3, r1
+ 802 0162 3046     		mov	r0, r6
+ 803 0164 3946     		mov	r1, r7
+ 804 0166 FFF7FEFF 		bl	__aeabi_dsub
+ 805              	.LVL86:
+ 806 016a 0646     		mov	r6, r0
+ 807 016c 0F46     		mov	r7, r1
+ 808 016e B0EE491A 		vmov.f32	s2, s18
+ 809 0172 F0EE691A 		vmov.f32	s3, s19
+ 810 0176 B0EE480A 		vmov.f32	s0, s16
+ 811 017a F0EE680A 		vmov.f32	s1, s17
+ 812 017e FFF7FEFF 		bl	pow
+ 813              	.LVL87:
+ 814 0182 53EC102B 		vmov	r2, r3, d0
+ 815 0186 3046     		mov	r0, r6
+ 816 0188 3946     		mov	r1, r7
+ 817 018a FFF7FEFF 		bl	__aeabi_ddiv
+ 818              	.LVL88:
+ 819 018e FFF7FEFF 		bl	__aeabi_d2lz
+ 820              	.LVL89:
+ 317:../system/src/drivers/ms5611.c **** 	output_p = (double)p;
+ 821              		.loc 1 317 0
+ 822 0192 FFF7FEFF 		bl	__aeabi_l2d
+ 823              	.LVL90:
+ 824 0196 FFF7FEFF 		bl	__aeabi_d2f
+ 825              	.LVL91:
+ 318:../system/src/drivers/ms5611.c **** 	output_p /= 100;
+ 826              		.loc 1 318 0
+ 827 019a 9FED287A 		vldr.32	s14, .L69+60
+ 828 019e 07EE900A 		vmov	s15, r0
+ 829 01a2 C7EE877A 		vdiv.f32	s15, s15, s14
+ 830              	.LVL92:
+ 319:../system/src/drivers/ms5611.c **** 
+ 320:../system/src/drivers/ms5611.c **** 	*out = output_p;
+ 831              		.loc 1 320 0
+ 832 01a6 C5ED007A 		vstr.32	s15, [r5]
+ 321:../system/src/drivers/ms5611.c **** 
+ 322:../system/src/drivers/ms5611.c **** 	if (output_p > MS5611_MIN_PRESSURE_OK && output_p < MS5611_MAX_PRESSURE_OK) {
+ 833              		.loc 1 322 0
+ 834 01aa 9FED257A 		vldr.32	s14, .L69+64
+ 835 01ae F4EEC77A 		vcmpe.f32	s15, s14
+ 836 01b2 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 837 01b6 1ADD     		ble	.L61
+ 838              		.loc 1 322 0 is_stmt 0 discriminator 1
+ 839 01b8 9FED227A 		vldr.32	s14, .L69+68
+ 840 01bc F4EEC77A 		vcmpe.f32	s15, s14
+ 841 01c0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 842 01c4 13D5     		bpl	.L61
+ 323:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_FULL;
+ 843              		.loc 1 323 0 is_stmt 1
+ 844 01c6 0123     		movs	r3, #1
+ 845 01c8 2370     		strb	r3, [r4]
+ 846              	.LVL93:
+ 847              	.L57:
+ 324:../system/src/drivers/ms5611.c **** 		return MS5611_OK;
+ 325:../system/src/drivers/ms5611.c **** 	}
+ 326:../system/src/drivers/ms5611.c **** 	else {
+ 327:../system/src/drivers/ms5611.c **** 		*qf = MS5611_QF_DEGRADATED;
+ 328:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 329:../system/src/drivers/ms5611.c **** 	}
+ 330:../system/src/drivers/ms5611.c **** 
+ 331:../system/src/drivers/ms5611.c **** 
+ 332:../system/src/drivers/ms5611.c **** }
+ 848              		.loc 1 332 0
+ 849 01ca 0198     		ldr	r0, [sp, #4]
+ 850 01cc 09B0     		add	sp, sp, #36
+ 851              		.cfi_remember_state
+ 852              		.cfi_def_cfa_offset 60
+ 853              		@ sp needed
+ 854 01ce BDEC068B 		vldm	sp!, {d8-d10}
+ 855              		.cfi_restore 84
+ 856              		.cfi_restore 85
+ 857              		.cfi_restore 82
+ 858              		.cfi_restore 83
+ 859              		.cfi_restore 80
+ 860              		.cfi_restore 81
+ 861              		.cfi_def_cfa_offset 36
+ 862 01d2 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 863              	.LVL94:
+ 864              	.L67:
+ 865              		.cfi_restore_state
+ 298:../system/src/drivers/ms5611.c **** 
+ 866              		.loc 1 298 0
+ 867 01d6 0223     		movs	r3, #2
+ 868 01d8 0B70     		strb	r3, [r1]
+ 300:../system/src/drivers/ms5611.c **** 	}
+ 869              		.loc 1 300 0
+ 870 01da 4FF0FF33 		mov	r3, #-1
+ 871 01de 0193     		str	r3, [sp, #4]
+ 872 01e0 F3E7     		b	.L57
+ 873              	.LVL95:
+ 874              	.L68:
+ 306:../system/src/drivers/ms5611.c **** 		//ms5611_sensor_avaliable = 0;
+ 875              		.loc 1 306 0
+ 876 01e2 0223     		movs	r3, #2
+ 877 01e4 2370     		strb	r3, [r4]
+ 309:../system/src/drivers/ms5611.c **** 	}
+ 878              		.loc 1 309 0
+ 879 01e6 6FF00103 		mvn	r3, #1
+ 880 01ea 0193     		str	r3, [sp, #4]
+ 881 01ec EDE7     		b	.L57
+ 882              	.LVL96:
+ 883              	.L61:
+ 327:../system/src/drivers/ms5611.c **** 		return MS5611_SENSOR_NOT_AVALIABLE;
+ 884              		.loc 1 327 0
+ 885 01ee 0323     		movs	r3, #3
+ 886 01f0 2370     		strb	r3, [r4]
+ 328:../system/src/drivers/ms5611.c **** 	}
+ 887              		.loc 1 328 0
+ 888 01f2 4FF0FF33 		mov	r3, #-1
+ 889 01f6 0193     		str	r3, [sp, #4]
+ 890              	.LVL97:
+ 891 01f8 E7E7     		b	.L57
+ 892              	.L70:
+ 893 01fa 00BFAFF3 		.align	3
+ 893      0080
+ 894              	.L69:
+ 895 0200 00000000 		.word	0
+ 896 0204 00000040 		.word	1073741824
+ 897 0208 00000000 		.word	0
+ 898 020c 00003040 		.word	1076887552
+ 899 0210 00000000 		.word	0
+ 900 0214 00001C40 		.word	1075576832
+ 901 0218 00000000 		.word	0
+ 902 021c 00002E40 		.word	1076756480
+ 903 0220 00000000 		.word	0
+ 904 0224 00002040 		.word	1075838976
+ 905 0228 00000000 		.word	0
+ 906 022c 00003540 		.word	1077215232
+ 907 0230 00000000 		.word	.LANCHOR0
+ 908 0234 00000000 		.word	SensorCalData
+ 909 0238 00000000 		.word	.LANCHOR1
+ 910 023c 0000C842 		.word	1120403456
+ 911 0240 00001644 		.word	1142292480
+ 912 0244 00808944 		.word	1149861888
+ 913              		.cfi_endproc
+ 914              	.LFE402:
+ 916              		.section	.text.crc4,"ax",%progbits
+ 917              		.align	1
+ 918              		.global	crc4
+ 919              		.syntax unified
+ 920              		.thumb
+ 921              		.thumb_func
+ 922              		.fpu fpv4-sp-d16
+ 924              	crc4:
+ 925              	.LFB403:
+ 333:../system/src/drivers/ms5611.c **** 
+ 334:../system/src/drivers/ms5611.c **** 
+ 335:../system/src/drivers/ms5611.c **** unsigned char crc4(int32_t* n_prom)
+ 336:../system/src/drivers/ms5611.c **** {
+ 926              		.loc 1 336 0
+ 927              		.cfi_startproc
+ 928              		@ args = 0, pretend = 0, frame = 0
+ 929              		@ frame_needed = 0, uses_anonymous_args = 0
+ 930              		@ link register save eliminated.
+ 931              	.LVL98:
+ 932 0000 10B4     		push	{r4}
+ 933              		.cfi_def_cfa_offset 4
+ 934              		.cfi_offset 4, -4
+ 935              	.LVL99:
+ 337:../system/src/drivers/ms5611.c **** 	int cnt; // simple counter
+ 338:../system/src/drivers/ms5611.c **** 	unsigned int n_rem; // crc reminder
+ 339:../system/src/drivers/ms5611.c **** 	unsigned int crc_read; // original value of the crc
+ 340:../system/src/drivers/ms5611.c **** 	unsigned char n_bit;
+ 341:../system/src/drivers/ms5611.c **** 	n_rem = 0x00;
+ 342:../system/src/drivers/ms5611.c **** 	crc_read=n_prom[7]; //save read CRC
+ 936              		.loc 1 342 0
+ 937 0002 C469     		ldr	r4, [r0, #28]
+ 938              	.LVL100:
+ 343:../system/src/drivers/ms5611.c **** 	n_prom[7]=(0xFF00 & (n_prom[7])); //CRC byte is replaced by 0
+ 939              		.loc 1 343 0
+ 940 0004 04F47F43 		and	r3, r4, #65280
+ 941 0008 C361     		str	r3, [r0, #28]
+ 942              	.LVL101:
+ 341:../system/src/drivers/ms5611.c **** 	crc_read=n_prom[7]; //save read CRC
+ 943              		.loc 1 341 0
+ 944 000a 0022     		movs	r2, #0
+ 344:../system/src/drivers/ms5611.c **** 	for (cnt = 0; cnt < 16; cnt++) // operation is performed on bytes
+ 945              		.loc 1 344 0
+ 946 000c 1146     		mov	r1, r2
+ 947 000e 10E0     		b	.L72
+ 948              	.LVL102:
+ 949              	.L83:
+ 345:../system/src/drivers/ms5611.c **** 	{// choose LSB or MSB
+ 346:../system/src/drivers/ms5611.c **** 		if (cnt%2 == 1) n_rem ^= (unsigned short) ((n_prom[cnt>>1]) & 0x00FF);
+ 950              		.loc 1 346 0 discriminator 1
+ 951 0010 4B10     		asrs	r3, r1, #1
+ 952 0012 10F82330 		ldrb	r3, [r0, r3, lsl #2]	@ zero_extendqisi2
+ 953 0016 5A40     		eors	r2, r2, r3
+ 954              	.LVL103:
+ 955 0018 1AE0     		b	.L74
+ 956              	.LVL104:
+ 957              	.L75:
+ 347:../system/src/drivers/ms5611.c **** 		else n_rem ^= (unsigned short) (n_prom[cnt>>1]>>8);
+ 348:../system/src/drivers/ms5611.c **** 		for (n_bit = 8; n_bit > 0; n_bit--)
+ 349:../system/src/drivers/ms5611.c **** 		{
+ 350:../system/src/drivers/ms5611.c **** 			if (n_rem & (0x8000))
+ 351:../system/src/drivers/ms5611.c **** 			{
+ 352:../system/src/drivers/ms5611.c **** 				n_rem = (n_rem << 1) ^ 0x3000;
+ 353:../system/src/drivers/ms5611.c **** 			}
+ 354:../system/src/drivers/ms5611.c **** 			else
+ 355:../system/src/drivers/ms5611.c **** 			{
+ 356:../system/src/drivers/ms5611.c **** 				n_rem = (n_rem << 1);
+ 958              		.loc 1 356 0
+ 959 001a 5200     		lsls	r2, r2, #1
+ 960              	.LVL105:
+ 961              	.L76:
+ 348:../system/src/drivers/ms5611.c **** 		{
+ 962              		.loc 1 348 0 discriminator 2
+ 963 001c 013B     		subs	r3, r3, #1
+ 964              	.LVL106:
+ 965 001e DBB2     		uxtb	r3, r3
+ 966              	.LVL107:
+ 967              	.L77:
+ 348:../system/src/drivers/ms5611.c **** 		{
+ 968              		.loc 1 348 0 is_stmt 0 discriminator 1
+ 969 0020 33B1     		cbz	r3, .L81
+ 350:../system/src/drivers/ms5611.c **** 			{
+ 970              		.loc 1 350 0 is_stmt 1
+ 971 0022 12F4004F 		tst	r2, #32768
+ 972 0026 F8D0     		beq	.L75
+ 352:../system/src/drivers/ms5611.c **** 			}
+ 973              		.loc 1 352 0
+ 974 0028 5200     		lsls	r2, r2, #1
+ 975              	.LVL108:
+ 976 002a 82F44052 		eor	r2, r2, #12288
+ 977              	.LVL109:
+ 978 002e F5E7     		b	.L76
+ 979              	.L81:
+ 344:../system/src/drivers/ms5611.c **** 	{// choose LSB or MSB
+ 980              		.loc 1 344 0 discriminator 2
+ 981 0030 0131     		adds	r1, r1, #1
+ 982              	.LVL110:
+ 983              	.L72:
+ 344:../system/src/drivers/ms5611.c **** 	{// choose LSB or MSB
+ 984              		.loc 1 344 0 is_stmt 0 discriminator 1
+ 985 0032 0F29     		cmp	r1, #15
+ 986 0034 0EDC     		bgt	.L82
+ 346:../system/src/drivers/ms5611.c **** 		else n_rem ^= (unsigned short) (n_prom[cnt>>1]>>8);
+ 987              		.loc 1 346 0 is_stmt 1
+ 988 0036 0029     		cmp	r1, #0
+ 989 0038 01F00103 		and	r3, r1, #1
+ 990 003c B8BF     		it	lt
+ 991 003e 5B42     		rsblt	r3, r3, #0
+ 992 0040 012B     		cmp	r3, #1
+ 993 0042 E5D0     		beq	.L83
+ 347:../system/src/drivers/ms5611.c **** 		for (n_bit = 8; n_bit > 0; n_bit--)
+ 994              		.loc 1 347 0
+ 995 0044 4B10     		asrs	r3, r1, #1
+ 996 0046 50F82330 		ldr	r3, [r0, r3, lsl #2]
+ 997 004a C3F30F23 		ubfx	r3, r3, #8, #16
+ 998 004e 5A40     		eors	r2, r2, r3
+ 999              	.LVL111:
+ 1000              	.L74:
+ 336:../system/src/drivers/ms5611.c **** 	int cnt; // simple counter
+ 1001              		.loc 1 336 0 discriminator 1
+ 1002 0050 0823     		movs	r3, #8
+ 1003 0052 E5E7     		b	.L77
+ 1004              	.L82:
+ 1005              	.LVL112:
+ 357:../system/src/drivers/ms5611.c **** 			}
+ 358:../system/src/drivers/ms5611.c **** 		}
+ 359:../system/src/drivers/ms5611.c **** 	}
+ 360:../system/src/drivers/ms5611.c **** 	n_rem= (0x000F & (n_rem >> 12)); // final 4-bit reminder is CRC code
+ 361:../system/src/drivers/ms5611.c **** 	n_prom[7]=crc_read; // restore the crc_read to its original place
+ 1006              		.loc 1 361 0
+ 1007 0054 C461     		str	r4, [r0, #28]
+ 362:../system/src/drivers/ms5611.c **** 	return (n_rem ^ 0x0);
+ 363:../system/src/drivers/ms5611.c **** }
+ 1008              		.loc 1 363 0
+ 1009 0056 C2F30330 		ubfx	r0, r2, #12, #4
+ 1010              	.LVL113:
+ 1011 005a 5DF8044B 		ldr	r4, [sp], #4
+ 1012              		.cfi_restore 4
+ 1013              		.cfi_def_cfa_offset 0
+ 1014              	.LVL114:
+ 1015 005e 7047     		bx	lr
+ 1016              		.cfi_endproc
+ 1017              	.LFE403:
+ 1019              		.section	.text.ms5611_read_calibration,"ax",%progbits
+ 1020              		.align	1
+ 1021              		.global	ms5611_read_calibration
+ 1022              		.syntax unified
+ 1023              		.thumb
+ 1024              		.thumb_func
+ 1025              		.fpu fpv4-sp-d16
+ 1027              	ms5611_read_calibration:
+ 1028              	.LFB399:
+  65:../system/src/drivers/ms5611.c **** 
+ 1029              		.loc 1 65 0
+ 1030              		.cfi_startproc
+ 1031              		@ args = 0, pretend = 0, frame = 8
+ 1032              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1033              	.LVL115:
+  68:../system/src/drivers/ms5611.c **** 		// If not stop further actions
+ 1034              		.loc 1 68 0
+ 1035 0000 2D4B     		ldr	r3, .L103
+ 1036 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1037 0004 33B1     		cbz	r3, .L99
+  65:../system/src/drivers/ms5611.c **** 
+ 1038              		.loc 1 65 0
+ 1039 0006 F0B5     		push	{r4, r5, r6, r7, lr}
+ 1040              		.cfi_def_cfa_offset 20
+ 1041              		.cfi_offset 4, -20
+ 1042              		.cfi_offset 5, -16
+ 1043              		.cfi_offset 6, -12
+ 1044              		.cfi_offset 7, -8
+ 1045              		.cfi_offset 14, -4
+ 1046 0008 83B0     		sub	sp, sp, #12
+ 1047              		.cfi_def_cfa_offset 32
+ 1048 000a 0F46     		mov	r7, r1
+ 1049 000c 0646     		mov	r6, r0
+  77:../system/src/drivers/ms5611.c **** 
+ 1050              		.loc 1 77 0
+ 1051 000e 0025     		movs	r5, #0
+  81:../system/src/drivers/ms5611.c **** 
+ 1052              		.loc 1 81 0
+ 1053 0010 2C46     		mov	r4, r5
+ 1054 0012 17E0     		b	.L85
+ 1055              	.L99:
+ 1056              		.cfi_def_cfa_offset 0
+ 1057              		.cfi_restore 4
+ 1058              		.cfi_restore 5
+ 1059              		.cfi_restore 6
+ 1060              		.cfi_restore 7
+ 1061              		.cfi_restore 14
+  70:../system/src/drivers/ms5611.c **** 
+ 1062              		.loc 1 70 0
+ 1063 0014 0223     		movs	r3, #2
+ 1064 0016 0B70     		strb	r3, [r1]
+  72:../system/src/drivers/ms5611.c **** 	}
+ 1065              		.loc 1 72 0
+ 1066 0018 4FF0FF30 		mov	r0, #-1
+ 1067              	.LVL116:
+ 131:../system/src/drivers/ms5611.c **** 
+ 1068              		.loc 1 131 0
+ 1069 001c 7047     		bx	lr
+ 1070              	.LVL117:
+ 1071              	.L102:
+ 1072              		.cfi_def_cfa_offset 32
+ 1073              		.cfi_offset 4, -20
+ 1074              		.cfi_offset 5, -16
+ 1075              		.cfi_offset 6, -12
+ 1076              		.cfi_offset 7, -8
+ 1077              		.cfi_offset 14, -4
+  97:../system/src/drivers/ms5611.c **** 
+ 1078              		.loc 1 97 0
+ 1079 001e 0223     		movs	r3, #2
+ 1080 0020 3B70     		strb	r3, [r7]
+  99:../system/src/drivers/ms5611.c **** 		}
+ 1081              		.loc 1 99 0
+ 1082 0022 6FF00100 		mvn	r0, #1
+ 1083 0026 41E0     		b	.L84
+ 1084              	.L90:
+ 108:../system/src/drivers/ms5611.c **** 			*out = MS5611_QF_NOT_AVALIABLE;
+ 1085              		.loc 1 108 0
+ 1086 0028 244B     		ldr	r3, .L103+4
+ 1087 002a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1088 002c DBB2     		uxtb	r3, r3
+ 1089 002e 032B     		cmp	r3, #3
+ 1090 0030 2ED0     		beq	.L100
+ 115:../system/src/drivers/ms5611.c **** 
+ 1091              		.loc 1 115 0 discriminator 2
+ 1092 0032 234A     		ldr	r2, .L103+8
+ 1093 0034 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+ 1094 0036 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+ 1095 0038 43EA0123 		orr	r3, r3, r1, lsl #8
+ 1096 003c 46F82530 		str	r3, [r6, r5, lsl #2]
+ 118:../system/src/drivers/ms5611.c **** 	}
+ 1097              		.loc 1 118 0 discriminator 2
+ 1098 0040 0135     		adds	r5, r5, #1
+ 1099              	.LVL118:
+  81:../system/src/drivers/ms5611.c **** 
+ 1100              		.loc 1 81 0 discriminator 2
+ 1101 0042 0234     		adds	r4, r4, #2
+ 1102              	.LVL119:
+ 1103              	.L85:
+  81:../system/src/drivers/ms5611.c **** 
+ 1104              		.loc 1 81 0 is_stmt 0 discriminator 1
+ 1105 0044 0E2C     		cmp	r4, #14
+ 1106 0046 28DC     		bgt	.L101
+  84:../system/src/drivers/ms5611.c **** 		txbuf[1] = '\0'; 
+ 1107              		.loc 1 84 0 is_stmt 1
+ 1108 0048 04F1A003 		add	r3, r4, #160
+ 1109 004c 0093     		str	r3, [sp]
+  85:../system/src/drivers/ms5611.c **** 
+ 1110              		.loc 1 85 0
+ 1111 004e 0022     		movs	r2, #0
+ 1112 0050 0192     		str	r2, [sp, #4]
+  88:../system/src/drivers/ms5611.c **** 
+ 1113              		.loc 1 88 0
+ 1114 0052 6946     		mov	r1, sp
+ 1115 0054 EE20     		movs	r0, #238
+ 1116 0056 FFF7FEFF 		bl	i2c_send_data
+ 1117              	.LVL120:
+ 1118              	.L88:
+  91:../system/src/drivers/ms5611.c **** 
+ 1119              		.loc 1 91 0 discriminator 2
+ 1120 005a 184B     		ldr	r3, .L103+4
+ 1121 005c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1122 005e 23B1     		cbz	r3, .L87
+  91:../system/src/drivers/ms5611.c **** 
+ 1123              		.loc 1 91 0 is_stmt 0 discriminator 1
+ 1124 0060 164B     		ldr	r3, .L103+4
+ 1125 0062 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1126 0064 DBB2     		uxtb	r3, r3
+ 1127 0066 032B     		cmp	r3, #3
+ 1128 0068 F7D1     		bne	.L88
+ 1129              	.L87:
+  94:../system/src/drivers/ms5611.c **** 			// If not break calibtaion reading but don't touch 'sensor_avaliable'
+ 1130              		.loc 1 94 0 is_stmt 1
+ 1131 006a 144B     		ldr	r3, .L103+4
+ 1132 006c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1133 006e DBB2     		uxtb	r3, r3
+ 1134 0070 032B     		cmp	r3, #3
+ 1135 0072 D4D0     		beq	.L102
+ 103:../system/src/drivers/ms5611.c **** 
+ 1136              		.loc 1 103 0
+ 1137 0074 0221     		movs	r1, #2
+ 1138 0076 EF20     		movs	r0, #239
+ 1139 0078 FFF7FEFF 		bl	i2c_receive_data
+ 1140              	.LVL121:
+ 1141              	.L91:
+ 106:../system/src/drivers/ms5611.c **** 
+ 1142              		.loc 1 106 0 discriminator 2
+ 1143 007c 0F4B     		ldr	r3, .L103+4
+ 1144 007e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1145 0080 002B     		cmp	r3, #0
+ 1146 0082 D1D0     		beq	.L90
+ 106:../system/src/drivers/ms5611.c **** 
+ 1147              		.loc 1 106 0 is_stmt 0 discriminator 1
+ 1148 0084 0D4B     		ldr	r3, .L103+4
+ 1149 0086 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1150 0088 DBB2     		uxtb	r3, r3
+ 1151 008a 032B     		cmp	r3, #3
+ 1152 008c F6D1     		bne	.L91
+ 1153 008e CBE7     		b	.L90
+ 1154              	.L100:
+ 109:../system/src/drivers/ms5611.c **** 
+ 1155              		.loc 1 109 0 is_stmt 1
+ 1156 0090 0223     		movs	r3, #2
+ 1157 0092 3B70     		strb	r3, [r7]
+ 111:../system/src/drivers/ms5611.c **** 		}
+ 1158              		.loc 1 111 0
+ 1159 0094 6FF00100 		mvn	r0, #1
+ 1160 0098 08E0     		b	.L84
+ 1161              	.L101:
+ 122:../system/src/drivers/ms5611.c **** 
+ 1162              		.loc 1 122 0
+ 1163 009a 347F     		ldrb	r4, [r6, #28]	@ zero_extendqisi2
+ 1164              	.LVL122:
+ 1165 009c 04F00F04 		and	r4, r4, #15
+ 1166              	.LVL123:
+ 125:../system/src/drivers/ms5611.c **** 
+ 1167              		.loc 1 125 0
+ 1168 00a0 3046     		mov	r0, r6
+ 1169 00a2 FFF7FEFF 		bl	crc4
+ 1170              	.LVL124:
+ 127:../system/src/drivers/ms5611.c **** 		return 0;
+ 1171              		.loc 1 127 0
+ 1172 00a6 8442     		cmp	r4, r0
+ 1173 00a8 02D1     		bne	.L95
+ 128:../system/src/drivers/ms5611.c **** 	else
+ 1174              		.loc 1 128 0
+ 1175 00aa 0020     		movs	r0, #0
+ 1176              	.LVL125:
+ 1177              	.L84:
+ 131:../system/src/drivers/ms5611.c **** 
+ 1178              		.loc 1 131 0
+ 1179 00ac 03B0     		add	sp, sp, #12
+ 1180              		.cfi_remember_state
+ 1181              		.cfi_def_cfa_offset 20
+ 1182              		@ sp needed
+ 1183 00ae F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1184              	.LVL126:
+ 1185              	.L95:
+ 1186              		.cfi_restore_state
+ 130:../system/src/drivers/ms5611.c **** }
+ 1187              		.loc 1 130 0
+ 1188 00b0 4FF0FF30 		mov	r0, #-1
+ 1189              	.LVL127:
+ 1190 00b4 FAE7     		b	.L84
+ 1191              	.L104:
+ 1192 00b6 00BF     		.align	2
+ 1193              	.L103:
+ 1194 00b8 00000000 		.word	.LANCHOR0
+ 1195 00bc 00000000 		.word	i2c_state
+ 1196 00c0 00000000 		.word	i2c_rx_data
+ 1197              		.cfi_endproc
+ 1198              	.LFE399:
+ 1200              		.global	__aeabi_f2d
+ 1201              		.section	.text.CalcQNHFromQFE,"ax",%progbits
+ 1202              		.align	1
+ 1203              		.global	CalcQNHFromQFE
+ 1204              		.syntax unified
+ 1205              		.thumb
+ 1206              		.thumb_func
+ 1207              		.fpu fpv4-sp-d16
+ 1209              	CalcQNHFromQFE:
+ 1210              	.LFB404:
+ 364:../system/src/drivers/ms5611.c **** 
+ 365:../system/src/drivers/ms5611.c **** 
+ 366:../system/src/drivers/ms5611.c **** float CalcQNHFromQFE(float qfe, float alti, float temp) {
+ 1211              		.loc 1 366 0
+ 1212              		.cfi_startproc
+ 1213              		@ args = 0, pretend = 0, frame = 0
+ 1214              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1215              	.LVL128:
+ 1216 0000 38B5     		push	{r3, r4, r5, lr}
+ 1217              		.cfi_def_cfa_offset 16
+ 1218              		.cfi_offset 3, -16
+ 1219              		.cfi_offset 4, -12
+ 1220              		.cfi_offset 5, -8
+ 1221              		.cfi_offset 14, -4
+ 1222 0002 2DED068B 		vpush.64	{d8, d9, d10}
+ 1223              		.cfi_def_cfa_offset 40
+ 1224              		.cfi_offset 80, -40
+ 1225              		.cfi_offset 81, -36
+ 1226              		.cfi_offset 82, -32
+ 1227              		.cfi_offset 83, -28
+ 1228              		.cfi_offset 84, -24
+ 1229              		.cfi_offset 85, -20
+ 1230 0006 F0EE408A 		vmov.f32	s17, s0
+ 1231 000a B0EE609A 		vmov.f32	s18, s1
+ 1232 000e B0EE418A 		vmov.f32	s16, s2
+ 367:../system/src/drivers/ms5611.c **** 
+ 368:../system/src/drivers/ms5611.c **** 	float hprim = 8000 * ( (1 + 0.004f * temp) / qfe);
+ 1233              		.loc 1 368 0
+ 1234 0012 DFED23AA 		vldr.32	s21, .L107
+ 1235 0016 21EE2A7A 		vmul.f32	s14, s2, s21
+ 1236 001a B7EE00AA 		vmov.f32	s20, #1.0e+0
+ 1237 001e 37EE0A7A 		vadd.f32	s14, s14, s20
+ 1238 0022 C7EE007A 		vdiv.f32	s15, s14, s0
+ 1239 0026 DFED1F9A 		vldr.32	s19, .L107+4
+ 1240 002a 67EEA97A 		vmul.f32	s15, s15, s19
+ 1241              	.LVL129:
+ 369:../system/src/drivers/ms5611.c **** 	double p = qfe + (alti/hprim);
+ 1242              		.loc 1 369 0
+ 1243 002e 80EEA77A 		vdiv.f32	s14, s1, s15
+ 1244 0032 77EE007A 		vadd.f32	s15, s14, s0
+ 1245              	.LVL130:
+ 1246 0036 17EE900A 		vmov	r0, s15
+ 1247 003a FFF7FEFF 		bl	__aeabi_f2d
+ 1248              	.LVL131:
+ 1249 003e 0446     		mov	r4, r0
+ 1250 0040 0D46     		mov	r5, r1
+ 1251              	.LVL132:
+ 370:../system/src/drivers/ms5611.c **** 
+ 371:../system/src/drivers/ms5611.c **** 
+ 372:../system/src/drivers/ms5611.c **** 	float psr = (qfe + p) * 0.5f;
+ 1252              		.loc 1 372 0
+ 1253 0042 18EE900A 		vmov	r0, s17
+ 1254 0046 FFF7FEFF 		bl	__aeabi_f2d
+ 1255              	.LVL133:
+ 1256 004a 2246     		mov	r2, r4
+ 1257 004c 2B46     		mov	r3, r5
+ 1258 004e FFF7FEFF 		bl	__aeabi_dadd
+ 1259              	.LVL134:
+ 1260 0052 0022     		movs	r2, #0
+ 1261 0054 144B     		ldr	r3, .L107+8
+ 1262 0056 FFF7FEFF 		bl	__aeabi_dmul
+ 1263              	.LVL135:
+ 1264 005a FFF7FEFF 		bl	__aeabi_d2f
+ 1265              	.LVL136:
+ 373:../system/src/drivers/ms5611.c **** 	float tpm = temp + (0.6f * alti) / 100.0f;
+ 1266              		.loc 1 373 0
+ 1267 005e 9FED137A 		vldr.32	s14, .L107+12
+ 1268 0062 29EE077A 		vmul.f32	s14, s18, s14
+ 1269 0066 DFED126A 		vldr.32	s13, .L107+16
+ 1270 006a C7EE267A 		vdiv.f32	s15, s14, s13
+ 1271 006e 77EE887A 		vadd.f32	s15, s15, s16
+ 1272              	.LVL137:
+ 374:../system/src/drivers/ms5611.c **** 
+ 375:../system/src/drivers/ms5611.c **** 	float tsr = (temp + tpm)/2.0f;
+ 1273              		.loc 1 375 0
+ 1274 0072 38EE278A 		vadd.f32	s16, s16, s15
+ 1275              	.LVL138:
+ 1276 0076 F6EE007A 		vmov.f32	s15, #5.0e-1
+ 1277              	.LVL139:
+ 1278 007a 28EE278A 		vmul.f32	s16, s16, s15
+ 1279              	.LVL140:
+ 376:../system/src/drivers/ms5611.c **** 	hprim = 8000 * ((1 + 0.004f * tsr) / psr);
+ 1280              		.loc 1 376 0
+ 1281 007e 28EE2A8A 		vmul.f32	s16, s16, s21
+ 1282              	.LVL141:
+ 1283 0082 38EE0A8A 		vadd.f32	s16, s16, s20
+ 1284 0086 07EE900A 		vmov	s15, r0
+ 1285              	.LVL142:
+ 1286 008a C8EE277A 		vdiv.f32	s15, s16, s15
+ 1287 008e 67EEA97A 		vmul.f32	s15, s15, s19
+ 1288              	.LVL143:
+ 377:../system/src/drivers/ms5611.c **** 	float qnh = qfe + (alti/hprim);
+ 1289              		.loc 1 377 0
+ 1290 0092 89EE270A 		vdiv.f32	s0, s18, s15
+ 1291              	.LVL144:
+ 378:../system/src/drivers/ms5611.c **** 
+ 379:../system/src/drivers/ms5611.c **** 	return qnh;
+ 380:../system/src/drivers/ms5611.c **** }
+ 1292              		.loc 1 380 0
+ 1293 0096 30EE280A 		vadd.f32	s0, s0, s17
+ 1294              	.LVL145:
+ 1295 009a BDEC068B 		vldm	sp!, {d8-d10}
+ 1296              		.cfi_restore 84
+ 1297              		.cfi_restore 85
+ 1298              		.cfi_restore 82
+ 1299              		.cfi_restore 83
+ 1300              		.cfi_restore 80
+ 1301              		.cfi_restore 81
+ 1302              		.cfi_def_cfa_offset 16
+ 1303              	.LVL146:
+ 1304 009e 38BD     		pop	{r3, r4, r5, pc}
+ 1305              	.LVL147:
+ 1306              	.L108:
+ 1307              		.align	2
+ 1308              	.L107:
+ 1309 00a0 6F12833B 		.word	998445679
+ 1310 00a4 0000FA45 		.word	1174011904
+ 1311 00a8 0000E03F 		.word	1071644672
+ 1312 00ac 9A99193F 		.word	1058642330
+ 1313 00b0 0000C842 		.word	1120403456
+ 1314              		.cfi_endproc
+ 1315              	.LFE404:
+ 1317              		.global	ms5611_sensor_avaliable
+ 1318              		.global	SensorDT
+ 1319              		.comm	SensorCalData,32,4
+ 1320              		.comm	state,1,1
+ 1321              		.section	.bss.SensorDT,"aw",%nobits
+ 1322              		.align	3
+ 1323              		.set	.LANCHOR1,. + 0
+ 1326              	SensorDT:
+ 1327 0000 00000000 		.space	8
+ 1327      00000000 
+ 1328              		.section	.bss.ms5611_sensor_avaliable,"aw",%nobits
+ 1329              		.set	.LANCHOR0,. + 0
+ 1332              	ms5611_sensor_avaliable:
+ 1333 0000 00       		.space	1
+ 1334              		.text
+ 1335              	.Letext0:
+ 1336              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1337              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1338              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1339              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1340              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 1341              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1342              		.file 8 "../system/include/drivers/ms5611.h"
+ 1343              		.file 9 "../system/include/drivers/i2c.h"
+ 1344              		.file 10 "../system/include/aprs/cfifo.h"
+ 1345              		.file 11 "../system/include/aprs/afsk.h"
+ 1346              		.file 12 "../system/include/aprs/ax25.h"
+ 1347              		.file 13 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 1348              		.file 14 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 1349              		.file 15 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 1350              		.file 16 "../system/include/drivers/serial.h"
+ 1351              		.file 17 "../include/../include/config_data.h"
+ 1352              		.file 18 "../include/../include/main.h"
+ 1353              		.file 19 "../include/../include/delay.h"
+ 1354              		.file 20 "../system/include/drivers/dallas.h"
+ 1355              		.file 21 "../system/include/drivers/analog_anemometer.h"
+ 1356              		.file 22 "../system/include/davis_vantage/davis_loop_t.h"
+ 1357              		.file 23 "../system/include/umb_master/umb_frame_t.h"
+ 1358              		.file 24 "../system/include/umb_master/umb_state_t.h"
+ 1359              		.file 25 "../system/include/umb_master/umb_context_t.h"
+ 1360              		.file 26 "../system/include/umb_master/umb_qf_t.h"
+ 1361              		.file 27 "../system/include/drivers/bme280.h"
+ 1362              		.file 28 "../include/rte_wx.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 ms5611.c
+     /tmp/ccqk7chM.s:18     .text.ms5611_reset:0000000000000000 $t
+     /tmp/ccqk7chM.s:25     .text.ms5611_reset:0000000000000000 ms5611_reset
+     /tmp/ccqk7chM.s:100    .text.ms5611_reset:0000000000000048 $d
+     /tmp/ccqk7chM.s:106    .text.ms5611_trigger_measure:0000000000000000 $t
+     /tmp/ccqk7chM.s:113    .text.ms5611_trigger_measure:0000000000000000 ms5611_trigger_measure
+     /tmp/ccqk7chM.s:409    .text.ms5611_trigger_measure:0000000000000198 $d
+     /tmp/ccqk7chM.s:422    .text.ms5611_get_temperature:0000000000000000 $t
+     /tmp/ccqk7chM.s:429    .text.ms5611_get_temperature:0000000000000000 ms5611_get_temperature
+     /tmp/ccqk7chM.s:606    .text.ms5611_get_temperature:0000000000000110 $d
+                            *COM*:0000000000000020 SensorCalData
+     /tmp/ccqk7chM.s:625    .text.ms5611_get_pressure:0000000000000000 $t
+     /tmp/ccqk7chM.s:632    .text.ms5611_get_pressure:0000000000000000 ms5611_get_pressure
+     /tmp/ccqk7chM.s:895    .text.ms5611_get_pressure:0000000000000200 $d
+     /tmp/ccqk7chM.s:917    .text.crc4:0000000000000000 $t
+     /tmp/ccqk7chM.s:924    .text.crc4:0000000000000000 crc4
+     /tmp/ccqk7chM.s:1020   .text.ms5611_read_calibration:0000000000000000 $t
+     /tmp/ccqk7chM.s:1027   .text.ms5611_read_calibration:0000000000000000 ms5611_read_calibration
+     /tmp/ccqk7chM.s:1194   .text.ms5611_read_calibration:00000000000000b8 $d
+     /tmp/ccqk7chM.s:1202   .text.CalcQNHFromQFE:0000000000000000 $t
+     /tmp/ccqk7chM.s:1209   .text.CalcQNHFromQFE:0000000000000000 CalcQNHFromQFE
+     /tmp/ccqk7chM.s:1309   .text.CalcQNHFromQFE:00000000000000a0 $d
+     /tmp/ccqk7chM.s:1332   .bss.ms5611_sensor_avaliable:0000000000000000 ms5611_sensor_avaliable
+     /tmp/ccqk7chM.s:1326   .bss.SensorDT:0000000000000000 SensorDT
+                            *COM*:0000000000000001 state
+     /tmp/ccqk7chM.s:1322   .bss.SensorDT:0000000000000000 $d
+     /tmp/ccqk7chM.s:1333   .bss.ms5611_sensor_avaliable:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.78077cef1206e937f7b56043ffca496a
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.main.h.8.bc9cddc046c84d80bc9382d177e590b0
+                           .group:0000000000000000 wm4.station_config.h.9.dccf6b17ee2bf87c63fe0b152d34825f
+                           .group:0000000000000000 wm4.station_config_target_hw.h.9.a20e080416e80d1cff9c1b51cc464832
+                           .group:0000000000000000 wm4.stm32l4xx_ll_gpio.h.22.6ea69d1eee1200f6e0d48e871aaa811d
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+
+UNDEFINED SYMBOLS
+i2c_send_data
+delay_fixed
+i2c_state
+i2c_receive_data
+i2c_rx_data
+__aeabi_i2d
+__aeabi_dmul
+__aeabi_dsub
+__aeabi_ddiv
+__aeabi_dadd
+__aeabi_d2f
+pow
+__aeabi_d2lz
+__aeabi_l2d
+__aeabi_f2d

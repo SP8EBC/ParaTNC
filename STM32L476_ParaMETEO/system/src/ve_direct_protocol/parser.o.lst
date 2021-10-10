@@ -1,0 +1,2777 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"parser.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.copy_till_non_printable_char,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	copy_till_non_printable_char:
+  25              	.LFB0:
+  26              		.file 1 "../system/src/ve_direct_protocol/parser.c"
+   1:../system/src/ve_direct_protocol/parser.c **** /*
+   2:../system/src/ve_direct_protocol/parser.c ****  * parser.c
+   3:../system/src/ve_direct_protocol/parser.c ****  *
+   4:../system/src/ve_direct_protocol/parser.c ****  *  Created on: 10.03.2019
+   5:../system/src/ve_direct_protocol/parser.c ****  *      Author: mateusz
+   6:../system/src/ve_direct_protocol/parser.c ****  */
+   7:../system/src/ve_direct_protocol/parser.c **** 
+   8:../system/src/ve_direct_protocol/parser.c **** #include "./ve_direct_protocol/parser.h"
+   9:../system/src/ve_direct_protocol/parser.c **** #include "./ve_direct_protocol/average_struct.h"
+  10:../system/src/ve_direct_protocol/parser.c **** 
+  11:../system/src/ve_direct_protocol/parser.c **** #include <string.h>
+  12:../system/src/ve_direct_protocol/parser.c **** #include <stdlib.h>
+  13:../system/src/ve_direct_protocol/parser.c **** 
+  14:../system/src/ve_direct_protocol/parser.c **** #define CHECKSUM_NAME_FIELD_LN_TO_DATA 10
+  15:../system/src/ve_direct_protocol/parser.c **** #define LOWEST_PRINTABLE_CHARACTER 33
+  16:../system/src/ve_direct_protocol/parser.c **** #define HIGHEST_PRINTABLE_CHARACTER 126
+  17:../system/src/ve_direct_protocol/parser.c **** 
+  18:../system/src/ve_direct_protocol/parser.c **** #define VE_DIRECT_MESSAGES_TO_SKIP 2
+  19:../system/src/ve_direct_protocol/parser.c **** 
+  20:../system/src/ve_direct_protocol/parser.c **** #define is_non_printable_character() (*(input + i) < LOWEST_PRINTABLE_CHARACTER || *(input + i) > H
+  21:../system/src/ve_direct_protocol/parser.c **** #define is_printable_character() (*(input + i) >= LOWEST_PRINTABLE_CHARACTER && *(input + i) <= HIG
+  22:../system/src/ve_direct_protocol/parser.c **** 
+  23:../system/src/ve_direct_protocol/parser.c **** uint8_t key[9];			// the static array to store a key fetched from input file
+  24:../system/src/ve_direct_protocol/parser.c **** uint8_t value[12];
+  25:../system/src/ve_direct_protocol/parser.c **** 
+  26:../system/src/ve_direct_protocol/parser.c **** uint8_t skip_counter = 0;	// counter used to skip some of VE.Direct protocol messages to spread an 
+  27:../system/src/ve_direct_protocol/parser.c **** 							// period of time
+  28:../system/src/ve_direct_protocol/parser.c **** 
+  29:../system/src/ve_direct_protocol/parser.c **** //ve_direct_average_struct ve_avg;
+  30:../system/src/ve_direct_protocol/parser.c **** 
+  31:../system/src/ve_direct_protocol/parser.c **** static int copy_till_non_printable_char(uint8_t* input, uint16_t* input_offset, uint16_t input_ln, 
+  27              		.loc 1 31 0
+  28              		.cfi_startproc
+  29              		@ args = 4, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+  33 0000 F0B4     		push	{r4, r5, r6, r7}
+  34              		.cfi_def_cfa_offset 16
+  35              		.cfi_offset 4, -16
+  36              		.cfi_offset 5, -12
+  37              		.cfi_offset 6, -8
+  38              		.cfi_offset 7, -4
+  39 0002 BDF810C0 		ldrh	ip, [sp, #16]
+  40              	.LVL1:
+  32:../system/src/ve_direct_protocol/parser.c **** 
+  33:../system/src/ve_direct_protocol/parser.c **** 	uint16_t j = 0;
+  34:../system/src/ve_direct_protocol/parser.c **** 
+  35:../system/src/ve_direct_protocol/parser.c **** 	uint16_t i = 0;
+  36:../system/src/ve_direct_protocol/parser.c **** 
+  37:../system/src/ve_direct_protocol/parser.c **** 	for (i = *input_offset; i < input_ln; i++) {
+  41              		.loc 1 37 0
+  42 0006 0C88     		ldrh	r4, [r1]
+  43              	.LVL2:
+  33:../system/src/ve_direct_protocol/parser.c **** 
+  44              		.loc 1 33 0
+  45 0008 0026     		movs	r6, #0
+  46              	.LVL3:
+  47              	.L2:
+  48              		.loc 1 37 0 discriminator 1
+  49 000a 9442     		cmp	r4, r2
+  50 000c 1FD2     		bcs	.L11
+  38:../system/src/ve_direct_protocol/parser.c **** 
+  39:../system/src/ve_direct_protocol/parser.c **** 		// if we reach any non-printable character
+  40:../system/src/ve_direct_protocol/parser.c **** 		if (is_non_printable_character() || j > output_ln) {
+  51              		.loc 1 40 0
+  52 000e 075D     		ldrb	r7, [r0, r4]	@ zero_extendqisi2
+  53 0010 A7F12105 		sub	r5, r7, #33
+  54 0014 EDB2     		uxtb	r5, r5
+  55 0016 5D2D     		cmp	r5, #93
+  56 0018 07D8     		bhi	.L6
+  57              		.loc 1 40 0 is_stmt 0 discriminator 1
+  58 001a 6645     		cmp	r6, ip
+  59 001c 05D8     		bhi	.L6
+  41:../system/src/ve_direct_protocol/parser.c **** 
+  42:../system/src/ve_direct_protocol/parser.c **** 			// stop copying and rewind to first printable character
+  43:../system/src/ve_direct_protocol/parser.c **** 			do {
+  44:../system/src/ve_direct_protocol/parser.c **** 				i++;
+  45:../system/src/ve_direct_protocol/parser.c **** 			} while (is_non_printable_character() && i < input_ln);
+  46:../system/src/ve_direct_protocol/parser.c **** 
+  47:../system/src/ve_direct_protocol/parser.c **** 			// updating an offset to input buffer
+  48:../system/src/ve_direct_protocol/parser.c **** 			*input_offset = i;
+  49:../system/src/ve_direct_protocol/parser.c **** 
+  50:../system/src/ve_direct_protocol/parser.c **** 			if (i > input_ln) {
+  51:../system/src/ve_direct_protocol/parser.c **** 				return VE_DIRECT_STRING_END_REACH_TO_EARLY;
+  52:../system/src/ve_direct_protocol/parser.c **** 			}
+  53:../system/src/ve_direct_protocol/parser.c **** 			else {
+  54:../system/src/ve_direct_protocol/parser.c **** 
+  55:../system/src/ve_direct_protocol/parser.c **** 				// end exit from function
+  56:../system/src/ve_direct_protocol/parser.c **** 				return 0;
+  57:../system/src/ve_direct_protocol/parser.c **** 			}
+  58:../system/src/ve_direct_protocol/parser.c **** 		}
+  59:../system/src/ve_direct_protocol/parser.c **** 
+  60:../system/src/ve_direct_protocol/parser.c **** 		output[j++] = input[i];
+  60              		.loc 1 60 0 is_stmt 1 discriminator 2
+  61 001e 751C     		adds	r5, r6, #1
+  62              	.LVL4:
+  63 0020 9F55     		strb	r7, [r3, r6]
+  37:../system/src/ve_direct_protocol/parser.c **** 
+  64              		.loc 1 37 0 discriminator 2
+  65 0022 0134     		adds	r4, r4, #1
+  66              	.LVL5:
+  67 0024 A4B2     		uxth	r4, r4
+  68              	.LVL6:
+  69              		.loc 1 60 0 discriminator 2
+  70 0026 AEB2     		uxth	r6, r5
+  71 0028 EFE7     		b	.L2
+  72              	.LVL7:
+  73              	.L6:
+  44:../system/src/ve_direct_protocol/parser.c **** 			} while (is_non_printable_character() && i < input_ln);
+  74              		.loc 1 44 0 discriminator 2
+  75 002a 0134     		adds	r4, r4, #1
+  76              	.LVL8:
+  77 002c A4B2     		uxth	r4, r4
+  78              	.LVL9:
+  45:../system/src/ve_direct_protocol/parser.c **** 
+  79              		.loc 1 45 0 discriminator 2
+  80 002e 035D     		ldrb	r3, [r0, r4]	@ zero_extendqisi2
+  81 0030 213B     		subs	r3, r3, #33
+  82 0032 DBB2     		uxtb	r3, r3
+  83 0034 5D2B     		cmp	r3, #93
+  84 0036 01D9     		bls	.L5
+  45:../system/src/ve_direct_protocol/parser.c **** 
+  85              		.loc 1 45 0 is_stmt 0 discriminator 1
+  86 0038 A242     		cmp	r2, r4
+  87 003a F6D8     		bhi	.L6
+  88              	.L5:
+  48:../system/src/ve_direct_protocol/parser.c **** 
+  89              		.loc 1 48 0 is_stmt 1
+  90 003c 0C80     		strh	r4, [r1]	@ movhi
+  50:../system/src/ve_direct_protocol/parser.c **** 				return VE_DIRECT_STRING_END_REACH_TO_EARLY;
+  91              		.loc 1 50 0
+  92 003e A242     		cmp	r2, r4
+  93 0040 02D3     		bcc	.L12
+  56:../system/src/ve_direct_protocol/parser.c **** 			}
+  94              		.loc 1 56 0
+  95 0042 0020     		movs	r0, #0
+  96              	.LVL10:
+  97              	.L1:
+  61:../system/src/ve_direct_protocol/parser.c **** 	}
+  62:../system/src/ve_direct_protocol/parser.c **** 
+  63:../system/src/ve_direct_protocol/parser.c **** 	*input_offset = i;
+  64:../system/src/ve_direct_protocol/parser.c **** 
+  65:../system/src/ve_direct_protocol/parser.c **** 	return 0;
+  66:../system/src/ve_direct_protocol/parser.c **** }
+  98              		.loc 1 66 0
+  99 0044 F0BC     		pop	{r4, r5, r6, r7}
+ 100              		.cfi_remember_state
+ 101              		.cfi_restore 7
+ 102              		.cfi_restore 6
+ 103              		.cfi_restore 5
+ 104              		.cfi_restore 4
+ 105              		.cfi_def_cfa_offset 0
+ 106              	.LVL11:
+ 107 0046 7047     		bx	lr
+ 108              	.LVL12:
+ 109              	.L12:
+ 110              		.cfi_restore_state
+  51:../system/src/ve_direct_protocol/parser.c **** 			}
+ 111              		.loc 1 51 0
+ 112 0048 6FF00100 		mvn	r0, #1
+ 113              	.LVL13:
+ 114 004c FAE7     		b	.L1
+ 115              	.LVL14:
+ 116              	.L11:
+  63:../system/src/ve_direct_protocol/parser.c **** 
+ 117              		.loc 1 63 0
+ 118 004e 0C80     		strh	r4, [r1]	@ movhi
+  65:../system/src/ve_direct_protocol/parser.c **** }
+ 119              		.loc 1 65 0
+ 120 0050 0020     		movs	r0, #0
+ 121              	.LVL15:
+ 122 0052 F7E7     		b	.L1
+ 123              		.cfi_endproc
+ 124              	.LFE0:
+ 126              		.section	.text.get_key_value_from_str,"ax",%progbits
+ 127              		.align	1
+ 128              		.syntax unified
+ 129              		.thumb
+ 130              		.thumb_func
+ 131              		.fpu fpv4-sp-d16
+ 133              	get_key_value_from_str:
+ 134              	.LFB1:
+  67:../system/src/ve_direct_protocol/parser.c **** 
+  68:../system/src/ve_direct_protocol/parser.c **** static ve_direct_key_values get_key_value_from_str(uint8_t* input) {
+ 135              		.loc 1 68 0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+ 139              	.LVL16:
+ 140 0000 10B5     		push	{r4, lr}
+ 141              		.cfi_def_cfa_offset 8
+ 142              		.cfi_offset 4, -8
+ 143              		.cfi_offset 14, -4
+ 144 0002 0446     		mov	r4, r0
+ 145              	.LVL17:
+  69:../system/src/ve_direct_protocol/parser.c **** 
+  70:../system/src/ve_direct_protocol/parser.c **** 	const char *str = (const char*) input;
+  71:../system/src/ve_direct_protocol/parser.c **** 
+  72:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("PID", str) == 0) {
+ 146              		.loc 1 72 0
+ 147 0004 0146     		mov	r1, r0
+ 148 0006 4448     		ldr	r0, .L35
+ 149              	.LVL18:
+ 150 0008 FFF7FEFF 		bl	strcmp
+ 151              	.LVL19:
+ 152 000c 08B9     		cbnz	r0, .L34
+  73:../system/src/ve_direct_protocol/parser.c **** 		return VE_PID;
+ 153              		.loc 1 73 0
+ 154 000e 0120     		movs	r0, #1
+ 155              	.L14:
+  74:../system/src/ve_direct_protocol/parser.c **** 	}
+  75:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("FW", str) == 0) {
+  76:../system/src/ve_direct_protocol/parser.c **** 		return VE_FW;
+  77:../system/src/ve_direct_protocol/parser.c **** 	}
+  78:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("SER#", str) == 0) {
+  79:../system/src/ve_direct_protocol/parser.c **** 		return VE_SERIAL;
+  80:../system/src/ve_direct_protocol/parser.c **** 	}
+  81:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("V", str) == 0) {
+  82:../system/src/ve_direct_protocol/parser.c **** 		return VE_V;
+  83:../system/src/ve_direct_protocol/parser.c **** 	}
+  84:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("I", str) == 0) {
+  85:../system/src/ve_direct_protocol/parser.c **** 		return VE_I;
+  86:../system/src/ve_direct_protocol/parser.c **** 	}
+  87:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("VPV", str) == 0) {
+  88:../system/src/ve_direct_protocol/parser.c **** 		return VE_VPV;
+  89:../system/src/ve_direct_protocol/parser.c **** 	}
+  90:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("PPV", str) == 0) {
+  91:../system/src/ve_direct_protocol/parser.c **** 		return VE_PPV;
+  92:../system/src/ve_direct_protocol/parser.c **** 	}
+  93:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("CS", str) == 0) {
+  94:../system/src/ve_direct_protocol/parser.c **** 		return VE_CS;
+  95:../system/src/ve_direct_protocol/parser.c **** 	}
+  96:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("ERR", str) == 0) {
+  97:../system/src/ve_direct_protocol/parser.c **** 		return VE_ERR;
+  98:../system/src/ve_direct_protocol/parser.c **** 	}
+  99:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("LOAD", str) == 0) {
+ 100:../system/src/ve_direct_protocol/parser.c **** 		return VE_LOAD;
+ 101:../system/src/ve_direct_protocol/parser.c **** 	}
+ 102:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("IL", str) == 0) {
+ 103:../system/src/ve_direct_protocol/parser.c **** 		return VE_IL;
+ 104:../system/src/ve_direct_protocol/parser.c **** 	}
+ 105:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("H19", str) == 0) {
+ 106:../system/src/ve_direct_protocol/parser.c **** 		return VE_H19;
+ 107:../system/src/ve_direct_protocol/parser.c **** 	}
+ 108:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("H20", str) == 0) {
+ 109:../system/src/ve_direct_protocol/parser.c **** 		return VE_H20;
+ 110:../system/src/ve_direct_protocol/parser.c **** 	}
+ 111:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("H21", str) == 0) {
+ 112:../system/src/ve_direct_protocol/parser.c **** 		return VE_H21;
+ 113:../system/src/ve_direct_protocol/parser.c **** 	}
+ 114:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("H22", str) == 0) {
+ 115:../system/src/ve_direct_protocol/parser.c **** 		return VE_H22;
+ 116:../system/src/ve_direct_protocol/parser.c **** 	}
+ 117:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("H23", str) == 0) {
+ 118:../system/src/ve_direct_protocol/parser.c **** 		return VE_H23;
+ 119:../system/src/ve_direct_protocol/parser.c **** 	}
+ 120:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("HSDS", str) == 0) {
+ 121:../system/src/ve_direct_protocol/parser.c **** 		return VE_HSDS;
+ 122:../system/src/ve_direct_protocol/parser.c **** 	}
+ 123:../system/src/ve_direct_protocol/parser.c **** 	if (strcmp("Checksum", str) == 0) {
+ 124:../system/src/ve_direct_protocol/parser.c **** 		return VE_CHECKSUM;
+ 125:../system/src/ve_direct_protocol/parser.c **** 	}
+ 126:../system/src/ve_direct_protocol/parser.c **** 
+ 127:../system/src/ve_direct_protocol/parser.c **** 	return VE_UNKNOWN;
+ 128:../system/src/ve_direct_protocol/parser.c **** }
+ 156              		.loc 1 128 0
+ 157 0010 10BD     		pop	{r4, pc}
+ 158              	.LVL20:
+ 159              	.L34:
+  75:../system/src/ve_direct_protocol/parser.c **** 		return VE_FW;
+ 160              		.loc 1 75 0
+ 161 0012 2146     		mov	r1, r4
+ 162 0014 4148     		ldr	r0, .L35+4
+ 163 0016 FFF7FEFF 		bl	strcmp
+ 164              	.LVL21:
+ 165 001a 0028     		cmp	r0, #0
+ 166 001c 59D0     		beq	.L16
+  78:../system/src/ve_direct_protocol/parser.c **** 		return VE_SERIAL;
+ 167              		.loc 1 78 0
+ 168 001e 2146     		mov	r1, r4
+ 169 0020 3F48     		ldr	r0, .L35+8
+ 170 0022 FFF7FEFF 		bl	strcmp
+ 171              	.LVL22:
+ 172 0026 0028     		cmp	r0, #0
+ 173 0028 55D0     		beq	.L17
+  81:../system/src/ve_direct_protocol/parser.c **** 		return VE_V;
+ 174              		.loc 1 81 0
+ 175 002a 2146     		mov	r1, r4
+ 176 002c 3D48     		ldr	r0, .L35+12
+ 177 002e FFF7FEFF 		bl	strcmp
+ 178              	.LVL23:
+ 179 0032 0028     		cmp	r0, #0
+ 180 0034 51D0     		beq	.L18
+  84:../system/src/ve_direct_protocol/parser.c **** 		return VE_I;
+ 181              		.loc 1 84 0
+ 182 0036 2146     		mov	r1, r4
+ 183 0038 3B48     		ldr	r0, .L35+16
+ 184 003a FFF7FEFF 		bl	strcmp
+ 185              	.LVL24:
+ 186 003e 0028     		cmp	r0, #0
+ 187 0040 4DD0     		beq	.L19
+  87:../system/src/ve_direct_protocol/parser.c **** 		return VE_VPV;
+ 188              		.loc 1 87 0
+ 189 0042 2146     		mov	r1, r4
+ 190 0044 3948     		ldr	r0, .L35+20
+ 191 0046 FFF7FEFF 		bl	strcmp
+ 192              	.LVL25:
+ 193 004a 0028     		cmp	r0, #0
+ 194 004c 49D0     		beq	.L20
+  90:../system/src/ve_direct_protocol/parser.c **** 		return VE_PPV;
+ 195              		.loc 1 90 0
+ 196 004e 2146     		mov	r1, r4
+ 197 0050 3748     		ldr	r0, .L35+24
+ 198 0052 FFF7FEFF 		bl	strcmp
+ 199              	.LVL26:
+ 200 0056 0028     		cmp	r0, #0
+ 201 0058 45D0     		beq	.L21
+  93:../system/src/ve_direct_protocol/parser.c **** 		return VE_CS;
+ 202              		.loc 1 93 0
+ 203 005a 2146     		mov	r1, r4
+ 204 005c 3548     		ldr	r0, .L35+28
+ 205 005e FFF7FEFF 		bl	strcmp
+ 206              	.LVL27:
+ 207 0062 0028     		cmp	r0, #0
+ 208 0064 41D0     		beq	.L22
+  96:../system/src/ve_direct_protocol/parser.c **** 		return VE_ERR;
+ 209              		.loc 1 96 0
+ 210 0066 2146     		mov	r1, r4
+ 211 0068 3348     		ldr	r0, .L35+32
+ 212 006a FFF7FEFF 		bl	strcmp
+ 213              	.LVL28:
+ 214 006e 0028     		cmp	r0, #0
+ 215 0070 3DD0     		beq	.L23
+  99:../system/src/ve_direct_protocol/parser.c **** 		return VE_LOAD;
+ 216              		.loc 1 99 0
+ 217 0072 2146     		mov	r1, r4
+ 218 0074 3148     		ldr	r0, .L35+36
+ 219 0076 FFF7FEFF 		bl	strcmp
+ 220              	.LVL29:
+ 221 007a 0028     		cmp	r0, #0
+ 222 007c 39D0     		beq	.L24
+ 102:../system/src/ve_direct_protocol/parser.c **** 		return VE_IL;
+ 223              		.loc 1 102 0
+ 224 007e 2146     		mov	r1, r4
+ 225 0080 2F48     		ldr	r0, .L35+40
+ 226 0082 FFF7FEFF 		bl	strcmp
+ 227              	.LVL30:
+ 228 0086 B0B3     		cbz	r0, .L25
+ 105:../system/src/ve_direct_protocol/parser.c **** 		return VE_H19;
+ 229              		.loc 1 105 0
+ 230 0088 2146     		mov	r1, r4
+ 231 008a 2E48     		ldr	r0, .L35+44
+ 232 008c FFF7FEFF 		bl	strcmp
+ 233              	.LVL31:
+ 234 0090 98B3     		cbz	r0, .L26
+ 108:../system/src/ve_direct_protocol/parser.c **** 		return VE_H20;
+ 235              		.loc 1 108 0
+ 236 0092 2146     		mov	r1, r4
+ 237 0094 2C48     		ldr	r0, .L35+48
+ 238 0096 FFF7FEFF 		bl	strcmp
+ 239              	.LVL32:
+ 240 009a 80B3     		cbz	r0, .L27
+ 111:../system/src/ve_direct_protocol/parser.c **** 		return VE_H21;
+ 241              		.loc 1 111 0
+ 242 009c 2146     		mov	r1, r4
+ 243 009e 2B48     		ldr	r0, .L35+52
+ 244 00a0 FFF7FEFF 		bl	strcmp
+ 245              	.LVL33:
+ 246 00a4 68B3     		cbz	r0, .L28
+ 114:../system/src/ve_direct_protocol/parser.c **** 		return VE_H22;
+ 247              		.loc 1 114 0
+ 248 00a6 2146     		mov	r1, r4
+ 249 00a8 2948     		ldr	r0, .L35+56
+ 250 00aa FFF7FEFF 		bl	strcmp
+ 251              	.LVL34:
+ 252 00ae 50B3     		cbz	r0, .L29
+ 117:../system/src/ve_direct_protocol/parser.c **** 		return VE_H23;
+ 253              		.loc 1 117 0
+ 254 00b0 2146     		mov	r1, r4
+ 255 00b2 2848     		ldr	r0, .L35+60
+ 256 00b4 FFF7FEFF 		bl	strcmp
+ 257              	.LVL35:
+ 258 00b8 38B3     		cbz	r0, .L30
+ 120:../system/src/ve_direct_protocol/parser.c **** 		return VE_HSDS;
+ 259              		.loc 1 120 0
+ 260 00ba 2146     		mov	r1, r4
+ 261 00bc 2648     		ldr	r0, .L35+64
+ 262 00be FFF7FEFF 		bl	strcmp
+ 263              	.LVL36:
+ 264 00c2 20B3     		cbz	r0, .L31
+ 123:../system/src/ve_direct_protocol/parser.c **** 		return VE_CHECKSUM;
+ 265              		.loc 1 123 0
+ 266 00c4 2146     		mov	r1, r4
+ 267 00c6 2548     		ldr	r0, .L35+68
+ 268 00c8 FFF7FEFF 		bl	strcmp
+ 269              	.LVL37:
+ 270 00cc 08BB     		cbnz	r0, .L32
+ 124:../system/src/ve_direct_protocol/parser.c **** 	}
+ 271              		.loc 1 124 0
+ 272 00ce 1220     		movs	r0, #18
+ 273 00d0 9EE7     		b	.L14
+ 274              	.L16:
+  76:../system/src/ve_direct_protocol/parser.c **** 	}
+ 275              		.loc 1 76 0
+ 276 00d2 0220     		movs	r0, #2
+ 277 00d4 9CE7     		b	.L14
+ 278              	.L17:
+  79:../system/src/ve_direct_protocol/parser.c **** 	}
+ 279              		.loc 1 79 0
+ 280 00d6 0320     		movs	r0, #3
+ 281 00d8 9AE7     		b	.L14
+ 282              	.L18:
+  82:../system/src/ve_direct_protocol/parser.c **** 	}
+ 283              		.loc 1 82 0
+ 284 00da 0420     		movs	r0, #4
+ 285 00dc 98E7     		b	.L14
+ 286              	.L19:
+  85:../system/src/ve_direct_protocol/parser.c **** 	}
+ 287              		.loc 1 85 0
+ 288 00de 0520     		movs	r0, #5
+ 289 00e0 96E7     		b	.L14
+ 290              	.L20:
+  88:../system/src/ve_direct_protocol/parser.c **** 	}
+ 291              		.loc 1 88 0
+ 292 00e2 0620     		movs	r0, #6
+ 293 00e4 94E7     		b	.L14
+ 294              	.L21:
+  91:../system/src/ve_direct_protocol/parser.c **** 	}
+ 295              		.loc 1 91 0
+ 296 00e6 0720     		movs	r0, #7
+ 297 00e8 92E7     		b	.L14
+ 298              	.L22:
+  94:../system/src/ve_direct_protocol/parser.c **** 	}
+ 299              		.loc 1 94 0
+ 300 00ea 0820     		movs	r0, #8
+ 301 00ec 90E7     		b	.L14
+ 302              	.L23:
+  97:../system/src/ve_direct_protocol/parser.c **** 	}
+ 303              		.loc 1 97 0
+ 304 00ee 0920     		movs	r0, #9
+ 305 00f0 8EE7     		b	.L14
+ 306              	.L24:
+ 100:../system/src/ve_direct_protocol/parser.c **** 	}
+ 307              		.loc 1 100 0
+ 308 00f2 0A20     		movs	r0, #10
+ 309 00f4 8CE7     		b	.L14
+ 310              	.L25:
+ 103:../system/src/ve_direct_protocol/parser.c **** 	}
+ 311              		.loc 1 103 0
+ 312 00f6 0B20     		movs	r0, #11
+ 313 00f8 8AE7     		b	.L14
+ 314              	.L26:
+ 106:../system/src/ve_direct_protocol/parser.c **** 	}
+ 315              		.loc 1 106 0
+ 316 00fa 0C20     		movs	r0, #12
+ 317 00fc 88E7     		b	.L14
+ 318              	.L27:
+ 109:../system/src/ve_direct_protocol/parser.c **** 	}
+ 319              		.loc 1 109 0
+ 320 00fe 0D20     		movs	r0, #13
+ 321 0100 86E7     		b	.L14
+ 322              	.L28:
+ 112:../system/src/ve_direct_protocol/parser.c **** 	}
+ 323              		.loc 1 112 0
+ 324 0102 0E20     		movs	r0, #14
+ 325 0104 84E7     		b	.L14
+ 326              	.L29:
+ 115:../system/src/ve_direct_protocol/parser.c **** 	}
+ 327              		.loc 1 115 0
+ 328 0106 0F20     		movs	r0, #15
+ 329 0108 82E7     		b	.L14
+ 330              	.L30:
+ 118:../system/src/ve_direct_protocol/parser.c **** 	}
+ 331              		.loc 1 118 0
+ 332 010a 1020     		movs	r0, #16
+ 333 010c 80E7     		b	.L14
+ 334              	.L31:
+ 121:../system/src/ve_direct_protocol/parser.c **** 	}
+ 335              		.loc 1 121 0
+ 336 010e 1120     		movs	r0, #17
+ 337 0110 7EE7     		b	.L14
+ 338              	.L32:
+ 127:../system/src/ve_direct_protocol/parser.c **** }
+ 339              		.loc 1 127 0
+ 340 0112 0020     		movs	r0, #0
+ 341 0114 7CE7     		b	.L14
+ 342              	.L36:
+ 343 0116 00BF     		.align	2
+ 344              	.L35:
+ 345 0118 00000000 		.word	.LC0
+ 346 011c 04000000 		.word	.LC1
+ 347 0120 08000000 		.word	.LC2
+ 348 0124 10000000 		.word	.LC3
+ 349 0128 14000000 		.word	.LC4
+ 350 012c 18000000 		.word	.LC5
+ 351 0130 1C000000 		.word	.LC6
+ 352 0134 20000000 		.word	.LC7
+ 353 0138 24000000 		.word	.LC8
+ 354 013c 28000000 		.word	.LC9
+ 355 0140 30000000 		.word	.LC10
+ 356 0144 34000000 		.word	.LC11
+ 357 0148 38000000 		.word	.LC12
+ 358 014c 3C000000 		.word	.LC13
+ 359 0150 40000000 		.word	.LC14
+ 360 0154 44000000 		.word	.LC15
+ 361 0158 48000000 		.word	.LC16
+ 362 015c 50000000 		.word	.LC17
+ 363              		.cfi_endproc
+ 364              	.LFE1:
+ 366              		.section	.text.ve_direct_parser_init,"ax",%progbits
+ 367              		.align	1
+ 368              		.global	ve_direct_parser_init
+ 369              		.syntax unified
+ 370              		.thumb
+ 371              		.thumb_func
+ 372              		.fpu fpv4-sp-d16
+ 374              	ve_direct_parser_init:
+ 375              	.LFB2:
+ 129:../system/src/ve_direct_protocol/parser.c **** 
+ 130:../system/src/ve_direct_protocol/parser.c **** void ve_direct_parser_init(ve_direct_raw_struct* raw_struct, ve_direct_average_struct* avg_struct) 
+ 376              		.loc 1 130 0
+ 377              		.cfi_startproc
+ 378              		@ args = 0, pretend = 0, frame = 0
+ 379              		@ frame_needed = 0, uses_anonymous_args = 0
+ 380              	.LVL38:
+ 381 0000 10B5     		push	{r4, lr}
+ 382              		.cfi_def_cfa_offset 8
+ 383              		.cfi_offset 4, -8
+ 384              		.cfi_offset 14, -4
+ 385 0002 0C46     		mov	r4, r1
+ 131:../system/src/ve_direct_protocol/parser.c **** 	//uint16_t size = sizeof(ve_avg);
+ 132:../system/src/ve_direct_protocol/parser.c **** 
+ 133:../system/src/ve_direct_protocol/parser.c **** 	memset(raw_struct, 0x00, sizeof(ve_direct_raw_struct));
+ 386              		.loc 1 133 0
+ 387 0004 2422     		movs	r2, #36
+ 388 0006 0021     		movs	r1, #0
+ 389              	.LVL39:
+ 390 0008 FFF7FEFF 		bl	memset
+ 391              	.LVL40:
+ 134:../system/src/ve_direct_protocol/parser.c **** 	memset(avg_struct, 0x00, sizeof(ve_direct_average_struct));
+ 392              		.loc 1 134 0
+ 393 000c C822     		movs	r2, #200
+ 394 000e 0021     		movs	r1, #0
+ 395 0010 2046     		mov	r0, r4
+ 396 0012 FFF7FEFF 		bl	memset
+ 397              	.LVL41:
+ 135:../system/src/ve_direct_protocol/parser.c **** }
+ 398              		.loc 1 135 0
+ 399 0016 10BD     		pop	{r4, pc}
+ 400              		.cfi_endproc
+ 401              	.LFE2:
+ 403              		.section	.text.ve_direct_cut_to_checksum,"ax",%progbits
+ 404              		.align	1
+ 405              		.global	ve_direct_cut_to_checksum
+ 406              		.syntax unified
+ 407              		.thumb
+ 408              		.thumb_func
+ 409              		.fpu fpv4-sp-d16
+ 411              	ve_direct_cut_to_checksum:
+ 412              	.LFB3:
+ 136:../system/src/ve_direct_protocol/parser.c **** 
+ 137:../system/src/ve_direct_protocol/parser.c **** 
+ 138:../system/src/ve_direct_protocol/parser.c **** void ve_direct_cut_to_checksum(uint8_t* input, uint16_t input_ln,
+ 139:../system/src/ve_direct_protocol/parser.c **** 		uint16_t* target_ln) {
+ 413              		.loc 1 139 0
+ 414              		.cfi_startproc
+ 415              		@ args = 0, pretend = 0, frame = 0
+ 416              		@ frame_needed = 0, uses_anonymous_args = 0
+ 417              		@ link register save eliminated.
+ 418              	.LVL42:
+ 419 0000 70B4     		push	{r4, r5, r6}
+ 420              		.cfi_def_cfa_offset 12
+ 421              		.cfi_offset 4, -12
+ 422              		.cfi_offset 5, -8
+ 423              		.cfi_offset 6, -4
+ 424              	.LVL43:
+ 140:../system/src/ve_direct_protocol/parser.c **** 
+ 141:../system/src/ve_direct_protocol/parser.c **** 	uint16_t i = 0;
+ 425              		.loc 1 141 0
+ 426 0002 0023     		movs	r3, #0
+ 142:../system/src/ve_direct_protocol/parser.c **** 	uint16_t checksum_start = 0;
+ 143:../system/src/ve_direct_protocol/parser.c **** 
+ 144:../system/src/ve_direct_protocol/parser.c **** 	for (; i < input_ln - 1; i++) {
+ 427              		.loc 1 144 0
+ 428 0004 01E0     		b	.L40
+ 429              	.LVL44:
+ 430              	.L41:
+ 431 0006 0133     		adds	r3, r3, #1
+ 432              	.LVL45:
+ 433 0008 9BB2     		uxth	r3, r3
+ 434              	.LVL46:
+ 435              	.L40:
+ 436              		.loc 1 144 0 is_stmt 0 discriminator 1
+ 437 000a 1E46     		mov	r6, r3
+ 438 000c 4C1E     		subs	r4, r1, #1
+ 439 000e A342     		cmp	r3, r4
+ 440 0010 07DA     		bge	.L47
+ 145:../system/src/ve_direct_protocol/parser.c **** 		if (*(input + i) == 'C' && *(input + i + 1) == 'h') {
+ 441              		.loc 1 145 0 is_stmt 1
+ 442 0012 C55C     		ldrb	r5, [r0, r3]	@ zero_extendqisi2
+ 443 0014 432D     		cmp	r5, #67
+ 444 0016 F6D1     		bne	.L41
+ 445              		.loc 1 145 0 is_stmt 0 discriminator 1
+ 446 0018 5D1C     		adds	r5, r3, #1
+ 447 001a 455D     		ldrb	r5, [r0, r5]	@ zero_extendqisi2
+ 448 001c 682D     		cmp	r5, #104
+ 449 001e F2D1     		bne	.L41
+ 450 0020 00E0     		b	.L42
+ 451              	.L47:
+ 142:../system/src/ve_direct_protocol/parser.c **** 	uint16_t checksum_start = 0;
+ 452              		.loc 1 142 0 is_stmt 1
+ 453 0022 0023     		movs	r3, #0
+ 454              	.LVL47:
+ 455              	.L42:
+ 146:../system/src/ve_direct_protocol/parser.c **** 			checksum_start = i;
+ 147:../system/src/ve_direct_protocol/parser.c **** 			break;
+ 148:../system/src/ve_direct_protocol/parser.c **** 		}
+ 149:../system/src/ve_direct_protocol/parser.c **** 	}
+ 150:../system/src/ve_direct_protocol/parser.c **** 
+ 151:../system/src/ve_direct_protocol/parser.c **** 	if (i >= input_ln - 1) {
+ 456              		.loc 1 151 0
+ 457 0024 A642     		cmp	r6, r4
+ 458 0026 03DA     		bge	.L48
+ 152:../system/src/ve_direct_protocol/parser.c **** 		*target_ln = 1;
+ 153:../system/src/ve_direct_protocol/parser.c **** 		return;
+ 154:../system/src/ve_direct_protocol/parser.c **** 	}
+ 155:../system/src/ve_direct_protocol/parser.c **** 
+ 156:../system/src/ve_direct_protocol/parser.c **** 	*target_ln = checksum_start + CHECKSUM_NAME_FIELD_LN_TO_DATA;
+ 459              		.loc 1 156 0
+ 460 0028 0A33     		adds	r3, r3, #10
+ 461              	.LVL48:
+ 462 002a 1380     		strh	r3, [r2]	@ movhi
+ 463              	.L39:
+ 157:../system/src/ve_direct_protocol/parser.c **** 
+ 158:../system/src/ve_direct_protocol/parser.c **** }
+ 464              		.loc 1 158 0
+ 465 002c 70BC     		pop	{r4, r5, r6}
+ 466              		.cfi_remember_state
+ 467              		.cfi_restore 6
+ 468              		.cfi_restore 5
+ 469              		.cfi_restore 4
+ 470              		.cfi_def_cfa_offset 0
+ 471 002e 7047     		bx	lr
+ 472              	.LVL49:
+ 473              	.L48:
+ 474              		.cfi_restore_state
+ 152:../system/src/ve_direct_protocol/parser.c **** 		*target_ln = 1;
+ 475              		.loc 1 152 0
+ 476 0030 0123     		movs	r3, #1
+ 477              	.LVL50:
+ 478 0032 1380     		strh	r3, [r2]	@ movhi
+ 153:../system/src/ve_direct_protocol/parser.c **** 	}
+ 479              		.loc 1 153 0
+ 480 0034 FAE7     		b	.L39
+ 481              		.cfi_endproc
+ 482              	.LFE3:
+ 484              		.section	.text.ve_direct_validate_checksum,"ax",%progbits
+ 485              		.align	1
+ 486              		.global	ve_direct_validate_checksum
+ 487              		.syntax unified
+ 488              		.thumb
+ 489              		.thumb_func
+ 490              		.fpu fpv4-sp-d16
+ 492              	ve_direct_validate_checksum:
+ 493              	.LFB4:
+ 159:../system/src/ve_direct_protocol/parser.c **** 
+ 160:../system/src/ve_direct_protocol/parser.c **** void ve_direct_validate_checksum(uint8_t* input, uint16_t input_ln, uint8_t* valid) {
+ 494              		.loc 1 160 0
+ 495              		.cfi_startproc
+ 496              		@ args = 0, pretend = 0, frame = 0
+ 497              		@ frame_needed = 0, uses_anonymous_args = 0
+ 498              		@ link register save eliminated.
+ 499              	.LVL51:
+ 161:../system/src/ve_direct_protocol/parser.c **** 	uint8_t sum = 0;
+ 162:../system/src/ve_direct_protocol/parser.c **** 
+ 163:../system/src/ve_direct_protocol/parser.c **** 	int i = 0;
+ 164:../system/src/ve_direct_protocol/parser.c **** 
+ 165:../system/src/ve_direct_protocol/parser.c **** 	if (input_ln < 10) {
+ 500              		.loc 1 165 0
+ 501 0000 0929     		cmp	r1, #9
+ 502 0002 03D9     		bls	.L61
+ 160:../system/src/ve_direct_protocol/parser.c **** 	uint8_t sum = 0;
+ 503              		.loc 1 160 0
+ 504 0004 F0B4     		push	{r4, r5, r6, r7}
+ 505              		.cfi_def_cfa_offset 16
+ 506              		.cfi_offset 4, -16
+ 507              		.cfi_offset 5, -12
+ 508              		.cfi_offset 6, -8
+ 509              		.cfi_offset 7, -4
+ 163:../system/src/ve_direct_protocol/parser.c **** 
+ 510              		.loc 1 163 0
+ 511 0006 0023     		movs	r3, #0
+ 161:../system/src/ve_direct_protocol/parser.c **** 	uint8_t sum = 0;
+ 512              		.loc 1 161 0
+ 513 0008 1C46     		mov	r4, r3
+ 514 000a 0DE0     		b	.L50
+ 515              	.L61:
+ 516              		.cfi_def_cfa_offset 0
+ 517              		.cfi_restore 4
+ 518              		.cfi_restore 5
+ 519              		.cfi_restore 6
+ 520              		.cfi_restore 7
+ 166:../system/src/ve_direct_protocol/parser.c **** 		*valid = 0;
+ 521              		.loc 1 166 0
+ 522 000c 0023     		movs	r3, #0
+ 523 000e 1370     		strb	r3, [r2]
+ 524 0010 7047     		bx	lr
+ 525              	.LVL52:
+ 526              	.L64:
+ 527              		.cfi_def_cfa_offset 16
+ 528              		.cfi_offset 4, -16
+ 529              		.cfi_offset 5, -12
+ 530              		.cfi_offset 6, -8
+ 531              		.cfi_offset 7, -4
+ 167:../system/src/ve_direct_protocol/parser.c **** 		return;
+ 168:../system/src/ve_direct_protocol/parser.c **** 	}
+ 169:../system/src/ve_direct_protocol/parser.c **** 
+ 170:../system/src/ve_direct_protocol/parser.c **** 	for (; i < input_ln; i++) {
+ 171:../system/src/ve_direct_protocol/parser.c **** 
+ 172:../system/src/ve_direct_protocol/parser.c **** 		// workaround of the problem with loosing \n or \r characters
+ 173:../system/src/ve_direct_protocol/parser.c **** 		// don't ask why and what this crap is all about. i had no time
+ 174:../system/src/ve_direct_protocol/parser.c **** 		// to debug the connection between the controller and pv charging regulator
+ 175:../system/src/ve_direct_protocol/parser.c **** 
+ 176:../system/src/ve_direct_protocol/parser.c **** 		sum += *(input + i);
+ 177:../system/src/ve_direct_protocol/parser.c **** 
+ 178:../system/src/ve_direct_protocol/parser.c **** 		if (i > 0) {
+ 179:../system/src/ve_direct_protocol/parser.c **** 
+ 180:../system/src/ve_direct_protocol/parser.c **** 			// if \n is the current character check if the previous one was \r
+ 181:../system/src/ve_direct_protocol/parser.c **** 			if (*(input + i) == '\n' && *(input + i - 1) != '\r') {
+ 532              		.loc 1 181 0 discriminator 1
+ 533 0012 5F1E     		subs	r7, r3, #1
+ 534 0014 C75D     		ldrb	r7, [r0, r7]	@ zero_extendqisi2
+ 535 0016 0D2F     		cmp	r7, #13
+ 536 0018 10D0     		beq	.L53
+ 182:../system/src/ve_direct_protocol/parser.c **** 				// if not assume that it was received and add it to the checksum
+ 183:../system/src/ve_direct_protocol/parser.c **** 				sum += '\r';
+ 537              		.loc 1 183 0
+ 538 001a 0D34     		adds	r4, r4, #13
+ 539              	.LVL53:
+ 540 001c E4B2     		uxtb	r4, r4
+ 541              	.LVL54:
+ 184:../system/src/ve_direct_protocol/parser.c **** 
+ 185:../system/src/ve_direct_protocol/parser.c **** 				// proceed to next character
+ 186:../system/src/ve_direct_protocol/parser.c **** 				continue;
+ 542              		.loc 1 186 0
+ 543 001e 02E0     		b	.L54
+ 544              	.L52:
+ 187:../system/src/ve_direct_protocol/parser.c **** 			}
+ 188:../system/src/ve_direct_protocol/parser.c **** 
+ 189:../system/src/ve_direct_protocol/parser.c **** 			// if \r is the current character but the next one isn't \n
+ 190:../system/src/ve_direct_protocol/parser.c **** 			if (*(input + i) == '\r' && *(input + i + 1) != '\n') {
+ 191:../system/src/ve_direct_protocol/parser.c **** 				// if not assume that it was received and add it to the checksum
+ 192:../system/src/ve_direct_protocol/parser.c **** 				sum += '\n';
+ 193:../system/src/ve_direct_protocol/parser.c **** 
+ 194:../system/src/ve_direct_protocol/parser.c **** 				// proceed to next character
+ 195:../system/src/ve_direct_protocol/parser.c **** 				continue;
+ 196:../system/src/ve_direct_protocol/parser.c **** 			}
+ 197:../system/src/ve_direct_protocol/parser.c **** 
+ 198:../system/src/ve_direct_protocol/parser.c **** 		}
+ 199:../system/src/ve_direct_protocol/parser.c **** 		else {
+ 200:../system/src/ve_direct_protocol/parser.c **** 
+ 201:../system/src/ve_direct_protocol/parser.c **** 			// the next part of the stupid workaround
+ 202:../system/src/ve_direct_protocol/parser.c **** 			if ((*input) == '\n') {
+ 545              		.loc 1 202 0
+ 546 0020 0578     		ldrb	r5, [r0]	@ zero_extendqisi2
+ 547 0022 0A2D     		cmp	r5, #10
+ 548 0024 13D0     		beq	.L62
+ 549              	.L54:
+ 170:../system/src/ve_direct_protocol/parser.c **** 
+ 550              		.loc 1 170 0
+ 551 0026 0133     		adds	r3, r3, #1
+ 552              	.LVL55:
+ 553              	.L50:
+ 170:../system/src/ve_direct_protocol/parser.c **** 
+ 554              		.loc 1 170 0 is_stmt 0 discriminator 1
+ 555 0028 9942     		cmp	r1, r3
+ 556 002a 13DD     		ble	.L63
+ 176:../system/src/ve_direct_protocol/parser.c **** 
+ 557              		.loc 1 176 0 is_stmt 1
+ 558 002c 1E46     		mov	r6, r3
+ 559 002e C55C     		ldrb	r5, [r0, r3]	@ zero_extendqisi2
+ 560 0030 2C44     		add	r4, r4, r5
+ 561              	.LVL56:
+ 562 0032 E4B2     		uxtb	r4, r4
+ 563              	.LVL57:
+ 178:../system/src/ve_direct_protocol/parser.c **** 
+ 564              		.loc 1 178 0
+ 565 0034 002B     		cmp	r3, #0
+ 566 0036 F3DD     		ble	.L52
+ 181:../system/src/ve_direct_protocol/parser.c **** 				// if not assume that it was received and add it to the checksum
+ 567              		.loc 1 181 0
+ 568 0038 0A2D     		cmp	r5, #10
+ 569 003a EAD0     		beq	.L64
+ 570              	.L53:
+ 190:../system/src/ve_direct_protocol/parser.c **** 				// if not assume that it was received and add it to the checksum
+ 571              		.loc 1 190 0
+ 572 003c 0D2D     		cmp	r5, #13
+ 573 003e F2D1     		bne	.L54
+ 190:../system/src/ve_direct_protocol/parser.c **** 				// if not assume that it was received and add it to the checksum
+ 574              		.loc 1 190 0 is_stmt 0 discriminator 1
+ 575 0040 0136     		adds	r6, r6, #1
+ 576 0042 855D     		ldrb	r5, [r0, r6]	@ zero_extendqisi2
+ 577 0044 0A2D     		cmp	r5, #10
+ 578 0046 EED0     		beq	.L54
+ 192:../system/src/ve_direct_protocol/parser.c **** 
+ 579              		.loc 1 192 0 is_stmt 1
+ 580 0048 0A34     		adds	r4, r4, #10
+ 581              	.LVL58:
+ 582 004a E4B2     		uxtb	r4, r4
+ 583              	.LVL59:
+ 195:../system/src/ve_direct_protocol/parser.c **** 			}
+ 584              		.loc 1 195 0
+ 585 004c EBE7     		b	.L54
+ 586              	.L62:
+ 203:../system/src/ve_direct_protocol/parser.c **** 				sum += '\r';
+ 587              		.loc 1 203 0
+ 588 004e 0D34     		adds	r4, r4, #13
+ 589              	.LVL60:
+ 590 0050 E4B2     		uxtb	r4, r4
+ 591              	.LVL61:
+ 592 0052 E8E7     		b	.L54
+ 593              	.L63:
+ 204:../system/src/ve_direct_protocol/parser.c **** 			}
+ 205:../system/src/ve_direct_protocol/parser.c **** 		}
+ 206:../system/src/ve_direct_protocol/parser.c **** 
+ 207:../system/src/ve_direct_protocol/parser.c **** 	}
+ 208:../system/src/ve_direct_protocol/parser.c **** 
+ 209:../system/src/ve_direct_protocol/parser.c **** 	sum %= 0xFF;
+ 594              		.loc 1 209 0
+ 595 0054 084B     		ldr	r3, .L66
+ 596              	.LVL62:
+ 597 0056 A3FB0413 		umull	r1, r3, r3, r4
+ 598              	.LVL63:
+ 599 005a DB09     		lsrs	r3, r3, #7
+ 600 005c 1902     		lsls	r1, r3, #8
+ 601 005e CB1A     		subs	r3, r1, r3
+ 602 0060 E41A     		subs	r4, r4, r3
+ 603              	.LVL64:
+ 210:../system/src/ve_direct_protocol/parser.c **** 
+ 211:../system/src/ve_direct_protocol/parser.c **** 	if (sum == 0)
+ 604              		.loc 1 211 0
+ 605 0062 14F0FF0F 		tst	r4, #255
+ 606 0066 03D0     		beq	.L65
+ 212:../system/src/ve_direct_protocol/parser.c **** 		*valid = 1;
+ 213:../system/src/ve_direct_protocol/parser.c **** 	else
+ 214:../system/src/ve_direct_protocol/parser.c **** 		*valid = 0;
+ 607              		.loc 1 214 0
+ 608 0068 0023     		movs	r3, #0
+ 609 006a 1370     		strb	r3, [r2]
+ 610              	.L49:
+ 215:../system/src/ve_direct_protocol/parser.c **** 
+ 216:../system/src/ve_direct_protocol/parser.c **** 	return;
+ 217:../system/src/ve_direct_protocol/parser.c **** }
+ 611              		.loc 1 217 0
+ 612 006c F0BC     		pop	{r4, r5, r6, r7}
+ 613              		.cfi_remember_state
+ 614              		.cfi_restore 7
+ 615              		.cfi_restore 6
+ 616              		.cfi_restore 5
+ 617              		.cfi_restore 4
+ 618              		.cfi_def_cfa_offset 0
+ 619              	.LVL65:
+ 620 006e 7047     		bx	lr
+ 621              	.LVL66:
+ 622              	.L65:
+ 623              		.cfi_restore_state
+ 212:../system/src/ve_direct_protocol/parser.c **** 		*valid = 1;
+ 624              		.loc 1 212 0
+ 625 0070 0123     		movs	r3, #1
+ 626 0072 1370     		strb	r3, [r2]
+ 627 0074 FAE7     		b	.L49
+ 628              	.L67:
+ 629 0076 00BF     		.align	2
+ 630              	.L66:
+ 631 0078 81808080 		.word	-2139062143
+ 632              		.cfi_endproc
+ 633              	.LFE4:
+ 635              		.section	.text.ve_direct_parse_to_raw_struct,"ax",%progbits
+ 636              		.align	1
+ 637              		.global	ve_direct_parse_to_raw_struct
+ 638              		.syntax unified
+ 639              		.thumb
+ 640              		.thumb_func
+ 641              		.fpu fpv4-sp-d16
+ 643              	ve_direct_parse_to_raw_struct:
+ 644              	.LFB5:
+ 218:../system/src/ve_direct_protocol/parser.c **** 
+ 219:../system/src/ve_direct_protocol/parser.c **** 
+ 220:../system/src/ve_direct_protocol/parser.c **** 
+ 221:../system/src/ve_direct_protocol/parser.c **** int ve_direct_parse_to_raw_struct(uint8_t* input, uint16_t input_ln, ve_direct_raw_struct* out) {
+ 645              		.loc 1 221 0
+ 646              		.cfi_startproc
+ 647              		@ args = 0, pretend = 0, frame = 8
+ 648              		@ frame_needed = 0, uses_anonymous_args = 0
+ 649              	.LVL67:
+ 650 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 651              		.cfi_def_cfa_offset 20
+ 652              		.cfi_offset 4, -20
+ 653              		.cfi_offset 5, -16
+ 654              		.cfi_offset 6, -12
+ 655              		.cfi_offset 7, -8
+ 656              		.cfi_offset 14, -4
+ 657 0002 85B0     		sub	sp, sp, #20
+ 658              		.cfi_def_cfa_offset 40
+ 222:../system/src/ve_direct_protocol/parser.c **** 
+ 223:../system/src/ve_direct_protocol/parser.c **** 	// local var to iterate throught
+ 224:../system/src/ve_direct_protocol/parser.c **** 	uint16_t i = 0;
+ 659              		.loc 1 224 0
+ 660 0004 0023     		movs	r3, #0
+ 661 0006 ADF80E30 		strh	r3, [sp, #14]	@ movhi
+ 662              	.LVL68:
+ 663              	.L69:
+ 225:../system/src/ve_direct_protocol/parser.c **** 
+ 226:../system/src/ve_direct_protocol/parser.c **** 	// value used to store return value from
+ 227:../system/src/ve_direct_protocol/parser.c **** 	int32_t ret_val = 0;
+ 228:../system/src/ve_direct_protocol/parser.c **** 
+ 229:../system/src/ve_direct_protocol/parser.c **** 	// local variable for parsing a key value to something easly processed
+ 230:../system/src/ve_direct_protocol/parser.c **** 	ve_direct_key_values key_enum;
+ 231:../system/src/ve_direct_protocol/parser.c **** 
+ 232:../system/src/ve_direct_protocol/parser.c **** 	// the same but for values
+ 233:../system/src/ve_direct_protocol/parser.c **** 	char* pointer_val = (char*) value;
+ 234:../system/src/ve_direct_protocol/parser.c **** 
+ 235:../system/src/ve_direct_protocol/parser.c **** 	// rewind to first printable chcaracter
+ 236:../system/src/ve_direct_protocol/parser.c **** 	while (is_non_printable_character()) {
+ 664              		.loc 1 236 0
+ 665 000a BDF80E30 		ldrh	r3, [sp, #14]
+ 666 000e C45C     		ldrb	r4, [r0, r3]	@ zero_extendqisi2
+ 667 0010 213C     		subs	r4, r4, #33
+ 668 0012 E4B2     		uxtb	r4, r4
+ 669 0014 5D2C     		cmp	r4, #93
+ 670 0016 09D9     		bls	.L120
+ 237:../system/src/ve_direct_protocol/parser.c **** 		i++;
+ 671              		.loc 1 237 0
+ 672 0018 0133     		adds	r3, r3, #1
+ 673 001a 9BB2     		uxth	r3, r3
+ 674 001c ADF80E30 		strh	r3, [sp, #14]	@ movhi
+ 238:../system/src/ve_direct_protocol/parser.c **** 
+ 239:../system/src/ve_direct_protocol/parser.c **** 		// if we reach an end of the string but no printable character has been spotted
+ 240:../system/src/ve_direct_protocol/parser.c **** 		if (i >= input_ln)
+ 675              		.loc 1 240 0
+ 676 0020 8B42     		cmp	r3, r1
+ 677 0022 F2D3     		bcc	.L69
+ 241:../system/src/ve_direct_protocol/parser.c **** 			return VE_DIRECT_INVALID_INP_STR;
+ 678              		.loc 1 241 0
+ 679 0024 4FF0FF30 		mov	r0, #-1
+ 680              	.LVL69:
+ 681              	.L68:
+ 242:../system/src/ve_direct_protocol/parser.c **** 	}
+ 243:../system/src/ve_direct_protocol/parser.c **** 
+ 244:../system/src/ve_direct_protocol/parser.c **** 	// loop from the first printable character till the end of input buffer
+ 245:../system/src/ve_direct_protocol/parser.c **** 	for (; i < input_ln;) {
+ 246:../system/src/ve_direct_protocol/parser.c **** 
+ 247:../system/src/ve_direct_protocol/parser.c **** 		memset(key, 0x00, 9);
+ 248:../system/src/ve_direct_protocol/parser.c **** 		memset(value, 0x00, 12);
+ 249:../system/src/ve_direct_protocol/parser.c **** 
+ 250:../system/src/ve_direct_protocol/parser.c **** 		// start copying a key of this entry
+ 251:../system/src/ve_direct_protocol/parser.c **** 		ret_val = copy_till_non_printable_char(input, &i, input_ln, key, sizeof(key));
+ 252:../system/src/ve_direct_protocol/parser.c **** 
+ 253:../system/src/ve_direct_protocol/parser.c **** 		// check if data were copied correctly
+ 254:../system/src/ve_direct_protocol/parser.c ****  		if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
+ 255:../system/src/ve_direct_protocol/parser.c **** 			return VE_DIRECT_INVALID_INP_STR;
+ 256:../system/src/ve_direct_protocol/parser.c **** 
+ 257:../system/src/ve_direct_protocol/parser.c **** 		key_enum = get_key_value_from_str(key);
+ 258:../system/src/ve_direct_protocol/parser.c **** 
+ 259:../system/src/ve_direct_protocol/parser.c **** 
+ 260:../system/src/ve_direct_protocol/parser.c **** 		if (key_enum == VE_CHECKSUM) {
+ 261:../system/src/ve_direct_protocol/parser.c **** 			// the checksum need to be treated separately, because it consist non-printable chracers
+ 262:../system/src/ve_direct_protocol/parser.c **** 			out->checksum  = *(input + i - 1);
+ 263:../system/src/ve_direct_protocol/parser.c **** 		}
+ 264:../system/src/ve_direct_protocol/parser.c **** 		else {
+ 265:../system/src/ve_direct_protocol/parser.c **** 			// start copying a value of this entry
+ 266:../system/src/ve_direct_protocol/parser.c **** 			ret_val = copy_till_non_printable_char(input, &i, input_ln, value, sizeof(value));
+ 267:../system/src/ve_direct_protocol/parser.c **** 
+ 268:../system/src/ve_direct_protocol/parser.c **** 			// in case than value wasn't copiedo correctly
+ 269:../system/src/ve_direct_protocol/parser.c **** 			if (ret_val == VE_DIRECT_STRING_END_REACH_TO_EARLY)
+ 270:../system/src/ve_direct_protocol/parser.c **** 				return VE_DIRECT_INVALID_INP_STR;
+ 271:../system/src/ve_direct_protocol/parser.c **** 		}
+ 272:../system/src/ve_direct_protocol/parser.c **** 
+ 273:../system/src/ve_direct_protocol/parser.c **** 		switch (key_enum) {
+ 274:../system/src/ve_direct_protocol/parser.c **** 			case VE_CHECKSUM:
+ 275:../system/src/ve_direct_protocol/parser.c **** 				// the checksum is a little bit different because it can consist non-printable characters
+ 276:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 277:../system/src/ve_direct_protocol/parser.c **** 			case VE_CS: {
+ 278:../system/src/ve_direct_protocol/parser.c **** 				switch (value[0]) {
+ 279:../system/src/ve_direct_protocol/parser.c **** 				case '0' : out->system_state = STATE_OFF; break;
+ 280:../system/src/ve_direct_protocol/parser.c **** 				case '1' : out->system_state = STATE_LOW_PWR; break;
+ 281:../system/src/ve_direct_protocol/parser.c **** 				case '2' : out->system_state = STATE_FAULT; break;
+ 282:../system/src/ve_direct_protocol/parser.c **** 				case '3' : out->system_state = STATE_BULK; break;
+ 283:../system/src/ve_direct_protocol/parser.c **** 				case '4' : out->system_state = STATE_ABSORPTION; break;
+ 284:../system/src/ve_direct_protocol/parser.c **** 				case '5' : out->system_state = STATE_FLOAT; break;
+ 285:../system/src/ve_direct_protocol/parser.c **** 				default: out->system_state = STATE_UNINITIALIZED; break;
+ 286:../system/src/ve_direct_protocol/parser.c **** 				}
+ 287:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 288:../system/src/ve_direct_protocol/parser.c **** 			}
+ 289:../system/src/ve_direct_protocol/parser.c **** 			case VE_ERR:
+ 290:../system/src/ve_direct_protocol/parser.c **** 				if		(strcmp(pointer_val, "0") == 0) 	out->error_reason = ERR_OK;
+ 291:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "2") == 0)		out->error_reason = ERR_EXCESIVE_BAT_VOLTAGE;
+ 292:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "17") == 0) 	out->error_reason = ERR_CHGR_TEMP_TOO_HIGH;
+ 293:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "18") == 0)	out->error_reason = ERR_CHGR_EXCESIVE_CURR;
+ 294:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "19") == 0)	out->error_reason = ERR_CHGR_CURR_REVERSED;
+ 295:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "20") == 0)	out->error_reason = ERR_BULK_TIME_EXCEED;
+ 296:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "21") == 0)	out->error_reason = ERR_CURRENT_SENSE_FAIL;
+ 297:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "26") == 0)	out->error_reason = ERR_EXCESIVE_TERMINAL_TEMP;
+ 298:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "33") == 0)	out->error_reason = ERR_EXCESIVE_PV_VOLTAGE;
+ 299:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "34") == 0)	out->error_reason = ERR_EXCESIVE_PV_CURRENT;
+ 300:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "38") == 0)	out->error_reason = ERR_INPUT_SHUTDOWN;
+ 301:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "116") == 0)	out->error_reason = ERR_TUNES_LOST;
+ 302:../system/src/ve_direct_protocol/parser.c **** 				else out->error_reason = ERR_UNINITIALIZED;
+ 303:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 304:../system/src/ve_direct_protocol/parser.c **** 			case VE_FW:
+ 305:../system/src/ve_direct_protocol/parser.c **** 				strcpy(out->fw_version, pointer_val);
+ 306:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 307:../system/src/ve_direct_protocol/parser.c **** 			case VE_H19:
+ 308:../system/src/ve_direct_protocol/parser.c **** 				out->energy_gathered_total = strtol(pointer_val, NULL, 10);
+ 309:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 310:../system/src/ve_direct_protocol/parser.c **** 			case VE_H20:
+ 311:../system/src/ve_direct_protocol/parser.c **** 				out->energy_gathered_today = strtol(pointer_val, NULL, 10);
+ 312:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 313:../system/src/ve_direct_protocol/parser.c **** 			case VE_H21:
+ 314:../system/src/ve_direct_protocol/parser.c **** 				out->maximum_power_today = strtol(pointer_val, NULL, 10);
+ 315:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 316:../system/src/ve_direct_protocol/parser.c **** 			case VE_H22:
+ 317:../system/src/ve_direct_protocol/parser.c **** 				out->energy_gathered_yesterday = strtol(pointer_val, NULL, 10);
+ 318:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 319:../system/src/ve_direct_protocol/parser.c **** 			case VE_H23:
+ 320:../system/src/ve_direct_protocol/parser.c **** 				out->maximum_power_yesterday = strtol(pointer_val, NULL, 10);
+ 321:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 322:../system/src/ve_direct_protocol/parser.c **** 			case VE_HSDS:
+ 323:../system/src/ve_direct_protocol/parser.c **** 				out->day_seq_number = strtol(pointer_val, NULL, 10);
+ 324:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 325:../system/src/ve_direct_protocol/parser.c **** 			case VE_I:
+ 326:../system/src/ve_direct_protocol/parser.c **** 				out->battery_current = strtol(pointer_val, NULL, 10);
+ 327:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 328:../system/src/ve_direct_protocol/parser.c **** 			case VE_IL:
+ 329:../system/src/ve_direct_protocol/parser.c **** 				out->load_current = strtol(pointer_val, NULL, 10);
+ 330:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 331:../system/src/ve_direct_protocol/parser.c **** 			case VE_LOAD:
+ 332:../system/src/ve_direct_protocol/parser.c **** 				if (strcmp(pointer_val, "ON") == 0) out->is_load_on = 1;
+ 333:../system/src/ve_direct_protocol/parser.c **** 				else out->is_load_on = 0;
+ 334:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 335:../system/src/ve_direct_protocol/parser.c **** 			case VE_PID:
+ 336:../system/src/ve_direct_protocol/parser.c **** 				out->pid = strtol(pointer_val, NULL, 16);
+ 337:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 338:../system/src/ve_direct_protocol/parser.c **** 			case VE_PPV:
+ 339:../system/src/ve_direct_protocol/parser.c **** 				out->pv_power = strtol(pointer_val, NULL, 10);
+ 340:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 341:../system/src/ve_direct_protocol/parser.c **** 			case VE_SERIAL:
+ 342:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 343:../system/src/ve_direct_protocol/parser.c **** 			case VE_V:
+ 344:../system/src/ve_direct_protocol/parser.c **** 				out->battery_voltage = strtol(pointer_val, NULL, 10);
+ 345:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 346:../system/src/ve_direct_protocol/parser.c **** 			case VE_VPV:
+ 347:../system/src/ve_direct_protocol/parser.c **** 				out->pv_voltage = strtol(pointer_val, NULL, 10);
+ 348:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 349:../system/src/ve_direct_protocol/parser.c **** 			default:
+ 350:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 351:../system/src/ve_direct_protocol/parser.c **** 		}
+ 352:../system/src/ve_direct_protocol/parser.c **** 
+ 353:../system/src/ve_direct_protocol/parser.c **** 	}
+ 354:../system/src/ve_direct_protocol/parser.c **** 
+ 355:../system/src/ve_direct_protocol/parser.c **** 	return 0;
+ 356:../system/src/ve_direct_protocol/parser.c **** 
+ 357:../system/src/ve_direct_protocol/parser.c **** }
+ 682              		.loc 1 357 0
+ 683 0028 05B0     		add	sp, sp, #20
+ 684              		.cfi_remember_state
+ 685              		.cfi_def_cfa_offset 20
+ 686              		@ sp needed
+ 687 002a F0BD     		pop	{r4, r5, r6, r7, pc}
+ 688              	.LVL70:
+ 689              	.L120:
+ 690              		.cfi_restore_state
+ 691 002c 1746     		mov	r7, r2
+ 692 002e 0D46     		mov	r5, r1
+ 693 0030 0646     		mov	r6, r0
+ 694 0032 95E0     		b	.L75
+ 695              	.LVL71:
+ 696              	.L73:
+ 266:../system/src/ve_direct_protocol/parser.c **** 
+ 697              		.loc 1 266 0
+ 698 0034 0C23     		movs	r3, #12
+ 699 0036 0093     		str	r3, [sp]
+ 700 0038 A44B     		ldr	r3, .L122
+ 701 003a 2A46     		mov	r2, r5
+ 702 003c 0DF10E01 		add	r1, sp, #14
+ 703 0040 3046     		mov	r0, r6
+ 704              	.LVL72:
+ 705 0042 FFF7FEFF 		bl	copy_till_non_printable_char
+ 706              	.LVL73:
+ 269:../system/src/ve_direct_protocol/parser.c **** 				return VE_DIRECT_INVALID_INP_STR;
+ 707              		.loc 1 269 0
+ 708 0046 10F1020F 		cmn	r0, #2
+ 709 004a 40F0B280 		bne	.L74
+ 270:../system/src/ve_direct_protocol/parser.c **** 		}
+ 710              		.loc 1 270 0
+ 711 004e 4FF0FF30 		mov	r0, #-1
+ 712              	.LVL74:
+ 713 0052 E9E7     		b	.L68
+ 714              	.L83:
+ 278:../system/src/ve_direct_protocol/parser.c **** 				case '0' : out->system_state = STATE_OFF; break;
+ 715              		.loc 1 278 0
+ 716 0054 9D4B     		ldr	r3, .L122
+ 717 0056 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 718 0058 303B     		subs	r3, r3, #48
+ 719 005a 052B     		cmp	r3, #5
+ 720 005c 16D8     		bhi	.L93
+ 721 005e DFE803F0 		tbb	[pc, r3]
+ 722              	.L95:
+ 723 0062 03       		.byte	(.L94-.L95)/2
+ 724 0063 06       		.byte	(.L96-.L95)/2
+ 725 0064 09       		.byte	(.L97-.L95)/2
+ 726 0065 0C       		.byte	(.L98-.L95)/2
+ 727 0066 0F       		.byte	(.L99-.L95)/2
+ 728 0067 12       		.byte	(.L100-.L95)/2
+ 729              		.p2align 1
+ 730              	.L94:
+ 279:../system/src/ve_direct_protocol/parser.c **** 				case '1' : out->system_state = STATE_LOW_PWR; break;
+ 731              		.loc 1 279 0
+ 732 0068 0023     		movs	r3, #0
+ 733 006a 7B74     		strb	r3, [r7, #17]
+ 734 006c 78E0     		b	.L75
+ 735              	.L96:
+ 280:../system/src/ve_direct_protocol/parser.c **** 				case '2' : out->system_state = STATE_FAULT; break;
+ 736              		.loc 1 280 0
+ 737 006e 0123     		movs	r3, #1
+ 738 0070 7B74     		strb	r3, [r7, #17]
+ 739 0072 75E0     		b	.L75
+ 740              	.L97:
+ 281:../system/src/ve_direct_protocol/parser.c **** 				case '3' : out->system_state = STATE_BULK; break;
+ 741              		.loc 1 281 0
+ 742 0074 0223     		movs	r3, #2
+ 743 0076 7B74     		strb	r3, [r7, #17]
+ 744 0078 72E0     		b	.L75
+ 745              	.L98:
+ 282:../system/src/ve_direct_protocol/parser.c **** 				case '4' : out->system_state = STATE_ABSORPTION; break;
+ 746              		.loc 1 282 0
+ 747 007a 0323     		movs	r3, #3
+ 748 007c 7B74     		strb	r3, [r7, #17]
+ 749 007e 6FE0     		b	.L75
+ 750              	.L99:
+ 283:../system/src/ve_direct_protocol/parser.c **** 				case '5' : out->system_state = STATE_FLOAT; break;
+ 751              		.loc 1 283 0
+ 752 0080 0423     		movs	r3, #4
+ 753 0082 7B74     		strb	r3, [r7, #17]
+ 754 0084 6CE0     		b	.L75
+ 755              	.L100:
+ 284:../system/src/ve_direct_protocol/parser.c **** 				default: out->system_state = STATE_UNINITIALIZED; break;
+ 756              		.loc 1 284 0
+ 757 0086 0523     		movs	r3, #5
+ 758 0088 7B74     		strb	r3, [r7, #17]
+ 759 008a 69E0     		b	.L75
+ 760              	.L93:
+ 285:../system/src/ve_direct_protocol/parser.c **** 				}
+ 761              		.loc 1 285 0
+ 762 008c FF23     		movs	r3, #255
+ 763 008e 7B74     		strb	r3, [r7, #17]
+ 764 0090 66E0     		b	.L75
+ 765              	.L84:
+ 290:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "2") == 0)		out->error_reason = ERR_EXCESIVE_BAT_VOLTAGE;
+ 766              		.loc 1 290 0
+ 767 0092 8F49     		ldr	r1, .L122+4
+ 768 0094 8D48     		ldr	r0, .L122
+ 769 0096 FFF7FEFF 		bl	strcmp
+ 770              	.LVL75:
+ 771 009a 10B9     		cbnz	r0, .L102
+ 290:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "2") == 0)		out->error_reason = ERR_EXCESIVE_BAT_VOLTAGE;
+ 772              		.loc 1 290 0 is_stmt 0 discriminator 1
+ 773 009c 0023     		movs	r3, #0
+ 774 009e BB74     		strb	r3, [r7, #18]
+ 775 00a0 5EE0     		b	.L75
+ 776              	.L102:
+ 291:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "17") == 0) 	out->error_reason = ERR_CHGR_TEMP_TOO_HIGH;
+ 777              		.loc 1 291 0 is_stmt 1
+ 778 00a2 8C49     		ldr	r1, .L122+8
+ 779 00a4 8948     		ldr	r0, .L122
+ 780 00a6 FFF7FEFF 		bl	strcmp
+ 781              	.LVL76:
+ 782 00aa 10B9     		cbnz	r0, .L103
+ 291:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "17") == 0) 	out->error_reason = ERR_CHGR_TEMP_TOO_HIGH;
+ 783              		.loc 1 291 0 is_stmt 0 discriminator 1
+ 784 00ac 0223     		movs	r3, #2
+ 785 00ae BB74     		strb	r3, [r7, #18]
+ 786 00b0 56E0     		b	.L75
+ 787              	.L103:
+ 292:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "18") == 0)	out->error_reason = ERR_CHGR_EXCESIVE_CURR;
+ 788              		.loc 1 292 0 is_stmt 1
+ 789 00b2 8949     		ldr	r1, .L122+12
+ 790 00b4 8548     		ldr	r0, .L122
+ 791 00b6 FFF7FEFF 		bl	strcmp
+ 792              	.LVL77:
+ 793 00ba 10B9     		cbnz	r0, .L104
+ 292:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "18") == 0)	out->error_reason = ERR_CHGR_EXCESIVE_CURR;
+ 794              		.loc 1 292 0 is_stmt 0 discriminator 1
+ 795 00bc 1123     		movs	r3, #17
+ 796 00be BB74     		strb	r3, [r7, #18]
+ 797 00c0 4EE0     		b	.L75
+ 798              	.L104:
+ 293:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "19") == 0)	out->error_reason = ERR_CHGR_CURR_REVERSED;
+ 799              		.loc 1 293 0 is_stmt 1
+ 800 00c2 8649     		ldr	r1, .L122+16
+ 801 00c4 8148     		ldr	r0, .L122
+ 802 00c6 FFF7FEFF 		bl	strcmp
+ 803              	.LVL78:
+ 804 00ca 10B9     		cbnz	r0, .L105
+ 293:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "19") == 0)	out->error_reason = ERR_CHGR_CURR_REVERSED;
+ 805              		.loc 1 293 0 is_stmt 0 discriminator 1
+ 806 00cc 1223     		movs	r3, #18
+ 807 00ce BB74     		strb	r3, [r7, #18]
+ 808 00d0 46E0     		b	.L75
+ 809              	.L105:
+ 294:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "20") == 0)	out->error_reason = ERR_BULK_TIME_EXCEED;
+ 810              		.loc 1 294 0 is_stmt 1
+ 811 00d2 8349     		ldr	r1, .L122+20
+ 812 00d4 7D48     		ldr	r0, .L122
+ 813 00d6 FFF7FEFF 		bl	strcmp
+ 814              	.LVL79:
+ 815 00da 10B9     		cbnz	r0, .L106
+ 294:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "20") == 0)	out->error_reason = ERR_BULK_TIME_EXCEED;
+ 816              		.loc 1 294 0 is_stmt 0 discriminator 1
+ 817 00dc 1323     		movs	r3, #19
+ 818 00de BB74     		strb	r3, [r7, #18]
+ 819 00e0 3EE0     		b	.L75
+ 820              	.L106:
+ 295:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "21") == 0)	out->error_reason = ERR_CURRENT_SENSE_FAIL;
+ 821              		.loc 1 295 0 is_stmt 1
+ 822 00e2 8049     		ldr	r1, .L122+24
+ 823 00e4 7948     		ldr	r0, .L122
+ 824 00e6 FFF7FEFF 		bl	strcmp
+ 825              	.LVL80:
+ 826 00ea 10B9     		cbnz	r0, .L107
+ 295:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "21") == 0)	out->error_reason = ERR_CURRENT_SENSE_FAIL;
+ 827              		.loc 1 295 0 is_stmt 0 discriminator 1
+ 828 00ec 1423     		movs	r3, #20
+ 829 00ee BB74     		strb	r3, [r7, #18]
+ 830 00f0 36E0     		b	.L75
+ 831              	.L107:
+ 296:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "26") == 0)	out->error_reason = ERR_EXCESIVE_TERMINAL_TEMP;
+ 832              		.loc 1 296 0 is_stmt 1
+ 833 00f2 7D49     		ldr	r1, .L122+28
+ 834 00f4 7548     		ldr	r0, .L122
+ 835 00f6 FFF7FEFF 		bl	strcmp
+ 836              	.LVL81:
+ 837 00fa 10B9     		cbnz	r0, .L108
+ 296:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "26") == 0)	out->error_reason = ERR_EXCESIVE_TERMINAL_TEMP;
+ 838              		.loc 1 296 0 is_stmt 0 discriminator 1
+ 839 00fc 1523     		movs	r3, #21
+ 840 00fe BB74     		strb	r3, [r7, #18]
+ 841 0100 2EE0     		b	.L75
+ 842              	.L108:
+ 297:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "33") == 0)	out->error_reason = ERR_EXCESIVE_PV_VOLTAGE;
+ 843              		.loc 1 297 0 is_stmt 1
+ 844 0102 7A49     		ldr	r1, .L122+32
+ 845 0104 7148     		ldr	r0, .L122
+ 846 0106 FFF7FEFF 		bl	strcmp
+ 847              	.LVL82:
+ 848 010a 10B9     		cbnz	r0, .L109
+ 297:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "33") == 0)	out->error_reason = ERR_EXCESIVE_PV_VOLTAGE;
+ 849              		.loc 1 297 0 is_stmt 0 discriminator 1
+ 850 010c 1A23     		movs	r3, #26
+ 851 010e BB74     		strb	r3, [r7, #18]
+ 852 0110 26E0     		b	.L75
+ 853              	.L109:
+ 298:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "34") == 0)	out->error_reason = ERR_EXCESIVE_PV_CURRENT;
+ 854              		.loc 1 298 0 is_stmt 1
+ 855 0112 7749     		ldr	r1, .L122+36
+ 856 0114 6D48     		ldr	r0, .L122
+ 857 0116 FFF7FEFF 		bl	strcmp
+ 858              	.LVL83:
+ 859 011a 10B9     		cbnz	r0, .L110
+ 298:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "34") == 0)	out->error_reason = ERR_EXCESIVE_PV_CURRENT;
+ 860              		.loc 1 298 0 is_stmt 0 discriminator 1
+ 861 011c 2123     		movs	r3, #33
+ 862 011e BB74     		strb	r3, [r7, #18]
+ 863 0120 1EE0     		b	.L75
+ 864              	.L110:
+ 299:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "38") == 0)	out->error_reason = ERR_INPUT_SHUTDOWN;
+ 865              		.loc 1 299 0 is_stmt 1
+ 866 0122 7449     		ldr	r1, .L122+40
+ 867 0124 6948     		ldr	r0, .L122
+ 868 0126 FFF7FEFF 		bl	strcmp
+ 869              	.LVL84:
+ 870 012a 10B9     		cbnz	r0, .L111
+ 299:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "38") == 0)	out->error_reason = ERR_INPUT_SHUTDOWN;
+ 871              		.loc 1 299 0 is_stmt 0 discriminator 1
+ 872 012c 2223     		movs	r3, #34
+ 873 012e BB74     		strb	r3, [r7, #18]
+ 874 0130 16E0     		b	.L75
+ 875              	.L111:
+ 300:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "116") == 0)	out->error_reason = ERR_TUNES_LOST;
+ 876              		.loc 1 300 0 is_stmt 1
+ 877 0132 7149     		ldr	r1, .L122+44
+ 878 0134 6548     		ldr	r0, .L122
+ 879 0136 FFF7FEFF 		bl	strcmp
+ 880              	.LVL85:
+ 881 013a 10B9     		cbnz	r0, .L112
+ 300:../system/src/ve_direct_protocol/parser.c **** 				else if (strcmp(pointer_val, "116") == 0)	out->error_reason = ERR_TUNES_LOST;
+ 882              		.loc 1 300 0 is_stmt 0 discriminator 1
+ 883 013c 2623     		movs	r3, #38
+ 884 013e BB74     		strb	r3, [r7, #18]
+ 885 0140 0EE0     		b	.L75
+ 886              	.L112:
+ 301:../system/src/ve_direct_protocol/parser.c **** 				else out->error_reason = ERR_UNINITIALIZED;
+ 887              		.loc 1 301 0 is_stmt 1
+ 888 0142 6E49     		ldr	r1, .L122+48
+ 889 0144 6148     		ldr	r0, .L122
+ 890 0146 FFF7FEFF 		bl	strcmp
+ 891              	.LVL86:
+ 892 014a 10B9     		cbnz	r0, .L113
+ 301:../system/src/ve_direct_protocol/parser.c **** 				else out->error_reason = ERR_UNINITIALIZED;
+ 893              		.loc 1 301 0 is_stmt 0 discriminator 1
+ 894 014c 7423     		movs	r3, #116
+ 895 014e BB74     		strb	r3, [r7, #18]
+ 896 0150 06E0     		b	.L75
+ 897              	.L113:
+ 302:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 898              		.loc 1 302 0 is_stmt 1
+ 899 0152 FF23     		movs	r3, #255
+ 900 0154 BB74     		strb	r3, [r7, #18]
+ 901 0156 03E0     		b	.L75
+ 902              	.L78:
+ 305:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 903              		.loc 1 305 0
+ 904 0158 5C49     		ldr	r1, .L122
+ 905 015a B81C     		adds	r0, r7, #2
+ 906 015c FFF7FEFF 		bl	strcpy
+ 907              	.LVL87:
+ 908              	.L75:
+ 245:../system/src/ve_direct_protocol/parser.c **** 
+ 909              		.loc 1 245 0
+ 910 0160 BDF80E30 		ldrh	r3, [sp, #14]
+ 911 0164 AB42     		cmp	r3, r5
+ 912 0166 80F0AC80 		bcs	.L121
+ 247:../system/src/ve_direct_protocol/parser.c **** 		memset(value, 0x00, 12);
+ 913              		.loc 1 247 0
+ 914 016a 654C     		ldr	r4, .L122+52
+ 915 016c 0922     		movs	r2, #9
+ 916 016e 0021     		movs	r1, #0
+ 917 0170 2046     		mov	r0, r4
+ 918 0172 FFF7FEFF 		bl	memset
+ 919              	.LVL88:
+ 248:../system/src/ve_direct_protocol/parser.c **** 
+ 920              		.loc 1 248 0
+ 921 0176 0C22     		movs	r2, #12
+ 922 0178 0021     		movs	r1, #0
+ 923 017a 5448     		ldr	r0, .L122
+ 924 017c FFF7FEFF 		bl	memset
+ 925              	.LVL89:
+ 251:../system/src/ve_direct_protocol/parser.c **** 
+ 926              		.loc 1 251 0
+ 927 0180 0923     		movs	r3, #9
+ 928 0182 0093     		str	r3, [sp]
+ 929 0184 2346     		mov	r3, r4
+ 930 0186 2A46     		mov	r2, r5
+ 931 0188 0DF10E01 		add	r1, sp, #14
+ 932 018c 3046     		mov	r0, r6
+ 933 018e FFF7FEFF 		bl	copy_till_non_printable_char
+ 934              	.LVL90:
+ 254:../system/src/ve_direct_protocol/parser.c **** 			return VE_DIRECT_INVALID_INP_STR;
+ 935              		.loc 1 254 0
+ 936 0192 10F1020F 		cmn	r0, #2
+ 937 0196 00F09680 		beq	.L117
+ 257:../system/src/ve_direct_protocol/parser.c **** 
+ 938              		.loc 1 257 0
+ 939 019a 2046     		mov	r0, r4
+ 940              	.LVL91:
+ 941 019c FFF7FEFF 		bl	get_key_value_from_str
+ 942              	.LVL92:
+ 943 01a0 0446     		mov	r4, r0
+ 944              	.LVL93:
+ 260:../system/src/ve_direct_protocol/parser.c **** 			// the checksum need to be treated separately, because it consist non-printable chracers
+ 945              		.loc 1 260 0
+ 946 01a2 1228     		cmp	r0, #18
+ 947 01a4 7FF446AF 		bne	.L73
+ 262:../system/src/ve_direct_protocol/parser.c **** 		}
+ 948              		.loc 1 262 0
+ 949 01a8 BDF80E30 		ldrh	r3, [sp, #14]
+ 950 01ac 013B     		subs	r3, r3, #1
+ 951 01ae F35C     		ldrb	r3, [r6, r3]	@ zero_extendqisi2
+ 952 01b0 7B84     		strh	r3, [r7, #34]	@ movhi
+ 953              	.LVL94:
+ 954              	.L74:
+ 273:../system/src/ve_direct_protocol/parser.c **** 			case VE_CHECKSUM:
+ 955              		.loc 1 273 0
+ 956 01b2 013C     		subs	r4, r4, #1
+ 957 01b4 102C     		cmp	r4, #16
+ 958 01b6 D3D8     		bhi	.L75
+ 959 01b8 01A3     		adr	r3, .L77
+ 960 01ba 53F824F0 		ldr	pc, [r3, r4, lsl #2]
+ 961 01be 00BF     		.p2align 2
+ 962              	.L77:
+ 963 01c0 8B020000 		.word	.L76+1
+ 964 01c4 59010000 		.word	.L78+1
+ 965 01c8 61010000 		.word	.L75+1
+ 966 01cc A7020000 		.word	.L79+1
+ 967 01d0 59020000 		.word	.L80+1
+ 968 01d4 B5020000 		.word	.L81+1
+ 969 01d8 99020000 		.word	.L82+1
+ 970 01dc 55000000 		.word	.L83+1
+ 971 01e0 93000000 		.word	.L84+1
+ 972 01e4 75020000 		.word	.L85+1
+ 973 01e8 67020000 		.word	.L86+1
+ 974 01ec 05020000 		.word	.L87+1
+ 975 01f0 13020000 		.word	.L88+1
+ 976 01f4 21020000 		.word	.L89+1
+ 977 01f8 2F020000 		.word	.L90+1
+ 978 01fc 3D020000 		.word	.L91+1
+ 979 0200 4B020000 		.word	.L92+1
+ 980              		.p2align 1
+ 981              	.L87:
+ 308:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 982              		.loc 1 308 0
+ 983 0204 0A22     		movs	r2, #10
+ 984 0206 0021     		movs	r1, #0
+ 985 0208 3048     		ldr	r0, .L122
+ 986 020a FFF7FEFF 		bl	strtol
+ 987              	.LVL95:
+ 988 020e F882     		strh	r0, [r7, #22]	@ movhi
+ 309:../system/src/ve_direct_protocol/parser.c **** 			case VE_H20:
+ 989              		.loc 1 309 0
+ 990 0210 A6E7     		b	.L75
+ 991              	.L88:
+ 311:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 992              		.loc 1 311 0
+ 993 0212 0A22     		movs	r2, #10
+ 994 0214 0021     		movs	r1, #0
+ 995 0216 2D48     		ldr	r0, .L122
+ 996 0218 FFF7FEFF 		bl	strtol
+ 997              	.LVL96:
+ 998 021c 3883     		strh	r0, [r7, #24]	@ movhi
+ 312:../system/src/ve_direct_protocol/parser.c **** 			case VE_H21:
+ 999              		.loc 1 312 0
+ 1000 021e 9FE7     		b	.L75
+ 1001              	.L89:
+ 314:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1002              		.loc 1 314 0
+ 1003 0220 0A22     		movs	r2, #10
+ 1004 0222 0021     		movs	r1, #0
+ 1005 0224 2948     		ldr	r0, .L122
+ 1006 0226 FFF7FEFF 		bl	strtol
+ 1007              	.LVL97:
+ 1008 022a 7883     		strh	r0, [r7, #26]	@ movhi
+ 315:../system/src/ve_direct_protocol/parser.c **** 			case VE_H22:
+ 1009              		.loc 1 315 0
+ 1010 022c 98E7     		b	.L75
+ 1011              	.L90:
+ 317:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1012              		.loc 1 317 0
+ 1013 022e 0A22     		movs	r2, #10
+ 1014 0230 0021     		movs	r1, #0
+ 1015 0232 2648     		ldr	r0, .L122
+ 1016 0234 FFF7FEFF 		bl	strtol
+ 1017              	.LVL98:
+ 1018 0238 B883     		strh	r0, [r7, #28]	@ movhi
+ 318:../system/src/ve_direct_protocol/parser.c **** 			case VE_H23:
+ 1019              		.loc 1 318 0
+ 1020 023a 91E7     		b	.L75
+ 1021              	.L91:
+ 320:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1022              		.loc 1 320 0
+ 1023 023c 0A22     		movs	r2, #10
+ 1024 023e 0021     		movs	r1, #0
+ 1025 0240 2248     		ldr	r0, .L122
+ 1026 0242 FFF7FEFF 		bl	strtol
+ 1027              	.LVL99:
+ 1028 0246 F883     		strh	r0, [r7, #30]	@ movhi
+ 321:../system/src/ve_direct_protocol/parser.c **** 			case VE_HSDS:
+ 1029              		.loc 1 321 0
+ 1030 0248 8AE7     		b	.L75
+ 1031              	.L92:
+ 323:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1032              		.loc 1 323 0
+ 1033 024a 0A22     		movs	r2, #10
+ 1034 024c 0021     		movs	r1, #0
+ 1035 024e 1F48     		ldr	r0, .L122
+ 1036 0250 FFF7FEFF 		bl	strtol
+ 1037              	.LVL100:
+ 1038 0254 3884     		strh	r0, [r7, #32]	@ movhi
+ 324:../system/src/ve_direct_protocol/parser.c **** 			case VE_I:
+ 1039              		.loc 1 324 0
+ 1040 0256 83E7     		b	.L75
+ 1041              	.L80:
+ 326:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1042              		.loc 1 326 0
+ 1043 0258 0A22     		movs	r2, #10
+ 1044 025a 0021     		movs	r1, #0
+ 1045 025c 1B48     		ldr	r0, .L122
+ 1046 025e FFF7FEFF 		bl	strtol
+ 1047              	.LVL101:
+ 1048 0262 B881     		strh	r0, [r7, #12]	@ movhi
+ 327:../system/src/ve_direct_protocol/parser.c **** 			case VE_IL:
+ 1049              		.loc 1 327 0
+ 1050 0264 7CE7     		b	.L75
+ 1051              	.L86:
+ 329:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1052              		.loc 1 329 0
+ 1053 0266 0A22     		movs	r2, #10
+ 1054 0268 0021     		movs	r1, #0
+ 1055 026a 1848     		ldr	r0, .L122
+ 1056 026c FFF7FEFF 		bl	strtol
+ 1057              	.LVL102:
+ 1058 0270 B882     		strh	r0, [r7, #20]	@ movhi
+ 330:../system/src/ve_direct_protocol/parser.c **** 			case VE_LOAD:
+ 1059              		.loc 1 330 0
+ 1060 0272 75E7     		b	.L75
+ 1061              	.L85:
+ 332:../system/src/ve_direct_protocol/parser.c **** 				else out->is_load_on = 0;
+ 1062              		.loc 1 332 0
+ 1063 0274 2349     		ldr	r1, .L122+56
+ 1064 0276 1548     		ldr	r0, .L122
+ 1065 0278 FFF7FEFF 		bl	strcmp
+ 1066              	.LVL103:
+ 1067 027c 10B9     		cbnz	r0, .L114
+ 332:../system/src/ve_direct_protocol/parser.c **** 				else out->is_load_on = 0;
+ 1068              		.loc 1 332 0 is_stmt 0 discriminator 1
+ 1069 027e 0123     		movs	r3, #1
+ 1070 0280 FB74     		strb	r3, [r7, #19]
+ 1071 0282 6DE7     		b	.L75
+ 1072              	.L114:
+ 333:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1073              		.loc 1 333 0 is_stmt 1
+ 1074 0284 0023     		movs	r3, #0
+ 1075 0286 FB74     		strb	r3, [r7, #19]
+ 1076 0288 6AE7     		b	.L75
+ 1077              	.L76:
+ 336:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1078              		.loc 1 336 0
+ 1079 028a 1022     		movs	r2, #16
+ 1080 028c 0021     		movs	r1, #0
+ 1081 028e 0F48     		ldr	r0, .L122
+ 1082 0290 FFF7FEFF 		bl	strtol
+ 1083              	.LVL104:
+ 1084 0294 3880     		strh	r0, [r7]	@ movhi
+ 337:../system/src/ve_direct_protocol/parser.c **** 			case VE_PPV:
+ 1085              		.loc 1 337 0
+ 1086 0296 63E7     		b	.L75
+ 1087              	.L82:
+ 339:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1088              		.loc 1 339 0
+ 1089 0298 0A22     		movs	r2, #10
+ 1090 029a 0021     		movs	r1, #0
+ 1091 029c 0B48     		ldr	r0, .L122
+ 1092 029e FFF7FEFF 		bl	strtol
+ 1093              	.LVL105:
+ 1094 02a2 3874     		strb	r0, [r7, #16]
+ 340:../system/src/ve_direct_protocol/parser.c **** 			case VE_SERIAL:
+ 1095              		.loc 1 340 0
+ 1096 02a4 5CE7     		b	.L75
+ 1097              	.L79:
+ 344:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1098              		.loc 1 344 0
+ 1099 02a6 0A22     		movs	r2, #10
+ 1100 02a8 0021     		movs	r1, #0
+ 1101 02aa 0848     		ldr	r0, .L122
+ 1102 02ac FFF7FEFF 		bl	strtol
+ 1103              	.LVL106:
+ 1104 02b0 7881     		strh	r0, [r7, #10]	@ movhi
+ 345:../system/src/ve_direct_protocol/parser.c **** 			case VE_VPV:
+ 1105              		.loc 1 345 0
+ 1106 02b2 55E7     		b	.L75
+ 1107              	.L81:
+ 347:../system/src/ve_direct_protocol/parser.c **** 				break;
+ 1108              		.loc 1 347 0
+ 1109 02b4 0A22     		movs	r2, #10
+ 1110 02b6 0021     		movs	r1, #0
+ 1111 02b8 0448     		ldr	r0, .L122
+ 1112 02ba FFF7FEFF 		bl	strtol
+ 1113              	.LVL107:
+ 1114 02be F881     		strh	r0, [r7, #14]	@ movhi
+ 348:../system/src/ve_direct_protocol/parser.c **** 			default:
+ 1115              		.loc 1 348 0
+ 1116 02c0 4EE7     		b	.L75
+ 1117              	.L121:
+ 355:../system/src/ve_direct_protocol/parser.c **** 
+ 1118              		.loc 1 355 0
+ 1119 02c2 0020     		movs	r0, #0
+ 1120 02c4 B0E6     		b	.L68
+ 1121              	.LVL108:
+ 1122              	.L117:
+ 255:../system/src/ve_direct_protocol/parser.c **** 
+ 1123              		.loc 1 255 0
+ 1124 02c6 4FF0FF30 		mov	r0, #-1
+ 1125              	.LVL109:
+ 1126 02ca ADE6     		b	.L68
+ 1127              	.L123:
+ 1128              		.align	2
+ 1129              	.L122:
+ 1130 02cc 00000000 		.word	value
+ 1131 02d0 00000000 		.word	.LC18
+ 1132 02d4 04000000 		.word	.LC19
+ 1133 02d8 08000000 		.word	.LC20
+ 1134 02dc 0C000000 		.word	.LC21
+ 1135 02e0 10000000 		.word	.LC22
+ 1136 02e4 14000000 		.word	.LC23
+ 1137 02e8 18000000 		.word	.LC24
+ 1138 02ec 1C000000 		.word	.LC25
+ 1139 02f0 20000000 		.word	.LC26
+ 1140 02f4 24000000 		.word	.LC27
+ 1141 02f8 28000000 		.word	.LC28
+ 1142 02fc 2C000000 		.word	.LC29
+ 1143 0300 00000000 		.word	key
+ 1144 0304 30000000 		.word	.LC30
+ 1145              		.cfi_endproc
+ 1146              	.LFE5:
+ 1148              		.section	.text.ve_direct_add_to_average,"ax",%progbits
+ 1149              		.align	1
+ 1150              		.global	ve_direct_add_to_average
+ 1151              		.syntax unified
+ 1152              		.thumb
+ 1153              		.thumb_func
+ 1154              		.fpu fpv4-sp-d16
+ 1156              	ve_direct_add_to_average:
+ 1157              	.LFB6:
+ 358:../system/src/ve_direct_protocol/parser.c **** 
+ 359:../system/src/ve_direct_protocol/parser.c **** void ve_direct_add_to_average(ve_direct_raw_struct* in, ve_direct_average_struct* avg_struct) {
+ 1158              		.loc 1 359 0
+ 1159              		.cfi_startproc
+ 1160              		@ args = 0, pretend = 0, frame = 0
+ 1161              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1162              		@ link register save eliminated.
+ 1163              	.LVL110:
+ 1164 0000 10B4     		push	{r4}
+ 1165              		.cfi_def_cfa_offset 4
+ 1166              		.cfi_offset 4, -4
+ 360:../system/src/ve_direct_protocol/parser.c **** 
+ 361:../system/src/ve_direct_protocol/parser.c **** 	if (skip_counter++ < VE_DIRECT_MESSAGES_TO_SKIP) {
+ 1167              		.loc 1 361 0
+ 1168 0002 1D4A     		ldr	r2, .L129
+ 1169 0004 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1170 0006 5C1C     		adds	r4, r3, #1
+ 1171 0008 1470     		strb	r4, [r2]
+ 1172 000a 012B     		cmp	r3, #1
+ 1173 000c 31D9     		bls	.L124
+ 362:../system/src/ve_direct_protocol/parser.c **** 		return;
+ 363:../system/src/ve_direct_protocol/parser.c **** 	}
+ 364:../system/src/ve_direct_protocol/parser.c **** 	else {
+ 365:../system/src/ve_direct_protocol/parser.c **** 		skip_counter = 0;
+ 1174              		.loc 1 365 0
+ 1175 000e 1346     		mov	r3, r2
+ 1176 0010 0022     		movs	r2, #0
+ 1177 0012 1A70     		strb	r2, [r3]
+ 366:../system/src/ve_direct_protocol/parser.c **** 	}
+ 367:../system/src/ve_direct_protocol/parser.c **** 
+ 368:../system/src/ve_direct_protocol/parser.c **** 	uint16_t it = avg_struct->current_pointer;
+ 1178              		.loc 1 368 0
+ 1179 0014 B1F8C030 		ldrh	r3, [r1, #192]	@ unaligned
+ 1180              	.LVL111:
+ 369:../system/src/ve_direct_protocol/parser.c **** 
+ 370:../system/src/ve_direct_protocol/parser.c **** 	avg_struct->battery_current[it] = in->battery_current;
+ 1181              		.loc 1 370 0
+ 1182 0018 B0F90C20 		ldrsh	r2, [r0, #12]
+ 1183 001c 21F81320 		strh	r2, [r1, r3, lsl #1]	@ unaligned
+ 1184              	.LVL112:
+ 371:../system/src/ve_direct_protocol/parser.c **** 	avg_struct->battery_voltage[it] = in->battery_voltage;
+ 1185              		.loc 1 371 0
+ 1186 0020 03F11802 		add	r2, r3, #24
+ 1187 0024 4489     		ldrh	r4, [r0, #10]
+ 1188 0026 21F81240 		strh	r4, [r1, r2, lsl #1]	@ unaligned
+ 372:../system/src/ve_direct_protocol/parser.c **** 	avg_struct->load_current[it] = in->load_current;
+ 1189              		.loc 1 372 0
+ 1190 002a 03F14802 		add	r2, r3, #72
+ 1191 002e 848A     		ldrh	r4, [r0, #20]
+ 1192 0030 21F81240 		strh	r4, [r1, r2, lsl #1]	@ unaligned
+ 373:../system/src/ve_direct_protocol/parser.c **** 	avg_struct->pv_voltage[it] = in->pv_voltage;
+ 1193              		.loc 1 373 0
+ 1194 0034 03F13002 		add	r2, r3, #48
+ 1195 0038 C489     		ldrh	r4, [r0, #14]
+ 1196 003a 21F81240 		strh	r4, [r1, r2, lsl #1]	@ unaligned
+ 374:../system/src/ve_direct_protocol/parser.c **** 
+ 375:../system/src/ve_direct_protocol/parser.c **** 	it++;
+ 1197              		.loc 1 375 0
+ 1198 003e 0133     		adds	r3, r3, #1
+ 1199 0040 9BB2     		uxth	r3, r3
+ 1200              	.LVL113:
+ 376:../system/src/ve_direct_protocol/parser.c **** 
+ 377:../system/src/ve_direct_protocol/parser.c **** 	if (it > VE_DIRECT_AVERAGE_LEN - 1) {
+ 1201              		.loc 1 377 0
+ 1202 0042 172B     		cmp	r3, #23
+ 1203 0044 03D9     		bls	.L126
+ 1204              	.LVL114:
+ 378:../system/src/ve_direct_protocol/parser.c **** 		it = 0;
+ 379:../system/src/ve_direct_protocol/parser.c **** 		avg_struct->full_buffer = 1;
+ 1205              		.loc 1 379 0
+ 1206 0046 0123     		movs	r3, #1
+ 1207 0048 81F8C230 		strb	r3, [r1, #194]
+ 378:../system/src/ve_direct_protocol/parser.c **** 		it = 0;
+ 1208              		.loc 1 378 0
+ 1209 004c 0023     		movs	r3, #0
+ 1210              	.LVL115:
+ 1211              	.L126:
+ 380:../system/src/ve_direct_protocol/parser.c **** 	}
+ 381:../system/src/ve_direct_protocol/parser.c **** 	else {
+ 382:../system/src/ve_direct_protocol/parser.c **** 		;
+ 383:../system/src/ve_direct_protocol/parser.c **** 	}
+ 384:../system/src/ve_direct_protocol/parser.c **** 
+ 385:../system/src/ve_direct_protocol/parser.c **** 	avg_struct->current_pointer = it;
+ 1212              		.loc 1 385 0
+ 1213 004e A1F8C030 		strh	r3, [r1, #192]	@ unaligned
+ 386:../system/src/ve_direct_protocol/parser.c **** 
+ 387:../system/src/ve_direct_protocol/parser.c **** 	if (in->battery_current < avg_struct->min_battery_current) {
+ 1214              		.loc 1 387 0
+ 1215 0052 B0F90C30 		ldrsh	r3, [r0, #12]
+ 1216              	.LVL116:
+ 1217 0056 B1F9C420 		ldrsh	r2, [r1, #196]	@ unaligned
+ 1218 005a 9342     		cmp	r3, r2
+ 1219 005c 01DA     		bge	.L127
+ 388:../system/src/ve_direct_protocol/parser.c **** 		avg_struct->min_battery_current = in->battery_current;
+ 1220              		.loc 1 388 0
+ 1221 005e A1F8C430 		strh	r3, [r1, #196]	@ unaligned
+ 1222              	.L127:
+ 389:../system/src/ve_direct_protocol/parser.c **** 	}
+ 390:../system/src/ve_direct_protocol/parser.c **** 
+ 391:../system/src/ve_direct_protocol/parser.c **** 	if (in->battery_current > avg_struct->max_battery_current) {
+ 1223              		.loc 1 391 0
+ 1224 0062 B0F90C30 		ldrsh	r3, [r0, #12]
+ 1225 0066 B1F9C620 		ldrsh	r2, [r1, #198]	@ unaligned
+ 1226 006a 9342     		cmp	r3, r2
+ 1227 006c 01DD     		ble	.L124
+ 392:../system/src/ve_direct_protocol/parser.c **** 		avg_struct->max_battery_current = in->battery_current;
+ 1228              		.loc 1 392 0
+ 1229 006e A1F8C630 		strh	r3, [r1, #198]	@ unaligned
+ 1230              	.L124:
+ 393:../system/src/ve_direct_protocol/parser.c **** 	}
+ 394:../system/src/ve_direct_protocol/parser.c **** 
+ 395:../system/src/ve_direct_protocol/parser.c **** 	return;
+ 396:../system/src/ve_direct_protocol/parser.c **** 
+ 397:../system/src/ve_direct_protocol/parser.c **** }
+ 1231              		.loc 1 397 0
+ 1232 0072 5DF8044B 		ldr	r4, [sp], #4
+ 1233              		.cfi_restore 4
+ 1234              		.cfi_def_cfa_offset 0
+ 1235 0076 7047     		bx	lr
+ 1236              	.L130:
+ 1237              		.align	2
+ 1238              	.L129:
+ 1239 0078 00000000 		.word	.LANCHOR0
+ 1240              		.cfi_endproc
+ 1241              	.LFE6:
+ 1243              		.section	.text.ve_direct_get_averages,"ax",%progbits
+ 1244              		.align	1
+ 1245              		.global	ve_direct_get_averages
+ 1246              		.syntax unified
+ 1247              		.thumb
+ 1248              		.thumb_func
+ 1249              		.fpu fpv4-sp-d16
+ 1251              	ve_direct_get_averages:
+ 1252              	.LFB7:
+ 398:../system/src/ve_direct_protocol/parser.c **** 
+ 399:../system/src/ve_direct_protocol/parser.c **** void ve_direct_get_averages(ve_direct_average_struct* avg_struct, int16_t* battery_current, uint16_
+ 400:../system/src/ve_direct_protocol/parser.c **** 		uint16_t* pv_voltage, uint16_t* load_current) {
+ 1253              		.loc 1 400 0
+ 1254              		.cfi_startproc
+ 1255              		@ args = 4, pretend = 0, frame = 0
+ 1256              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1257              	.LVL117:
+ 1258 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 1259              		.cfi_def_cfa_offset 20
+ 1260              		.cfi_offset 4, -20
+ 1261              		.cfi_offset 5, -16
+ 1262              		.cfi_offset 6, -12
+ 1263              		.cfi_offset 7, -8
+ 1264              		.cfi_offset 14, -4
+ 401:../system/src/ve_direct_protocol/parser.c **** 
+ 402:../system/src/ve_direct_protocol/parser.c **** 	if (avg_struct->full_buffer != 1)
+ 1265              		.loc 1 402 0
+ 1266 0002 90F8C240 		ldrb	r4, [r0, #194]	@ zero_extendqisi2
+ 1267 0006 012C     		cmp	r4, #1
+ 1268 0008 00D0     		beq	.L136
+ 1269              	.LVL118:
+ 1270              	.L131:
+ 403:../system/src/ve_direct_protocol/parser.c **** 		return;
+ 404:../system/src/ve_direct_protocol/parser.c **** 
+ 405:../system/src/ve_direct_protocol/parser.c **** 	int32_t battery_current_avg = 0;
+ 406:../system/src/ve_direct_protocol/parser.c **** 	uint32_t battery_voltage_avg = 0;
+ 407:../system/src/ve_direct_protocol/parser.c **** 	uint32_t pv_voltage_avg = 0;
+ 408:../system/src/ve_direct_protocol/parser.c **** 	uint32_t load_current_avg = 0;
+ 409:../system/src/ve_direct_protocol/parser.c **** 
+ 410:../system/src/ve_direct_protocol/parser.c **** 	for (int i = 0; i < VE_DIRECT_AVERAGE_LEN; i++) {
+ 411:../system/src/ve_direct_protocol/parser.c **** 		battery_current_avg += avg_struct->battery_current[i];
+ 412:../system/src/ve_direct_protocol/parser.c **** 		battery_voltage_avg += avg_struct->battery_voltage[i];
+ 413:../system/src/ve_direct_protocol/parser.c **** 		pv_voltage_avg += avg_struct->pv_voltage[i];
+ 414:../system/src/ve_direct_protocol/parser.c **** 		load_current_avg += avg_struct->load_current[i];
+ 415:../system/src/ve_direct_protocol/parser.c **** 	}
+ 416:../system/src/ve_direct_protocol/parser.c **** 
+ 417:../system/src/ve_direct_protocol/parser.c **** 	*battery_current = battery_current_avg / VE_DIRECT_AVERAGE_LEN;
+ 418:../system/src/ve_direct_protocol/parser.c **** 	*battery_voltage = battery_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+ 419:../system/src/ve_direct_protocol/parser.c **** 	*pv_voltage = pv_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+ 420:../system/src/ve_direct_protocol/parser.c **** 	*load_current = load_current_avg / VE_DIRECT_AVERAGE_LEN;
+ 421:../system/src/ve_direct_protocol/parser.c **** }
+ 1271              		.loc 1 421 0
+ 1272 000a F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1273              	.LVL119:
+ 1274              	.L136:
+ 1275              	.LBB2:
+ 410:../system/src/ve_direct_protocol/parser.c **** 		battery_current_avg += avg_struct->battery_current[i];
+ 1276              		.loc 1 410 0
+ 1277 000c 0024     		movs	r4, #0
+ 1278              	.LBE2:
+ 408:../system/src/ve_direct_protocol/parser.c **** 
+ 1279              		.loc 1 408 0
+ 1280 000e 2646     		mov	r6, r4
+ 407:../system/src/ve_direct_protocol/parser.c **** 	uint32_t load_current_avg = 0;
+ 1281              		.loc 1 407 0
+ 1282 0010 2746     		mov	r7, r4
+ 406:../system/src/ve_direct_protocol/parser.c **** 	uint32_t pv_voltage_avg = 0;
+ 1283              		.loc 1 406 0
+ 1284 0012 A446     		mov	ip, r4
+ 405:../system/src/ve_direct_protocol/parser.c **** 	uint32_t battery_voltage_avg = 0;
+ 1285              		.loc 1 405 0
+ 1286 0014 2546     		mov	r5, r4
+ 1287 0016 12E0     		b	.L133
+ 1288              	.LVL120:
+ 1289              	.L134:
+ 1290              	.LBB3:
+ 411:../system/src/ve_direct_protocol/parser.c **** 		battery_voltage_avg += avg_struct->battery_voltage[i];
+ 1291              		.loc 1 411 0 discriminator 3
+ 1292 0018 30F914E0 		ldrsh	lr, [r0, r4, lsl #1]	@ unaligned
+ 1293 001c 7544     		add	r5, r5, lr
+ 1294              	.LVL121:
+ 412:../system/src/ve_direct_protocol/parser.c **** 		pv_voltage_avg += avg_struct->pv_voltage[i];
+ 1295              		.loc 1 412 0 discriminator 3
+ 1296 001e 04F1180E 		add	lr, r4, #24
+ 1297 0022 30F81EE0 		ldrh	lr, [r0, lr, lsl #1]	@ unaligned
+ 1298 0026 F444     		add	ip, ip, lr
+ 1299              	.LVL122:
+ 413:../system/src/ve_direct_protocol/parser.c **** 		load_current_avg += avg_struct->load_current[i];
+ 1300              		.loc 1 413 0 discriminator 3
+ 1301 0028 04F1300E 		add	lr, r4, #48
+ 1302 002c 30F81EE0 		ldrh	lr, [r0, lr, lsl #1]	@ unaligned
+ 1303 0030 7744     		add	r7, r7, lr
+ 1304              	.LVL123:
+ 414:../system/src/ve_direct_protocol/parser.c **** 	}
+ 1305              		.loc 1 414 0 discriminator 3
+ 1306 0032 04F1480E 		add	lr, r4, #72
+ 1307 0036 30F81EE0 		ldrh	lr, [r0, lr, lsl #1]	@ unaligned
+ 1308 003a 7644     		add	r6, r6, lr
+ 1309              	.LVL124:
+ 410:../system/src/ve_direct_protocol/parser.c **** 		battery_current_avg += avg_struct->battery_current[i];
+ 1310              		.loc 1 410 0 discriminator 3
+ 1311 003c 0134     		adds	r4, r4, #1
+ 1312              	.LVL125:
+ 1313              	.L133:
+ 410:../system/src/ve_direct_protocol/parser.c **** 		battery_current_avg += avg_struct->battery_current[i];
+ 1314              		.loc 1 410 0 is_stmt 0 discriminator 1
+ 1315 003e 172C     		cmp	r4, #23
+ 1316 0040 EADD     		ble	.L134
+ 1317              	.LBE3:
+ 417:../system/src/ve_direct_protocol/parser.c **** 	*battery_voltage = battery_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+ 1318              		.loc 1 417 0 is_stmt 1
+ 1319 0042 0C48     		ldr	r0, .L137
+ 1320              	.LVL126:
+ 1321 0044 80FB0540 		smull	r4, r0, r0, r5
+ 1322              	.LVL127:
+ 1323 0048 ED17     		asrs	r5, r5, #31
+ 1324              	.LVL128:
+ 1325 004a C5EBA005 		rsb	r5, r5, r0, asr #2
+ 1326 004e 0D80     		strh	r5, [r1]	@ movhi
+ 418:../system/src/ve_direct_protocol/parser.c **** 	*pv_voltage = pv_voltage_avg / VE_DIRECT_AVERAGE_LEN;
+ 1327              		.loc 1 418 0
+ 1328 0050 0949     		ldr	r1, .L137+4
+ 1329              	.LVL129:
+ 1330 0052 A1FB0C0C 		umull	r0, ip, r1, ip
+ 1331              	.LVL130:
+ 1332 0056 4FEA1C1C 		lsr	ip, ip, #4
+ 1333 005a A2F800C0 		strh	ip, [r2]	@ movhi
+ 419:../system/src/ve_direct_protocol/parser.c **** 	*load_current = load_current_avg / VE_DIRECT_AVERAGE_LEN;
+ 1334              		.loc 1 419 0
+ 1335 005e A1FB0727 		umull	r2, r7, r1, r7
+ 1336              	.LVL131:
+ 1337 0062 3F09     		lsrs	r7, r7, #4
+ 1338 0064 1F80     		strh	r7, [r3]	@ movhi
+ 420:../system/src/ve_direct_protocol/parser.c **** }
+ 1339              		.loc 1 420 0
+ 1340 0066 A1FB0636 		umull	r3, r6, r1, r6
+ 1341              	.LVL132:
+ 1342 006a 3609     		lsrs	r6, r6, #4
+ 1343 006c 059B     		ldr	r3, [sp, #20]
+ 1344 006e 1E80     		strh	r6, [r3]	@ movhi
+ 1345 0070 CBE7     		b	.L131
+ 1346              	.L138:
+ 1347 0072 00BF     		.align	2
+ 1348              	.L137:
+ 1349 0074 ABAAAA2A 		.word	715827883
+ 1350 0078 ABAAAAAA 		.word	-1431655765
+ 1351              		.cfi_endproc
+ 1352              	.LFE7:
+ 1354              		.section	.text.ve_direct_set_sys_voltage,"ax",%progbits
+ 1355              		.align	1
+ 1356              		.global	ve_direct_set_sys_voltage
+ 1357              		.syntax unified
+ 1358              		.thumb
+ 1359              		.thumb_func
+ 1360              		.fpu fpv4-sp-d16
+ 1362              	ve_direct_set_sys_voltage:
+ 1363              	.LFB8:
+ 422:../system/src/ve_direct_protocol/parser.c **** 
+ 423:../system/src/ve_direct_protocol/parser.c **** void ve_direct_set_sys_voltage(ve_direct_raw_struct* in, uint8_t* sys_voltage) {
+ 1364              		.loc 1 423 0
+ 1365              		.cfi_startproc
+ 1366              		@ args = 0, pretend = 0, frame = 0
+ 1367              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1368              		@ link register save eliminated.
+ 1369              	.LVL133:
+ 424:../system/src/ve_direct_protocol/parser.c **** 
+ 425:../system/src/ve_direct_protocol/parser.c **** }
+ 1370              		.loc 1 425 0
+ 1371 0000 7047     		bx	lr
+ 1372              		.cfi_endproc
+ 1373              	.LFE8:
+ 1375              		.section	.text.ve_direct_store_errors,"ax",%progbits
+ 1376              		.align	1
+ 1377              		.global	ve_direct_store_errors
+ 1378              		.syntax unified
+ 1379              		.thumb
+ 1380              		.thumb_func
+ 1381              		.fpu fpv4-sp-d16
+ 1383              	ve_direct_store_errors:
+ 1384              	.LFB9:
+ 426:../system/src/ve_direct_protocol/parser.c **** 
+ 427:../system/src/ve_direct_protocol/parser.c **** void ve_direct_store_errors(ve_direct_raw_struct* input, ve_direct_error_reason* err_reason) {
+ 1385              		.loc 1 427 0
+ 1386              		.cfi_startproc
+ 1387              		@ args = 0, pretend = 0, frame = 0
+ 1388              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1389              		@ link register save eliminated.
+ 1390              	.LVL134:
+ 428:../system/src/ve_direct_protocol/parser.c **** 	if (input->error_reason != ERR_OK) {
+ 1391              		.loc 1 428 0
+ 1392 0000 90F91230 		ldrsb	r3, [r0, #18]
+ 1393 0004 33B9     		cbnz	r3, .L143
+ 429:../system/src/ve_direct_protocol/parser.c **** 		*err_reason = input->error_reason;
+ 430:../system/src/ve_direct_protocol/parser.c **** 	}
+ 431:../system/src/ve_direct_protocol/parser.c **** 	else {
+ 432:../system/src/ve_direct_protocol/parser.c **** 		if (*err_reason == ERR_UNINITIALIZED || *err_reason == ERR_OK) {
+ 1394              		.loc 1 432 0
+ 1395 0006 91F90030 		ldrsb	r3, [r1]
+ 1396 000a 0133     		adds	r3, r3, #1
+ 1397 000c DBB2     		uxtb	r3, r3
+ 1398 000e 012B     		cmp	r3, #1
+ 1399 0010 02D9     		bls	.L144
+ 1400              	.L140:
+ 433:../system/src/ve_direct_protocol/parser.c **** 			*err_reason = ERR_OK;
+ 434:../system/src/ve_direct_protocol/parser.c **** 		}
+ 435:../system/src/ve_direct_protocol/parser.c **** 	}
+ 436:../system/src/ve_direct_protocol/parser.c **** 
+ 437:../system/src/ve_direct_protocol/parser.c **** }
+ 1401              		.loc 1 437 0
+ 1402 0012 7047     		bx	lr
+ 1403              	.L143:
+ 429:../system/src/ve_direct_protocol/parser.c **** 		*err_reason = input->error_reason;
+ 1404              		.loc 1 429 0
+ 1405 0014 0B70     		strb	r3, [r1]
+ 1406 0016 7047     		bx	lr
+ 1407              	.L144:
+ 433:../system/src/ve_direct_protocol/parser.c **** 			*err_reason = ERR_OK;
+ 1408              		.loc 1 433 0
+ 1409 0018 0023     		movs	r3, #0
+ 1410 001a 0B70     		strb	r3, [r1]
+ 1411              		.loc 1 437 0
+ 1412 001c F9E7     		b	.L140
+ 1413              		.cfi_endproc
+ 1414              	.LFE9:
+ 1416              		.section	.text.ve_direct_error_to_string,"ax",%progbits
+ 1417              		.align	1
+ 1418              		.global	ve_direct_error_to_string
+ 1419              		.syntax unified
+ 1420              		.thumb
+ 1421              		.thumb_func
+ 1422              		.fpu fpv4-sp-d16
+ 1424              	ve_direct_error_to_string:
+ 1425              	.LFB10:
+ 438:../system/src/ve_direct_protocol/parser.c **** 
+ 439:../system/src/ve_direct_protocol/parser.c **** void ve_direct_error_to_string(ve_direct_error_reason input, char* output, int8_t output_ln) {
+ 1426              		.loc 1 439 0
+ 1427              		.cfi_startproc
+ 1428              		@ args = 0, pretend = 0, frame = 0
+ 1429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1430              	.LVL135:
+ 1431 0000 70B5     		push	{r4, r5, r6, lr}
+ 1432              		.cfi_def_cfa_offset 16
+ 1433              		.cfi_offset 4, -16
+ 1434              		.cfi_offset 5, -12
+ 1435              		.cfi_offset 6, -8
+ 1436              		.cfi_offset 14, -4
+ 1437 0002 0446     		mov	r4, r0
+ 1438 0004 0D46     		mov	r5, r1
+ 1439 0006 1646     		mov	r6, r2
+ 440:../system/src/ve_direct_protocol/parser.c **** 	memset(output, 0x00, output_ln);
+ 1440              		.loc 1 440 0
+ 1441 0008 0021     		movs	r1, #0
+ 1442              	.LVL136:
+ 1443 000a 2846     		mov	r0, r5
+ 1444              	.LVL137:
+ 1445 000c FFF7FEFF 		bl	memset
+ 1446              	.LVL138:
+ 441:../system/src/ve_direct_protocol/parser.c **** 
+ 442:../system/src/ve_direct_protocol/parser.c **** 	switch(input) {
+ 1447              		.loc 1 442 0
+ 1448 0010 601C     		adds	r0, r4, #1
+ 1449 0012 7528     		cmp	r0, #117
+ 1450 0014 41D8     		bhi	.L145
+ 1451 0016 DFE800F0 		tbb	[pc, r0]
+ 1452              	.L148:
+ 1453 001a 3B       		.byte	(.L147-.L148)/2
+ 1454 001b 41       		.byte	(.L149-.L148)/2
+ 1455 001c 40       		.byte	(.L145-.L148)/2
+ 1456 001d 47       		.byte	(.L150-.L148)/2
+ 1457 001e 40       		.byte	(.L145-.L148)/2
+ 1458 001f 40       		.byte	(.L145-.L148)/2
+ 1459 0020 40       		.byte	(.L145-.L148)/2
+ 1460 0021 40       		.byte	(.L145-.L148)/2
+ 1461 0022 40       		.byte	(.L145-.L148)/2
+ 1462 0023 40       		.byte	(.L145-.L148)/2
+ 1463 0024 40       		.byte	(.L145-.L148)/2
+ 1464 0025 40       		.byte	(.L145-.L148)/2
+ 1465 0026 40       		.byte	(.L145-.L148)/2
+ 1466 0027 40       		.byte	(.L145-.L148)/2
+ 1467 0028 40       		.byte	(.L145-.L148)/2
+ 1468 0029 40       		.byte	(.L145-.L148)/2
+ 1469 002a 40       		.byte	(.L145-.L148)/2
+ 1470 002b 40       		.byte	(.L145-.L148)/2
+ 1471 002c 4D       		.byte	(.L151-.L148)/2
+ 1472 002d 53       		.byte	(.L152-.L148)/2
+ 1473 002e 59       		.byte	(.L153-.L148)/2
+ 1474 002f 5F       		.byte	(.L154-.L148)/2
+ 1475 0030 65       		.byte	(.L155-.L148)/2
+ 1476 0031 40       		.byte	(.L145-.L148)/2
+ 1477 0032 40       		.byte	(.L145-.L148)/2
+ 1478 0033 40       		.byte	(.L145-.L148)/2
+ 1479 0034 40       		.byte	(.L145-.L148)/2
+ 1480 0035 6B       		.byte	(.L156-.L148)/2
+ 1481 0036 40       		.byte	(.L145-.L148)/2
+ 1482 0037 40       		.byte	(.L145-.L148)/2
+ 1483 0038 40       		.byte	(.L145-.L148)/2
+ 1484 0039 40       		.byte	(.L145-.L148)/2
+ 1485 003a 40       		.byte	(.L145-.L148)/2
+ 1486 003b 40       		.byte	(.L145-.L148)/2
+ 1487 003c 71       		.byte	(.L157-.L148)/2
+ 1488 003d 77       		.byte	(.L158-.L148)/2
+ 1489 003e 40       		.byte	(.L145-.L148)/2
+ 1490 003f 40       		.byte	(.L145-.L148)/2
+ 1491 0040 40       		.byte	(.L145-.L148)/2
+ 1492 0041 7D       		.byte	(.L159-.L148)/2
+ 1493 0042 40       		.byte	(.L145-.L148)/2
+ 1494 0043 40       		.byte	(.L145-.L148)/2
+ 1495 0044 40       		.byte	(.L145-.L148)/2
+ 1496 0045 40       		.byte	(.L145-.L148)/2
+ 1497 0046 40       		.byte	(.L145-.L148)/2
+ 1498 0047 40       		.byte	(.L145-.L148)/2
+ 1499 0048 40       		.byte	(.L145-.L148)/2
+ 1500 0049 40       		.byte	(.L145-.L148)/2
+ 1501 004a 40       		.byte	(.L145-.L148)/2
+ 1502 004b 40       		.byte	(.L145-.L148)/2
+ 1503 004c 40       		.byte	(.L145-.L148)/2
+ 1504 004d 40       		.byte	(.L145-.L148)/2
+ 1505 004e 40       		.byte	(.L145-.L148)/2
+ 1506 004f 40       		.byte	(.L145-.L148)/2
+ 1507 0050 40       		.byte	(.L145-.L148)/2
+ 1508 0051 40       		.byte	(.L145-.L148)/2
+ 1509 0052 40       		.byte	(.L145-.L148)/2
+ 1510 0053 40       		.byte	(.L145-.L148)/2
+ 1511 0054 40       		.byte	(.L145-.L148)/2
+ 1512 0055 40       		.byte	(.L145-.L148)/2
+ 1513 0056 40       		.byte	(.L145-.L148)/2
+ 1514 0057 40       		.byte	(.L145-.L148)/2
+ 1515 0058 40       		.byte	(.L145-.L148)/2
+ 1516 0059 40       		.byte	(.L145-.L148)/2
+ 1517 005a 40       		.byte	(.L145-.L148)/2
+ 1518 005b 40       		.byte	(.L145-.L148)/2
+ 1519 005c 40       		.byte	(.L145-.L148)/2
+ 1520 005d 40       		.byte	(.L145-.L148)/2
+ 1521 005e 40       		.byte	(.L145-.L148)/2
+ 1522 005f 40       		.byte	(.L145-.L148)/2
+ 1523 0060 40       		.byte	(.L145-.L148)/2
+ 1524 0061 40       		.byte	(.L145-.L148)/2
+ 1525 0062 40       		.byte	(.L145-.L148)/2
+ 1526 0063 40       		.byte	(.L145-.L148)/2
+ 1527 0064 40       		.byte	(.L145-.L148)/2
+ 1528 0065 40       		.byte	(.L145-.L148)/2
+ 1529 0066 40       		.byte	(.L145-.L148)/2
+ 1530 0067 40       		.byte	(.L145-.L148)/2
+ 1531 0068 40       		.byte	(.L145-.L148)/2
+ 1532 0069 40       		.byte	(.L145-.L148)/2
+ 1533 006a 40       		.byte	(.L145-.L148)/2
+ 1534 006b 40       		.byte	(.L145-.L148)/2
+ 1535 006c 40       		.byte	(.L145-.L148)/2
+ 1536 006d 40       		.byte	(.L145-.L148)/2
+ 1537 006e 40       		.byte	(.L145-.L148)/2
+ 1538 006f 40       		.byte	(.L145-.L148)/2
+ 1539 0070 40       		.byte	(.L145-.L148)/2
+ 1540 0071 40       		.byte	(.L145-.L148)/2
+ 1541 0072 40       		.byte	(.L145-.L148)/2
+ 1542 0073 40       		.byte	(.L145-.L148)/2
+ 1543 0074 40       		.byte	(.L145-.L148)/2
+ 1544 0075 40       		.byte	(.L145-.L148)/2
+ 1545 0076 40       		.byte	(.L145-.L148)/2
+ 1546 0077 40       		.byte	(.L145-.L148)/2
+ 1547 0078 40       		.byte	(.L145-.L148)/2
+ 1548 0079 40       		.byte	(.L145-.L148)/2
+ 1549 007a 40       		.byte	(.L145-.L148)/2
+ 1550 007b 40       		.byte	(.L145-.L148)/2
+ 1551 007c 40       		.byte	(.L145-.L148)/2
+ 1552 007d 40       		.byte	(.L145-.L148)/2
+ 1553 007e 40       		.byte	(.L145-.L148)/2
+ 1554 007f 40       		.byte	(.L145-.L148)/2
+ 1555 0080 40       		.byte	(.L145-.L148)/2
+ 1556 0081 40       		.byte	(.L145-.L148)/2
+ 1557 0082 40       		.byte	(.L145-.L148)/2
+ 1558 0083 40       		.byte	(.L145-.L148)/2
+ 1559 0084 40       		.byte	(.L145-.L148)/2
+ 1560 0085 40       		.byte	(.L145-.L148)/2
+ 1561 0086 40       		.byte	(.L145-.L148)/2
+ 1562 0087 40       		.byte	(.L145-.L148)/2
+ 1563 0088 40       		.byte	(.L145-.L148)/2
+ 1564 0089 40       		.byte	(.L145-.L148)/2
+ 1565 008a 40       		.byte	(.L145-.L148)/2
+ 1566 008b 40       		.byte	(.L145-.L148)/2
+ 1567 008c 40       		.byte	(.L145-.L148)/2
+ 1568 008d 40       		.byte	(.L145-.L148)/2
+ 1569 008e 40       		.byte	(.L145-.L148)/2
+ 1570 008f 83       		.byte	(.L160-.L148)/2
+ 1571              		.p2align 1
+ 1572              	.L147:
+ 1573              	.LBB4:
+ 443:../system/src/ve_direct_protocol/parser.c **** 		case ERR_UNINITIALIZED: snprintf(output, output_ln, "ERR_UNINITIALIZED"); break;
+ 1574              		.loc 1 443 0
+ 1575 0090 264A     		ldr	r2, .L162
+ 1576 0092 3146     		mov	r1, r6
+ 1577 0094 2846     		mov	r0, r5
+ 1578 0096 FFF7FEFF 		bl	snprintf
+ 1579              	.LVL139:
+ 1580              	.L145:
+ 1581              	.LBE4:
+ 444:../system/src/ve_direct_protocol/parser.c **** 		case ERR_OK: snprintf(output, output_ln, "ERR_OK"); break;
+ 445:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_BAT_VOLTAGE: snprintf(output, output_ln, "ERR_EXCESIVE_BAT_VOLTAGE"); break;
+ 446:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_TEMP_TOO_HIGH: snprintf(output, output_ln, "ERR_CHGR_TEMP_TOO_HIGH"); break;
+ 447:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_EXCESIVE_CURR: snprintf(output, output_ln, "ERR_CHGR_EXCESIVE_CURR"); break;
+ 448:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_CURR_REVERSED: snprintf(output, output_ln, "ERR_CHGR_CURR_REVERSED"); break;
+ 449:../system/src/ve_direct_protocol/parser.c **** 		case ERR_BULK_TIME_EXCEED: snprintf(output, output_ln, "ERR_BULK_TIME_EXCEED"); break;
+ 450:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CURRENT_SENSE_FAIL: snprintf(output, output_ln, "ERR_CURRENT_SENSE_FAIL"); break;
+ 451:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_TERMINAL_TEMP:  snprintf(output, output_ln, "ERR_EXCESIVE_TERMINAL_TEMP"); brea
+ 452:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_PV_VOLTAGE: snprintf(output, output_ln, "ERR_EXCESIVE_PV_VOLTAGE"); break;
+ 453:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_PV_CURRENT: snprintf(output, output_ln, "ERR_EXCESIVE_PV_CURRENT"); break;
+ 454:../system/src/ve_direct_protocol/parser.c **** 		case ERR_INPUT_SHUTDOWN: snprintf(output, output_ln, "ERR_INPUT_SHUTDOWN"); break;
+ 455:../system/src/ve_direct_protocol/parser.c **** 		case ERR_TUNES_LOST: snprintf(output, output_ln, "ERR_TUNES_LOST"); break;
+ 456:../system/src/ve_direct_protocol/parser.c **** 	}
+ 457:../system/src/ve_direct_protocol/parser.c **** }
+ 1582              		.loc 1 457 0
+ 1583 009a 70BD     		pop	{r4, r5, r6, pc}
+ 1584              	.LVL140:
+ 1585              	.L149:
+ 1586              	.LBB5:
+ 444:../system/src/ve_direct_protocol/parser.c **** 		case ERR_OK: snprintf(output, output_ln, "ERR_OK"); break;
+ 1587              		.loc 1 444 0
+ 1588 009c 244A     		ldr	r2, .L162+4
+ 1589 009e 3146     		mov	r1, r6
+ 1590 00a0 2846     		mov	r0, r5
+ 1591 00a2 FFF7FEFF 		bl	snprintf
+ 1592              	.LVL141:
+ 1593 00a6 F8E7     		b	.L145
+ 1594              	.L150:
+ 445:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_TEMP_TOO_HIGH: snprintf(output, output_ln, "ERR_CHGR_TEMP_TOO_HIGH"); break;
+ 1595              		.loc 1 445 0
+ 1596 00a8 224A     		ldr	r2, .L162+8
+ 1597 00aa 3146     		mov	r1, r6
+ 1598 00ac 2846     		mov	r0, r5
+ 1599 00ae FFF7FEFF 		bl	snprintf
+ 1600              	.LVL142:
+ 1601 00b2 F2E7     		b	.L145
+ 1602              	.L151:
+ 446:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_EXCESIVE_CURR: snprintf(output, output_ln, "ERR_CHGR_EXCESIVE_CURR"); break;
+ 1603              		.loc 1 446 0
+ 1604 00b4 204A     		ldr	r2, .L162+12
+ 1605 00b6 3146     		mov	r1, r6
+ 1606 00b8 2846     		mov	r0, r5
+ 1607 00ba FFF7FEFF 		bl	snprintf
+ 1608              	.LVL143:
+ 1609 00be ECE7     		b	.L145
+ 1610              	.L152:
+ 447:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CHGR_CURR_REVERSED: snprintf(output, output_ln, "ERR_CHGR_CURR_REVERSED"); break;
+ 1611              		.loc 1 447 0
+ 1612 00c0 1E4A     		ldr	r2, .L162+16
+ 1613 00c2 3146     		mov	r1, r6
+ 1614 00c4 2846     		mov	r0, r5
+ 1615 00c6 FFF7FEFF 		bl	snprintf
+ 1616              	.LVL144:
+ 1617 00ca E6E7     		b	.L145
+ 1618              	.L153:
+ 448:../system/src/ve_direct_protocol/parser.c **** 		case ERR_BULK_TIME_EXCEED: snprintf(output, output_ln, "ERR_BULK_TIME_EXCEED"); break;
+ 1619              		.loc 1 448 0
+ 1620 00cc 1C4A     		ldr	r2, .L162+20
+ 1621 00ce 3146     		mov	r1, r6
+ 1622 00d0 2846     		mov	r0, r5
+ 1623 00d2 FFF7FEFF 		bl	snprintf
+ 1624              	.LVL145:
+ 1625 00d6 E0E7     		b	.L145
+ 1626              	.L154:
+ 449:../system/src/ve_direct_protocol/parser.c **** 		case ERR_CURRENT_SENSE_FAIL: snprintf(output, output_ln, "ERR_CURRENT_SENSE_FAIL"); break;
+ 1627              		.loc 1 449 0
+ 1628 00d8 1A4A     		ldr	r2, .L162+24
+ 1629 00da 3146     		mov	r1, r6
+ 1630 00dc 2846     		mov	r0, r5
+ 1631 00de FFF7FEFF 		bl	snprintf
+ 1632              	.LVL146:
+ 1633 00e2 DAE7     		b	.L145
+ 1634              	.L155:
+ 450:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_TERMINAL_TEMP:  snprintf(output, output_ln, "ERR_EXCESIVE_TERMINAL_TEMP"); brea
+ 1635              		.loc 1 450 0
+ 1636 00e4 184A     		ldr	r2, .L162+28
+ 1637 00e6 3146     		mov	r1, r6
+ 1638 00e8 2846     		mov	r0, r5
+ 1639 00ea FFF7FEFF 		bl	snprintf
+ 1640              	.LVL147:
+ 1641 00ee D4E7     		b	.L145
+ 1642              	.L156:
+ 451:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_PV_VOLTAGE: snprintf(output, output_ln, "ERR_EXCESIVE_PV_VOLTAGE"); break;
+ 1643              		.loc 1 451 0
+ 1644 00f0 164A     		ldr	r2, .L162+32
+ 1645 00f2 3146     		mov	r1, r6
+ 1646 00f4 2846     		mov	r0, r5
+ 1647 00f6 FFF7FEFF 		bl	snprintf
+ 1648              	.LVL148:
+ 1649 00fa CEE7     		b	.L145
+ 1650              	.L157:
+ 452:../system/src/ve_direct_protocol/parser.c **** 		case ERR_EXCESIVE_PV_CURRENT: snprintf(output, output_ln, "ERR_EXCESIVE_PV_CURRENT"); break;
+ 1651              		.loc 1 452 0
+ 1652 00fc 144A     		ldr	r2, .L162+36
+ 1653 00fe 3146     		mov	r1, r6
+ 1654 0100 2846     		mov	r0, r5
+ 1655 0102 FFF7FEFF 		bl	snprintf
+ 1656              	.LVL149:
+ 1657 0106 C8E7     		b	.L145
+ 1658              	.L158:
+ 453:../system/src/ve_direct_protocol/parser.c **** 		case ERR_INPUT_SHUTDOWN: snprintf(output, output_ln, "ERR_INPUT_SHUTDOWN"); break;
+ 1659              		.loc 1 453 0
+ 1660 0108 124A     		ldr	r2, .L162+40
+ 1661 010a 3146     		mov	r1, r6
+ 1662 010c 2846     		mov	r0, r5
+ 1663 010e FFF7FEFF 		bl	snprintf
+ 1664              	.LVL150:
+ 1665 0112 C2E7     		b	.L145
+ 1666              	.L159:
+ 454:../system/src/ve_direct_protocol/parser.c **** 		case ERR_TUNES_LOST: snprintf(output, output_ln, "ERR_TUNES_LOST"); break;
+ 1667              		.loc 1 454 0
+ 1668 0114 104A     		ldr	r2, .L162+44
+ 1669 0116 3146     		mov	r1, r6
+ 1670 0118 2846     		mov	r0, r5
+ 1671 011a FFF7FEFF 		bl	snprintf
+ 1672              	.LVL151:
+ 1673 011e BCE7     		b	.L145
+ 1674              	.L160:
+ 455:../system/src/ve_direct_protocol/parser.c **** 	}
+ 1675              		.loc 1 455 0
+ 1676 0120 0E4A     		ldr	r2, .L162+48
+ 1677 0122 3146     		mov	r1, r6
+ 1678 0124 2846     		mov	r0, r5
+ 1679 0126 FFF7FEFF 		bl	snprintf
+ 1680              	.LVL152:
+ 1681              	.LBE5:
+ 1682              		.loc 1 457 0
+ 1683 012a B6E7     		b	.L145
+ 1684              	.L163:
+ 1685              		.align	2
+ 1686              	.L162:
+ 1687 012c 00000000 		.word	.LC31
+ 1688 0130 14000000 		.word	.LC32
+ 1689 0134 1C000000 		.word	.LC33
+ 1690 0138 38000000 		.word	.LC34
+ 1691 013c 50000000 		.word	.LC35
+ 1692 0140 68000000 		.word	.LC36
+ 1693 0144 80000000 		.word	.LC37
+ 1694 0148 98000000 		.word	.LC38
+ 1695 014c B0000000 		.word	.LC39
+ 1696 0150 CC000000 		.word	.LC40
+ 1697 0154 E4000000 		.word	.LC41
+ 1698 0158 FC000000 		.word	.LC42
+ 1699 015c 10010000 		.word	.LC43
+ 1700              		.cfi_endproc
+ 1701              	.LFE10:
+ 1703              		.section	.text.ve_direct_state_to_string,"ax",%progbits
+ 1704              		.align	1
+ 1705              		.global	ve_direct_state_to_string
+ 1706              		.syntax unified
+ 1707              		.thumb
+ 1708              		.thumb_func
+ 1709              		.fpu fpv4-sp-d16
+ 1711              	ve_direct_state_to_string:
+ 1712              	.LFB11:
+ 458:../system/src/ve_direct_protocol/parser.c **** 
+ 459:../system/src/ve_direct_protocol/parser.c **** void ve_direct_state_to_string(ve_direct_system_state input, char* output, int8_t output_ln) {
+ 1713              		.loc 1 459 0
+ 1714              		.cfi_startproc
+ 1715              		@ args = 0, pretend = 0, frame = 0
+ 1716              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1717              	.LVL153:
+ 1718 0000 70B5     		push	{r4, r5, r6, lr}
+ 1719              		.cfi_def_cfa_offset 16
+ 1720              		.cfi_offset 4, -16
+ 1721              		.cfi_offset 5, -12
+ 1722              		.cfi_offset 6, -8
+ 1723              		.cfi_offset 14, -4
+ 1724 0002 0446     		mov	r4, r0
+ 1725 0004 0D46     		mov	r5, r1
+ 1726 0006 1646     		mov	r6, r2
+ 460:../system/src/ve_direct_protocol/parser.c **** 	memset(output, 0x00, output_ln);
+ 1727              		.loc 1 460 0
+ 1728 0008 0021     		movs	r1, #0
+ 1729              	.LVL154:
+ 1730 000a 2846     		mov	r0, r5
+ 1731              	.LVL155:
+ 1732 000c FFF7FEFF 		bl	memset
+ 1733              	.LVL156:
+ 461:../system/src/ve_direct_protocol/parser.c **** 
+ 462:../system/src/ve_direct_protocol/parser.c **** 	switch(input) {
+ 1734              		.loc 1 462 0
+ 1735 0010 601C     		adds	r0, r4, #1
+ 1736 0012 0A28     		cmp	r0, #10
+ 1737 0014 0CD8     		bhi	.L164
+ 1738 0016 DFE800F0 		tbb	[pc, r0]
+ 1739              	.L167:
+ 1740 001a 06       		.byte	(.L166-.L167)/2
+ 1741 001b 0C       		.byte	(.L168-.L167)/2
+ 1742 001c 12       		.byte	(.L169-.L167)/2
+ 1743 001d 18       		.byte	(.L170-.L167)/2
+ 1744 001e 1E       		.byte	(.L171-.L167)/2
+ 1745 001f 24       		.byte	(.L172-.L167)/2
+ 1746 0020 2A       		.byte	(.L173-.L167)/2
+ 1747 0021 0B       		.byte	(.L164-.L167)/2
+ 1748 0022 0B       		.byte	(.L164-.L167)/2
+ 1749 0023 0B       		.byte	(.L164-.L167)/2
+ 1750 0024 30       		.byte	(.L174-.L167)/2
+ 1751 0025 00       		.p2align 1
+ 1752              	.L166:
+ 1753              	.LBB6:
+ 463:../system/src/ve_direct_protocol/parser.c **** 		case STATE_UNINITIALIZED: snprintf(output, output_ln, "STATE_UNINITIALIZED"); break;
+ 1754              		.loc 1 463 0
+ 1755 0026 184A     		ldr	r2, .L176
+ 1756 0028 3146     		mov	r1, r6
+ 1757 002a 2846     		mov	r0, r5
+ 1758 002c FFF7FEFF 		bl	snprintf
+ 1759              	.LVL157:
+ 1760              	.L164:
+ 1761              	.LBE6:
+ 464:../system/src/ve_direct_protocol/parser.c **** 		case STATE_OFF: snprintf(output, output_ln, "STATE_OFF"); break;
+ 465:../system/src/ve_direct_protocol/parser.c **** 		case STATE_LOW_PWR: snprintf(output, output_ln, "STATE_LOW_PWR"); break;
+ 466:../system/src/ve_direct_protocol/parser.c **** 		case STATE_FAULT: snprintf(output, output_ln, "STATE_FAULT"); break;
+ 467:../system/src/ve_direct_protocol/parser.c **** 		case STATE_BULK: snprintf(output, output_ln, "STATE_BULK"); break;
+ 468:../system/src/ve_direct_protocol/parser.c **** 		case STATE_ABSORPTION: snprintf(output, output_ln, "STATE_ABSORPTION"); break;
+ 469:../system/src/ve_direct_protocol/parser.c **** 		case STATE_FLOAT: snprintf(output, output_ln, "STATE_FLOAT"); break;
+ 470:../system/src/ve_direct_protocol/parser.c **** 		case STATE_INVERTING:  snprintf(output, output_ln, "STATE_INVERTING"); break;
+ 471:../system/src/ve_direct_protocol/parser.c **** 	}
+ 472:../system/src/ve_direct_protocol/parser.c **** }
+ 1762              		.loc 1 472 0
+ 1763 0030 70BD     		pop	{r4, r5, r6, pc}
+ 1764              	.LVL158:
+ 1765              	.L168:
+ 1766              	.LBB7:
+ 464:../system/src/ve_direct_protocol/parser.c **** 		case STATE_OFF: snprintf(output, output_ln, "STATE_OFF"); break;
+ 1767              		.loc 1 464 0
+ 1768 0032 164A     		ldr	r2, .L176+4
+ 1769 0034 3146     		mov	r1, r6
+ 1770 0036 2846     		mov	r0, r5
+ 1771 0038 FFF7FEFF 		bl	snprintf
+ 1772              	.LVL159:
+ 1773 003c F8E7     		b	.L164
+ 1774              	.L169:
+ 465:../system/src/ve_direct_protocol/parser.c **** 		case STATE_FAULT: snprintf(output, output_ln, "STATE_FAULT"); break;
+ 1775              		.loc 1 465 0
+ 1776 003e 144A     		ldr	r2, .L176+8
+ 1777 0040 3146     		mov	r1, r6
+ 1778 0042 2846     		mov	r0, r5
+ 1779 0044 FFF7FEFF 		bl	snprintf
+ 1780              	.LVL160:
+ 1781 0048 F2E7     		b	.L164
+ 1782              	.L170:
+ 466:../system/src/ve_direct_protocol/parser.c **** 		case STATE_BULK: snprintf(output, output_ln, "STATE_BULK"); break;
+ 1783              		.loc 1 466 0
+ 1784 004a 124A     		ldr	r2, .L176+12
+ 1785 004c 3146     		mov	r1, r6
+ 1786 004e 2846     		mov	r0, r5
+ 1787 0050 FFF7FEFF 		bl	snprintf
+ 1788              	.LVL161:
+ 1789 0054 ECE7     		b	.L164
+ 1790              	.L171:
+ 467:../system/src/ve_direct_protocol/parser.c **** 		case STATE_ABSORPTION: snprintf(output, output_ln, "STATE_ABSORPTION"); break;
+ 1791              		.loc 1 467 0
+ 1792 0056 104A     		ldr	r2, .L176+16
+ 1793 0058 3146     		mov	r1, r6
+ 1794 005a 2846     		mov	r0, r5
+ 1795 005c FFF7FEFF 		bl	snprintf
+ 1796              	.LVL162:
+ 1797 0060 E6E7     		b	.L164
+ 1798              	.L172:
+ 468:../system/src/ve_direct_protocol/parser.c **** 		case STATE_FLOAT: snprintf(output, output_ln, "STATE_FLOAT"); break;
+ 1799              		.loc 1 468 0
+ 1800 0062 0E4A     		ldr	r2, .L176+20
+ 1801 0064 3146     		mov	r1, r6
+ 1802 0066 2846     		mov	r0, r5
+ 1803 0068 FFF7FEFF 		bl	snprintf
+ 1804              	.LVL163:
+ 1805 006c E0E7     		b	.L164
+ 1806              	.L173:
+ 469:../system/src/ve_direct_protocol/parser.c **** 		case STATE_INVERTING:  snprintf(output, output_ln, "STATE_INVERTING"); break;
+ 1807              		.loc 1 469 0
+ 1808 006e 0C4A     		ldr	r2, .L176+24
+ 1809 0070 3146     		mov	r1, r6
+ 1810 0072 2846     		mov	r0, r5
+ 1811 0074 FFF7FEFF 		bl	snprintf
+ 1812              	.LVL164:
+ 1813 0078 DAE7     		b	.L164
+ 1814              	.L174:
+ 470:../system/src/ve_direct_protocol/parser.c **** 	}
+ 1815              		.loc 1 470 0
+ 1816 007a 0A4A     		ldr	r2, .L176+28
+ 1817 007c 3146     		mov	r1, r6
+ 1818 007e 2846     		mov	r0, r5
+ 1819 0080 FFF7FEFF 		bl	snprintf
+ 1820              	.LVL165:
+ 1821              	.LBE7:
+ 1822              		.loc 1 472 0
+ 1823 0084 D4E7     		b	.L164
+ 1824              	.L177:
+ 1825 0086 00BF     		.align	2
+ 1826              	.L176:
+ 1827 0088 00000000 		.word	.LC44
+ 1828 008c 14000000 		.word	.LC45
+ 1829 0090 20000000 		.word	.LC46
+ 1830 0094 30000000 		.word	.LC47
+ 1831 0098 3C000000 		.word	.LC48
+ 1832 009c 48000000 		.word	.LC49
+ 1833 00a0 5C000000 		.word	.LC50
+ 1834 00a4 68000000 		.word	.LC51
+ 1835              		.cfi_endproc
+ 1836              	.LFE11:
+ 1838              		.global	skip_counter
+ 1839              		.comm	value,12,4
+ 1840              		.comm	key,9,4
+ 1841              		.section	.bss.skip_counter,"aw",%nobits
+ 1842              		.set	.LANCHOR0,. + 0
+ 1845              	skip_counter:
+ 1846 0000 00       		.space	1
+ 1847              		.section	.rodata.get_key_value_from_str.str1.4,"aMS",%progbits,1
+ 1848              		.align	2
+ 1849              	.LC0:
+ 1850 0000 50494400 		.ascii	"PID\000"
+ 1851              	.LC1:
+ 1852 0004 465700   		.ascii	"FW\000"
+ 1853 0007 00       		.space	1
+ 1854              	.LC2:
+ 1855 0008 53455223 		.ascii	"SER#\000"
+ 1855      00
+ 1856 000d 000000   		.space	3
+ 1857              	.LC3:
+ 1858 0010 5600     		.ascii	"V\000"
+ 1859 0012 0000     		.space	2
+ 1860              	.LC4:
+ 1861 0014 4900     		.ascii	"I\000"
+ 1862 0016 0000     		.space	2
+ 1863              	.LC5:
+ 1864 0018 56505600 		.ascii	"VPV\000"
+ 1865              	.LC6:
+ 1866 001c 50505600 		.ascii	"PPV\000"
+ 1867              	.LC7:
+ 1868 0020 435300   		.ascii	"CS\000"
+ 1869 0023 00       		.space	1
+ 1870              	.LC8:
+ 1871 0024 45525200 		.ascii	"ERR\000"
+ 1872              	.LC9:
+ 1873 0028 4C4F4144 		.ascii	"LOAD\000"
+ 1873      00
+ 1874 002d 000000   		.space	3
+ 1875              	.LC10:
+ 1876 0030 494C00   		.ascii	"IL\000"
+ 1877 0033 00       		.space	1
+ 1878              	.LC11:
+ 1879 0034 48313900 		.ascii	"H19\000"
+ 1880              	.LC12:
+ 1881 0038 48323000 		.ascii	"H20\000"
+ 1882              	.LC13:
+ 1883 003c 48323100 		.ascii	"H21\000"
+ 1884              	.LC14:
+ 1885 0040 48323200 		.ascii	"H22\000"
+ 1886              	.LC15:
+ 1887 0044 48323300 		.ascii	"H23\000"
+ 1888              	.LC16:
+ 1889 0048 48534453 		.ascii	"HSDS\000"
+ 1889      00
+ 1890 004d 000000   		.space	3
+ 1891              	.LC17:
+ 1892 0050 43686563 		.ascii	"Checksum\000"
+ 1892      6B73756D 
+ 1892      00
+ 1893              		.section	.rodata.ve_direct_error_to_string.str1.4,"aMS",%progbits,1
+ 1894              		.align	2
+ 1895              	.LC31:
+ 1896 0000 4552525F 		.ascii	"ERR_UNINITIALIZED\000"
+ 1896      554E494E 
+ 1896      49544941 
+ 1896      4C495A45 
+ 1896      4400
+ 1897 0012 0000     		.space	2
+ 1898              	.LC32:
+ 1899 0014 4552525F 		.ascii	"ERR_OK\000"
+ 1899      4F4B00
+ 1900 001b 00       		.space	1
+ 1901              	.LC33:
+ 1902 001c 4552525F 		.ascii	"ERR_EXCESIVE_BAT_VOLTAGE\000"
+ 1902      45584345 
+ 1902      53495645 
+ 1902      5F424154 
+ 1902      5F564F4C 
+ 1903 0035 000000   		.space	3
+ 1904              	.LC34:
+ 1905 0038 4552525F 		.ascii	"ERR_CHGR_TEMP_TOO_HIGH\000"
+ 1905      43484752 
+ 1905      5F54454D 
+ 1905      505F544F 
+ 1905      4F5F4849 
+ 1906 004f 00       		.space	1
+ 1907              	.LC35:
+ 1908 0050 4552525F 		.ascii	"ERR_CHGR_EXCESIVE_CURR\000"
+ 1908      43484752 
+ 1908      5F455843 
+ 1908      45534956 
+ 1908      455F4355 
+ 1909 0067 00       		.space	1
+ 1910              	.LC36:
+ 1911 0068 4552525F 		.ascii	"ERR_CHGR_CURR_REVERSED\000"
+ 1911      43484752 
+ 1911      5F435552 
+ 1911      525F5245 
+ 1911      56455253 
+ 1912 007f 00       		.space	1
+ 1913              	.LC37:
+ 1914 0080 4552525F 		.ascii	"ERR_BULK_TIME_EXCEED\000"
+ 1914      42554C4B 
+ 1914      5F54494D 
+ 1914      455F4558 
+ 1914      43454544 
+ 1915 0095 000000   		.space	3
+ 1916              	.LC38:
+ 1917 0098 4552525F 		.ascii	"ERR_CURRENT_SENSE_FAIL\000"
+ 1917      43555252 
+ 1917      454E545F 
+ 1917      53454E53 
+ 1917      455F4641 
+ 1918 00af 00       		.space	1
+ 1919              	.LC39:
+ 1920 00b0 4552525F 		.ascii	"ERR_EXCESIVE_TERMINAL_TEMP\000"
+ 1920      45584345 
+ 1920      53495645 
+ 1920      5F544552 
+ 1920      4D494E41 
+ 1921 00cb 00       		.space	1
+ 1922              	.LC40:
+ 1923 00cc 4552525F 		.ascii	"ERR_EXCESIVE_PV_VOLTAGE\000"
+ 1923      45584345 
+ 1923      53495645 
+ 1923      5F50565F 
+ 1923      564F4C54 
+ 1924              	.LC41:
+ 1925 00e4 4552525F 		.ascii	"ERR_EXCESIVE_PV_CURRENT\000"
+ 1925      45584345 
+ 1925      53495645 
+ 1925      5F50565F 
+ 1925      43555252 
+ 1926              	.LC42:
+ 1927 00fc 4552525F 		.ascii	"ERR_INPUT_SHUTDOWN\000"
+ 1927      494E5055 
+ 1927      545F5348 
+ 1927      5554444F 
+ 1927      574E00
+ 1928 010f 00       		.space	1
+ 1929              	.LC43:
+ 1930 0110 4552525F 		.ascii	"ERR_TUNES_LOST\000"
+ 1930      54554E45 
+ 1930      535F4C4F 
+ 1930      535400
+ 1931              		.section	.rodata.ve_direct_parse_to_raw_struct.str1.4,"aMS",%progbits,1
+ 1932              		.align	2
+ 1933              	.LC18:
+ 1934 0000 3000     		.ascii	"0\000"
+ 1935 0002 0000     		.space	2
+ 1936              	.LC19:
+ 1937 0004 3200     		.ascii	"2\000"
+ 1938 0006 0000     		.space	2
+ 1939              	.LC20:
+ 1940 0008 313700   		.ascii	"17\000"
+ 1941 000b 00       		.space	1
+ 1942              	.LC21:
+ 1943 000c 313800   		.ascii	"18\000"
+ 1944 000f 00       		.space	1
+ 1945              	.LC22:
+ 1946 0010 313900   		.ascii	"19\000"
+ 1947 0013 00       		.space	1
+ 1948              	.LC23:
+ 1949 0014 323000   		.ascii	"20\000"
+ 1950 0017 00       		.space	1
+ 1951              	.LC24:
+ 1952 0018 323100   		.ascii	"21\000"
+ 1953 001b 00       		.space	1
+ 1954              	.LC25:
+ 1955 001c 323600   		.ascii	"26\000"
+ 1956 001f 00       		.space	1
+ 1957              	.LC26:
+ 1958 0020 333300   		.ascii	"33\000"
+ 1959 0023 00       		.space	1
+ 1960              	.LC27:
+ 1961 0024 333400   		.ascii	"34\000"
+ 1962 0027 00       		.space	1
+ 1963              	.LC28:
+ 1964 0028 333800   		.ascii	"38\000"
+ 1965 002b 00       		.space	1
+ 1966              	.LC29:
+ 1967 002c 31313600 		.ascii	"116\000"
+ 1968              	.LC30:
+ 1969 0030 4F4E00   		.ascii	"ON\000"
+ 1970              		.section	.rodata.ve_direct_state_to_string.str1.4,"aMS",%progbits,1
+ 1971              		.align	2
+ 1972              	.LC44:
+ 1973 0000 53544154 		.ascii	"STATE_UNINITIALIZED\000"
+ 1973      455F554E 
+ 1973      494E4954 
+ 1973      49414C49 
+ 1973      5A454400 
+ 1974              	.LC45:
+ 1975 0014 53544154 		.ascii	"STATE_OFF\000"
+ 1975      455F4F46 
+ 1975      4600
+ 1976 001e 0000     		.space	2
+ 1977              	.LC46:
+ 1978 0020 53544154 		.ascii	"STATE_LOW_PWR\000"
+ 1978      455F4C4F 
+ 1978      575F5057 
+ 1978      5200
+ 1979 002e 0000     		.space	2
+ 1980              	.LC47:
+ 1981 0030 53544154 		.ascii	"STATE_FAULT\000"
+ 1981      455F4641 
+ 1981      554C5400 
+ 1982              	.LC48:
+ 1983 003c 53544154 		.ascii	"STATE_BULK\000"
+ 1983      455F4255 
+ 1983      4C4B00
+ 1984 0047 00       		.space	1
+ 1985              	.LC49:
+ 1986 0048 53544154 		.ascii	"STATE_ABSORPTION\000"
+ 1986      455F4142 
+ 1986      534F5250 
+ 1986      54494F4E 
+ 1986      00
+ 1987 0059 000000   		.space	3
+ 1988              	.LC50:
+ 1989 005c 53544154 		.ascii	"STATE_FLOAT\000"
+ 1989      455F464C 
+ 1989      4F415400 
+ 1990              	.LC51:
+ 1991 0068 53544154 		.ascii	"STATE_INVERTING\000"
+ 1991      455F494E 
+ 1991      56455254 
+ 1991      494E4700 
+ 1992              		.text
+ 1993              	.Letext0:
+ 1994              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1995              		.file 3 "../system/include/./ve_direct_protocol/raw_struct.h"
+ 1996              		.file 4 "../system/include/./ve_direct_protocol/average_struct.h"
+ 1997              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1998              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1999              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 2000              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 2001              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+ 2002              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 parser.c
+     /tmp/ccL0ZdcX.s:18     .text.copy_till_non_printable_char:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:24     .text.copy_till_non_printable_char:0000000000000000 copy_till_non_printable_char
+     /tmp/ccL0ZdcX.s:127    .text.get_key_value_from_str:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:133    .text.get_key_value_from_str:0000000000000000 get_key_value_from_str
+     /tmp/ccL0ZdcX.s:345    .text.get_key_value_from_str:0000000000000118 $d
+     /tmp/ccL0ZdcX.s:367    .text.ve_direct_parser_init:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:374    .text.ve_direct_parser_init:0000000000000000 ve_direct_parser_init
+     /tmp/ccL0ZdcX.s:404    .text.ve_direct_cut_to_checksum:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:411    .text.ve_direct_cut_to_checksum:0000000000000000 ve_direct_cut_to_checksum
+     /tmp/ccL0ZdcX.s:485    .text.ve_direct_validate_checksum:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:492    .text.ve_direct_validate_checksum:0000000000000000 ve_direct_validate_checksum
+     /tmp/ccL0ZdcX.s:631    .text.ve_direct_validate_checksum:0000000000000078 $d
+     /tmp/ccL0ZdcX.s:636    .text.ve_direct_parse_to_raw_struct:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:643    .text.ve_direct_parse_to_raw_struct:0000000000000000 ve_direct_parse_to_raw_struct
+     /tmp/ccL0ZdcX.s:723    .text.ve_direct_parse_to_raw_struct:0000000000000062 $d
+     /tmp/ccL0ZdcX.s:729    .text.ve_direct_parse_to_raw_struct:0000000000000068 $t
+     /tmp/ccL0ZdcX.s:963    .text.ve_direct_parse_to_raw_struct:00000000000001c0 $d
+     /tmp/ccL0ZdcX.s:980    .text.ve_direct_parse_to_raw_struct:0000000000000204 $t
+     /tmp/ccL0ZdcX.s:1130   .text.ve_direct_parse_to_raw_struct:00000000000002cc $d
+                            *COM*:000000000000000c value
+                            *COM*:0000000000000009 key
+     /tmp/ccL0ZdcX.s:1149   .text.ve_direct_add_to_average:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1156   .text.ve_direct_add_to_average:0000000000000000 ve_direct_add_to_average
+     /tmp/ccL0ZdcX.s:1239   .text.ve_direct_add_to_average:0000000000000078 $d
+     /tmp/ccL0ZdcX.s:1244   .text.ve_direct_get_averages:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1251   .text.ve_direct_get_averages:0000000000000000 ve_direct_get_averages
+     /tmp/ccL0ZdcX.s:1349   .text.ve_direct_get_averages:0000000000000074 $d
+     /tmp/ccL0ZdcX.s:1355   .text.ve_direct_set_sys_voltage:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1362   .text.ve_direct_set_sys_voltage:0000000000000000 ve_direct_set_sys_voltage
+     /tmp/ccL0ZdcX.s:1376   .text.ve_direct_store_errors:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1383   .text.ve_direct_store_errors:0000000000000000 ve_direct_store_errors
+     /tmp/ccL0ZdcX.s:1417   .text.ve_direct_error_to_string:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1424   .text.ve_direct_error_to_string:0000000000000000 ve_direct_error_to_string
+     /tmp/ccL0ZdcX.s:1453   .text.ve_direct_error_to_string:000000000000001a $d
+     /tmp/ccL0ZdcX.s:1571   .text.ve_direct_error_to_string:0000000000000090 $t
+     /tmp/ccL0ZdcX.s:1687   .text.ve_direct_error_to_string:000000000000012c $d
+     /tmp/ccL0ZdcX.s:1704   .text.ve_direct_state_to_string:0000000000000000 $t
+     /tmp/ccL0ZdcX.s:1711   .text.ve_direct_state_to_string:0000000000000000 ve_direct_state_to_string
+     /tmp/ccL0ZdcX.s:1740   .text.ve_direct_state_to_string:000000000000001a $d
+     /tmp/ccL0ZdcX.s:1827   .text.ve_direct_state_to_string:0000000000000088 $d
+     /tmp/ccL0ZdcX.s:1845   .bss.skip_counter:0000000000000000 skip_counter
+     /tmp/ccL0ZdcX.s:1846   .bss.skip_counter:0000000000000000 $d
+     /tmp/ccL0ZdcX.s:1848   .rodata.get_key_value_from_str.str1.4:0000000000000000 $d
+     /tmp/ccL0ZdcX.s:1894   .rodata.ve_direct_error_to_string.str1.4:0000000000000000 $d
+     /tmp/ccL0ZdcX.s:1932   .rodata.ve_direct_parse_to_raw_struct.str1.4:0000000000000000 $d
+     /tmp/ccL0ZdcX.s:1971   .rodata.ve_direct_state_to_string.str1.4:0000000000000000 $d
+     /tmp/ccL0ZdcX.s:1751   .text.ve_direct_state_to_string:0000000000000025 $d
+     /tmp/ccL0ZdcX.s:1751   .text.ve_direct_state_to_string:0000000000000026 $t
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.parser.h.9.2d68c8669e0bffa77926bbb9bf5a2aba
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.average_struct.h.9.41820d0d7dc25dca8a9005c6d1a8bb5f
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdlib.h.13.4ed386f5c1a80d71e72172885d946ef2
+                           .group:0000000000000000 wm4.alloca.h.8.dfc0c703c47ec3e69746825b17d9e66d
+                           .group:0000000000000000 wm4.stdlib.h.56.d4493cd3736e51e9d56335045f26df45
+
+UNDEFINED SYMBOLS
+strcmp
+memset
+strcpy
+strtol
+snprintf

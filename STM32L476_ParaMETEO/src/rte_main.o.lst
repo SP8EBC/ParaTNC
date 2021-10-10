@@ -1,0 +1,63 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"rte_main.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	rte_main_trigger_wx_packet
+  18              		.global	rte_main_trigger_modbus_status
+  19              		.global	rte_main_trigger_status
+  20              		.global	rte_main_hard_faults
+  21              		.global	rte_main_boot_cycles
+  22              		.global	rte_main_reboot_req
+  23              		.section	.bss.rte_main_boot_cycles,"aw",%nobits
+  26              	rte_main_boot_cycles:
+  27 0000 00       		.space	1
+  28              		.section	.bss.rte_main_hard_faults,"aw",%nobits
+  31              	rte_main_hard_faults:
+  32 0000 00       		.space	1
+  33              		.section	.bss.rte_main_reboot_req,"aw",%nobits
+  36              	rte_main_reboot_req:
+  37 0000 00       		.space	1
+  38              		.section	.bss.rte_main_trigger_modbus_status,"aw",%nobits
+  41              	rte_main_trigger_modbus_status:
+  42 0000 00       		.space	1
+  43              		.section	.bss.rte_main_trigger_status,"aw",%nobits
+  46              	rte_main_trigger_status:
+  47 0000 00       		.space	1
+  48              		.section	.bss.rte_main_trigger_wx_packet,"aw",%nobits
+  51              	rte_main_trigger_wx_packet:
+  52 0000 00       		.space	1
+  53              		.text
+  54              	.Letext0:
+  55              		.file 1 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  56              		.file 2 "../include/rte_main.h"
+  57              		.file 3 "../src/rte_main.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 rte_main.c
+     /tmp/ccORWLjQ.s:51     .bss.rte_main_trigger_wx_packet:0000000000000000 rte_main_trigger_wx_packet
+     /tmp/ccORWLjQ.s:41     .bss.rte_main_trigger_modbus_status:0000000000000000 rte_main_trigger_modbus_status
+     /tmp/ccORWLjQ.s:46     .bss.rte_main_trigger_status:0000000000000000 rte_main_trigger_status
+     /tmp/ccORWLjQ.s:31     .bss.rte_main_hard_faults:0000000000000000 rte_main_hard_faults
+     /tmp/ccORWLjQ.s:26     .bss.rte_main_boot_cycles:0000000000000000 rte_main_boot_cycles
+     /tmp/ccORWLjQ.s:36     .bss.rte_main_reboot_req:0000000000000000 rte_main_reboot_req
+     /tmp/ccORWLjQ.s:27     .bss.rte_main_boot_cycles:0000000000000000 $d
+     /tmp/ccORWLjQ.s:32     .bss.rte_main_hard_faults:0000000000000000 $d
+     /tmp/ccORWLjQ.s:37     .bss.rte_main_reboot_req:0000000000000000 $d
+     /tmp/ccORWLjQ.s:42     .bss.rte_main_trigger_modbus_status:0000000000000000 $d
+     /tmp/ccORWLjQ.s:47     .bss.rte_main_trigger_status:0000000000000000 $d
+     /tmp/ccORWLjQ.s:52     .bss.rte_main_trigger_wx_packet:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+
+NO UNDEFINED SYMBOLS

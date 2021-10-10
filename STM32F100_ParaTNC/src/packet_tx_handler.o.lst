@@ -1,0 +1,2173 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"packet_tx_handler.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.packet_tx_send_wx_frame,"ax",%progbits
+  16              		.align	1
+  17              		.global	packet_tx_send_wx_frame
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	packet_tx_send_wx_frame:
+  24              	.LFB100:
+  25              		.file 1 "../src/packet_tx_handler.c"
+   1:../src/packet_tx_handler.c **** #include "packet_tx_handler.h"
+   2:../src/packet_tx_handler.c **** 
+   3:../src/packet_tx_handler.c **** #include "rte_wx.h"
+   4:../src/packet_tx_handler.c **** #include "rte_pv.h"
+   5:../src/packet_tx_handler.c **** #include "rte_main.h"
+   6:../src/packet_tx_handler.c **** 
+   7:../src/packet_tx_handler.c **** #include "station_config.h"
+   8:../src/packet_tx_handler.c **** 
+   9:../src/packet_tx_handler.c **** #include "./aprs/beacon.h"
+  10:../src/packet_tx_handler.c **** #include "./aprs/wx.h"
+  11:../src/packet_tx_handler.c **** #include "./aprs/telemetry.h"
+  12:../src/packet_tx_handler.c **** 
+  13:../src/packet_tx_handler.c **** #include "./drivers/serial.h"
+  14:../src/packet_tx_handler.c **** 
+  15:../src/packet_tx_handler.c **** #include "./umb_master/umb_master.h"
+  16:../src/packet_tx_handler.c **** 
+  17:../src/packet_tx_handler.c **** #include "./modbus_rtu/rtu_configuration.h"
+  18:../src/packet_tx_handler.c **** 
+  19:../src/packet_tx_handler.c **** #include "main.h"
+  20:../src/packet_tx_handler.c **** #include "delay.h"
+  21:../src/packet_tx_handler.c **** #include "io.h"
+  22:../src/packet_tx_handler.c **** 
+  23:../src/packet_tx_handler.c **** #define _TELEM_DESCR_INTERVAL	150
+  24:../src/packet_tx_handler.c **** 
+  25:../src/packet_tx_handler.c **** uint8_t packet_tx_beacon_interval = 0;
+  26:../src/packet_tx_handler.c **** uint8_t packet_tx_beacon_counter = 0;
+  27:../src/packet_tx_handler.c **** 
+  28:../src/packet_tx_handler.c **** uint8_t packet_tx_error_status_interval = 2;
+  29:../src/packet_tx_handler.c **** uint8_t packet_tx_error_status_counter = 0;
+  30:../src/packet_tx_handler.c **** 
+  31:../src/packet_tx_handler.c **** uint8_t packet_tx_meteo_interval = 0;
+  32:../src/packet_tx_handler.c **** uint8_t packet_tx_meteo_counter = 2;
+  33:../src/packet_tx_handler.c **** 
+  34:../src/packet_tx_handler.c **** uint8_t packet_tx_meteo_kiss_interval = 2;
+  35:../src/packet_tx_handler.c **** uint8_t packet_tx_meteo_kiss_counter = 0;
+  36:../src/packet_tx_handler.c **** 
+  37:../src/packet_tx_handler.c **** uint8_t packet_tx_telemetry_interval = 10;
+  38:../src/packet_tx_handler.c **** uint8_t packet_tx_telemetry_counter = 0;
+  39:../src/packet_tx_handler.c **** 
+  40:../src/packet_tx_handler.c **** uint8_t packet_tx_telemetry_descr_interval = 155;	// 155
+  41:../src/packet_tx_handler.c **** uint8_t packet_tx_telemetry_descr_counter = 10;
+  42:../src/packet_tx_handler.c **** 
+  43:../src/packet_tx_handler.c **** uint8_t packet_tx_modbus_raw_values = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_T
+  44:../src/packet_tx_handler.c **** uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL * (uint8_t)(_TELEM
+  45:../src/packet_tx_handler.c **** 
+  46:../src/packet_tx_handler.c **** uint8_t packet_tx_more_than_one = 0;
+  47:../src/packet_tx_handler.c **** 
+  48:../src/packet_tx_handler.c **** void packet_tx_send_wx_frame(void) {
+  26              		.loc 1 48 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 10B5     		push	{r4, lr}
+  31              		.cfi_def_cfa_offset 8
+  32              		.cfi_offset 4, -8
+  33              		.cfi_offset 14, -4
+  34 0002 82B0     		sub	sp, sp, #8
+  35              		.cfi_def_cfa_offset 16
+  36              	.L2:
+  37              	.LBB6:
+  38              	.LBB7:
+  39              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA01"
+   9:../include/main.h **** #define SW_DATE "28092021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+  64:../include/main.h **** }
+  65:../include/main.h **** 
+  66:../include/main.h **** inline void main_wait_for_tx_complete(void) {
+  67:../include/main.h **** 	while(main_afsk.sending == 1);
+  40              		.loc 2 67 0
+  41 0004 0B4B     		ldr	r3, .L4
+  42 0006 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+  43 000a 002B     		cmp	r3, #0
+  44 000c FAD1     		bne	.L2
+  45              	.LBE7:
+  46              	.LBE6:
+  49:../src/packet_tx_handler.c **** 	main_wait_for_tx_complete();
+  50:../src/packet_tx_handler.c **** 
+  51:../src/packet_tx_handler.c **** 	SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_t
+  47              		.loc 1 51 0
+  48 000e 0A4B     		ldr	r3, .L4+4
+  49 0010 1B68     		ldr	r3, [r3]	@ float
+  50 0012 0A4A     		ldr	r2, .L4+8
+  51 0014 1288     		ldrh	r2, [r2]
+  52 0016 0A49     		ldr	r1, .L4+12
+  53 0018 0988     		ldrh	r1, [r1]
+  54 001a 0A48     		ldr	r0, .L4+16
+  55 001c 0088     		ldrh	r0, [r0]
+  56 001e 0A4C     		ldr	r4, .L4+20
+  57 0020 2478     		ldrb	r4, [r4]	@ zero_extendqisi2
+  58 0022 0194     		str	r4, [sp, #4]
+  59 0024 094C     		ldr	r4, .L4+24
+  60 0026 2468     		ldr	r4, [r4]	@ float
+  61 0028 0094     		str	r4, [sp]	@ float
+  62 002a FFF7FEFF 		bl	SendWXFrame
+  63              	.LVL0:
+  52:../src/packet_tx_handler.c **** 
+  53:../src/packet_tx_handler.c **** }
+  64              		.loc 1 53 0
+  65 002e 02B0     		add	sp, sp, #8
+  66              		.cfi_def_cfa_offset 8
+  67              		@ sp needed
+  68 0030 10BD     		pop	{r4, pc}
+  69              	.L5:
+  70 0032 00BF     		.align	2
+  71              	.L4:
+  72 0034 00000000 		.word	main_afsk
+  73 0038 00000000 		.word	rte_wx_temperature_average_external_valid
+  74 003c 00000000 		.word	rte_wx_average_winddirection
+  75 0040 00000000 		.word	rte_wx_max_windspeed
+  76 0044 00000000 		.word	rte_wx_average_windspeed
+  77 0048 00000000 		.word	rte_wx_humidity_valid
+  78 004c 00000000 		.word	rte_wx_pressure_valid
+  79              		.cfi_endproc
+  80              	.LFE100:
+  82              		.section	.text.packet_tx_configure,"ax",%progbits
+  83              		.align	1
+  84              		.global	packet_tx_configure
+  85              		.syntax unified
+  86              		.thumb
+  87              		.thumb_func
+  88              		.fpu softvfp
+  90              	packet_tx_configure:
+  91              	.LFB101:
+  54:../src/packet_tx_handler.c **** 
+  55:../src/packet_tx_handler.c **** void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mod
+  92              		.loc 1 55 0
+  93              		.cfi_startproc
+  94              		@ args = 0, pretend = 0, frame = 0
+  95              		@ frame_needed = 0, uses_anonymous_args = 0
+  96              		@ link register save eliminated.
+  97              	.LVL1:
+  56:../src/packet_tx_handler.c **** 	packet_tx_meteo_interval = meteo_interval;
+  98              		.loc 1 56 0
+  99 0000 034B     		ldr	r3, .L7
+ 100 0002 1870     		strb	r0, [r3]
+  57:../src/packet_tx_handler.c **** 
+  58:../src/packet_tx_handler.c **** 	packet_tx_beacon_interval = beacon_interval;
+ 101              		.loc 1 58 0
+ 102 0004 034B     		ldr	r3, .L7+4
+ 103 0006 1970     		strb	r1, [r3]
+  59:../src/packet_tx_handler.c **** 
+  60:../src/packet_tx_handler.c **** 	// if user selected aggressive powersave mode the meteo counter must be set back to zero
+  61:../src/packet_tx_handler.c **** 	// to prevent quirks with waking from sleep mode
+  62:../src/packet_tx_handler.c **** 	packet_tx_meteo_counter = 0;
+ 104              		.loc 1 62 0
+ 105 0008 034B     		ldr	r3, .L7+8
+ 106 000a 0022     		movs	r2, #0
+ 107              	.LVL2:
+ 108 000c 1A70     		strb	r2, [r3]
+  63:../src/packet_tx_handler.c **** 
+  64:../src/packet_tx_handler.c **** }
+ 109              		.loc 1 64 0
+ 110 000e 7047     		bx	lr
+ 111              	.L8:
+ 112              		.align	2
+ 113              	.L7:
+ 114 0010 00000000 		.word	.LANCHOR0
+ 115 0014 00000000 		.word	.LANCHOR1
+ 116 0018 00000000 		.word	.LANCHOR2
+ 117              		.cfi_endproc
+ 118              	.LFE101:
+ 120              		.section	.text.packet_tx_handler,"ax",%progbits
+ 121              		.align	1
+ 122              		.global	packet_tx_handler
+ 123              		.syntax unified
+ 124              		.thumb
+ 125              		.thumb_func
+ 126              		.fpu softvfp
+ 128              	packet_tx_handler:
+ 129              	.LFB103:
+  65:../src/packet_tx_handler.c **** 
+  66:../src/packet_tx_handler.c **** /**
+  67:../src/packet_tx_handler.c ****  * This function is called from the inside of 'packet_rx_handler' to put an extra wait
+  68:../src/packet_tx_handler.c ****  * if more than one packet is sent from the single call to that function. This is required
+  69:../src/packet_tx_handler.c ****  * to protect against jamming own frames when any path is configured.
+  70:../src/packet_tx_handler.c ****  *
+  71:../src/packet_tx_handler.c ****  */
+  72:../src/packet_tx_handler.c **** inline void packet_tx_multi_per_call_handler(void) {
+  73:../src/packet_tx_handler.c **** 	// if this consecutive frame sent from one call to this function
+  74:../src/packet_tx_handler.c **** 	if (packet_tx_more_than_one > 0) {
+  75:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+  76:../src/packet_tx_handler.c **** 		main_wait_for_tx_complete();
+  77:../src/packet_tx_handler.c **** 
+  78:../src/packet_tx_handler.c **** 		// wait for any possible retransmission to kick in
+  79:../src/packet_tx_handler.c **** 		delay_fixed(1000);
+  80:../src/packet_tx_handler.c **** 
+  81:../src/packet_tx_handler.c **** 	}
+  82:../src/packet_tx_handler.c **** 	else {
+  83:../src/packet_tx_handler.c **** 		packet_tx_more_than_one = 1;
+  84:../src/packet_tx_handler.c **** 	}
+  85:../src/packet_tx_handler.c **** }
+  86:../src/packet_tx_handler.c **** 
+  87:../src/packet_tx_handler.c **** // this shall be called in 60 seconds periods
+  88:../src/packet_tx_handler.c **** void packet_tx_handler(const config_data_basic_t * const config_basic, const config_data_mode_t * c
+ 130              		.loc 1 88 0
+ 131              		.cfi_startproc
+ 132              		@ args = 0, pretend = 0, frame = 8
+ 133              		@ frame_needed = 0, uses_anonymous_args = 0
+ 134              	.LVL3:
+ 135 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 136              		.cfi_def_cfa_offset 20
+ 137              		.cfi_offset 4, -20
+ 138              		.cfi_offset 5, -16
+ 139              		.cfi_offset 6, -12
+ 140              		.cfi_offset 7, -8
+ 141              		.cfi_offset 14, -4
+ 142 0002 89B0     		sub	sp, sp, #36
+ 143              		.cfi_def_cfa_offset 56
+ 144 0004 0546     		mov	r5, r0
+ 145 0006 0C46     		mov	r4, r1
+ 146              	.LVL4:
+  89:../src/packet_tx_handler.c **** 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
+  90:../src/packet_tx_handler.c **** 
+  91:../src/packet_tx_handler.c **** 	pressure_qf_t pressure_qf = PRESSURE_QF_UNKNOWN;
+  92:../src/packet_tx_handler.c **** 	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
+  93:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+  94:../src/packet_tx_handler.c **** 
+  95:../src/packet_tx_handler.c **** 	uint16_t ln = 0;
+ 147              		.loc 1 95 0
+ 148 0008 0023     		movs	r3, #0
+ 149 000a ADF81E30 		strh	r3, [sp, #30]	@ movhi
+  96:../src/packet_tx_handler.c **** 
+  97:../src/packet_tx_handler.c **** 	// set to one if more than one packet will be send from this function at once (like beacon + telem
+  98:../src/packet_tx_handler.c **** 	packet_tx_more_than_one = 0;
+ 150              		.loc 1 98 0
+ 151 000e 9E4A     		ldr	r2, .L101
+ 152 0010 1370     		strb	r3, [r2]
+  99:../src/packet_tx_handler.c **** 
+ 100:../src/packet_tx_handler.c **** 	packet_tx_beacon_counter++;
+ 153              		.loc 1 100 0
+ 154 0012 9E4A     		ldr	r2, .L101+4
+ 155 0014 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 156 0016 0133     		adds	r3, r3, #1
+ 157 0018 1370     		strb	r3, [r2]
+ 101:../src/packet_tx_handler.c **** 	packet_tx_error_status_counter++;
+ 158              		.loc 1 101 0
+ 159 001a 9D4A     		ldr	r2, .L101+8
+ 160 001c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 161 001e 0133     		adds	r3, r3, #1
+ 162 0020 DBB2     		uxtb	r3, r3
+ 163 0022 1370     		strb	r3, [r2]
+ 102:../src/packet_tx_handler.c **** 	packet_tx_telemetry_counter++;
+ 164              		.loc 1 102 0
+ 165 0024 9B49     		ldr	r1, .L101+12
+ 166              	.LVL5:
+ 167 0026 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 168 0028 0132     		adds	r2, r2, #1
+ 169 002a 0A70     		strb	r2, [r1]
+ 103:../src/packet_tx_handler.c **** 	packet_tx_telemetry_descr_counter++;
+ 170              		.loc 1 103 0
+ 171 002c 9A49     		ldr	r1, .L101+16
+ 172 002e 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 173 0030 0132     		adds	r2, r2, #1
+ 174 0032 0A70     		strb	r2, [r1]
+ 104:../src/packet_tx_handler.c **** 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
+ 175              		.loc 1 104 0
+ 176 0034 994A     		ldr	r2, .L101+20
+ 177 0036 1268     		ldr	r2, [r2]
+ 178 0038 5278     		ldrb	r2, [r2, #1]	@ zero_extendqisi2
+ 179 003a 12F0010F 		tst	r2, #1
+ 180 003e 07D0     		beq	.L10
+ 105:../src/packet_tx_handler.c **** 		packet_tx_meteo_counter++;
+ 181              		.loc 1 105 0
+ 182 0040 9749     		ldr	r1, .L101+24
+ 183 0042 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 184 0044 0132     		adds	r2, r2, #1
+ 185 0046 0A70     		strb	r2, [r1]
+ 106:../src/packet_tx_handler.c **** 		packet_tx_meteo_kiss_counter++;
+ 186              		.loc 1 106 0
+ 187 0048 9649     		ldr	r1, .L101+28
+ 188 004a 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 189 004c 0132     		adds	r2, r2, #1
+ 190 004e 0A70     		strb	r2, [r1]
+ 191              	.L10:
+ 107:../src/packet_tx_handler.c **** 	}
+ 108:../src/packet_tx_handler.c **** 
+ 109:../src/packet_tx_handler.c **** 	if (packet_tx_error_status_counter >= packet_tx_error_status_interval) {
+ 192              		.loc 1 109 0
+ 193 0050 954A     		ldr	r2, .L101+32
+ 194 0052 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 195 0054 9342     		cmp	r3, r2
+ 196 0056 05D3     		bcc	.L11
+ 110:../src/packet_tx_handler.c **** 		if (config_mode->wx_umb) {
+ 197              		.loc 1 110 0
+ 198 0058 A378     		ldrb	r3, [r4, #2]	@ zero_extendqisi2
+ 199 005a 002B     		cmp	r3, #0
+ 200 005c 4DD1     		bne	.L85
+ 201              	.LVL6:
+ 202              	.L12:
+ 111:../src/packet_tx_handler.c **** 			umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln,
+ 112:../src/packet_tx_handler.c **** 
+ 113:../src/packet_tx_handler.c **** 			packet_tx_multi_per_call_handler();
+ 114:../src/packet_tx_handler.c **** 		}
+ 115:../src/packet_tx_handler.c **** 
+ 116:../src/packet_tx_handler.c **** 		packet_tx_error_status_counter = 0;
+ 203              		.loc 1 116 0
+ 204 005e 8C4B     		ldr	r3, .L101+8
+ 205 0060 0022     		movs	r2, #0
+ 206 0062 1A70     		strb	r2, [r3]
+ 207              	.L11:
+ 117:../src/packet_tx_handler.c **** 	}
+ 118:../src/packet_tx_handler.c **** 
+ 119:../src/packet_tx_handler.c **** 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval && packet_tx_beacon_interval != 0) {
+ 208              		.loc 1 119 0
+ 209 0064 894B     		ldr	r3, .L101+4
+ 210 0066 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 211 0068 904B     		ldr	r3, .L101+36
+ 212 006a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 213 006c 9A42     		cmp	r2, r3
+ 214 006e 01D3     		bcc	.L15
+ 215              		.loc 1 119 0 is_stmt 0 discriminator 1
+ 216 0070 002B     		cmp	r3, #0
+ 217 0072 5DD1     		bne	.L86
+ 218              	.L15:
+ 120:../src/packet_tx_handler.c **** 
+ 121:../src/packet_tx_handler.c **** 		packet_tx_multi_per_call_handler();
+ 122:../src/packet_tx_handler.c **** 
+ 123:../src/packet_tx_handler.c **** 		beacon_send_own();
+ 124:../src/packet_tx_handler.c **** 
+ 125:../src/packet_tx_handler.c **** 		packet_tx_beacon_counter = 0;
+ 126:../src/packet_tx_handler.c **** 
+ 127:../src/packet_tx_handler.c **** 
+ 128:../src/packet_tx_handler.c **** 	}
+ 129:../src/packet_tx_handler.c **** 
+ 130:../src/packet_tx_handler.c **** 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
+ 219              		.loc 1 130 0 is_stmt 1
+ 220 0074 894B     		ldr	r3, .L101+20
+ 221 0076 1B68     		ldr	r3, [r3]
+ 222 0078 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 223 007a 13F0010F 		tst	r3, #1
+ 224 007e 2CD0     		beq	.L19
+ 131:../src/packet_tx_handler.c **** 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
+ 225              		.loc 1 131 0
+ 226 0080 874B     		ldr	r3, .L101+24
+ 227 0082 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 228 0084 8A4B     		ldr	r3, .L101+40
+ 229 0086 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 230 0088 9A42     		cmp	r2, r3
+ 231 008a 01D3     		bcc	.L20
+ 232              		.loc 1 131 0 is_stmt 0 discriminator 1
+ 233 008c 002B     		cmp	r3, #0
+ 234 008e 65D1     		bne	.L87
+ 235              	.L20:
+ 132:../src/packet_tx_handler.c **** 
+ 133:../src/packet_tx_handler.c **** 			packet_tx_multi_per_call_handler();
+ 134:../src/packet_tx_handler.c **** 
+ 135:../src/packet_tx_handler.c **** 			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx
+ 136:../src/packet_tx_handler.c **** 
+ 137:../src/packet_tx_handler.c **** 			#ifdef EXTERNAL_WATCHDOG
+ 138:../src/packet_tx_handler.c **** 			io_ext_watchdog_service();
+ 139:../src/packet_tx_handler.c **** 			#endif
+ 140:../src/packet_tx_handler.c **** 
+ 141:../src/packet_tx_handler.c **** 			if (main_config_data_basic->wx_double_transmit == 1) {
+ 142:../src/packet_tx_handler.c **** 				rte_main_trigger_wx_packet = 1;
+ 143:../src/packet_tx_handler.c **** 			}
+ 144:../src/packet_tx_handler.c **** 
+ 145:../src/packet_tx_handler.c **** 			packet_tx_meteo_counter = 0;
+ 146:../src/packet_tx_handler.c **** 		}
+ 147:../src/packet_tx_handler.c **** 
+ 148:../src/packet_tx_handler.c **** 		if ((main_config_data_mode->wx_modbus & WX_MODBUS_DEBUG) == WX_MODBUS_DEBUG) {
+ 236              		.loc 1 148 0 is_stmt 1
+ 237 0090 824B     		ldr	r3, .L101+20
+ 238 0092 1B68     		ldr	r3, [r3]
+ 239 0094 DB78     		ldrb	r3, [r3, #3]	@ zero_extendqisi2
+ 240 0096 13F0020F 		tst	r3, #2
+ 241 009a 0FD0     		beq	.L25
+ 149:../src/packet_tx_handler.c **** 			// send the status packet with raw values of all requested modbus-RTU registers
+ 150:../src/packet_tx_handler.c **** 			if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+ 242              		.loc 1 150 0
+ 243 009c 804B     		ldr	r3, .L101+24
+ 244 009e 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 245 00a0 834B     		ldr	r3, .L101+40
+ 246 00a2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 247 00a4 013B     		subs	r3, r3, #1
+ 248 00a6 9A42     		cmp	r2, r3
+ 249 00a8 00F08880 		beq	.L88
+ 250              	.L26:
+ 151:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
+ 152:../src/packet_tx_handler.c **** 			{
+ 153:../src/packet_tx_handler.c **** 
+ 154:../src/packet_tx_handler.c **** 
+ 155:../src/packet_tx_handler.c **** 				packet_tx_multi_per_call_handler();
+ 156:../src/packet_tx_handler.c **** 
+ 157:../src/packet_tx_handler.c **** 				telemetry_send_status_raw_values_modbus();
+ 158:../src/packet_tx_handler.c **** 			}
+ 159:../src/packet_tx_handler.c **** 
+ 160:../src/packet_tx_handler.c **** 			// trigger the status packet with modbus-rtu state like error counters, timestamps etc.
+ 161:../src/packet_tx_handler.c **** 			if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+ 251              		.loc 1 161 0
+ 252 00ac 7C4B     		ldr	r3, .L101+24
+ 253 00ae 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 254 00b0 7F4B     		ldr	r3, .L101+40
+ 255 00b2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 256 00b4 013B     		subs	r3, r3, #1
+ 257 00b6 9A42     		cmp	r2, r3
+ 258 00b8 00F09A80 		beq	.L89
+ 259              	.L25:
+ 162:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
+ 163:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
+ 164:../src/packet_tx_handler.c **** 			{
+ 165:../src/packet_tx_handler.c **** 
+ 166:../src/packet_tx_handler.c **** 				packet_tx_multi_per_call_handler();
+ 167:../src/packet_tx_handler.c **** 
+ 168:../src/packet_tx_handler.c **** 				rte_main_trigger_modbus_status = 1;
+ 169:../src/packet_tx_handler.c **** 			}
+ 170:../src/packet_tx_handler.c **** 		}
+ 171:../src/packet_tx_handler.c **** 
+ 172:../src/packet_tx_handler.c **** 
+ 173:../src/packet_tx_handler.c **** 		// check if Victron VE.Direct serial protocol client is enabled and it is
+ 174:../src/packet_tx_handler.c **** 		// a time to send the status message
+ 175:../src/packet_tx_handler.c **** 		if (config_mode->victron == 1 &&
+ 260              		.loc 1 175 0
+ 261 00bc E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 262 00be 012B     		cmp	r3, #1
+ 263 00c0 00F0B580 		beq	.L90
+ 264              	.L33:
+ 176:../src/packet_tx_handler.c **** 			packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+ 177:../src/packet_tx_handler.c **** 			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
+ 178:../src/packet_tx_handler.c **** 		{
+ 179:../src/packet_tx_handler.c **** 			packet_tx_multi_per_call_handler();
+ 180:../src/packet_tx_handler.c **** 
+ 181:../src/packet_tx_handler.c **** 			telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state, master
+ 182:../src/packet_tx_handler.c **** 
+ 183:../src/packet_tx_handler.c **** 		}
+ 184:../src/packet_tx_handler.c **** 
+ 185:../src/packet_tx_handler.c **** 		// send wx frame to KISS host once every two minutes
+ 186:../src/packet_tx_handler.c **** 		if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval && main_kiss_enabled == 1) {
+ 265              		.loc 1 186 0
+ 266 00c4 774B     		ldr	r3, .L101+28
+ 267 00c6 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 268 00c8 7A4B     		ldr	r3, .L101+44
+ 269 00ca 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 270 00cc 9A42     		cmp	r2, r3
+ 271 00ce 04D3     		bcc	.L19
+ 272              		.loc 1 186 0 is_stmt 0 discriminator 1
+ 273 00d0 794B     		ldr	r3, .L101+48
+ 274 00d2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 275 00d4 012B     		cmp	r3, #1
+ 276 00d6 00F02181 		beq	.L91
+ 277              	.L19:
+ 187:../src/packet_tx_handler.c **** 
+ 188:../src/packet_tx_handler.c **** 			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+ 189:../src/packet_tx_handler.c **** 
+ 190:../src/packet_tx_handler.c **** 			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection
+ 191:../src/packet_tx_handler.c **** 
+ 192:../src/packet_tx_handler.c **** 			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
+ 193:../src/packet_tx_handler.c **** 
+ 194:../src/packet_tx_handler.c **** 			packet_tx_meteo_kiss_counter = 0;
+ 195:../src/packet_tx_handler.c **** 		}
+ 196:../src/packet_tx_handler.c **** 	}
+ 197:../src/packet_tx_handler.c **** 
+ 198:../src/packet_tx_handler.c **** 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
+ 278              		.loc 1 198 0 is_stmt 1
+ 279 00da 6E4B     		ldr	r3, .L101+12
+ 280 00dc 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 281 00de 774B     		ldr	r3, .L101+52
+ 282 00e0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 283 00e2 9A42     		cmp	r2, r3
+ 284 00e4 80F04281 		bcs	.L92
+ 285              	.LVL7:
+ 286              	.L37:
+ 199:../src/packet_tx_handler.c **** 
+ 200:../src/packet_tx_handler.c **** 		packet_tx_multi_per_call_handler();
+ 201:../src/packet_tx_handler.c **** 
+ 202:../src/packet_tx_handler.c **** 		// if there weren't any erros related to communication with DS12B20 from previous function call
+ 203:../src/packet_tx_handler.c **** 		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
+ 204:../src/packet_tx_handler.c **** 			dallas_qf = rte_wx_current_dallas_qf;	// it might be DEGRADATED so we need to copy a value direc
+ 205:../src/packet_tx_handler.c **** 
+ 206:../src/packet_tx_handler.c **** 			// reset current QF to check if there will be at least one successfull readout of temperature
+ 207:../src/packet_tx_handler.c **** 			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
+ 208:../src/packet_tx_handler.c **** 		}
+ 209:../src/packet_tx_handler.c **** 
+ 210:../src/packet_tx_handler.c **** 		// if there were any errors
+ 211:../src/packet_tx_handler.c **** 		else {
+ 212:../src/packet_tx_handler.c **** 
+ 213:../src/packet_tx_handler.c **** 			// if we had at least one successfull communication with the sensor
+ 214:../src/packet_tx_handler.c **** 			if (rte_wx_current_dallas_qf == DALLAS_QF_FULL || rte_wx_current_dallas_qf == DALLAS_QF_DEGRADAT
+ 215:../src/packet_tx_handler.c **** 				// set the error reason
+ 216:../src/packet_tx_handler.c **** 				dallas_qf = DALLAS_QF_DEGRADATED;
+ 217:../src/packet_tx_handler.c **** 			}
+ 218:../src/packet_tx_handler.c **** 			// if they wasn't any successfull comm
+ 219:../src/packet_tx_handler.c **** 			else {
+ 220:../src/packet_tx_handler.c **** 				// set that it is totally dead and not avaliable
+ 221:../src/packet_tx_handler.c **** 				dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+ 222:../src/packet_tx_handler.c **** 			}
+ 223:../src/packet_tx_handler.c **** 
+ 224:../src/packet_tx_handler.c **** 			// and reset the error
+ 225:../src/packet_tx_handler.c **** 			rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
+ 226:../src/packet_tx_handler.c **** 
+ 227:../src/packet_tx_handler.c **** 			rte_wx_current_dallas_qf = DALLAS_QF_UNKNOWN;
+ 228:../src/packet_tx_handler.c **** 		}
+ 229:../src/packet_tx_handler.c **** 
+ 230:../src/packet_tx_handler.c **** 		// get quality factors for internal pressure and humidity sensors
+ 231:../src/packet_tx_handler.c **** 		if (config_mode->wx_ms5611_or_bme == 0) {
+ 232:../src/packet_tx_handler.c **** 			// pressure sensors quality factors
+ 233:../src/packet_tx_handler.c **** 
+ 234:../src/packet_tx_handler.c **** 			switch (rte_wx_ms5611_qf) {
+ 235:../src/packet_tx_handler.c **** 				case MS5611_QF_FULL: pressure_qf = PRESSURE_QF_FULL; break;
+ 236:../src/packet_tx_handler.c **** 				case MS5611_QF_NOT_AVALIABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+ 237:../src/packet_tx_handler.c **** 				case MS5611_QF_DEGRADATED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+ 238:../src/packet_tx_handler.c **** 				case MS5611_QF_UNKNOWN: pressure_qf = PRESSURE_QF_UNKNOWN; break;
+ 239:../src/packet_tx_handler.c **** 			}
+ 240:../src/packet_tx_handler.c **** 
+ 241:../src/packet_tx_handler.c **** 		}
+ 242:../src/packet_tx_handler.c **** 		else if (config_mode->wx_ms5611_or_bme == 1) {
+ 243:../src/packet_tx_handler.c **** 			//#elif defined(_SENSOR_BME280)
+ 244:../src/packet_tx_handler.c **** 			// humidity sensors quality factors
+ 245:../src/packet_tx_handler.c **** 			if (rte_wx_bme280_qf == BME280_QF_UKNOWN) {
+ 246:../src/packet_tx_handler.c **** 				;
+ 247:../src/packet_tx_handler.c **** 			}
+ 248:../src/packet_tx_handler.c **** 			else {
+ 249:../src/packet_tx_handler.c **** 				// use BME280
+ 250:../src/packet_tx_handler.c **** 				switch (rte_wx_bme280_qf) {
+ 251:../src/packet_tx_handler.c **** 					case BME280_QF_FULL:
+ 252:../src/packet_tx_handler.c **** 					case BME280_QF_PRESSURE_DEGRADED: humidity_qf = HUMIDITY_QF_FULL; break;
+ 253:../src/packet_tx_handler.c **** 					case BME280_QF_UKNOWN:
+ 254:../src/packet_tx_handler.c **** 					case BME280_QF_NOT_AVAILABLE: humidity_qf = HUMIDITY_QF_NOT_AVALIABLE; break;
+ 255:../src/packet_tx_handler.c **** 					case BME280_QF_HUMIDITY_DEGRADED:
+ 256:../src/packet_tx_handler.c **** 					case BME280_QF_GEN_DEGRADED: humidity_qf = HUMIDITY_QF_DEGRADATED; break;
+ 257:../src/packet_tx_handler.c **** 				}
+ 258:../src/packet_tx_handler.c **** 
+ 259:../src/packet_tx_handler.c **** 				switch (rte_wx_bme280_qf) {
+ 260:../src/packet_tx_handler.c **** 					case BME280_QF_FULL:
+ 261:../src/packet_tx_handler.c **** 					case BME280_QF_HUMIDITY_DEGRADED: pressure_qf = PRESSURE_QF_FULL; break;
+ 262:../src/packet_tx_handler.c **** 					case BME280_QF_UKNOWN:
+ 263:../src/packet_tx_handler.c **** 					case BME280_QF_NOT_AVAILABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+ 264:../src/packet_tx_handler.c **** 					case BME280_QF_PRESSURE_DEGRADED:
+ 265:../src/packet_tx_handler.c **** 					case BME280_QF_GEN_DEGRADED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+ 266:../src/packet_tx_handler.c **** 				}
+ 267:../src/packet_tx_handler.c **** 
+ 268:../src/packet_tx_handler.c **** 			}
+ 269:../src/packet_tx_handler.c **** 		}
+ 270:../src/packet_tx_handler.c **** 		else {
+ 271:../src/packet_tx_handler.c **** 			pressure_qf = PRESSURE_QF_NOT_AVALIABLE;
+ 272:../src/packet_tx_handler.c **** 			humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
+ 273:../src/packet_tx_handler.c **** 		}
+ 274:../src/packet_tx_handler.c **** 
+ 275:../src/packet_tx_handler.c **** 		// wind quality factor
+ 276:../src/packet_tx_handler.c **** 		if (rte_wx_wind_qf == AN_WIND_QF_UNKNOWN) {
+ 277:../src/packet_tx_handler.c **** 			;
+ 278:../src/packet_tx_handler.c **** 		}
+ 279:../src/packet_tx_handler.c **** 		else {
+ 280:../src/packet_tx_handler.c **** 			switch (rte_wx_wind_qf) {
+ 281:../src/packet_tx_handler.c **** 				case AN_WIND_QF_FULL: wind_qf = WIND_QF_FULL; break;
+ 282:../src/packet_tx_handler.c **** 				case AN_WIND_QF_DEGRADED_DEBOUNCE:
+ 283:../src/packet_tx_handler.c **** 				case AN_WIND_QF_DEGRADED_SLEW:
+ 284:../src/packet_tx_handler.c **** 				case AN_WIND_QF_DEGRADED: wind_qf = WIND_QF_DEGRADATED; break;
+ 285:../src/packet_tx_handler.c **** 				case AN_WIND_QF_NOT_AVALIABLE:
+ 286:../src/packet_tx_handler.c **** 				case AN_WIND_QF_UNKNOWN: wind_qf = WIND_QF_NOT_AVALIABLE; break;
+ 287:../src/packet_tx_handler.c **** 			}
+ 288:../src/packet_tx_handler.c **** 
+ 289:../src/packet_tx_handler.c **** 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+ 290:../src/packet_tx_handler.c **** 		}
+ 291:../src/packet_tx_handler.c **** 
+ 292:../src/packet_tx_handler.c **** 
+ 293:../src/packet_tx_handler.c **** 		if (config_mode->victron == 1) {
+ 294:../src/packet_tx_handler.c **** 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_
+ 295:../src/packet_tx_handler.c **** 		}
+ 296:../src/packet_tx_handler.c **** 		else {
+ 297:../src/packet_tx_handler.c **** 
+ 298:../src/packet_tx_handler.c **** 				// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by
+ 299:../src/packet_tx_handler.c **** 				//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas
+ 300:../src/packet_tx_handler.c **** 			if (config_mode->wx == 1) {
+ 301:../src/packet_tx_handler.c **** 
+ 302:../src/packet_tx_handler.c **** 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to tr
+ 303:../src/packet_tx_handler.c **** 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be use
+ 304:../src/packet_tx_handler.c **** 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_internal_valid, dallas
+ 305:../src/packet_tx_handler.c **** 			}
+ 306:../src/packet_tx_handler.c **** 			else {
+ 307:../src/packet_tx_handler.c **** 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
+ 308:../src/packet_tx_handler.c **** 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, pressure_qf, humidity_qf
+ 309:../src/packet_tx_handler.c **** 			}
+ 310:../src/packet_tx_handler.c **** 
+ 311:../src/packet_tx_handler.c **** 		}
+ 312:../src/packet_tx_handler.c **** 		packet_tx_telemetry_counter = 0;
+ 313:../src/packet_tx_handler.c **** 
+ 314:../src/packet_tx_handler.c **** 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
+ 315:../src/packet_tx_handler.c **** 
+ 316:../src/packet_tx_handler.c **** 	}
+ 317:../src/packet_tx_handler.c **** 
+ 318:../src/packet_tx_handler.c **** 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
+ 287              		.loc 1 318 0
+ 288 00e8 6B4B     		ldr	r3, .L101+16
+ 289 00ea 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 290 00ec 744B     		ldr	r3, .L101+56
+ 291 00ee 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 292 00f0 9A42     		cmp	r2, r3
+ 293 00f2 80F00D82 		bcs	.L93
+ 294              	.L9:
+ 319:../src/packet_tx_handler.c **** 		packet_tx_multi_per_call_handler();
+ 320:../src/packet_tx_handler.c **** 
+ 321:../src/packet_tx_handler.c **** 		if (config_mode->victron == 1) {
+ 322:../src/packet_tx_handler.c **** 			telemetry_send_chns_description_pv(config_basic);
+ 323:../src/packet_tx_handler.c **** 
+ 324:../src/packet_tx_handler.c **** 
+ 325:../src/packet_tx_handler.c **** 			if (rte_pv_battery_voltage == 0) {
+ 326:../src/packet_tx_handler.c **** 				rte_main_reboot_req = 1;
+ 327:../src/packet_tx_handler.c **** 			}
+ 328:../src/packet_tx_handler.c **** 
+ 329:../src/packet_tx_handler.c **** 			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
+ 330:../src/packet_tx_handler.c **** 		}
+ 331:../src/packet_tx_handler.c **** 		else {
+ 332:../src/packet_tx_handler.c **** 			telemetry_send_chns_description(config_basic);
+ 333:../src/packet_tx_handler.c **** 
+ 334:../src/packet_tx_handler.c **** 			packet_tx_multi_per_call_handler();
+ 335:../src/packet_tx_handler.c **** 
+ 336:../src/packet_tx_handler.c **** 			//telemetry_send_status();
+ 337:../src/packet_tx_handler.c **** 		}
+ 338:../src/packet_tx_handler.c **** 
+ 339:../src/packet_tx_handler.c **** 		telemetry_send_status();
+ 340:../src/packet_tx_handler.c **** 
+ 341:../src/packet_tx_handler.c **** 
+ 342:../src/packet_tx_handler.c **** 		if (config_mode->wx_umb == 1) {
+ 343:../src/packet_tx_handler.c **** 
+ 344:../src/packet_tx_handler.c **** 			umb_clear_error_history(&rte_wx_umb_context);
+ 345:../src/packet_tx_handler.c **** 		}
+ 346:../src/packet_tx_handler.c **** 
+ 347:../src/packet_tx_handler.c **** 		packet_tx_telemetry_descr_counter = 0;
+ 348:../src/packet_tx_handler.c **** 	}
+ 349:../src/packet_tx_handler.c **** 
+ 350:../src/packet_tx_handler.c **** }
+ 295              		.loc 1 350 0
+ 296 00f6 09B0     		add	sp, sp, #36
+ 297              		.cfi_remember_state
+ 298              		.cfi_def_cfa_offset 20
+ 299              		@ sp needed
+ 300 00f8 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 301              	.LVL8:
+ 302              	.L85:
+ 303              		.cfi_restore_state
+ 111:../src/packet_tx_handler.c **** 
+ 304              		.loc 1 111 0
+ 305 00fa 724B     		ldr	r3, .L101+60
+ 306 00fc 1B68     		ldr	r3, [r3]
+ 307 00fe 0093     		str	r3, [sp]
+ 308 0100 0DF11E03 		add	r3, sp, #30
+ 309 0104 A022     		movs	r2, #160
+ 310 0106 7049     		ldr	r1, .L101+64
+ 311 0108 7048     		ldr	r0, .L101+68
+ 312              	.LVL9:
+ 313 010a FFF7FEFF 		bl	umb_construct_status_str
+ 314              	.LVL10:
+ 315              	.LBB44:
+ 316              	.LBB45:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 317              		.loc 1 74 0
+ 318 010e 5E4B     		ldr	r3, .L101
+ 319 0110 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 320 0112 4BB1     		cbz	r3, .L13
+ 321              	.L14:
+ 322              	.LBB46:
+ 323              	.LBB47:
+ 324              		.loc 2 67 0
+ 325 0114 6E4B     		ldr	r3, .L101+72
+ 326 0116 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 327 011a 002B     		cmp	r3, #0
+ 328 011c FAD1     		bne	.L14
+ 329              	.LBE47:
+ 330              	.LBE46:
+  79:../src/packet_tx_handler.c **** 
+ 331              		.loc 1 79 0
+ 332 011e 4FF47A70 		mov	r0, #1000
+ 333 0122 FFF7FEFF 		bl	delay_fixed
+ 334              	.LVL11:
+ 335 0126 9AE7     		b	.L12
+ 336              	.L13:
+  83:../src/packet_tx_handler.c **** 	}
+ 337              		.loc 1 83 0
+ 338 0128 574B     		ldr	r3, .L101
+ 339 012a 0122     		movs	r2, #1
+ 340 012c 1A70     		strb	r2, [r3]
+ 341 012e 96E7     		b	.L12
+ 342              	.L86:
+ 343              	.LBE45:
+ 344              	.LBE44:
+ 345              	.LBB48:
+ 346              	.LBB49:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 347              		.loc 1 74 0
+ 348 0130 554B     		ldr	r3, .L101
+ 349 0132 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 350 0134 73B1     		cbz	r3, .L16
+ 351              	.L17:
+ 352              	.LBB50:
+ 353              	.LBB51:
+ 354              		.loc 2 67 0
+ 355 0136 664B     		ldr	r3, .L101+72
+ 356 0138 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 357 013c 002B     		cmp	r3, #0
+ 358 013e FAD1     		bne	.L17
+ 359              	.LBE51:
+ 360              	.LBE50:
+  79:../src/packet_tx_handler.c **** 
+ 361              		.loc 1 79 0
+ 362 0140 4FF47A70 		mov	r0, #1000
+ 363 0144 FFF7FEFF 		bl	delay_fixed
+ 364              	.LVL12:
+ 365              	.L18:
+ 366              	.LBE49:
+ 367              	.LBE48:
+ 123:../src/packet_tx_handler.c **** 
+ 368              		.loc 1 123 0
+ 369 0148 FFF7FEFF 		bl	beacon_send_own
+ 370              	.LVL13:
+ 125:../src/packet_tx_handler.c **** 
+ 371              		.loc 1 125 0
+ 372 014c 4F4B     		ldr	r3, .L101+4
+ 373 014e 0022     		movs	r2, #0
+ 374 0150 1A70     		strb	r2, [r3]
+ 375 0152 8FE7     		b	.L15
+ 376              	.L16:
+ 377              	.LBB53:
+ 378              	.LBB52:
+  83:../src/packet_tx_handler.c **** 	}
+ 379              		.loc 1 83 0
+ 380 0154 4C4B     		ldr	r3, .L101
+ 381 0156 0122     		movs	r2, #1
+ 382 0158 1A70     		strb	r2, [r3]
+ 383 015a F5E7     		b	.L18
+ 384              	.L87:
+ 385              	.LBE52:
+ 386              	.LBE53:
+ 387              	.LBB54:
+ 388              	.LBB55:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 389              		.loc 1 74 0
+ 390 015c 4A4B     		ldr	r3, .L101
+ 391 015e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 392 0160 23B3     		cbz	r3, .L21
+ 393              	.L22:
+ 394              	.LBB56:
+ 395              	.LBB57:
+ 396              		.loc 2 67 0
+ 397 0162 5B4B     		ldr	r3, .L101+72
+ 398 0164 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 399 0168 002B     		cmp	r3, #0
+ 400 016a FAD1     		bne	.L22
+ 401              	.LBE57:
+ 402              	.LBE56:
+  79:../src/packet_tx_handler.c **** 
+ 403              		.loc 1 79 0
+ 404 016c 4FF47A70 		mov	r0, #1000
+ 405 0170 FFF7FEFF 		bl	delay_fixed
+ 406              	.LVL14:
+ 407              	.L23:
+ 408              	.LBE55:
+ 409              	.LBE54:
+ 135:../src/packet_tx_handler.c **** 
+ 410              		.loc 1 135 0
+ 411 0174 574B     		ldr	r3, .L101+76
+ 412 0176 1B68     		ldr	r3, [r3]	@ float
+ 413 0178 574A     		ldr	r2, .L101+80
+ 414 017a 1288     		ldrh	r2, [r2]
+ 415 017c 5749     		ldr	r1, .L101+84
+ 416 017e 0988     		ldrh	r1, [r1]
+ 417 0180 5748     		ldr	r0, .L101+88
+ 418 0182 0088     		ldrh	r0, [r0]
+ 419 0184 574E     		ldr	r6, .L101+92
+ 420 0186 3678     		ldrb	r6, [r6]	@ zero_extendqisi2
+ 421 0188 0196     		str	r6, [sp, #4]
+ 422 018a 574E     		ldr	r6, .L101+96
+ 423 018c 3668     		ldr	r6, [r6]	@ float
+ 424 018e 0096     		str	r6, [sp]	@ float
+ 425 0190 FFF7FEFF 		bl	SendWXFrame
+ 426              	.LVL15:
+ 138:../src/packet_tx_handler.c **** 			#endif
+ 427              		.loc 1 138 0
+ 428 0194 FFF7FEFF 		bl	io_ext_watchdog_service
+ 429              	.LVL16:
+ 141:../src/packet_tx_handler.c **** 				rte_main_trigger_wx_packet = 1;
+ 430              		.loc 1 141 0
+ 431 0198 544B     		ldr	r3, .L101+100
+ 432 019a 1B68     		ldr	r3, [r3]
+ 433 019c 93F89A30 		ldrb	r3, [r3, #154]	@ zero_extendqisi2
+ 434 01a0 012B     		cmp	r3, #1
+ 435 01a2 07D0     		beq	.L94
+ 436              	.L24:
+ 145:../src/packet_tx_handler.c **** 		}
+ 437              		.loc 1 145 0
+ 438 01a4 3E4B     		ldr	r3, .L101+24
+ 439 01a6 0022     		movs	r2, #0
+ 440 01a8 1A70     		strb	r2, [r3]
+ 441 01aa 71E7     		b	.L20
+ 442              	.L21:
+ 443              	.LBB59:
+ 444              	.LBB58:
+  83:../src/packet_tx_handler.c **** 	}
+ 445              		.loc 1 83 0
+ 446 01ac 364B     		ldr	r3, .L101
+ 447 01ae 0122     		movs	r2, #1
+ 448 01b0 1A70     		strb	r2, [r3]
+ 449 01b2 DFE7     		b	.L23
+ 450              	.L94:
+ 451              	.LBE58:
+ 452              	.LBE59:
+ 142:../src/packet_tx_handler.c **** 			}
+ 453              		.loc 1 142 0
+ 454 01b4 4E4B     		ldr	r3, .L101+104
+ 455 01b6 0122     		movs	r2, #1
+ 456 01b8 1A70     		strb	r2, [r3]
+ 457 01ba F3E7     		b	.L24
+ 458              	.L88:
+ 151:../src/packet_tx_handler.c **** 			{
+ 459              		.loc 1 151 0 discriminator 1
+ 460 01bc 364B     		ldr	r3, .L101+16
+ 461 01be 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 462 01c0 4C4B     		ldr	r3, .L101+108
+ 463 01c2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 150:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
+ 464              		.loc 1 150 0 discriminator 1
+ 465 01c4 9A42     		cmp	r2, r3
+ 466 01c6 FFF471AF 		bcc	.L26
+ 467              	.LBB60:
+ 468              	.LBB61:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 469              		.loc 1 74 0
+ 470 01ca 2F4B     		ldr	r3, .L101
+ 471 01cc 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 472 01ce 5BB1     		cbz	r3, .L27
+ 473              	.L28:
+ 474              	.LBB62:
+ 475              	.LBB63:
+ 476              		.loc 2 67 0
+ 477 01d0 3F4B     		ldr	r3, .L101+72
+ 478 01d2 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 479 01d6 002B     		cmp	r3, #0
+ 480 01d8 FAD1     		bne	.L28
+ 481              	.LBE63:
+ 482              	.LBE62:
+  79:../src/packet_tx_handler.c **** 
+ 483              		.loc 1 79 0
+ 484 01da 4FF47A70 		mov	r0, #1000
+ 485 01de FFF7FEFF 		bl	delay_fixed
+ 486              	.LVL17:
+ 487              	.L29:
+ 488              	.LBE61:
+ 489              	.LBE60:
+ 157:../src/packet_tx_handler.c **** 			}
+ 490              		.loc 1 157 0
+ 491 01e2 FFF7FEFF 		bl	telemetry_send_status_raw_values_modbus
+ 492              	.LVL18:
+ 493 01e6 61E7     		b	.L26
+ 494              	.L27:
+ 495              	.LBB65:
+ 496              	.LBB64:
+  83:../src/packet_tx_handler.c **** 	}
+ 497              		.loc 1 83 0
+ 498 01e8 274B     		ldr	r3, .L101
+ 499 01ea 0122     		movs	r2, #1
+ 500 01ec 1A70     		strb	r2, [r3]
+ 501 01ee F8E7     		b	.L29
+ 502              	.L89:
+ 503              	.LBE64:
+ 504              	.LBE65:
+ 162:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
+ 505              		.loc 1 162 0 discriminator 1
+ 506 01f0 294B     		ldr	r3, .L101+16
+ 507 01f2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 508 01f4 404A     		ldr	r2, .L101+112
+ 509 01f6 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 161:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
+ 510              		.loc 1 161 0 discriminator 1
+ 511 01f8 9342     		cmp	r3, r2
+ 512 01fa 7FF65FAF 		bls	.L25
+ 162:../src/packet_tx_handler.c **** 					packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
+ 513              		.loc 1 162 0
+ 514 01fe B3EB420F 		cmp	r3, r2, lsl #1
+ 515 0202 3FF75BAF 		bgt	.L25
+ 516              	.LBB66:
+ 517              	.LBB67:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 518              		.loc 1 74 0
+ 519 0206 204B     		ldr	r3, .L101
+ 520 0208 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 521 020a 63B1     		cbz	r3, .L30
+ 522              	.L31:
+ 523              	.LBB68:
+ 524              	.LBB69:
+ 525              		.loc 2 67 0
+ 526 020c 304B     		ldr	r3, .L101+72
+ 527 020e 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 528 0212 002B     		cmp	r3, #0
+ 529 0214 FAD1     		bne	.L31
+ 530              	.LBE69:
+ 531              	.LBE68:
+  79:../src/packet_tx_handler.c **** 
+ 532              		.loc 1 79 0
+ 533 0216 4FF47A70 		mov	r0, #1000
+ 534 021a FFF7FEFF 		bl	delay_fixed
+ 535              	.LVL19:
+ 536              	.L32:
+ 537              	.LBE67:
+ 538              	.LBE66:
+ 168:../src/packet_tx_handler.c **** 			}
+ 539              		.loc 1 168 0
+ 540 021e 374B     		ldr	r3, .L101+116
+ 541 0220 0122     		movs	r2, #1
+ 542 0222 1A70     		strb	r2, [r3]
+ 543 0224 4AE7     		b	.L25
+ 544              	.L30:
+ 545              	.LBB71:
+ 546              	.LBB70:
+  83:../src/packet_tx_handler.c **** 	}
+ 547              		.loc 1 83 0
+ 548 0226 184B     		ldr	r3, .L101
+ 549 0228 0122     		movs	r2, #1
+ 550 022a 1A70     		strb	r2, [r3]
+ 551 022c F7E7     		b	.L32
+ 552              	.L90:
+ 553              	.LBE70:
+ 554              	.LBE71:
+ 176:../src/packet_tx_handler.c **** 			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
+ 555              		.loc 1 176 0 discriminator 1
+ 556 022e 1C4B     		ldr	r3, .L101+24
+ 557 0230 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 558 0232 1F4B     		ldr	r3, .L101+40
+ 559 0234 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 560 0236 013B     		subs	r3, r3, #1
+ 175:../src/packet_tx_handler.c **** 			packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
+ 561              		.loc 1 175 0 discriminator 1
+ 562 0238 9A42     		cmp	r2, r3
+ 563 023a 7FF443AF 		bne	.L33
+ 177:../src/packet_tx_handler.c **** 		{
+ 564              		.loc 1 177 0
+ 565 023e 164B     		ldr	r3, .L101+16
+ 566 0240 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 567 0242 2C4B     		ldr	r3, .L101+108
+ 568 0244 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 176:../src/packet_tx_handler.c **** 			packet_tx_telemetry_descr_counter >= packet_tx_modbus_raw_values)
+ 569              		.loc 1 176 0
+ 570 0246 9A42     		cmp	r2, r3
+ 571 0248 FFF43CAF 		bcc	.L33
+ 572              	.LBB72:
+ 573              	.LBB73:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 574              		.loc 1 74 0
+ 575 024c 0E4B     		ldr	r3, .L101
+ 576 024e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 577 0250 002B     		cmp	r3, #0
+ 578 0252 5FD0     		beq	.L34
+ 579              	.L35:
+ 580              	.LBB74:
+ 581              	.LBB75:
+ 582              		.loc 2 67 0
+ 583 0254 1E4B     		ldr	r3, .L101+72
+ 584 0256 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 585 025a 002B     		cmp	r3, #0
+ 586 025c FAD1     		bne	.L35
+ 587              	.LBE75:
+ 588              	.LBE74:
+  79:../src/packet_tx_handler.c **** 
+ 589              		.loc 1 79 0
+ 590 025e 4FF47A70 		mov	r0, #1000
+ 591 0262 FFF7FEFF 		bl	delay_fixed
+ 592              	.LVL20:
+ 593              	.L36:
+ 594              	.LBE73:
+ 595              	.LBE72:
+ 181:../src/packet_tx_handler.c **** 
+ 596              		.loc 1 181 0
+ 597 0266 174B     		ldr	r3, .L101+60
+ 598 0268 1B68     		ldr	r3, [r3]
+ 599 026a 254A     		ldr	r2, .L101+120
+ 600 026c 92F91120 		ldrsb	r2, [r2, #17]
+ 601 0270 2449     		ldr	r1, .L101+124
+ 602 0272 0988     		ldrh	r1, [r1]
+ 603 0274 0191     		str	r1, [sp, #4]
+ 604 0276 2449     		ldr	r1, .L101+128
+ 605 0278 0988     		ldrh	r1, [r1]
+ 606 027a 0091     		str	r1, [sp]
+ 607 027c 2349     		ldr	r1, .L101+132
+ 608 027e 2448     		ldr	r0, .L101+136
+ 609 0280 FFF7FEFF 		bl	telemetry_send_status_pv
+ 610              	.LVL21:
+ 611 0284 1EE7     		b	.L33
+ 612              	.L102:
+ 613 0286 00BF     		.align	2
+ 614              	.L101:
+ 615 0288 00000000 		.word	.LANCHOR3
+ 616 028c 00000000 		.word	.LANCHOR4
+ 617 0290 00000000 		.word	.LANCHOR5
+ 618 0294 00000000 		.word	.LANCHOR6
+ 619 0298 00000000 		.word	.LANCHOR7
+ 620 029c 00000000 		.word	main_config_data_mode
+ 621 02a0 00000000 		.word	.LANCHOR2
+ 622 02a4 00000000 		.word	.LANCHOR8
+ 623 02a8 00000000 		.word	.LANCHOR9
+ 624 02ac 00000000 		.word	.LANCHOR1
+ 625 02b0 00000000 		.word	.LANCHOR0
+ 626 02b4 00000000 		.word	.LANCHOR12
+ 627 02b8 00000000 		.word	main_kiss_enabled
+ 628 02bc 00000000 		.word	.LANCHOR13
+ 629 02c0 00000000 		.word	.LANCHOR14
+ 630 02c4 00000000 		.word	master_time
+ 631 02c8 00000000 		.word	main_own_aprs_msg
+ 632 02cc 00000000 		.word	rte_wx_umb_context
+ 633 02d0 00000000 		.word	main_afsk
+ 634 02d4 00000000 		.word	rte_wx_temperature_average_external_valid
+ 635 02d8 00000000 		.word	rte_wx_average_winddirection
+ 636 02dc 00000000 		.word	rte_wx_max_windspeed
+ 637 02e0 00000000 		.word	rte_wx_average_windspeed
+ 638 02e4 00000000 		.word	rte_wx_humidity_valid
+ 639 02e8 00000000 		.word	rte_wx_pressure_valid
+ 640 02ec 00000000 		.word	main_config_data_basic
+ 641 02f0 00000000 		.word	rte_main_trigger_wx_packet
+ 642 02f4 00000000 		.word	.LANCHOR10
+ 643 02f8 00000000 		.word	.LANCHOR11
+ 644 02fc 00000000 		.word	rte_main_trigger_modbus_status
+ 645 0300 00000000 		.word	rte_pv_struct
+ 646 0304 00000000 		.word	rte_pv_corrupted_messages_count
+ 647 0308 00000000 		.word	rte_pv_messages_count
+ 648 030c 00000000 		.word	rte_pv_last_error
+ 649 0310 00000000 		.word	rte_pv_average
+ 650              	.L34:
+ 651              	.LBB77:
+ 652              	.LBB76:
+  83:../src/packet_tx_handler.c **** 	}
+ 653              		.loc 1 83 0
+ 654 0314 944B     		ldr	r3, .L103
+ 655 0316 0122     		movs	r2, #1
+ 656 0318 1A70     		strb	r2, [r3]
+ 657 031a A4E7     		b	.L36
+ 658              	.L91:
+ 659              	.LBE76:
+ 660              	.LBE77:
+ 188:../src/packet_tx_handler.c **** 
+ 661              		.loc 1 188 0
+ 662 031c 934E     		ldr	r6, .L103+4
+ 663 031e 3068     		ldr	r0, [r6]
+ 664 0320 FFF7FEFF 		bl	srl_wait_for_tx_completion
+ 665              	.LVL22:
+ 190:../src/packet_tx_handler.c **** 
+ 666              		.loc 1 190 0
+ 667 0324 3768     		ldr	r7, [r6]
+ 668 0326 924B     		ldr	r3, .L103+8
+ 669 0328 1B68     		ldr	r3, [r3]	@ float
+ 670 032a 924A     		ldr	r2, .L103+12
+ 671 032c 1288     		ldrh	r2, [r2]
+ 672 032e 9249     		ldr	r1, .L103+16
+ 673 0330 0988     		ldrh	r1, [r1]
+ 674 0332 9248     		ldr	r0, .L103+20
+ 675 0334 0088     		ldrh	r0, [r0]
+ 676 0336 0DF11E0C 		add	ip, sp, #30
+ 677 033a CDF810C0 		str	ip, [sp, #16]
+ 678 033e B7F81EC0 		ldrh	ip, [r7, #30]
+ 679 0342 CDF80CC0 		str	ip, [sp, #12]
+ 680 0346 7F69     		ldr	r7, [r7, #20]
+ 681 0348 0297     		str	r7, [sp, #8]
+ 682 034a 8D4F     		ldr	r7, .L103+24
+ 683 034c 3F78     		ldrb	r7, [r7]	@ zero_extendqisi2
+ 684 034e 0197     		str	r7, [sp, #4]
+ 685 0350 8C4F     		ldr	r7, .L103+28
+ 686 0352 3F68     		ldr	r7, [r7]	@ float
+ 687 0354 0097     		str	r7, [sp]	@ float
+ 688 0356 FFF7FEFF 		bl	SendWXFrameToBuffer
+ 689              	.LVL23:
+ 192:../src/packet_tx_handler.c **** 
+ 690              		.loc 1 192 0
+ 691 035a BDF91E10 		ldrsh	r1, [sp, #30]
+ 692 035e 3068     		ldr	r0, [r6]
+ 693 0360 FFF7FEFF 		bl	srl_start_tx
+ 694              	.LVL24:
+ 194:../src/packet_tx_handler.c **** 		}
+ 695              		.loc 1 194 0
+ 696 0364 884B     		ldr	r3, .L103+32
+ 697 0366 0022     		movs	r2, #0
+ 698 0368 1A70     		strb	r2, [r3]
+ 699 036a B6E6     		b	.L19
+ 700              	.L92:
+ 701              	.LBB78:
+ 702              	.LBB79:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 703              		.loc 1 74 0
+ 704 036c 7E4B     		ldr	r3, .L103
+ 705 036e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 706 0370 EBB1     		cbz	r3, .L38
+ 707              	.L39:
+ 708              	.LBB80:
+ 709              	.LBB81:
+ 710              		.loc 2 67 0
+ 711 0372 864B     		ldr	r3, .L103+36
+ 712 0374 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 713 0378 002B     		cmp	r3, #0
+ 714 037a FAD1     		bne	.L39
+ 715              	.LBE81:
+ 716              	.LBE80:
+  79:../src/packet_tx_handler.c **** 
+ 717              		.loc 1 79 0
+ 718 037c 4FF47A70 		mov	r0, #1000
+ 719 0380 FFF7FEFF 		bl	delay_fixed
+ 720              	.LVL25:
+ 721              	.L40:
+ 722              	.LBE79:
+ 723              	.LBE78:
+ 203:../src/packet_tx_handler.c **** 			dallas_qf = rte_wx_current_dallas_qf;	// it might be DEGRADATED so we need to copy a value direc
+ 724              		.loc 1 203 0
+ 725 0384 824B     		ldr	r3, .L103+40
+ 726 0386 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 727 0388 ABB9     		cbnz	r3, .L41
+ 204:../src/packet_tx_handler.c **** 
+ 728              		.loc 1 204 0
+ 729 038a 824B     		ldr	r3, .L103+44
+ 730 038c 93F800E0 		ldrb	lr, [r3]	@ zero_extendqisi2
+ 731              	.LVL26:
+ 207:../src/packet_tx_handler.c **** 		}
+ 732              		.loc 1 207 0
+ 733 0390 0022     		movs	r2, #0
+ 734 0392 1A70     		strb	r2, [r3]
+ 735              	.L42:
+ 231:../src/packet_tx_handler.c **** 			// pressure sensors quality factors
+ 736              		.loc 1 231 0
+ 737 0394 6379     		ldrb	r3, [r4, #5]	@ zero_extendqisi2
+ 738 0396 3BBB     		cbnz	r3, .L44
+ 234:../src/packet_tx_handler.c **** 				case MS5611_QF_FULL: pressure_qf = PRESSURE_QF_FULL; break;
+ 739              		.loc 1 234 0
+ 740 0398 7F4B     		ldr	r3, .L103+48
+ 741 039a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 742 039c 022B     		cmp	r3, #2
+ 743 039e 1BD0     		beq	.L46
+ 744 03a0 032B     		cmp	r3, #3
+ 745 03a2 1DD0     		beq	.L47
+ 746 03a4 012B     		cmp	r3, #1
+ 747 03a6 50D0     		beq	.L77
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 748              		.loc 1 92 0
+ 749 03a8 0026     		movs	r6, #0
+  91:../src/packet_tx_handler.c **** 	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
+ 750              		.loc 1 91 0
+ 751 03aa B446     		mov	ip, r6
+ 752 03ac 20E0     		b	.L48
+ 753              	.LVL27:
+ 754              	.L38:
+ 755              	.LBB83:
+ 756              	.LBB82:
+  83:../src/packet_tx_handler.c **** 	}
+ 757              		.loc 1 83 0
+ 758 03ae 6E4B     		ldr	r3, .L103
+ 759 03b0 0122     		movs	r2, #1
+ 760 03b2 1A70     		strb	r2, [r3]
+ 761 03b4 E6E7     		b	.L40
+ 762              	.L41:
+ 763              	.LBE82:
+ 764              	.LBE83:
+ 214:../src/packet_tx_handler.c **** 				// set the error reason
+ 765              		.loc 1 214 0
+ 766 03b6 774B     		ldr	r3, .L103+44
+ 767 03b8 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 768 03ba 013B     		subs	r3, r3, #1
+ 769 03bc DBB2     		uxtb	r3, r3
+ 770 03be 012B     		cmp	r3, #1
+ 771 03c0 07D9     		bls	.L95
+ 221:../src/packet_tx_handler.c **** 			}
+ 772              		.loc 1 221 0
+ 773 03c2 4FF0030E 		mov	lr, #3
+ 774              	.L43:
+ 775              	.LVL28:
+ 225:../src/packet_tx_handler.c **** 
+ 776              		.loc 1 225 0
+ 777 03c6 0023     		movs	r3, #0
+ 778 03c8 714A     		ldr	r2, .L103+40
+ 779 03ca 1370     		strb	r3, [r2]
+ 227:../src/packet_tx_handler.c **** 		}
+ 780              		.loc 1 227 0
+ 781 03cc 714A     		ldr	r2, .L103+44
+ 782 03ce 1370     		strb	r3, [r2]
+ 783 03d0 E0E7     		b	.L42
+ 784              	.LVL29:
+ 785              	.L95:
+ 216:../src/packet_tx_handler.c **** 			}
+ 786              		.loc 1 216 0
+ 787 03d2 4FF0020E 		mov	lr, #2
+ 788 03d6 F6E7     		b	.L43
+ 789              	.LVL30:
+ 790              	.L46:
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 791              		.loc 1 92 0
+ 792 03d8 0026     		movs	r6, #0
+ 236:../src/packet_tx_handler.c **** 				case MS5611_QF_DEGRADATED: pressure_qf = PRESSURE_QF_DEGRADATED; break;
+ 793              		.loc 1 236 0
+ 794 03da 4FF0020C 		mov	ip, #2
+ 795 03de 07E0     		b	.L48
+ 796              	.LVL31:
+ 797              	.L47:
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 798              		.loc 1 92 0
+ 799 03e0 0026     		movs	r6, #0
+ 237:../src/packet_tx_handler.c **** 				case MS5611_QF_UNKNOWN: pressure_qf = PRESSURE_QF_UNKNOWN; break;
+ 800              		.loc 1 237 0
+ 801 03e2 4FF0030C 		mov	ip, #3
+ 802 03e6 03E0     		b	.L48
+ 803              	.LVL32:
+ 804              	.L44:
+ 242:../src/packet_tx_handler.c **** 			//#elif defined(_SENSOR_BME280)
+ 805              		.loc 1 242 0
+ 806 03e8 012B     		cmp	r3, #1
+ 807 03ea 0CD0     		beq	.L96
+ 272:../src/packet_tx_handler.c **** 		}
+ 808              		.loc 1 272 0
+ 809 03ec 0226     		movs	r6, #2
+ 271:../src/packet_tx_handler.c **** 			humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
+ 810              		.loc 1 271 0
+ 811 03ee B446     		mov	ip, r6
+ 812              	.LVL33:
+ 813              	.L48:
+ 276:../src/packet_tx_handler.c **** 			;
+ 814              		.loc 1 276 0
+ 815 03f0 6A4B     		ldr	r3, .L103+52
+ 816 03f2 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 817 03f4 052B     		cmp	r3, #5
+ 818 03f6 60D0     		beq	.L82
+ 280:../src/packet_tx_handler.c **** 				case AN_WIND_QF_FULL: wind_qf = WIND_QF_FULL; break;
+ 819              		.loc 1 280 0
+ 820 03f8 052B     		cmp	r3, #5
+ 821 03fa 30D8     		bhi	.L59
+ 822 03fc DFE803F0 		tbb	[pc, r3]
+ 823              	.L61:
+ 824 0400 35       		.byte	(.L83-.L61)/2
+ 825 0401 31       		.byte	(.L62-.L61)/2
+ 826 0402 31       		.byte	(.L62-.L61)/2
+ 827 0403 31       		.byte	(.L62-.L61)/2
+ 828 0404 33       		.byte	(.L63-.L61)/2
+ 829 0405 33       		.byte	(.L63-.L61)/2
+ 830              	.LVL34:
+ 831              		.p2align 1
+ 832              	.L96:
+ 245:../src/packet_tx_handler.c **** 				;
+ 833              		.loc 1 245 0
+ 834 0406 664B     		ldr	r3, .L103+56
+ 835 0408 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 836 040a 052B     		cmp	r3, #5
+ 837 040c 21D0     		beq	.L79
+ 250:../src/packet_tx_handler.c **** 					case BME280_QF_FULL:
+ 838              		.loc 1 250 0
+ 839 040e 052B     		cmp	r3, #5
+ 840 0410 04D8     		bhi	.L49
+ 841 0412 DFE803F0 		tbb	[pc, r3]
+ 842              	.L51:
+ 843 0416 09       		.byte	(.L80-.L51)/2
+ 844 0417 05       		.byte	(.L52-.L51)/2
+ 845 0418 07       		.byte	(.L53-.L51)/2
+ 846 0419 09       		.byte	(.L80-.L51)/2
+ 847 041a 07       		.byte	(.L53-.L51)/2
+ 848 041b 05       		.byte	(.L52-.L51)/2
+ 849              		.p2align 1
+ 850              	.L49:
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 851              		.loc 1 92 0
+ 852 041c 0026     		movs	r6, #0
+ 853 041e 04E0     		b	.L50
+ 854              	.L52:
+ 855              	.LVL35:
+ 254:../src/packet_tx_handler.c **** 					case BME280_QF_HUMIDITY_DEGRADED:
+ 856              		.loc 1 254 0
+ 857 0420 0226     		movs	r6, #2
+ 858 0422 02E0     		b	.L50
+ 859              	.LVL36:
+ 860              	.L53:
+ 256:../src/packet_tx_handler.c **** 				}
+ 861              		.loc 1 256 0
+ 862 0424 0326     		movs	r6, #3
+ 863 0426 00E0     		b	.L50
+ 864              	.LVL37:
+ 865              	.L80:
+ 252:../src/packet_tx_handler.c **** 					case BME280_QF_UKNOWN:
+ 866              		.loc 1 252 0
+ 867 0428 0126     		movs	r6, #1
+ 868              	.LVL38:
+ 869              	.L50:
+ 259:../src/packet_tx_handler.c **** 					case BME280_QF_FULL:
+ 870              		.loc 1 259 0
+ 871 042a 052B     		cmp	r3, #5
+ 872 042c 04D8     		bhi	.L54
+ 873 042e DFE803F0 		tbb	[pc, r3]
+ 874              	.L55:
+ 875 0432 13       		.byte	(.L81-.L55)/2
+ 876 0433 06       		.byte	(.L56-.L55)/2
+ 877 0434 13       		.byte	(.L81-.L55)/2
+ 878 0435 09       		.byte	(.L57-.L55)/2
+ 879 0436 09       		.byte	(.L57-.L55)/2
+ 880 0437 06       		.byte	(.L56-.L55)/2
+ 881              		.p2align 1
+ 882              	.L54:
+  91:../src/packet_tx_handler.c **** 	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
+ 883              		.loc 1 91 0
+ 884 0438 4FF0000C 		mov	ip, #0
+ 885 043c D8E7     		b	.L48
+ 886              	.L56:
+ 887              	.LVL39:
+ 263:../src/packet_tx_handler.c **** 					case BME280_QF_PRESSURE_DEGRADED:
+ 888              		.loc 1 263 0
+ 889 043e 4FF0020C 		mov	ip, #2
+ 890 0442 D5E7     		b	.L48
+ 891              	.LVL40:
+ 892              	.L57:
+ 265:../src/packet_tx_handler.c **** 				}
+ 893              		.loc 1 265 0
+ 894 0444 4FF0030C 		mov	ip, #3
+ 895 0448 D2E7     		b	.L48
+ 896              	.LVL41:
+ 897              	.L77:
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 898              		.loc 1 92 0
+ 899 044a 0026     		movs	r6, #0
+ 235:../src/packet_tx_handler.c **** 				case MS5611_QF_NOT_AVALIABLE: pressure_qf = PRESSURE_QF_NOT_AVALIABLE; break;
+ 900              		.loc 1 235 0
+ 901 044c 4FF0010C 		mov	ip, #1
+ 902 0450 CEE7     		b	.L48
+ 903              	.L79:
+  92:../src/packet_tx_handler.c **** 	wind_qf_t wind_qf = WIND_QF_UNKNOWN;
+ 904              		.loc 1 92 0
+ 905 0452 0026     		movs	r6, #0
+  91:../src/packet_tx_handler.c **** 	humidity_qf_t humidity_qf = HUMIDITY_QF_UNKNOWN;
+ 906              		.loc 1 91 0
+ 907 0454 B446     		mov	ip, r6
+ 908 0456 CBE7     		b	.L48
+ 909              	.LVL42:
+ 910              	.L81:
+ 261:../src/packet_tx_handler.c **** 					case BME280_QF_UKNOWN:
+ 911              		.loc 1 261 0
+ 912 0458 4FF0010C 		mov	ip, #1
+ 913 045c C8E7     		b	.L48
+ 914              	.LVL43:
+ 915              	.L59:
+  93:../src/packet_tx_handler.c **** 
+ 916              		.loc 1 93 0
+ 917 045e 0027     		movs	r7, #0
+ 918 0460 04E0     		b	.L60
+ 919              	.L62:
+ 920              	.LVL44:
+ 284:../src/packet_tx_handler.c **** 				case AN_WIND_QF_NOT_AVALIABLE:
+ 921              		.loc 1 284 0
+ 922 0462 0327     		movs	r7, #3
+ 923 0464 02E0     		b	.L60
+ 924              	.LVL45:
+ 925              	.L63:
+ 286:../src/packet_tx_handler.c **** 			}
+ 926              		.loc 1 286 0
+ 927 0466 0227     		movs	r7, #2
+ 928 0468 00E0     		b	.L60
+ 929              	.LVL46:
+ 930              	.L83:
+ 281:../src/packet_tx_handler.c **** 				case AN_WIND_QF_DEGRADED_DEBOUNCE:
+ 931              		.loc 1 281 0
+ 932 046a 0127     		movs	r7, #1
+ 933              	.LVL47:
+ 934              	.L60:
+ 289:../src/packet_tx_handler.c **** 		}
+ 935              		.loc 1 289 0
+ 936 046c 4B4B     		ldr	r3, .L103+52
+ 937 046e 0522     		movs	r2, #5
+ 938 0470 1A70     		strb	r2, [r3]
+ 939              	.LVL48:
+ 940              	.L58:
+ 293:../src/packet_tx_handler.c **** 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_
+ 941              		.loc 1 293 0
+ 942 0472 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 943 0474 012B     		cmp	r3, #1
+ 944 0476 22D0     		beq	.L97
+ 300:../src/packet_tx_handler.c **** 
+ 945              		.loc 1 300 0
+ 946 0478 6378     		ldrb	r3, [r4, #1]	@ zero_extendqisi2
+ 947 047a 012B     		cmp	r3, #1
+ 948 047c 34D0     		beq	.L98
+ 308:../src/packet_tx_handler.c **** 			}
+ 949              		.loc 1 308 0
+ 950 047e 494B     		ldr	r3, .L103+60
+ 951 0480 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 952 0482 494A     		ldr	r2, .L103+64
+ 953 0484 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 954 0486 4949     		ldr	r1, .L103+68
+ 955 0488 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 956 048a 4948     		ldr	r0, .L103+72
+ 957 048c 0078     		ldrb	r0, [r0]	@ zero_extendqisi2
+ 958 048e 0497     		str	r7, [sp, #16]
+ 959 0490 0396     		str	r6, [sp, #12]
+ 960 0492 CDF808C0 		str	ip, [sp, #8]
+ 961 0496 CDF804E0 		str	lr, [sp, #4]
+ 962 049a 0026     		movs	r6, #0
+ 963              	.LVL49:
+ 964 049c 0096     		str	r6, [sp]	@ float
+ 965 049e FFF7FEFF 		bl	telemetry_send_values
+ 966              	.LVL50:
+ 967              	.L65:
+ 312:../src/packet_tx_handler.c **** 
+ 968              		.loc 1 312 0
+ 969 04a2 0023     		movs	r3, #0
+ 970 04a4 434A     		ldr	r2, .L103+76
+ 971 04a6 1370     		strb	r3, [r2]
+ 314:../src/packet_tx_handler.c **** 
+ 972              		.loc 1 314 0
+ 973 04a8 414A     		ldr	r2, .L103+72
+ 974 04aa 1380     		strh	r3, [r2]	@ movhi
+ 975 04ac 3F4A     		ldr	r2, .L103+68
+ 976 04ae 1380     		strh	r3, [r2]	@ movhi
+ 977 04b0 3D4A     		ldr	r2, .L103+64
+ 978 04b2 1380     		strh	r3, [r2]	@ movhi
+ 979 04b4 3B4A     		ldr	r2, .L103+60
+ 980 04b6 1380     		strh	r3, [r2]	@ movhi
+ 981 04b8 16E6     		b	.L37
+ 982              	.LVL51:
+ 983              	.L82:
+  93:../src/packet_tx_handler.c **** 
+ 984              		.loc 1 93 0
+ 985 04ba 0027     		movs	r7, #0
+ 986 04bc D9E7     		b	.L58
+ 987              	.LVL52:
+ 988              	.L97:
+ 294:../src/packet_tx_handler.c **** 		}
+ 989              		.loc 1 294 0
+ 990 04be 3E4B     		ldr	r3, .L103+80
+ 991 04c0 1B88     		ldrh	r3, [r3]
+ 992 04c2 3E4A     		ldr	r2, .L103+84
+ 993 04c4 B2F90020 		ldrsh	r2, [r2]
+ 994 04c8 3749     		ldr	r1, .L103+64
+ 995 04ca 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 996 04cc 3848     		ldr	r0, .L103+72
+ 997 04ce 0078     		ldrb	r0, [r0]	@ zero_extendqisi2
+ 998 04d0 0497     		str	r7, [sp, #16]
+ 999 04d2 0396     		str	r6, [sp, #12]
+ 1000 04d4 CDF808C0 		str	ip, [sp, #8]
+ 1001 04d8 CDF804E0 		str	lr, [sp, #4]
+ 1002 04dc 384E     		ldr	r6, .L103+88
+ 1003              	.LVL53:
+ 1004 04de 3688     		ldrh	r6, [r6]
+ 1005 04e0 0096     		str	r6, [sp]
+ 1006 04e2 FFF7FEFF 		bl	telemetry_send_values_pv
+ 1007              	.LVL54:
+ 1008 04e6 DCE7     		b	.L65
+ 1009              	.LVL55:
+ 1010              	.L98:
+ 304:../src/packet_tx_handler.c **** 			}
+ 1011              		.loc 1 304 0
+ 1012 04e8 2E4B     		ldr	r3, .L103+60
+ 1013 04ea 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1014 04ec 2E4A     		ldr	r2, .L103+64
+ 1015 04ee 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1016 04f0 2E49     		ldr	r1, .L103+68
+ 1017 04f2 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 1018 04f4 2E48     		ldr	r0, .L103+72
+ 1019 04f6 0078     		ldrb	r0, [r0]	@ zero_extendqisi2
+ 1020 04f8 0497     		str	r7, [sp, #16]
+ 1021 04fa 0396     		str	r6, [sp, #12]
+ 1022 04fc CDF808C0 		str	ip, [sp, #8]
+ 1023 0500 CDF804E0 		str	lr, [sp, #4]
+ 1024 0504 2F4E     		ldr	r6, .L103+92
+ 1025              	.LVL56:
+ 1026 0506 3668     		ldr	r6, [r6]	@ float
+ 1027 0508 0096     		str	r6, [sp]	@ float
+ 1028 050a FFF7FEFF 		bl	telemetry_send_values
+ 1029              	.LVL57:
+ 1030 050e C8E7     		b	.L65
+ 1031              	.LVL58:
+ 1032              	.L93:
+ 1033              	.LBB84:
+ 1034              	.LBB85:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 1035              		.loc 1 74 0
+ 1036 0510 154B     		ldr	r3, .L103
+ 1037 0512 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1038 0514 23B3     		cbz	r3, .L68
+ 1039              	.L69:
+ 1040              	.LBB86:
+ 1041              	.LBB87:
+ 1042              		.loc 2 67 0
+ 1043 0516 1D4B     		ldr	r3, .L103+36
+ 1044 0518 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 1045 051c 002B     		cmp	r3, #0
+ 1046 051e FAD1     		bne	.L69
+ 1047              	.LBE87:
+ 1048              	.LBE86:
+  79:../src/packet_tx_handler.c **** 
+ 1049              		.loc 1 79 0
+ 1050 0520 4FF47A70 		mov	r0, #1000
+ 1051 0524 FFF7FEFF 		bl	delay_fixed
+ 1052              	.LVL59:
+ 1053              	.L70:
+ 1054              	.LBE85:
+ 1055              	.LBE84:
+ 321:../src/packet_tx_handler.c **** 			telemetry_send_chns_description_pv(config_basic);
+ 1056              		.loc 1 321 0
+ 1057 0528 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 1058 052a 012B     		cmp	r3, #1
+ 1059 052c 4ED0     		beq	.L99
+ 332:../src/packet_tx_handler.c **** 
+ 1060              		.loc 1 332 0
+ 1061 052e 2846     		mov	r0, r5
+ 1062 0530 FFF7FEFF 		bl	telemetry_send_chns_description
+ 1063              	.LVL60:
+ 1064              	.LBB89:
+ 1065              	.LBB90:
+  74:../src/packet_tx_handler.c **** 		// wait for previous transmission to complete
+ 1066              		.loc 1 74 0
+ 1067 0534 0C4B     		ldr	r3, .L103
+ 1068 0536 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1069 0538 002B     		cmp	r3, #0
+ 1070 053a 52D0     		beq	.L73
+ 1071              	.L74:
+ 1072              	.LBB91:
+ 1073              	.LBB92:
+ 1074              		.loc 2 67 0
+ 1075 053c 134B     		ldr	r3, .L103+36
+ 1076 053e 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 1077 0542 002B     		cmp	r3, #0
+ 1078 0544 FAD1     		bne	.L74
+ 1079              	.LBE92:
+ 1080              	.LBE91:
+  79:../src/packet_tx_handler.c **** 
+ 1081              		.loc 1 79 0
+ 1082 0546 4FF47A70 		mov	r0, #1000
+ 1083 054a FFF7FEFF 		bl	delay_fixed
+ 1084              	.LVL61:
+ 1085              	.L72:
+ 1086              	.LBE90:
+ 1087              	.LBE89:
+ 339:../src/packet_tx_handler.c **** 
+ 1088              		.loc 1 339 0
+ 1089 054e FFF7FEFF 		bl	telemetry_send_status
+ 1090              	.LVL62:
+ 342:../src/packet_tx_handler.c **** 
+ 1091              		.loc 1 342 0
+ 1092 0552 A378     		ldrb	r3, [r4, #2]	@ zero_extendqisi2
+ 1093 0554 012B     		cmp	r3, #1
+ 1094 0556 48D0     		beq	.L100
+ 1095              	.L75:
+ 347:../src/packet_tx_handler.c **** 	}
+ 1096              		.loc 1 347 0
+ 1097 0558 1B4B     		ldr	r3, .L103+96
+ 1098 055a 0022     		movs	r2, #0
+ 1099 055c 1A70     		strb	r2, [r3]
+ 1100              		.loc 1 350 0
+ 1101 055e CAE5     		b	.L9
+ 1102              	.L68:
+ 1103              	.LBB94:
+ 1104              	.LBB88:
+  83:../src/packet_tx_handler.c **** 	}
+ 1105              		.loc 1 83 0
+ 1106 0560 014B     		ldr	r3, .L103
+ 1107 0562 0122     		movs	r2, #1
+ 1108 0564 1A70     		strb	r2, [r3]
+ 1109 0566 DFE7     		b	.L70
+ 1110              	.L104:
+ 1111              		.align	2
+ 1112              	.L103:
+ 1113 0568 00000000 		.word	.LANCHOR3
+ 1114 056c 00000000 		.word	main_kiss_srl_ctx_ptr
+ 1115 0570 00000000 		.word	rte_wx_temperature_average_external_valid
+ 1116 0574 00000000 		.word	rte_wx_average_winddirection
+ 1117 0578 00000000 		.word	rte_wx_max_windspeed
+ 1118 057c 00000000 		.word	rte_wx_average_windspeed
+ 1119 0580 00000000 		.word	rte_wx_humidity_valid
+ 1120 0584 00000000 		.word	rte_wx_pressure_valid
+ 1121 0588 00000000 		.word	.LANCHOR8
+ 1122 058c 00000000 		.word	main_afsk
+ 1123 0590 00000000 		.word	rte_wx_error_dallas_qf
+ 1124 0594 00000000 		.word	rte_wx_current_dallas_qf
+ 1125 0598 00000000 		.word	rte_wx_ms5611_qf
+ 1126 059c 00000000 		.word	rte_wx_wind_qf
+ 1127 05a0 00000000 		.word	rte_wx_bme280_qf
+ 1128 05a4 00000000 		.word	kiss10m
+ 1129 05a8 00000000 		.word	digi10m
+ 1130 05ac 00000000 		.word	tx10m
+ 1131 05b0 00000000 		.word	rx10m
+ 1132 05b4 00000000 		.word	.LANCHOR6
+ 1133 05b8 00000000 		.word	rte_pv_battery_voltage
+ 1134 05bc 00000000 		.word	rte_pv_battery_current
+ 1135 05c0 00000000 		.word	rte_pv_cell_voltage
+ 1136 05c4 00000000 		.word	rte_wx_temperature_internal_valid
+ 1137 05c8 00000000 		.word	.LANCHOR7
+ 1138              	.L99:
+ 1139              	.LBE88:
+ 1140              	.LBE94:
+ 322:../src/packet_tx_handler.c **** 
+ 1141              		.loc 1 322 0
+ 1142 05cc 2846     		mov	r0, r5
+ 1143 05ce FFF7FEFF 		bl	telemetry_send_chns_description_pv
+ 1144              	.LVL63:
+ 325:../src/packet_tx_handler.c **** 				rte_main_reboot_req = 1;
+ 1145              		.loc 1 325 0
+ 1146 05d2 084B     		ldr	r3, .L105
+ 1147 05d4 1B88     		ldrh	r3, [r3]
+ 1148 05d6 002B     		cmp	r3, #0
+ 1149 05d8 B9D1     		bne	.L72
+ 326:../src/packet_tx_handler.c **** 			}
+ 1150              		.loc 1 326 0
+ 1151 05da 074B     		ldr	r3, .L105+4
+ 1152 05dc 0122     		movs	r2, #1
+ 1153 05de 1A70     		strb	r2, [r3]
+ 1154 05e0 B5E7     		b	.L72
+ 1155              	.L73:
+ 1156              	.LBB95:
+ 1157              	.LBB93:
+  83:../src/packet_tx_handler.c **** 	}
+ 1158              		.loc 1 83 0
+ 1159 05e2 064B     		ldr	r3, .L105+8
+ 1160 05e4 0122     		movs	r2, #1
+ 1161 05e6 1A70     		strb	r2, [r3]
+ 1162 05e8 B1E7     		b	.L72
+ 1163              	.L100:
+ 1164              	.LBE93:
+ 1165              	.LBE95:
+ 344:../src/packet_tx_handler.c **** 		}
+ 1166              		.loc 1 344 0
+ 1167 05ea 0548     		ldr	r0, .L105+12
+ 1168 05ec FFF7FEFF 		bl	umb_clear_error_history
+ 1169              	.LVL64:
+ 1170 05f0 B2E7     		b	.L75
+ 1171              	.L106:
+ 1172 05f2 00BF     		.align	2
+ 1173              	.L105:
+ 1174 05f4 00000000 		.word	rte_pv_battery_voltage
+ 1175 05f8 00000000 		.word	rte_main_reboot_req
+ 1176 05fc 00000000 		.word	.LANCHOR3
+ 1177 0600 00000000 		.word	rte_wx_umb_context
+ 1178              		.cfi_endproc
+ 1179              	.LFE103:
+ 1181              		.section	.text.packet_tx_get_current_counters,"ax",%progbits
+ 1182              		.align	1
+ 1183              		.global	packet_tx_get_current_counters
+ 1184              		.syntax unified
+ 1185              		.thumb
+ 1186              		.thumb_func
+ 1187              		.fpu softvfp
+ 1189              	packet_tx_get_current_counters:
+ 1190              	.LFB104:
+ 351:../src/packet_tx_handler.c **** 
+ 352:../src/packet_tx_handler.c **** void packet_tx_get_current_counters(packet_tx_counter_values_t * out) {
+ 1191              		.loc 1 352 0
+ 1192              		.cfi_startproc
+ 1193              		@ args = 0, pretend = 0, frame = 0
+ 1194              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1195              		@ link register save eliminated.
+ 1196              	.LVL65:
+ 353:../src/packet_tx_handler.c **** 
+ 354:../src/packet_tx_handler.c **** 	if (out != 0x00) {
+ 1197              		.loc 1 354 0
+ 1198 0000 70B1     		cbz	r0, .L107
+ 355:../src/packet_tx_handler.c **** 		out->beacon_counter = packet_tx_beacon_counter;
+ 1199              		.loc 1 355 0
+ 1200 0002 084A     		ldr	r2, .L109
+ 1201 0004 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1202 0006 0270     		strb	r2, [r0]
+ 356:../src/packet_tx_handler.c **** 		out->wx_counter = packet_tx_meteo_counter;
+ 1203              		.loc 1 356 0
+ 1204 0008 074A     		ldr	r2, .L109+4
+ 1205 000a 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1206 000c 4270     		strb	r2, [r0, #1]
+ 357:../src/packet_tx_handler.c **** 		out->telemetry_counter = packet_tx_telemetry_counter;
+ 1207              		.loc 1 357 0
+ 1208 000e 074A     		ldr	r2, .L109+8
+ 1209 0010 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1210 0012 8270     		strb	r2, [r0, #2]
+ 358:../src/packet_tx_handler.c **** 		out->telemetry_desc_counter = packet_tx_telemetry_descr_counter;
+ 1211              		.loc 1 358 0
+ 1212 0014 064A     		ldr	r2, .L109+12
+ 1213 0016 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1214 0018 C270     		strb	r2, [r0, #3]
+ 359:../src/packet_tx_handler.c **** 		out->kiss_counter = packet_tx_meteo_kiss_counter;
+ 1215              		.loc 1 359 0
+ 1216 001a 064A     		ldr	r2, .L109+16
+ 1217 001c 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 1218 001e 0271     		strb	r2, [r0, #4]
+ 1219              	.L107:
+ 360:../src/packet_tx_handler.c **** 	}
+ 361:../src/packet_tx_handler.c **** }
+ 1220              		.loc 1 361 0
+ 1221 0020 7047     		bx	lr
+ 1222              	.L110:
+ 1223 0022 00BF     		.align	2
+ 1224              	.L109:
+ 1225 0024 00000000 		.word	.LANCHOR4
+ 1226 0028 00000000 		.word	.LANCHOR2
+ 1227 002c 00000000 		.word	.LANCHOR6
+ 1228 0030 00000000 		.word	.LANCHOR7
+ 1229 0034 00000000 		.word	.LANCHOR8
+ 1230              		.cfi_endproc
+ 1231              	.LFE104:
+ 1233              		.section	.text.packet_tx_set_current_counters,"ax",%progbits
+ 1234              		.align	1
+ 1235              		.global	packet_tx_set_current_counters
+ 1236              		.syntax unified
+ 1237              		.thumb
+ 1238              		.thumb_func
+ 1239              		.fpu softvfp
+ 1241              	packet_tx_set_current_counters:
+ 1242              	.LFB105:
+ 362:../src/packet_tx_handler.c **** 
+ 363:../src/packet_tx_handler.c **** void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
+ 1243              		.loc 1 363 0
+ 1244              		.cfi_startproc
+ 1245              		@ args = 0, pretend = 0, frame = 0
+ 1246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1247              		@ link register save eliminated.
+ 1248              	.LVL66:
+ 364:../src/packet_tx_handler.c **** 	if (in != 0x00) {
+ 1249              		.loc 1 364 0
+ 1250 0000 0346     		mov	r3, r0
+ 1251 0002 98B1     		cbz	r0, .L111
+ 365:../src/packet_tx_handler.c **** 
+ 366:../src/packet_tx_handler.c **** 		if (in->beacon_counter != 0)
+ 1252              		.loc 1 366 0
+ 1253 0004 0278     		ldrb	r2, [r0]	@ zero_extendqisi2
+ 1254 0006 0AB1     		cbz	r2, .L113
+ 367:../src/packet_tx_handler.c **** 			packet_tx_beacon_counter = in->beacon_counter;
+ 1255              		.loc 1 367 0
+ 1256 0008 0949     		ldr	r1, .L117
+ 1257 000a 0A70     		strb	r2, [r1]
+ 1258              	.L113:
+ 368:../src/packet_tx_handler.c **** 
+ 369:../src/packet_tx_handler.c **** 		if (in->wx_counter != 0)
+ 1259              		.loc 1 369 0
+ 1260 000c 5A78     		ldrb	r2, [r3, #1]	@ zero_extendqisi2
+ 1261 000e 0AB1     		cbz	r2, .L114
+ 370:../src/packet_tx_handler.c **** 			packet_tx_meteo_counter = in->wx_counter;
+ 1262              		.loc 1 370 0
+ 1263 0010 0849     		ldr	r1, .L117+4
+ 1264 0012 0A70     		strb	r2, [r1]
+ 1265              	.L114:
+ 371:../src/packet_tx_handler.c **** 
+ 372:../src/packet_tx_handler.c **** 		if (in->telemetry_counter != 0)
+ 1266              		.loc 1 372 0
+ 1267 0014 9A78     		ldrb	r2, [r3, #2]	@ zero_extendqisi2
+ 1268 0016 0AB1     		cbz	r2, .L115
+ 373:../src/packet_tx_handler.c **** 			packet_tx_telemetry_counter = in->telemetry_counter;
+ 1269              		.loc 1 373 0
+ 1270 0018 0749     		ldr	r1, .L117+8
+ 1271 001a 0A70     		strb	r2, [r1]
+ 1272              	.L115:
+ 374:../src/packet_tx_handler.c **** 
+ 375:../src/packet_tx_handler.c **** 		if (in->telemetry_desc_counter != 0)
+ 1273              		.loc 1 375 0
+ 1274 001c DA78     		ldrb	r2, [r3, #3]	@ zero_extendqisi2
+ 1275 001e 0AB1     		cbz	r2, .L116
+ 376:../src/packet_tx_handler.c **** 			packet_tx_telemetry_descr_counter = in->telemetry_desc_counter;
+ 1276              		.loc 1 376 0
+ 1277 0020 0649     		ldr	r1, .L117+12
+ 1278 0022 0A70     		strb	r2, [r1]
+ 1279              	.L116:
+ 377:../src/packet_tx_handler.c **** 
+ 378:../src/packet_tx_handler.c **** 		if (in->kiss_counter != 0)
+ 1280              		.loc 1 378 0
+ 1281 0024 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+ 1282 0026 0BB1     		cbz	r3, .L111
+ 379:../src/packet_tx_handler.c **** 			packet_tx_meteo_kiss_counter = in->kiss_counter;
+ 1283              		.loc 1 379 0
+ 1284 0028 054A     		ldr	r2, .L117+16
+ 1285 002a 1370     		strb	r3, [r2]
+ 1286              	.L111:
+ 380:../src/packet_tx_handler.c **** 	}
+ 381:../src/packet_tx_handler.c **** }
+ 1287              		.loc 1 381 0
+ 1288 002c 7047     		bx	lr
+ 1289              	.L118:
+ 1290 002e 00BF     		.align	2
+ 1291              	.L117:
+ 1292 0030 00000000 		.word	.LANCHOR4
+ 1293 0034 00000000 		.word	.LANCHOR2
+ 1294 0038 00000000 		.word	.LANCHOR6
+ 1295 003c 00000000 		.word	.LANCHOR7
+ 1296 0040 00000000 		.word	.LANCHOR8
+ 1297              		.cfi_endproc
+ 1298              	.LFE105:
+ 1300              		.section	.text.packet_tx_get_minutes_to_next_wx,"ax",%progbits
+ 1301              		.align	1
+ 1302              		.global	packet_tx_get_minutes_to_next_wx
+ 1303              		.syntax unified
+ 1304              		.thumb
+ 1305              		.thumb_func
+ 1306              		.fpu softvfp
+ 1308              	packet_tx_get_minutes_to_next_wx:
+ 1309              	.LFB106:
+ 382:../src/packet_tx_handler.c **** 
+ 383:../src/packet_tx_handler.c **** int16_t packet_tx_get_minutes_to_next_wx(void) {
+ 1310              		.loc 1 383 0
+ 1311              		.cfi_startproc
+ 1312              		@ args = 0, pretend = 0, frame = 0
+ 1313              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1314              		@ link register save eliminated.
+ 384:../src/packet_tx_handler.c **** 	if (packet_tx_meteo_interval != 0) {
+ 1315              		.loc 1 384 0
+ 1316 0000 044B     		ldr	r3, .L122
+ 1317 0002 1878     		ldrb	r0, [r3]	@ zero_extendqisi2
+ 1318 0004 18B1     		cbz	r0, .L121
+ 385:../src/packet_tx_handler.c **** 		return packet_tx_meteo_interval - packet_tx_meteo_counter;
+ 1319              		.loc 1 385 0
+ 1320 0006 044B     		ldr	r3, .L122+4
+ 1321 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1322 000a C01A     		subs	r0, r0, r3
+ 1323 000c 7047     		bx	lr
+ 1324              	.L121:
+ 386:../src/packet_tx_handler.c **** 	}
+ 387:../src/packet_tx_handler.c **** 	else {
+ 388:../src/packet_tx_handler.c **** 		return -1;
+ 1325              		.loc 1 388 0
+ 1326 000e 4FF0FF30 		mov	r0, #-1
+ 389:../src/packet_tx_handler.c **** 	}
+ 390:../src/packet_tx_handler.c **** }
+ 1327              		.loc 1 390 0
+ 1328 0012 7047     		bx	lr
+ 1329              	.L123:
+ 1330              		.align	2
+ 1331              	.L122:
+ 1332 0014 00000000 		.word	.LANCHOR0
+ 1333 0018 00000000 		.word	.LANCHOR2
+ 1334              		.cfi_endproc
+ 1335              	.LFE106:
+ 1337              		.global	packet_tx_more_than_one
+ 1338              		.global	packet_tx_modbus_status
+ 1339              		.global	packet_tx_modbus_raw_values
+ 1340              		.global	packet_tx_telemetry_descr_counter
+ 1341              		.global	packet_tx_telemetry_descr_interval
+ 1342              		.global	packet_tx_telemetry_counter
+ 1343              		.global	packet_tx_telemetry_interval
+ 1344              		.global	packet_tx_meteo_kiss_counter
+ 1345              		.global	packet_tx_meteo_kiss_interval
+ 1346              		.global	packet_tx_meteo_counter
+ 1347              		.global	packet_tx_meteo_interval
+ 1348              		.global	packet_tx_error_status_counter
+ 1349              		.global	packet_tx_error_status_interval
+ 1350              		.global	packet_tx_beacon_counter
+ 1351              		.global	packet_tx_beacon_interval
+ 1352              		.section	.bss.packet_tx_beacon_counter,"aw",%nobits
+ 1353              		.set	.LANCHOR4,. + 0
+ 1356              	packet_tx_beacon_counter:
+ 1357 0000 00       		.space	1
+ 1358              		.section	.bss.packet_tx_beacon_interval,"aw",%nobits
+ 1359              		.set	.LANCHOR1,. + 0
+ 1362              	packet_tx_beacon_interval:
+ 1363 0000 00       		.space	1
+ 1364              		.section	.bss.packet_tx_error_status_counter,"aw",%nobits
+ 1365              		.set	.LANCHOR5,. + 0
+ 1368              	packet_tx_error_status_counter:
+ 1369 0000 00       		.space	1
+ 1370              		.section	.bss.packet_tx_meteo_interval,"aw",%nobits
+ 1371              		.set	.LANCHOR0,. + 0
+ 1374              	packet_tx_meteo_interval:
+ 1375 0000 00       		.space	1
+ 1376              		.section	.bss.packet_tx_meteo_kiss_counter,"aw",%nobits
+ 1377              		.set	.LANCHOR8,. + 0
+ 1380              	packet_tx_meteo_kiss_counter:
+ 1381 0000 00       		.space	1
+ 1382              		.section	.bss.packet_tx_modbus_status,"aw",%nobits
+ 1383              		.set	.LANCHOR11,. + 0
+ 1386              	packet_tx_modbus_status:
+ 1387 0000 00       		.space	1
+ 1388              		.section	.bss.packet_tx_more_than_one,"aw",%nobits
+ 1389              		.set	.LANCHOR3,. + 0
+ 1392              	packet_tx_more_than_one:
+ 1393 0000 00       		.space	1
+ 1394              		.section	.bss.packet_tx_telemetry_counter,"aw",%nobits
+ 1395              		.set	.LANCHOR6,. + 0
+ 1398              	packet_tx_telemetry_counter:
+ 1399 0000 00       		.space	1
+ 1400              		.section	.data.packet_tx_error_status_interval,"aw",%progbits
+ 1401              		.set	.LANCHOR9,. + 0
+ 1404              	packet_tx_error_status_interval:
+ 1405 0000 02       		.byte	2
+ 1406              		.section	.data.packet_tx_meteo_counter,"aw",%progbits
+ 1407              		.set	.LANCHOR2,. + 0
+ 1410              	packet_tx_meteo_counter:
+ 1411 0000 02       		.byte	2
+ 1412              		.section	.data.packet_tx_meteo_kiss_interval,"aw",%progbits
+ 1413              		.set	.LANCHOR12,. + 0
+ 1416              	packet_tx_meteo_kiss_interval:
+ 1417 0000 02       		.byte	2
+ 1418              		.section	.data.packet_tx_modbus_raw_values,"aw",%progbits
+ 1419              		.set	.LANCHOR10,. + 0
+ 1422              	packet_tx_modbus_raw_values:
+ 1423 0000 87       		.byte	-121
+ 1424              		.section	.data.packet_tx_telemetry_descr_counter,"aw",%progbits
+ 1425              		.set	.LANCHOR7,. + 0
+ 1428              	packet_tx_telemetry_descr_counter:
+ 1429 0000 0A       		.byte	10
+ 1430              		.section	.data.packet_tx_telemetry_descr_interval,"aw",%progbits
+ 1431              		.set	.LANCHOR14,. + 0
+ 1434              	packet_tx_telemetry_descr_interval:
+ 1435 0000 9B       		.byte	-101
+ 1436              		.section	.data.packet_tx_telemetry_interval,"aw",%progbits
+ 1437              		.set	.LANCHOR13,. + 0
+ 1440              	packet_tx_telemetry_interval:
+ 1441 0000 0A       		.byte	10
+ 1442              		.text
+ 1443              	.Letext0:
+ 1444              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1445              		.file 4 "../include/config_data.h"
+ 1446              		.file 5 "../include/packet_tx_handler.h"
+ 1447              		.file 6 "../system/include/cmsis/core_cm3.h"
+ 1448              		.file 7 "../system/include/cmsis/system_stm32f10x.h"
+ 1449              		.file 8 "../system/include/cmsis/stm32f10x.h"
+ 1450              		.file 9 "../system/include/drivers/dallas.h"
+ 1451              		.file 10 "../system/include/drivers/analog_anemometer.h"
+ 1452              		.file 11 "../system/include/davis_vantage/davis_loop_t.h"
+ 1453              		.file 12 "../system/include/umb_master/umb_frame_t.h"
+ 1454              		.file 13 "../system/include/umb_master/umb_state_t.h"
+ 1455              		.file 14 "../system/include/drivers/serial.h"
+ 1456              		.file 15 "../system/include/umb_master/umb_context_t.h"
+ 1457              		.file 16 "../system/include/umb_master/umb_qf_t.h"
+ 1458              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1459              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1460              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 1461              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1462              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 1463              		.file 22 "../system/include/drivers/ms5611.h"
+ 1464              		.file 23 "../system/include/drivers/bme280.h"
+ 1465              		.file 24 "../include/rte_wx.h"
+ 1466              		.file 25 "../system/include/./ve_direct_protocol/average_struct.h"
+ 1467              		.file 26 "../system/include/./ve_direct_protocol/raw_struct.h"
+ 1468              		.file 27 "../include/rte_pv.h"
+ 1469              		.file 28 "../include/rte_main.h"
+ 1470              		.file 29 "../system/include/./aprs/telemetry.h"
+ 1471              		.file 30 "../system/include/aprs/cfifo.h"
+ 1472              		.file 31 "../system/include/aprs/afsk.h"
+ 1473              		.file 32 "../system/include/aprs/ax25.h"
+ 1474              		.file 33 "../include/delay.h"
+ 1475              		.file 34 "../system/include/umb_master/umb_master.h"
+ 1476              		.file 35 "../system/include/./aprs/beacon.h"
+ 1477              		.file 36 "../system/include/./aprs/wx.h"
+ 1478              		.file 37 "../include/io.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 packet_tx_handler.c
+     /tmp/cccJUjBM.s:16     .text.packet_tx_send_wx_frame:0000000000000000 $t
+     /tmp/cccJUjBM.s:23     .text.packet_tx_send_wx_frame:0000000000000000 packet_tx_send_wx_frame
+     /tmp/cccJUjBM.s:72     .text.packet_tx_send_wx_frame:0000000000000034 $d
+     /tmp/cccJUjBM.s:83     .text.packet_tx_configure:0000000000000000 $t
+     /tmp/cccJUjBM.s:90     .text.packet_tx_configure:0000000000000000 packet_tx_configure
+     /tmp/cccJUjBM.s:114    .text.packet_tx_configure:0000000000000010 $d
+     /tmp/cccJUjBM.s:121    .text.packet_tx_handler:0000000000000000 $t
+     /tmp/cccJUjBM.s:128    .text.packet_tx_handler:0000000000000000 packet_tx_handler
+     /tmp/cccJUjBM.s:615    .text.packet_tx_handler:0000000000000288 $d
+     /tmp/cccJUjBM.s:654    .text.packet_tx_handler:0000000000000314 $t
+     /tmp/cccJUjBM.s:824    .text.packet_tx_handler:0000000000000400 $d
+     /tmp/cccJUjBM.s:831    .text.packet_tx_handler:0000000000000406 $t
+     /tmp/cccJUjBM.s:843    .text.packet_tx_handler:0000000000000416 $d
+     /tmp/cccJUjBM.s:849    .text.packet_tx_handler:000000000000041c $t
+     /tmp/cccJUjBM.s:875    .text.packet_tx_handler:0000000000000432 $d
+     /tmp/cccJUjBM.s:881    .text.packet_tx_handler:0000000000000438 $t
+     /tmp/cccJUjBM.s:1113   .text.packet_tx_handler:0000000000000568 $d
+     /tmp/cccJUjBM.s:1142   .text.packet_tx_handler:00000000000005cc $t
+     /tmp/cccJUjBM.s:1174   .text.packet_tx_handler:00000000000005f4 $d
+     /tmp/cccJUjBM.s:1182   .text.packet_tx_get_current_counters:0000000000000000 $t
+     /tmp/cccJUjBM.s:1189   .text.packet_tx_get_current_counters:0000000000000000 packet_tx_get_current_counters
+     /tmp/cccJUjBM.s:1225   .text.packet_tx_get_current_counters:0000000000000024 $d
+     /tmp/cccJUjBM.s:1234   .text.packet_tx_set_current_counters:0000000000000000 $t
+     /tmp/cccJUjBM.s:1241   .text.packet_tx_set_current_counters:0000000000000000 packet_tx_set_current_counters
+     /tmp/cccJUjBM.s:1292   .text.packet_tx_set_current_counters:0000000000000030 $d
+     /tmp/cccJUjBM.s:1301   .text.packet_tx_get_minutes_to_next_wx:0000000000000000 $t
+     /tmp/cccJUjBM.s:1308   .text.packet_tx_get_minutes_to_next_wx:0000000000000000 packet_tx_get_minutes_to_next_wx
+     /tmp/cccJUjBM.s:1332   .text.packet_tx_get_minutes_to_next_wx:0000000000000014 $d
+     /tmp/cccJUjBM.s:1392   .bss.packet_tx_more_than_one:0000000000000000 packet_tx_more_than_one
+     /tmp/cccJUjBM.s:1386   .bss.packet_tx_modbus_status:0000000000000000 packet_tx_modbus_status
+     /tmp/cccJUjBM.s:1422   .data.packet_tx_modbus_raw_values:0000000000000000 packet_tx_modbus_raw_values
+     /tmp/cccJUjBM.s:1428   .data.packet_tx_telemetry_descr_counter:0000000000000000 packet_tx_telemetry_descr_counter
+     /tmp/cccJUjBM.s:1434   .data.packet_tx_telemetry_descr_interval:0000000000000000 packet_tx_telemetry_descr_interval
+     /tmp/cccJUjBM.s:1398   .bss.packet_tx_telemetry_counter:0000000000000000 packet_tx_telemetry_counter
+     /tmp/cccJUjBM.s:1440   .data.packet_tx_telemetry_interval:0000000000000000 packet_tx_telemetry_interval
+     /tmp/cccJUjBM.s:1380   .bss.packet_tx_meteo_kiss_counter:0000000000000000 packet_tx_meteo_kiss_counter
+     /tmp/cccJUjBM.s:1416   .data.packet_tx_meteo_kiss_interval:0000000000000000 packet_tx_meteo_kiss_interval
+     /tmp/cccJUjBM.s:1410   .data.packet_tx_meteo_counter:0000000000000000 packet_tx_meteo_counter
+     /tmp/cccJUjBM.s:1374   .bss.packet_tx_meteo_interval:0000000000000000 packet_tx_meteo_interval
+     /tmp/cccJUjBM.s:1368   .bss.packet_tx_error_status_counter:0000000000000000 packet_tx_error_status_counter
+     /tmp/cccJUjBM.s:1404   .data.packet_tx_error_status_interval:0000000000000000 packet_tx_error_status_interval
+     /tmp/cccJUjBM.s:1356   .bss.packet_tx_beacon_counter:0000000000000000 packet_tx_beacon_counter
+     /tmp/cccJUjBM.s:1362   .bss.packet_tx_beacon_interval:0000000000000000 packet_tx_beacon_interval
+     /tmp/cccJUjBM.s:1357   .bss.packet_tx_beacon_counter:0000000000000000 $d
+     /tmp/cccJUjBM.s:1363   .bss.packet_tx_beacon_interval:0000000000000000 $d
+     /tmp/cccJUjBM.s:1369   .bss.packet_tx_error_status_counter:0000000000000000 $d
+     /tmp/cccJUjBM.s:1375   .bss.packet_tx_meteo_interval:0000000000000000 $d
+     /tmp/cccJUjBM.s:1381   .bss.packet_tx_meteo_kiss_counter:0000000000000000 $d
+     /tmp/cccJUjBM.s:1387   .bss.packet_tx_modbus_status:0000000000000000 $d
+     /tmp/cccJUjBM.s:1393   .bss.packet_tx_more_than_one:0000000000000000 $d
+     /tmp/cccJUjBM.s:1399   .bss.packet_tx_telemetry_counter:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.a574250aaf0d4f0a93b2db72031afff6
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.average_struct.h.9.41820d0d7dc25dca8a9005c6d1a8bb5f
+                           .group:0000000000000000 wm4.telemetry.h.21.a87436b8ee86f5e60170454e063be1e3
+                           .group:0000000000000000 wm4.parser.h.9.2d68c8669e0bffa77926bbb9bf5a2aba
+                           .group:0000000000000000 wm4.rtu_configuration.h.9.225559723a46d58da796e0ac6cb0b2ac
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+
+UNDEFINED SYMBOLS
+SendWXFrame
+main_afsk
+rte_wx_temperature_average_external_valid
+rte_wx_average_winddirection
+rte_wx_max_windspeed
+rte_wx_average_windspeed
+rte_wx_humidity_valid
+rte_wx_pressure_valid
+umb_construct_status_str
+delay_fixed
+beacon_send_own
+io_ext_watchdog_service
+telemetry_send_status_raw_values_modbus
+telemetry_send_status_pv
+main_config_data_mode
+main_kiss_enabled
+master_time
+main_own_aprs_msg
+rte_wx_umb_context
+main_config_data_basic
+rte_main_trigger_wx_packet
+rte_main_trigger_modbus_status
+rte_pv_struct
+rte_pv_corrupted_messages_count
+rte_pv_messages_count
+rte_pv_last_error
+rte_pv_average
+srl_wait_for_tx_completion
+SendWXFrameToBuffer
+srl_start_tx
+telemetry_send_values
+telemetry_send_values_pv
+telemetry_send_chns_description
+telemetry_send_status
+main_kiss_srl_ctx_ptr
+rte_wx_error_dallas_qf
+rte_wx_current_dallas_qf
+rte_wx_ms5611_qf
+rte_wx_wind_qf
+rte_wx_bme280_qf
+kiss10m
+digi10m
+tx10m
+rx10m
+rte_pv_battery_voltage
+rte_pv_battery_current
+rte_pv_cell_voltage
+rte_wx_temperature_internal_valid
+telemetry_send_chns_description_pv
+umb_clear_error_history
+rte_main_reboot_req

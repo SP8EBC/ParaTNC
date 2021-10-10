@@ -1,0 +1,1206 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"KissCommunication.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.updcrc_ccitt,"ax",%progbits
+  16              		.align	1
+  17              		.syntax unified
+  18              		.thumb
+  19              		.thumb_func
+  20              		.fpu softvfp
+  22              	updcrc_ccitt:
+  23              	.LFB63:
+  24              		.file 1 "../system/include/aprs/crc.h"
+   1:../system/include/aprs/crc.h **** #ifndef CRC_H_
+   2:../system/include/aprs/crc.h **** #define CRC_H_
+   3:../system/include/aprs/crc.h **** 
+   4:../system/include/aprs/crc.h **** #include <stdint.h>
+   5:../system/include/aprs/crc.h **** 
+   6:../system/include/aprs/crc.h **** #include <macros.h>
+   7:../system/include/aprs/crc.h **** 
+   8:../system/include/aprs/crc.h **** extern const uint16_t crc_ccitt_tab[256];
+   9:../system/include/aprs/crc.h **** #ifdef __cplusplus
+  10:../system/include/aprs/crc.h **** extern "C"
+  11:../system/include/aprs/crc.h **** {
+  12:../system/include/aprs/crc.h **** #endif
+  13:../system/include/aprs/crc.h **** /**************************************************************************************************
+  14:../system/include/aprs/crc.h **** static uint16_t updcrc_ccitt(uint8_t c, uint16_t oldcrc) {
+  25              		.loc 1 14 0
+  26              		.cfi_startproc
+  27              		@ args = 0, pretend = 0, frame = 0
+  28              		@ frame_needed = 0, uses_anonymous_args = 0
+  29              		@ link register save eliminated.
+  30              	.LVL0:
+  15:../system/include/aprs/crc.h **** /**************************************************************************************************
+  16:../system/include/aprs/crc.h **** 
+  17:../system/include/aprs/crc.h **** 	return (oldcrc >> 8) ^ pgm_read16(&crc_ccitt_tab[(oldcrc ^ c) & 0xff]);
+  31              		.loc 1 17 0
+  32 0000 4840     		eors	r0, r0, r1
+  33              	.LVL1:
+  34 0002 C0B2     		uxtb	r0, r0
+  35 0004 024B     		ldr	r3, .L2
+  36 0006 33F81000 		ldrh	r0, [r3, r0, lsl #1]
+  18:../system/include/aprs/crc.h **** }
+  37              		.loc 1 18 0
+  38 000a 80EA1120 		eor	r0, r0, r1, lsr #8
+  39 000e 7047     		bx	lr
+  40              	.L3:
+  41              		.align	2
+  42              	.L2:
+  43 0010 00000000 		.word	crc_ccitt_tab
+  44              		.cfi_endproc
+  45              	.LFE63:
+  47              		.section	.text.SendKISSToHost,"ax",%progbits
+  48              		.align	1
+  49              		.global	SendKISSToHost
+  50              		.syntax unified
+  51              		.thumb
+  52              		.thumb_func
+  53              		.fpu softvfp
+  55              	SendKISSToHost:
+  56              	.LFB64:
+  57              		.file 2 "../src/KissCommunication.c"
+   1:../src/KissCommunication.c **** /*
+   2:../src/KissCommunication.c ****  * KissCommunication.c
+   3:../src/KissCommunication.c ****  *
+   4:../src/KissCommunication.c ****  *  Created on: 29.04.2017
+   5:../src/KissCommunication.c ****  *      Author: mateusz
+   6:../src/KissCommunication.c ****  */
+   7:../src/KissCommunication.c **** 
+   8:../src/KissCommunication.c **** #include "KissCommunication.h"
+   9:../src/KissCommunication.c **** //#include "main.h"
+  10:../src/KissCommunication.c **** 
+  11:../src/KissCommunication.c **** #include "drivers/serial.h"
+  12:../src/KissCommunication.c **** 
+  13:../src/KissCommunication.c **** #include "diag/Trace.h"
+  14:../src/KissCommunication.c **** #include "station_config.h"
+  15:../src/KissCommunication.c **** #include "TimerConfig.h"
+  16:../src/KissCommunication.c **** 
+  17:../src/KissCommunication.c **** #include <crc.h>
+  18:../src/KissCommunication.c **** 
+  19:../src/KissCommunication.c **** #include <string.h>
+  20:../src/KissCommunication.c **** 
+  21:../src/KissCommunication.c **** extern unsigned short tx10m;
+  22:../src/KissCommunication.c **** 
+  23:../src/KissCommunication.c **** 
+  24:../src/KissCommunication.c **** uint8_t kiss_buffer[KISS_BUFFER_LN];
+  25:../src/KissCommunication.c **** 
+  26:../src/KissCommunication.c **** int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t ou
+  58              		.loc 2 26 0
+  59              		.cfi_startproc
+  60              		@ args = 0, pretend = 0, frame = 0
+  61              		@ frame_needed = 0, uses_anonymous_args = 0
+  62              		@ link register save eliminated.
+  63              	.LVL2:
+  27:../src/KissCommunication.c **** 	#define FEND	(uint8_t)0xC0
+  28:../src/KissCommunication.c **** 	#define FESC	(uint8_t)0xDB
+  29:../src/KissCommunication.c **** 	#define TFEND	(uint8_t)0xDC
+  30:../src/KissCommunication.c **** 	#define TFESC	(uint8_t)0xDD
+  31:../src/KissCommunication.c **** 	short int i /* Zmienna do poruszania siê po frame */, j /* zmienna do poruszani siê po data*/;
+  32:../src/KissCommunication.c **** 
+  33:../src/KissCommunication.c **** 	if (input_frame_len >= output_len)
+  64              		.loc 2 33 0
+  65 0000 9942     		cmp	r1, r3
+  66 0002 2BD2     		bcs	.L11
+  26:../src/KissCommunication.c **** 	#define FEND	(uint8_t)0xC0
+  67              		.loc 2 26 0
+  68 0004 F0B4     		push	{r4, r5, r6, r7}
+  69              		.cfi_def_cfa_offset 16
+  70              		.cfi_offset 4, -16
+  71              		.cfi_offset 5, -12
+  72              		.cfi_offset 6, -8
+  73              		.cfi_offset 7, -4
+  74              	.LVL3:
+  34:../src/KissCommunication.c **** 		return KISS_TOO_LONG_FRM;
+  35:../src/KissCommunication.c **** 
+  36:../src/KissCommunication.c **** 	uint8_t* data;
+  37:../src/KissCommunication.c **** 	data = output;
+  38:../src/KissCommunication.c **** 
+  39:../src/KissCommunication.c **** 	data[0] = FEND;
+  75              		.loc 2 39 0
+  76 0006 C024     		movs	r4, #192
+  77 0008 1470     		strb	r4, [r2]
+  40:../src/KissCommunication.c **** 	data[1] = 0x00;
+  78              		.loc 2 40 0
+  79 000a 0025     		movs	r5, #0
+  80 000c 5570     		strb	r5, [r2, #1]
+  81              	.LVL4:
+  41:../src/KissCommunication.c **** //	KissFrm.data[2] = HDLC_FLAG;
+  42:../src/KissCommunication.c **** 	for (j = 2, i = 0; i < input_frame_len; j++, i++) {
+  82              		.loc 2 42 0
+  83 000e 0224     		movs	r4, #2
+  84 0010 07E0     		b	.L6
+  85              	.LVL5:
+  86              	.L7:
+  43:../src/KissCommunication.c **** 
+  44:../src/KissCommunication.c **** 		// if we reach the maximu size of an output buffer
+  45:../src/KissCommunication.c **** 		if (j >= output_len)
+  46:../src/KissCommunication.c **** 			return KISS_TOO_LONG_FRM;
+  47:../src/KissCommunication.c **** 
+  48:../src/KissCommunication.c **** 		if (*(input_frame+i) != FEND && *(input_frame+i) != FESC)
+  49:../src/KissCommunication.c **** 			data[j] = input_frame[i];
+  50:../src/KissCommunication.c **** 		else if (*(input_frame+i) == FEND) {
+  87              		.loc 2 50 0
+  88 0012 C02E     		cmp	r6, #192
+  89 0014 10D0     		beq	.L17
+  51:../src/KissCommunication.c **** 			data[j] = FESC;
+  52:../src/KissCommunication.c **** 			*(data + (j++)) = TFEND;
+  53:../src/KissCommunication.c **** 		}
+  54:../src/KissCommunication.c **** 		else if(*(input_frame+i) == FESC) {
+  90              		.loc 2 54 0
+  91 0016 DB2E     		cmp	r6, #219
+  92 0018 14D0     		beq	.L18
+  93              	.L8:
+  42:../src/KissCommunication.c **** 
+  94              		.loc 2 42 0 discriminator 2
+  95 001a 0134     		adds	r4, r4, #1
+  96              	.LVL6:
+  97 001c 24B2     		sxth	r4, r4
+  98              	.LVL7:
+  99 001e 0135     		adds	r5, r5, #1
+ 100              	.LVL8:
+ 101 0020 2DB2     		sxth	r5, r5
+ 102              	.LVL9:
+ 103              	.L6:
+  42:../src/KissCommunication.c **** 
+ 104              		.loc 2 42 0 is_stmt 0 discriminator 1
+ 105 0022 8D42     		cmp	r5, r1
+ 106 0024 14DA     		bge	.L19
+  45:../src/KissCommunication.c **** 			return KISS_TOO_LONG_FRM;
+ 107              		.loc 2 45 0 is_stmt 1
+ 108 0026 9C42     		cmp	r4, r3
+ 109 0028 1BDA     		bge	.L12
+  48:../src/KissCommunication.c **** 			data[j] = input_frame[i];
+ 110              		.loc 2 48 0
+ 111 002a 465D     		ldrb	r6, [r0, r5]	@ zero_extendqisi2
+ 112 002c C02E     		cmp	r6, #192
+ 113 002e F0D0     		beq	.L7
+  48:../src/KissCommunication.c **** 			data[j] = input_frame[i];
+ 114              		.loc 2 48 0 is_stmt 0 discriminator 1
+ 115 0030 DB2E     		cmp	r6, #219
+ 116 0032 EED0     		beq	.L7
+  49:../src/KissCommunication.c **** 		else if (*(input_frame+i) == FEND) {
+ 117              		.loc 2 49 0 is_stmt 1
+ 118 0034 1655     		strb	r6, [r2, r4]
+ 119 0036 F0E7     		b	.L8
+ 120              	.L17:
+  51:../src/KissCommunication.c **** 			*(data + (j++)) = TFEND;
+ 121              		.loc 2 51 0
+ 122 0038 1619     		adds	r6, r2, r4
+  52:../src/KissCommunication.c **** 		}
+ 123              		.loc 2 52 0
+ 124 003a 0134     		adds	r4, r4, #1
+ 125              	.LVL10:
+ 126 003c 24B2     		sxth	r4, r4
+ 127              	.LVL11:
+ 128 003e DC27     		movs	r7, #220
+ 129 0040 3770     		strb	r7, [r6]
+ 130 0042 EAE7     		b	.L8
+ 131              	.L18:
+  55:../src/KissCommunication.c **** 			data[j] = FESC;
+ 132              		.loc 2 55 0
+ 133 0044 1619     		adds	r6, r2, r4
+  56:../src/KissCommunication.c **** 			*(data + (j++)) = TFESC;
+ 134              		.loc 2 56 0
+ 135 0046 0134     		adds	r4, r4, #1
+ 136              	.LVL12:
+ 137 0048 24B2     		sxth	r4, r4
+ 138              	.LVL13:
+ 139 004a DD27     		movs	r7, #221
+ 140 004c 3770     		strb	r7, [r6]
+ 141 004e E4E7     		b	.L8
+ 142              	.L19:
+  57:../src/KissCommunication.c **** 		}
+  58:../src/KissCommunication.c **** 		else {
+  59:../src/KissCommunication.c **** 
+  60:../src/KissCommunication.c **** 		}
+  61:../src/KissCommunication.c **** 	}
+  62:../src/KissCommunication.c **** //	*(KissFrm.data + (j++)) = HDLC_FLAG;
+  63:../src/KissCommunication.c **** 	*(data + (j++)) = FEND;
+ 143              		.loc 2 63 0
+ 144 0050 601C     		adds	r0, r4, #1
+ 145              	.LVL14:
+ 146 0052 C023     		movs	r3, #192
+ 147              	.LVL15:
+ 148 0054 1355     		strb	r3, [r2, r4]
+  64:../src/KissCommunication.c **** 	return j;
+ 149              		.loc 2 64 0
+ 150 0056 00B2     		sxth	r0, r0
+ 151              	.LVL16:
+ 152              	.L4:
+  65:../src/KissCommunication.c **** }
+ 153              		.loc 2 65 0
+ 154 0058 F0BC     		pop	{r4, r5, r6, r7}
+ 155              		.cfi_restore 7
+ 156              		.cfi_restore 6
+ 157              		.cfi_restore 5
+ 158              		.cfi_restore 4
+ 159              		.cfi_def_cfa_offset 0
+ 160              	.LVL17:
+ 161 005a 7047     		bx	lr
+ 162              	.LVL18:
+ 163              	.L11:
+  34:../src/KissCommunication.c **** 
+ 164              		.loc 2 34 0
+ 165 005c 4FF0FF30 		mov	r0, #-1
+ 166              	.LVL19:
+ 167              		.loc 2 65 0
+ 168 0060 7047     		bx	lr
+ 169              	.LVL20:
+ 170              	.L12:
+ 171              		.cfi_def_cfa_offset 16
+ 172              		.cfi_offset 4, -16
+ 173              		.cfi_offset 5, -12
+ 174              		.cfi_offset 6, -8
+ 175              		.cfi_offset 7, -4
+  46:../src/KissCommunication.c **** 
+ 176              		.loc 2 46 0
+ 177 0062 4FF0FF30 		mov	r0, #-1
+ 178              	.LVL21:
+ 179 0066 F7E7     		b	.L4
+ 180              		.cfi_endproc
+ 181              	.LFE64:
+ 183              		.section	.text.ParseReceivedKISS,"ax",%progbits
+ 184              		.align	1
+ 185              		.global	ParseReceivedKISS
+ 186              		.syntax unified
+ 187              		.thumb
+ 188              		.thumb_func
+ 189              		.fpu softvfp
+ 191              	ParseReceivedKISS:
+ 192              	.LFB65:
+  66:../src/KissCommunication.c **** 
+  67:../src/KissCommunication.c **** short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a)
+ 193              		.loc 2 67 0
+ 194              		.cfi_startproc
+ 195              		@ args = 0, pretend = 0, frame = 0
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ 197              	.LVL22:
+  68:../src/KissCommunication.c **** 	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
+  69:../src/KissCommunication.c **** 	int j/* zmienna do poruszania sie po lokalnej tablicy do przepisywania*/;
+  70:../src/KissCommunication.c **** //	uint8_t FrameBuff[100];
+  71:../src/KissCommunication.c **** 
+  72:../src/KissCommunication.c **** 	uint8_t *FrameBuff = kiss_buffer;
+  73:../src/KissCommunication.c **** 
+  74:../src/KissCommunication.c **** 	// check if frame from host is not too long
+  75:../src/KissCommunication.c **** 	if (input_len >= KISS_BUFFER_LN)
+ 198              		.loc 2 75 0
+ 199 0000 B1F5967F 		cmp	r1, #300
+ 200 0004 3AD2     		bcs	.L30
+  67:../src/KissCommunication.c **** 	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
+ 201              		.loc 2 67 0
+ 202 0006 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 203              		.cfi_def_cfa_offset 24
+ 204              		.cfi_offset 3, -24
+ 205              		.cfi_offset 4, -20
+ 206              		.cfi_offset 5, -16
+ 207              		.cfi_offset 6, -12
+ 208              		.cfi_offset 7, -8
+ 209              		.cfi_offset 14, -4
+  76:../src/KissCommunication.c **** 		return 1;
+  77:../src/KissCommunication.c **** 
+  78:../src/KissCommunication.c **** 	if (*(input_frame_from_host) != FEND)
+ 210              		.loc 2 78 0
+ 211 0008 0478     		ldrb	r4, [r0]	@ zero_extendqisi2
+ 212 000a C02C     		cmp	r4, #192
+ 213 000c 01D0     		beq	.L37
+  79:../src/KissCommunication.c **** 		return 1;
+ 214              		.loc 2 79 0
+ 215 000e 0120     		movs	r0, #1
+ 216              	.LVL23:
+ 217              	.L21:
+  80:../src/KissCommunication.c **** 	if (*(input_frame_from_host+1) != 0x00)
+  81:../src/KissCommunication.c **** 		return 1;
+  82:../src/KissCommunication.c **** 	for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
+  83:../src/KissCommunication.c **** 		if (*(input_frame_from_host+i) == FESC) {
+  84:../src/KissCommunication.c **** 			if(*(input_frame_from_host+i+1) == TFEND)
+  85:../src/KissCommunication.c **** 				FrameBuff[j]=FEND;
+  86:../src/KissCommunication.c **** 			else if(*(input_frame_from_host+i+1) == TFESC)
+  87:../src/KissCommunication.c **** 				FrameBuff[j]=FESC;
+  88:../src/KissCommunication.c **** 			else {
+  89:../src/KissCommunication.c **** 				;
+  90:../src/KissCommunication.c **** 			}
+  91:../src/KissCommunication.c **** 			i++;
+  92:../src/KissCommunication.c **** 		}
+  93:../src/KissCommunication.c **** 		else
+  94:../src/KissCommunication.c **** 			FrameBuff[j] = *(input_frame_from_host+i);
+  95:../src/KissCommunication.c **** 	}
+  96:../src/KissCommunication.c **** #ifdef _DBG_TRACE
+  97:../src/KissCommunication.c **** 	trace_printf("KISS-FromHost:Ln=%d;Content=%s\r\n", j, FrameBuff);
+  98:../src/KissCommunication.c **** #endif
+  99:../src/KissCommunication.c **** 	tx10m++;
+ 100:../src/KissCommunication.c **** 
+ 101:../src/KissCommunication.c **** 	// keep this commented until reseting the DCD variable will be moved outside main for (;;) loop
+ 102:../src/KissCommunication.c **** 	//	while(ax25->dcd == true);
+ 103:../src/KissCommunication.c **** 	while(a->sending == true);
+ 104:../src/KissCommunication.c **** 
+ 105:../src/KissCommunication.c **** 
+ 106:../src/KissCommunication.c **** 	ax25_sendRaw(ax25,FrameBuff,j);
+ 107:../src/KissCommunication.c ****  	afsk_txStart(a);
+ 108:../src/KissCommunication.c **** 	return 0;
+ 109:../src/KissCommunication.c **** }
+ 218              		.loc 2 109 0
+ 219 0010 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 220              	.LVL24:
+ 221              	.L37:
+  80:../src/KissCommunication.c **** 	if (*(input_frame_from_host+1) != 0x00)
+ 222              		.loc 2 80 0
+ 223 0012 4478     		ldrb	r4, [r0, #1]	@ zero_extendqisi2
+ 224 0014 002C     		cmp	r4, #0
+ 225 0016 33D1     		bne	.L32
+  82:../src/KissCommunication.c **** 		if (*(input_frame_from_host+i) == FESC) {
+ 226              		.loc 2 82 0
+ 227 0018 0026     		movs	r6, #0
+ 228 001a 0224     		movs	r4, #2
+ 229 001c 08E0     		b	.L22
+ 230              	.LVL25:
+ 231              	.L40:
+  84:../src/KissCommunication.c **** 				FrameBuff[j]=FEND;
+ 232              		.loc 2 84 0
+ 233 001e 0137     		adds	r7, r7, #1
+ 234 0020 C55D     		ldrb	r5, [r0, r7]	@ zero_extendqisi2
+ 235 0022 DC2D     		cmp	r5, #220
+ 236 0024 0FD0     		beq	.L38
+  86:../src/KissCommunication.c **** 				FrameBuff[j]=FESC;
+ 237              		.loc 2 86 0
+ 238 0026 DD2D     		cmp	r5, #221
+ 239 0028 11D0     		beq	.L39
+ 240              	.L25:
+  91:../src/KissCommunication.c **** 		}
+ 241              		.loc 2 91 0
+ 242 002a 0134     		adds	r4, r4, #1
+ 243              	.LVL26:
+ 244              	.L26:
+  82:../src/KissCommunication.c **** 		if (*(input_frame_from_host+i) == FESC) {
+ 245              		.loc 2 82 0 discriminator 2
+ 246 002c 0134     		adds	r4, r4, #1
+ 247              	.LVL27:
+ 248 002e 0136     		adds	r6, r6, #1
+ 249              	.LVL28:
+ 250              	.L22:
+  82:../src/KissCommunication.c **** 		if (*(input_frame_from_host+i) == FESC) {
+ 251              		.loc 2 82 0 is_stmt 0 discriminator 1
+ 252 0030 A142     		cmp	r1, r4
+ 253 0032 10DD     		ble	.L27
+  82:../src/KissCommunication.c **** 		if (*(input_frame_from_host+i) == FESC) {
+ 254              		.loc 2 82 0 discriminator 3
+ 255 0034 2746     		mov	r7, r4
+ 256 0036 055D     		ldrb	r5, [r0, r4]	@ zero_extendqisi2
+ 257 0038 C02D     		cmp	r5, #192
+ 258 003a 0CD0     		beq	.L27
+  83:../src/KissCommunication.c **** 			if(*(input_frame_from_host+i+1) == TFEND)
+ 259              		.loc 2 83 0 is_stmt 1
+ 260 003c DB2D     		cmp	r5, #219
+ 261 003e EED0     		beq	.L40
+  94:../src/KissCommunication.c **** 	}
+ 262              		.loc 2 94 0
+ 263 0040 104F     		ldr	r7, .L41
+ 264 0042 F555     		strb	r5, [r6, r7]
+ 265 0044 F2E7     		b	.L26
+ 266              	.L38:
+  85:../src/KissCommunication.c **** 			else if(*(input_frame_from_host+i+1) == TFESC)
+ 267              		.loc 2 85 0
+ 268 0046 0F4D     		ldr	r5, .L41
+ 269 0048 C027     		movs	r7, #192
+ 270 004a 7755     		strb	r7, [r6, r5]
+ 271 004c EDE7     		b	.L25
+ 272              	.L39:
+  87:../src/KissCommunication.c **** 			else {
+ 273              		.loc 2 87 0
+ 274 004e 0D4D     		ldr	r5, .L41
+ 275 0050 DB27     		movs	r7, #219
+ 276 0052 7755     		strb	r7, [r6, r5]
+ 277 0054 E9E7     		b	.L25
+ 278              	.L27:
+  99:../src/KissCommunication.c **** 
+ 279              		.loc 2 99 0
+ 280 0056 0C48     		ldr	r0, .L41+4
+ 281              	.LVL29:
+ 282 0058 0188     		ldrh	r1, [r0]
+ 283              	.LVL30:
+ 284 005a 0131     		adds	r1, r1, #1
+ 285 005c 0180     		strh	r1, [r0]	@ movhi
+ 286              	.L29:
+ 103:../src/KissCommunication.c **** 
+ 287              		.loc 2 103 0 discriminator 1
+ 288 005e 93F83014 		ldrb	r1, [r3, #1072]	@ zero_extendqisi2
+ 289 0062 0029     		cmp	r1, #0
+ 290 0064 FBD1     		bne	.L29
+ 291 0066 1C46     		mov	r4, r3
+ 292              	.LVL31:
+ 293 0068 1046     		mov	r0, r2
+ 106:../src/KissCommunication.c ****  	afsk_txStart(a);
+ 294              		.loc 2 106 0
+ 295 006a B2B2     		uxth	r2, r6
+ 296              	.LVL32:
+ 297 006c 0549     		ldr	r1, .L41
+ 298 006e FFF7FEFF 		bl	ax25_sendRaw
+ 299              	.LVL33:
+ 107:../src/KissCommunication.c **** 	return 0;
+ 300              		.loc 2 107 0
+ 301 0072 2046     		mov	r0, r4
+ 302 0074 FFF7FEFF 		bl	afsk_txStart
+ 303              	.LVL34:
+ 108:../src/KissCommunication.c **** }
+ 304              		.loc 2 108 0
+ 305 0078 0020     		movs	r0, #0
+ 306 007a C9E7     		b	.L21
+ 307              	.LVL35:
+ 308              	.L30:
+ 309              		.cfi_def_cfa_offset 0
+ 310              		.cfi_restore 3
+ 311              		.cfi_restore 4
+ 312              		.cfi_restore 5
+ 313              		.cfi_restore 6
+ 314              		.cfi_restore 7
+ 315              		.cfi_restore 14
+  76:../src/KissCommunication.c **** 
+ 316              		.loc 2 76 0
+ 317 007c 0120     		movs	r0, #1
+ 318              	.LVL36:
+ 319              		.loc 2 109 0
+ 320 007e 7047     		bx	lr
+ 321              	.LVL37:
+ 322              	.L32:
+ 323              		.cfi_def_cfa_offset 24
+ 324              		.cfi_offset 3, -24
+ 325              		.cfi_offset 4, -20
+ 326              		.cfi_offset 5, -16
+ 327              		.cfi_offset 6, -12
+ 328              		.cfi_offset 7, -8
+ 329              		.cfi_offset 14, -4
+  81:../src/KissCommunication.c **** 	for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
+ 330              		.loc 2 81 0
+ 331 0080 0120     		movs	r0, #1
+ 332              	.LVL38:
+ 333 0082 C5E7     		b	.L21
+ 334              	.L42:
+ 335              		.align	2
+ 336              	.L41:
+ 337 0084 00000000 		.word	kiss_buffer
+ 338 0088 00000000 		.word	tx10m
+ 339              		.cfi_endproc
+ 340              	.LFE65:
+ 342              		.section	.text.kiss_reset_buffer,"ax",%progbits
+ 343              		.align	1
+ 344              		.global	kiss_reset_buffer
+ 345              		.syntax unified
+ 346              		.thumb
+ 347              		.thumb_func
+ 348              		.fpu softvfp
+ 350              	kiss_reset_buffer:
+ 351              	.LFB66:
+ 110:../src/KissCommunication.c **** 
+ 111:../src/KissCommunication.c **** void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
+ 352              		.loc 2 111 0
+ 353              		.cfi_startproc
+ 354              		@ args = 0, pretend = 0, frame = 0
+ 355              		@ frame_needed = 0, uses_anonymous_args = 0
+ 356              	.LVL39:
+ 357 0000 38B5     		push	{r3, r4, r5, lr}
+ 358              		.cfi_def_cfa_offset 16
+ 359              		.cfi_offset 3, -16
+ 360              		.cfi_offset 4, -12
+ 361              		.cfi_offset 5, -8
+ 362              		.cfi_offset 14, -4
+ 363 0002 0446     		mov	r4, r0
+ 364 0004 1546     		mov	r5, r2
+ 112:../src/KissCommunication.c **** 	memset(output, 0x00, sizeof(output_len));
+ 365              		.loc 2 112 0
+ 366 0006 0222     		movs	r2, #2
+ 367              	.LVL40:
+ 368 0008 0021     		movs	r1, #0
+ 369              	.LVL41:
+ 370 000a FFF7FEFF 		bl	memset
+ 371              	.LVL42:
+ 113:../src/KissCommunication.c **** 
+ 114:../src/KissCommunication.c **** 	output[0] = FEND;
+ 372              		.loc 2 114 0
+ 373 000e C023     		movs	r3, #192
+ 374 0010 2370     		strb	r3, [r4]
+ 115:../src/KissCommunication.c **** 	output[1] = 0x00;
+ 375              		.loc 2 115 0
+ 376 0012 0023     		movs	r3, #0
+ 377 0014 6370     		strb	r3, [r4, #1]
+ 116:../src/KissCommunication.c **** 
+ 117:../src/KissCommunication.c **** 	*current_len = 2;
+ 378              		.loc 2 117 0
+ 379 0016 0223     		movs	r3, #2
+ 380 0018 2B80     		strh	r3, [r5]	@ movhi
+ 118:../src/KissCommunication.c **** }
+ 381              		.loc 2 118 0
+ 382 001a 38BD     		pop	{r3, r4, r5, pc}
+ 383              		.cfi_endproc
+ 384              	.LFE66:
+ 386              		.section	.text.kiss_put_char_nocheck,"ax",%progbits
+ 387              		.align	1
+ 388              		.global	kiss_put_char_nocheck
+ 389              		.syntax unified
+ 390              		.thumb
+ 391              		.thumb_func
+ 392              		.fpu softvfp
+ 394              	kiss_put_char_nocheck:
+ 395              	.LFB68:
+ 119:../src/KissCommunication.c **** 
+ 120:../src/KissCommunication.c **** uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint1
+ 121:../src/KissCommunication.c **** 
+ 122:../src/KissCommunication.c **** 	uint16_t new_crc = 0;
+ 123:../src/KissCommunication.c **** 	uint16_t curr_ln = *current_len;
+ 124:../src/KissCommunication.c **** 
+ 125:../src/KissCommunication.c **** 	if (*current_len >= output_len) {
+ 126:../src/KissCommunication.c **** 		return 1;
+ 127:../src/KissCommunication.c **** 	}
+ 128:../src/KissCommunication.c **** 
+ 129:../src/KissCommunication.c **** 	if (c == HDLC_FLAG || c == HDLC_RESET || c == AX25_ESC)
+ 130:../src/KissCommunication.c **** 	{
+ 131:../src/KissCommunication.c **** 		kiss_put_char_nocheck(AX25_ESC, output, output_len, current_len, crc);
+ 132:../src/KissCommunication.c **** 	}
+ 133:../src/KissCommunication.c **** 
+ 134:../src/KissCommunication.c **** 	if (c == FEND)
+ 135:../src/KissCommunication.c **** 	{
+ 136:../src/KissCommunication.c **** 		kiss_put_char_nocheck(FESC, output, output_len, current_len, crc);
+ 137:../src/KissCommunication.c **** 		kiss_put_char_nocheck(TFEND, output, output_len, current_len, crc);
+ 138:../src/KissCommunication.c **** 	}
+ 139:../src/KissCommunication.c **** 
+ 140:../src/KissCommunication.c **** 	else if (c == FESC)
+ 141:../src/KissCommunication.c **** 	{
+ 142:../src/KissCommunication.c **** 		kiss_put_char_nocheck(FESC, output, output_len, current_len, crc);
+ 143:../src/KissCommunication.c **** 		kiss_put_char_nocheck(TFESC, output, output_len, current_len, crc);
+ 144:../src/KissCommunication.c **** 	}
+ 145:../src/KissCommunication.c **** 
+ 146:../src/KissCommunication.c **** 	else {
+ 147:../src/KissCommunication.c **** 		output[curr_ln++] = c;
+ 148:../src/KissCommunication.c **** 	}
+ 149:../src/KissCommunication.c **** 
+ 150:../src/KissCommunication.c **** 	if (crc == NULL) {
+ 151:../src/KissCommunication.c **** 		;
+ 152:../src/KissCommunication.c **** 	}
+ 153:../src/KissCommunication.c **** 	else {
+ 154:../src/KissCommunication.c **** 		new_crc = updcrc_ccitt(c, *crc);
+ 155:../src/KissCommunication.c **** 
+ 156:../src/KissCommunication.c **** 		*crc = new_crc;
+ 157:../src/KissCommunication.c **** 	}
+ 158:../src/KissCommunication.c **** 
+ 159:../src/KissCommunication.c **** 	*current_len = curr_ln;
+ 160:../src/KissCommunication.c **** 
+ 161:../src/KissCommunication.c **** 	return 0;
+ 162:../src/KissCommunication.c **** }
+ 163:../src/KissCommunication.c **** 
+ 164:../src/KissCommunication.c **** uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_le
+ 396              		.loc 2 164 0
+ 397              		.cfi_startproc
+ 398              		@ args = 4, pretend = 0, frame = 0
+ 399              		@ frame_needed = 0, uses_anonymous_args = 0
+ 400              	.LVL43:
+ 401 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 402              		.cfi_def_cfa_offset 24
+ 403              		.cfi_offset 3, -24
+ 404              		.cfi_offset 4, -20
+ 405              		.cfi_offset 5, -16
+ 406              		.cfi_offset 6, -12
+ 407              		.cfi_offset 7, -8
+ 408              		.cfi_offset 14, -4
+ 409 0002 069D     		ldr	r5, [sp, #24]
+ 410              	.LVL44:
+ 165:../src/KissCommunication.c **** 	uint16_t new_crc = 0;
+ 166:../src/KissCommunication.c **** 	uint16_t curr_ln = *current_len;
+ 411              		.loc 2 166 0
+ 412 0004 1C88     		ldrh	r4, [r3]
+ 413              	.LVL45:
+ 167:../src/KissCommunication.c **** 
+ 168:../src/KissCommunication.c **** 	if (*current_len >= output_len) {
+ 414              		.loc 2 168 0
+ 415 0006 9442     		cmp	r4, r2
+ 416 0008 0BD2     		bcs	.L48
+ 417 000a 1E46     		mov	r6, r3
+ 169:../src/KissCommunication.c **** 		return 1;
+ 170:../src/KissCommunication.c **** 	}
+ 171:../src/KissCommunication.c **** 
+ 172:../src/KissCommunication.c **** 	output[curr_ln++] = c;
+ 418              		.loc 2 172 0
+ 419 000c 671C     		adds	r7, r4, #1
+ 420 000e BFB2     		uxth	r7, r7
+ 421              	.LVL46:
+ 422 0010 0855     		strb	r0, [r1, r4]
+ 173:../src/KissCommunication.c **** 
+ 174:../src/KissCommunication.c **** 	if (crc == NULL) {
+ 423              		.loc 2 174 0
+ 424 0012 1DB1     		cbz	r5, .L47
+ 175:../src/KissCommunication.c **** 		;
+ 176:../src/KissCommunication.c **** 	}
+ 177:../src/KissCommunication.c **** 	else {
+ 178:../src/KissCommunication.c **** 		new_crc = updcrc_ccitt(c, *crc);
+ 425              		.loc 2 178 0
+ 426 0014 2988     		ldrh	r1, [r5]
+ 427              	.LVL47:
+ 428 0016 FFF7FEFF 		bl	updcrc_ccitt
+ 429              	.LVL48:
+ 179:../src/KissCommunication.c **** 
+ 180:../src/KissCommunication.c **** 		*crc = new_crc;
+ 430              		.loc 2 180 0
+ 431 001a 2880     		strh	r0, [r5]	@ movhi
+ 432              	.LVL49:
+ 433              	.L47:
+ 181:../src/KissCommunication.c **** 	}
+ 182:../src/KissCommunication.c **** 
+ 183:../src/KissCommunication.c **** 	*current_len = curr_ln;
+ 434              		.loc 2 183 0
+ 435 001c 3780     		strh	r7, [r6]	@ movhi
+ 184:../src/KissCommunication.c **** 
+ 185:../src/KissCommunication.c **** 	return 0;
+ 436              		.loc 2 185 0
+ 437 001e 0020     		movs	r0, #0
+ 438              	.LVL50:
+ 439              	.L46:
+ 186:../src/KissCommunication.c **** }
+ 440              		.loc 2 186 0
+ 441 0020 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 442              	.LVL51:
+ 443              	.L48:
+ 169:../src/KissCommunication.c **** 	}
+ 444              		.loc 2 169 0
+ 445 0022 0120     		movs	r0, #1
+ 446              	.LVL52:
+ 447 0024 FCE7     		b	.L46
+ 448              		.cfi_endproc
+ 449              	.LFE68:
+ 451              		.section	.text.kiss_put_char,"ax",%progbits
+ 452              		.align	1
+ 453              		.global	kiss_put_char
+ 454              		.syntax unified
+ 455              		.thumb
+ 456              		.thumb_func
+ 457              		.fpu softvfp
+ 459              	kiss_put_char:
+ 460              	.LFB67:
+ 120:../src/KissCommunication.c **** 
+ 461              		.loc 2 120 0
+ 462              		.cfi_startproc
+ 463              		@ args = 4, pretend = 0, frame = 0
+ 464              		@ frame_needed = 0, uses_anonymous_args = 0
+ 465              	.LVL53:
+ 466 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 467              		.cfi_def_cfa_offset 28
+ 468              		.cfi_offset 4, -28
+ 469              		.cfi_offset 5, -24
+ 470              		.cfi_offset 6, -20
+ 471              		.cfi_offset 7, -16
+ 472              		.cfi_offset 8, -12
+ 473              		.cfi_offset 9, -8
+ 474              		.cfi_offset 14, -4
+ 475 0004 83B0     		sub	sp, sp, #12
+ 476              		.cfi_def_cfa_offset 40
+ 477 0006 DDF82880 		ldr	r8, [sp, #40]
+ 478              	.LVL54:
+ 123:../src/KissCommunication.c **** 
+ 479              		.loc 2 123 0
+ 480 000a B3F80090 		ldrh	r9, [r3]
+ 481              	.LVL55:
+ 125:../src/KissCommunication.c **** 		return 1;
+ 482              		.loc 2 125 0
+ 483 000e 9145     		cmp	r9, r2
+ 484 0010 4FD2     		bcs	.L58
+ 485 0012 1F46     		mov	r7, r3
+ 486 0014 1546     		mov	r5, r2
+ 487 0016 0E46     		mov	r6, r1
+ 488 0018 0446     		mov	r4, r0
+ 129:../src/KissCommunication.c **** 	{
+ 489              		.loc 2 129 0
+ 490 001a A0F17E03 		sub	r3, r0, #126
+ 491              	.LVL56:
+ 492 001e DBB2     		uxtb	r3, r3
+ 493 0020 012B     		cmp	r3, #1
+ 494 0022 19D9     		bls	.L52
+ 129:../src/KissCommunication.c **** 	{
+ 495              		.loc 2 129 0 is_stmt 0 discriminator 1
+ 496 0024 1B28     		cmp	r0, #27
+ 497 0026 17D0     		beq	.L52
+ 498              	.LVL57:
+ 499              	.L53:
+ 134:../src/KissCommunication.c **** 	{
+ 500              		.loc 2 134 0 is_stmt 1
+ 501 0028 C02C     		cmp	r4, #192
+ 502 002a 1ED0     		beq	.L60
+ 140:../src/KissCommunication.c **** 	{
+ 503              		.loc 2 140 0
+ 504 002c DB2C     		cmp	r4, #219
+ 505 002e 2ED0     		beq	.L61
+ 147:../src/KissCommunication.c **** 	}
+ 506              		.loc 2 147 0
+ 507 0030 09F10105 		add	r5, r9, #1
+ 508 0034 ADB2     		uxth	r5, r5
+ 509              	.LVL58:
+ 510 0036 06F80940 		strb	r4, [r6, r9]
+ 511              	.LVL59:
+ 512              	.L55:
+ 150:../src/KissCommunication.c **** 		;
+ 513              		.loc 2 150 0
+ 514 003a B8F1000F 		cmp	r8, #0
+ 515 003e 06D0     		beq	.L57
+ 154:../src/KissCommunication.c **** 
+ 516              		.loc 2 154 0
+ 517 0040 B8F80010 		ldrh	r1, [r8]
+ 518 0044 2046     		mov	r0, r4
+ 519 0046 FFF7FEFF 		bl	updcrc_ccitt
+ 520              	.LVL60:
+ 156:../src/KissCommunication.c **** 	}
+ 521              		.loc 2 156 0
+ 522 004a A8F80000 		strh	r0, [r8]	@ movhi
+ 523              	.LVL61:
+ 524              	.L57:
+ 159:../src/KissCommunication.c **** 
+ 525              		.loc 2 159 0
+ 526 004e 3D80     		strh	r5, [r7]	@ movhi
+ 161:../src/KissCommunication.c **** }
+ 527              		.loc 2 161 0
+ 528 0050 0020     		movs	r0, #0
+ 529              	.LVL62:
+ 530              	.L51:
+ 162:../src/KissCommunication.c **** 
+ 531              		.loc 2 162 0
+ 532 0052 03B0     		add	sp, sp, #12
+ 533              		.cfi_remember_state
+ 534              		.cfi_def_cfa_offset 28
+ 535              		@ sp needed
+ 536 0054 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 537              	.LVL63:
+ 538              	.L52:
+ 539              		.cfi_restore_state
+ 131:../src/KissCommunication.c **** 	}
+ 540              		.loc 2 131 0
+ 541 0058 CDF80080 		str	r8, [sp]
+ 542 005c 3B46     		mov	r3, r7
+ 543 005e 2A46     		mov	r2, r5
+ 544              	.LVL64:
+ 545 0060 3146     		mov	r1, r6
+ 546              	.LVL65:
+ 547 0062 1B20     		movs	r0, #27
+ 548              	.LVL66:
+ 549 0064 FFF7FEFF 		bl	kiss_put_char_nocheck
+ 550              	.LVL67:
+ 551 0068 DEE7     		b	.L53
+ 552              	.L60:
+ 136:../src/KissCommunication.c **** 		kiss_put_char_nocheck(TFEND, output, output_len, current_len, crc);
+ 553              		.loc 2 136 0
+ 554 006a CDF80080 		str	r8, [sp]
+ 555 006e 3B46     		mov	r3, r7
+ 556 0070 2A46     		mov	r2, r5
+ 557 0072 3146     		mov	r1, r6
+ 558 0074 DB20     		movs	r0, #219
+ 559 0076 FFF7FEFF 		bl	kiss_put_char_nocheck
+ 560              	.LVL68:
+ 137:../src/KissCommunication.c **** 	}
+ 561              		.loc 2 137 0
+ 562 007a CDF80080 		str	r8, [sp]
+ 563 007e 3B46     		mov	r3, r7
+ 564 0080 2A46     		mov	r2, r5
+ 565 0082 3146     		mov	r1, r6
+ 566 0084 DC20     		movs	r0, #220
+ 567 0086 FFF7FEFF 		bl	kiss_put_char_nocheck
+ 568              	.LVL69:
+ 123:../src/KissCommunication.c **** 
+ 569              		.loc 2 123 0
+ 570 008a 4D46     		mov	r5, r9
+ 571 008c D5E7     		b	.L55
+ 572              	.L61:
+ 142:../src/KissCommunication.c **** 		kiss_put_char_nocheck(TFESC, output, output_len, current_len, crc);
+ 573              		.loc 2 142 0
+ 574 008e CDF80080 		str	r8, [sp]
+ 575 0092 3B46     		mov	r3, r7
+ 576 0094 2A46     		mov	r2, r5
+ 577 0096 3146     		mov	r1, r6
+ 578 0098 DB20     		movs	r0, #219
+ 579 009a FFF7FEFF 		bl	kiss_put_char_nocheck
+ 580              	.LVL70:
+ 143:../src/KissCommunication.c **** 	}
+ 581              		.loc 2 143 0
+ 582 009e CDF80080 		str	r8, [sp]
+ 583 00a2 3B46     		mov	r3, r7
+ 584 00a4 2A46     		mov	r2, r5
+ 585 00a6 3146     		mov	r1, r6
+ 586 00a8 DD20     		movs	r0, #221
+ 587 00aa FFF7FEFF 		bl	kiss_put_char_nocheck
+ 588              	.LVL71:
+ 123:../src/KissCommunication.c **** 
+ 589              		.loc 2 123 0
+ 590 00ae 4D46     		mov	r5, r9
+ 591 00b0 C3E7     		b	.L55
+ 592              	.LVL72:
+ 593              	.L58:
+ 126:../src/KissCommunication.c **** 	}
+ 594              		.loc 2 126 0
+ 595 00b2 0120     		movs	r0, #1
+ 596              	.LVL73:
+ 597 00b4 CDE7     		b	.L51
+ 598              		.cfi_endproc
+ 599              	.LFE67:
+ 601              		.section	.text.kiss_put_call,"ax",%progbits
+ 602              		.align	1
+ 603              		.global	kiss_put_call
+ 604              		.syntax unified
+ 605              		.thumb
+ 606              		.thumb_func
+ 607              		.fpu softvfp
+ 609              	kiss_put_call:
+ 610              	.LFB69:
+ 187:../src/KissCommunication.c **** 
+ 188:../src/KissCommunication.c **** void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint16_t output_len, uin
+ 611              		.loc 2 188 0
+ 612              		.cfi_startproc
+ 613              		@ args = 8, pretend = 0, frame = 0
+ 614              		@ frame_needed = 0, uses_anonymous_args = 0
+ 615              	.LVL74:
+ 616 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 617              		.cfi_def_cfa_offset 32
+ 618              		.cfi_offset 4, -32
+ 619              		.cfi_offset 5, -28
+ 620              		.cfi_offset 6, -24
+ 621              		.cfi_offset 7, -20
+ 622              		.cfi_offset 8, -16
+ 623              		.cfi_offset 9, -12
+ 624              		.cfi_offset 10, -8
+ 625              		.cfi_offset 14, -4
+ 626 0004 82B0     		sub	sp, sp, #8
+ 627              		.cfi_def_cfa_offset 40
+ 628 0006 8146     		mov	r9, r0
+ 629 0008 8A46     		mov	r10, r1
+ 630 000a 9046     		mov	r8, r2
+ 631 000c 1F46     		mov	r7, r3
+ 632 000e 0B9E     		ldr	r6, [sp, #44]
+ 189:../src/KissCommunication.c **** 
+ 190:../src/KissCommunication.c **** 	uint16_t i;
+ 191:../src/KissCommunication.c **** 	uint8_t ssid;
+ 192:../src/KissCommunication.c **** 	uint16_t len = MIN(sizeof(addr->call), strlen(addr->call));
+ 633              		.loc 2 192 0
+ 634 0010 FFF7FEFF 		bl	strlen
+ 635              	.LVL75:
+ 636 0014 0628     		cmp	r0, #6
+ 637 0016 02D9     		bls	.L72
+ 638 0018 0625     		movs	r5, #6
+ 639              	.L63:
+ 640              	.LVL76:
+ 193:../src/KissCommunication.c **** 
+ 194:../src/KissCommunication.c **** 
+ 195:../src/KissCommunication.c **** 	for (i = 0; i < len; i++)
+ 641              		.loc 2 195 0 discriminator 4
+ 642 001a 0024     		movs	r4, #0
+ 643 001c 12E0     		b	.L64
+ 644              	.LVL77:
+ 645              	.L72:
+ 192:../src/KissCommunication.c **** 
+ 646              		.loc 2 192 0 discriminator 1
+ 647 001e 4846     		mov	r0, r9
+ 648 0020 FFF7FEFF 		bl	strlen
+ 649              	.LVL78:
+ 650 0024 85B2     		uxth	r5, r0
+ 651 0026 F8E7     		b	.L63
+ 652              	.LVL79:
+ 653              	.L65:
+ 654              	.LBB2:
+ 196:../src/KissCommunication.c **** 	{
+ 197:../src/KissCommunication.c **** 		uint8_t c = addr->call[i];
+ 655              		.loc 2 197 0 discriminator 3
+ 656 0028 19F90400 		ldrsb	r0, [r9, r4]
+ 657 002c C0B2     		uxtb	r0, r0
+ 658              	.LVL80:
+ 198:../src/KissCommunication.c **** 		kiss_put_char(c << 1, output, output_len, current_len, crc);
+ 659              		.loc 2 198 0 discriminator 3
+ 660 002e 4000     		lsls	r0, r0, #1
+ 661              	.LVL81:
+ 662 0030 0096     		str	r6, [sp]
+ 663              	.LVL82:
+ 664 0032 0A9B     		ldr	r3, [sp, #40]
+ 665 0034 3A46     		mov	r2, r7
+ 666 0036 4146     		mov	r1, r8
+ 667 0038 00F0FE00 		and	r0, r0, #254
+ 668 003c FFF7FEFF 		bl	kiss_put_char
+ 669              	.LVL83:
+ 670              	.LBE2:
+ 195:../src/KissCommunication.c **** 	{
+ 671              		.loc 2 195 0 discriminator 3
+ 672 0040 0134     		adds	r4, r4, #1
+ 673              	.LVL84:
+ 674 0042 A4B2     		uxth	r4, r4
+ 675              	.LVL85:
+ 676              	.L64:
+ 195:../src/KissCommunication.c **** 	{
+ 677              		.loc 2 195 0 is_stmt 0 discriminator 1
+ 678 0044 AC42     		cmp	r4, r5
+ 679 0046 EFD3     		bcc	.L65
+ 199:../src/KissCommunication.c **** 	}
+ 200:../src/KissCommunication.c **** 
+ 201:../src/KissCommunication.c **** 	if (len < sizeof(addr->call))
+ 680              		.loc 2 201 0 is_stmt 1
+ 681 0048 052D     		cmp	r5, #5
+ 682 004a 0ED8     		bhi	.L67
+ 202:../src/KissCommunication.c **** 	{
+ 203:../src/KissCommunication.c **** 		for (i = 0; i < sizeof(addr->call) - len; i++)
+ 683              		.loc 2 203 0
+ 684 004c 0024     		movs	r4, #0
+ 685              	.LVL86:
+ 686 004e 08E0     		b	.L66
+ 687              	.LVL87:
+ 688              	.L68:
+ 204:../src/KissCommunication.c **** 		{
+ 205:../src/KissCommunication.c **** 			kiss_put_char(' ' << 1, output, output_len, current_len, crc);
+ 689              		.loc 2 205 0 discriminator 3
+ 690 0050 0096     		str	r6, [sp]
+ 691 0052 0A9B     		ldr	r3, [sp, #40]
+ 692 0054 3A46     		mov	r2, r7
+ 693 0056 4146     		mov	r1, r8
+ 694 0058 4020     		movs	r0, #64
+ 695 005a FFF7FEFF 		bl	kiss_put_char
+ 696              	.LVL88:
+ 203:../src/KissCommunication.c **** 		{
+ 697              		.loc 2 203 0 discriminator 3
+ 698 005e 0134     		adds	r4, r4, #1
+ 699              	.LVL89:
+ 700 0060 A4B2     		uxth	r4, r4
+ 701              	.LVL90:
+ 702              	.L66:
+ 203:../src/KissCommunication.c **** 		{
+ 703              		.loc 2 203 0 is_stmt 0 discriminator 1
+ 704 0062 C5F10603 		rsb	r3, r5, #6
+ 705 0066 9C42     		cmp	r4, r3
+ 706 0068 F2D3     		bcc	.L68
+ 707              	.L67:
+ 206:../src/KissCommunication.c **** 		}
+ 207:../src/KissCommunication.c **** 	}
+ 208:../src/KissCommunication.c **** 
+ 209:../src/KissCommunication.c **** 	ssid = 0x60 | (addr->ssid << 1) | (is_last ? 0x01 : 0);
+ 708              		.loc 2 209 0 is_stmt 1
+ 709 006a 99F80600 		ldrb	r0, [r9, #6]	@ zero_extendqisi2
+ 710 006e 4000     		lsls	r0, r0, #1
+ 711 0070 40F06000 		orr	r0, r0, #96
+ 712 0074 40B2     		sxtb	r0, r0
+ 713 0076 BAF1000F 		cmp	r10, #0
+ 714 007a 18BF     		it	ne
+ 715 007c 40F00100 		orrne	r0, r0, #1
+ 716              	.LVL91:
+ 210:../src/KissCommunication.c **** 	kiss_put_char(ssid, output, output_len, current_len, crc);
+ 717              		.loc 2 210 0
+ 718 0080 0096     		str	r6, [sp]
+ 719 0082 0A9B     		ldr	r3, [sp, #40]
+ 720 0084 3A46     		mov	r2, r7
+ 721 0086 4146     		mov	r1, r8
+ 722 0088 C0B2     		uxtb	r0, r0
+ 723 008a FFF7FEFF 		bl	kiss_put_char
+ 724              	.LVL92:
+ 211:../src/KissCommunication.c **** 
+ 212:../src/KissCommunication.c **** }
+ 725              		.loc 2 212 0
+ 726 008e 02B0     		add	sp, sp, #8
+ 727              		.cfi_def_cfa_offset 32
+ 728              		@ sp needed
+ 729 0090 BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 730              		.cfi_endproc
+ 731              	.LFE69:
+ 733              		.section	.text.kiss_finalize_buffer,"ax",%progbits
+ 734              		.align	1
+ 735              		.global	kiss_finalize_buffer
+ 736              		.syntax unified
+ 737              		.thumb
+ 738              		.thumb_func
+ 739              		.fpu softvfp
+ 741              	kiss_finalize_buffer:
+ 742              	.LFB70:
+ 213:../src/KissCommunication.c **** 
+ 214:../src/KissCommunication.c **** void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
+ 743              		.loc 2 214 0
+ 744              		.cfi_startproc
+ 745              		@ args = 0, pretend = 0, frame = 0
+ 746              		@ frame_needed = 0, uses_anonymous_args = 0
+ 747              		@ link register save eliminated.
+ 748              	.LVL93:
+ 215:../src/KissCommunication.c **** 
+ 216:../src/KissCommunication.c **** 	uint16_t ln = *current_len;
+ 749              		.loc 2 216 0
+ 750 0000 1388     		ldrh	r3, [r2]
+ 751              	.LVL94:
+ 217:../src/KissCommunication.c **** 
+ 218:../src/KissCommunication.c **** 	if (*current_len >= output_len) {
+ 752              		.loc 2 218 0
+ 753 0002 8B42     		cmp	r3, r1
+ 754 0004 06D2     		bcs	.L76
+ 214:../src/KissCommunication.c **** 
+ 755              		.loc 2 214 0
+ 756 0006 10B4     		push	{r4}
+ 757              		.cfi_def_cfa_offset 4
+ 758              		.cfi_offset 4, -4
+ 219:../src/KissCommunication.c **** 		return;
+ 220:../src/KissCommunication.c **** 	}
+ 221:../src/KissCommunication.c **** 
+ 222:../src/KissCommunication.c **** 	output[ln++] = FEND;
+ 759              		.loc 2 222 0
+ 760 0008 591C     		adds	r1, r3, #1
+ 761              	.LVL95:
+ 762 000a C024     		movs	r4, #192
+ 763 000c C454     		strb	r4, [r0, r3]
+ 223:../src/KissCommunication.c **** 
+ 224:../src/KissCommunication.c **** 	*current_len = ln;
+ 764              		.loc 2 224 0
+ 765 000e 1180     		strh	r1, [r2]	@ movhi
+ 225:../src/KissCommunication.c **** }
+ 766              		.loc 2 225 0
+ 767 0010 10BC     		pop	{r4}
+ 768              		.cfi_restore 4
+ 769              		.cfi_def_cfa_offset 0
+ 770 0012 7047     		bx	lr
+ 771              	.LVL96:
+ 772              	.L76:
+ 773 0014 7047     		bx	lr
+ 774              		.cfi_endproc
+ 775              	.LFE70:
+ 777              		.section	.text.kiss_get_buff_ptr,"ax",%progbits
+ 778              		.align	1
+ 779              		.global	kiss_get_buff_ptr
+ 780              		.syntax unified
+ 781              		.thumb
+ 782              		.thumb_func
+ 783              		.fpu softvfp
+ 785              	kiss_get_buff_ptr:
+ 786              	.LFB71:
+ 226:../src/KissCommunication.c **** 
+ 227:../src/KissCommunication.c **** uint8_t* kiss_get_buff_ptr(void) {
+ 787              		.loc 2 227 0
+ 788              		.cfi_startproc
+ 789              		@ args = 0, pretend = 0, frame = 0
+ 790              		@ frame_needed = 0, uses_anonymous_args = 0
+ 791              		@ link register save eliminated.
+ 228:../src/KissCommunication.c **** 	return kiss_buffer;
+ 229:../src/KissCommunication.c **** }
+ 792              		.loc 2 229 0
+ 793 0000 0048     		ldr	r0, .L80
+ 794 0002 7047     		bx	lr
+ 795              	.L81:
+ 796              		.align	2
+ 797              	.L80:
+ 798 0004 00000000 		.word	kiss_buffer
+ 799              		.cfi_endproc
+ 800              	.LFE71:
+ 802              		.comm	kiss_buffer,300,4
+ 803              		.text
+ 804              	.Letext0:
+ 805              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 806              		.file 4 "../system/include/aprs/cfifo.h"
+ 807              		.file 5 "../system/include/aprs/afsk.h"
+ 808              		.file 6 "../system/include/aprs/ax25.h"
+ 809              		.file 7 "../system/include/cmsis/core_cm3.h"
+ 810              		.file 8 "../system/include/cmsis/system_stm32f10x.h"
+ 811              		.file 9 "../system/include/drivers/serial.h"
+ 812              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 813              		.file 11 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 814              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 815              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/unistd.h"
+ 816              		.file 14 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 817              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 KissCommunication.c
+     /tmp/ccz5CKTp.s:16     .text.updcrc_ccitt:0000000000000000 $t
+     /tmp/ccz5CKTp.s:22     .text.updcrc_ccitt:0000000000000000 updcrc_ccitt
+     /tmp/ccz5CKTp.s:43     .text.updcrc_ccitt:0000000000000010 $d
+     /tmp/ccz5CKTp.s:48     .text.SendKISSToHost:0000000000000000 $t
+     /tmp/ccz5CKTp.s:55     .text.SendKISSToHost:0000000000000000 SendKISSToHost
+     /tmp/ccz5CKTp.s:184    .text.ParseReceivedKISS:0000000000000000 $t
+     /tmp/ccz5CKTp.s:191    .text.ParseReceivedKISS:0000000000000000 ParseReceivedKISS
+     /tmp/ccz5CKTp.s:337    .text.ParseReceivedKISS:0000000000000084 $d
+                            *COM*:000000000000012c kiss_buffer
+     /tmp/ccz5CKTp.s:343    .text.kiss_reset_buffer:0000000000000000 $t
+     /tmp/ccz5CKTp.s:350    .text.kiss_reset_buffer:0000000000000000 kiss_reset_buffer
+     /tmp/ccz5CKTp.s:387    .text.kiss_put_char_nocheck:0000000000000000 $t
+     /tmp/ccz5CKTp.s:394    .text.kiss_put_char_nocheck:0000000000000000 kiss_put_char_nocheck
+     /tmp/ccz5CKTp.s:452    .text.kiss_put_char:0000000000000000 $t
+     /tmp/ccz5CKTp.s:459    .text.kiss_put_char:0000000000000000 kiss_put_char
+     /tmp/ccz5CKTp.s:602    .text.kiss_put_call:0000000000000000 $t
+     /tmp/ccz5CKTp.s:609    .text.kiss_put_call:0000000000000000 kiss_put_call
+     /tmp/ccz5CKTp.s:734    .text.kiss_finalize_buffer:0000000000000000 $t
+     /tmp/ccz5CKTp.s:741    .text.kiss_finalize_buffer:0000000000000000 kiss_finalize_buffer
+     /tmp/ccz5CKTp.s:778    .text.kiss_get_buff_ptr:0000000000000000 $t
+     /tmp/ccz5CKTp.s:785    .text.kiss_get_buff_ptr:0000000000000000 kiss_get_buff_ptr
+     /tmp/ccz5CKTp.s:798    .text.kiss_get_buff_ptr:0000000000000004 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.config.h.2.b965ce3e758b9658e1093b983de98cf3
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config.h.27.09664e95de8752841e0abdfac4357408
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.KissCommunication.h.17.f1e76db053f07badac1040f3bea74fb3
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.unistd.h.9.2709ac388e61c5728907bf928c890ff7
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.137.87f4223e19f53e7620a07a017dcd2e0a
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4.stddef.h.39.79ae3d254e9e71fbd4877f77aa50f4ea
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.unistd.h.170.da6e816043042c61475c2b1f58468b37
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+
+UNDEFINED SYMBOLS
+crc_ccitt_tab
+ax25_sendRaw
+afsk_txStart
+tx10m
+memset
+strlen

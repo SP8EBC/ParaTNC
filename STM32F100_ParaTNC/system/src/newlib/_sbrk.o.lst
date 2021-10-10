@@ -1,0 +1,203 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"_sbrk.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text._sbrk,"ax",%progbits
+  16              		.align	1
+  17              		.global	_sbrk
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	_sbrk:
+  24              	.LFB0:
+  25              		.file 1 "../system/src/newlib/_sbrk.c"
+   1:../system/src/newlib/_sbrk.c **** //
+   2:../system/src/newlib/_sbrk.c **** // This file is part of the µOS++ III distribution.
+   3:../system/src/newlib/_sbrk.c **** // Copyright (c) 2014 Liviu Ionescu.
+   4:../system/src/newlib/_sbrk.c **** //
+   5:../system/src/newlib/_sbrk.c **** 
+   6:../system/src/newlib/_sbrk.c **** // ----------------------------------------------------------------------------
+   7:../system/src/newlib/_sbrk.c **** 
+   8:../system/src/newlib/_sbrk.c **** #include <sys/types.h>
+   9:../system/src/newlib/_sbrk.c **** #include <errno.h>
+  10:../system/src/newlib/_sbrk.c **** 
+  11:../system/src/newlib/_sbrk.c **** // ----------------------------------------------------------------------------
+  12:../system/src/newlib/_sbrk.c **** 
+  13:../system/src/newlib/_sbrk.c **** caddr_t
+  14:../system/src/newlib/_sbrk.c **** _sbrk(int incr);
+  15:../system/src/newlib/_sbrk.c **** 
+  16:../system/src/newlib/_sbrk.c **** // ----------------------------------------------------------------------------
+  17:../system/src/newlib/_sbrk.c **** 
+  18:../system/src/newlib/_sbrk.c **** // The definitions used here should be kept in sync with the
+  19:../system/src/newlib/_sbrk.c **** // stack definitions in the linker script.
+  20:../system/src/newlib/_sbrk.c **** 
+  21:../system/src/newlib/_sbrk.c **** caddr_t
+  22:../system/src/newlib/_sbrk.c **** _sbrk(int incr)
+  23:../system/src/newlib/_sbrk.c **** {
+  26              		.loc 1 23 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 08B5     		push	{r3, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 3, -8
+  34              		.cfi_offset 14, -4
+  35 0002 0346     		mov	r3, r0
+  24:../system/src/newlib/_sbrk.c ****   extern char _Heap_Begin; // Defined by the linker.
+  25:../system/src/newlib/_sbrk.c ****   extern char _Heap_Limit; // Defined by the linker.
+  26:../system/src/newlib/_sbrk.c **** 
+  27:../system/src/newlib/_sbrk.c ****   static char* current_heap_end;
+  28:../system/src/newlib/_sbrk.c ****   char* current_block_address;
+  29:../system/src/newlib/_sbrk.c **** 
+  30:../system/src/newlib/_sbrk.c ****   if (current_heap_end == 0)
+  36              		.loc 1 30 0
+  37 0004 0C4A     		ldr	r2, .L8
+  38 0006 1268     		ldr	r2, [r2]
+  39 0008 5AB1     		cbz	r2, .L6
+  40              	.L2:
+  31:../system/src/newlib/_sbrk.c ****     {
+  32:../system/src/newlib/_sbrk.c ****       current_heap_end = &_Heap_Begin;
+  33:../system/src/newlib/_sbrk.c ****     }
+  34:../system/src/newlib/_sbrk.c **** 
+  35:../system/src/newlib/_sbrk.c ****   current_block_address = current_heap_end;
+  41              		.loc 1 35 0
+  42 000a 0B4A     		ldr	r2, .L8
+  43 000c 1068     		ldr	r0, [r2]
+  44              	.LVL1:
+  36:../system/src/newlib/_sbrk.c **** 
+  37:../system/src/newlib/_sbrk.c ****   // Need to align heap to word boundary, else will get
+  38:../system/src/newlib/_sbrk.c ****   // hard faults on Cortex-M0. So we assume that heap starts on
+  39:../system/src/newlib/_sbrk.c ****   // word boundary, hence make sure we always add a multiple of
+  40:../system/src/newlib/_sbrk.c ****   // 4 to it.
+  41:../system/src/newlib/_sbrk.c ****   incr = (incr + 3) & (~3); // align value to 4
+  45              		.loc 1 41 0
+  46 000e 0333     		adds	r3, r3, #3
+  47              	.LVL2:
+  48 0010 23F00303 		bic	r3, r3, #3
+  49              	.LVL3:
+  42:../system/src/newlib/_sbrk.c ****   if (current_heap_end + incr > &_Heap_Limit)
+  50              		.loc 1 42 0
+  51 0014 0344     		add	r3, r3, r0
+  52              	.LVL4:
+  53 0016 094A     		ldr	r2, .L8+4
+  54 0018 9342     		cmp	r3, r2
+  55 001a 06D8     		bhi	.L7
+  43:../system/src/newlib/_sbrk.c ****     {
+  44:../system/src/newlib/_sbrk.c ****       // Some of the libstdc++-v3 tests rely upon detecting
+  45:../system/src/newlib/_sbrk.c ****       // out of memory errors, so do not abort here.
+  46:../system/src/newlib/_sbrk.c **** #if 0
+  47:../system/src/newlib/_sbrk.c ****       extern void abort (void);
+  48:../system/src/newlib/_sbrk.c **** 
+  49:../system/src/newlib/_sbrk.c ****       _write (1, "_sbrk: Heap and stack collision\n", 32);
+  50:../system/src/newlib/_sbrk.c **** 
+  51:../system/src/newlib/_sbrk.c ****       abort ();
+  52:../system/src/newlib/_sbrk.c **** #else
+  53:../system/src/newlib/_sbrk.c ****       // Heap has overflowed
+  54:../system/src/newlib/_sbrk.c ****       errno = ENOMEM;
+  55:../system/src/newlib/_sbrk.c ****       return (caddr_t) - 1;
+  56:../system/src/newlib/_sbrk.c **** #endif
+  57:../system/src/newlib/_sbrk.c ****     }
+  58:../system/src/newlib/_sbrk.c **** 
+  59:../system/src/newlib/_sbrk.c ****   current_heap_end += incr;
+  56              		.loc 1 59 0
+  57 001c 064A     		ldr	r2, .L8
+  58 001e 1360     		str	r3, [r2]
+  59              	.LVL5:
+  60              	.L1:
+  60:../system/src/newlib/_sbrk.c **** 
+  61:../system/src/newlib/_sbrk.c ****   return (caddr_t) current_block_address;
+  62:../system/src/newlib/_sbrk.c **** }
+  61              		.loc 1 62 0
+  62 0020 08BD     		pop	{r3, pc}
+  63              	.LVL6:
+  64              	.L6:
+  32:../system/src/newlib/_sbrk.c ****     }
+  65              		.loc 1 32 0
+  66 0022 054A     		ldr	r2, .L8
+  67 0024 0649     		ldr	r1, .L8+8
+  68 0026 1160     		str	r1, [r2]
+  69 0028 EFE7     		b	.L2
+  70              	.LVL7:
+  71              	.L7:
+  54:../system/src/newlib/_sbrk.c ****       return (caddr_t) - 1;
+  72              		.loc 1 54 0
+  73 002a FFF7FEFF 		bl	__errno
+  74              	.LVL8:
+  75 002e 0C23     		movs	r3, #12
+  76 0030 0360     		str	r3, [r0]
+  55:../system/src/newlib/_sbrk.c **** #endif
+  77              		.loc 1 55 0
+  78 0032 4FF0FF30 		mov	r0, #-1
+  79 0036 F3E7     		b	.L1
+  80              	.L9:
+  81              		.align	2
+  82              	.L8:
+  83 0038 00000000 		.word	.LANCHOR0
+  84 003c 00000000 		.word	_Heap_Limit
+  85 0040 00000000 		.word	_Heap_Begin
+  86              		.cfi_endproc
+  87              	.LFE0:
+  89              		.section	.bss.current_heap_end.3961,"aw",%nobits
+  90              		.align	2
+  91              		.set	.LANCHOR0,. + 0
+  94              	current_heap_end.3961:
+  95 0000 00000000 		.space	4
+  96              		.text
+  97              	.Letext0:
+  98              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+  99              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 100              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 101              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/types.h"
+ 102              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 103              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/errno.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 _sbrk.c
+     /tmp/ccIrayz2.s:16     .text._sbrk:0000000000000000 $t
+     /tmp/ccIrayz2.s:23     .text._sbrk:0000000000000000 _sbrk
+     /tmp/ccIrayz2.s:83     .text._sbrk:0000000000000038 $d
+     /tmp/ccIrayz2.s:90     .bss.current_heap_end.3961:0000000000000000 $d
+     /tmp/ccIrayz2.s:94     .bss.current_heap_end.3961:0000000000000000 current_heap_end.3961
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.errno.h.2.ba016d646105af6cad23be83630b6a3f
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.errno.h.14.6a5939d3ae7434a1e97991a97123b12d
+
+UNDEFINED SYMBOLS
+__errno
+_Heap_Limit
+_Heap_Begin

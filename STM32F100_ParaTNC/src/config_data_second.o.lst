@@ -1,0 +1,197 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"config_data_second.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.global	config_data_rtu_second
+  16              		.global	config_data_umb_second
+  17              		.global	config_data_wx_sources_second
+  18              		.global	config_data_basic_second
+  19              		.global	config_data_mode_second
+  20              		.global	config_data_crc_val_second
+  21              		.global	config_data_pgm_cntr_second
+  22              		.section	.config_section_second,"a",%progbits
+  23              		.align	1
+  26              	config_data_pgm_cntr_second:
+  27 0000 0200     		.short	2
+  28              		.section	.config_section_second.basic,"a",%progbits
+  29              		.align	2
+  32              	config_data_basic_second:
+  33 0000 53523957 		.ascii	"SR9WXZ\000"
+  33      585A00
+  34 0007 00       		.byte	0
+  35 0008 857B9A45 		.word	1167752069
+  36 000c 4E       		.byte	78
+  37 000d 000000   		.space	3
+  38 0010 8503EF44 		.word	1156514693
+  39 0014 45       		.byte	69
+  40 0015 5758206F 		.ascii	"WX only = TXPower 2W = Klub Zeglarski Halny, plywaj"
+  40      6E6C7920 
+  40      3D205458 
+  40      506F7765 
+  40      72203257 
+  41 0048 61636120 		.ascii	"aca keja manewrowa na J. Zywieckim = sp8ebc@interia"
+  41      6B656A61 
+  41      206D616E 
+  41      6577726F 
+  41      7761206E 
+  42 007b 2E706C00 		.ascii	".pl\000"
+  43 007f 00000000 		.space	22
+  43      00000000 
+  43      00000000 
+  43      00000000 
+  43      00000000 
+  44 0095 05       		.byte	5
+  45 0096 00       		.byte	0
+  46 0097 01       		.byte	1
+  47 0098 05       		.byte	5
+  48 0099 2D       		.byte	45
+  49 009a 01       		.byte	1
+  50 009b 00       		.space	1
+  51              		.section	.config_section_second.crc,"a",%progbits
+  52              		.align	2
+  55              	config_data_crc_val_second:
+  56 0000 EFBEADDE 		.word	-559038737
+  57              		.section	.config_section_second.mode,"a",%progbits
+  58              		.align	2
+  61              	config_data_mode_second:
+  62 0000 00       		.byte	0
+  63 0001 01       		.byte	1
+  64 0002 00       		.byte	0
+  65 0003 00       		.byte	0
+  66 0004 00       		.space	1
+  67 0005 00       		.byte	0
+  68 0006 0A       		.byte	10
+  69 0007 00       		.byte	0
+  70 0008 00       		.byte	0
+  71 0009 00       		.byte	0
+  72 000a 03       		.byte	3
+  73 000b 00       		.byte	0
+  74 000c 01       		.byte	1
+  75              		.section	.config_section_second.rtu,"a",%progbits
+  76              		.align	2
+  79              	config_data_rtu_second:
+  80 0000 8025     		.short	9600
+  81 0002 00       		.byte	0
+  82 0003 02       		.byte	2
+  83 0004 00       		.byte	0
+  84 0005 00       		.byte	0
+  85 0006 02       		.byte	2
+  86 0007 00       		.byte	0
+  87 0008 00       		.byte	0
+  88 0009 00       		.byte	0
+  89 000a 00       		.byte	0
+  90 000b 01       		.byte	1
+  91 000c 03       		.byte	3
+  92 000d 00       		.space	1
+  93 000e 0000     		.short	0
+  94 0010 0100     		.short	1
+  95 0012 00       		.byte	0
+  96 0013 01       		.byte	1
+  97 0014 00       		.byte	0
+  98 0015 0A       		.byte	10
+  99 0016 00       		.byte	0
+ 100 0017 01       		.byte	1
+ 101 0018 03       		.byte	3
+ 102 0019 00       		.space	1
+ 103 001a 0100     		.short	1
+ 104 001c 0100     		.short	1
+ 105 001e 00       		.byte	0
+ 106 001f 01       		.byte	1
+ 107 0020 00       		.byte	0
+ 108 0021 01       		.byte	1
+ 109 0022 00       		.byte	0
+ 110 0023 01       		.byte	1
+ 111 0024 03       		.byte	3
+ 112 0025 00       		.space	1
+ 113 0026 0200     		.short	2
+ 114 0028 0100     		.short	1
+ 115 002a 00       		.byte	0
+ 116 002b 01       		.byte	1
+ 117 002c 00       		.byte	0
+ 118 002d 01       		.byte	1
+ 119 002e 00       		.byte	0
+ 120 002f 01       		.byte	1
+ 121 0030 03       		.byte	3
+ 122 0031 00       		.space	1
+ 123 0032 0300     		.short	3
+ 124 0034 0100     		.short	1
+ 125 0036 00       		.byte	0
+ 126 0037 01       		.byte	1
+ 127 0038 00       		.byte	0
+ 128 0039 01       		.byte	1
+ 129 003a 00       		.byte	0
+ 130 003b 00       		.byte	0
+ 131 003c 00       		.byte	0
+ 132 003d 00       		.space	1
+ 133 003e 0300     		.short	3
+ 134 0040 0100     		.short	1
+ 135 0042 00       		.byte	0
+ 136 0043 01       		.byte	1
+ 137 0044 00       		.byte	0
+ 138 0045 01       		.byte	1
+ 139 0046 00       		.byte	0
+ 140 0047 00       		.byte	0
+ 141 0048 00       		.byte	0
+ 142 0049 00       		.space	1
+ 143 004a 0000     		.short	0
+ 144 004c 0100     		.short	1
+ 145 004e 00       		.byte	0
+ 146 004f 01       		.byte	1
+ 147 0050 00       		.byte	0
+ 148 0051 01       		.byte	1
+ 149 0052 00       		.byte	0
+ 150 0053 00       		.space	1
+ 151              		.section	.config_section_second.sources,"a",%progbits
+ 152              		.align	2
+ 155              	config_data_wx_sources_second:
+ 156 0000 01       		.byte	1
+ 157 0001 01       		.byte	1
+ 158 0002 01       		.byte	1
+ 159 0003 01       		.byte	1
+ 160              		.section	.config_section_second.umb,"a",%progbits
+ 161              		.align	2
+ 164              	config_data_umb_second:
+ 165 0000 0800     		.short	8
+ 166 0002 0100     		.short	1
+ 167 0004 CC01     		.short	460
+ 168 0006 B801     		.short	440
+ 169 0008 4402     		.short	580
+ 170 000a 6400     		.short	100
+ 171 000c 2C01     		.short	300
+ 172              		.text
+ 173              	.Letext0:
+ 174              		.file 1 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 175              		.file 2 "../include/config_data.h"
+ 176              		.file 3 "../src/config_data_second.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 config_data_second.c
+     /tmp/ccgbvdZK.s:79     .config_section_second.rtu:0000000000000000 config_data_rtu_second
+     /tmp/ccgbvdZK.s:164    .config_section_second.umb:0000000000000000 config_data_umb_second
+     /tmp/ccgbvdZK.s:155    .config_section_second.sources:0000000000000000 config_data_wx_sources_second
+     /tmp/ccgbvdZK.s:32     .config_section_second.basic:0000000000000000 config_data_basic_second
+     /tmp/ccgbvdZK.s:61     .config_section_second.mode:0000000000000000 config_data_mode_second
+     /tmp/ccgbvdZK.s:55     .config_section_second.crc:0000000000000000 config_data_crc_val_second
+     /tmp/ccgbvdZK.s:26     .config_section_second:0000000000000000 config_data_pgm_cntr_second
+     /tmp/ccgbvdZK.s:23     .config_section_second:0000000000000000 $d
+     /tmp/ccgbvdZK.s:29     .config_section_second.basic:0000000000000000 $d
+     /tmp/ccgbvdZK.s:52     .config_section_second.crc:0000000000000000 $d
+     /tmp/ccgbvdZK.s:58     .config_section_second.mode:0000000000000000 $d
+     /tmp/ccgbvdZK.s:76     .config_section_second.rtu:0000000000000000 $d
+     /tmp/ccgbvdZK.s:152    .config_section_second.sources:0000000000000000 $d
+     /tmp/ccgbvdZK.s:161    .config_section_second.umb:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+
+NO UNDEFINED SYMBOLS

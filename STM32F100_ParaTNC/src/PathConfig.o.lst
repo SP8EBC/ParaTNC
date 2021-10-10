@@ -1,0 +1,224 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"PathConfig.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.ConfigPath,"ax",%progbits
+  16              		.align	1
+  17              		.global	ConfigPath
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	ConfigPath:
+  24              	.LFB0:
+  25              		.file 1 "../src/PathConfig.c"
+   1:../src/PathConfig.c **** /*
+   2:../src/PathConfig.c ****  * PathConfig.c
+   3:../src/PathConfig.c ****  *
+   4:../src/PathConfig.c ****  *  Created on: 02.08.2017
+   5:../src/PathConfig.c ****  *      Author: mateusz
+   6:../src/PathConfig.c ****  */
+   7:../src/PathConfig.c **** 
+   8:../src/PathConfig.c **** #include "PathConfig.h"
+   9:../src/PathConfig.c **** #include "station_config.h"
+  10:../src/PathConfig.c **** #include <string.h>
+  11:../src/PathConfig.c **** 
+  12:../src/PathConfig.c **** uint8_t ConfigPath(AX25Call* p, const config_data_basic_t* conf) {
+  26              		.loc 1 12 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 38B5     		push	{r3, r4, r5, lr}
+  32              		.cfi_def_cfa_offset 16
+  33              		.cfi_offset 3, -16
+  34              		.cfi_offset 4, -12
+  35              		.cfi_offset 5, -8
+  36              		.cfi_offset 14, -4
+  37 0002 0446     		mov	r4, r0
+  38 0004 0D46     		mov	r5, r1
+  13:../src/PathConfig.c **** 
+  14:../src/PathConfig.c **** 	memcpy(p[0].call, "AKLPRZ", 6), p[0].ssid = 0;
+  39              		.loc 1 14 0
+  40 0006 0622     		movs	r2, #6
+  41 0008 1A49     		ldr	r1, .L8
+  42              	.LVL1:
+  43 000a FFF7FEFF 		bl	memcpy
+  44              	.LVL2:
+  45 000e 0023     		movs	r3, #0
+  46 0010 A371     		strb	r3, [r4, #6]
+  15:../src/PathConfig.c **** 
+  16:../src/PathConfig.c **** 	switch (conf->path_type) {
+  47              		.loc 1 16 0
+  48 0012 95F89630 		ldrb	r3, [r5, #150]	@ zero_extendqisi2
+  49 0016 012B     		cmp	r3, #1
+  50 0018 0AD0     		beq	.L3
+  51 001a 022B     		cmp	r3, #2
+  52 001c 19D0     		beq	.L4
+  17:../src/PathConfig.c **** 	case 1:
+  18:../src/PathConfig.c **** 		strncpy(p[1].call, conf->callsign, 6), p[1].ssid = conf->ssid;
+  19:../src/PathConfig.c **** 		memcpy(p[2].call, "WIDE1", 6), p[2].ssid = 1;
+  20:../src/PathConfig.c **** 		return 3;
+  21:../src/PathConfig.c **** 	case 2:
+  22:../src/PathConfig.c **** 		strncpy(p[1].call, conf->callsign, 6), p[1].ssid = conf->ssid;
+  23:../src/PathConfig.c **** 		memcpy(p[2].call, "WIDE2", 6), p[2].ssid = 1;
+  24:../src/PathConfig.c **** 		return 3;
+  25:../src/PathConfig.c **** 	case 0:
+  26:../src/PathConfig.c **** 	default:
+  27:../src/PathConfig.c **** 		strncpy(p[1].call, conf->callsign, 6), p[1].ssid = conf->ssid;
+  53              		.loc 1 27 0
+  54 001e 0622     		movs	r2, #6
+  55 0020 2946     		mov	r1, r5
+  56 0022 E01D     		adds	r0, r4, #7
+  57 0024 FFF7FEFF 		bl	strncpy
+  58              	.LVL3:
+  59 0028 EB79     		ldrb	r3, [r5, #7]	@ zero_extendqisi2
+  60 002a 6373     		strb	r3, [r4, #13]
+  28:../src/PathConfig.c **** 		return 2;
+  61              		.loc 1 28 0
+  62 002c 0220     		movs	r0, #2
+  63 002e 0FE0     		b	.L5
+  64              	.L3:
+  18:../src/PathConfig.c **** 		memcpy(p[2].call, "WIDE1", 6), p[2].ssid = 1;
+  65              		.loc 1 18 0
+  66 0030 0622     		movs	r2, #6
+  67 0032 2946     		mov	r1, r5
+  68 0034 E01D     		adds	r0, r4, #7
+  69 0036 FFF7FEFF 		bl	strncpy
+  70              	.LVL4:
+  71 003a EB79     		ldrb	r3, [r5, #7]	@ zero_extendqisi2
+  72 003c 6373     		strb	r3, [r4, #13]
+  19:../src/PathConfig.c **** 		return 3;
+  73              		.loc 1 19 0
+  74 003e 0622     		movs	r2, #6
+  75 0040 0D49     		ldr	r1, .L8+4
+  76 0042 04F10E00 		add	r0, r4, #14
+  77 0046 FFF7FEFF 		bl	memcpy
+  78              	.LVL5:
+  79 004a 0123     		movs	r3, #1
+  80 004c 2375     		strb	r3, [r4, #20]
+  20:../src/PathConfig.c **** 	case 2:
+  81              		.loc 1 20 0
+  82 004e 0320     		movs	r0, #3
+  83              	.L5:
+  29:../src/PathConfig.c **** 
+  30:../src/PathConfig.c **** 	}
+  31:../src/PathConfig.c **** 
+  32:../src/PathConfig.c **** //#if (defined(_WIDE1_PATH) && !defined(_WIDE21_PATH))
+  33:../src/PathConfig.c **** //	memcpy(p[1].call, _CALL, 6), p[1].ssid = _SSID;
+  34:../src/PathConfig.c **** //	memcpy(p[2].call, "WIDE1", 6), p[2].ssid = 1;
+  35:../src/PathConfig.c **** //	return 3;
+  36:../src/PathConfig.c **** //#elif (!defined(_WIDE1_PATH) && defined(_WIDE21_PATH))
+  37:../src/PathConfig.c **** //	memcpy(p[1].call, _CALL, 6), p[1].ssid = _SSID;
+  38:../src/PathConfig.c **** //	memcpy(p[2].call, "WIDE2", 6), p[2].ssid = 1;
+  39:../src/PathConfig.c **** //	return 3;
+  40:../src/PathConfig.c **** //#else
+  41:../src/PathConfig.c **** //	memcpy(p[1].call, _CALL, 6), p[1].ssid = _SSID;
+  42:../src/PathConfig.c **** //	return 2;
+  43:../src/PathConfig.c **** //	#endif
+  44:../src/PathConfig.c **** //
+  45:../src/PathConfig.c **** //	return 0;
+  46:../src/PathConfig.c **** 
+  47:../src/PathConfig.c **** }
+  84              		.loc 1 47 0
+  85 0050 38BD     		pop	{r3, r4, r5, pc}
+  86              	.LVL6:
+  87              	.L4:
+  22:../src/PathConfig.c **** 		memcpy(p[2].call, "WIDE2", 6), p[2].ssid = 1;
+  88              		.loc 1 22 0
+  89 0052 0622     		movs	r2, #6
+  90 0054 2946     		mov	r1, r5
+  91 0056 E01D     		adds	r0, r4, #7
+  92 0058 FFF7FEFF 		bl	strncpy
+  93              	.LVL7:
+  94 005c EB79     		ldrb	r3, [r5, #7]	@ zero_extendqisi2
+  95 005e 6373     		strb	r3, [r4, #13]
+  23:../src/PathConfig.c **** 		return 3;
+  96              		.loc 1 23 0
+  97 0060 0622     		movs	r2, #6
+  98 0062 0649     		ldr	r1, .L8+8
+  99 0064 04F10E00 		add	r0, r4, #14
+ 100 0068 FFF7FEFF 		bl	memcpy
+ 101              	.LVL8:
+ 102 006c 0123     		movs	r3, #1
+ 103 006e 2375     		strb	r3, [r4, #20]
+  24:../src/PathConfig.c **** 	case 0:
+ 104              		.loc 1 24 0
+ 105 0070 0320     		movs	r0, #3
+ 106 0072 EDE7     		b	.L5
+ 107              	.L9:
+ 108              		.align	2
+ 109              	.L8:
+ 110 0074 00000000 		.word	.LC0
+ 111 0078 08000000 		.word	.LC1
+ 112 007c 10000000 		.word	.LC2
+ 113              		.cfi_endproc
+ 114              	.LFE0:
+ 116              		.section	.rodata.ConfigPath.str1.4,"aMS",%progbits,1
+ 117              		.align	2
+ 118              	.LC0:
+ 119 0000 414B4C50 		.ascii	"AKLPRZ\000"
+ 119      525A00
+ 120 0007 00       		.space	1
+ 121              	.LC1:
+ 122 0008 57494445 		.ascii	"WIDE1\000"
+ 122      3100
+ 123 000e 0000     		.space	2
+ 124              	.LC2:
+ 125 0010 57494445 		.ascii	"WIDE2\000"
+ 125      3200
+ 126              		.text
+ 127              	.Letext0:
+ 128              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 129              		.file 3 "../system/include/aprs/ax25.h"
+ 130              		.file 4 "../include/config_data.h"
+ 131              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 132              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 133              		.file 7 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 134              		.file 8 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 135              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 PathConfig.c
+     /tmp/ccQ3jPJJ.s:16     .text.ConfigPath:0000000000000000 $t
+     /tmp/ccQ3jPJJ.s:23     .text.ConfigPath:0000000000000000 ConfigPath
+     /tmp/ccQ3jPJJ.s:110    .text.ConfigPath:0000000000000074 $d
+     /tmp/ccQ3jPJJ.s:117    .rodata.ConfigPath.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+
+UNDEFINED SYMBOLS
+memcpy
+strncpy

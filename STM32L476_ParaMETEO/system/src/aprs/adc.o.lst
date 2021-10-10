@@ -1,0 +1,248 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"adc.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.AD_Init,"ax",%progbits
+  18              		.align	1
+  19              		.global	AD_Init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	AD_Init:
+  26              	.LFB338:
+  27              		.file 1 "../system/src/aprs/adc.c"
+   1:../system/src/aprs/adc.c **** 
+   2:../system/src/aprs/adc.c **** #include "adc.h"
+   3:../system/src/aprs/adc.c **** 
+   4:../system/src/aprs/adc.c **** #ifdef STM32F10X_MD_VL
+   5:../system/src/aprs/adc.c **** #include <stm32f10x.h>
+   6:../system/src/aprs/adc.c **** #endif
+   7:../system/src/aprs/adc.c **** 
+   8:../system/src/aprs/adc.c **** #ifdef STM32L471xx
+   9:../system/src/aprs/adc.c **** #include <stm32l4xx.h>
+  10:../system/src/aprs/adc.c **** #include <stm32l4xx_ll_tim.h>
+  11:../system/src/aprs/adc.c **** #endif
+  12:../system/src/aprs/adc.c **** 
+  13:../system/src/aprs/adc.c **** #include <stdlib.h>
+  14:../system/src/aprs/adc.c **** #include <stdio.h>
+  15:../system/src/aprs/adc.c **** 
+  16:../system/src/aprs/adc.c **** #define ADC1_DR_Address	((uint32_t)0x4001244C)
+  17:../system/src/aprs/adc.c **** 
+  18:../system/src/aprs/adc.c **** 
+  19:../system/src/aprs/adc.c **** Afsk *adc_afsk;
+  20:../system/src/aprs/adc.c **** 
+  21:../system/src/aprs/adc.c **** volatile uint16_t ADCValue[16];
+  22:../system/src/aprs/adc.c **** 
+  23:../system/src/aprs/adc.c **** uint16_t max_value;
+  24:../system/src/aprs/adc.c **** uint32_t samplecount;
+  25:../system/src/aprs/adc.c **** 
+  26:../system/src/aprs/adc.c **** 
+  27:../system/src/aprs/adc.c **** 
+  28:../system/src/aprs/adc.c **** 
+  29:../system/src/aprs/adc.c **** /**************************************************************************************************
+  30:../system/src/aprs/adc.c **** void AD_Init(Afsk *af) {
+  28              		.loc 1 30 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  31:../system/src/aprs/adc.c **** /**************************************************************************************************
+  32:../system/src/aprs/adc.c **** 
+  33:../system/src/aprs/adc.c **** //	GPIO_InitTypeDef GPIO_InitStructure;
+  34:../system/src/aprs/adc.c **** //	NVIC_InitTypeDef NVIC_InitStructure;
+  35:../system/src/aprs/adc.c **** //
+  36:../system/src/aprs/adc.c **** //	//Dolacz zegar do GPIOA, ADC1
+  37:../system/src/aprs/adc.c **** //	RCC->APB2ENR |= RCC_APB2Periph_GPIOA | RCC_APB2Periph_ADC1;
+  38:../system/src/aprs/adc.c **** //	RCC_ADCCLKConfig(RCC_PCLK2_Div6);
+  39:../system/src/aprs/adc.c **** //
+  40:../system/src/aprs/adc.c **** //	//Dolacz zegar do DMA1
+  41:../system/src/aprs/adc.c **** //	RCC->AHBENR |= RCC_AHBPeriph_DMA1;
+  42:../system/src/aprs/adc.c **** //
+  43:../system/src/aprs/adc.c **** //	//Konfiguracja portu
+  44:../system/src/aprs/adc.c **** //	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 ;
+  45:../system/src/aprs/adc.c **** //	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  46:../system/src/aprs/adc.c **** //	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  47:../system/src/aprs/adc.c **** //	GPIO_Init(GPIOA, &GPIO_InitStructure);
+  48:../system/src/aprs/adc.c **** //
+  49:../system/src/aprs/adc.c **** //	AD_Reset();
+  50:../system/src/aprs/adc.c **** //
+  51:../system/src/aprs/adc.c **** //	adc_afsk = af;
+  52:../system/src/aprs/adc.c **** //
+  53:../system/src/aprs/adc.c **** //	//Przerwania DMA1 Kanal1
+  54:../system/src/aprs/adc.c **** //	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
+  55:../system/src/aprs/adc.c **** //	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  56:../system/src/aprs/adc.c **** //	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  57:../system/src/aprs/adc.c **** //	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  58:../system/src/aprs/adc.c **** //	NVIC_Init(&NVIC_InitStructure);
+  59:../system/src/aprs/adc.c **** 
+  60:../system/src/aprs/adc.c **** }
+  34              		.loc 1 60 0
+  35 0000 7047     		bx	lr
+  36              		.cfi_endproc
+  37              	.LFE338:
+  39              		.section	.text.AD_Start,"ax",%progbits
+  40              		.align	1
+  41              		.global	AD_Start
+  42              		.syntax unified
+  43              		.thumb
+  44              		.thumb_func
+  45              		.fpu fpv4-sp-d16
+  47              	AD_Start:
+  48              	.LFB339:
+  61:../system/src/aprs/adc.c **** 
+  62:../system/src/aprs/adc.c **** 
+  63:../system/src/aprs/adc.c **** /**************************************************************************************************
+  64:../system/src/aprs/adc.c **** void AD_Start() {
+  49              		.loc 1 64 0
+  50              		.cfi_startproc
+  51              		@ args = 0, pretend = 0, frame = 0
+  52              		@ frame_needed = 0, uses_anonymous_args = 0
+  53              		@ link register save eliminated.
+  65:../system/src/aprs/adc.c **** /**************************************************************************************************
+  66:../system/src/aprs/adc.c **** 
+  67:../system/src/aprs/adc.c **** // 	samplecount = 0;
+  68:../system/src/aprs/adc.c **** // 	max_value = 0;
+  69:../system/src/aprs/adc.c **** 
+  70:../system/src/aprs/adc.c **** 	//Timer3 ENABLE
+  71:../system/src/aprs/adc.c **** 	TIM2->CR1 |= TIM_CR1_CEN;
+  54              		.loc 1 71 0
+  55 0000 4FF08042 		mov	r2, #1073741824
+  56 0004 1368     		ldr	r3, [r2]
+  57 0006 43F00103 		orr	r3, r3, #1
+  58 000a 1360     		str	r3, [r2]
+  72:../system/src/aprs/adc.c **** 
+  73:../system/src/aprs/adc.c **** }
+  59              		.loc 1 73 0
+  60 000c 7047     		bx	lr
+  61              		.cfi_endproc
+  62              	.LFE339:
+  64              		.section	.text.AD_Stop,"ax",%progbits
+  65              		.align	1
+  66              		.global	AD_Stop
+  67              		.syntax unified
+  68              		.thumb
+  69              		.thumb_func
+  70              		.fpu fpv4-sp-d16
+  72              	AD_Stop:
+  73              	.LFB340:
+  74:../system/src/aprs/adc.c **** 
+  75:../system/src/aprs/adc.c **** 
+  76:../system/src/aprs/adc.c **** /**************************************************************************************************
+  77:../system/src/aprs/adc.c **** void AD_Stop() {
+  74              		.loc 1 77 0
+  75              		.cfi_startproc
+  76              		@ args = 0, pretend = 0, frame = 0
+  77              		@ frame_needed = 0, uses_anonymous_args = 0
+  78              		@ link register save eliminated.
+  78:../system/src/aprs/adc.c **** /**************************************************************************************************
+  79:../system/src/aprs/adc.c **** 
+  80:../system/src/aprs/adc.c **** 	//Timer3 DISABLE
+  81:../system/src/aprs/adc.c **** 	TIM2->CR1 &= ~TIM_CR1_CEN;
+  79              		.loc 1 81 0
+  80 0000 4FF08042 		mov	r2, #1073741824
+  81 0004 1368     		ldr	r3, [r2]
+  82 0006 23F00103 		bic	r3, r3, #1
+  83 000a 1360     		str	r3, [r2]
+  82:../system/src/aprs/adc.c **** 
+  83:../system/src/aprs/adc.c **** // 	AD_Reset();
+  84:../system/src/aprs/adc.c **** 
+  85:../system/src/aprs/adc.c **** }
+  84              		.loc 1 85 0
+  85 000c 7047     		bx	lr
+  86              		.cfi_endproc
+  87              	.LFE340:
+  89              		.comm	samplecount,4,4
+  90              		.comm	max_value,2,2
+  91              		.comm	ADCValue,32,4
+  92              		.comm	adc_afsk,4,4
+  93              		.text
+  94              	.Letext0:
+  95              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+  96              		.file 3 "../system/include/aprs/cfifo.h"
+  97              		.file 4 "../system/include/aprs/afsk.h"
+  98              		.file 5 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+  99              		.file 6 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 100              		.file 7 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 101              		.file 8 "../system/include/stm32l4-hal-driver/stm32l4xx_ll_tim.h"
+ 102              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 103              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 104              		.file 11 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 105              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 106              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdlib.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 adc.c
+     /tmp/ccccpveF.s:18     .text.AD_Init:0000000000000000 $t
+     /tmp/ccccpveF.s:25     .text.AD_Init:0000000000000000 AD_Init
+     /tmp/ccccpveF.s:40     .text.AD_Start:0000000000000000 $t
+     /tmp/ccccpveF.s:47     .text.AD_Start:0000000000000000 AD_Start
+     /tmp/ccccpveF.s:65     .text.AD_Stop:0000000000000000 $t
+     /tmp/ccccpveF.s:72     .text.AD_Stop:0000000000000000 AD_Stop
+                            *COM*:0000000000000004 samplecount
+                            *COM*:0000000000000002 max_value
+                            *COM*:0000000000000020 ADCValue
+                            *COM*:0000000000000004 adc_afsk
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.b6144e50d34fc998dd4c2cfb6387cf91
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_tim.h.22.3ad11d579f6c3053b8c8daba8bebe46e
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stdlib.h.13.4ed386f5c1a80d71e72172885d946ef2
+                           .group:0000000000000000 wm4.stddef.h.187.e1c83cba2098ce92b68f6311de19e6b1
+                           .group:0000000000000000 wm4.stddef.h.39.57db33e786ccd422e31be63a26e19309
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.7eec48e1bc15e3b0aff1089c232f5a9c
+                           .group:0000000000000000 wm4.alloca.h.8.dfc0c703c47ec3e69746825b17d9e66d
+                           .group:0000000000000000 wm4.stdlib.h.56.d4493cd3736e51e9d56335045f26df45
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+
+NO UNDEFINED SYMBOLS

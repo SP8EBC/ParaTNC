@@ -1,0 +1,691 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"wx_handler_pressure.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.wx_get_pressure_ms5611,"ax",%progbits
+  16              		.align	1
+  17              		.global	wx_get_pressure_ms5611
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	wx_get_pressure_ms5611:
+  24              	.LFB92:
+  25              		.file 1 "../src/wx_handler_pressure.c"
+   1:../src/wx_handler_pressure.c **** /*
+   2:../src/wx_handler_pressure.c ****  * wx_handler_pressure.c
+   3:../src/wx_handler_pressure.c ****  *
+   4:../src/wx_handler_pressure.c ****  *  Created on: Apr 15, 2021
+   5:../src/wx_handler_pressure.c ****  *      Author: mateusz
+   6:../src/wx_handler_pressure.c ****  */
+   7:../src/wx_handler_pressure.c **** 
+   8:../src/wx_handler_pressure.c **** #include "wx_handler_pressure.h"
+   9:../src/wx_handler_pressure.c **** #include "wx_handler.h"
+  10:../src/wx_handler_pressure.c **** 
+  11:../src/wx_handler_pressure.c **** #include "rte_wx.h"
+  12:../src/wx_handler_pressure.c **** #include "main.h"
+  13:../src/wx_handler_pressure.c **** 
+  14:../src/wx_handler_pressure.c **** #include <drivers/ms5611.h>
+  15:../src/wx_handler_pressure.c **** #include <drivers/bme280.h>
+  16:../src/wx_handler_pressure.c **** 
+  17:../src/wx_handler_pressure.c **** #include <modbus_rtu/rtu_getters.h>
+  18:../src/wx_handler_pressure.c **** #include <modbus_rtu/rtu_return_values.h>
+  19:../src/wx_handler_pressure.c **** 
+  20:../src/wx_handler_pressure.c **** int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const config_sources, const co
+  21:../src/wx_handler_pressure.c **** 
+  22:../src/wx_handler_pressure.c **** 	int32_t output = 0;
+  23:../src/wx_handler_pressure.c **** 	int32_t measurement_retval = 0;
+  24:../src/wx_handler_pressure.c **** 	int32_t i = 0, j = 0;
+  25:../src/wx_handler_pressure.c **** 	float pressure_average_sum = 0.0f;
+  26:../src/wx_handler_pressure.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// quality factor for UMB communication
+  27:../src/wx_handler_pressure.c **** 
+  28:../src/wx_handler_pressure.c **** 	switch(config_sources->temperature) {
+  29:../src/wx_handler_pressure.c **** 	case WX_SOURCE_INTERNAL: {
+  30:../src/wx_handler_pressure.c **** 
+  31:../src/wx_handler_pressure.c **** 		// switch between MS5611 and BME280 depends on user configuration
+  32:../src/wx_handler_pressure.c **** 		if (config_mode->wx_ms5611_or_bme == 1) {
+  33:../src/wx_handler_pressure.c **** 			measurement_retval = wx_get_pressure_bme280(&rte_wx_pressure);
+  34:../src/wx_handler_pressure.c **** 		}
+  35:../src/wx_handler_pressure.c **** 		else {
+  36:../src/wx_handler_pressure.c **** 			measurement_retval = wx_get_pressure_ms5611(&rte_wx_pressure);
+  37:../src/wx_handler_pressure.c **** 		}
+  38:../src/wx_handler_pressure.c **** 
+  39:../src/wx_handler_pressure.c **** 		// check if pressure has been retrieved correctly
+  40:../src/wx_handler_pressure.c **** 		if (measurement_retval == BME280_OK || measurement_retval == MS5611_OK) {
+  41:../src/wx_handler_pressure.c **** 			// BME280 measures all three things at one call to the driver
+  42:../src/wx_handler_pressure.c **** 			output |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;
+  43:../src/wx_handler_pressure.c **** 
+  44:../src/wx_handler_pressure.c **** 			// add the current pressure into buffer for average calculation
+  45:../src/wx_handler_pressure.c **** 			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
+  46:../src/wx_handler_pressure.c **** 
+  47:../src/wx_handler_pressure.c **** 			// reseting the average length iterator
+  48:../src/wx_handler_pressure.c **** 			j = 0;
+  49:../src/wx_handler_pressure.c **** 
+  50:../src/wx_handler_pressure.c **** 			// check if and end of the buffer was reached
+  51:../src/wx_handler_pressure.c **** 			if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
+  52:../src/wx_handler_pressure.c **** 				rte_wx_pressure_it = 0;
+  53:../src/wx_handler_pressure.c **** 			}
+  54:../src/wx_handler_pressure.c **** 
+  55:../src/wx_handler_pressure.c **** 			// calculating the average of pressure measuremenets
+  56:../src/wx_handler_pressure.c **** 			for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
+  57:../src/wx_handler_pressure.c **** 
+  58:../src/wx_handler_pressure.c **** 				// skip empty slots in the history to provide proper value even for first wx packet
+  59:../src/wx_handler_pressure.c **** 				if (rte_wx_pressure_history[i] < 10.0f) {
+  60:../src/wx_handler_pressure.c **** 					continue;
+  61:../src/wx_handler_pressure.c **** 				}
+  62:../src/wx_handler_pressure.c **** 
+  63:../src/wx_handler_pressure.c **** 				// add to the average
+  64:../src/wx_handler_pressure.c **** 				pressure_average_sum += rte_wx_pressure_history[i];
+  65:../src/wx_handler_pressure.c **** 
+  66:../src/wx_handler_pressure.c **** 				// increase the average lenght iterator
+  67:../src/wx_handler_pressure.c **** 				j++;
+  68:../src/wx_handler_pressure.c **** 			}
+  69:../src/wx_handler_pressure.c **** 
+  70:../src/wx_handler_pressure.c **** 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
+  71:../src/wx_handler_pressure.c **** 
+  72:../src/wx_handler_pressure.c **** 		}
+  73:../src/wx_handler_pressure.c **** 		break;
+  74:../src/wx_handler_pressure.c **** 	}
+  75:../src/wx_handler_pressure.c **** 	case WX_SOURCE_UMB: {
+  76:../src/wx_handler_pressure.c **** 		// get current UMB bus quality factor
+  77:../src/wx_handler_pressure.c **** 		umb_quality_factor = umb_get_current_qf(&rte_wx_umb_context, master_time);
+  78:../src/wx_handler_pressure.c **** 
+  79:../src/wx_handler_pressure.c **** 		// if there are any data collected from UMB sensors
+  80:../src/wx_handler_pressure.c **** 		if (umb_quality_factor == UMB_QF_FULL || umb_quality_factor == UMB_QF_DEGRADED) {
+  81:../src/wx_handler_pressure.c **** 
+  82:../src/wx_handler_pressure.c **** 			// get the average pressure directly, there is no need for any further processing
+  83:../src/wx_handler_pressure.c **** 			rte_wx_pressure = umb_get_qnh(config_umb);
+  84:../src/wx_handler_pressure.c **** 
+  85:../src/wx_handler_pressure.c **** 			// set the flag that external temperature is available
+  86:../src/wx_handler_pressure.c **** 			output |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;
+  87:../src/wx_handler_pressure.c **** 		}
+  88:../src/wx_handler_pressure.c **** 		else {
+  89:../src/wx_handler_pressure.c **** 			// do nothing if no new data was received from UMB sensor in last 10 minutes
+  90:../src/wx_handler_pressure.c **** 			;
+  91:../src/wx_handler_pressure.c **** 		}
+  92:../src/wx_handler_pressure.c **** 
+  93:../src/wx_handler_pressure.c **** 		break;
+  94:../src/wx_handler_pressure.c **** 	}
+  95:../src/wx_handler_pressure.c **** 	case WX_SOURCE_RTU:
+  96:../src/wx_handler_pressure.c **** 	case WX_SOURCE_FULL_RTU: {
+  97:../src/wx_handler_pressure.c **** 
+  98:../src/wx_handler_pressure.c **** 		// get the value read from RTU registers
+  99:../src/wx_handler_pressure.c **** 		measurement_retval = rtu_get_humidity(&rte_wx_humidity, config_rtu);
+ 100:../src/wx_handler_pressure.c **** 
+ 101:../src/wx_handler_pressure.c **** 		// check
+ 102:../src/wx_handler_pressure.c **** 		if (measurement_retval == MODBUS_RET_OK || measurement_retval == MODBUS_RET_DEGRADED) {
+ 103:../src/wx_handler_pressure.c **** 
+ 104:../src/wx_handler_pressure.c **** 			// set the flag that external temperature is available
+ 105:../src/wx_handler_pressure.c **** 			output |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;
+ 106:../src/wx_handler_pressure.c **** 
+ 107:../src/wx_handler_pressure.c **** 			if (measurement_retval == BME280_OK) {
+ 108:../src/wx_handler_pressure.c **** 				rte_wx_humidity_valid = rte_wx_humidity;
+ 109:../src/wx_handler_pressure.c **** 			}
+ 110:../src/wx_handler_pressure.c **** 		}
+ 111:../src/wx_handler_pressure.c **** 
+ 112:../src/wx_handler_pressure.c **** 		break;
+ 113:../src/wx_handler_pressure.c **** 	}
+ 114:../src/wx_handler_pressure.c **** 	case WX_SOURCE_DAVIS_SERIAL:
+ 115:../src/wx_handler_pressure.c **** 		break;
+ 116:../src/wx_handler_pressure.c **** 	}
+ 117:../src/wx_handler_pressure.c **** 
+ 118:../src/wx_handler_pressure.c **** 	return output;
+ 119:../src/wx_handler_pressure.c **** 
+ 120:../src/wx_handler_pressure.c **** }
+ 121:../src/wx_handler_pressure.c **** 
+ 122:../src/wx_handler_pressure.c **** int32_t wx_get_pressure_ms5611(float * const pressure) {
+  26              		.loc 1 122 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 08B5     		push	{r3, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 3, -8
+  34              		.cfi_offset 14, -4
+  35              	.LVL1:
+ 123:../src/wx_handler_pressure.c **** 
+ 124:../src/wx_handler_pressure.c **** 	int32_t return_value = 0;
+ 125:../src/wx_handler_pressure.c **** 
+ 126:../src/wx_handler_pressure.c **** 	// quering MS5611 sensor for pressure
+ 127:../src/wx_handler_pressure.c **** 	return_value = ms5611_get_pressure(pressure,  &rte_wx_ms5611_qf);
+  36              		.loc 1 127 0
+  37 0002 0249     		ldr	r1, .L3
+  38 0004 FFF7FEFF 		bl	ms5611_get_pressure
+  39              	.LVL2:
+ 128:../src/wx_handler_pressure.c **** 
+ 129:../src/wx_handler_pressure.c **** 	return return_value;
+ 130:../src/wx_handler_pressure.c **** 
+ 131:../src/wx_handler_pressure.c **** }
+  40              		.loc 1 131 0
+  41 0008 08BD     		pop	{r3, pc}
+  42              	.L4:
+  43 000a 00BF     		.align	2
+  44              	.L3:
+  45 000c 00000000 		.word	rte_wx_ms5611_qf
+  46              		.cfi_endproc
+  47              	.LFE92:
+  49              		.section	.text.wx_get_pressure_bme280,"ax",%progbits
+  50              		.align	1
+  51              		.global	wx_get_pressure_bme280
+  52              		.syntax unified
+  53              		.thumb
+  54              		.thumb_func
+  55              		.fpu softvfp
+  57              	wx_get_pressure_bme280:
+  58              	.LFB93:
+ 132:../src/wx_handler_pressure.c **** 
+ 133:../src/wx_handler_pressure.c **** int32_t wx_get_pressure_bme280(float * const pressure) {
+  59              		.loc 1 133 0
+  60              		.cfi_startproc
+  61              		@ args = 0, pretend = 0, frame = 0
+  62              		@ frame_needed = 0, uses_anonymous_args = 0
+  63              	.LVL3:
+  64 0000 08B5     		push	{r3, lr}
+  65              		.cfi_def_cfa_offset 8
+  66              		.cfi_offset 3, -8
+  67              		.cfi_offset 14, -4
+  68              	.LVL4:
+ 134:../src/wx_handler_pressure.c **** 
+ 135:../src/wx_handler_pressure.c **** 	int32_t retval = 0;
+ 136:../src/wx_handler_pressure.c **** 
+ 137:../src/wx_handler_pressure.c **** 	// check if raw data is avaliable
+ 138:../src/wx_handler_pressure.c **** 	if (rte_wx_bme280_qf == BME280_QF_FULL) {
+  69              		.loc 1 138 0
+  70 0002 094B     		ldr	r3, .L10
+  71 0004 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  72 0006 0BB1     		cbz	r3, .L9
+ 135:../src/wx_handler_pressure.c **** 
+  73              		.loc 1 135 0
+  74 0008 0020     		movs	r0, #0
+  75              	.LVL5:
+  76              	.L5:
+ 139:../src/wx_handler_pressure.c **** 		retval = bme280_get_pressure(pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+ 140:../src/wx_handler_pressure.c **** 	}
+ 141:../src/wx_handler_pressure.c **** 
+ 142:../src/wx_handler_pressure.c **** 	return retval;
+ 143:../src/wx_handler_pressure.c **** 
+ 144:../src/wx_handler_pressure.c **** }
+  77              		.loc 1 144 0
+  78 000a 08BD     		pop	{r3, pc}
+  79              	.LVL6:
+  80              	.L9:
+  81              	.LBB4:
+  82              	.LBB5:
+  83              		.file 2 "../system/include/drivers/bme280.h"
+   1:../system/include/drivers/bme280.h **** /*
+   2:../system/include/drivers/bme280.h ****  * bma150.h
+   3:../system/include/drivers/bme280.h ****  *
+   4:../system/include/drivers/bme280.h ****  *  Created on: 21.06.2020
+   5:../system/include/drivers/bme280.h ****  *      Author: mateusz
+   6:../system/include/drivers/bme280.h ****  */
+   7:../system/include/drivers/bme280.h **** 
+   8:../system/include/drivers/bme280.h **** #ifndef INCLUDE_DRIVERS_BME280_H_
+   9:../system/include/drivers/bme280.h **** #define INCLUDE_DRIVERS_BME280_H_
+  10:../system/include/drivers/bme280.h **** 
+  11:../system/include/drivers/bme280.h **** #include "stdint.h"
+  12:../system/include/drivers/bme280.h **** 
+  13:../system/include/drivers/bme280.h **** #define BME280_OK						0
+  14:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_RESPONDING	-1
+  15:../system/include/drivers/bme280.h **** #define BME280_SENSOR_NOT_AVALIABLE		-2
+  16:../system/include/drivers/bme280.h **** #define BME280_WRONG_PRESSURE_READOUT	-3
+  17:../system/include/drivers/bme280.h **** #define BME280_WRONG_HUMIDITY_READOUT	-4
+  18:../system/include/drivers/bme280.h **** 
+  19:../system/include/drivers/bme280.h **** #define BME280_LN_CALIBRATION 	41
+  20:../system/include/drivers/bme280.h **** #define BME280_LN_RAW_DATA		8
+  21:../system/include/drivers/bme280.h **** 
+  22:../system/include/drivers/bme280.h **** typedef enum bme280_qf {
+  23:../system/include/drivers/bme280.h **** 	BME280_QF_FULL,
+  24:../system/include/drivers/bme280.h **** 	BME280_QF_NOT_AVAILABLE,
+  25:../system/include/drivers/bme280.h **** 	BME280_QF_HUMIDITY_DEGRADED,
+  26:../system/include/drivers/bme280.h **** 	BME280_QF_PRESSURE_DEGRADED,
+  27:../system/include/drivers/bme280.h **** 	BME280_QF_GEN_DEGRADED,
+  28:../system/include/drivers/bme280.h **** 	BME280_QF_UKNOWN
+  29:../system/include/drivers/bme280.h **** }bme280_qf_t;
+  30:../system/include/drivers/bme280.h **** 
+  31:../system/include/drivers/bme280.h **** extern uint8_t bme280_data_buffer[BME280_LN_RAW_DATA + 1];
+  32:../system/include/drivers/bme280.h **** extern uint8_t bme280_calibration_data[BME280_LN_CALIBRATION + 1];
+  33:../system/include/drivers/bme280.h **** 
+  34:../system/include/drivers/bme280.h **** int32_t bme280_reset(bme280_qf_t* qf);
+  35:../system/include/drivers/bme280.h **** int32_t bme280_setup(void);
+  36:../system/include/drivers/bme280.h **** int32_t bme280_read_calibration(uint8_t* calibration);
+  37:../system/include/drivers/bme280.h **** int32_t bme280_read_raw_data(uint8_t* raw_data);
+  38:../system/include/drivers/bme280.h **** 
+  39:../system/include/drivers/bme280.h **** int32_t bme280_get_pressure(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  40:../system/include/drivers/bme280.h **** int32_t bme280_get_temperature(float* out, uint32_t raw_data, bme280_qf_t* qf);
+  41:../system/include/drivers/bme280.h **** int32_t bme280_get_humidity(int8_t* out, uint16_t raw_data, bme280_qf_t* qf);
+  42:../system/include/drivers/bme280.h **** 
+  43:../system/include/drivers/bme280.h **** //#define BME280_CONCAT_BYTES(msb, lsb)            (((uint16_t)msb << 8) | (uint16_t)lsb)
+  44:../system/include/drivers/bme280.h **** 
+  45:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_t(void) {
+  46:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[3] << 12) | (bme280_data_buffer[4] << 4) | (bme280_data_buffer[5] >> 4)
+  47:../system/include/drivers/bme280.h **** }
+  48:../system/include/drivers/bme280.h **** 
+  49:../system/include/drivers/bme280.h **** inline uint32_t bme280_get_adc_p(void) {
+  50:../system/include/drivers/bme280.h **** 	return (bme280_data_buffer[0] << 12) | (bme280_data_buffer[1] << 4) | (bme280_data_buffer[2] >> 4)
+  84              		.loc 2 50 0
+  85 000c 074A     		ldr	r2, .L10+4
+  86 000e 1178     		ldrb	r1, [r2]	@ zero_extendqisi2
+  87 0010 5378     		ldrb	r3, [r2, #1]	@ zero_extendqisi2
+  88 0012 1B01     		lsls	r3, r3, #4
+  89 0014 43EA0133 		orr	r3, r3, r1, lsl #12
+  90 0018 9178     		ldrb	r1, [r2, #2]	@ zero_extendqisi2
+  91              	.LBE5:
+  92              	.LBE4:
+ 139:../src/wx_handler_pressure.c **** 		retval = bme280_get_pressure(pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
+  93              		.loc 1 139 0
+  94 001a 034A     		ldr	r2, .L10
+  95 001c 43EA1111 		orr	r1, r3, r1, lsr #4
+  96 0020 FFF7FEFF 		bl	bme280_get_pressure
+  97              	.LVL7:
+  98 0024 F1E7     		b	.L5
+  99              	.L11:
+ 100 0026 00BF     		.align	2
+ 101              	.L10:
+ 102 0028 00000000 		.word	rte_wx_bme280_qf
+ 103 002c 00000000 		.word	bme280_data_buffer
+ 104              		.cfi_endproc
+ 105              	.LFE93:
+ 107              		.global	__aeabi_fcmplt
+ 108              		.global	__aeabi_fadd
+ 109              		.global	__aeabi_i2f
+ 110              		.global	__aeabi_fdiv
+ 111              		.section	.text.wx_get_pressure_measurement,"ax",%progbits
+ 112              		.align	1
+ 113              		.global	wx_get_pressure_measurement
+ 114              		.syntax unified
+ 115              		.thumb
+ 116              		.thumb_func
+ 117              		.fpu softvfp
+ 119              	wx_get_pressure_measurement:
+ 120              	.LFB91:
+  20:../src/wx_handler_pressure.c **** 
+ 121              		.loc 1 20 0
+ 122              		.cfi_startproc
+ 123              		@ args = 0, pretend = 0, frame = 0
+ 124              		@ frame_needed = 0, uses_anonymous_args = 0
+ 125              	.LVL8:
+ 126 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 127              		.cfi_def_cfa_offset 24
+ 128              		.cfi_offset 3, -24
+ 129              		.cfi_offset 4, -20
+ 130              		.cfi_offset 5, -16
+ 131              		.cfi_offset 6, -12
+ 132              		.cfi_offset 7, -8
+ 133              		.cfi_offset 14, -4
+ 134 0002 1446     		mov	r4, r2
+ 135              	.LVL9:
+  28:../src/wx_handler_pressure.c **** 	case WX_SOURCE_INTERNAL: {
+ 136              		.loc 1 28 0
+ 137 0004 0278     		ldrb	r2, [r0]	@ zero_extendqisi2
+ 138              	.LVL10:
+ 139 0006 013A     		subs	r2, r2, #1
+ 140 0008 032A     		cmp	r2, #3
+ 141 000a 63D8     		bhi	.L25
+ 142 000c DFE802F0 		tbb	[pc, r2]
+ 143              	.LVL11:
+ 144              	.L15:
+ 145 0010 02       		.byte	(.L14-.L15)/2
+ 146 0011 41       		.byte	(.L16-.L15)/2
+ 147 0012 51       		.byte	(.L17-.L15)/2
+ 148 0013 51       		.byte	(.L17-.L15)/2
+ 149              		.p2align 1
+ 150              	.L14:
+  32:../src/wx_handler_pressure.c **** 			measurement_retval = wx_get_pressure_bme280(&rte_wx_pressure);
+ 151              		.loc 1 32 0
+ 152 0014 4B79     		ldrb	r3, [r1, #5]	@ zero_extendqisi2
+ 153              	.LVL12:
+ 154 0016 012B     		cmp	r3, #1
+ 155 0018 06D0     		beq	.L31
+  36:../src/wx_handler_pressure.c **** 		}
+ 156              		.loc 1 36 0
+ 157 001a 3048     		ldr	r0, .L35
+ 158 001c FFF7FEFF 		bl	wx_get_pressure_ms5611
+ 159              	.LVL13:
+ 160 0020 0446     		mov	r4, r0
+ 161              	.LVL14:
+ 162              	.L19:
+  40:../src/wx_handler_pressure.c **** 			// BME280 measures all three things at one call to the driver
+ 163              		.loc 1 40 0
+ 164 0022 34B1     		cbz	r4, .L32
+  22:../src/wx_handler_pressure.c **** 	int32_t measurement_retval = 0;
+ 165              		.loc 1 22 0
+ 166 0024 0020     		movs	r0, #0
+ 167              	.LVL15:
+ 168 0026 3CE0     		b	.L12
+ 169              	.LVL16:
+ 170              	.L31:
+  33:../src/wx_handler_pressure.c **** 		}
+ 171              		.loc 1 33 0
+ 172 0028 2C48     		ldr	r0, .L35
+ 173 002a FFF7FEFF 		bl	wx_get_pressure_bme280
+ 174              	.LVL17:
+ 175 002e 0446     		mov	r4, r0
+ 176              	.LVL18:
+ 177 0030 F7E7     		b	.L19
+ 178              	.L32:
+ 179              	.LVL19:
+  45:../src/wx_handler_pressure.c **** 
+ 180              		.loc 1 45 0
+ 181 0032 2B49     		ldr	r1, .L35+4
+ 182 0034 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+ 183 0036 531C     		adds	r3, r2, #1
+ 184 0038 DBB2     		uxtb	r3, r3
+ 185 003a 0B70     		strb	r3, [r1]
+ 186 003c 2749     		ldr	r1, .L35
+ 187 003e 0868     		ldr	r0, [r1]	@ float
+ 188              	.LVL20:
+ 189 0040 2849     		ldr	r1, .L35+8
+ 190 0042 41F82200 		str	r0, [r1, r2, lsl #2]	@ float
+  51:../src/wx_handler_pressure.c **** 				rte_wx_pressure_it = 0;
+ 191              		.loc 1 51 0
+ 192 0046 032B     		cmp	r3, #3
+ 193 0048 02D9     		bls	.L20
+  52:../src/wx_handler_pressure.c **** 			}
+ 194              		.loc 1 52 0
+ 195 004a 254B     		ldr	r3, .L35+4
+ 196 004c 0022     		movs	r2, #0
+ 197 004e 1A70     		strb	r2, [r3]
+ 198              	.L20:
+  48:../src/wx_handler_pressure.c **** 
+ 199              		.loc 1 48 0
+ 200 0050 2746     		mov	r7, r4
+  25:../src/wx_handler_pressure.c **** 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// quality factor for UMB communication
+ 201              		.loc 1 25 0
+ 202 0052 0026     		movs	r6, #0
+  56:../src/wx_handler_pressure.c **** 
+ 203              		.loc 1 56 0
+ 204 0054 00E0     		b	.L21
+ 205              	.LVL21:
+ 206              	.L22:
+  56:../src/wx_handler_pressure.c **** 
+ 207              		.loc 1 56 0 is_stmt 0 discriminator 2
+ 208 0056 0134     		adds	r4, r4, #1
+ 209              	.LVL22:
+ 210              	.L21:
+  56:../src/wx_handler_pressure.c **** 
+ 211              		.loc 1 56 0 discriminator 1
+ 212 0058 032C     		cmp	r4, #3
+ 213 005a 0FDC     		bgt	.L33
+  59:../src/wx_handler_pressure.c **** 					continue;
+ 214              		.loc 1 59 0 is_stmt 1
+ 215 005c 214B     		ldr	r3, .L35+8
+ 216 005e 53F82450 		ldr	r5, [r3, r4, lsl #2]	@ float
+ 217 0062 2149     		ldr	r1, .L35+12
+ 218 0064 2846     		mov	r0, r5
+ 219 0066 FFF7FEFF 		bl	__aeabi_fcmplt
+ 220              	.LVL23:
+ 221 006a 0028     		cmp	r0, #0
+ 222 006c F3D1     		bne	.L22
+  64:../src/wx_handler_pressure.c **** 
+ 223              		.loc 1 64 0
+ 224 006e 2946     		mov	r1, r5
+ 225 0070 3046     		mov	r0, r6
+ 226 0072 FFF7FEFF 		bl	__aeabi_fadd
+ 227              	.LVL24:
+ 228 0076 0646     		mov	r6, r0
+ 229              	.LVL25:
+  67:../src/wx_handler_pressure.c **** 			}
+ 230              		.loc 1 67 0
+ 231 0078 0137     		adds	r7, r7, #1
+ 232              	.LVL26:
+ 233 007a ECE7     		b	.L22
+ 234              	.LVL27:
+ 235              	.L33:
+  70:../src/wx_handler_pressure.c **** 
+ 236              		.loc 1 70 0
+ 237 007c 3846     		mov	r0, r7
+ 238 007e FFF7FEFF 		bl	__aeabi_i2f
+ 239              	.LVL28:
+ 240 0082 0146     		mov	r1, r0
+ 241 0084 3046     		mov	r0, r6
+ 242 0086 FFF7FEFF 		bl	__aeabi_fdiv
+ 243              	.LVL29:
+ 244 008a 184B     		ldr	r3, .L35+16
+ 245 008c 1860     		str	r0, [r3]	@ float
+  42:../src/wx_handler_pressure.c **** 
+ 246              		.loc 1 42 0
+ 247 008e 0420     		movs	r0, #4
+ 248 0090 07E0     		b	.L12
+ 249              	.LVL30:
+ 250              	.L16:
+  77:../src/wx_handler_pressure.c **** 
+ 251              		.loc 1 77 0
+ 252 0092 174B     		ldr	r3, .L35+20
+ 253              	.LVL31:
+ 254 0094 1968     		ldr	r1, [r3]
+ 255              	.LVL32:
+ 256 0096 1748     		ldr	r0, .L35+24
+ 257 0098 FFF7FEFF 		bl	umb_get_current_qf
+ 258              	.LVL33:
+  80:../src/wx_handler_pressure.c **** 
+ 259              		.loc 1 80 0
+ 260 009c 0128     		cmp	r0, #1
+ 261 009e 01D9     		bls	.L34
+  22:../src/wx_handler_pressure.c **** 	int32_t measurement_retval = 0;
+ 262              		.loc 1 22 0
+ 263 00a0 0020     		movs	r0, #0
+ 264              	.LVL34:
+ 265              	.L12:
+ 120:../src/wx_handler_pressure.c **** 
+ 266              		.loc 1 120 0
+ 267 00a2 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 268              	.LVL35:
+ 269              	.L34:
+  83:../src/wx_handler_pressure.c **** 
+ 270              		.loc 1 83 0
+ 271 00a4 2046     		mov	r0, r4
+ 272              	.LVL36:
+ 273 00a6 FFF7FEFF 		bl	umb_get_qnh
+ 274              	.LVL37:
+ 275 00aa 0C4B     		ldr	r3, .L35
+ 276 00ac 1860     		str	r0, [r3]	@ float
+ 277              	.LVL38:
+  86:../src/wx_handler_pressure.c **** 		}
+ 278              		.loc 1 86 0
+ 279 00ae 0420     		movs	r0, #4
+ 280 00b0 F7E7     		b	.L12
+ 281              	.LVL39:
+ 282              	.L17:
+  99:../src/wx_handler_pressure.c **** 
+ 283              		.loc 1 99 0
+ 284 00b2 1946     		mov	r1, r3
+ 285              	.LVL40:
+ 286 00b4 1048     		ldr	r0, .L35+28
+ 287 00b6 FFF7FEFF 		bl	rtu_get_humidity
+ 288              	.LVL41:
+ 102:../src/wx_handler_pressure.c **** 
+ 289              		.loc 1 102 0
+ 290 00ba 0346     		mov	r3, r0
+ 291 00bc 18B1     		cbz	r0, .L24
+ 102:../src/wx_handler_pressure.c **** 
+ 292              		.loc 1 102 0 is_stmt 0 discriminator 1
+ 293 00be 0628     		cmp	r0, #6
+ 294 00c0 01D0     		beq	.L24
+  22:../src/wx_handler_pressure.c **** 	int32_t measurement_retval = 0;
+ 295              		.loc 1 22 0 is_stmt 1
+ 296 00c2 0020     		movs	r0, #0
+ 297              	.LVL42:
+ 298 00c4 EDE7     		b	.L12
+ 299              	.LVL43:
+ 300              	.L24:
+ 107:../src/wx_handler_pressure.c **** 				rte_wx_humidity_valid = rte_wx_humidity;
+ 301              		.loc 1 107 0
+ 302 00c6 3BB9     		cbnz	r3, .L29
+ 108:../src/wx_handler_pressure.c **** 			}
+ 303              		.loc 1 108 0
+ 304 00c8 0B4B     		ldr	r3, .L35+28
+ 305 00ca 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 306 00cc 0B4B     		ldr	r3, .L35+32
+ 307 00ce 1A70     		strb	r2, [r3]
+ 105:../src/wx_handler_pressure.c **** 
+ 308              		.loc 1 105 0
+ 309 00d0 0820     		movs	r0, #8
+ 310              	.LVL44:
+ 311 00d2 E6E7     		b	.L12
+ 312              	.LVL45:
+ 313              	.L25:
+  22:../src/wx_handler_pressure.c **** 	int32_t measurement_retval = 0;
+ 314              		.loc 1 22 0
+ 315 00d4 0020     		movs	r0, #0
+ 316 00d6 E4E7     		b	.L12
+ 317              	.LVL46:
+ 318              	.L29:
+ 105:../src/wx_handler_pressure.c **** 
+ 319              		.loc 1 105 0
+ 320 00d8 0820     		movs	r0, #8
+ 321              	.LVL47:
+ 118:../src/wx_handler_pressure.c **** 
+ 322              		.loc 1 118 0
+ 323 00da E2E7     		b	.L12
+ 324              	.L36:
+ 325              		.align	2
+ 326              	.L35:
+ 327 00dc 00000000 		.word	rte_wx_pressure
+ 328 00e0 00000000 		.word	rte_wx_pressure_it
+ 329 00e4 00000000 		.word	rte_wx_pressure_history
+ 330 00e8 00002041 		.word	1092616192
+ 331 00ec 00000000 		.word	rte_wx_pressure_valid
+ 332 00f0 00000000 		.word	master_time
+ 333 00f4 00000000 		.word	rte_wx_umb_context
+ 334 00f8 00000000 		.word	rte_wx_humidity
+ 335 00fc 00000000 		.word	rte_wx_humidity_valid
+ 336              		.cfi_endproc
+ 337              	.LFE91:
+ 339              		.text
+ 340              	.Letext0:
+ 341              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 342              		.file 4 "../include/config_data.h"
+ 343              		.file 5 "../include/wx_handler.h"
+ 344              		.file 6 "../system/include/cmsis/core_cm3.h"
+ 345              		.file 7 "../system/include/cmsis/system_stm32f10x.h"
+ 346              		.file 8 "../system/include/cmsis/stm32f10x.h"
+ 347              		.file 9 "../system/include/drivers/dallas.h"
+ 348              		.file 10 "../system/include/drivers/analog_anemometer.h"
+ 349              		.file 11 "../system/include/davis_vantage/davis_loop_t.h"
+ 350              		.file 12 "../system/include/umb_master/umb_frame_t.h"
+ 351              		.file 13 "../system/include/umb_master/umb_state_t.h"
+ 352              		.file 14 "../system/include/drivers/serial.h"
+ 353              		.file 15 "../system/include/umb_master/umb_context_t.h"
+ 354              		.file 16 "../system/include/umb_master/umb_qf_t.h"
+ 355              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 356              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 357              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 358              		.file 20 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 359              		.file 21 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 360              		.file 22 "../system/include/drivers/ms5611.h"
+ 361              		.file 23 "../include/rte_wx.h"
+ 362              		.file 24 "../system/include/aprs/cfifo.h"
+ 363              		.file 25 "../system/include/aprs/afsk.h"
+ 364              		.file 26 "../system/include/aprs/ax25.h"
+ 365              		.file 27 "../include/main.h"
+ 366              		.file 28 "../system/include/umb_master/umb_master.h"
+ 367              		.file 29 "../system/include/modbus_rtu/rtu_getters.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 wx_handler_pressure.c
+     /tmp/cc4uVMVV.s:16     .text.wx_get_pressure_ms5611:0000000000000000 $t
+     /tmp/cc4uVMVV.s:23     .text.wx_get_pressure_ms5611:0000000000000000 wx_get_pressure_ms5611
+     /tmp/cc4uVMVV.s:45     .text.wx_get_pressure_ms5611:000000000000000c $d
+     /tmp/cc4uVMVV.s:50     .text.wx_get_pressure_bme280:0000000000000000 $t
+     /tmp/cc4uVMVV.s:57     .text.wx_get_pressure_bme280:0000000000000000 wx_get_pressure_bme280
+     /tmp/cc4uVMVV.s:102    .text.wx_get_pressure_bme280:0000000000000028 $d
+     /tmp/cc4uVMVV.s:112    .text.wx_get_pressure_measurement:0000000000000000 $t
+     /tmp/cc4uVMVV.s:119    .text.wx_get_pressure_measurement:0000000000000000 wx_get_pressure_measurement
+     /tmp/cc4uVMVV.s:145    .text.wx_get_pressure_measurement:0000000000000010 $d
+     /tmp/cc4uVMVV.s:149    .text.wx_get_pressure_measurement:0000000000000014 $t
+     /tmp/cc4uVMVV.s:327    .text.wx_get_pressure_measurement:00000000000000dc $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.wx_handler.h.9.c93580273a56e0f9036dfe7a28400494
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4.analog_anemometer.h.9.8c21570f6fc3dcd7763ba4d0d5168e3c
+                           .group:0000000000000000 wm4.umb_frame_t.h.9.05796095a57acd1575f07118cb6ab058
+                           .group:0000000000000000 wm4.umb_defines.h.9.77e79b84cd2dd9a74204aaeb1ca9d6be
+                           .group:0000000000000000 wm4.serial.h.2.a574250aaf0d4f0a93b2db72031afff6
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.bme280.h.9.aefe05f9329372f30337537cea488dce
+                           .group:0000000000000000 wm4.rte_wx.h.30.cb80bd87f9fae81b43459954f1781e96
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+                           .group:0000000000000000 wm4.rtu_return_values.h.9.ebf5128ee53fb26e4da5d61aff7556b7
+
+UNDEFINED SYMBOLS
+ms5611_get_pressure
+rte_wx_ms5611_qf
+bme280_get_pressure
+rte_wx_bme280_qf
+bme280_data_buffer
+__aeabi_fcmplt
+__aeabi_fadd
+__aeabi_i2f
+__aeabi_fdiv
+umb_get_current_qf
+umb_get_qnh
+rtu_get_humidity
+rte_wx_pressure
+rte_wx_pressure_it
+rte_wx_pressure_history
+rte_wx_pressure_valid
+master_time
+rte_wx_umb_context
+rte_wx_humidity
+rte_wx_humidity_valid

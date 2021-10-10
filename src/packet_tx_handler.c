@@ -321,6 +321,11 @@ void packet_tx_handler(void) {
 	}
 
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
+
+		#ifdef EXTERNAL_WATCHDOG
+		GPIOA->ODR ^= GPIO_Pin_12;
+		#endif
+
 		packet_tx_multi_per_call_handler();
 
 		// sened telemetry channel descriptions according to configuration
@@ -349,6 +354,10 @@ void packet_tx_handler(void) {
 		}
 
 		packet_tx_telemetry_descr_counter = 0;
+
+		#ifdef EXTERNAL_WATCHDOG
+		GPIOA->ODR ^= GPIO_Pin_12;
+		#endif
 	}
 
 }

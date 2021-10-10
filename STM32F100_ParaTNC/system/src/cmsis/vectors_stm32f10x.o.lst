@@ -1,0 +1,1327 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"vectors_stm32f10x.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.after_vectors,"ax",%progbits
+  16              		.align	1
+  17              		.weak	Default_Handler
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	Default_Handler:
+  24              	.LFB0:
+  25              		.file 1 "../system/src/cmsis/vectors_stm32f10x.c"
+   1:../system/src/cmsis/vectors_stm32f10x.c **** //
+   2:../system/src/cmsis/vectors_stm32f10x.c **** // This file is part of the µOS++ III distribution.
+   3:../system/src/cmsis/vectors_stm32f10x.c **** // Copyright (c) 2014 Liviu Ionescu.
+   4:../system/src/cmsis/vectors_stm32f10x.c **** //
+   5:../system/src/cmsis/vectors_stm32f10x.c **** 
+   6:../system/src/cmsis/vectors_stm32f10x.c **** // ----------------------------------------------------------------------------
+   7:../system/src/cmsis/vectors_stm32f10x.c **** 
+   8:../system/src/cmsis/vectors_stm32f10x.c **** #include "cortexm/ExceptionHandlers.h"
+   9:../system/src/cmsis/vectors_stm32f10x.c **** 
+  10:../system/src/cmsis/vectors_stm32f10x.c **** // ----------------------------------------------------------------------------
+  11:../system/src/cmsis/vectors_stm32f10x.c **** 
+  12:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__((weak))
+  13:../system/src/cmsis/vectors_stm32f10x.c **** Default_Handler(void);
+  14:../system/src/cmsis/vectors_stm32f10x.c **** 
+  15:../system/src/cmsis/vectors_stm32f10x.c **** // Forward declaration of the specific IRQ handlers. These are aliased
+  16:../system/src/cmsis/vectors_stm32f10x.c **** // to the Default_Handler, which is a 'forever' loop. When the application
+  17:../system/src/cmsis/vectors_stm32f10x.c **** // defines a handler (with the same name), this will automatically take
+  18:../system/src/cmsis/vectors_stm32f10x.c **** // precedence over these weak definitions
+  19:../system/src/cmsis/vectors_stm32f10x.c **** 
+  20:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  21:../system/src/cmsis/vectors_stm32f10x.c **** WWDG_IRQHandler(void);
+  22:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  23:../system/src/cmsis/vectors_stm32f10x.c **** PVD_IRQHandler(void);
+  24:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  25:../system/src/cmsis/vectors_stm32f10x.c **** TAMPER_IRQHandler(void);
+  26:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  27:../system/src/cmsis/vectors_stm32f10x.c **** RTC_IRQHandler(void);
+  28:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  29:../system/src/cmsis/vectors_stm32f10x.c **** FLASH_IRQHandler(void);
+  30:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  31:../system/src/cmsis/vectors_stm32f10x.c **** RCC_IRQHandler(void);
+  32:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  33:../system/src/cmsis/vectors_stm32f10x.c **** EXTI0_IRQHandler(void);
+  34:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  35:../system/src/cmsis/vectors_stm32f10x.c **** EXTI1_IRQHandler(void);
+  36:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  37:../system/src/cmsis/vectors_stm32f10x.c **** EXTI2_IRQHandler(void);
+  38:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  39:../system/src/cmsis/vectors_stm32f10x.c **** EXTI3_IRQHandler(void);
+  40:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  41:../system/src/cmsis/vectors_stm32f10x.c **** EXTI4_IRQHandler(void);
+  42:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  43:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel1_IRQHandler(void);
+  44:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  45:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel2_IRQHandler(void);
+  46:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  47:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel3_IRQHandler(void);
+  48:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  49:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel4_IRQHandler(void);
+  50:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  51:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel5_IRQHandler(void);
+  52:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  53:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel6_IRQHandler(void);
+  54:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  55:../system/src/cmsis/vectors_stm32f10x.c **** DMA1_Channel7_IRQHandler(void);
+  56:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  57:../system/src/cmsis/vectors_stm32f10x.c **** ADC1_2_IRQHandler(void);
+  58:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  59:../system/src/cmsis/vectors_stm32f10x.c **** USB_HP_CAN1_TX_IRQHandler(void);
+  60:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  61:../system/src/cmsis/vectors_stm32f10x.c **** USB_LP_CAN1_RX0_IRQHandler(void);
+  62:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  63:../system/src/cmsis/vectors_stm32f10x.c **** CAN1_RX1_IRQHandler(void);
+  64:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  65:../system/src/cmsis/vectors_stm32f10x.c **** CAN1_SCE_IRQHandler(void);
+  66:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  67:../system/src/cmsis/vectors_stm32f10x.c **** EXTI9_5_IRQHandler(void);
+  68:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  69:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_BRK_TIM9_IRQHandler(void);
+  70:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  71:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_UP_TIM10_IRQHandler(void);
+  72:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  73:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_TRG_COM_TIM11_IRQHandler(void);
+  74:../system/src/cmsis/vectors_stm32f10x.c **** 
+  75:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  76:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_BRK_IRQHandler(void);
+  77:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  78:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_UP_IRQHandler(void);
+  79:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  80:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_TRG_COM_IRQHandler(void);
+  81:../system/src/cmsis/vectors_stm32f10x.c **** 
+  82:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  83:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_CC_IRQHandler(void);
+  84:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  85:../system/src/cmsis/vectors_stm32f10x.c **** TIM2_IRQHandler(void);
+  86:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  87:../system/src/cmsis/vectors_stm32f10x.c **** TIM3_IRQHandler(void);
+  88:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  89:../system/src/cmsis/vectors_stm32f10x.c **** TIM4_IRQHandler(void);
+  90:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  91:../system/src/cmsis/vectors_stm32f10x.c **** I2C1_EV_IRQHandler(void);
+  92:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  93:../system/src/cmsis/vectors_stm32f10x.c **** I2C1_ER_IRQHandler(void);
+  94:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  95:../system/src/cmsis/vectors_stm32f10x.c **** I2C2_EV_IRQHandler(void);
+  96:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  97:../system/src/cmsis/vectors_stm32f10x.c **** I2C2_ER_IRQHandler(void);
+  98:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+  99:../system/src/cmsis/vectors_stm32f10x.c **** SPI1_IRQHandler(void);
+ 100:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 101:../system/src/cmsis/vectors_stm32f10x.c **** SPI2_IRQHandler(void);
+ 102:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 103:../system/src/cmsis/vectors_stm32f10x.c **** USART1_IRQHandler(void);
+ 104:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 105:../system/src/cmsis/vectors_stm32f10x.c **** USART2_IRQHandler(void);
+ 106:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 107:../system/src/cmsis/vectors_stm32f10x.c **** USART3_IRQHandler(void);
+ 108:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 109:../system/src/cmsis/vectors_stm32f10x.c **** EXTI15_10_IRQHandler(void);
+ 110:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 111:../system/src/cmsis/vectors_stm32f10x.c **** RTCAlarm_IRQHandler(void);
+ 112:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 113:../system/src/cmsis/vectors_stm32f10x.c **** USBWakeUp_IRQHandler(void);
+ 114:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 115:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 116:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_BRK_IRQHandler(void);
+ 117:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 118:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_UP_IRQHandler(void);
+ 119:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 120:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_TRG_COM_IRQHandler(void);
+ 121:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 122:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 123:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_BRK_TIM12_IRQHandler(void);
+ 124:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 125:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_UP_TIM13_IRQHandler(void);
+ 126:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 127:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_TRG_COM_TIM14_IRQHandler(void);
+ 128:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 129:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 130:../system/src/cmsis/vectors_stm32f10x.c **** TIM8_CC_IRQHandler(void);
+ 131:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 132:../system/src/cmsis/vectors_stm32f10x.c **** ADC3_IRQHandler(void);
+ 133:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 134:../system/src/cmsis/vectors_stm32f10x.c **** FSMC_IRQHandler(void);
+ 135:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 136:../system/src/cmsis/vectors_stm32f10x.c **** SDIO_IRQHandler(void);
+ 137:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 138:../system/src/cmsis/vectors_stm32f10x.c **** TIM5_IRQHandler(void);
+ 139:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 140:../system/src/cmsis/vectors_stm32f10x.c **** SPI3_IRQHandler(void);
+ 141:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 142:../system/src/cmsis/vectors_stm32f10x.c **** UART4_IRQHandler(void);
+ 143:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 144:../system/src/cmsis/vectors_stm32f10x.c **** UART5_IRQHandler(void);
+ 145:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 146:../system/src/cmsis/vectors_stm32f10x.c **** TIM6_IRQHandler(void);
+ 147:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 148:../system/src/cmsis/vectors_stm32f10x.c **** TIM7_IRQHandler(void);
+ 149:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 150:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel1_IRQHandler(void);
+ 151:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 152:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel2_IRQHandler(void);
+ 153:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 154:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel3_IRQHandler(void);
+ 155:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 156:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel4_5_IRQHandler(void);
+ 157:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 158:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 159:../system/src/cmsis/vectors_stm32f10x.c **** CAN1_TX_IRQHandler(void);
+ 160:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 161:../system/src/cmsis/vectors_stm32f10x.c **** CAN1_RX0_IRQHandler(void);
+ 162:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 163:../system/src/cmsis/vectors_stm32f10x.c **** OTG_FS_WKUP_IRQHandler(void);
+ 164:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 165:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel4_IRQHandler(void);
+ 166:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 167:../system/src/cmsis/vectors_stm32f10x.c **** DMA2_Channel5_IRQHandler(void);
+ 168:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 169:../system/src/cmsis/vectors_stm32f10x.c **** ETH_IRQHandler(void);
+ 170:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 171:../system/src/cmsis/vectors_stm32f10x.c **** ETH_WKUP_IRQHandler(void);
+ 172:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 173:../system/src/cmsis/vectors_stm32f10x.c **** CAN2_TX_IRQHandler(void);
+ 174:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 175:../system/src/cmsis/vectors_stm32f10x.c **** CAN2_RX0_IRQHandler(void);
+ 176:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 177:../system/src/cmsis/vectors_stm32f10x.c **** CAN2_RX1_IRQHandler(void);
+ 178:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 179:../system/src/cmsis/vectors_stm32f10x.c **** CAN2_SCE_IRQHandler(void);
+ 180:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 181:../system/src/cmsis/vectors_stm32f10x.c **** OTG_FS_IRQHandler(void);
+ 182:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 183:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 184:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_BRK_TIM15_IRQHandler(void);
+ 185:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 186:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_UP_TIM16_IRQHandler(void);
+ 187:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 188:../system/src/cmsis/vectors_stm32f10x.c **** TIM1_TRG_COM_TIM17_IRQHandler(void);
+ 189:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 190:../system/src/cmsis/vectors_stm32f10x.c **** CEC_IRQHandler(void);
+ 191:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 192:../system/src/cmsis/vectors_stm32f10x.c **** TIM6_DAC_IRQHandler(void);
+ 193:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 194:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 195:../system/src/cmsis/vectors_stm32f10x.c **** TIM12_IRQHandler(void);
+ 196:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 197:../system/src/cmsis/vectors_stm32f10x.c **** TIM13_IRQHandler(void);
+ 198:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((weak, alias ("Default_Handler")))
+ 199:../system/src/cmsis/vectors_stm32f10x.c **** TIM14_IRQHandler(void);
+ 200:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 201:../system/src/cmsis/vectors_stm32f10x.c **** // ----------------------------------------------------------------------------
+ 202:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 203:../system/src/cmsis/vectors_stm32f10x.c **** extern unsigned int _estack;
+ 204:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 205:../system/src/cmsis/vectors_stm32f10x.c **** typedef void
+ 206:../system/src/cmsis/vectors_stm32f10x.c **** (* const pHandler)(void);
+ 207:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 208:../system/src/cmsis/vectors_stm32f10x.c **** // ----------------------------------------------------------------------------
+ 209:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 210:../system/src/cmsis/vectors_stm32f10x.c **** // The vector table.
+ 211:../system/src/cmsis/vectors_stm32f10x.c **** // This relies on the linker script to place at correct location in memory.
+ 212:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 213:../system/src/cmsis/vectors_stm32f10x.c **** __attribute__ ((section(".isr_vector"),used))
+ 214:../system/src/cmsis/vectors_stm32f10x.c **** pHandler __isr_vectors[] =
+ 215:../system/src/cmsis/vectors_stm32f10x.c ****   {
+ 216:../system/src/cmsis/vectors_stm32f10x.c ****   // Core Level - CM3
+ 217:../system/src/cmsis/vectors_stm32f10x.c ****       (pHandler) &_estack, // The initial stack pointer
+ 218:../system/src/cmsis/vectors_stm32f10x.c ****       Reset_Handler, // The reset handler
+ 219:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 220:../system/src/cmsis/vectors_stm32f10x.c ****       NMI_Handler, // The NMI handler
+ 221:../system/src/cmsis/vectors_stm32f10x.c ****       HardFault_Handler, // The hard fault handler
+ 222:../system/src/cmsis/vectors_stm32f10x.c **** #if defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
+ 223:../system/src/cmsis/vectors_stm32f10x.c ****       MemManage_Handler,                        // The MPU fault handler
+ 224:../system/src/cmsis/vectors_stm32f10x.c ****       BusFault_Handler,                        // The bus fault handler
+ 225:../system/src/cmsis/vectors_stm32f10x.c ****       UsageFault_Handler,                        // The usage fault handler
+ 226:../system/src/cmsis/vectors_stm32f10x.c **** #else
+ 227:../system/src/cmsis/vectors_stm32f10x.c ****       0, 0, 0,                                  // Reserved
+ 228:../system/src/cmsis/vectors_stm32f10x.c **** #endif
+ 229:../system/src/cmsis/vectors_stm32f10x.c ****       0,                                        // Reserved
+ 230:../system/src/cmsis/vectors_stm32f10x.c ****       0,                                        // Reserved
+ 231:../system/src/cmsis/vectors_stm32f10x.c ****       0,                                        // Reserved
+ 232:../system/src/cmsis/vectors_stm32f10x.c ****       0,                                        // Reserved
+ 233:../system/src/cmsis/vectors_stm32f10x.c ****       SVC_Handler,                              // SVCall handler
+ 234:../system/src/cmsis/vectors_stm32f10x.c **** #if defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
+ 235:../system/src/cmsis/vectors_stm32f10x.c ****       DebugMon_Handler,                         // Debug monitor handler
+ 236:../system/src/cmsis/vectors_stm32f10x.c **** #else
+ 237:../system/src/cmsis/vectors_stm32f10x.c ****       0,                                        // Reserved
+ 238:../system/src/cmsis/vectors_stm32f10x.c **** #endif
+ 239:../system/src/cmsis/vectors_stm32f10x.c ****       0, // Reserved
+ 240:../system/src/cmsis/vectors_stm32f10x.c ****       PendSV_Handler, // The PendSV handler
+ 241:../system/src/cmsis/vectors_stm32f10x.c ****       SysTick_Handler, // The SysTick handler
+ 242:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 243:../system/src/cmsis/vectors_stm32f10x.c ****       // ----------------------------------------------------------------------
+ 244:../system/src/cmsis/vectors_stm32f10x.c ****       // Chip Level - STM32F10x
+ 245:../system/src/cmsis/vectors_stm32f10x.c ****       WWDG_IRQHandler, // Window WatchDog
+ 246:../system/src/cmsis/vectors_stm32f10x.c ****       PVD_IRQHandler, // PVD through EXTI Line detection
+ 247:../system/src/cmsis/vectors_stm32f10x.c ****       TAMPER_IRQHandler, // Tamper through the EXTI line
+ 248:../system/src/cmsis/vectors_stm32f10x.c ****       RTC_IRQHandler, // RTC Wakeup through the EXTI line
+ 249:../system/src/cmsis/vectors_stm32f10x.c ****       FLASH_IRQHandler, // FLASH
+ 250:../system/src/cmsis/vectors_stm32f10x.c ****       RCC_IRQHandler, // RCC
+ 251:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI0_IRQHandler, // EXTI Line0
+ 252:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI1_IRQHandler, // EXTI Line1
+ 253:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI2_IRQHandler, // EXTI Line2
+ 254:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI3_IRQHandler, // EXTI Line3
+ 255:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI4_IRQHandler, // EXTI Line4
+ 256:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel1_IRQHandler, // DMA1 Channel 1
+ 257:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel2_IRQHandler, // DMA1 Channel 2
+ 258:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel3_IRQHandler, // DMA1 Channel 3
+ 259:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel4_IRQHandler, // DMA1 Channel 4
+ 260:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel5_IRQHandler, // DMA1 Channel 5
+ 261:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel6_IRQHandler, // DMA1 Channel 6
+ 262:../system/src/cmsis/vectors_stm32f10x.c ****       DMA1_Channel7_IRQHandler, // DMA1 Channel 7
+ 263:../system/src/cmsis/vectors_stm32f10x.c ****       ADC1_2_IRQHandler, // ADC1, ADC2
+ 264:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 265:../system/src/cmsis/vectors_stm32f10x.c **** #if defined(STM32F10X_LD)
+ 266:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 267:../system/src/cmsis/vectors_stm32f10x.c ****       USB_HP_CAN1_TX_IRQHandler, //
+ 268:../system/src/cmsis/vectors_stm32f10x.c ****       USB_LP_CAN1_RX0_IRQHandler, //
+ 269:../system/src/cmsis/vectors_stm32f10x.c ****       CAN1_RX1_IRQHandler, //
+ 270:../system/src/cmsis/vectors_stm32f10x.c ****       CAN1_SCE_IRQHandler, //
+ 271:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI9_5_IRQHandler, //
+ 272:../system/src/cmsis/vectors_stm32f10x.c ****       TIM1_BRK_IRQHandler, //
+ 273:../system/src/cmsis/vectors_stm32f10x.c ****       TIM1_UP_IRQHandler, //
+ 274:../system/src/cmsis/vectors_stm32f10x.c ****       TIM1_TRG_COM_IRQHandler, //
+ 275:../system/src/cmsis/vectors_stm32f10x.c ****       TIM1_CC_IRQHandler, //
+ 276:../system/src/cmsis/vectors_stm32f10x.c ****       TIM2_IRQHandler, //
+ 277:../system/src/cmsis/vectors_stm32f10x.c ****       TIM3_IRQHandler, //
+ 278:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 279:../system/src/cmsis/vectors_stm32f10x.c ****       I2C1_EV_IRQHandler, //
+ 280:../system/src/cmsis/vectors_stm32f10x.c ****       I2C1_ER_IRQHandler, //
+ 281:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 282:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 283:../system/src/cmsis/vectors_stm32f10x.c ****       SPI1_IRQHandler, //
+ 284:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 285:../system/src/cmsis/vectors_stm32f10x.c ****       USART1_IRQHandler, //
+ 286:../system/src/cmsis/vectors_stm32f10x.c ****       USART2_IRQHandler, //
+ 287:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 288:../system/src/cmsis/vectors_stm32f10x.c ****       EXTI15_10_IRQHandler, //
+ 289:../system/src/cmsis/vectors_stm32f10x.c ****       RTCAlarm_IRQHandler, //
+ 290:../system/src/cmsis/vectors_stm32f10x.c ****       USBWakeUp_IRQHandler, //
+ 291:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 292:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 293:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 294:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 295:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 296:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 297:../system/src/cmsis/vectors_stm32f10x.c ****       0, //
+ 298:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x108. This is for boot in RAM mode for STM32F10x Low Density devices.
+ 299:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF108F85F
+ 300:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 301:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_MD)
+ 302:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 303:../system/src/cmsis/vectors_stm32f10x.c ****     USB_HP_CAN1_TX_IRQHandler, //
+ 304:../system/src/cmsis/vectors_stm32f10x.c ****     USB_LP_CAN1_RX0_IRQHandler, //
+ 305:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_RX1_IRQHandler, //
+ 306:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_SCE_IRQHandler, //
+ 307:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 308:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_IRQHandler, //
+ 309:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_IRQHandler, //
+ 310:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_IRQHandler, //
+ 311:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 312:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 313:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 314:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 315:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 316:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 317:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 318:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 319:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 320:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 321:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 322:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 323:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 324:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 325:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 326:../system/src/cmsis/vectors_stm32f10x.c ****     USBWakeUp_IRQHandler, //
+ 327:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 328:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 329:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 330:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 331:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 332:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 333:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 334:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x108. This is for boot in RAM mode for STM32F10x Low Density devices.
+ 335:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF108F85F
+ 336:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 337:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_HD)
+ 338:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 339:../system/src/cmsis/vectors_stm32f10x.c ****     USB_HP_CAN1_TX_IRQHandler, //
+ 340:../system/src/cmsis/vectors_stm32f10x.c ****     USB_LP_CAN1_RX0_IRQHandler, //
+ 341:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_RX1_IRQHandler, //
+ 342:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_SCE_IRQHandler, //
+ 343:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 344:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_IRQHandler, //
+ 345:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_IRQHandler, //
+ 346:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_IRQHandler, //
+ 347:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 348:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 349:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 350:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 351:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 352:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 353:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 354:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 355:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 356:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 357:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 358:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 359:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 360:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 361:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 362:../system/src/cmsis/vectors_stm32f10x.c ****     USBWakeUp_IRQHandler, //
+ 363:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_BRK_IRQHandler, //
+ 364:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_UP_IRQHandler, //
+ 365:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_TRG_COM_IRQHandler, //
+ 366:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_CC_IRQHandler, //
+ 367:../system/src/cmsis/vectors_stm32f10x.c ****     ADC3_IRQHandler, //
+ 368:../system/src/cmsis/vectors_stm32f10x.c ****     FSMC_IRQHandler, //
+ 369:../system/src/cmsis/vectors_stm32f10x.c ****     SDIO_IRQHandler, //
+ 370:../system/src/cmsis/vectors_stm32f10x.c ****     TIM5_IRQHandler, //
+ 371:../system/src/cmsis/vectors_stm32f10x.c ****     SPI3_IRQHandler, //
+ 372:../system/src/cmsis/vectors_stm32f10x.c ****     UART4_IRQHandler, //
+ 373:../system/src/cmsis/vectors_stm32f10x.c ****     UART5_IRQHandler, //
+ 374:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_IRQHandler, //
+ 375:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 376:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel1_IRQHandler, //
+ 377:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel2_IRQHandler, //
+ 378:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel3_IRQHandler, //
+ 379:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel4_5_IRQHandler, //
+ 380:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 381:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 382:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 383:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 384:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 385:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 386:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 387:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 388:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 389:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 390:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 391:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 392:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 393:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 394:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 395:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 396:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 397:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 398:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 399:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 400:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 401:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 402:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 403:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 404:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 405:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 406:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 407:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 408:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 409:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 410:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 411:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 412:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 413:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 414:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 415:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 416:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 417:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 418:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 419:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 420:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 421:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 422:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 423:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 424:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x1E0. This is for boot in RAM mode for STM32F10x High Density devices.
+ 425:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF1E0F85F
+ 426:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 427:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_XL)
+ 428:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 429:../system/src/cmsis/vectors_stm32f10x.c ****     USB_HP_CAN1_TX_IRQHandler, //
+ 430:../system/src/cmsis/vectors_stm32f10x.c ****     USB_LP_CAN1_RX0_IRQHandler, //
+ 431:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_RX1_IRQHandler, //
+ 432:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_SCE_IRQHandler, //
+ 433:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 434:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_TIM9_IRQHandler, //
+ 435:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_TIM10_IRQHandler, //
+ 436:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_TIM11_IRQHandler, //
+ 437:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 438:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 439:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 440:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 441:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 442:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 443:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 444:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 445:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 446:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 447:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 448:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 449:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 450:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 451:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 452:../system/src/cmsis/vectors_stm32f10x.c ****     USBWakeUp_IRQHandler, //
+ 453:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_BRK_TIM12_IRQHandler, //
+ 454:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_UP_TIM13_IRQHandler, //
+ 455:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_TRG_COM_TIM14_IRQHandler, //
+ 456:../system/src/cmsis/vectors_stm32f10x.c ****     TIM8_CC_IRQHandler, //
+ 457:../system/src/cmsis/vectors_stm32f10x.c ****     ADC3_IRQHandler, //
+ 458:../system/src/cmsis/vectors_stm32f10x.c ****     FSMC_IRQHandler, //
+ 459:../system/src/cmsis/vectors_stm32f10x.c ****     SDIO_IRQHandler, //
+ 460:../system/src/cmsis/vectors_stm32f10x.c ****     TIM5_IRQHandler, //
+ 461:../system/src/cmsis/vectors_stm32f10x.c ****     SPI3_IRQHandler, //
+ 462:../system/src/cmsis/vectors_stm32f10x.c ****     UART4_IRQHandler, //
+ 463:../system/src/cmsis/vectors_stm32f10x.c ****     UART5_IRQHandler, //
+ 464:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_IRQHandler, //
+ 465:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 466:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel1_IRQHandler, //
+ 467:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel2_IRQHandler, //
+ 468:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel3_IRQHandler, //
+ 469:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel4_5_IRQHandler, //
+ 470:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 471:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 472:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 473:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 474:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 475:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 476:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 477:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 478:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 479:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 480:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 481:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 482:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 483:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 484:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 485:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 486:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 487:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 488:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 489:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 490:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 491:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 492:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 493:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 494:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 495:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 496:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 497:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 498:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 499:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 500:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 501:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 502:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 503:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 504:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 505:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 506:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 507:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 508:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 509:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 510:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 511:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 512:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 513:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 514:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x1E0. This is for boot in RAM mode for STM32F10x Connectivity line Devices.
+ 515:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF1E0F85F
+ 516:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 517:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_CL)
+ 518:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 519:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_TX_IRQHandler, //
+ 520:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_RX0_IRQHandler, //
+ 521:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_RX1_IRQHandler, //
+ 522:../system/src/cmsis/vectors_stm32f10x.c ****     CAN1_SCE_IRQHandler, //
+ 523:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 524:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_IRQHandler, //
+ 525:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_IRQHandler, //
+ 526:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_IRQHandler, //
+ 527:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 528:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 529:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 530:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 531:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 532:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 533:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 534:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 535:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 536:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 537:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 538:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 539:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 540:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 541:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 542:../system/src/cmsis/vectors_stm32f10x.c ****     OTG_FS_WKUP_IRQHandler, //
+ 543:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 544:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 545:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 546:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 547:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 548:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 549:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 550:../system/src/cmsis/vectors_stm32f10x.c ****     TIM5_IRQHandler, //
+ 551:../system/src/cmsis/vectors_stm32f10x.c ****     SPI3_IRQHandler, //
+ 552:../system/src/cmsis/vectors_stm32f10x.c ****     UART4_IRQHandler, //
+ 553:../system/src/cmsis/vectors_stm32f10x.c ****     UART5_IRQHandler, //
+ 554:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_IRQHandler, //
+ 555:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 556:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel1_IRQHandler, //
+ 557:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel2_IRQHandler, //
+ 558:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel3_IRQHandler, //
+ 559:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel4_IRQHandler, //
+ 560:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel5_IRQHandler, //
+ 561:../system/src/cmsis/vectors_stm32f10x.c ****     ETH_IRQHandler, //
+ 562:../system/src/cmsis/vectors_stm32f10x.c ****     ETH_WKUP_IRQHandler, //
+ 563:../system/src/cmsis/vectors_stm32f10x.c ****     CAN2_TX_IRQHandler, //
+ 564:../system/src/cmsis/vectors_stm32f10x.c ****     CAN2_RX0_IRQHandler, //
+ 565:../system/src/cmsis/vectors_stm32f10x.c ****     CAN2_RX1_IRQHandler, //
+ 566:../system/src/cmsis/vectors_stm32f10x.c ****     CAN2_SCE_IRQHandler, //
+ 567:../system/src/cmsis/vectors_stm32f10x.c ****     OTG_FS_IRQHandler, //
+ 568:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 569:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 570:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 571:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 572:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 573:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 574:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 575:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 576:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 577:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 578:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 579:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 580:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 581:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 582:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 583:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 584:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 585:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 586:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 587:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 588:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 589:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 590:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 591:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 592:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 593:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 594:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 595:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 596:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 597:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 598:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 599:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 600:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 601:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 602:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 603:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 604:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 605:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x1E0. This is for boot in RAM mode for STM32F10x Connectivity line Devices.
+ 606:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF1E0F85F
+ 607:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 608:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_LD_VL)
+ 609:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 610:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 611:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 612:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 613:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 614:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 615:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_TIM15_IRQHandler, //
+ 616:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_TIM16_IRQHandler, //
+ 617:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_TIM17_IRQHandler, //
+ 618:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 619:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 620:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 621:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 622:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 623:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 624:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 625:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 626:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 627:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 628:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 629:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 630:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 631:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 632:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 633:../system/src/cmsis/vectors_stm32f10x.c ****     CEC_IRQHandler, //
+ 634:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 635:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 636:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 637:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 638:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 639:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 640:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 641:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 642:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 643:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 644:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 645:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_DAC_IRQHandler, //
+ 646:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 647:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 648:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 649:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 650:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 651:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 652:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 653:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 654:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 655:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 656:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 657:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 658:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 659:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 660:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 661:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 662:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 663:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 664:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 665:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 666:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 667:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 668:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 669:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 670:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 671:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 672:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 673:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 674:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 675:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 676:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 677:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 678:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 679:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 680:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 681:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 682:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 683:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 684:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 685:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 686:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 687:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 688:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 689:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 690:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 691:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x01CC. This is for boot in RAM mode for STM32F10x Low Density Value Line devices.
+ 692:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF108F85F
+ 693:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 694:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_MD_VL)
+ 695:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 696:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 697:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 698:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 699:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 700:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 701:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_TIM15_IRQHandler, //
+ 702:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_TIM16_IRQHandler, //
+ 703:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_TIM17_IRQHandler, //
+ 704:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 705:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 706:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 707:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 708:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 709:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 710:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 711:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 712:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 713:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 714:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 715:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 716:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 717:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 718:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 719:../system/src/cmsis/vectors_stm32f10x.c ****     CEC_IRQHandler, //
+ 720:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 721:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 722:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 723:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 724:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 725:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 726:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 727:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 728:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 729:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 730:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 731:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_DAC_IRQHandler, //
+ 732:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 733:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 734:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 735:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 736:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 737:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 738:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 739:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 740:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 741:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 742:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 743:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 744:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 745:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 746:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 747:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 748:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 749:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 750:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 751:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 752:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 753:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 754:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 755:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 756:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 757:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 758:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 759:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 760:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 761:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 762:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 763:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 764:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 765:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 766:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 767:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 768:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 769:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 770:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 771:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 772:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 773:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 774:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 775:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 776:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 777:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x01CC. This is for boot in RAM mode for STM32F10x Low Density Value Line devices.
+ 778:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF108F85F
+ 779:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 780:../system/src/cmsis/vectors_stm32f10x.c **** #elif defined(STM32F10X_HD_VL)
+ 781:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 782:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 783:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 784:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 785:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 786:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI9_5_IRQHandler, //
+ 787:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_BRK_TIM15_IRQHandler, //
+ 788:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_UP_TIM16_IRQHandler, //
+ 789:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_TRG_COM_TIM17_IRQHandler, //
+ 790:../system/src/cmsis/vectors_stm32f10x.c ****     TIM1_CC_IRQHandler, //
+ 791:../system/src/cmsis/vectors_stm32f10x.c ****     TIM2_IRQHandler, //
+ 792:../system/src/cmsis/vectors_stm32f10x.c ****     TIM3_IRQHandler, //
+ 793:../system/src/cmsis/vectors_stm32f10x.c ****     TIM4_IRQHandler, //
+ 794:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_EV_IRQHandler, //
+ 795:../system/src/cmsis/vectors_stm32f10x.c ****     I2C1_ER_IRQHandler, //
+ 796:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_EV_IRQHandler, //
+ 797:../system/src/cmsis/vectors_stm32f10x.c ****     I2C2_ER_IRQHandler, //
+ 798:../system/src/cmsis/vectors_stm32f10x.c ****     SPI1_IRQHandler, //
+ 799:../system/src/cmsis/vectors_stm32f10x.c ****     SPI2_IRQHandler, //
+ 800:../system/src/cmsis/vectors_stm32f10x.c ****     USART1_IRQHandler, //
+ 801:../system/src/cmsis/vectors_stm32f10x.c ****     USART2_IRQHandler, //
+ 802:../system/src/cmsis/vectors_stm32f10x.c ****     USART3_IRQHandler, //
+ 803:../system/src/cmsis/vectors_stm32f10x.c ****     EXTI15_10_IRQHandler, //
+ 804:../system/src/cmsis/vectors_stm32f10x.c ****     RTCAlarm_IRQHandler, //
+ 805:../system/src/cmsis/vectors_stm32f10x.c ****     CEC_IRQHandler, //
+ 806:../system/src/cmsis/vectors_stm32f10x.c ****     TIM12_IRQHandler, //
+ 807:../system/src/cmsis/vectors_stm32f10x.c ****     TIM13_IRQHandler, //
+ 808:../system/src/cmsis/vectors_stm32f10x.c ****     TIM14_IRQHandler, //
+ 809:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 810:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 811:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 812:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 813:../system/src/cmsis/vectors_stm32f10x.c ****     TIM5_IRQHandler, //
+ 814:../system/src/cmsis/vectors_stm32f10x.c ****     SPI3_IRQHandler, //
+ 815:../system/src/cmsis/vectors_stm32f10x.c ****     UART4_IRQHandler, //
+ 816:../system/src/cmsis/vectors_stm32f10x.c ****     UART5_IRQHandler, //
+ 817:../system/src/cmsis/vectors_stm32f10x.c ****     TIM6_DAC_IRQHandler, //
+ 818:../system/src/cmsis/vectors_stm32f10x.c ****     TIM7_IRQHandler, //
+ 819:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel1_IRQHandler, //
+ 820:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel2_IRQHandler, //
+ 821:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel3_IRQHandler, //
+ 822:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel4_5_IRQHandler, //
+ 823:../system/src/cmsis/vectors_stm32f10x.c ****     DMA2_Channel5_IRQHandler, //
+ 824:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 825:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 826:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 827:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 828:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 829:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 830:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 831:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 832:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 833:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 834:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 835:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 836:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 837:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 838:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 839:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 840:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 841:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 842:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 843:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 844:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 845:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 846:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 847:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 848:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 849:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 850:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 851:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 852:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 853:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 854:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 855:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 856:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 857:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 858:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 859:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 860:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 861:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 862:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 863:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 864:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 865:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 866:../system/src/cmsis/vectors_stm32f10x.c ****     0, //
+ 867:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 868:../system/src/cmsis/vectors_stm32f10x.c ****     // @0x1E0. This is for boot in RAM mode for STM32F10x High Density Value line devices.
+ 869:../system/src/cmsis/vectors_stm32f10x.c ****     (pHandler)0xF108F85F
+ 870:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 871:../system/src/cmsis/vectors_stm32f10x.c **** #else
+ 872:../system/src/cmsis/vectors_stm32f10x.c **** #error "missing vectors"
+ 873:../system/src/cmsis/vectors_stm32f10x.c **** #endif
+ 874:../system/src/cmsis/vectors_stm32f10x.c ****   };
+ 875:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 876:../system/src/cmsis/vectors_stm32f10x.c **** // ----------------------------------------------------------------------------
+ 877:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 878:../system/src/cmsis/vectors_stm32f10x.c **** // Processor ends up here if an unexpected interrupt occurs or a specific
+ 879:../system/src/cmsis/vectors_stm32f10x.c **** // handler is not present in the application code.
+ 880:../system/src/cmsis/vectors_stm32f10x.c **** 
+ 881:../system/src/cmsis/vectors_stm32f10x.c **** void __attribute__ ((section(".after_vectors")))
+ 882:../system/src/cmsis/vectors_stm32f10x.c **** Default_Handler(void)
+ 883:../system/src/cmsis/vectors_stm32f10x.c **** {
+  26              		.loc 1 883 0
+  27              		.cfi_startproc
+  28              		@ Volatile: function does not return.
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+ 884:../system/src/cmsis/vectors_stm32f10x.c **** #if defined(DEBUG)
+ 885:../system/src/cmsis/vectors_stm32f10x.c ****   __DEBUG_BKPT();
+  32              		.loc 1 885 0
+  33              		.syntax unified
+  34              	@ 885 "../system/src/cmsis/vectors_stm32f10x.c" 1
+  35 0000 00BE     		bkpt 0
+  36              	@ 0 "" 2
+  37              		.thumb
+  38              		.syntax unified
+  39              	.L2:
+  40 0002 FEE7     		b	.L2
+  41              		.cfi_endproc
+  42              	.LFE0:
+  44              		.weak	TIM14_IRQHandler
+  45              		.thumb_set TIM14_IRQHandler,Default_Handler
+  46              		.weak	TIM13_IRQHandler
+  47              		.thumb_set TIM13_IRQHandler,Default_Handler
+  48              		.weak	TIM12_IRQHandler
+  49              		.thumb_set TIM12_IRQHandler,Default_Handler
+  50              		.weak	TIM6_DAC_IRQHandler
+  51              		.thumb_set TIM6_DAC_IRQHandler,Default_Handler
+  52              		.weak	CEC_IRQHandler
+  53              		.thumb_set CEC_IRQHandler,Default_Handler
+  54              		.weak	TIM1_TRG_COM_TIM17_IRQHandler
+  55              		.thumb_set TIM1_TRG_COM_TIM17_IRQHandler,Default_Handler
+  56              		.weak	TIM1_UP_TIM16_IRQHandler
+  57              		.thumb_set TIM1_UP_TIM16_IRQHandler,Default_Handler
+  58              		.weak	TIM1_BRK_TIM15_IRQHandler
+  59              		.thumb_set TIM1_BRK_TIM15_IRQHandler,Default_Handler
+  60              		.weak	OTG_FS_IRQHandler
+  61              		.thumb_set OTG_FS_IRQHandler,Default_Handler
+  62              		.weak	CAN2_SCE_IRQHandler
+  63              		.thumb_set CAN2_SCE_IRQHandler,Default_Handler
+  64              		.weak	CAN2_RX1_IRQHandler
+  65              		.thumb_set CAN2_RX1_IRQHandler,Default_Handler
+  66              		.weak	CAN2_RX0_IRQHandler
+  67              		.thumb_set CAN2_RX0_IRQHandler,Default_Handler
+  68              		.weak	CAN2_TX_IRQHandler
+  69              		.thumb_set CAN2_TX_IRQHandler,Default_Handler
+  70              		.weak	ETH_WKUP_IRQHandler
+  71              		.thumb_set ETH_WKUP_IRQHandler,Default_Handler
+  72              		.weak	ETH_IRQHandler
+  73              		.thumb_set ETH_IRQHandler,Default_Handler
+  74              		.weak	DMA2_Channel5_IRQHandler
+  75              		.thumb_set DMA2_Channel5_IRQHandler,Default_Handler
+  76              		.weak	DMA2_Channel4_IRQHandler
+  77              		.thumb_set DMA2_Channel4_IRQHandler,Default_Handler
+  78              		.weak	OTG_FS_WKUP_IRQHandler
+  79              		.thumb_set OTG_FS_WKUP_IRQHandler,Default_Handler
+  80              		.weak	CAN1_RX0_IRQHandler
+  81              		.thumb_set CAN1_RX0_IRQHandler,Default_Handler
+  82              		.weak	CAN1_TX_IRQHandler
+  83              		.thumb_set CAN1_TX_IRQHandler,Default_Handler
+  84              		.weak	DMA2_Channel4_5_IRQHandler
+  85              		.thumb_set DMA2_Channel4_5_IRQHandler,Default_Handler
+  86              		.weak	DMA2_Channel3_IRQHandler
+  87              		.thumb_set DMA2_Channel3_IRQHandler,Default_Handler
+  88              		.weak	DMA2_Channel2_IRQHandler
+  89              		.thumb_set DMA2_Channel2_IRQHandler,Default_Handler
+  90              		.weak	DMA2_Channel1_IRQHandler
+  91              		.thumb_set DMA2_Channel1_IRQHandler,Default_Handler
+  92              		.weak	TIM7_IRQHandler
+  93              		.thumb_set TIM7_IRQHandler,Default_Handler
+  94              		.weak	TIM6_IRQHandler
+  95              		.thumb_set TIM6_IRQHandler,Default_Handler
+  96              		.weak	UART5_IRQHandler
+  97              		.thumb_set UART5_IRQHandler,Default_Handler
+  98              		.weak	UART4_IRQHandler
+  99              		.thumb_set UART4_IRQHandler,Default_Handler
+ 100              		.weak	SPI3_IRQHandler
+ 101              		.thumb_set SPI3_IRQHandler,Default_Handler
+ 102              		.weak	TIM5_IRQHandler
+ 103              		.thumb_set TIM5_IRQHandler,Default_Handler
+ 104              		.weak	SDIO_IRQHandler
+ 105              		.thumb_set SDIO_IRQHandler,Default_Handler
+ 106              		.weak	FSMC_IRQHandler
+ 107              		.thumb_set FSMC_IRQHandler,Default_Handler
+ 108              		.weak	ADC3_IRQHandler
+ 109              		.thumb_set ADC3_IRQHandler,Default_Handler
+ 110              		.weak	TIM8_CC_IRQHandler
+ 111              		.thumb_set TIM8_CC_IRQHandler,Default_Handler
+ 112              		.weak	TIM8_TRG_COM_TIM14_IRQHandler
+ 113              		.thumb_set TIM8_TRG_COM_TIM14_IRQHandler,Default_Handler
+ 114              		.weak	TIM8_UP_TIM13_IRQHandler
+ 115              		.thumb_set TIM8_UP_TIM13_IRQHandler,Default_Handler
+ 116              		.weak	TIM8_BRK_TIM12_IRQHandler
+ 117              		.thumb_set TIM8_BRK_TIM12_IRQHandler,Default_Handler
+ 118              		.weak	TIM8_TRG_COM_IRQHandler
+ 119              		.thumb_set TIM8_TRG_COM_IRQHandler,Default_Handler
+ 120              		.weak	TIM8_UP_IRQHandler
+ 121              		.thumb_set TIM8_UP_IRQHandler,Default_Handler
+ 122              		.weak	TIM8_BRK_IRQHandler
+ 123              		.thumb_set TIM8_BRK_IRQHandler,Default_Handler
+ 124              		.weak	USBWakeUp_IRQHandler
+ 125              		.thumb_set USBWakeUp_IRQHandler,Default_Handler
+ 126              		.weak	RTCAlarm_IRQHandler
+ 127              		.thumb_set RTCAlarm_IRQHandler,Default_Handler
+ 128              		.weak	EXTI15_10_IRQHandler
+ 129              		.thumb_set EXTI15_10_IRQHandler,Default_Handler
+ 130              		.weak	USART3_IRQHandler
+ 131              		.thumb_set USART3_IRQHandler,Default_Handler
+ 132              		.weak	USART2_IRQHandler
+ 133              		.thumb_set USART2_IRQHandler,Default_Handler
+ 134              		.weak	USART1_IRQHandler
+ 135              		.thumb_set USART1_IRQHandler,Default_Handler
+ 136              		.weak	SPI2_IRQHandler
+ 137              		.thumb_set SPI2_IRQHandler,Default_Handler
+ 138              		.weak	SPI1_IRQHandler
+ 139              		.thumb_set SPI1_IRQHandler,Default_Handler
+ 140              		.weak	I2C2_ER_IRQHandler
+ 141              		.thumb_set I2C2_ER_IRQHandler,Default_Handler
+ 142              		.weak	I2C2_EV_IRQHandler
+ 143              		.thumb_set I2C2_EV_IRQHandler,Default_Handler
+ 144              		.weak	I2C1_ER_IRQHandler
+ 145              		.thumb_set I2C1_ER_IRQHandler,Default_Handler
+ 146              		.weak	I2C1_EV_IRQHandler
+ 147              		.thumb_set I2C1_EV_IRQHandler,Default_Handler
+ 148              		.weak	TIM4_IRQHandler
+ 149              		.thumb_set TIM4_IRQHandler,Default_Handler
+ 150              		.weak	TIM3_IRQHandler
+ 151              		.thumb_set TIM3_IRQHandler,Default_Handler
+ 152              		.weak	TIM2_IRQHandler
+ 153              		.thumb_set TIM2_IRQHandler,Default_Handler
+ 154              		.weak	TIM1_CC_IRQHandler
+ 155              		.thumb_set TIM1_CC_IRQHandler,Default_Handler
+ 156              		.weak	TIM1_TRG_COM_IRQHandler
+ 157              		.thumb_set TIM1_TRG_COM_IRQHandler,Default_Handler
+ 158              		.weak	TIM1_UP_IRQHandler
+ 159              		.thumb_set TIM1_UP_IRQHandler,Default_Handler
+ 160              		.weak	TIM1_BRK_IRQHandler
+ 161              		.thumb_set TIM1_BRK_IRQHandler,Default_Handler
+ 162              		.weak	TIM1_TRG_COM_TIM11_IRQHandler
+ 163              		.thumb_set TIM1_TRG_COM_TIM11_IRQHandler,Default_Handler
+ 164              		.weak	TIM1_UP_TIM10_IRQHandler
+ 165              		.thumb_set TIM1_UP_TIM10_IRQHandler,Default_Handler
+ 166              		.weak	TIM1_BRK_TIM9_IRQHandler
+ 167              		.thumb_set TIM1_BRK_TIM9_IRQHandler,Default_Handler
+ 168              		.weak	EXTI9_5_IRQHandler
+ 169              		.thumb_set EXTI9_5_IRQHandler,Default_Handler
+ 170              		.weak	CAN1_SCE_IRQHandler
+ 171              		.thumb_set CAN1_SCE_IRQHandler,Default_Handler
+ 172              		.weak	CAN1_RX1_IRQHandler
+ 173              		.thumb_set CAN1_RX1_IRQHandler,Default_Handler
+ 174              		.weak	USB_LP_CAN1_RX0_IRQHandler
+ 175              		.thumb_set USB_LP_CAN1_RX0_IRQHandler,Default_Handler
+ 176              		.weak	USB_HP_CAN1_TX_IRQHandler
+ 177              		.thumb_set USB_HP_CAN1_TX_IRQHandler,Default_Handler
+ 178              		.weak	ADC1_2_IRQHandler
+ 179              		.thumb_set ADC1_2_IRQHandler,Default_Handler
+ 180              		.weak	DMA1_Channel7_IRQHandler
+ 181              		.thumb_set DMA1_Channel7_IRQHandler,Default_Handler
+ 182              		.weak	DMA1_Channel6_IRQHandler
+ 183              		.thumb_set DMA1_Channel6_IRQHandler,Default_Handler
+ 184              		.weak	DMA1_Channel5_IRQHandler
+ 185              		.thumb_set DMA1_Channel5_IRQHandler,Default_Handler
+ 186              		.weak	DMA1_Channel4_IRQHandler
+ 187              		.thumb_set DMA1_Channel4_IRQHandler,Default_Handler
+ 188              		.weak	DMA1_Channel3_IRQHandler
+ 189              		.thumb_set DMA1_Channel3_IRQHandler,Default_Handler
+ 190              		.weak	DMA1_Channel2_IRQHandler
+ 191              		.thumb_set DMA1_Channel2_IRQHandler,Default_Handler
+ 192              		.weak	DMA1_Channel1_IRQHandler
+ 193              		.thumb_set DMA1_Channel1_IRQHandler,Default_Handler
+ 194              		.weak	EXTI4_IRQHandler
+ 195              		.thumb_set EXTI4_IRQHandler,Default_Handler
+ 196              		.weak	EXTI3_IRQHandler
+ 197              		.thumb_set EXTI3_IRQHandler,Default_Handler
+ 198              		.weak	EXTI2_IRQHandler
+ 199              		.thumb_set EXTI2_IRQHandler,Default_Handler
+ 200              		.weak	EXTI1_IRQHandler
+ 201              		.thumb_set EXTI1_IRQHandler,Default_Handler
+ 202              		.weak	EXTI0_IRQHandler
+ 203              		.thumb_set EXTI0_IRQHandler,Default_Handler
+ 204              		.weak	RCC_IRQHandler
+ 205              		.thumb_set RCC_IRQHandler,Default_Handler
+ 206              		.weak	FLASH_IRQHandler
+ 207              		.thumb_set FLASH_IRQHandler,Default_Handler
+ 208              		.weak	RTC_IRQHandler
+ 209              		.thumb_set RTC_IRQHandler,Default_Handler
+ 210              		.weak	TAMPER_IRQHandler
+ 211              		.thumb_set TAMPER_IRQHandler,Default_Handler
+ 212              		.weak	PVD_IRQHandler
+ 213              		.thumb_set PVD_IRQHandler,Default_Handler
+ 214              		.weak	WWDG_IRQHandler
+ 215              		.thumb_set WWDG_IRQHandler,Default_Handler
+ 216              		.global	__isr_vectors
+ 217              		.section	.isr_vector,"a",%progbits
+ 218              		.align	2
+ 221              	__isr_vectors:
+ 222 0000 00000000 		.word	_estack
+ 223 0004 00000000 		.word	Reset_Handler
+ 224 0008 00000000 		.word	NMI_Handler
+ 225 000c 00000000 		.word	HardFault_Handler
+ 226 0010 00000000 		.word	MemManage_Handler
+ 227 0014 00000000 		.word	BusFault_Handler
+ 228 0018 00000000 		.word	UsageFault_Handler
+ 229 001c 00000000 		.word	0
+ 230 0020 00000000 		.word	0
+ 231 0024 00000000 		.word	0
+ 232 0028 00000000 		.word	0
+ 233 002c 00000000 		.word	SVC_Handler
+ 234 0030 00000000 		.word	DebugMon_Handler
+ 235 0034 00000000 		.word	0
+ 236 0038 00000000 		.word	PendSV_Handler
+ 237 003c 00000000 		.word	SysTick_Handler
+ 238 0040 00000000 		.word	WWDG_IRQHandler
+ 239 0044 00000000 		.word	PVD_IRQHandler
+ 240 0048 00000000 		.word	TAMPER_IRQHandler
+ 241 004c 00000000 		.word	RTC_IRQHandler
+ 242 0050 00000000 		.word	FLASH_IRQHandler
+ 243 0054 00000000 		.word	RCC_IRQHandler
+ 244 0058 00000000 		.word	EXTI0_IRQHandler
+ 245 005c 00000000 		.word	EXTI1_IRQHandler
+ 246 0060 00000000 		.word	EXTI2_IRQHandler
+ 247 0064 00000000 		.word	EXTI3_IRQHandler
+ 248 0068 00000000 		.word	EXTI4_IRQHandler
+ 249 006c 00000000 		.word	DMA1_Channel1_IRQHandler
+ 250 0070 00000000 		.word	DMA1_Channel2_IRQHandler
+ 251 0074 00000000 		.word	DMA1_Channel3_IRQHandler
+ 252 0078 00000000 		.word	DMA1_Channel4_IRQHandler
+ 253 007c 00000000 		.word	DMA1_Channel5_IRQHandler
+ 254 0080 00000000 		.word	DMA1_Channel6_IRQHandler
+ 255 0084 00000000 		.word	DMA1_Channel7_IRQHandler
+ 256 0088 00000000 		.word	ADC1_2_IRQHandler
+ 257 008c 00000000 		.word	0
+ 258 0090 00000000 		.word	0
+ 259 0094 00000000 		.word	0
+ 260 0098 00000000 		.word	0
+ 261 009c 00000000 		.word	EXTI9_5_IRQHandler
+ 262 00a0 00000000 		.word	TIM1_BRK_TIM15_IRQHandler
+ 263 00a4 00000000 		.word	TIM1_UP_TIM16_IRQHandler
+ 264 00a8 00000000 		.word	TIM1_TRG_COM_TIM17_IRQHandler
+ 265 00ac 00000000 		.word	TIM1_CC_IRQHandler
+ 266 00b0 00000000 		.word	TIM2_IRQHandler
+ 267 00b4 00000000 		.word	TIM3_IRQHandler
+ 268 00b8 00000000 		.word	TIM4_IRQHandler
+ 269 00bc 00000000 		.word	I2C1_EV_IRQHandler
+ 270 00c0 00000000 		.word	I2C1_ER_IRQHandler
+ 271 00c4 00000000 		.word	I2C2_EV_IRQHandler
+ 272 00c8 00000000 		.word	I2C2_ER_IRQHandler
+ 273 00cc 00000000 		.word	SPI1_IRQHandler
+ 274 00d0 00000000 		.word	SPI2_IRQHandler
+ 275 00d4 00000000 		.word	USART1_IRQHandler
+ 276 00d8 00000000 		.word	USART2_IRQHandler
+ 277 00dc 00000000 		.word	USART3_IRQHandler
+ 278 00e0 00000000 		.word	EXTI15_10_IRQHandler
+ 279 00e4 00000000 		.word	RTCAlarm_IRQHandler
+ 280 00e8 00000000 		.word	CEC_IRQHandler
+ 281 00ec 00000000 		.word	0
+ 282 00f0 00000000 		.word	0
+ 283 00f4 00000000 		.word	0
+ 284 00f8 00000000 		.word	0
+ 285 00fc 00000000 		.word	0
+ 286 0100 00000000 		.word	0
+ 287 0104 00000000 		.word	0
+ 288 0108 00000000 		.word	0
+ 289 010c 00000000 		.word	0
+ 290 0110 00000000 		.word	0
+ 291 0114 00000000 		.word	0
+ 292 0118 00000000 		.word	TIM6_DAC_IRQHandler
+ 293 011c 00000000 		.word	TIM7_IRQHandler
+ 294 0120 00000000 		.word	0
+ 295 0124 00000000 		.word	0
+ 296 0128 00000000 		.word	0
+ 297 012c 00000000 		.word	0
+ 298 0130 00000000 		.word	0
+ 299 0134 00000000 		.word	0
+ 300 0138 00000000 		.word	0
+ 301 013c 00000000 		.word	0
+ 302 0140 00000000 		.word	0
+ 303 0144 00000000 		.word	0
+ 304 0148 00000000 		.word	0
+ 305 014c 00000000 		.word	0
+ 306 0150 00000000 		.word	0
+ 307 0154 00000000 		.word	0
+ 308 0158 00000000 		.word	0
+ 309 015c 00000000 		.word	0
+ 310 0160 00000000 		.word	0
+ 311 0164 00000000 		.word	0
+ 312 0168 00000000 		.word	0
+ 313 016c 00000000 		.word	0
+ 314 0170 00000000 		.word	0
+ 315 0174 00000000 		.word	0
+ 316 0178 00000000 		.word	0
+ 317 017c 00000000 		.word	0
+ 318 0180 00000000 		.word	0
+ 319 0184 00000000 		.word	0
+ 320 0188 00000000 		.word	0
+ 321 018c 00000000 		.word	0
+ 322 0190 00000000 		.word	0
+ 323 0194 00000000 		.word	0
+ 324 0198 00000000 		.word	0
+ 325 019c 00000000 		.word	0
+ 326 01a0 00000000 		.word	0
+ 327 01a4 00000000 		.word	0
+ 328 01a8 00000000 		.word	0
+ 329 01ac 00000000 		.word	0
+ 330 01b0 00000000 		.word	0
+ 331 01b4 00000000 		.word	0
+ 332 01b8 00000000 		.word	0
+ 333 01bc 00000000 		.word	0
+ 334 01c0 00000000 		.word	0
+ 335 01c4 00000000 		.word	0
+ 336 01c8 00000000 		.word	0
+ 337 01cc 5FF808F1 		.word	-251070369
+ 338              		.text
+ 339              	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 vectors_stm32f10x.c
+     /tmp/ccXFknfE.s:16     .after_vectors:0000000000000000 $t
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 Default_Handler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM14_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM13_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM12_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM6_DAC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CEC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_TRG_COM_TIM17_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_UP_TIM16_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_BRK_TIM15_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 OTG_FS_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN2_SCE_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN2_RX1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN2_RX0_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN2_TX_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 ETH_WKUP_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 ETH_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel4_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 OTG_FS_WKUP_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN1_RX0_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN1_TX_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel4_5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA2_Channel1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM7_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM6_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 UART5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 UART4_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 SPI3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 SDIO_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 FSMC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 ADC3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_CC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_TRG_COM_TIM14_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_UP_TIM13_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_BRK_TIM12_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_TRG_COM_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_UP_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM8_BRK_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USBWakeUp_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 RTCAlarm_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI15_10_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USART3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USART2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USART1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 SPI2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 SPI1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 I2C2_ER_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 I2C2_EV_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 I2C1_ER_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 I2C1_EV_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM4_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_CC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_TRG_COM_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_UP_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_BRK_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_TRG_COM_TIM11_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_UP_TIM10_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TIM1_BRK_TIM9_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI9_5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN1_SCE_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 CAN1_RX1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USB_LP_CAN1_RX0_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 USB_HP_CAN1_TX_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 ADC1_2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel7_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel6_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel5_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel4_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 DMA1_Channel1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI4_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI3_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI2_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI1_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 EXTI0_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 RCC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 FLASH_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 RTC_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 TAMPER_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 PVD_IRQHandler
+     /tmp/ccXFknfE.s:23     .after_vectors:0000000000000000 WWDG_IRQHandler
+     /tmp/ccXFknfE.s:221    .isr_vector:0000000000000000 __isr_vectors
+     /tmp/ccXFknfE.s:218    .isr_vector:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+
+UNDEFINED SYMBOLS
+_estack
+Reset_Handler
+NMI_Handler
+HardFault_Handler
+MemManage_Handler
+BusFault_Handler
+UsageFault_Handler
+SVC_Handler
+DebugMon_Handler
+PendSV_Handler
+SysTick_Handler

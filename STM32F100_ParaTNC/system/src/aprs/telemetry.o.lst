@@ -1,0 +1,2209 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"telemetry.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.telemetry_send_chns_description_pv,"ax",%progbits
+  16              		.align	1
+  17              		.global	telemetry_send_chns_description_pv
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	telemetry_send_chns_description_pv:
+  24              	.LFB74:
+  25              		.file 1 "../system/src/aprs/telemetry.c"
+   1:../system/src/aprs/telemetry.c **** /*
+   2:../system/src/aprs/telemetry.c ****  * telemetry.c
+   3:../system/src/aprs/telemetry.c ****  *
+   4:../system/src/aprs/telemetry.c ****  *  Created on: 01.07.2017
+   5:../system/src/aprs/telemetry.c ****  *      Author: mateusz
+   6:../system/src/aprs/telemetry.c ****  */
+   7:../system/src/aprs/telemetry.c **** 
+   8:../system/src/aprs/telemetry.c **** #include "aprs/telemetry.h"
+   9:../system/src/aprs/telemetry.c **** #include "main.h"
+  10:../system/src/aprs/telemetry.c **** #include "delay.h"
+  11:../system/src/aprs/telemetry.c **** 
+  12:../system/src/aprs/telemetry.c **** #include "ve_direct_protocol/parser.h"
+  13:../system/src/aprs/telemetry.c **** 
+  14:../system/src/aprs/telemetry.c **** #include "modbus_rtu/rtu_getters.h"
+  15:../system/src/aprs/telemetry.c **** 
+  16:../system/src/aprs/telemetry.c **** #include <main.h>
+  17:../system/src/aprs/telemetry.c **** #include <stdio.h>
+  18:../system/src/aprs/telemetry.c **** #include <string.h>
+  19:../system/src/aprs/telemetry.c **** 
+  20:../system/src/aprs/telemetry.c **** uint16_t telemetry_counter = 0;
+  21:../system/src/aprs/telemetry.c **** 
+  22:../system/src/aprs/telemetry.c **** void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic) {
+  26              		.loc 1 22 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 16
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 10B5     		push	{r4, lr}
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 4, -8
+  34              		.cfi_offset 14, -4
+  35 0002 86B0     		sub	sp, sp, #24
+  36              		.cfi_def_cfa_offset 32
+  37 0004 0446     		mov	r4, r0
+  23:../system/src/aprs/telemetry.c **** 
+  24:../system/src/aprs/telemetry.c **** 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
+  25:../system/src/aprs/telemetry.c **** 	char message_prefix_buffer[9];
+  26:../system/src/aprs/telemetry.c **** 
+  27:../system/src/aprs/telemetry.c **** 	memset(message_prefix_buffer, 0x00, 0x09);
+  38              		.loc 1 27 0
+  39 0006 0922     		movs	r2, #9
+  40 0008 0021     		movs	r1, #0
+  41 000a 03A8     		add	r0, sp, #12
+  42              	.LVL1:
+  43 000c FFF7FEFF 		bl	memset
+  44              	.LVL2:
+  28:../system/src/aprs/telemetry.c **** 
+  29:../system/src/aprs/telemetry.c **** 	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+  45              		.loc 1 29 0
+  46 0010 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+  47 0012 2246     		mov	r2, r4
+  48 0014 5D49     		ldr	r1, .L23
+  49 0016 03A8     		add	r0, sp, #12
+  50 0018 FFF7FEFF 		bl	sprintf
+  51              	.LVL3:
+  52              	.L2:
+  30:../system/src/aprs/telemetry.c **** 
+  31:../system/src/aprs/telemetry.c **** 	while (main_afsk.sending == 1);
+  53              		.loc 1 31 0 discriminator 1
+  54 001c 5C4B     		ldr	r3, .L23+4
+  55 001e 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+  56 0022 002B     		cmp	r3, #0
+  57 0024 FAD1     		bne	.L2
+  32:../system/src/aprs/telemetry.c **** 
+  33:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+  58              		.loc 1 33 0
+  59 0026 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+  60 0028 83B1     		cbz	r3, .L17
+  34:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVo
+  35:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+  61              		.loc 1 35 0
+  62 002a 5A1E     		subs	r2, r3, #1
+  63 002c D2B2     		uxtb	r2, r2
+  64 002e 082A     		cmp	r2, #8
+  65 0030 40D9     		bls	.L18
+  36:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,
+  37:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+  66              		.loc 1 37 0
+  67 0032 0A3B     		subs	r3, r3, #10
+  68 0034 DBB2     		uxtb	r3, r3
+  69 0036 052B     		cmp	r3, #5
+  70 0038 00F29D80 		bhi	.L1
+  38:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,
+  71              		.loc 1 38 0
+  72 003c 03AA     		add	r2, sp, #12
+  73 003e 5549     		ldr	r1, .L23+8
+  74 0040 5548     		ldr	r0, .L23+12
+  75 0042 FFF7FEFF 		bl	sprintf
+  76              	.LVL4:
+  77 0046 554B     		ldr	r3, .L23+16
+  78 0048 1870     		strb	r0, [r3]
+  79 004a 06E0     		b	.L4
+  80              	.L17:
+  34:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVo
+  81              		.loc 1 34 0
+  82 004c 2246     		mov	r2, r4
+  83 004e 5449     		ldr	r1, .L23+20
+  84 0050 5148     		ldr	r0, .L23+12
+  85 0052 FFF7FEFF 		bl	sprintf
+  86              	.LVL5:
+  87 0056 514B     		ldr	r3, .L23+16
+  88 0058 1870     		strb	r0, [r3]
+  89              	.L4:
+  39:../system/src/aprs/telemetry.c **** 	else
+  40:../system/src/aprs/telemetry.c **** 		return;
+  41:../system/src/aprs/telemetry.c **** 
+  42:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+  90              		.loc 1 42 0
+  91 005a 504B     		ldr	r3, .L23+16
+  92 005c 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+  93 005e 4E4B     		ldr	r3, .L23+12
+  94 0060 0022     		movs	r2, #0
+  95 0062 5A54     		strb	r2, [r3, r1]
+  43:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+  96              		.loc 1 43 0
+  97 0064 4F4A     		ldr	r2, .L23+24
+  98 0066 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+  99 0068 0091     		str	r1, [sp]
+ 100 006a 4F49     		ldr	r1, .L23+28
+ 101 006c 4F48     		ldr	r0, .L23+32
+ 102 006e FFF7FEFF 		bl	ax25_sendVia
+ 103              	.LVL6:
+  44:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 104              		.loc 1 44 0
+ 105 0072 4F4B     		ldr	r3, .L23+36
+ 106 0074 0122     		movs	r2, #1
+ 107 0076 1A70     		strb	r2, [r3]
+  45:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 108              		.loc 1 45 0
+ 109 0078 4548     		ldr	r0, .L23+4
+ 110 007a FFF7FEFF 		bl	afsk_txStart
+ 111              	.LVL7:
+ 112              	.L7:
+  46:../system/src/aprs/telemetry.c **** 
+  47:../system/src/aprs/telemetry.c **** 	while (main_afsk.sending == 1);
+ 113              		.loc 1 47 0 discriminator 1
+ 114 007e 444B     		ldr	r3, .L23+4
+ 115 0080 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 116 0084 002B     		cmp	r3, #0
+ 117 0086 FAD1     		bne	.L7
+  48:../system/src/aprs/telemetry.c **** 
+  49:../system/src/aprs/telemetry.c **** 	delay_fixed(1200);
+ 118              		.loc 1 49 0
+ 119 0088 4FF49660 		mov	r0, #1200
+ 120 008c FFF7FEFF 		bl	delay_fixed
+ 121              	.LVL8:
+  50:../system/src/aprs/telemetry.c **** 
+  51:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+ 122              		.loc 1 51 0
+ 123 0090 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 124 0092 BBB1     		cbz	r3, .L19
+  52:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,
+  53:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 125              		.loc 1 53 0
+ 126 0094 5A1E     		subs	r2, r3, #1
+ 127 0096 D2B2     		uxtb	r2, r2
+ 128 0098 082A     		cmp	r2, #8
+ 129 009a 47D9     		bls	.L20
+  54:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0
+  55:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 130              		.loc 1 55 0
+ 131 009c 0A3B     		subs	r3, r3, #10
+ 132 009e DBB2     		uxtb	r3, r3
+ 133 00a0 052B     		cmp	r3, #5
+ 134 00a2 68D8     		bhi	.L1
+  56:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0
+ 135              		.loc 1 56 0
+ 136 00a4 03AA     		add	r2, sp, #12
+ 137 00a6 4349     		ldr	r1, .L23+40
+ 138 00a8 3B48     		ldr	r0, .L23+12
+ 139 00aa FFF7FEFF 		bl	sprintf
+ 140              	.LVL9:
+ 141 00ae 3B4B     		ldr	r3, .L23+16
+ 142 00b0 1870     		strb	r0, [r3]
+ 143 00b2 0EE0     		b	.L9
+ 144              	.L18:
+  36:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 145              		.loc 1 36 0
+ 146 00b4 03AA     		add	r2, sp, #12
+ 147 00b6 3749     		ldr	r1, .L23+8
+ 148 00b8 3748     		ldr	r0, .L23+12
+ 149 00ba FFF7FEFF 		bl	sprintf
+ 150              	.LVL10:
+ 151 00be 374B     		ldr	r3, .L23+16
+ 152 00c0 1870     		strb	r0, [r3]
+ 153 00c2 CAE7     		b	.L4
+ 154              	.L19:
+  52:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 155              		.loc 1 52 0
+ 156 00c4 2246     		mov	r2, r4
+ 157 00c6 3C49     		ldr	r1, .L23+44
+ 158 00c8 3348     		ldr	r0, .L23+12
+ 159 00ca FFF7FEFF 		bl	sprintf
+ 160              	.LVL11:
+ 161 00ce 334B     		ldr	r3, .L23+16
+ 162 00d0 1870     		strb	r0, [r3]
+ 163              	.L9:
+  57:../system/src/aprs/telemetry.c **** 	else
+  58:../system/src/aprs/telemetry.c **** 		return;
+  59:../system/src/aprs/telemetry.c **** 
+  60:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 164              		.loc 1 60 0
+ 165 00d2 324B     		ldr	r3, .L23+16
+ 166 00d4 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 167 00d6 304B     		ldr	r3, .L23+12
+ 168 00d8 0022     		movs	r2, #0
+ 169 00da 5A54     		strb	r2, [r3, r1]
+  61:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+ 170              		.loc 1 61 0
+ 171 00dc 314A     		ldr	r2, .L23+24
+ 172 00de 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 173 00e0 0091     		str	r1, [sp]
+ 174 00e2 3149     		ldr	r1, .L23+28
+ 175 00e4 3148     		ldr	r0, .L23+32
+ 176 00e6 FFF7FEFF 		bl	ax25_sendVia
+ 177              	.LVL12:
+  62:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 178              		.loc 1 62 0
+ 179 00ea 314B     		ldr	r3, .L23+36
+ 180 00ec 0122     		movs	r2, #1
+ 181 00ee 1A70     		strb	r2, [r3]
+  63:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 182              		.loc 1 63 0
+ 183 00f0 2748     		ldr	r0, .L23+4
+ 184 00f2 FFF7FEFF 		bl	afsk_txStart
+ 185              	.LVL13:
+ 186              	.L11:
+  64:../system/src/aprs/telemetry.c **** 
+  65:../system/src/aprs/telemetry.c **** 	while (main_afsk.sending == 1);
+ 187              		.loc 1 65 0 discriminator 1
+ 188 00f6 264B     		ldr	r3, .L23+4
+ 189 00f8 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 190 00fc 002B     		cmp	r3, #0
+ 191 00fe FAD1     		bne	.L11
+  66:../system/src/aprs/telemetry.c **** 
+  67:../system/src/aprs/telemetry.c **** 	delay_fixed(1200);
+ 192              		.loc 1 67 0
+ 193 0100 4FF49660 		mov	r0, #1200
+ 194 0104 FFF7FEFF 		bl	delay_fixed
+ 195              	.LVL14:
+  68:../system/src/aprs/telemetry.c **** 
+  69:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+ 196              		.loc 1 69 0
+ 197 0108 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 198 010a BBB1     		cbz	r3, .L21
+  70:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi
+  71:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 199              		.loc 1 71 0
+ 200 010c 5A1E     		subs	r2, r3, #1
+ 201 010e D2B2     		uxtb	r2, r2
+ 202 0110 082A     		cmp	r2, #8
+ 203 0112 32D9     		bls	.L22
+  72:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi
+  73:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 204              		.loc 1 73 0
+ 205 0114 0A3B     		subs	r3, r3, #10
+ 206 0116 DBB2     		uxtb	r3, r3
+ 207 0118 052B     		cmp	r3, #5
+ 208 011a 2CD8     		bhi	.L1
+  74:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi
+ 209              		.loc 1 74 0
+ 210 011c 03AA     		add	r2, sp, #12
+ 211 011e 2749     		ldr	r1, .L23+48
+ 212 0120 1D48     		ldr	r0, .L23+12
+ 213 0122 FFF7FEFF 		bl	sprintf
+ 214              	.LVL15:
+ 215 0126 1D4B     		ldr	r3, .L23+16
+ 216 0128 1870     		strb	r0, [r3]
+ 217 012a 0EE0     		b	.L13
+ 218              	.L20:
+  54:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 219              		.loc 1 54 0
+ 220 012c 03AA     		add	r2, sp, #12
+ 221 012e 2149     		ldr	r1, .L23+40
+ 222 0130 1948     		ldr	r0, .L23+12
+ 223 0132 FFF7FEFF 		bl	sprintf
+ 224              	.LVL16:
+ 225 0136 194B     		ldr	r3, .L23+16
+ 226 0138 1870     		strb	r0, [r3]
+ 227 013a CAE7     		b	.L9
+ 228              	.L21:
+  70:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 229              		.loc 1 70 0
+ 230 013c 2246     		mov	r2, r4
+ 231 013e 2049     		ldr	r1, .L23+52
+ 232 0140 1548     		ldr	r0, .L23+12
+ 233 0142 FFF7FEFF 		bl	sprintf
+ 234              	.LVL17:
+ 235 0146 154B     		ldr	r3, .L23+16
+ 236 0148 1870     		strb	r0, [r3]
+ 237              	.L13:
+  75:../system/src/aprs/telemetry.c **** 	else
+  76:../system/src/aprs/telemetry.c **** 		return;
+  77:../system/src/aprs/telemetry.c **** 
+  78:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 238              		.loc 1 78 0
+ 239 014a 144B     		ldr	r3, .L23+16
+ 240 014c 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 241 014e 124B     		ldr	r3, .L23+12
+ 242 0150 0022     		movs	r2, #0
+ 243 0152 5A54     		strb	r2, [r3, r1]
+  79:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+ 244              		.loc 1 79 0
+ 245 0154 134A     		ldr	r2, .L23+24
+ 246 0156 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 247 0158 0091     		str	r1, [sp]
+ 248 015a 1349     		ldr	r1, .L23+28
+ 249 015c 1348     		ldr	r0, .L23+32
+ 250 015e FFF7FEFF 		bl	ax25_sendVia
+ 251              	.LVL18:
+  80:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 252              		.loc 1 80 0
+ 253 0162 134B     		ldr	r3, .L23+36
+ 254 0164 0122     		movs	r2, #1
+ 255 0166 1A70     		strb	r2, [r3]
+  81:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 256              		.loc 1 81 0
+ 257 0168 0948     		ldr	r0, .L23+4
+ 258 016a FFF7FEFF 		bl	afsk_txStart
+ 259              	.LVL19:
+  82:../system/src/aprs/telemetry.c **** 
+  83:../system/src/aprs/telemetry.c **** 	delay_fixed(1200);
+ 260              		.loc 1 83 0
+ 261 016e 4FF49660 		mov	r0, #1200
+ 262 0172 FFF7FEFF 		bl	delay_fixed
+ 263              	.LVL20:
+ 264              	.L1:
+  84:../system/src/aprs/telemetry.c **** }
+ 265              		.loc 1 84 0
+ 266 0176 06B0     		add	sp, sp, #24
+ 267              		.cfi_remember_state
+ 268              		.cfi_def_cfa_offset 8
+ 269              		@ sp needed
+ 270 0178 10BD     		pop	{r4, pc}
+ 271              	.LVL21:
+ 272              	.L22:
+ 273              		.cfi_restore_state
+  72:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 274              		.loc 1 72 0
+ 275 017a 03AA     		add	r2, sp, #12
+ 276 017c 0F49     		ldr	r1, .L23+48
+ 277 017e 0648     		ldr	r0, .L23+12
+ 278 0180 FFF7FEFF 		bl	sprintf
+ 279              	.LVL22:
+ 280 0184 054B     		ldr	r3, .L23+16
+ 281 0186 1870     		strb	r0, [r3]
+ 282 0188 DFE7     		b	.L13
+ 283              	.L24:
+ 284 018a 00BF     		.align	2
+ 285              	.L23:
+ 286 018c 00000000 		.word	.LC0
+ 287 0190 00000000 		.word	main_afsk
+ 288 0194 9C000000 		.word	.LC2
+ 289 0198 00000000 		.word	main_own_aprs_msg
+ 290 019c 00000000 		.word	main_own_aprs_msg_len
+ 291 01a0 08000000 		.word	.LC1
+ 292 01a4 00000000 		.word	main_own_path_ln
+ 293 01a8 00000000 		.word	main_own_path
+ 294 01ac 00000000 		.word	main_ax25
+ 295 01b0 00000000 		.word	after_tx_lock
+ 296 01b4 64010000 		.word	.LC4
+ 297 01b8 2C010000 		.word	.LC3
+ 298 01bc CC010000 		.word	.LC6
+ 299 01c0 98010000 		.word	.LC5
+ 300              		.cfi_endproc
+ 301              	.LFE74:
+ 303              		.global	__aeabi_i2f
+ 304              		.global	__aeabi_fdiv
+ 305              		.global	__aeabi_ui2f
+ 306              		.global	__aeabi_fadd
+ 307              		.global	__aeabi_fmul
+ 308              		.global	__aeabi_f2uiz
+ 309              		.global	__aeabi_fsub
+ 310              		.section	.text.telemetry_send_values_pv,"ax",%progbits
+ 311              		.align	1
+ 312              		.global	telemetry_send_values_pv
+ 313              		.syntax unified
+ 314              		.thumb
+ 315              		.thumb_func
+ 316              		.fpu softvfp
+ 318              	telemetry_send_values_pv:
+ 319              	.LFB75:
+  85:../system/src/aprs/telemetry.c **** 
+  86:../system/src/aprs/telemetry.c **** void telemetry_send_values_pv (	uint8_t rx_pkts,
+  87:../system/src/aprs/telemetry.c **** 								uint8_t digi_pkts,
+  88:../system/src/aprs/telemetry.c **** 								int16_t raw_battery_current,
+  89:../system/src/aprs/telemetry.c **** 								uint16_t raw_battery_voltage,
+  90:../system/src/aprs/telemetry.c **** 								uint16_t raw_pv_cell_voltage,
+  91:../system/src/aprs/telemetry.c **** 								dallas_qf_t dallas_qf,
+  92:../system/src/aprs/telemetry.c **** 								pressure_qf_t press_qf,
+  93:../system/src/aprs/telemetry.c **** 								humidity_qf_t humid_qf,
+  94:../system/src/aprs/telemetry.c **** 								wind_qf_t anemometer_qf)
+  95:../system/src/aprs/telemetry.c **** {
+ 320              		.loc 1 95 0
+ 321              		.cfi_startproc
+ 322              		@ args = 20, pretend = 0, frame = 0
+ 323              		@ frame_needed = 0, uses_anonymous_args = 0
+ 324              	.LVL23:
+ 325 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 326              		.cfi_def_cfa_offset 36
+ 327              		.cfi_offset 4, -36
+ 328              		.cfi_offset 5, -32
+ 329              		.cfi_offset 6, -28
+ 330              		.cfi_offset 7, -24
+ 331              		.cfi_offset 8, -20
+ 332              		.cfi_offset 9, -16
+ 333              		.cfi_offset 10, -12
+ 334              		.cfi_offset 11, -8
+ 335              		.cfi_offset 14, -4
+ 336 0004 8DB0     		sub	sp, sp, #52
+ 337              		.cfi_def_cfa_offset 88
+ 338 0006 0546     		mov	r5, r0
+ 339 0008 0E46     		mov	r6, r1
+ 340 000a 9846     		mov	r8, r3
+ 341 000c 9DF85C40 		ldrb	r4, [sp, #92]	@ zero_extendqisi2
+ 342 0010 9DF860A0 		ldrb	r10, [sp, #96]	@ zero_extendqisi2
+ 343 0014 9DF86490 		ldrb	r9, [sp, #100]	@ zero_extendqisi2
+ 344              	.LVL24:
+  96:../system/src/aprs/telemetry.c **** 	// local variables with characters to be inserted to APRS telemetry frame
+  97:../system/src/aprs/telemetry.c **** 	char qf = '0', degr = '0', nav = '0';
+  98:../system/src/aprs/telemetry.c **** 
+  99:../system/src/aprs/telemetry.c **** 	char pressure_qf_navaliable = '0';
+ 100:../system/src/aprs/telemetry.c **** 	char humidity_qf_navaliable = '0';
+ 101:../system/src/aprs/telemetry.c **** 	char anemometer_degradated = '0';
+ 102:../system/src/aprs/telemetry.c **** 	char anemometer_navble = '0';
+ 103:../system/src/aprs/telemetry.c **** 
+ 104:../system/src/aprs/telemetry.c **** 	uint8_t scaled_battery_current = 0;
+ 105:../system/src/aprs/telemetry.c **** 	uint8_t scaled_battery_voltage = 0;
+ 106:../system/src/aprs/telemetry.c **** 	uint8_t scaled_pvcell_volage = 0;
+ 107:../system/src/aprs/telemetry.c **** 
+ 108:../system/src/aprs/telemetry.c **** 	float phy_battery_current = 0.0f;
+ 109:../system/src/aprs/telemetry.c **** 	float phy_battery_voltage = 0.0f;
+ 110:../system/src/aprs/telemetry.c **** 	float phy_pvcell_voltage = 0.0f;
+ 111:../system/src/aprs/telemetry.c **** 
+ 112:../system/src/aprs/telemetry.c **** 	phy_battery_current = (float)raw_battery_current / 1000.0f;
+ 345              		.loc 1 112 0
+ 346 0018 1046     		mov	r0, r2
+ 347              	.LVL25:
+ 348 001a FFF7FEFF 		bl	__aeabi_i2f
+ 349              	.LVL26:
+ 350 001e 5149     		ldr	r1, .L44
+ 351 0020 FFF7FEFF 		bl	__aeabi_fdiv
+ 352              	.LVL27:
+ 353 0024 0746     		mov	r7, r0
+ 354              	.LVL28:
+ 113:../system/src/aprs/telemetry.c **** 	phy_battery_voltage = (float)raw_battery_voltage / 1000.0f;
+ 355              		.loc 1 113 0
+ 356 0026 4046     		mov	r0, r8
+ 357              	.LVL29:
+ 358 0028 FFF7FEFF 		bl	__aeabi_ui2f
+ 359              	.LVL30:
+ 360 002c 4D49     		ldr	r1, .L44
+ 361 002e FFF7FEFF 		bl	__aeabi_fdiv
+ 362              	.LVL31:
+ 363 0032 8046     		mov	r8, r0
+ 364              	.LVL32:
+ 114:../system/src/aprs/telemetry.c **** 	phy_pvcell_voltage = (float)raw_pv_cell_voltage / 1000.0f;
+ 365              		.loc 1 114 0
+ 366 0034 BDF85800 		ldrh	r0, [sp, #88]
+ 367              	.LVL33:
+ 368 0038 FFF7FEFF 		bl	__aeabi_ui2f
+ 369              	.LVL34:
+ 370 003c 4949     		ldr	r1, .L44
+ 371 003e FFF7FEFF 		bl	__aeabi_fdiv
+ 372              	.LVL35:
+ 373 0042 8346     		mov	fp, r0
+ 374              	.LVL36:
+ 115:../system/src/aprs/telemetry.c **** 
+ 116:../system/src/aprs/telemetry.c **** 	scaled_battery_current = (uint8_t) roundf((phy_battery_current + 8.0f) * 14.2857f);
+ 375              		.loc 1 116 0
+ 376 0044 4FF08241 		mov	r1, #1090519040
+ 377 0048 3846     		mov	r0, r7
+ 378              	.LVL37:
+ 379 004a FFF7FEFF 		bl	__aeabi_fadd
+ 380              	.LVL38:
+ 381 004e 4649     		ldr	r1, .L44+4
+ 382 0050 FFF7FEFF 		bl	__aeabi_fmul
+ 383              	.LVL39:
+ 384 0054 FFF7FEFF 		bl	roundf
+ 385              	.LVL40:
+ 386 0058 FFF7FEFF 		bl	__aeabi_f2uiz
+ 387              	.LVL41:
+ 388 005c C7B2     		uxtb	r7, r0
+ 389              	.LVL42:
+ 117:../system/src/aprs/telemetry.c **** 	scaled_battery_voltage = (uint8_t) roundf((phy_battery_voltage - 4.0f) * 14.2857f);
+ 390              		.loc 1 117 0
+ 391 005e 4FF08141 		mov	r1, #1082130432
+ 392 0062 4046     		mov	r0, r8
+ 393 0064 FFF7FEFF 		bl	__aeabi_fsub
+ 394              	.LVL43:
+ 395 0068 3F49     		ldr	r1, .L44+4
+ 396 006a FFF7FEFF 		bl	__aeabi_fmul
+ 397              	.LVL44:
+ 398 006e FFF7FEFF 		bl	roundf
+ 399              	.LVL45:
+ 400 0072 FFF7FEFF 		bl	__aeabi_f2uiz
+ 401              	.LVL46:
+ 402 0076 5FFA80F8 		uxtb	r8, r0
+ 403              	.LVL47:
+ 118:../system/src/aprs/telemetry.c **** 	scaled_pvcell_volage = (uint8_t) roundf((phy_pvcell_voltage - 4.0f) * 14.2857f);
+ 404              		.loc 1 118 0
+ 405 007a 4FF08141 		mov	r1, #1082130432
+ 406 007e 5846     		mov	r0, fp
+ 407 0080 FFF7FEFF 		bl	__aeabi_fsub
+ 408              	.LVL48:
+ 409 0084 3849     		ldr	r1, .L44+4
+ 410 0086 FFF7FEFF 		bl	__aeabi_fmul
+ 411              	.LVL49:
+ 412 008a FFF7FEFF 		bl	roundf
+ 413              	.LVL50:
+ 414 008e FFF7FEFF 		bl	__aeabi_f2uiz
+ 415              	.LVL51:
+ 416 0092 5FFA80FC 		uxtb	ip, r0
+ 417              	.LVL52:
+ 119:../system/src/aprs/telemetry.c **** 
+ 120:../system/src/aprs/telemetry.c **** 	switch (dallas_qf) {
+ 418              		.loc 1 120 0
+ 419 0096 022C     		cmp	r4, #2
+ 420 0098 18D0     		beq	.L36
+ 421 009a 032C     		cmp	r4, #3
+ 422 009c 12D0     		beq	.L28
+ 423 009e 012C     		cmp	r4, #1
+ 424 00a0 03D0     		beq	.L43
+ 121:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_FULL:
+ 122:../system/src/aprs/telemetry.c **** 		qf = '1', degr = '0', nav = '0';
+ 123:../system/src/aprs/telemetry.c **** 		break;
+ 124:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_DEGRADATED:
+ 125:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '1', nav = '0';
+ 126:../system/src/aprs/telemetry.c **** 		break;
+ 127:../system/src/aprs/telemetry.c **** 
+ 128:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_NOT_AVALIABLE:
+ 129:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '0', nav = '1';
+ 130:../system/src/aprs/telemetry.c **** 		break;
+ 131:../system/src/aprs/telemetry.c **** 
+ 132:../system/src/aprs/telemetry.c **** 	default:
+ 133:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '0', nav = '0';
+ 425              		.loc 1 133 0
+ 426 00a2 3021     		movs	r1, #48
+ 427 00a4 0846     		mov	r0, r1
+ 428 00a6 8B46     		mov	fp, r1
+ 429              	.LVL53:
+ 134:../system/src/aprs/telemetry.c **** 		break;
+ 430              		.loc 1 134 0
+ 431 00a8 03E0     		b	.L27
+ 432              	.LVL54:
+ 433              	.L43:
+ 122:../system/src/aprs/telemetry.c **** 		break;
+ 434              		.loc 1 122 0
+ 435 00aa 3021     		movs	r1, #48
+ 436 00ac 0846     		mov	r0, r1
+ 437 00ae 4FF0310B 		mov	fp, #49
+ 438              	.LVL55:
+ 439              	.L27:
+ 135:../system/src/aprs/telemetry.c **** 	}
+ 136:../system/src/aprs/telemetry.c **** 
+ 137:../system/src/aprs/telemetry.c **** 	// set the quality factor for pressure
+ 138:../system/src/aprs/telemetry.c **** 	switch (press_qf) {
+ 440              		.loc 1 138 0
+ 441 00b2 BAF1000F 		cmp	r10, #0
+ 442 00b6 0DD0     		beq	.L31
+ 443 00b8 BAF1020F 		cmp	r10, #2
+ 444 00bc 0AD0     		beq	.L31
+ 139:../system/src/aprs/telemetry.c **** 	case PRESSURE_QF_NOT_AVALIABLE:
+ 140:../system/src/aprs/telemetry.c **** 	case PRESSURE_QF_UNKNOWN:
+ 141:../system/src/aprs/telemetry.c **** 		 pressure_qf_navaliable = '1';
+ 142:../system/src/aprs/telemetry.c **** 		 break;
+ 143:../system/src/aprs/telemetry.c **** 	default:
+ 144:../system/src/aprs/telemetry.c **** 		pressure_qf_navaliable = '0';
+ 445              		.loc 1 144 0
+ 446 00be 4FF0300E 		mov	lr, #48
+ 447 00c2 09E0     		b	.L30
+ 448              	.LVL56:
+ 449              	.L28:
+ 129:../system/src/aprs/telemetry.c **** 		break;
+ 450              		.loc 1 129 0
+ 451 00c4 3121     		movs	r1, #49
+ 452 00c6 3020     		movs	r0, #48
+ 453 00c8 8346     		mov	fp, r0
+ 454              	.LVL57:
+ 130:../system/src/aprs/telemetry.c **** 
+ 455              		.loc 1 130 0
+ 456 00ca F2E7     		b	.L27
+ 457              	.LVL58:
+ 458              	.L36:
+ 125:../system/src/aprs/telemetry.c **** 		break;
+ 459              		.loc 1 125 0
+ 460 00cc 3021     		movs	r1, #48
+ 461 00ce 3120     		movs	r0, #49
+ 462 00d0 8B46     		mov	fp, r1
+ 463              	.LVL59:
+ 464 00d2 EEE7     		b	.L27
+ 465              	.LVL60:
+ 466              	.L31:
+ 141:../system/src/aprs/telemetry.c **** 		 break;
+ 467              		.loc 1 141 0
+ 468 00d4 4FF0310E 		mov	lr, #49
+ 469              	.L30:
+ 470              	.LVL61:
+ 145:../system/src/aprs/telemetry.c **** 		break;
+ 146:../system/src/aprs/telemetry.c **** 	}
+ 147:../system/src/aprs/telemetry.c **** 
+ 148:../system/src/aprs/telemetry.c **** 	switch (humid_qf) {
+ 471              		.loc 1 148 0
+ 472 00d8 B9F1000F 		cmp	r9, #0
+ 473 00dc 05D0     		beq	.L33
+ 474 00de B9F1020F 		cmp	r9, #2
+ 475 00e2 02D0     		beq	.L33
+ 149:../system/src/aprs/telemetry.c **** 	case HUMIDITY_QF_UNKNOWN:
+ 150:../system/src/aprs/telemetry.c **** 	case HUMIDITY_QF_NOT_AVALIABLE:
+ 151:../system/src/aprs/telemetry.c **** 		humidity_qf_navaliable = '1';
+ 152:../system/src/aprs/telemetry.c **** 		break;
+ 153:../system/src/aprs/telemetry.c **** 	default:
+ 154:../system/src/aprs/telemetry.c **** 		humidity_qf_navaliable = '0';
+ 476              		.loc 1 154 0
+ 477 00e4 4FF03009 		mov	r9, #48
+ 478 00e8 01E0     		b	.L32
+ 479              	.L33:
+ 151:../system/src/aprs/telemetry.c **** 		break;
+ 480              		.loc 1 151 0
+ 481 00ea 4FF03109 		mov	r9, #49
+ 482              	.L32:
+ 483              	.LVL62:
+ 155:../system/src/aprs/telemetry.c **** 	}
+ 156:../system/src/aprs/telemetry.c **** 
+ 157:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c
+ 484              		.loc 1 157 0
+ 485 00ee 1F4C     		ldr	r4, .L44+8
+ 486 00f0 2288     		ldrh	r2, [r4]
+ 487 00f2 531C     		adds	r3, r2, #1
+ 488 00f4 2380     		strh	r3, [r4]	@ movhi
+ 489 00f6 3023     		movs	r3, #48
+ 490 00f8 0A93     		str	r3, [sp, #40]
+ 491 00fa 0993     		str	r3, [sp, #36]
+ 492 00fc CDF82090 		str	r9, [sp, #32]
+ 493 0100 CDF81CE0 		str	lr, [sp, #28]
+ 494 0104 0691     		str	r1, [sp, #24]
+ 495 0106 0590     		str	r0, [sp, #20]
+ 496 0108 CDF810B0 		str	fp, [sp, #16]
+ 497 010c CDF80CC0 		str	ip, [sp, #12]
+ 498 0110 CDF80880 		str	r8, [sp, #8]
+ 499 0114 0197     		str	r7, [sp, #4]
+ 500 0116 0096     		str	r6, [sp]
+ 501 0118 2B46     		mov	r3, r5
+ 502 011a 1549     		ldr	r1, .L44+12
+ 503              	.LVL63:
+ 504 011c 1548     		ldr	r0, .L44+16
+ 505              	.LVL64:
+ 506 011e FFF7FEFF 		bl	sprintf
+ 507              	.LVL65:
+ 508 0122 C0B2     		uxtb	r0, r0
+ 509 0124 144B     		ldr	r3, .L44+20
+ 510 0126 1870     		strb	r0, [r3]
+ 158:../system/src/aprs/telemetry.c **** 
+ 159:../system/src/aprs/telemetry.c **** 
+ 160:../system/src/aprs/telemetry.c **** 	if (telemetry_counter > 999)
+ 511              		.loc 1 160 0
+ 512 0128 2388     		ldrh	r3, [r4]
+ 513 012a B3F57A7F 		cmp	r3, #1000
+ 514 012e 01D3     		bcc	.L34
+ 161:../system/src/aprs/telemetry.c **** 		telemetry_counter = 0;
+ 515              		.loc 1 161 0
+ 516 0130 0022     		movs	r2, #0
+ 517 0132 2280     		strh	r2, [r4]	@ movhi
+ 518              	.L34:
+ 162:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 519              		.loc 1 162 0
+ 520 0134 0F4B     		ldr	r3, .L44+16
+ 521 0136 0022     		movs	r2, #0
+ 522 0138 1A54     		strb	r2, [r3, r0]
+ 163:../system/src/aprs/telemetry.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 523              		.loc 1 163 0
+ 524 013a 104A     		ldr	r2, .L44+24
+ 525 013c 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 526 013e 0090     		str	r0, [sp]
+ 527 0140 0F49     		ldr	r1, .L44+28
+ 528 0142 1048     		ldr	r0, .L44+32
+ 529 0144 FFF7FEFF 		bl	ax25_sendVia
+ 530              	.LVL66:
+ 164:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 531              		.loc 1 164 0
+ 532 0148 0F4B     		ldr	r3, .L44+36
+ 533 014a 0122     		movs	r2, #1
+ 534 014c 1A70     		strb	r2, [r3]
+ 535              	.L35:
+ 165:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 536              		.loc 1 165 0 discriminator 1
+ 537 014e 0D4B     		ldr	r3, .L44+32
+ 538 0150 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 539 0154 002B     		cmp	r3, #0
+ 540 0156 FAD1     		bne	.L35
+ 166:../system/src/aprs/telemetry.c **** 
+ 167:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 541              		.loc 1 167 0
+ 542 0158 0C48     		ldr	r0, .L44+40
+ 543 015a FFF7FEFF 		bl	afsk_txStart
+ 544              	.LVL67:
+ 168:../system/src/aprs/telemetry.c **** 
+ 169:../system/src/aprs/telemetry.c **** }
+ 545              		.loc 1 169 0
+ 546 015e 0DB0     		add	sp, sp, #52
+ 547              		.cfi_def_cfa_offset 36
+ 548              		@ sp needed
+ 549 0160 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 550              	.LVL68:
+ 551              	.L45:
+ 552              		.align	2
+ 553              	.L44:
+ 554 0164 00007A44 		.word	1148846080
+ 555 0168 3A926441 		.word	1097110074
+ 556 016c 00000000 		.word	.LANCHOR0
+ 557 0170 00000000 		.word	.LC7
+ 558 0174 00000000 		.word	main_own_aprs_msg
+ 559 0178 00000000 		.word	main_own_aprs_msg_len
+ 560 017c 00000000 		.word	main_own_path_ln
+ 561 0180 00000000 		.word	main_own_path
+ 562 0184 00000000 		.word	main_ax25
+ 563 0188 00000000 		.word	after_tx_lock
+ 564 018c 00000000 		.word	main_afsk
+ 565              		.cfi_endproc
+ 566              	.LFE75:
+ 568              		.section	.text.telemetry_send_status_pv,"ax",%progbits
+ 569              		.align	1
+ 570              		.global	telemetry_send_status_pv
+ 571              		.syntax unified
+ 572              		.thumb
+ 573              		.thumb_func
+ 574              		.fpu softvfp
+ 576              	telemetry_send_status_pv:
+ 577              	.LFB76:
+ 170:../system/src/aprs/telemetry.c **** 
+ 171:../system/src/aprs/telemetry.c **** void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve
+ 578              		.loc 1 171 0
+ 579              		.cfi_startproc
+ 580              		@ args = 8, pretend = 0, frame = 48
+ 581              		@ frame_needed = 0, uses_anonymous_args = 0
+ 582              	.LVL69:
+ 583 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 584              		.cfi_def_cfa_offset 28
+ 585              		.cfi_offset 4, -28
+ 586              		.cfi_offset 5, -24
+ 587              		.cfi_offset 6, -20
+ 588              		.cfi_offset 7, -16
+ 589              		.cfi_offset 8, -12
+ 590              		.cfi_offset 9, -8
+ 591              		.cfi_offset 14, -4
+ 592 0004 93B0     		sub	sp, sp, #76
+ 593              		.cfi_def_cfa_offset 104
+ 594 0006 0446     		mov	r4, r0
+ 595 0008 0D46     		mov	r5, r1
+ 596 000a 1046     		mov	r0, r2
+ 597              	.LVL70:
+ 598 000c 9946     		mov	r9, r3
+ 172:../system/src/aprs/telemetry.c **** 	char string_buff_err[24], string_buff_state[23];
+ 173:../system/src/aprs/telemetry.c **** 
+ 174:../system/src/aprs/telemetry.c **** 	ve_direct_state_to_string(state, string_buff_state, 23);
+ 599              		.loc 1 174 0
+ 600 000e 06AF     		add	r7, sp, #24
+ 601 0010 1722     		movs	r2, #23
+ 602              	.LVL71:
+ 603 0012 3946     		mov	r1, r7
+ 604              	.LVL72:
+ 605 0014 FFF7FEFF 		bl	ve_direct_state_to_string
+ 606              	.LVL73:
+ 175:../system/src/aprs/telemetry.c **** 	ve_direct_error_to_string(*last_error, string_buff_err, 24);
+ 607              		.loc 1 175 0
+ 608 0018 0DF13008 		add	r8, sp, #48
+ 609 001c 1822     		movs	r2, #24
+ 610 001e 4146     		mov	r1, r8
+ 611 0020 95F90000 		ldrsb	r0, [r5]
+ 612 0024 FFF7FEFF 		bl	ve_direct_error_to_string
+ 613              	.LVL74:
+ 176:../system/src/aprs/telemetry.c **** 
+ 177:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %lX, MC %lX, C
+ 614              		.loc 1 177 0
+ 615 0028 B4F9C430 		ldrsh	r3, [r4, #196]	@ unaligned
+ 616 002c B4F9C620 		ldrsh	r2, [r4, #198]	@ unaligned
+ 617 0030 184E     		ldr	r6, .L49
+ 618 0032 CDF81480 		str	r8, [sp, #20]
+ 619 0036 0497     		str	r7, [sp, #16]
+ 620 0038 0392     		str	r2, [sp, #12]
+ 621 003a 0293     		str	r3, [sp, #8]
+ 622 003c BDF86C30 		ldrh	r3, [sp, #108]
+ 623 0040 0193     		str	r3, [sp, #4]
+ 624 0042 BDF86830 		ldrh	r3, [sp, #104]
+ 625 0046 0093     		str	r3, [sp]
+ 626 0048 4B46     		mov	r3, r9
+ 627 004a 134A     		ldr	r2, .L49+4
+ 628 004c A021     		movs	r1, #160
+ 629 004e 3046     		mov	r0, r6
+ 630 0050 FFF7FEFF 		bl	snprintf
+ 631              	.LVL75:
+ 632 0054 C0B2     		uxtb	r0, r0
+ 633 0056 114B     		ldr	r3, .L49+8
+ 634 0058 1870     		strb	r0, [r3]
+ 178:../system/src/aprs/telemetry.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 635              		.loc 1 178 0
+ 636 005a 114B     		ldr	r3, .L49+12
+ 637 005c 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 638 005e 0090     		str	r0, [sp]
+ 639 0060 3346     		mov	r3, r6
+ 640 0062 1049     		ldr	r1, .L49+16
+ 641 0064 1048     		ldr	r0, .L49+20
+ 642 0066 FFF7FEFF 		bl	ax25_sendVia
+ 643              	.LVL76:
+ 179:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 644              		.loc 1 179 0
+ 645 006a 1048     		ldr	r0, .L49+24
+ 646 006c FFF7FEFF 		bl	afsk_txStart
+ 647              	.LVL77:
+ 648              	.L47:
+ 649              	.LBB12:
+ 650              	.LBB13:
+ 651              		.file 2 "../include/main.h"
+   1:../include/main.h **** #ifndef MAIN_H_
+   2:../include/main.h **** #define MAIN_H_
+   3:../include/main.h **** 
+   4:../include/main.h **** #include "aprs/ax25.h"
+   5:../include/main.h **** #include "drivers/serial.h"
+   6:../include/main.h **** #include "config_data.h"
+   7:../include/main.h **** 
+   8:../include/main.h **** #define SW_VER "EA01"
+   9:../include/main.h **** #define SW_DATE "28092021"
+  10:../include/main.h **** 
+  11:../include/main.h **** #define SYSTICK_TICKS_PER_SECONDS 100
+  12:../include/main.h **** #define SYSTICK_TICKS_PERIOD 10
+  13:../include/main.h **** 
+  14:../include/main.h **** //#define INTERNAL_WATCHDOG
+  15:../include/main.h **** #define EXTERNAL_WATCHDOG
+  16:../include/main.h **** 
+  17:../include/main.h **** #define PWR_SWITCH_BOTH
+  18:../include/main.h **** 
+  19:../include/main.h **** #define OWN_APRS_MSG_LN 	160
+  20:../include/main.h **** 
+  21:../include/main.h **** extern uint32_t master_time;
+  22:../include/main.h **** 
+  23:../include/main.h **** extern const config_data_mode_t * main_config_data_mode;
+  24:../include/main.h **** extern const config_data_basic_t * main_config_data_basic;
+  25:../include/main.h **** extern const config_data_wx_sources_t * main_config_data_wx_sources;
+  26:../include/main.h **** extern const config_data_umb_t * main_config_data_umb;
+  27:../include/main.h **** extern const config_data_rtu_t * main_config_data_rtu;
+  28:../include/main.h **** 
+  29:../include/main.h **** extern int32_t main_wx_sensors_pool_timer;
+  30:../include/main.h **** extern int32_t main_one_minute_pool_timer;
+  31:../include/main.h **** extern int32_t main_one_second_pool_timer;
+  32:../include/main.h **** extern int32_t main_two_second_pool_timer;
+  33:../include/main.h **** extern int32_t main_ten_second_pool_timer;
+  34:../include/main.h **** 
+  35:../include/main.h **** extern AX25Ctx main_ax25;
+  36:../include/main.h **** extern Afsk main_afsk;
+  37:../include/main.h **** 
+  38:../include/main.h **** extern AX25Call main_own_path[3];
+  39:../include/main.h **** extern uint8_t main_own_path_ln;
+  40:../include/main.h **** extern uint8_t main_own_aprs_msg_len;
+  41:../include/main.h **** extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
+  42:../include/main.h **** 
+  43:../include/main.h **** extern char main_string_latitude[9];
+  44:../include/main.h **** extern char main_string_longitude[9];
+  45:../include/main.h **** 
+  46:../include/main.h **** extern char main_symbol_f;
+  47:../include/main.h **** extern char main_symbol_s;
+  48:../include/main.h **** 
+  49:../include/main.h **** extern srl_context_t* main_kiss_srl_ctx_ptr;
+  50:../include/main.h **** extern srl_context_t* main_wx_srl_ctx_ptr;
+  51:../include/main.h **** 
+  52:../include/main.h **** extern  uint8_t main_kiss_enabled;
+  53:../include/main.h **** 
+  54:../include/main.h **** extern char after_tx_lock;
+  55:../include/main.h **** 
+  56:../include/main.h **** extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+  57:../include/main.h **** 
+  58:../include/main.h **** uint16_t main_get_adc_sample(void);
+  59:../include/main.h **** 
+  60:../include/main.h **** void main_service_cpu_load_ticks(void);
+  61:../include/main.h **** 
+  62:../include/main.h **** inline uint32_t main_get_master_time(void) {
+  63:../include/main.h **** 	return master_time;
+  64:../include/main.h **** }
+  65:../include/main.h **** 
+  66:../include/main.h **** inline void main_wait_for_tx_complete(void) {
+  67:../include/main.h **** 	while(main_afsk.sending == 1);
+ 652              		.loc 2 67 0
+ 653 0070 0E4B     		ldr	r3, .L49+24
+ 654 0072 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 655 0076 002B     		cmp	r3, #0
+ 656 0078 FAD1     		bne	.L47
+ 657              	.LBE13:
+ 658              	.LBE12:
+ 180:../system/src/aprs/telemetry.c **** 
+ 181:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 182:../system/src/aprs/telemetry.c **** 
+ 183:../system/src/aprs/telemetry.c **** 	avg->max_battery_current = 0;
+ 659              		.loc 1 183 0
+ 660 007a 84F8C630 		strb	r3, [r4, #198]
+ 661 007e 84F8C730 		strb	r3, [r4, #199]
+ 184:../system/src/aprs/telemetry.c **** 	avg->min_battery_current = 0;
+ 662              		.loc 1 184 0
+ 663 0082 84F8C430 		strb	r3, [r4, #196]
+ 664 0086 84F8C530 		strb	r3, [r4, #197]
+ 185:../system/src/aprs/telemetry.c **** 	*last_error = ERR_UNINITIALIZED;
+ 665              		.loc 1 185 0
+ 666 008a FF23     		movs	r3, #255
+ 667 008c 2B70     		strb	r3, [r5]
+ 186:../system/src/aprs/telemetry.c **** }
+ 668              		.loc 1 186 0
+ 669 008e 13B0     		add	sp, sp, #76
+ 670              		.cfi_def_cfa_offset 28
+ 671              		@ sp needed
+ 672 0090 BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 673              	.LVL78:
+ 674              	.L50:
+ 675              		.align	2
+ 676              	.L49:
+ 677 0094 00000000 		.word	main_own_aprs_msg
+ 678 0098 00000000 		.word	.LC8
+ 679 009c 00000000 		.word	main_own_aprs_msg_len
+ 680 00a0 00000000 		.word	main_own_path_ln
+ 681 00a4 00000000 		.word	main_own_path
+ 682 00a8 00000000 		.word	main_ax25
+ 683 00ac 00000000 		.word	main_afsk
+ 684              		.cfi_endproc
+ 685              	.LFE76:
+ 687              		.section	.text.telemetry_send_chns_description,"ax",%progbits
+ 688              		.align	1
+ 689              		.global	telemetry_send_chns_description
+ 690              		.syntax unified
+ 691              		.thumb
+ 692              		.thumb_func
+ 693              		.fpu softvfp
+ 695              	telemetry_send_chns_description:
+ 696              	.LFB77:
+ 187:../system/src/aprs/telemetry.c **** ////
+ 188:../system/src/aprs/telemetry.c **** 
+ 189:../system/src/aprs/telemetry.c **** /**
+ 190:../system/src/aprs/telemetry.c ****  * Sends four frames with telemetry description
+ 191:../system/src/aprs/telemetry.c ****  */
+ 192:../system/src/aprs/telemetry.c **** void telemetry_send_chns_description(const config_data_basic_t * const config_basic) {
+ 697              		.loc 1 192 0
+ 698              		.cfi_startproc
+ 699              		@ args = 0, pretend = 0, frame = 16
+ 700              		@ frame_needed = 0, uses_anonymous_args = 0
+ 701              	.LVL79:
+ 702 0000 10B5     		push	{r4, lr}
+ 703              		.cfi_def_cfa_offset 8
+ 704              		.cfi_offset 4, -8
+ 705              		.cfi_offset 14, -4
+ 706 0002 86B0     		sub	sp, sp, #24
+ 707              		.cfi_def_cfa_offset 32
+ 708 0004 0446     		mov	r4, r0
+ 193:../system/src/aprs/telemetry.c **** 
+ 194:../system/src/aprs/telemetry.c **** 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
+ 195:../system/src/aprs/telemetry.c **** 	char message_prefix_buffer[9];
+ 196:../system/src/aprs/telemetry.c **** 
+ 197:../system/src/aprs/telemetry.c **** 	memset(message_prefix_buffer, 0x00, 0x09);
+ 709              		.loc 1 197 0
+ 710 0006 0922     		movs	r2, #9
+ 711 0008 0021     		movs	r1, #0
+ 712 000a 03A8     		add	r0, sp, #12
+ 713              	.LVL80:
+ 714 000c FFF7FEFF 		bl	memset
+ 715              	.LVL81:
+ 198:../system/src/aprs/telemetry.c **** 
+ 199:../system/src/aprs/telemetry.c **** 	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+ 716              		.loc 1 199 0
+ 717 0010 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 718 0012 2246     		mov	r2, r4
+ 719 0014 6249     		ldr	r1, .L75
+ 720 0016 03A8     		add	r0, sp, #12
+ 721 0018 FFF7FEFF 		bl	sprintf
+ 722              	.LVL82:
+ 723              	.L52:
+ 724              	.LBB14:
+ 725              	.LBB15:
+ 726              		.loc 2 67 0
+ 727 001c 614B     		ldr	r3, .L75+4
+ 728 001e 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 729 0022 002B     		cmp	r3, #0
+ 730 0024 FAD1     		bne	.L52
+ 731              	.LBE15:
+ 732              	.LBE14:
+ 200:../system/src/aprs/telemetry.c **** 
+ 201:../system/src/aprs/telemetry.c **** 	// wait for any RF transmission to finish
+ 202:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 203:../system/src/aprs/telemetry.c **** 
+ 204:../system/src/aprs/telemetry.c **** 	// clear the output frame buffer
+ 205:../system/src/aprs/telemetry.c **** 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+ 733              		.loc 1 205 0
+ 734 0026 A022     		movs	r2, #160
+ 735 0028 0021     		movs	r1, #0
+ 736 002a 5F48     		ldr	r0, .L75+8
+ 737 002c FFF7FEFF 		bl	memset
+ 738              	.LVL83:
+ 206:../system/src/aprs/telemetry.c **** 
+ 207:../system/src/aprs/telemetry.c **** 	// prepare a frame with channel names depending on SSID
+ 208:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+ 739              		.loc 1 208 0
+ 740 0030 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 741 0032 83B1     		cbz	r3, .L69
+ 209:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostT
+ 210:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 742              		.loc 1 210 0
+ 743 0034 5A1E     		subs	r2, r3, #1
+ 744 0036 D2B2     		uxtb	r2, r2
+ 745 0038 082A     		cmp	r2, #8
+ 746 003a 45D9     		bls	.L70
+ 211:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10
+ 212:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 747              		.loc 1 212 0
+ 748 003c 0A3B     		subs	r3, r3, #10
+ 749 003e DBB2     		uxtb	r3, r3
+ 750 0040 052B     		cmp	r3, #5
+ 751 0042 00F2A380 		bhi	.L51
+ 213:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10
+ 752              		.loc 1 213 0
+ 753 0046 03AA     		add	r2, sp, #12
+ 754 0048 5849     		ldr	r1, .L75+12
+ 755 004a 5748     		ldr	r0, .L75+8
+ 756 004c FFF7FEFF 		bl	sprintf
+ 757              	.LVL84:
+ 758 0050 574B     		ldr	r3, .L75+16
+ 759 0052 1870     		strb	r0, [r3]
+ 760 0054 06E0     		b	.L54
+ 761              	.L69:
+ 209:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostT
+ 762              		.loc 1 209 0
+ 763 0056 2246     		mov	r2, r4
+ 764 0058 5649     		ldr	r1, .L75+20
+ 765 005a 5348     		ldr	r0, .L75+8
+ 766 005c FFF7FEFF 		bl	sprintf
+ 767              	.LVL85:
+ 768 0060 534B     		ldr	r3, .L75+16
+ 769 0062 1870     		strb	r0, [r3]
+ 770              	.L54:
+ 214:../system/src/aprs/telemetry.c **** 	else
+ 215:../system/src/aprs/telemetry.c **** 		return;
+ 216:../system/src/aprs/telemetry.c **** 
+ 217:../system/src/aprs/telemetry.c **** 	// place a null terminator at the end
+ 218:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 771              		.loc 1 218 0
+ 772 0064 524B     		ldr	r3, .L75+16
+ 773 0066 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 774 0068 4F4B     		ldr	r3, .L75+8
+ 775 006a 0022     		movs	r2, #0
+ 776 006c 5A54     		strb	r2, [r3, r1]
+ 219:../system/src/aprs/telemetry.c **** 
+ 220:../system/src/aprs/telemetry.c **** 	// prepare transmission
+ 221:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+ 777              		.loc 1 221 0
+ 778 006e 524A     		ldr	r2, .L75+24
+ 779 0070 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 780 0072 0091     		str	r1, [sp]
+ 781 0074 5149     		ldr	r1, .L75+28
+ 782 0076 5248     		ldr	r0, .L75+32
+ 783 0078 FFF7FEFF 		bl	ax25_sendVia
+ 784              	.LVL86:
+ 222:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 785              		.loc 1 222 0
+ 786 007c 514B     		ldr	r3, .L75+36
+ 787 007e 0122     		movs	r2, #1
+ 788 0080 1A70     		strb	r2, [r3]
+ 223:../system/src/aprs/telemetry.c **** 
+ 224:../system/src/aprs/telemetry.c **** 	// key up the transmitter and
+ 225:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 789              		.loc 1 225 0
+ 790 0082 4848     		ldr	r0, .L75+4
+ 791 0084 FFF7FEFF 		bl	afsk_txStart
+ 792              	.LVL87:
+ 793              	.L57:
+ 794              	.LBB16:
+ 795              	.LBB17:
+ 796              		.loc 2 67 0
+ 797 0088 464B     		ldr	r3, .L75+4
+ 798 008a 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 799 008e 002B     		cmp	r3, #0
+ 800 0090 FAD1     		bne	.L57
+ 801              	.LBE17:
+ 802              	.LBE16:
+ 226:../system/src/aprs/telemetry.c **** 
+ 227:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 228:../system/src/aprs/telemetry.c **** 
+ 229:../system/src/aprs/telemetry.c **** 	delay_fixed(1500);
+ 803              		.loc 1 229 0
+ 804 0092 40F2DC50 		movw	r0, #1500
+ 805 0096 FFF7FEFF 		bl	delay_fixed
+ 806              	.LVL88:
+ 807              	.L58:
+ 230:../system/src/aprs/telemetry.c **** 
+ 231:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 808              		.loc 1 231 0 discriminator 1
+ 809 009a 494B     		ldr	r3, .L75+32
+ 810 009c 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 811 00a0 002B     		cmp	r3, #0
+ 812 00a2 FAD1     		bne	.L58
+ 232:../system/src/aprs/telemetry.c **** 
+ 233:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+ 813              		.loc 1 233 0
+ 814 00a4 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 815 00a6 BBB1     		cbz	r3, .L71
+ 234:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-
+ 235:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 816              		.loc 1 235 0
+ 817 00a8 5A1E     		subs	r2, r3, #1
+ 818 00aa D2B2     		uxtb	r2, r2
+ 819 00ac 082A     		cmp	r2, #8
+ 820 00ae 4CD9     		bls	.L72
+ 236:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50"
+ 237:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 821              		.loc 1 237 0
+ 822 00b0 0A3B     		subs	r3, r3, #10
+ 823 00b2 DBB2     		uxtb	r3, r3
+ 824 00b4 052B     		cmp	r3, #5
+ 825 00b6 69D8     		bhi	.L51
+ 238:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50"
+ 826              		.loc 1 238 0
+ 827 00b8 03AA     		add	r2, sp, #12
+ 828 00ba 4349     		ldr	r1, .L75+40
+ 829 00bc 3A48     		ldr	r0, .L75+8
+ 830 00be FFF7FEFF 		bl	sprintf
+ 831              	.LVL89:
+ 832 00c2 3B4B     		ldr	r3, .L75+16
+ 833 00c4 1870     		strb	r0, [r3]
+ 834 00c6 0EE0     		b	.L60
+ 835              	.L70:
+ 211:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 836              		.loc 1 211 0
+ 837 00c8 03AA     		add	r2, sp, #12
+ 838 00ca 3849     		ldr	r1, .L75+12
+ 839 00cc 3648     		ldr	r0, .L75+8
+ 840 00ce FFF7FEFF 		bl	sprintf
+ 841              	.LVL90:
+ 842 00d2 374B     		ldr	r3, .L75+16
+ 843 00d4 1870     		strb	r0, [r3]
+ 844 00d6 C5E7     		b	.L54
+ 845              	.L71:
+ 234:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 846              		.loc 1 234 0
+ 847 00d8 2246     		mov	r2, r4
+ 848 00da 3C49     		ldr	r1, .L75+44
+ 849 00dc 3248     		ldr	r0, .L75+8
+ 850 00de FFF7FEFF 		bl	sprintf
+ 851              	.LVL91:
+ 852 00e2 334B     		ldr	r3, .L75+16
+ 853 00e4 1870     		strb	r0, [r3]
+ 854              	.L60:
+ 239:../system/src/aprs/telemetry.c **** 	else
+ 240:../system/src/aprs/telemetry.c **** 		return;
+ 241:../system/src/aprs/telemetry.c **** 
+ 242:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 855              		.loc 1 242 0
+ 856 00e6 324B     		ldr	r3, .L75+16
+ 857 00e8 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 858 00ea 2F4B     		ldr	r3, .L75+8
+ 859 00ec 0022     		movs	r2, #0
+ 860 00ee 5A54     		strb	r2, [r3, r1]
+ 243:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+ 861              		.loc 1 243 0
+ 862 00f0 314A     		ldr	r2, .L75+24
+ 863 00f2 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 864 00f4 0091     		str	r1, [sp]
+ 865 00f6 3149     		ldr	r1, .L75+28
+ 866 00f8 3148     		ldr	r0, .L75+32
+ 867 00fa FFF7FEFF 		bl	ax25_sendVia
+ 868              	.LVL92:
+ 244:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 869              		.loc 1 244 0
+ 870 00fe 314B     		ldr	r3, .L75+36
+ 871 0100 0122     		movs	r2, #1
+ 872 0102 1A70     		strb	r2, [r3]
+ 245:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 873              		.loc 1 245 0
+ 874 0104 2748     		ldr	r0, .L75+4
+ 875 0106 FFF7FEFF 		bl	afsk_txStart
+ 876              	.LVL93:
+ 877              	.L62:
+ 878              	.LBB18:
+ 879              	.LBB19:
+ 880              		.loc 2 67 0
+ 881 010a 264B     		ldr	r3, .L75+4
+ 882 010c 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 883 0110 002B     		cmp	r3, #0
+ 884 0112 FAD1     		bne	.L62
+ 885              	.LBE19:
+ 886              	.LBE18:
+ 246:../system/src/aprs/telemetry.c **** 
+ 247:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 248:../system/src/aprs/telemetry.c **** 
+ 249:../system/src/aprs/telemetry.c **** 	delay_fixed(1500);
+ 887              		.loc 1 249 0
+ 888 0114 40F2DC50 		movw	r0, #1500
+ 889 0118 FFF7FEFF 		bl	delay_fixed
+ 890              	.LVL94:
+ 891              	.L63:
+ 250:../system/src/aprs/telemetry.c **** 
+ 251:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 892              		.loc 1 251 0 discriminator 1
+ 893 011c 284B     		ldr	r3, .L75+32
+ 894 011e 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 895 0122 002B     		cmp	r3, #0
+ 896 0124 FAD1     		bne	.L63
+ 252:../system/src/aprs/telemetry.c **** 
+ 253:../system/src/aprs/telemetry.c **** 	if (config_basic->ssid == 0)
+ 897              		.loc 1 253 0
+ 898 0126 E379     		ldrb	r3, [r4, #7]	@ zero_extendqisi2
+ 899 0128 BBB1     		cbz	r3, .L73
+ 254:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,H
+ 255:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 900              		.loc 1 255 0
+ 901 012a 5A1E     		subs	r2, r3, #1
+ 902 012c D2B2     		uxtb	r2, r2
+ 903 012e 082A     		cmp	r2, #8
+ 904 0130 2ED9     		bls	.L74
+ 256:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,H
+ 257:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 905              		.loc 1 257 0
+ 906 0132 0A3B     		subs	r3, r3, #10
+ 907 0134 DBB2     		uxtb	r3, r3
+ 908 0136 052B     		cmp	r3, #5
+ 909 0138 28D8     		bhi	.L51
+ 258:../system/src/aprs/telemetry.c **** 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,H
+ 910              		.loc 1 258 0
+ 911 013a 03AA     		add	r2, sp, #12
+ 912 013c 2449     		ldr	r1, .L75+48
+ 913 013e 1A48     		ldr	r0, .L75+8
+ 914 0140 FFF7FEFF 		bl	sprintf
+ 915              	.LVL95:
+ 916 0144 1A4B     		ldr	r3, .L75+16
+ 917 0146 1870     		strb	r0, [r3]
+ 918 0148 0EE0     		b	.L65
+ 919              	.L72:
+ 236:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 920              		.loc 1 236 0
+ 921 014a 03AA     		add	r2, sp, #12
+ 922 014c 1E49     		ldr	r1, .L75+40
+ 923 014e 1648     		ldr	r0, .L75+8
+ 924 0150 FFF7FEFF 		bl	sprintf
+ 925              	.LVL96:
+ 926 0154 164B     		ldr	r3, .L75+16
+ 927 0156 1870     		strb	r0, [r3]
+ 928 0158 C5E7     		b	.L60
+ 929              	.L73:
+ 254:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+ 930              		.loc 1 254 0
+ 931 015a 2246     		mov	r2, r4
+ 932 015c 1D49     		ldr	r1, .L75+52
+ 933 015e 1248     		ldr	r0, .L75+8
+ 934 0160 FFF7FEFF 		bl	sprintf
+ 935              	.LVL97:
+ 936 0164 124B     		ldr	r3, .L75+16
+ 937 0166 1870     		strb	r0, [r3]
+ 938              	.L65:
+ 259:../system/src/aprs/telemetry.c **** 	else
+ 260:../system/src/aprs/telemetry.c **** 		return;
+ 261:../system/src/aprs/telemetry.c **** 
+ 262:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 939              		.loc 1 262 0
+ 940 0168 114B     		ldr	r3, .L75+16
+ 941 016a 1978     		ldrb	r1, [r3]	@ zero_extendqisi2
+ 942 016c 0E4B     		ldr	r3, .L75+8
+ 943 016e 0022     		movs	r2, #0
+ 944 0170 5A54     		strb	r2, [r3, r1]
+ 263:../system/src/aprs/telemetry.c **** 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len
+ 945              		.loc 1 263 0
+ 946 0172 114A     		ldr	r2, .L75+24
+ 947 0174 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 948 0176 0091     		str	r1, [sp]
+ 949 0178 1049     		ldr	r1, .L75+28
+ 950 017a 1148     		ldr	r0, .L75+32
+ 951 017c FFF7FEFF 		bl	ax25_sendVia
+ 952              	.LVL98:
+ 264:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 953              		.loc 1 264 0
+ 954 0180 104B     		ldr	r3, .L75+36
+ 955 0182 0122     		movs	r2, #1
+ 956 0184 1A70     		strb	r2, [r3]
+ 265:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 957              		.loc 1 265 0
+ 958 0186 0748     		ldr	r0, .L75+4
+ 959 0188 FFF7FEFF 		bl	afsk_txStart
+ 960              	.LVL99:
+ 961              	.L51:
+ 266:../system/src/aprs/telemetry.c **** //
+ 267:../system/src/aprs/telemetry.c **** //	main_wait_for_tx_complete();
+ 268:../system/src/aprs/telemetry.c **** //
+ 269:../system/src/aprs/telemetry.c **** //	delay_fixed(1500);
+ 270:../system/src/aprs/telemetry.c **** //
+ 271:../system/src/aprs/telemetry.c **** //	while (main_ax25.dcd == 1);
+ 272:../system/src/aprs/telemetry.c **** 
+ 273:../system/src/aprs/telemetry.c **** }
+ 962              		.loc 1 273 0
+ 963 018c 06B0     		add	sp, sp, #24
+ 964              		.cfi_remember_state
+ 965              		.cfi_def_cfa_offset 8
+ 966              		@ sp needed
+ 967 018e 10BD     		pop	{r4, pc}
+ 968              	.LVL100:
+ 969              	.L74:
+ 970              		.cfi_restore_state
+ 256:../system/src/aprs/telemetry.c **** 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+ 971              		.loc 1 256 0
+ 972 0190 03AA     		add	r2, sp, #12
+ 973 0192 0F49     		ldr	r1, .L75+48
+ 974 0194 0448     		ldr	r0, .L75+8
+ 975 0196 FFF7FEFF 		bl	sprintf
+ 976              	.LVL101:
+ 977 019a 054B     		ldr	r3, .L75+16
+ 978 019c 1870     		strb	r0, [r3]
+ 979 019e E3E7     		b	.L65
+ 980              	.L76:
+ 981              		.align	2
+ 982              	.L75:
+ 983 01a0 00000000 		.word	.LC0
+ 984 01a4 00000000 		.word	main_afsk
+ 985 01a8 00000000 		.word	main_own_aprs_msg
+ 986 01ac 94000000 		.word	.LC10
+ 987 01b0 00000000 		.word	main_own_aprs_msg_len
+ 988 01b4 00000000 		.word	.LC9
+ 989 01b8 00000000 		.word	main_own_path_ln
+ 990 01bc 00000000 		.word	main_own_path
+ 991 01c0 00000000 		.word	main_ax25
+ 992 01c4 00000000 		.word	after_tx_lock
+ 993 01c8 58010000 		.word	.LC12
+ 994 01cc 28010000 		.word	.LC11
+ 995 01d0 C0010000 		.word	.LC14
+ 996 01d4 88010000 		.word	.LC13
+ 997              		.cfi_endproc
+ 998              	.LFE77:
+ 1000              		.global	__aeabi_fcmplt
+ 1001              		.global	__aeabi_fcmpgt
+ 1002              		.section	.text.telemetry_send_values,"ax",%progbits
+ 1003              		.align	1
+ 1004              		.global	telemetry_send_values
+ 1005              		.syntax unified
+ 1006              		.thumb
+ 1007              		.thumb_func
+ 1008              		.fpu softvfp
+ 1010              	telemetry_send_values:
+ 1011              	.LFB78:
+ 274:../system/src/aprs/telemetry.c **** 
+ 275:../system/src/aprs/telemetry.c **** /**
+ 276:../system/src/aprs/telemetry.c ****  * This function sends telemetry values in 'typical configuration' when VICTRON VE.direct protocol 
+ 277:../system/src/aprs/telemetry.c ****  */
+ 278:../system/src/aprs/telemetry.c **** void telemetry_send_values(	uint8_t rx_pkts,
+ 279:../system/src/aprs/telemetry.c **** 							uint8_t tx_pkts,
+ 280:../system/src/aprs/telemetry.c **** 							uint8_t digi_pkts,
+ 281:../system/src/aprs/telemetry.c **** 							uint8_t kiss_pkts,
+ 282:../system/src/aprs/telemetry.c **** 							float temperature,
+ 283:../system/src/aprs/telemetry.c **** 							dallas_qf_t dallas_qf,
+ 284:../system/src/aprs/telemetry.c **** 							pressure_qf_t press_qf,
+ 285:../system/src/aprs/telemetry.c **** 							humidity_qf_t humid_qf,
+ 286:../system/src/aprs/telemetry.c **** 							wind_qf_t anemometer_qf) {
+ 1012              		.loc 1 286 0
+ 1013              		.cfi_startproc
+ 1014              		@ args = 20, pretend = 0, frame = 24
+ 1015              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1016              	.LVL102:
+ 1017 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 1018              		.cfi_def_cfa_offset 36
+ 1019              		.cfi_offset 4, -36
+ 1020              		.cfi_offset 5, -32
+ 1021              		.cfi_offset 6, -28
+ 1022              		.cfi_offset 7, -24
+ 1023              		.cfi_offset 8, -20
+ 1024              		.cfi_offset 9, -16
+ 1025              		.cfi_offset 10, -12
+ 1026              		.cfi_offset 11, -8
+ 1027              		.cfi_offset 14, -4
+ 1028 0004 93B0     		sub	sp, sp, #76
+ 1029              		.cfi_def_cfa_offset 112
+ 1030 0006 0D90     		str	r0, [sp, #52]
+ 1031 0008 0E91     		str	r1, [sp, #56]
+ 1032 000a 0F92     		str	r2, [sp, #60]
+ 1033 000c 1093     		str	r3, [sp, #64]
+ 1034 000e 9DF87450 		ldrb	r5, [sp, #116]	@ zero_extendqisi2
+ 1035 0012 9DF87890 		ldrb	r9, [sp, #120]	@ zero_extendqisi2
+ 1036 0016 9DF87C40 		ldrb	r4, [sp, #124]	@ zero_extendqisi2
+ 1037 001a 9DF88030 		ldrb	r3, [sp, #128]	@ zero_extendqisi2
+ 1038              	.LVL103:
+ 287:../system/src/aprs/telemetry.c **** 
+ 288:../system/src/aprs/telemetry.c **** 
+ 289:../system/src/aprs/telemetry.c **** 	// local variables with characters to be inserted to APRS telemetry frame
+ 290:../system/src/aprs/telemetry.c **** 	char qf = '0', degr = '0', nav = '0';
+ 291:../system/src/aprs/telemetry.c **** 	char pressure_qf_navaliable = '0';
+ 292:../system/src/aprs/telemetry.c **** 	char humidity_qf_navaliable = '0';
+ 293:../system/src/aprs/telemetry.c **** 	char anemometer_degradated = '0';
+ 294:../system/src/aprs/telemetry.c **** 	char anemometer_navble = '0';
+ 295:../system/src/aprs/telemetry.c **** 
+ 296:../system/src/aprs/telemetry.c **** 	// temperature scaled to 0x00-0xFF range for fifth telemetry channel.
+ 297:../system/src/aprs/telemetry.c **** 	// if _METEO mode is enabled this channel sends the temperaure measure by
+ 298:../system/src/aprs/telemetry.c **** 	// internal MS5611 or BME280. If _METEO is not enabled this channel
+ 299:../system/src/aprs/telemetry.c **** 	// could send Dallas DS18B20 masurements if this is enabled in station_config.h
+ 300:../system/src/aprs/telemetry.c **** 	uint8_t scaled_temperature = 0;
+ 301:../system/src/aprs/telemetry.c **** 
+ 302:../system/src/aprs/telemetry.c **** 	// get the quality factor for wind measurements
+ 303:../system/src/aprs/telemetry.c **** 	if (anemometer_qf == WIND_QF_DEGRADATED) {
+ 1039              		.loc 1 303 0
+ 1040 001e 032B     		cmp	r3, #3
+ 1041 0020 05D0     		beq	.L91
+ 304:../system/src/aprs/telemetry.c **** 		anemometer_degradated = '1';
+ 305:../system/src/aprs/telemetry.c **** 		anemometer_navble = '0';
+ 306:../system/src/aprs/telemetry.c **** 	}
+ 307:../system/src/aprs/telemetry.c **** 	else if (anemometer_qf == WIND_QF_NOT_AVALIABLE) {
+ 1042              		.loc 1 307 0
+ 1043 0022 022B     		cmp	r3, #2
+ 1044 0024 1BD0     		beq	.L92
+ 308:../system/src/aprs/telemetry.c **** 		anemometer_degradated = '0';
+ 309:../system/src/aprs/telemetry.c **** 		anemometer_navble = '1';
+ 310:../system/src/aprs/telemetry.c **** 	}
+ 311:../system/src/aprs/telemetry.c **** 	else if (anemometer_qf == WIND_QF_UNKNOWN) {
+ 1045              		.loc 1 311 0
+ 1046 0026 EBB1     		cbz	r3, .L93
+ 294:../system/src/aprs/telemetry.c **** 
+ 1047              		.loc 1 294 0
+ 1048 0028 3026     		movs	r6, #48
+ 293:../system/src/aprs/telemetry.c **** 	char anemometer_navble = '0';
+ 1049              		.loc 1 293 0
+ 1050 002a 3746     		mov	r7, r6
+ 1051 002c 01E0     		b	.L78
+ 1052              	.L91:
+ 305:../system/src/aprs/telemetry.c **** 	}
+ 1053              		.loc 1 305 0
+ 1054 002e 3026     		movs	r6, #48
+ 304:../system/src/aprs/telemetry.c **** 		anemometer_navble = '0';
+ 1055              		.loc 1 304 0
+ 1056 0030 3127     		movs	r7, #49
+ 1057              	.L78:
+ 1058              	.LVL104:
+ 312:../system/src/aprs/telemetry.c **** 		anemometer_degradated = '1';
+ 313:../system/src/aprs/telemetry.c **** 		anemometer_navble = '1';
+ 314:../system/src/aprs/telemetry.c **** 	}
+ 315:../system/src/aprs/telemetry.c **** 
+ 316:../system/src/aprs/telemetry.c **** 	// scale the physical temperature and limit upper and lower boundary if
+ 317:../system/src/aprs/telemetry.c **** 	// it is required
+ 318:../system/src/aprs/telemetry.c **** 	if (temperature < -50.0f) {
+ 1059              		.loc 1 318 0
+ 1060 0032 4A49     		ldr	r1, .L104
+ 1061              	.LVL105:
+ 1062 0034 1C98     		ldr	r0, [sp, #112]	@ float
+ 1063              	.LVL106:
+ 1064 0036 FFF7FEFF 		bl	__aeabi_fcmplt
+ 1065              	.LVL107:
+ 1066 003a B0B9     		cbnz	r0, .L94
+ 319:../system/src/aprs/telemetry.c **** 		scaled_temperature = (uint8_t)0;
+ 320:../system/src/aprs/telemetry.c **** 	}
+ 321:../system/src/aprs/telemetry.c **** 	else if (temperature > 70.0f) {
+ 1067              		.loc 1 321 0
+ 1068 003c 4849     		ldr	r1, .L104+4
+ 1069 003e 1C98     		ldr	r0, [sp, #112]	@ float
+ 1070 0040 FFF7FEFF 		bl	__aeabi_fcmpgt
+ 1071              	.LVL108:
+ 1072 0044 E8B9     		cbnz	r0, .L95
+ 322:../system/src/aprs/telemetry.c **** 		scaled_temperature = (uint8_t)255;
+ 323:../system/src/aprs/telemetry.c **** 	}
+ 324:../system/src/aprs/telemetry.c **** 	else {
+ 325:../system/src/aprs/telemetry.c **** 		scaled_temperature = (uint8_t)((temperature + 50.0f) * 2.0f);
+ 1073              		.loc 1 325 0
+ 1074 0046 4749     		ldr	r1, .L104+8
+ 1075 0048 1C98     		ldr	r0, [sp, #112]	@ float
+ 1076 004a FFF7FEFF 		bl	__aeabi_fadd
+ 1077              	.LVL109:
+ 1078 004e 0146     		mov	r1, r0
+ 1079 0050 FFF7FEFF 		bl	__aeabi_fadd
+ 1080              	.LVL110:
+ 1081 0054 FFF7FEFF 		bl	__aeabi_f2uiz
+ 1082              	.LVL111:
+ 1083 0058 5FFA80FB 		uxtb	fp, r0
+ 1084              	.LVL112:
+ 1085 005c 07E0     		b	.L79
+ 1086              	.LVL113:
+ 1087              	.L92:
+ 309:../system/src/aprs/telemetry.c **** 	}
+ 1088              		.loc 1 309 0
+ 1089 005e 3126     		movs	r6, #49
+ 308:../system/src/aprs/telemetry.c **** 		anemometer_navble = '1';
+ 1090              		.loc 1 308 0
+ 1091 0060 3027     		movs	r7, #48
+ 1092 0062 E6E7     		b	.L78
+ 1093              	.L93:
+ 313:../system/src/aprs/telemetry.c **** 	}
+ 1094              		.loc 1 313 0
+ 1095 0064 3126     		movs	r6, #49
+ 312:../system/src/aprs/telemetry.c **** 		anemometer_navble = '1';
+ 1096              		.loc 1 312 0
+ 1097 0066 3746     		mov	r7, r6
+ 1098 0068 E3E7     		b	.L78
+ 1099              	.LVL114:
+ 1100              	.L94:
+ 319:../system/src/aprs/telemetry.c **** 	}
+ 1101              		.loc 1 319 0
+ 1102 006a 4FF0000B 		mov	fp, #0
+ 1103              	.LVL115:
+ 1104              	.L79:
+ 326:../system/src/aprs/telemetry.c **** 	}
+ 327:../system/src/aprs/telemetry.c **** 
+ 328:../system/src/aprs/telemetry.c **** 	// set the quality factor for dallas DS18B20
+ 329:../system/src/aprs/telemetry.c **** 	switch (dallas_qf) {
+ 1105              		.loc 1 329 0
+ 1106 006e 022D     		cmp	r5, #2
+ 1107 0070 1DD0     		beq	.L96
+ 1108 0072 032D     		cmp	r5, #3
+ 1109 0074 15D0     		beq	.L82
+ 1110 0076 012D     		cmp	r5, #1
+ 1111 0078 06D0     		beq	.L103
+ 330:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_FULL:
+ 331:../system/src/aprs/telemetry.c **** 		qf = '1', degr = '0', nav = '0';
+ 332:../system/src/aprs/telemetry.c **** 		break;
+ 333:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_DEGRADATED:
+ 334:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '1', nav = '0';
+ 335:../system/src/aprs/telemetry.c **** 		break;
+ 336:../system/src/aprs/telemetry.c **** 
+ 337:../system/src/aprs/telemetry.c **** 	case DALLAS_QF_NOT_AVALIABLE:
+ 338:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '0', nav = '1';
+ 339:../system/src/aprs/telemetry.c **** 		break;
+ 340:../system/src/aprs/telemetry.c **** 
+ 341:../system/src/aprs/telemetry.c **** 	default:
+ 342:../system/src/aprs/telemetry.c **** 		qf = '0', degr = '0', nav = '0';
+ 1112              		.loc 1 342 0
+ 1113 007a 3025     		movs	r5, #48
+ 1114 007c A846     		mov	r8, r5
+ 1115 007e 1195     		str	r5, [sp, #68]
+ 343:../system/src/aprs/telemetry.c **** 		break;
+ 1116              		.loc 1 343 0
+ 1117 0080 06E0     		b	.L81
+ 1118              	.LVL116:
+ 1119              	.L95:
+ 322:../system/src/aprs/telemetry.c **** 	}
+ 1120              		.loc 1 322 0
+ 1121 0082 4FF0FF0B 		mov	fp, #255
+ 1122 0086 F2E7     		b	.L79
+ 1123              	.LVL117:
+ 1124              	.L103:
+ 331:../system/src/aprs/telemetry.c **** 		break;
+ 1125              		.loc 1 331 0
+ 1126 0088 3025     		movs	r5, #48
+ 1127 008a A846     		mov	r8, r5
+ 1128 008c 3123     		movs	r3, #49
+ 1129 008e 1193     		str	r3, [sp, #68]
+ 1130              	.LVL118:
+ 1131              	.L81:
+ 344:../system/src/aprs/telemetry.c **** 	}
+ 345:../system/src/aprs/telemetry.c **** 
+ 346:../system/src/aprs/telemetry.c **** 	// set the quality factor for pressure
+ 347:../system/src/aprs/telemetry.c **** 	switch (press_qf) {
+ 1132              		.loc 1 347 0
+ 1133 0090 B9F1000F 		cmp	r9, #0
+ 1134 0094 10D0     		beq	.L85
+ 1135 0096 B9F1020F 		cmp	r9, #2
+ 1136 009a 0DD0     		beq	.L85
+ 348:../system/src/aprs/telemetry.c **** 	case PRESSURE_QF_NOT_AVALIABLE:
+ 349:../system/src/aprs/telemetry.c **** 	case PRESSURE_QF_UNKNOWN:
+ 350:../system/src/aprs/telemetry.c **** 		 pressure_qf_navaliable = '1';
+ 351:../system/src/aprs/telemetry.c **** 		 break;
+ 352:../system/src/aprs/telemetry.c **** 	default:
+ 353:../system/src/aprs/telemetry.c **** 		pressure_qf_navaliable = '0';
+ 1137              		.loc 1 353 0
+ 1138 009c 4FF03009 		mov	r9, #48
+ 1139 00a0 0CE0     		b	.L84
+ 1140              	.LVL119:
+ 1141              	.L82:
+ 338:../system/src/aprs/telemetry.c **** 		break;
+ 1142              		.loc 1 338 0
+ 1143 00a2 3125     		movs	r5, #49
+ 1144 00a4 4FF03008 		mov	r8, #48
+ 1145 00a8 CDF84480 		str	r8, [sp, #68]
+ 339:../system/src/aprs/telemetry.c **** 
+ 1146              		.loc 1 339 0
+ 1147 00ac F0E7     		b	.L81
+ 1148              	.LVL120:
+ 1149              	.L96:
+ 334:../system/src/aprs/telemetry.c **** 		break;
+ 1150              		.loc 1 334 0
+ 1151 00ae 3025     		movs	r5, #48
+ 1152 00b0 4FF03108 		mov	r8, #49
+ 1153 00b4 1195     		str	r5, [sp, #68]
+ 1154 00b6 EBE7     		b	.L81
+ 1155              	.LVL121:
+ 1156              	.L85:
+ 350:../system/src/aprs/telemetry.c **** 		 break;
+ 1157              		.loc 1 350 0
+ 1158 00b8 4FF03109 		mov	r9, #49
+ 1159              	.L84:
+ 1160              	.LVL122:
+ 354:../system/src/aprs/telemetry.c **** 		break;
+ 355:../system/src/aprs/telemetry.c **** 	}
+ 356:../system/src/aprs/telemetry.c **** 
+ 357:../system/src/aprs/telemetry.c **** 	switch (humid_qf) {
+ 1161              		.loc 1 357 0
+ 1162 00bc 24B1     		cbz	r4, .L87
+ 1163 00be 022C     		cmp	r4, #2
+ 1164 00c0 02D0     		beq	.L87
+ 358:../system/src/aprs/telemetry.c **** 	case HUMIDITY_QF_UNKNOWN:
+ 359:../system/src/aprs/telemetry.c **** 	case HUMIDITY_QF_NOT_AVALIABLE:
+ 360:../system/src/aprs/telemetry.c **** 		humidity_qf_navaliable = '1';
+ 361:../system/src/aprs/telemetry.c **** 		break;
+ 362:../system/src/aprs/telemetry.c **** 	default:
+ 363:../system/src/aprs/telemetry.c **** 		humidity_qf_navaliable = '0';
+ 1165              		.loc 1 363 0
+ 1166 00c2 4FF0300A 		mov	r10, #48
+ 1167 00c6 01E0     		b	.L86
+ 1168              	.L87:
+ 360:../system/src/aprs/telemetry.c **** 		break;
+ 1169              		.loc 1 360 0
+ 1170 00c8 4FF0310A 		mov	r10, #49
+ 1171              	.L86:
+ 1172              	.LVL123:
+ 364:../system/src/aprs/telemetry.c **** 	}
+ 365:../system/src/aprs/telemetry.c **** 
+ 366:../system/src/aprs/telemetry.c **** 	// reset the buffer where the frame will be contructed and stored for transmission
+ 367:../system/src/aprs/telemetry.c **** 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+ 1173              		.loc 1 367 0
+ 1174 00cc A022     		movs	r2, #160
+ 1175 00ce 0021     		movs	r1, #0
+ 1176 00d0 2548     		ldr	r0, .L104+12
+ 1177 00d2 FFF7FEFF 		bl	memset
+ 1178              	.LVL124:
+ 368:../system/src/aprs/telemetry.c **** 
+ 369:../system/src/aprs/telemetry.c **** 	// generate the telemetry frame from values
+ 370:../system/src/aprs/telemetry.c **** #ifdef _DALLAS_AS_TELEM
+ 371:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c
+ 372:../system/src/aprs/telemetry.c **** #else
+ 373:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c
+ 1179              		.loc 1 373 0
+ 1180 00d6 254C     		ldr	r4, .L104+16
+ 1181 00d8 2288     		ldrh	r2, [r4]
+ 1182 00da 531C     		adds	r3, r2, #1
+ 1183 00dc 2380     		strh	r3, [r4]	@ movhi
+ 1184 00de 0A96     		str	r6, [sp, #40]
+ 1185 00e0 0997     		str	r7, [sp, #36]
+ 1186 00e2 CDF820A0 		str	r10, [sp, #32]
+ 1187 00e6 CDF81C90 		str	r9, [sp, #28]
+ 1188 00ea 0695     		str	r5, [sp, #24]
+ 1189 00ec CDF81480 		str	r8, [sp, #20]
+ 1190 00f0 119B     		ldr	r3, [sp, #68]
+ 1191 00f2 0493     		str	r3, [sp, #16]
+ 1192 00f4 CDF80CB0 		str	fp, [sp, #12]
+ 1193 00f8 109B     		ldr	r3, [sp, #64]
+ 1194 00fa 0293     		str	r3, [sp, #8]
+ 1195 00fc 0F9B     		ldr	r3, [sp, #60]
+ 1196 00fe 0193     		str	r3, [sp, #4]
+ 1197 0100 0E9B     		ldr	r3, [sp, #56]
+ 1198 0102 0093     		str	r3, [sp]
+ 1199 0104 0D9B     		ldr	r3, [sp, #52]
+ 1200 0106 1A49     		ldr	r1, .L104+20
+ 1201 0108 1748     		ldr	r0, .L104+12
+ 1202 010a FFF7FEFF 		bl	sprintf
+ 1203              	.LVL125:
+ 1204 010e C0B2     		uxtb	r0, r0
+ 1205 0110 184B     		ldr	r3, .L104+24
+ 1206 0112 1870     		strb	r0, [r3]
+ 374:../system/src/aprs/telemetry.c **** #endif
+ 375:../system/src/aprs/telemetry.c **** 
+ 376:../system/src/aprs/telemetry.c **** 	// reset the frame counter if it overflowed
+ 377:../system/src/aprs/telemetry.c **** 	if (telemetry_counter > 999)
+ 1207              		.loc 1 377 0
+ 1208 0114 2388     		ldrh	r3, [r4]
+ 1209 0116 B3F57A7F 		cmp	r3, #1000
+ 1210 011a 01D3     		bcc	.L88
+ 378:../system/src/aprs/telemetry.c **** 		telemetry_counter = 0;
+ 1211              		.loc 1 378 0
+ 1212 011c 0022     		movs	r2, #0
+ 1213 011e 2280     		strh	r2, [r4]	@ movhi
+ 1214              	.L88:
+ 379:../system/src/aprs/telemetry.c **** 
+ 380:../system/src/aprs/telemetry.c **** 	// put a null terminator at the end of frame (but it should be placed there anyway)
+ 381:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+ 1215              		.loc 1 381 0
+ 1216 0120 114B     		ldr	r3, .L104+12
+ 1217 0122 0022     		movs	r2, #0
+ 1218 0124 1A54     		strb	r2, [r3, r0]
+ 1219              	.L89:
+ 1220              	.LBB20:
+ 1221              	.LBB21:
+ 1222              		.loc 2 67 0
+ 1223 0126 144B     		ldr	r3, .L104+28
+ 1224 0128 93F83034 		ldrb	r3, [r3, #1072]	@ zero_extendqisi2
+ 1225 012c 002B     		cmp	r3, #0
+ 1226 012e FAD1     		bne	.L89
+ 1227              	.LBE21:
+ 1228              	.LBE20:
+ 382:../system/src/aprs/telemetry.c **** 
+ 383:../system/src/aprs/telemetry.c **** 	// wait for completing any previous transmission (afsk_txStart will exit with failure if the modem
+ 384:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 385:../system/src/aprs/telemetry.c **** 
+ 386:../system/src/aprs/telemetry.c **** 	// prepare transmission of the frame
+ 387:../system/src/aprs/telemetry.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 1229              		.loc 1 387 0
+ 1230 0130 124B     		ldr	r3, .L104+32
+ 1231 0132 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 1232 0134 0090     		str	r0, [sp]
+ 1233 0136 0C4B     		ldr	r3, .L104+12
+ 1234 0138 1149     		ldr	r1, .L104+36
+ 1235 013a 1248     		ldr	r0, .L104+40
+ 1236 013c FFF7FEFF 		bl	ax25_sendVia
+ 1237              	.LVL126:
+ 388:../system/src/aprs/telemetry.c **** 
+ 389:../system/src/aprs/telemetry.c ****  	// ??
+ 390:../system/src/aprs/telemetry.c **** 	after_tx_lock = 1;
+ 1238              		.loc 1 390 0
+ 1239 0140 114B     		ldr	r3, .L104+44
+ 1240 0142 0122     		movs	r2, #1
+ 1241 0144 1A70     		strb	r2, [r3]
+ 1242              	.L90:
+ 391:../system/src/aprs/telemetry.c **** 
+ 392:../system/src/aprs/telemetry.c **** 	// check if RF channel is free from other transmissions and wait for the clearance if it is needed
+ 393:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 1243              		.loc 1 393 0 discriminator 1
+ 1244 0146 0F4B     		ldr	r3, .L104+40
+ 1245 0148 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 1246 014c 002B     		cmp	r3, #0
+ 1247 014e FAD1     		bne	.L90
+ 394:../system/src/aprs/telemetry.c **** 
+ 395:../system/src/aprs/telemetry.c **** 	// key up a transmitter and start transmission
+ 396:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 1248              		.loc 1 396 0
+ 1249 0150 0948     		ldr	r0, .L104+28
+ 1250 0152 FFF7FEFF 		bl	afsk_txStart
+ 1251              	.LVL127:
+ 397:../system/src/aprs/telemetry.c **** 
+ 398:../system/src/aprs/telemetry.c **** }
+ 1252              		.loc 1 398 0
+ 1253 0156 13B0     		add	sp, sp, #76
+ 1254              		.cfi_def_cfa_offset 36
+ 1255              		@ sp needed
+ 1256 0158 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1257              	.LVL128:
+ 1258              	.L105:
+ 1259              		.align	2
+ 1260              	.L104:
+ 1261 015c 000048C2 		.word	-1035468800
+ 1262 0160 00008C42 		.word	1116471296
+ 1263 0164 00004842 		.word	1112014848
+ 1264 0168 00000000 		.word	main_own_aprs_msg
+ 1265 016c 00000000 		.word	.LANCHOR0
+ 1266 0170 00000000 		.word	.LC7
+ 1267 0174 00000000 		.word	main_own_aprs_msg_len
+ 1268 0178 00000000 		.word	main_afsk
+ 1269 017c 00000000 		.word	main_own_path_ln
+ 1270 0180 00000000 		.word	main_own_path
+ 1271 0184 00000000 		.word	main_ax25
+ 1272 0188 00000000 		.word	after_tx_lock
+ 1273              		.cfi_endproc
+ 1274              	.LFE78:
+ 1276              		.section	.text.telemetry_send_status,"ax",%progbits
+ 1277              		.align	1
+ 1278              		.global	telemetry_send_status
+ 1279              		.syntax unified
+ 1280              		.thumb
+ 1281              		.thumb_func
+ 1282              		.fpu softvfp
+ 1284              	telemetry_send_status:
+ 1285              	.LFB79:
+ 399:../system/src/aprs/telemetry.c **** 
+ 400:../system/src/aprs/telemetry.c **** void telemetry_send_status(void) {
+ 1286              		.loc 1 400 0
+ 1287              		.cfi_startproc
+ 1288              		@ args = 0, pretend = 0, frame = 0
+ 1289              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1290 0000 10B5     		push	{r4, lr}
+ 1291              		.cfi_def_cfa_offset 8
+ 1292              		.cfi_offset 4, -8
+ 1293              		.cfi_offset 14, -4
+ 1294 0002 82B0     		sub	sp, sp, #8
+ 1295              		.cfi_def_cfa_offset 16
+ 401:../system/src/aprs/telemetry.c **** 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+ 1296              		.loc 1 401 0
+ 1297 0004 104C     		ldr	r4, .L109
+ 1298 0006 A022     		movs	r2, #160
+ 1299 0008 0021     		movs	r1, #0
+ 1300 000a 2046     		mov	r0, r4
+ 1301 000c FFF7FEFF 		bl	memset
+ 1302              	.LVL129:
+ 402:../system/src/aprs/telemetry.c **** #ifdef STM32L471xx
+ 403:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaMETEO firmware %s-%s by SP8EBC - PV power
+ 404:../system/src/aprs/telemetry.c **** #else
+ 405:../system/src/aprs/telemetry.c **** 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW
+ 1303              		.loc 1 405 0
+ 1304 0010 0E4B     		ldr	r3, .L109+4
+ 1305 0012 0F4A     		ldr	r2, .L109+8
+ 1306 0014 0F49     		ldr	r1, .L109+12
+ 1307 0016 2046     		mov	r0, r4
+ 1308 0018 FFF7FEFF 		bl	sprintf
+ 1309              	.LVL130:
+ 1310 001c C0B2     		uxtb	r0, r0
+ 1311 001e 0E4B     		ldr	r3, .L109+16
+ 1312 0020 1870     		strb	r0, [r3]
+ 406:../system/src/aprs/telemetry.c **** #endif
+ 407:../system/src/aprs/telemetry.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_le
+ 1313              		.loc 1 407 0
+ 1314 0022 0E4B     		ldr	r3, .L109+20
+ 1315 0024 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 1316 0026 0090     		str	r0, [sp]
+ 1317 0028 2346     		mov	r3, r4
+ 1318 002a 0D49     		ldr	r1, .L109+24
+ 1319 002c 0D48     		ldr	r0, .L109+28
+ 1320 002e FFF7FEFF 		bl	ax25_sendVia
+ 1321              	.LVL131:
+ 1322              	.L107:
+ 408:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 1323              		.loc 1 408 0 discriminator 1
+ 1324 0032 0C4B     		ldr	r3, .L109+28
+ 1325 0034 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 1326 0038 002B     		cmp	r3, #0
+ 1327 003a FAD1     		bne	.L107
+ 409:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 1328              		.loc 1 409 0
+ 1329 003c 0A48     		ldr	r0, .L109+32
+ 1330 003e FFF7FEFF 		bl	afsk_txStart
+ 1331              	.LVL132:
+ 410:../system/src/aprs/telemetry.c **** 
+ 411:../system/src/aprs/telemetry.c **** }
+ 1332              		.loc 1 411 0
+ 1333 0042 02B0     		add	sp, sp, #8
+ 1334              		.cfi_def_cfa_offset 8
+ 1335              		@ sp needed
+ 1336 0044 10BD     		pop	{r4, pc}
+ 1337              	.L110:
+ 1338 0046 00BF     		.align	2
+ 1339              	.L109:
+ 1340 0048 00000000 		.word	main_own_aprs_msg
+ 1341 004c 00000000 		.word	.LC15
+ 1342 0050 0C000000 		.word	.LC16
+ 1343 0054 14000000 		.word	.LC17
+ 1344 0058 00000000 		.word	main_own_aprs_msg_len
+ 1345 005c 00000000 		.word	main_own_path_ln
+ 1346 0060 00000000 		.word	main_own_path
+ 1347 0064 00000000 		.word	main_ax25
+ 1348 0068 00000000 		.word	main_afsk
+ 1349              		.cfi_endproc
+ 1350              	.LFE79:
+ 1352              		.section	.text.telemetry_send_status_raw_values_modbus,"ax",%progbits
+ 1353              		.align	1
+ 1354              		.global	telemetry_send_status_raw_values_modbus
+ 1355              		.syntax unified
+ 1356              		.thumb
+ 1357              		.thumb_func
+ 1358              		.fpu softvfp
+ 1360              	telemetry_send_status_raw_values_modbus:
+ 1361              	.LFB80:
+ 412:../system/src/aprs/telemetry.c **** 
+ 413:../system/src/aprs/telemetry.c **** 
+ 414:../system/src/aprs/telemetry.c **** void telemetry_send_status_raw_values_modbus(void) {
+ 1362              		.loc 1 414 0
+ 1363              		.cfi_startproc
+ 1364              		@ args = 0, pretend = 0, frame = 0
+ 1365              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1366              		@ link register save eliminated.
+ 415:../system/src/aprs/telemetry.c **** #ifdef _MODBUS_RTU
+ 416:../system/src/aprs/telemetry.c **** 	uint8_t status_ln = 0;
+ 417:../system/src/aprs/telemetry.c **** 
+ 418:../system/src/aprs/telemetry.c **** 	rtu_get_raw_values_string(main_own_aprs_msg, OWN_APRS_MSG_LN, &status_ln);
+ 419:../system/src/aprs/telemetry.c **** 
+ 420:../system/src/aprs/telemetry.c ****  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, status_ln);
+ 421:../system/src/aprs/telemetry.c **** 	while (main_ax25.dcd == 1);
+ 422:../system/src/aprs/telemetry.c **** 	afsk_txStart(&main_afsk);
+ 423:../system/src/aprs/telemetry.c **** 	main_wait_for_tx_complete();
+ 424:../system/src/aprs/telemetry.c **** #endif
+ 425:../system/src/aprs/telemetry.c **** }
+ 1367              		.loc 1 425 0
+ 1368 0000 7047     		bx	lr
+ 1369              		.cfi_endproc
+ 1370              	.LFE80:
+ 1372              		.global	telemetry_counter
+ 1373              		.section	.bss.telemetry_counter,"aw",%nobits
+ 1374              		.align	1
+ 1375              		.set	.LANCHOR0,. + 0
+ 1378              	telemetry_counter:
+ 1379 0000 0000     		.space	2
+ 1380              		.section	.rodata.telemetry_send_chns_description.str1.4,"aMS",%progbits,1
+ 1381              		.align	2
+ 1382              	.LC9:
+ 1383 0000 3A252D36 		.ascii	":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,T"
+ 1383      73202020 
+ 1383      3A504152 
+ 1383      4D2E5278 
+ 1383      31306D69 
+ 1384 0033 656D7072 		.ascii	"empre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_N"
+ 1384      652C4453 
+ 1384      5F51465F 
+ 1384      46554C4C 
+ 1384      2C44535F 
+ 1385 0066 4156424C 		.ascii	"AVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB\000"
+ 1385      452C4855 
+ 1385      4D5F5146 
+ 1385      5F4E4156 
+ 1385      424C452C 
+ 1386              	.LC10:
+ 1387 0094 3A252D39 		.ascii	":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Temp"
+ 1387      733A5041 
+ 1387      524D2E52 
+ 1387      7831306D 
+ 1387      696E2C54 
+ 1388 00c7 72652C44 		.ascii	"re,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVB"
+ 1388      535F5146 
+ 1388      5F46554C 
+ 1388      4C2C4453 
+ 1388      5F51465F 
+ 1389 00fa 4C452C48 		.ascii	"LE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB\000"
+ 1389      554D5F51 
+ 1389      465F4E41 
+ 1389      56424C45 
+ 1389      2C57494E 
+ 1390 0125 000000   		.space	3
+ 1391              	.LC11:
+ 1392 0128 3A252D36 		.ascii	":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50\000"
+ 1392      73202020 
+ 1392      3A45514E 
+ 1392      532E302C 
+ 1392      312C302C 
+ 1393              	.LC12:
+ 1394 0158 3A252D39 		.ascii	":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,1,0,0,0.5,-50\000"
+ 1394      733A4551 
+ 1394      4E532E30 
+ 1394      2C312C30 
+ 1394      2C302C31 
+ 1395 0185 000000   		.space	3
+ 1396              	.LC13:
+ 1397 0188 3A252D36 		.ascii	":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,H"
+ 1397      73202020 
+ 1397      3A554E49 
+ 1397      542E506B 
+ 1397      742C506B 
+ 1398 01bb 692C4869 		.ascii	"i,Hi\000"
+ 1398      00
+ 1399              	.LC14:
+ 1400 01c0 3A252D39 		.ascii	":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,H"
+ 1400      733A554E 
+ 1400      49542E50 
+ 1400      6B742C50 
+ 1400      6B742C50 
+ 1401 01f3 6900     		.ascii	"i\000"
+ 1402              		.section	.rodata.telemetry_send_chns_description_pv.str1.4,"aMS",%progbits,1
+ 1403              		.align	2
+ 1404              	.LC0:
+ 1405 0000 25732D25 		.ascii	"%s-%d\000"
+ 1405      6400
+ 1406 0006 0000     		.space	2
+ 1407              	.LC1:
+ 1408 0008 3A252D36 		.ascii	":%-6s   :PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvV"
+ 1408      73202020 
+ 1408      3A504152 
+ 1408      4D2E5278 
+ 1408      31306D69 
+ 1409 003b 6F6C742C 		.ascii	"olt,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAV"
+ 1409      44535F51 
+ 1409      465F4655 
+ 1409      4C4C2C44 
+ 1409      535F5146 
+ 1410 006e 424C452C 		.ascii	"BLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB\000"
+ 1410      48554D5F 
+ 1410      51465F4E 
+ 1410      4156424C 
+ 1410      452C5749 
+ 1411 009a 0000     		.space	2
+ 1412              	.LC2:
+ 1413 009c 3A252D39 		.ascii	":%-9s:PARM.Rx10min,Digi10min,BatAmps,BatVolt,PvVolt"
+ 1413      733A5041 
+ 1413      524D2E52 
+ 1413      7831306D 
+ 1413      696E2C44 
+ 1414 00cf 2C44535F 		.ascii	",DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE"
+ 1414      51465F46 
+ 1414      554C4C2C 
+ 1414      44535F51 
+ 1414      465F4445 
+ 1415 0102 2C48554D 		.ascii	",HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB\000"
+ 1415      5F51465F 
+ 1415      4E415642 
+ 1415      4C452C57 
+ 1415      494E445F 
+ 1416 012b 00       		.space	1
+ 1417              	.LC3:
+ 1418 012c 3A252D36 		.ascii	":%-6s   :EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07"
+ 1418      73202020 
+ 1418      3A45514E 
+ 1418      532E302C 
+ 1418      312C302C 
+ 1419 015f 2C3400   		.ascii	",4\000"
+ 1420 0162 0000     		.space	2
+ 1421              	.LC4:
+ 1422 0164 3A252D39 		.ascii	":%-9s:EQNS.0,1,0,0,1,0,0,0.07,-8,0,0.07,4,0,0.07,4\000"
+ 1422      733A4551 
+ 1422      4E532E30 
+ 1422      2C312C30 
+ 1422      2C302C31 
+ 1423 0197 00       		.space	1
+ 1424              	.LC5:
+ 1425 0198 3A252D36 		.ascii	":%-6s   :UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi\000"
+ 1425      73202020 
+ 1425      3A554E49 
+ 1425      542E506B 
+ 1425      742C506B 
+ 1426 01c9 000000   		.space	3
+ 1427              	.LC6:
+ 1428 01cc 3A252D39 		.ascii	":%-9s:UNIT.Pkt,Pkt,A,V,V,Hi,Hi,Hi,Hi,Hi,Hi,Hi\000"
+ 1428      733A554E 
+ 1428      49542E50 
+ 1428      6B742C50 
+ 1428      6B742C41 
+ 1429              		.section	.rodata.telemetry_send_status.str1.4,"aMS",%progbits,1
+ 1430              		.align	2
+ 1431              	.LC15:
+ 1432 0000 32383039 		.ascii	"28092021\000"
+ 1432      32303231 
+ 1432      00
+ 1433 0009 000000   		.space	3
+ 1434              	.LC16:
+ 1435 000c 45413031 		.ascii	"EA01\000"
+ 1435      00
+ 1436 0011 000000   		.space	3
+ 1437              	.LC17:
+ 1438 0014 3E506172 		.ascii	">ParaTNC firmware %s-%s by SP8EBC\000"
+ 1438      61544E43 
+ 1438      20666972 
+ 1438      6D776172 
+ 1438      65202573 
+ 1439              		.section	.rodata.telemetry_send_status_pv.str1.4,"aMS",%progbits,1
+ 1440              		.align	2
+ 1441              	.LC8:
+ 1442 0000 3E4D5420 		.ascii	">MT %lX, MC %lX, CMC %lX, IMIN %d, IMAX %d, %s, %s\000"
+ 1442      256C582C 
+ 1442      204D4320 
+ 1442      256C582C 
+ 1442      20434D43 
+ 1443              		.section	.rodata.telemetry_send_values_pv.str1.4,"aMS",%progbits,1
+ 1444              		.align	2
+ 1445              	.LC7:
+ 1446 0000 54232530 		.ascii	"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0\000"
+ 1446      33642C25 
+ 1446      3033642C 
+ 1446      25303364 
+ 1446      2C253033 
+ 1447              		.text
+ 1448              	.Letext0:
+ 1449              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 1450              		.file 4 "../include/config_data.h"
+ 1451              		.file 5 "../system/include/cmsis/core_cm3.h"
+ 1452              		.file 6 "../system/include/cmsis/system_stm32f10x.h"
+ 1453              		.file 7 "../system/include/cmsis/stm32f10x.h"
+ 1454              		.file 8 "../system/include/./drivers/dallas.h"
+ 1455              		.file 9 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 1456              		.file 10 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 1457              		.file 11 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 1458              		.file 12 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 1459              		.file 13 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/math.h"
+ 1460              		.file 14 "../system/include/./drivers/ms5611.h"
+ 1461              		.file 15 "../system/include/./ve_direct_protocol/raw_struct.h"
+ 1462              		.file 16 "../system/include/./ve_direct_protocol/average_struct.h"
+ 1463              		.file 17 "../system/include/aprs/telemetry.h"
+ 1464              		.file 18 "../system/include/aprs/cfifo.h"
+ 1465              		.file 19 "../system/include/aprs/afsk.h"
+ 1466              		.file 20 "../system/include/aprs/ax25.h"
+ 1467              		.file 21 "../system/include/drivers/serial.h"
+ 1468              		.file 22 "../include/delay.h"
+ 1469              		.file 23 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 1470              		.file 24 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/stdio.h"
+ 1471              		.file 25 "../system/include/ve_direct_protocol/parser.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 telemetry.c
+     /tmp/cch7Oov8.s:16     .text.telemetry_send_chns_description_pv:0000000000000000 $t
+     /tmp/cch7Oov8.s:23     .text.telemetry_send_chns_description_pv:0000000000000000 telemetry_send_chns_description_pv
+     /tmp/cch7Oov8.s:286    .text.telemetry_send_chns_description_pv:000000000000018c $d
+     /tmp/cch7Oov8.s:311    .text.telemetry_send_values_pv:0000000000000000 $t
+     /tmp/cch7Oov8.s:318    .text.telemetry_send_values_pv:0000000000000000 telemetry_send_values_pv
+     /tmp/cch7Oov8.s:554    .text.telemetry_send_values_pv:0000000000000164 $d
+     /tmp/cch7Oov8.s:569    .text.telemetry_send_status_pv:0000000000000000 $t
+     /tmp/cch7Oov8.s:576    .text.telemetry_send_status_pv:0000000000000000 telemetry_send_status_pv
+     /tmp/cch7Oov8.s:677    .text.telemetry_send_status_pv:0000000000000094 $d
+     /tmp/cch7Oov8.s:688    .text.telemetry_send_chns_description:0000000000000000 $t
+     /tmp/cch7Oov8.s:695    .text.telemetry_send_chns_description:0000000000000000 telemetry_send_chns_description
+     /tmp/cch7Oov8.s:983    .text.telemetry_send_chns_description:00000000000001a0 $d
+     /tmp/cch7Oov8.s:1003   .text.telemetry_send_values:0000000000000000 $t
+     /tmp/cch7Oov8.s:1010   .text.telemetry_send_values:0000000000000000 telemetry_send_values
+     /tmp/cch7Oov8.s:1261   .text.telemetry_send_values:000000000000015c $d
+     /tmp/cch7Oov8.s:1277   .text.telemetry_send_status:0000000000000000 $t
+     /tmp/cch7Oov8.s:1284   .text.telemetry_send_status:0000000000000000 telemetry_send_status
+     /tmp/cch7Oov8.s:1340   .text.telemetry_send_status:0000000000000048 $d
+     /tmp/cch7Oov8.s:1353   .text.telemetry_send_status_raw_values_modbus:0000000000000000 $t
+     /tmp/cch7Oov8.s:1360   .text.telemetry_send_status_raw_values_modbus:0000000000000000 telemetry_send_status_raw_values_modbus
+     /tmp/cch7Oov8.s:1378   .bss.telemetry_counter:0000000000000000 telemetry_counter
+     /tmp/cch7Oov8.s:1374   .bss.telemetry_counter:0000000000000000 $d
+     /tmp/cch7Oov8.s:1381   .rodata.telemetry_send_chns_description.str1.4:0000000000000000 $d
+     /tmp/cch7Oov8.s:1403   .rodata.telemetry_send_chns_description_pv.str1.4:0000000000000000 $d
+     /tmp/cch7Oov8.s:1430   .rodata.telemetry_send_status.str1.4:0000000000000000 $d
+     /tmp/cch7Oov8.s:1440   .rodata.telemetry_send_status_pv.str1.4:0000000000000000 $d
+     /tmp/cch7Oov8.s:1444   .rodata.telemetry_send_values_pv.str1.4:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.46.4096b03458401eca76553253bd40f29d
+                           .group:0000000000000000 wm4.station_config.h.9.39d8e1c3ae8d42c39bc1698d9fb88942
+                           .group:0000000000000000 wm4.dallas.h.28.4c25313e4181236c94847de9c84bd06e
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.math.h.13.adb102f7bd7860b1f241e149d6914a1e
+                           .group:0000000000000000 wm4.ms5611.h.13.84fbf6afa85557f675e3d85f1be6067c
+                           .group:0000000000000000 wm4.average_struct.h.9.41820d0d7dc25dca8a9005c6d1a8bb5f
+                           .group:0000000000000000 wm4.telemetry.h.21.a87436b8ee86f5e60170454e063be1e3
+                           .group:0000000000000000 wm4.parser.h.9.2d68c8669e0bffa77926bbb9bf5a2aba
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.serial.h.2.a574250aaf0d4f0a93b2db72031afff6
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+                           .group:0000000000000000 wm4.stdio.h.27.3fc80220048df77954e38daec3bb9670
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdarg.h.34.3a23a216c0c293b3d2ea2e89281481e6
+                           .group:0000000000000000 wm4.types.h.40.e8c16e7ec36ba55f133d0616070e25fc
+                           .group:0000000000000000 wm4._stdint.h.10.c24fa3af3bc1706662bb5593a907e841
+                           .group:0000000000000000 wm4._endian.h.31.65a10590763c3dde1ac4a7f66d7d4891
+                           .group:0000000000000000 wm4.endian.h.9.49f3a4695c1b61e8a0808de3c4a106cb
+                           .group:0000000000000000 wm4._timeval.h.30.0e8bfd94e85db17dda3286ee81496fe6
+                           .group:0000000000000000 wm4.timespec.h.41.d855182eb0e690443ab8651bcedca6e1
+                           .group:0000000000000000 wm4.select.h.19.97ca6fd0c752a0f3b6719fd314d361e6
+                           .group:0000000000000000 wm4.types.h.69.ed3eae3cf73030a737515151ebcab7a1
+                           .group:0000000000000000 wm4.sched.h.22.c60982713a5c428609783c78f9c78d95
+                           .group:0000000000000000 wm4._pthreadtypes.h.36.fcee9961c35163dde6267ef772ad1972
+                           .group:0000000000000000 wm4.stdio.h.2.4aa87247282eca6c8f36f9de33d8df1a
+                           .group:0000000000000000 wm4.stdio.h.81.932d0c162786b883f622b8d05c120c78
+                           .group:0000000000000000 wm4.string.h.8.c4b8571ce60dff2817f43fec8b86aecd
+
+UNDEFINED SYMBOLS
+memset
+sprintf
+ax25_sendVia
+afsk_txStart
+delay_fixed
+main_afsk
+main_own_aprs_msg
+main_own_aprs_msg_len
+main_own_path_ln
+main_own_path
+main_ax25
+after_tx_lock
+__aeabi_i2f
+__aeabi_fdiv
+__aeabi_ui2f
+__aeabi_fadd
+__aeabi_fmul
+__aeabi_f2uiz
+__aeabi_fsub
+roundf
+ve_direct_state_to_string
+ve_direct_error_to_string
+snprintf
+__aeabi_fcmplt
+__aeabi_fcmpgt

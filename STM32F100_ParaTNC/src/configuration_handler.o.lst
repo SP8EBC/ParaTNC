@@ -1,0 +1,1572 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"configuration_handler.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.configuration_handler_check_crc,"ax",%progbits
+  16              		.align	1
+  17              		.global	configuration_handler_check_crc
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	configuration_handler_check_crc:
+  24              	.LFB70:
+  25              		.file 1 "../src/configuration_handler.c"
+   1:../src/configuration_handler.c **** /*
+   2:../src/configuration_handler.c ****  * configuration_handler.c
+   3:../src/configuration_handler.c ****  *
+   4:../src/configuration_handler.c ****  *  Created on: Apr 28, 2021
+   5:../src/configuration_handler.c ****  *      Author: mateusz
+   6:../src/configuration_handler.c ****  */
+   7:../src/configuration_handler.c **** 
+   8:../src/configuration_handler.c **** #include "station_config_target_hw.h"
+   9:../src/configuration_handler.c **** 
+  10:../src/configuration_handler.c **** #include "configuration_handler.h"
+  11:../src/configuration_handler.c **** #include "config_data.h"
+  12:../src/configuration_handler.c **** #include "config_data_externs.h"
+  13:../src/configuration_handler.c **** 
+  14:../src/configuration_handler.c **** #include "main.h"
+  15:../src/configuration_handler.c **** 
+  16:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+  17:../src/configuration_handler.c **** #include <stm32f10x.h>
+  18:../src/configuration_handler.c **** #include <stm32f10x_crc.h>
+  19:../src/configuration_handler.c **** #include <stm32f10x_flash.h>
+  20:../src/configuration_handler.c **** #endif
+  21:../src/configuration_handler.c **** 
+  22:../src/configuration_handler.c **** #ifdef STM32L471xx
+  23:../src/configuration_handler.c **** #include "./drivers/l4/flash_stm32l4x.h"
+  24:../src/configuration_handler.c **** #include <stm32l4xx.h>
+  25:../src/configuration_handler.c **** #include <stm32l4xx_ll_crc.h>
+  26:../src/configuration_handler.c **** #endif
+  27:../src/configuration_handler.c **** 
+  28:../src/configuration_handler.c **** 
+  29:../src/configuration_handler.c **** #include <string.h>
+  30:../src/configuration_handler.c **** 
+  31:../src/configuration_handler.c **** const uint32_t * config_section_first_start = (uint32_t *)0x0801E800;
+  32:../src/configuration_handler.c **** const uint32_t * config_section_second_start = (uint32_t *)0x0801F000;
+  33:../src/configuration_handler.c **** 
+  34:../src/configuration_handler.c **** #define CRC_OFFSET				0x7FC
+  35:../src/configuration_handler.c **** #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
+  36:../src/configuration_handler.c **** #define CRC_32B_WORD_OFFSET		CRC_OFFSET / 4
+  37:../src/configuration_handler.c **** 
+  38:../src/configuration_handler.c **** #define CONFIG_SECTION_LN 0x7FF
+  39:../src/configuration_handler.c **** 
+  40:../src/configuration_handler.c **** 
+  41:../src/configuration_handler.c **** volatile extern const config_data_basic_t config_data_basic_default;
+  42:../src/configuration_handler.c **** volatile extern const config_data_mode_t config_data_mode_default;
+  43:../src/configuration_handler.c **** volatile extern const config_data_umb_t config_data_umb_default;
+  44:../src/configuration_handler.c **** volatile extern const config_data_rtu_t config_data_rtu_default;
+  45:../src/configuration_handler.c **** volatile extern const config_data_wx_sources_t config_data_wx_sources_default;
+  46:../src/configuration_handler.c **** 
+  47:../src/configuration_handler.c **** uint32_t configuration_handler_check_crc(void) {
+  26              		.loc 1 47 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 38B5     		push	{r3, r4, r5, lr}
+  31              		.cfi_def_cfa_offset 16
+  32              		.cfi_offset 3, -16
+  33              		.cfi_offset 4, -12
+  34              		.cfi_offset 5, -8
+  35              		.cfi_offset 14, -4
+  36              	.LVL0:
+  48:../src/configuration_handler.c **** 
+  49:../src/configuration_handler.c **** 	uint32_t out = 0;
+  50:../src/configuration_handler.c **** 
+  51:../src/configuration_handler.c **** 	// crc stored in the configuration section
+  52:../src/configuration_handler.c **** 	uint32_t crc_expected = 0;
+  53:../src/configuration_handler.c **** 
+  54:../src/configuration_handler.c **** 	// calculated CRC value
+  55:../src/configuration_handler.c **** 	uint32_t crc_current = 0;
+  56:../src/configuration_handler.c **** 
+  57:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+  58:../src/configuration_handler.c **** 	// reset CRC engine
+  59:../src/configuration_handler.c **** 	CRC_ResetDR();
+  37              		.loc 1 59 0
+  38 0002 FFF7FEFF 		bl	CRC_ResetDR
+  39              	.LVL1:
+  60:../src/configuration_handler.c **** 
+  61:../src/configuration_handler.c **** 	// calculate CRC over everything from config_section_first except the last word which constit crc 
+  62:../src/configuration_handler.c **** 	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+  40              		.loc 1 62 0
+  41 0006 114C     		ldr	r4, .L7
+  42 0008 4FF4FF71 		mov	r1, #510
+  43 000c 2068     		ldr	r0, [r4]
+  44 000e FFF7FEFF 		bl	CRC_CalcBlockCRC
+  45              	.LVL2:
+  63:../src/configuration_handler.c **** 
+  64:../src/configuration_handler.c **** 	// add 0x0 as a placeholder for CRC value
+  65:../src/configuration_handler.c **** 	crc_current = CRC_CalcCRC(0x0);
+  46              		.loc 1 65 0
+  47 0012 0020     		movs	r0, #0
+  48 0014 FFF7FEFF 		bl	CRC_CalcCRC
+  49              	.LVL3:
+  66:../src/configuration_handler.c **** #endif
+  67:../src/configuration_handler.c **** 
+  68:../src/configuration_handler.c **** #ifdef STM32L471xx
+  69:../src/configuration_handler.c **** 
+  70:../src/configuration_handler.c **** 	// reset CRC engine
+  71:../src/configuration_handler.c **** 	LL_CRC_ResetCRCCalculationUnit(CRC);
+  72:../src/configuration_handler.c **** 
+  73:../src/configuration_handler.c **** 	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+  74:../src/configuration_handler.c **** 		// feed the data into CRC engine
+  75:../src/configuration_handler.c **** 		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+  76:../src/configuration_handler.c **** 	}
+  77:../src/configuration_handler.c **** 
+  78:../src/configuration_handler.c **** 	// placeholder for CRC value itself
+  79:../src/configuration_handler.c **** 	CRC->DR = 0x00;
+  80:../src/configuration_handler.c **** 
+  81:../src/configuration_handler.c **** 	crc_current = CRC->DR;
+  82:../src/configuration_handler.c **** #endif
+  83:../src/configuration_handler.c **** 
+  84:../src/configuration_handler.c **** 	// expected crc is stored in the last 32b word of the configuration section
+  85:../src/configuration_handler.c **** 	crc_expected = *(config_section_first_start + CRC_32B_WORD_OFFSET);
+  50              		.loc 1 85 0
+  51 0018 2368     		ldr	r3, [r4]
+  52 001a D3F8FC47 		ldr	r4, [r3, #2044]
+  53              	.LVL4:
+  86:../src/configuration_handler.c **** 
+  87:../src/configuration_handler.c **** 	// check if calculated CRC value match value stored in flash memory
+  88:../src/configuration_handler.c **** 	if (crc_expected == crc_current) {
+  54              		.loc 1 88 0
+  55 001e A042     		cmp	r0, r4
+  56 0020 0FD0     		beq	.L4
+  49:../src/configuration_handler.c **** 
+  57              		.loc 1 49 0
+  58 0022 0025     		movs	r5, #0
+  59              	.L2:
+  60              	.LVL5:
+  89:../src/configuration_handler.c **** 		out |= 0x01;
+  90:../src/configuration_handler.c **** 	}
+  91:../src/configuration_handler.c **** 
+  92:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+  93:../src/configuration_handler.c **** 	// reset the CRC engine
+  94:../src/configuration_handler.c **** 	CRC_ResetDR();
+  61              		.loc 1 94 0
+  62 0024 FFF7FEFF 		bl	CRC_ResetDR
+  63              	.LVL6:
+  95:../src/configuration_handler.c **** 
+  96:../src/configuration_handler.c **** 	// and do the same but for second section
+  97:../src/configuration_handler.c **** 	CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
+  64              		.loc 1 97 0
+  65 0028 4FF4FF71 		mov	r1, #510
+  66 002c 084B     		ldr	r3, .L7+4
+  67 002e 1868     		ldr	r0, [r3]
+  68 0030 FFF7FEFF 		bl	CRC_CalcBlockCRC
+  69              	.LVL7:
+  98:../src/configuration_handler.c **** 
+  99:../src/configuration_handler.c **** 	// add 0x0 as a placeholder for CRC value
+ 100:../src/configuration_handler.c **** 	crc_current = CRC_CalcCRC((uint32_t)0x0);
+  70              		.loc 1 100 0
+  71 0034 0020     		movs	r0, #0
+  72 0036 FFF7FEFF 		bl	CRC_CalcCRC
+  73              	.LVL8:
+ 101:../src/configuration_handler.c **** #endif
+ 102:../src/configuration_handler.c **** 
+ 103:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 104:../src/configuration_handler.c **** 	// reset CRC engine
+ 105:../src/configuration_handler.c **** 	LL_CRC_ResetCRCCalculationUnit(CRC);
+ 106:../src/configuration_handler.c **** 
+ 107:../src/configuration_handler.c **** 	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+ 108:../src/configuration_handler.c **** 		// feed the data into CRC engine
+ 109:../src/configuration_handler.c **** 		LL_CRC_FeedData32(CRC, *(config_section_second_start + i));
+ 110:../src/configuration_handler.c **** 	}
+ 111:../src/configuration_handler.c **** 
+ 112:../src/configuration_handler.c **** 	// placeholder for CRC value itself
+ 113:../src/configuration_handler.c **** 	CRC->DR = 0x00;
+ 114:../src/configuration_handler.c **** 
+ 115:../src/configuration_handler.c **** 	crc_current = CRC->DR;
+ 116:../src/configuration_handler.c **** #endif
+ 117:../src/configuration_handler.c **** 
+ 118:../src/configuration_handler.c **** 	//crc_expected = *__config_section_second_end;
+ 119:../src/configuration_handler.c **** 
+ 120:../src/configuration_handler.c **** 	// check if calculated CRC value match value stored in flash memory
+ 121:../src/configuration_handler.c **** 	if (crc_expected == crc_current) {
+  74              		.loc 1 121 0
+  75 003a 8442     		cmp	r4, r0
+  76 003c 03D0     		beq	.L6
+  77              	.L1:
+ 122:../src/configuration_handler.c **** 		out |= 0x02;
+ 123:../src/configuration_handler.c **** 	}
+ 124:../src/configuration_handler.c **** 	return out;
+ 125:../src/configuration_handler.c **** }
+  78              		.loc 1 125 0
+  79 003e 2846     		mov	r0, r5
+  80              	.LVL9:
+  81 0040 38BD     		pop	{r3, r4, r5, pc}
+  82              	.LVL10:
+  83              	.L4:
+  89:../src/configuration_handler.c **** 	}
+  84              		.loc 1 89 0
+  85 0042 0125     		movs	r5, #1
+  86 0044 EEE7     		b	.L2
+  87              	.LVL11:
+  88              	.L6:
+ 122:../src/configuration_handler.c **** 		out |= 0x02;
+  89              		.loc 1 122 0
+  90 0046 45F00205 		orr	r5, r5, #2
+  91              	.LVL12:
+ 124:../src/configuration_handler.c **** }
+  92              		.loc 1 124 0
+  93 004a F8E7     		b	.L1
+  94              	.L8:
+  95              		.align	2
+  96              	.L7:
+  97 004c 00000000 		.word	.LANCHOR0
+  98 0050 00000000 		.word	.LANCHOR1
+  99              		.cfi_endproc
+ 100              	.LFE70:
+ 102              		.section	.text.configuration_handler_restore_default_first,"ax",%progbits
+ 103              		.align	1
+ 104              		.global	configuration_handler_restore_default_first
+ 105              		.syntax unified
+ 106              		.thumb
+ 107              		.thumb_func
+ 108              		.fpu softvfp
+ 110              	configuration_handler_restore_default_first:
+ 111              	.LFB71:
+ 126:../src/configuration_handler.c **** 
+ 127:../src/configuration_handler.c **** uint32_t configuration_handler_restore_default_first(void) {
+ 112              		.loc 1 127 0
+ 113              		.cfi_startproc
+ 114              		@ args = 0, pretend = 0, frame = 0
+ 115              		@ frame_needed = 0, uses_anonymous_args = 0
+ 116 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 117              		.cfi_def_cfa_offset 32
+ 118              		.cfi_offset 3, -32
+ 119              		.cfi_offset 4, -28
+ 120              		.cfi_offset 5, -24
+ 121              		.cfi_offset 6, -20
+ 122              		.cfi_offset 7, -16
+ 123              		.cfi_offset 8, -12
+ 124              		.cfi_offset 9, -8
+ 125              		.cfi_offset 14, -4
+ 126              	.LVL13:
+ 128:../src/configuration_handler.c **** 
+ 129:../src/configuration_handler.c **** 	uint32_t out = 0;
+ 130:../src/configuration_handler.c **** 
+ 131:../src/configuration_handler.c **** 	// loop iterators
+ 132:../src/configuration_handler.c **** 	int i = 0;
+ 133:../src/configuration_handler.c **** 	int8_t config_struct_it = 0;
+ 134:../src/configuration_handler.c **** 
+ 135:../src/configuration_handler.c **** 	// source pointer
+ 136:../src/configuration_handler.c **** 	volatile uint16_t * source = 0x00;
+ 137:../src/configuration_handler.c **** 
+ 138:../src/configuration_handler.c **** 	// destination pointer for flash reprogramming
+ 139:../src/configuration_handler.c **** 	volatile uint16_t * target = 0x00;
+ 140:../src/configuration_handler.c **** 
+ 141:../src/configuration_handler.c **** 	// amount of 16 bit words to copy across the memory
+ 142:../src/configuration_handler.c **** 	uint16_t size = 0;
+ 143:../src/configuration_handler.c **** 
+ 144:../src/configuration_handler.c **** 	// target region CRC value to be stored in the flash memory
+ 145:../src/configuration_handler.c **** 	uint32_t target_crc_value = 0;
+ 146:../src/configuration_handler.c **** 
+ 147:../src/configuration_handler.c **** 	// flash operation result
+ 148:../src/configuration_handler.c **** 	FLASH_Status flash_status = 0;
+ 149:../src/configuration_handler.c **** 
+ 150:../src/configuration_handler.c **** 	int comparision_result = 0;
+ 151:../src/configuration_handler.c **** 
+ 152:../src/configuration_handler.c **** 	// unlock flash memory
+ 153:../src/configuration_handler.c **** 	FLASH_Unlock();
+ 127              		.loc 1 153 0
+ 128 0004 FFF7FEFF 		bl	FLASH_Unlock
+ 129              	.LVL14:
+ 154:../src/configuration_handler.c **** 
+ 155:../src/configuration_handler.c **** 	// erase first page
+ 156:../src/configuration_handler.c **** 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start);
+ 130              		.loc 1 156 0
+ 131 0008 404C     		ldr	r4, .L32
+ 132 000a 2068     		ldr	r0, [r4]
+ 133 000c FFF7FEFF 		bl	FLASH_ErasePage
+ 134              	.LVL15:
+ 157:../src/configuration_handler.c **** 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start + 0x400);
+ 135              		.loc 1 157 0
+ 136 0010 2068     		ldr	r0, [r4]
+ 137 0012 00F58060 		add	r0, r0, #1024
+ 138 0016 FFF7FEFF 		bl	FLASH_ErasePage
+ 139              	.LVL16:
+ 158:../src/configuration_handler.c **** 
+ 159:../src/configuration_handler.c **** 	// check if erasure was completed successfully
+ 160:../src/configuration_handler.c **** 	if (flash_status == FLASH_COMPLETE) {
+ 140              		.loc 1 160 0
+ 141 001a 0428     		cmp	r0, #4
+ 142 001c 4CD1     		bne	.L11
+ 142:../src/configuration_handler.c **** 
+ 143              		.loc 1 142 0
+ 144 001e 0025     		movs	r5, #0
+ 139:../src/configuration_handler.c **** 
+ 145              		.loc 1 139 0
+ 146 0020 2F46     		mov	r7, r5
+ 136:../src/configuration_handler.c **** 
+ 147              		.loc 1 136 0
+ 148 0022 2E46     		mov	r6, r5
+ 161:../src/configuration_handler.c **** 
+ 162:../src/configuration_handler.c **** 		for (config_struct_it = 0; config_struct_it < 5; config_struct_it++) {
+ 149              		.loc 1 162 0
+ 150 0024 A946     		mov	r9, r5
+ 151 0026 34E0     		b	.L10
+ 152              	.LVL17:
+ 153              	.L15:
+ 163:../src/configuration_handler.c **** 
+ 164:../src/configuration_handler.c **** 			// set pointers
+ 165:../src/configuration_handler.c **** 			switch (config_struct_it) {
+ 166:../src/configuration_handler.c **** 				case 0:	// mode
+ 167:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_mode_default;
+ 168:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_mode_first;
+ 169:../src/configuration_handler.c **** 					size = sizeof(config_data_mode_t) / 2;
+ 170:../src/configuration_handler.c **** 					break;
+ 171:../src/configuration_handler.c **** 				case 1:	// basic
+ 172:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_basic_default;
+ 173:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_basic_first;
+ 174:../src/configuration_handler.c **** 					size = sizeof(config_data_basic_t) / 2;
+ 154              		.loc 1 174 0
+ 155 0028 4E25     		movs	r5, #78
+ 173:../src/configuration_handler.c **** 					size = sizeof(config_data_basic_t) / 2;
+ 156              		.loc 1 173 0
+ 157 002a 394F     		ldr	r7, .L32+4
+ 172:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_basic_first;
+ 158              		.loc 1 172 0
+ 159 002c 394E     		ldr	r6, .L32+8
+ 175:../src/configuration_handler.c **** 					break;
+ 160              		.loc 1 175 0
+ 161 002e 0EE0     		b	.L13
+ 162              	.LVL18:
+ 163              	.L16:
+ 176:../src/configuration_handler.c **** 				case 2:	// sources
+ 177:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_wx_sources_default;
+ 178:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_wx_sources_first;
+ 179:../src/configuration_handler.c **** 					size = sizeof(config_data_wx_sources_t) / 2;
+ 164              		.loc 1 179 0
+ 165 0030 0225     		movs	r5, #2
+ 178:../src/configuration_handler.c **** 					size = sizeof(config_data_wx_sources_t) / 2;
+ 166              		.loc 1 178 0
+ 167 0032 394F     		ldr	r7, .L32+12
+ 177:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_wx_sources_first;
+ 168              		.loc 1 177 0
+ 169 0034 394E     		ldr	r6, .L32+16
+ 180:../src/configuration_handler.c **** 					break;
+ 170              		.loc 1 180 0
+ 171 0036 0AE0     		b	.L13
+ 172              	.LVL19:
+ 173              	.L17:
+ 181:../src/configuration_handler.c **** 				case 3:
+ 182:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_umb_default;
+ 183:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_umb_first;
+ 184:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 174              		.loc 1 184 0
+ 175 0038 0725     		movs	r5, #7
+ 183:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 176              		.loc 1 183 0
+ 177 003a 394F     		ldr	r7, .L32+20
+ 182:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_umb_first;
+ 178              		.loc 1 182 0
+ 179 003c 394E     		ldr	r6, .L32+24
+ 185:../src/configuration_handler.c **** 					break;
+ 180              		.loc 1 185 0
+ 181 003e 06E0     		b	.L13
+ 182              	.LVL20:
+ 183              	.L18:
+ 186:../src/configuration_handler.c **** 				case 4:
+ 187:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_rtu_default;
+ 188:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_rtu_first;
+ 189:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 184              		.loc 1 189 0
+ 185 0040 0725     		movs	r5, #7
+ 188:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 186              		.loc 1 188 0
+ 187 0042 394F     		ldr	r7, .L32+28
+ 187:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_rtu_first;
+ 188              		.loc 1 187 0
+ 189 0044 394E     		ldr	r6, .L32+32
+ 190:../src/configuration_handler.c **** 					break;
+ 190              		.loc 1 190 0
+ 191 0046 02E0     		b	.L13
+ 192              	.LVL21:
+ 193              	.L27:
+ 169:../src/configuration_handler.c **** 					break;
+ 194              		.loc 1 169 0
+ 195 0048 0625     		movs	r5, #6
+ 196              	.LVL22:
+ 168:../src/configuration_handler.c **** 					size = sizeof(config_data_mode_t) / 2;
+ 197              		.loc 1 168 0
+ 198 004a 394F     		ldr	r7, .L32+36
+ 199              	.LVL23:
+ 167:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_mode_first;
+ 200              		.loc 1 167 0
+ 201 004c 394E     		ldr	r6, .L32+40
+ 202              	.LVL24:
+ 203              	.L13:
+ 191:../src/configuration_handler.c **** 			}
+ 192:../src/configuration_handler.c **** 
+ 193:../src/configuration_handler.c **** 
+ 194:../src/configuration_handler.c **** 			// enable programming
+ 195:../src/configuration_handler.c **** 			FLASH->CR |= FLASH_CR_PG;
+ 204              		.loc 1 195 0
+ 205 004e 3A4A     		ldr	r2, .L32+44
+ 206 0050 1369     		ldr	r3, [r2, #16]
+ 207 0052 43F00103 		orr	r3, r3, #1
+ 208 0056 1361     		str	r3, [r2, #16]
+ 209              	.LVL25:
+ 196:../src/configuration_handler.c **** 
+ 197:../src/configuration_handler.c **** 			// if so reprogram first section
+ 198:../src/configuration_handler.c **** 			for (i = 0; i < size; i++) {
+ 210              		.loc 1 198 0
+ 211 0058 0024     		movs	r4, #0
+ 212              	.LVL26:
+ 213              	.L19:
+ 214              		.loc 1 198 0 is_stmt 0 discriminator 1
+ 215 005a A846     		mov	r8, r5
+ 216 005c A542     		cmp	r5, r4
+ 217 005e 0CDD     		ble	.L21
+ 199:../src/configuration_handler.c **** 
+ 200:../src/configuration_handler.c **** 				// copy data
+ 201:../src/configuration_handler.c **** 				*(target + i) = *(source + i);
+ 218              		.loc 1 201 0 is_stmt 1
+ 219 0060 36F81430 		ldrh	r3, [r6, r4, lsl #1]
+ 220 0064 9BB2     		uxth	r3, r3
+ 221 0066 27F81430 		strh	r3, [r7, r4, lsl #1]	@ movhi
+ 222              	.L20:
+ 202:../src/configuration_handler.c **** 
+ 203:../src/configuration_handler.c **** 				// wait for flash operation to finish
+ 204:../src/configuration_handler.c **** 				while (1) {
+ 205:../src/configuration_handler.c **** 					// check current status
+ 206:../src/configuration_handler.c **** 					flash_status = FLASH_GetBank1Status();
+ 223              		.loc 1 206 0
+ 224 006a FFF7FEFF 		bl	FLASH_GetBank1Status
+ 225              	.LVL27:
+ 207:../src/configuration_handler.c **** 
+ 208:../src/configuration_handler.c **** 					if (flash_status == FLASH_BUSY) {
+ 226              		.loc 1 208 0
+ 227 006e 0128     		cmp	r0, #1
+ 228 0070 FBD0     		beq	.L20
+ 209:../src/configuration_handler.c **** 						;
+ 210:../src/configuration_handler.c **** 					}
+ 211:../src/configuration_handler.c **** 					else {
+ 212:../src/configuration_handler.c **** 						break;
+ 213:../src/configuration_handler.c **** 					}
+ 214:../src/configuration_handler.c **** 				}
+ 215:../src/configuration_handler.c **** 
+ 216:../src/configuration_handler.c **** 				if (flash_status != FLASH_COMPLETE) {
+ 229              		.loc 1 216 0
+ 230 0072 0428     		cmp	r0, #4
+ 231 0074 01D1     		bne	.L21
+ 198:../src/configuration_handler.c **** 
+ 232              		.loc 1 198 0 discriminator 2
+ 233 0076 0134     		adds	r4, r4, #1
+ 234              	.LVL28:
+ 235 0078 EFE7     		b	.L19
+ 236              	.LVL29:
+ 237              	.L21:
+ 217:../src/configuration_handler.c **** 					break;	// exit from the loop in case of programming error
+ 218:../src/configuration_handler.c **** 				}
+ 219:../src/configuration_handler.c **** 
+ 220:../src/configuration_handler.c **** 			}
+ 221:../src/configuration_handler.c **** 
+ 222:../src/configuration_handler.c **** 			// verify programming
+ 223:../src/configuration_handler.c **** 			comparision_result = memcmp((const void * )target, (const void * )source, size * 2);
+ 238              		.loc 1 223 0
+ 239 007a 4FEA4802 		lsl	r2, r8, #1
+ 240 007e 3146     		mov	r1, r6
+ 241 0080 3846     		mov	r0, r7
+ 242 0082 FFF7FEFF 		bl	memcmp
+ 243              	.LVL30:
+ 224:../src/configuration_handler.c **** 
+ 225:../src/configuration_handler.c **** 			if (comparision_result != 0) {
+ 244              		.loc 1 225 0
+ 245 0086 0028     		cmp	r0, #0
+ 246 0088 3CD1     		bne	.L28
+ 162:../src/configuration_handler.c **** 
+ 247              		.loc 1 162 0 discriminator 2
+ 248 008a 09F10109 		add	r9, r9, #1
+ 249              	.LVL31:
+ 250 008e 4FFA89F9 		sxtb	r9, r9
+ 251              	.LVL32:
+ 252              	.L10:
+ 162:../src/configuration_handler.c **** 
+ 253              		.loc 1 162 0 is_stmt 0 discriminator 1
+ 254 0092 B9F1040F 		cmp	r9, #4
+ 255 0096 0FDC     		bgt	.L11
+ 165:../src/configuration_handler.c **** 				case 0:	// mode
+ 256              		.loc 1 165 0 is_stmt 1
+ 257 0098 B9F1040F 		cmp	r9, #4
+ 258 009c D7D8     		bhi	.L13
+ 259 009e 01A3     		adr	r3, .L14
+ 260 00a0 53F829F0 		ldr	pc, [r3, r9, lsl #2]
+ 261              		.p2align 2
+ 262              	.L14:
+ 263 00a4 49000000 		.word	.L27+1
+ 264 00a8 29000000 		.word	.L15+1
+ 265 00ac 31000000 		.word	.L16+1
+ 266 00b0 39000000 		.word	.L17+1
+ 267 00b4 41000000 		.word	.L18+1
+ 268              	.LVL33:
+ 269              		.p2align 1
+ 270              	.L11:
+ 226:../src/configuration_handler.c **** 				// quit from the
+ 227:../src/configuration_handler.c **** 				out = -1;
+ 228:../src/configuration_handler.c **** 
+ 229:../src/configuration_handler.c **** 				return out;
+ 230:../src/configuration_handler.c **** 			}
+ 231:../src/configuration_handler.c **** 		}
+ 232:../src/configuration_handler.c **** 	}
+ 233:../src/configuration_handler.c **** 
+ 234:../src/configuration_handler.c **** 	// set programming counter. If second region is also screwed the first one will be used as a sourc
+ 235:../src/configuration_handler.c **** 	// if second is OK it will be used instead (if its programming counter has value three or more).
+ 236:../src/configuration_handler.c **** 	*(uint16_t*)&config_data_pgm_cntr_first = 0x0002u;
+ 271              		.loc 1 236 0
+ 272 00b8 204B     		ldr	r3, .L32+48
+ 273 00ba 0222     		movs	r2, #2
+ 274 00bc 1A80     		strh	r2, [r3]	@ movhi
+ 237:../src/configuration_handler.c **** 
+ 238:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 239:../src/configuration_handler.c **** 	// resetting CRC engine
+ 240:../src/configuration_handler.c **** 	CRC_ResetDR();
+ 275              		.loc 1 240 0
+ 276 00be FFF7FEFF 		bl	CRC_ResetDR
+ 277              	.LVL34:
+ 241:../src/configuration_handler.c **** 
+ 242:../src/configuration_handler.c **** 	// calculate CRC checksum of the first block
+ 243:../src/configuration_handler.c **** 	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+ 278              		.loc 1 243 0
+ 279 00c2 124C     		ldr	r4, .L32
+ 280 00c4 4FF4FF71 		mov	r1, #510
+ 281 00c8 2068     		ldr	r0, [r4]
+ 282 00ca FFF7FEFF 		bl	CRC_CalcBlockCRC
+ 283              	.LVL35:
+ 244:../src/configuration_handler.c **** 
+ 245:../src/configuration_handler.c **** 	// adding finalizing 0x00
+ 246:../src/configuration_handler.c **** 	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+ 284              		.loc 1 246 0
+ 285 00ce 0020     		movs	r0, #0
+ 286 00d0 FFF7FEFF 		bl	CRC_CalcCRC
+ 287              	.LVL36:
+ 247:../src/configuration_handler.c **** #endif
+ 248:../src/configuration_handler.c **** 
+ 249:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 250:../src/configuration_handler.c **** 	// reset CRC engine
+ 251:../src/configuration_handler.c **** 	LL_CRC_ResetCRCCalculationUnit(CRC);
+ 252:../src/configuration_handler.c **** 
+ 253:../src/configuration_handler.c **** 	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+ 254:../src/configuration_handler.c **** 		// feed the data into CRC engine
+ 255:../src/configuration_handler.c **** 		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+ 256:../src/configuration_handler.c **** 	}
+ 257:../src/configuration_handler.c **** 
+ 258:../src/configuration_handler.c **** 	// placeholder for CRC value itself
+ 259:../src/configuration_handler.c **** 	CRC->DR = 0x00;
+ 260:../src/configuration_handler.c **** 
+ 261:../src/configuration_handler.c **** 	target_crc_value = CRC->DR;
+ 262:../src/configuration_handler.c **** #endif
+ 263:../src/configuration_handler.c **** 
+ 264:../src/configuration_handler.c **** 	// program the CRC value
+ 265:../src/configuration_handler.c **** 	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc
+ 288              		.loc 1 265 0
+ 289 00d4 2368     		ldr	r3, [r4]
+ 290 00d6 A3F8FC07 		strh	r0, [r3, #2044]	@ movhi
+ 266:../src/configuration_handler.c **** 	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((targe
+ 291              		.loc 1 266 0
+ 292 00da 000C     		lsrs	r0, r0, #16
+ 293              	.LVL37:
+ 294 00dc A3F8FE07 		strh	r0, [r3, #2046]	@ movhi
+ 267:../src/configuration_handler.c **** 
+ 268:../src/configuration_handler.c **** 	flash_status = FLASH_GetBank1Status();
+ 295              		.loc 1 268 0
+ 296 00e0 FFF7FEFF 		bl	FLASH_GetBank1Status
+ 297              	.LVL38:
+ 269:../src/configuration_handler.c **** 
+ 270:../src/configuration_handler.c **** 	if (flash_status != FLASH_COMPLETE) {
+ 298              		.loc 1 270 0
+ 299 00e4 0428     		cmp	r0, #4
+ 300 00e6 0BD0     		beq	.L31
+ 271:../src/configuration_handler.c **** 		out = -2;	// exit from the loop in case of programming error
+ 301              		.loc 1 271 0
+ 302 00e8 6FF00104 		mvn	r4, #1
+ 303              	.L25:
+ 304              	.LVL39:
+ 272:../src/configuration_handler.c **** 	}
+ 273:../src/configuration_handler.c **** 
+ 274:../src/configuration_handler.c **** 	// disable programming
+ 275:../src/configuration_handler.c **** 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+ 305              		.loc 1 275 0
+ 306 00ec 124A     		ldr	r2, .L32+44
+ 307 00ee 1369     		ldr	r3, [r2, #16]
+ 308 00f0 23F00103 		bic	r3, r3, #1
+ 309 00f4 1361     		str	r3, [r2, #16]
+ 276:../src/configuration_handler.c **** 
+ 277:../src/configuration_handler.c **** 	// lock the memory back
+ 278:../src/configuration_handler.c **** 	FLASH_Lock();
+ 310              		.loc 1 278 0
+ 311 00f6 FFF7FEFF 		bl	FLASH_Lock
+ 312              	.LVL40:
+ 313              	.L9:
+ 279:../src/configuration_handler.c **** 
+ 280:../src/configuration_handler.c **** 	return out;
+ 281:../src/configuration_handler.c **** 
+ 282:../src/configuration_handler.c **** }
+ 314              		.loc 1 282 0
+ 315 00fa 2046     		mov	r0, r4
+ 316 00fc BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 317              	.LVL41:
+ 318              	.L31:
+ 129:../src/configuration_handler.c **** 
+ 319              		.loc 1 129 0
+ 320 0100 0024     		movs	r4, #0
+ 321 0102 F3E7     		b	.L25
+ 322              	.LVL42:
+ 323              	.L28:
+ 229:../src/configuration_handler.c **** 			}
+ 324              		.loc 1 229 0
+ 325 0104 4FF0FF34 		mov	r4, #-1
+ 326              	.LVL43:
+ 327 0108 F7E7     		b	.L9
+ 328              	.L33:
+ 329 010a 00BF     		.align	2
+ 330              	.L32:
+ 331 010c 00000000 		.word	.LANCHOR0
+ 332 0110 00000000 		.word	config_data_basic_first
+ 333 0114 00000000 		.word	config_data_basic_default
+ 334 0118 00000000 		.word	config_data_wx_sources_first
+ 335 011c 00000000 		.word	config_data_wx_sources_default
+ 336 0120 00000000 		.word	config_data_umb_first
+ 337 0124 00000000 		.word	config_data_umb_default
+ 338 0128 00000000 		.word	config_data_rtu_first
+ 339 012c 00000000 		.word	config_data_rtu_default
+ 340 0130 00000000 		.word	config_data_mode_first
+ 341 0134 00000000 		.word	config_data_mode_default
+ 342 0138 00200240 		.word	1073881088
+ 343 013c 00000000 		.word	config_data_pgm_cntr_first
+ 344              		.cfi_endproc
+ 345              	.LFE71:
+ 347              		.section	.text.configuration_handler_restore_default_second,"ax",%progbits
+ 348              		.align	1
+ 349              		.global	configuration_handler_restore_default_second
+ 350              		.syntax unified
+ 351              		.thumb
+ 352              		.thumb_func
+ 353              		.fpu softvfp
+ 355              	configuration_handler_restore_default_second:
+ 356              	.LFB72:
+ 283:../src/configuration_handler.c **** 
+ 284:../src/configuration_handler.c **** uint32_t configuration_handler_restore_default_second(void) {
+ 357              		.loc 1 284 0
+ 358              		.cfi_startproc
+ 359              		@ args = 0, pretend = 0, frame = 0
+ 360              		@ frame_needed = 0, uses_anonymous_args = 0
+ 361 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 362              		.cfi_def_cfa_offset 32
+ 363              		.cfi_offset 3, -32
+ 364              		.cfi_offset 4, -28
+ 365              		.cfi_offset 5, -24
+ 366              		.cfi_offset 6, -20
+ 367              		.cfi_offset 7, -16
+ 368              		.cfi_offset 8, -12
+ 369              		.cfi_offset 9, -8
+ 370              		.cfi_offset 14, -4
+ 371              	.LVL44:
+ 285:../src/configuration_handler.c **** 	uint32_t out = 0;
+ 286:../src/configuration_handler.c **** 
+ 287:../src/configuration_handler.c **** 	// loop iterators
+ 288:../src/configuration_handler.c **** 	int i = 0;
+ 289:../src/configuration_handler.c **** 	int8_t config_struct_it = 0;
+ 290:../src/configuration_handler.c **** 
+ 291:../src/configuration_handler.c **** 	// source pointer
+ 292:../src/configuration_handler.c **** 	volatile uint16_t * source = 0x00;
+ 293:../src/configuration_handler.c **** 
+ 294:../src/configuration_handler.c **** 	// destination pointer for flash reprogramming
+ 295:../src/configuration_handler.c **** 	volatile uint16_t * target = 0x00;
+ 296:../src/configuration_handler.c **** 
+ 297:../src/configuration_handler.c **** 	// amount of 16 bit words to copy across the memory
+ 298:../src/configuration_handler.c **** 	uint16_t size = 0;
+ 299:../src/configuration_handler.c **** 
+ 300:../src/configuration_handler.c **** 	// target region CRC value to be stored in the flash memory
+ 301:../src/configuration_handler.c **** 	uint32_t target_crc_value = 0;
+ 302:../src/configuration_handler.c **** 
+ 303:../src/configuration_handler.c **** 	// flash operation result
+ 304:../src/configuration_handler.c **** 	FLASH_Status flash_status = 0;
+ 305:../src/configuration_handler.c **** 
+ 306:../src/configuration_handler.c **** 	int comparision_result = 0;
+ 307:../src/configuration_handler.c **** 
+ 308:../src/configuration_handler.c **** 	// unlock flash memory
+ 309:../src/configuration_handler.c **** 	FLASH_Unlock();
+ 372              		.loc 1 309 0
+ 373 0004 FFF7FEFF 		bl	FLASH_Unlock
+ 374              	.LVL45:
+ 310:../src/configuration_handler.c **** 
+ 311:../src/configuration_handler.c **** 	// erase first page
+ 312:../src/configuration_handler.c **** 	flash_status = FLASH_ErasePage((uint32_t)config_section_second_start);
+ 375              		.loc 1 312 0
+ 376 0008 404C     		ldr	r4, .L57
+ 377 000a 2068     		ldr	r0, [r4]
+ 378 000c FFF7FEFF 		bl	FLASH_ErasePage
+ 379              	.LVL46:
+ 313:../src/configuration_handler.c **** 	flash_status = FLASH_ErasePage((uint32_t)config_section_second_start + 0x400);
+ 380              		.loc 1 313 0
+ 381 0010 2068     		ldr	r0, [r4]
+ 382 0012 00F58060 		add	r0, r0, #1024
+ 383 0016 FFF7FEFF 		bl	FLASH_ErasePage
+ 384              	.LVL47:
+ 314:../src/configuration_handler.c **** 
+ 315:../src/configuration_handler.c **** 	// check if erasure was completed successfully
+ 316:../src/configuration_handler.c **** 	if (flash_status == FLASH_COMPLETE) {
+ 385              		.loc 1 316 0
+ 386 001a 0428     		cmp	r0, #4
+ 387 001c 4CD1     		bne	.L36
+ 298:../src/configuration_handler.c **** 
+ 388              		.loc 1 298 0
+ 389 001e 0025     		movs	r5, #0
+ 295:../src/configuration_handler.c **** 
+ 390              		.loc 1 295 0
+ 391 0020 2F46     		mov	r7, r5
+ 292:../src/configuration_handler.c **** 
+ 392              		.loc 1 292 0
+ 393 0022 2E46     		mov	r6, r5
+ 317:../src/configuration_handler.c **** 
+ 318:../src/configuration_handler.c **** 		for (config_struct_it = 0; config_struct_it < 5; config_struct_it++) {
+ 394              		.loc 1 318 0
+ 395 0024 A946     		mov	r9, r5
+ 396 0026 34E0     		b	.L35
+ 397              	.LVL48:
+ 398              	.L40:
+ 319:../src/configuration_handler.c **** 
+ 320:../src/configuration_handler.c **** 			// set pointers
+ 321:../src/configuration_handler.c **** 			switch (config_struct_it) {
+ 322:../src/configuration_handler.c **** 				case 0:	// mode
+ 323:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_mode_default;
+ 324:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_mode_second;
+ 325:../src/configuration_handler.c **** 					size = sizeof(config_data_mode_t) / 2;
+ 326:../src/configuration_handler.c **** 					break;
+ 327:../src/configuration_handler.c **** 				case 1:	// basic
+ 328:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_basic_default;
+ 329:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_basic_second;
+ 330:../src/configuration_handler.c **** 					size = sizeof(config_data_basic_t) / 2;
+ 399              		.loc 1 330 0
+ 400 0028 4E25     		movs	r5, #78
+ 329:../src/configuration_handler.c **** 					size = sizeof(config_data_basic_t) / 2;
+ 401              		.loc 1 329 0
+ 402 002a 394F     		ldr	r7, .L57+4
+ 328:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_basic_second;
+ 403              		.loc 1 328 0
+ 404 002c 394E     		ldr	r6, .L57+8
+ 331:../src/configuration_handler.c **** 					break;
+ 405              		.loc 1 331 0
+ 406 002e 0EE0     		b	.L38
+ 407              	.LVL49:
+ 408              	.L41:
+ 332:../src/configuration_handler.c **** 				case 2:	// sources
+ 333:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_wx_sources_default;
+ 334:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_wx_sources_second;
+ 335:../src/configuration_handler.c **** 					size = sizeof(config_data_wx_sources_t) / 2;
+ 409              		.loc 1 335 0
+ 410 0030 0225     		movs	r5, #2
+ 334:../src/configuration_handler.c **** 					size = sizeof(config_data_wx_sources_t) / 2;
+ 411              		.loc 1 334 0
+ 412 0032 394F     		ldr	r7, .L57+12
+ 333:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_wx_sources_second;
+ 413              		.loc 1 333 0
+ 414 0034 394E     		ldr	r6, .L57+16
+ 336:../src/configuration_handler.c **** 					break;
+ 415              		.loc 1 336 0
+ 416 0036 0AE0     		b	.L38
+ 417              	.LVL50:
+ 418              	.L42:
+ 337:../src/configuration_handler.c **** 				case 3:
+ 338:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_umb_default;
+ 339:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_umb_second;
+ 340:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 419              		.loc 1 340 0
+ 420 0038 0725     		movs	r5, #7
+ 339:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 421              		.loc 1 339 0
+ 422 003a 394F     		ldr	r7, .L57+20
+ 338:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_umb_second;
+ 423              		.loc 1 338 0
+ 424 003c 394E     		ldr	r6, .L57+24
+ 341:../src/configuration_handler.c **** 					break;
+ 425              		.loc 1 341 0
+ 426 003e 06E0     		b	.L38
+ 427              	.LVL51:
+ 428              	.L43:
+ 342:../src/configuration_handler.c **** 				case 4:
+ 343:../src/configuration_handler.c **** 					source = (uint16_t *) &config_data_rtu_default;
+ 344:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_rtu_second;
+ 345:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 429              		.loc 1 345 0
+ 430 0040 0725     		movs	r5, #7
+ 344:../src/configuration_handler.c **** 					size = sizeof(config_data_umb_t) / 2;
+ 431              		.loc 1 344 0
+ 432 0042 394F     		ldr	r7, .L57+28
+ 343:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_rtu_second;
+ 433              		.loc 1 343 0
+ 434 0044 394E     		ldr	r6, .L57+32
+ 346:../src/configuration_handler.c **** 					break;
+ 435              		.loc 1 346 0
+ 436 0046 02E0     		b	.L38
+ 437              	.LVL52:
+ 438              	.L52:
+ 325:../src/configuration_handler.c **** 					break;
+ 439              		.loc 1 325 0
+ 440 0048 0625     		movs	r5, #6
+ 441              	.LVL53:
+ 324:../src/configuration_handler.c **** 					size = sizeof(config_data_mode_t) / 2;
+ 442              		.loc 1 324 0
+ 443 004a 394F     		ldr	r7, .L57+36
+ 444              	.LVL54:
+ 323:../src/configuration_handler.c **** 					target = (uint16_t *) &config_data_mode_second;
+ 445              		.loc 1 323 0
+ 446 004c 394E     		ldr	r6, .L57+40
+ 447              	.LVL55:
+ 448              	.L38:
+ 347:../src/configuration_handler.c **** 			}
+ 348:../src/configuration_handler.c **** 
+ 349:../src/configuration_handler.c **** 
+ 350:../src/configuration_handler.c **** 			// enable programming
+ 351:../src/configuration_handler.c **** 			FLASH->CR |= FLASH_CR_PG;
+ 449              		.loc 1 351 0
+ 450 004e 3A4A     		ldr	r2, .L57+44
+ 451 0050 1369     		ldr	r3, [r2, #16]
+ 452 0052 43F00103 		orr	r3, r3, #1
+ 453 0056 1361     		str	r3, [r2, #16]
+ 454              	.LVL56:
+ 352:../src/configuration_handler.c **** 
+ 353:../src/configuration_handler.c **** 			// if so reprogram first section
+ 354:../src/configuration_handler.c **** 			for (i = 0; i < size; i++) {
+ 455              		.loc 1 354 0
+ 456 0058 0024     		movs	r4, #0
+ 457              	.LVL57:
+ 458              	.L44:
+ 459              		.loc 1 354 0 is_stmt 0 discriminator 1
+ 460 005a A846     		mov	r8, r5
+ 461 005c A542     		cmp	r5, r4
+ 462 005e 0CDD     		ble	.L46
+ 355:../src/configuration_handler.c **** 
+ 356:../src/configuration_handler.c **** 				// copy data
+ 357:../src/configuration_handler.c **** 				*(target + i) = *(source + i);
+ 463              		.loc 1 357 0 is_stmt 1
+ 464 0060 36F81430 		ldrh	r3, [r6, r4, lsl #1]
+ 465 0064 9BB2     		uxth	r3, r3
+ 466 0066 27F81430 		strh	r3, [r7, r4, lsl #1]	@ movhi
+ 467              	.L45:
+ 358:../src/configuration_handler.c **** 
+ 359:../src/configuration_handler.c **** 				// wait for flash operation to finish
+ 360:../src/configuration_handler.c **** 				while (1) {
+ 361:../src/configuration_handler.c **** 					// check current status
+ 362:../src/configuration_handler.c **** 					flash_status = FLASH_GetBank1Status();
+ 468              		.loc 1 362 0
+ 469 006a FFF7FEFF 		bl	FLASH_GetBank1Status
+ 470              	.LVL58:
+ 363:../src/configuration_handler.c **** 
+ 364:../src/configuration_handler.c **** 					if (flash_status == FLASH_BUSY) {
+ 471              		.loc 1 364 0
+ 472 006e 0128     		cmp	r0, #1
+ 473 0070 FBD0     		beq	.L45
+ 365:../src/configuration_handler.c **** 						;
+ 366:../src/configuration_handler.c **** 					}
+ 367:../src/configuration_handler.c **** 					else {
+ 368:../src/configuration_handler.c **** 						break;
+ 369:../src/configuration_handler.c **** 					}
+ 370:../src/configuration_handler.c **** 				}
+ 371:../src/configuration_handler.c **** 
+ 372:../src/configuration_handler.c **** 				if (flash_status != FLASH_COMPLETE) {
+ 474              		.loc 1 372 0
+ 475 0072 0428     		cmp	r0, #4
+ 476 0074 01D1     		bne	.L46
+ 354:../src/configuration_handler.c **** 
+ 477              		.loc 1 354 0 discriminator 2
+ 478 0076 0134     		adds	r4, r4, #1
+ 479              	.LVL59:
+ 480 0078 EFE7     		b	.L44
+ 481              	.LVL60:
+ 482              	.L46:
+ 373:../src/configuration_handler.c **** 					break;	// exit from the loop in case of programming error
+ 374:../src/configuration_handler.c **** 				}
+ 375:../src/configuration_handler.c **** 
+ 376:../src/configuration_handler.c **** 			}
+ 377:../src/configuration_handler.c **** 
+ 378:../src/configuration_handler.c **** 			// verify programming
+ 379:../src/configuration_handler.c **** 			comparision_result = memcmp((const void * )target, (const void * )source, size * 2);
+ 483              		.loc 1 379 0
+ 484 007a 4FEA4802 		lsl	r2, r8, #1
+ 485 007e 3146     		mov	r1, r6
+ 486 0080 3846     		mov	r0, r7
+ 487 0082 FFF7FEFF 		bl	memcmp
+ 488              	.LVL61:
+ 380:../src/configuration_handler.c **** 
+ 381:../src/configuration_handler.c **** 			if (comparision_result != 0) {
+ 489              		.loc 1 381 0
+ 490 0086 0028     		cmp	r0, #0
+ 491 0088 3DD1     		bne	.L53
+ 318:../src/configuration_handler.c **** 
+ 492              		.loc 1 318 0 discriminator 2
+ 493 008a 09F10109 		add	r9, r9, #1
+ 494              	.LVL62:
+ 495 008e 4FFA89F9 		sxtb	r9, r9
+ 496              	.LVL63:
+ 497              	.L35:
+ 318:../src/configuration_handler.c **** 
+ 498              		.loc 1 318 0 is_stmt 0 discriminator 1
+ 499 0092 B9F1040F 		cmp	r9, #4
+ 500 0096 0FDC     		bgt	.L36
+ 321:../src/configuration_handler.c **** 				case 0:	// mode
+ 501              		.loc 1 321 0 is_stmt 1
+ 502 0098 B9F1040F 		cmp	r9, #4
+ 503 009c D7D8     		bhi	.L38
+ 504 009e 01A3     		adr	r3, .L39
+ 505 00a0 53F829F0 		ldr	pc, [r3, r9, lsl #2]
+ 506              		.p2align 2
+ 507              	.L39:
+ 508 00a4 49000000 		.word	.L52+1
+ 509 00a8 29000000 		.word	.L40+1
+ 510 00ac 31000000 		.word	.L41+1
+ 511 00b0 39000000 		.word	.L42+1
+ 512 00b4 41000000 		.word	.L43+1
+ 513              	.LVL64:
+ 514              		.p2align 1
+ 515              	.L36:
+ 382:../src/configuration_handler.c **** 				// quit from the
+ 383:../src/configuration_handler.c **** 				out = -1;
+ 384:../src/configuration_handler.c **** 
+ 385:../src/configuration_handler.c **** 				return out;
+ 386:../src/configuration_handler.c **** 			}
+ 387:../src/configuration_handler.c **** 		}
+ 388:../src/configuration_handler.c **** 	}
+ 389:../src/configuration_handler.c **** 
+ 390:../src/configuration_handler.c **** 	// set programming counter. If second region is also screwed the first one will be used as a sourc
+ 391:../src/configuration_handler.c **** 	// if second is OK it will be used instead (if its programming counter has value three or more).
+ 392:../src/configuration_handler.c **** 	*(uint16_t*)&config_data_pgm_cntr_second = 0x0002u;
+ 516              		.loc 1 392 0
+ 517 00b8 204B     		ldr	r3, .L57+48
+ 518 00ba 0222     		movs	r2, #2
+ 519 00bc 1A80     		strh	r2, [r3]	@ movhi
+ 393:../src/configuration_handler.c **** 
+ 394:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 395:../src/configuration_handler.c **** 	// resetting CRC engine
+ 396:../src/configuration_handler.c **** 	CRC_ResetDR();
+ 520              		.loc 1 396 0
+ 521 00be FFF7FEFF 		bl	CRC_ResetDR
+ 522              	.LVL65:
+ 397:../src/configuration_handler.c **** 
+ 398:../src/configuration_handler.c **** 	// calculate CRC checksum of the first block
+ 399:../src/configuration_handler.c **** 	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+ 523              		.loc 1 399 0
+ 524 00c2 4FF4FF71 		mov	r1, #510
+ 525 00c6 1E4B     		ldr	r3, .L57+52
+ 526 00c8 1868     		ldr	r0, [r3]
+ 527 00ca FFF7FEFF 		bl	CRC_CalcBlockCRC
+ 528              	.LVL66:
+ 400:../src/configuration_handler.c **** 
+ 401:../src/configuration_handler.c **** 	// adding finalizing 0x00
+ 402:../src/configuration_handler.c **** 	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+ 529              		.loc 1 402 0
+ 530 00ce 0020     		movs	r0, #0
+ 531 00d0 FFF7FEFF 		bl	CRC_CalcCRC
+ 532              	.LVL67:
+ 403:../src/configuration_handler.c **** #endif
+ 404:../src/configuration_handler.c **** 
+ 405:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 406:../src/configuration_handler.c **** 	// reset CRC engine
+ 407:../src/configuration_handler.c **** 	LL_CRC_ResetCRCCalculationUnit(CRC);
+ 408:../src/configuration_handler.c **** 
+ 409:../src/configuration_handler.c **** 	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
+ 410:../src/configuration_handler.c **** 		// feed the data into CRC engine
+ 411:../src/configuration_handler.c **** 		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+ 412:../src/configuration_handler.c **** 	}
+ 413:../src/configuration_handler.c **** 
+ 414:../src/configuration_handler.c **** 	// placeholder for CRC value itself
+ 415:../src/configuration_handler.c **** 	CRC->DR = 0x00;
+ 416:../src/configuration_handler.c **** 
+ 417:../src/configuration_handler.c **** 	target_crc_value = CRC->DR;
+ 418:../src/configuration_handler.c **** #endif
+ 419:../src/configuration_handler.c **** 
+ 420:../src/configuration_handler.c **** 	// program the CRC value
+ 421:../src/configuration_handler.c **** 	*(uint16_t*)((uint16_t *)config_section_second_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_cr
+ 533              		.loc 1 421 0
+ 534 00d4 0D4B     		ldr	r3, .L57
+ 535 00d6 1B68     		ldr	r3, [r3]
+ 536 00d8 A3F8FC07 		strh	r0, [r3, #2044]	@ movhi
+ 422:../src/configuration_handler.c **** 	*(uint16_t*)((uint16_t *)config_section_second_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((targ
+ 537              		.loc 1 422 0
+ 538 00dc 000C     		lsrs	r0, r0, #16
+ 539              	.LVL68:
+ 540 00de A3F8FE07 		strh	r0, [r3, #2046]	@ movhi
+ 423:../src/configuration_handler.c **** 
+ 424:../src/configuration_handler.c **** 	flash_status = FLASH_GetBank1Status();
+ 541              		.loc 1 424 0
+ 542 00e2 FFF7FEFF 		bl	FLASH_GetBank1Status
+ 543              	.LVL69:
+ 425:../src/configuration_handler.c **** 
+ 426:../src/configuration_handler.c **** 	if (flash_status != FLASH_COMPLETE) {
+ 544              		.loc 1 426 0
+ 545 00e6 0428     		cmp	r0, #4
+ 546 00e8 0BD0     		beq	.L56
+ 427:../src/configuration_handler.c **** 		out = -2;	// exit from the loop in case of programming error
+ 547              		.loc 1 427 0
+ 548 00ea 6FF00104 		mvn	r4, #1
+ 549              	.L50:
+ 550              	.LVL70:
+ 428:../src/configuration_handler.c **** 	}
+ 429:../src/configuration_handler.c **** 
+ 430:../src/configuration_handler.c **** 	// disable programming
+ 431:../src/configuration_handler.c **** 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+ 551              		.loc 1 431 0
+ 552 00ee 124A     		ldr	r2, .L57+44
+ 553 00f0 1369     		ldr	r3, [r2, #16]
+ 554 00f2 23F00103 		bic	r3, r3, #1
+ 555 00f6 1361     		str	r3, [r2, #16]
+ 432:../src/configuration_handler.c **** 
+ 433:../src/configuration_handler.c **** 	// lock the memory back
+ 434:../src/configuration_handler.c **** 	FLASH_Lock();
+ 556              		.loc 1 434 0
+ 557 00f8 FFF7FEFF 		bl	FLASH_Lock
+ 558              	.LVL71:
+ 559              	.L34:
+ 435:../src/configuration_handler.c **** 
+ 436:../src/configuration_handler.c **** 	return out;}
+ 560              		.loc 1 436 0
+ 561 00fc 2046     		mov	r0, r4
+ 562 00fe BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 563              	.LVL72:
+ 564              	.L56:
+ 285:../src/configuration_handler.c **** 
+ 565              		.loc 1 285 0
+ 566 0102 0024     		movs	r4, #0
+ 567 0104 F3E7     		b	.L50
+ 568              	.LVL73:
+ 569              	.L53:
+ 385:../src/configuration_handler.c **** 			}
+ 570              		.loc 1 385 0
+ 571 0106 4FF0FF34 		mov	r4, #-1
+ 572              	.LVL74:
+ 573 010a F7E7     		b	.L34
+ 574              	.L58:
+ 575              		.align	2
+ 576              	.L57:
+ 577 010c 00000000 		.word	.LANCHOR1
+ 578 0110 00000000 		.word	config_data_basic_second
+ 579 0114 00000000 		.word	config_data_basic_default
+ 580 0118 00000000 		.word	config_data_wx_sources_second
+ 581 011c 00000000 		.word	config_data_wx_sources_default
+ 582 0120 00000000 		.word	config_data_umb_second
+ 583 0124 00000000 		.word	config_data_umb_default
+ 584 0128 00000000 		.word	config_data_rtu_second
+ 585 012c 00000000 		.word	config_data_rtu_default
+ 586 0130 00000000 		.word	config_data_mode_second
+ 587 0134 00000000 		.word	config_data_mode_default
+ 588 0138 00200240 		.word	1073881088
+ 589 013c 00000000 		.word	config_data_pgm_cntr_second
+ 590 0140 00000000 		.word	.LANCHOR0
+ 591              		.cfi_endproc
+ 592              	.LFE72:
+ 594              		.section	.text.configuration_handler_load_configuration,"ax",%progbits
+ 595              		.align	1
+ 596              		.global	configuration_handler_load_configuration
+ 597              		.syntax unified
+ 598              		.thumb
+ 599              		.thumb_func
+ 600              		.fpu softvfp
+ 602              	configuration_handler_load_configuration:
+ 603              	.LFB73:
+ 437:../src/configuration_handler.c **** 
+ 438:../src/configuration_handler.c **** void configuration_handler_load_configuration(configuration_handler_region_t region) {
+ 604              		.loc 1 438 0
+ 605              		.cfi_startproc
+ 606              		@ args = 0, pretend = 0, frame = 0
+ 607              		@ frame_needed = 0, uses_anonymous_args = 0
+ 608              		@ link register save eliminated.
+ 609              	.LVL75:
+ 439:../src/configuration_handler.c **** 
+ 440:../src/configuration_handler.c **** 	if (region == REGION_DEFAULT) {
+ 610              		.loc 1 440 0
+ 611 0000 20B1     		cbz	r0, .L63
+ 441:../src/configuration_handler.c **** 		main_config_data_mode = &config_data_mode_default;
+ 442:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_default;
+ 443:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_default;
+ 444:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_default;
+ 445:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_default;
+ 446:../src/configuration_handler.c **** 	}
+ 447:../src/configuration_handler.c **** 	else if (region == REGION_FIRST) {
+ 612              		.loc 1 447 0
+ 613 0002 0128     		cmp	r0, #1
+ 614 0004 12D0     		beq	.L64
+ 448:../src/configuration_handler.c **** 		main_config_data_mode = &config_data_mode_first;
+ 449:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_first;
+ 450:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_first;
+ 451:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_first;
+ 452:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_first;
+ 453:../src/configuration_handler.c **** 	}
+ 454:../src/configuration_handler.c **** 	else if (region == REGION_SECOND) {
+ 615              		.loc 1 454 0
+ 616 0006 0228     		cmp	r0, #2
+ 617 0008 20D0     		beq	.L65
+ 618              	.L59:
+ 455:../src/configuration_handler.c **** 		main_config_data_mode = &config_data_mode_second;
+ 456:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_second;
+ 457:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_second;
+ 458:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_second;
+ 459:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_second;
+ 460:../src/configuration_handler.c **** 	}
+ 461:../src/configuration_handler.c **** 	else {
+ 462:../src/configuration_handler.c **** 		;
+ 463:../src/configuration_handler.c **** 	}
+ 464:../src/configuration_handler.c **** 
+ 465:../src/configuration_handler.c **** }
+ 619              		.loc 1 465 0
+ 620 000a 7047     		bx	lr
+ 621              	.L63:
+ 441:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_default;
+ 622              		.loc 1 441 0
+ 623 000c 174B     		ldr	r3, .L66
+ 624 000e 184A     		ldr	r2, .L66+4
+ 625 0010 1A60     		str	r2, [r3]
+ 442:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_default;
+ 626              		.loc 1 442 0
+ 627 0012 184B     		ldr	r3, .L66+8
+ 628 0014 184A     		ldr	r2, .L66+12
+ 629 0016 1A60     		str	r2, [r3]
+ 443:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_default;
+ 630              		.loc 1 443 0
+ 631 0018 184B     		ldr	r3, .L66+16
+ 632 001a 194A     		ldr	r2, .L66+20
+ 633 001c 1A60     		str	r2, [r3]
+ 444:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_default;
+ 634              		.loc 1 444 0
+ 635 001e 194B     		ldr	r3, .L66+24
+ 636 0020 194A     		ldr	r2, .L66+28
+ 637 0022 1A60     		str	r2, [r3]
+ 445:../src/configuration_handler.c **** 	}
+ 638              		.loc 1 445 0
+ 639 0024 194B     		ldr	r3, .L66+32
+ 640 0026 1A4A     		ldr	r2, .L66+36
+ 641 0028 1A60     		str	r2, [r3]
+ 642 002a 7047     		bx	lr
+ 643              	.L64:
+ 448:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_first;
+ 644              		.loc 1 448 0
+ 645 002c 0F4B     		ldr	r3, .L66
+ 646 002e 194A     		ldr	r2, .L66+40
+ 647 0030 1A60     		str	r2, [r3]
+ 449:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_first;
+ 648              		.loc 1 449 0
+ 649 0032 104B     		ldr	r3, .L66+8
+ 650 0034 184A     		ldr	r2, .L66+44
+ 651 0036 1A60     		str	r2, [r3]
+ 450:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_first;
+ 652              		.loc 1 450 0
+ 653 0038 104B     		ldr	r3, .L66+16
+ 654 003a 184A     		ldr	r2, .L66+48
+ 655 003c 1A60     		str	r2, [r3]
+ 451:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_first;
+ 656              		.loc 1 451 0
+ 657 003e 114B     		ldr	r3, .L66+24
+ 658 0040 174A     		ldr	r2, .L66+52
+ 659 0042 1A60     		str	r2, [r3]
+ 452:../src/configuration_handler.c **** 	}
+ 660              		.loc 1 452 0
+ 661 0044 114B     		ldr	r3, .L66+32
+ 662 0046 174A     		ldr	r2, .L66+56
+ 663 0048 1A60     		str	r2, [r3]
+ 664 004a 7047     		bx	lr
+ 665              	.L65:
+ 455:../src/configuration_handler.c **** 		main_config_data_basic = &config_data_basic_second;
+ 666              		.loc 1 455 0
+ 667 004c 074B     		ldr	r3, .L66
+ 668 004e 164A     		ldr	r2, .L66+60
+ 669 0050 1A60     		str	r2, [r3]
+ 456:../src/configuration_handler.c **** 		main_config_data_wx_sources = &config_data_wx_sources_second;
+ 670              		.loc 1 456 0
+ 671 0052 084B     		ldr	r3, .L66+8
+ 672 0054 154A     		ldr	r2, .L66+64
+ 673 0056 1A60     		str	r2, [r3]
+ 457:../src/configuration_handler.c **** 		main_config_data_umb = &config_data_umb_second;
+ 674              		.loc 1 457 0
+ 675 0058 084B     		ldr	r3, .L66+16
+ 676 005a 154A     		ldr	r2, .L66+68
+ 677 005c 1A60     		str	r2, [r3]
+ 458:../src/configuration_handler.c **** 		main_config_data_rtu = &config_data_rtu_second;
+ 678              		.loc 1 458 0
+ 679 005e 094B     		ldr	r3, .L66+24
+ 680 0060 144A     		ldr	r2, .L66+72
+ 681 0062 1A60     		str	r2, [r3]
+ 459:../src/configuration_handler.c **** 	}
+ 682              		.loc 1 459 0
+ 683 0064 094B     		ldr	r3, .L66+32
+ 684 0066 144A     		ldr	r2, .L66+76
+ 685 0068 1A60     		str	r2, [r3]
+ 686              		.loc 1 465 0
+ 687 006a CEE7     		b	.L59
+ 688              	.L67:
+ 689              		.align	2
+ 690              	.L66:
+ 691 006c 00000000 		.word	main_config_data_mode
+ 692 0070 00000000 		.word	config_data_mode_default
+ 693 0074 00000000 		.word	main_config_data_basic
+ 694 0078 00000000 		.word	config_data_basic_default
+ 695 007c 00000000 		.word	main_config_data_wx_sources
+ 696 0080 00000000 		.word	config_data_wx_sources_default
+ 697 0084 00000000 		.word	main_config_data_umb
+ 698 0088 00000000 		.word	config_data_umb_default
+ 699 008c 00000000 		.word	main_config_data_rtu
+ 700 0090 00000000 		.word	config_data_rtu_default
+ 701 0094 00000000 		.word	config_data_mode_first
+ 702 0098 00000000 		.word	config_data_basic_first
+ 703 009c 00000000 		.word	config_data_wx_sources_first
+ 704 00a0 00000000 		.word	config_data_umb_first
+ 705 00a4 00000000 		.word	config_data_rtu_first
+ 706 00a8 00000000 		.word	config_data_mode_second
+ 707 00ac 00000000 		.word	config_data_basic_second
+ 708 00b0 00000000 		.word	config_data_wx_sources_second
+ 709 00b4 00000000 		.word	config_data_umb_second
+ 710 00b8 00000000 		.word	config_data_rtu_second
+ 711              		.cfi_endproc
+ 712              	.LFE73:
+ 714              		.section	.text.configuration_handler_program,"ax",%progbits
+ 715              		.align	1
+ 716              		.global	configuration_handler_program
+ 717              		.syntax unified
+ 718              		.thumb
+ 719              		.thumb_func
+ 720              		.fpu softvfp
+ 722              	configuration_handler_program:
+ 723              	.LFB74:
+ 466:../src/configuration_handler.c **** 
+ 467:../src/configuration_handler.c **** uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx) {
+ 724              		.loc 1 467 0
+ 725              		.cfi_startproc
+ 726              		@ args = 0, pretend = 0, frame = 0
+ 727              		@ frame_needed = 0, uses_anonymous_args = 0
+ 728              		@ link register save eliminated.
+ 729              	.LVL76:
+ 468:../src/configuration_handler.c **** 	return -1;
+ 469:../src/configuration_handler.c **** }
+ 730              		.loc 1 469 0
+ 731 0000 4FF0FF30 		mov	r0, #-1
+ 732              	.LVL77:
+ 733 0004 7047     		bx	lr
+ 734              		.cfi_endproc
+ 735              	.LFE74:
+ 737              		.section	.text.configuration_get_register,"ax",%progbits
+ 738              		.align	1
+ 739              		.global	configuration_get_register
+ 740              		.syntax unified
+ 741              		.thumb
+ 742              		.thumb_func
+ 743              		.fpu softvfp
+ 745              	configuration_get_register:
+ 746              	.LFB75:
+ 470:../src/configuration_handler.c **** 
+ 471:../src/configuration_handler.c **** uint32_t configuration_get_register(void) {
+ 747              		.loc 1 471 0
+ 748              		.cfi_startproc
+ 749              		@ args = 0, pretend = 0, frame = 0
+ 750              		@ frame_needed = 0, uses_anonymous_args = 0
+ 751              		@ link register save eliminated.
+ 752              	.LVL78:
+ 472:../src/configuration_handler.c **** 
+ 473:../src/configuration_handler.c **** 	uint32_t out = 0;
+ 474:../src/configuration_handler.c **** 
+ 475:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 476:../src/configuration_handler.c **** 	out = BKP->DR3;
+ 753              		.loc 1 476 0
+ 754 0000 014B     		ldr	r3, .L70
+ 755 0002 9889     		ldrh	r0, [r3, #12]
+ 756              	.LVL79:
+ 477:../src/configuration_handler.c **** #endif
+ 478:../src/configuration_handler.c **** 
+ 479:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 480:../src/configuration_handler.c **** 	out = RTC->BKP3R;
+ 481:../src/configuration_handler.c **** 
+ 482:../src/configuration_handler.c **** #endif
+ 483:../src/configuration_handler.c **** 
+ 484:../src/configuration_handler.c **** 	return out;
+ 485:../src/configuration_handler.c **** }
+ 757              		.loc 1 485 0
+ 758 0004 7047     		bx	lr
+ 759              	.L71:
+ 760 0006 00BF     		.align	2
+ 761              	.L70:
+ 762 0008 006C0040 		.word	1073769472
+ 763              		.cfi_endproc
+ 764              	.LFE75:
+ 766              		.section	.text.configuration_set_register,"ax",%progbits
+ 767              		.align	1
+ 768              		.global	configuration_set_register
+ 769              		.syntax unified
+ 770              		.thumb
+ 771              		.thumb_func
+ 772              		.fpu softvfp
+ 774              	configuration_set_register:
+ 775              	.LFB76:
+ 486:../src/configuration_handler.c **** 
+ 487:../src/configuration_handler.c **** void configuration_set_register(uint32_t value) {
+ 776              		.loc 1 487 0
+ 777              		.cfi_startproc
+ 778              		@ args = 0, pretend = 0, frame = 0
+ 779              		@ frame_needed = 0, uses_anonymous_args = 0
+ 780              		@ link register save eliminated.
+ 781              	.LVL80:
+ 488:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 489:../src/configuration_handler.c **** 	BKP->DR3 = value;
+ 782              		.loc 1 489 0
+ 783 0000 80B2     		uxth	r0, r0
+ 784              	.LVL81:
+ 785 0002 014B     		ldr	r3, .L73
+ 786 0004 9881     		strh	r0, [r3, #12]	@ movhi
+ 490:../src/configuration_handler.c **** #endif
+ 491:../src/configuration_handler.c **** 
+ 492:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 493:../src/configuration_handler.c **** 	RTC->BKP3R = value;
+ 494:../src/configuration_handler.c **** 
+ 495:../src/configuration_handler.c **** #endif
+ 496:../src/configuration_handler.c **** }
+ 787              		.loc 1 496 0
+ 788 0006 7047     		bx	lr
+ 789              	.L74:
+ 790              		.align	2
+ 791              	.L73:
+ 792 0008 006C0040 		.word	1073769472
+ 793              		.cfi_endproc
+ 794              	.LFE76:
+ 796              		.section	.text.configuration_set_bits_register,"ax",%progbits
+ 797              		.align	1
+ 798              		.global	configuration_set_bits_register
+ 799              		.syntax unified
+ 800              		.thumb
+ 801              		.thumb_func
+ 802              		.fpu softvfp
+ 804              	configuration_set_bits_register:
+ 805              	.LFB77:
+ 497:../src/configuration_handler.c **** 
+ 498:../src/configuration_handler.c **** void configuration_set_bits_register(uint32_t value) {
+ 806              		.loc 1 498 0
+ 807              		.cfi_startproc
+ 808              		@ args = 0, pretend = 0, frame = 0
+ 809              		@ frame_needed = 0, uses_anonymous_args = 0
+ 810              		@ link register save eliminated.
+ 811              	.LVL82:
+ 499:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 500:../src/configuration_handler.c **** 	BKP->DR3 |= value;
+ 812              		.loc 1 500 0
+ 813 0000 024A     		ldr	r2, .L76
+ 814 0002 9389     		ldrh	r3, [r2, #12]
+ 815 0004 1843     		orrs	r0, r0, r3
+ 816              	.LVL83:
+ 817 0006 80B2     		uxth	r0, r0
+ 818 0008 9081     		strh	r0, [r2, #12]	@ movhi
+ 501:../src/configuration_handler.c **** #endif
+ 502:../src/configuration_handler.c **** 
+ 503:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 504:../src/configuration_handler.c **** 	RTC->BKP3R |= value;
+ 505:../src/configuration_handler.c **** 
+ 506:../src/configuration_handler.c **** #endif
+ 507:../src/configuration_handler.c **** }
+ 819              		.loc 1 507 0
+ 820 000a 7047     		bx	lr
+ 821              	.L77:
+ 822              		.align	2
+ 823              	.L76:
+ 824 000c 006C0040 		.word	1073769472
+ 825              		.cfi_endproc
+ 826              	.LFE77:
+ 828              		.section	.text.configuration_clear_bits_register,"ax",%progbits
+ 829              		.align	1
+ 830              		.global	configuration_clear_bits_register
+ 831              		.syntax unified
+ 832              		.thumb
+ 833              		.thumb_func
+ 834              		.fpu softvfp
+ 836              	configuration_clear_bits_register:
+ 837              	.LFB78:
+ 508:../src/configuration_handler.c **** 
+ 509:../src/configuration_handler.c **** void configuration_clear_bits_register(uint32_t value) {
+ 838              		.loc 1 509 0
+ 839              		.cfi_startproc
+ 840              		@ args = 0, pretend = 0, frame = 0
+ 841              		@ frame_needed = 0, uses_anonymous_args = 0
+ 842              		@ link register save eliminated.
+ 843              	.LVL84:
+ 510:../src/configuration_handler.c **** #ifdef STM32F10X_MD_VL
+ 511:../src/configuration_handler.c **** 	BKP->DR3 &= (0xFFFF ^ value);
+ 844              		.loc 1 511 0
+ 845 0000 024A     		ldr	r2, .L79
+ 846 0002 9389     		ldrh	r3, [r2, #12]
+ 847 0004 23EA0000 		bic	r0, r3, r0
+ 848              	.LVL85:
+ 849 0008 9081     		strh	r0, [r2, #12]	@ movhi
+ 512:../src/configuration_handler.c **** #endif
+ 513:../src/configuration_handler.c **** 
+ 514:../src/configuration_handler.c **** #ifdef STM32L471xx
+ 515:../src/configuration_handler.c **** 	RTC->BKP3R &= (0xFFFFFFFF ^ value);
+ 516:../src/configuration_handler.c **** 
+ 517:../src/configuration_handler.c **** #endif
+ 518:../src/configuration_handler.c **** }
+ 850              		.loc 1 518 0
+ 851 000a 7047     		bx	lr
+ 852              	.L80:
+ 853              		.align	2
+ 854              	.L79:
+ 855 000c 006C0040 		.word	1073769472
+ 856              		.cfi_endproc
+ 857              	.LFE78:
+ 859              		.global	config_section_second_start
+ 860              		.global	config_section_first_start
+ 861              		.section	.data.config_section_first_start,"aw",%progbits
+ 862              		.align	2
+ 863              		.set	.LANCHOR0,. + 0
+ 866              	config_section_first_start:
+ 867 0000 00E80108 		.word	134342656
+ 868              		.section	.data.config_section_second_start,"aw",%progbits
+ 869              		.align	2
+ 870              		.set	.LANCHOR1,. + 0
+ 873              	config_section_second_start:
+ 874 0000 00F00108 		.word	134344704
+ 875              		.text
+ 876              	.Letext0:
+ 877              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 878              		.file 3 "../include/configuration_handler.h"
+ 879              		.file 4 "../include/config_data.h"
+ 880              		.file 5 "../include/config_data_externs.h"
+ 881              		.file 6 "../system/include/aprs/cfifo.h"
+ 882              		.file 7 "../system/include/aprs/afsk.h"
+ 883              		.file 8 "../system/include/aprs/ax25.h"
+ 884              		.file 9 "../system/include/cmsis/core_cm3.h"
+ 885              		.file 10 "../system/include/cmsis/system_stm32f10x.h"
+ 886              		.file 11 "../system/include/cmsis/stm32f10x.h"
+ 887              		.file 12 "../system/include/stm32f1-stdperiph/stm32f10x_flash.h"
+ 888              		.file 13 "../system/include/drivers/serial.h"
+ 889              		.file 14 "../include/main.h"
+ 890              		.file 15 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 891              		.file 16 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 892              		.file 17 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/st
+ 893              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 894              		.file 19 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+ 895              		.file 20 "../system/include/stm32f1-stdperiph/stm32f10x_crc.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 configuration_handler.c
+     /tmp/cccIfZDm.s:16     .text.configuration_handler_check_crc:0000000000000000 $t
+     /tmp/cccIfZDm.s:23     .text.configuration_handler_check_crc:0000000000000000 configuration_handler_check_crc
+     /tmp/cccIfZDm.s:97     .text.configuration_handler_check_crc:000000000000004c $d
+     /tmp/cccIfZDm.s:103    .text.configuration_handler_restore_default_first:0000000000000000 $t
+     /tmp/cccIfZDm.s:110    .text.configuration_handler_restore_default_first:0000000000000000 configuration_handler_restore_default_first
+     /tmp/cccIfZDm.s:263    .text.configuration_handler_restore_default_first:00000000000000a4 $d
+     /tmp/cccIfZDm.s:269    .text.configuration_handler_restore_default_first:00000000000000b8 $t
+     /tmp/cccIfZDm.s:331    .text.configuration_handler_restore_default_first:000000000000010c $d
+     /tmp/cccIfZDm.s:348    .text.configuration_handler_restore_default_second:0000000000000000 $t
+     /tmp/cccIfZDm.s:355    .text.configuration_handler_restore_default_second:0000000000000000 configuration_handler_restore_default_second
+     /tmp/cccIfZDm.s:508    .text.configuration_handler_restore_default_second:00000000000000a4 $d
+     /tmp/cccIfZDm.s:514    .text.configuration_handler_restore_default_second:00000000000000b8 $t
+     /tmp/cccIfZDm.s:577    .text.configuration_handler_restore_default_second:000000000000010c $d
+     /tmp/cccIfZDm.s:595    .text.configuration_handler_load_configuration:0000000000000000 $t
+     /tmp/cccIfZDm.s:602    .text.configuration_handler_load_configuration:0000000000000000 configuration_handler_load_configuration
+     /tmp/cccIfZDm.s:691    .text.configuration_handler_load_configuration:000000000000006c $d
+     /tmp/cccIfZDm.s:715    .text.configuration_handler_program:0000000000000000 $t
+     /tmp/cccIfZDm.s:722    .text.configuration_handler_program:0000000000000000 configuration_handler_program
+     /tmp/cccIfZDm.s:738    .text.configuration_get_register:0000000000000000 $t
+     /tmp/cccIfZDm.s:745    .text.configuration_get_register:0000000000000000 configuration_get_register
+     /tmp/cccIfZDm.s:762    .text.configuration_get_register:0000000000000008 $d
+     /tmp/cccIfZDm.s:767    .text.configuration_set_register:0000000000000000 $t
+     /tmp/cccIfZDm.s:774    .text.configuration_set_register:0000000000000000 configuration_set_register
+     /tmp/cccIfZDm.s:792    .text.configuration_set_register:0000000000000008 $d
+     /tmp/cccIfZDm.s:797    .text.configuration_set_bits_register:0000000000000000 $t
+     /tmp/cccIfZDm.s:804    .text.configuration_set_bits_register:0000000000000000 configuration_set_bits_register
+     /tmp/cccIfZDm.s:824    .text.configuration_set_bits_register:000000000000000c $d
+     /tmp/cccIfZDm.s:829    .text.configuration_clear_bits_register:0000000000000000 $t
+     /tmp/cccIfZDm.s:836    .text.configuration_clear_bits_register:0000000000000000 configuration_clear_bits_register
+     /tmp/cccIfZDm.s:855    .text.configuration_clear_bits_register:000000000000000c $d
+     /tmp/cccIfZDm.s:873    .data.config_section_second_start:0000000000000000 config_section_second_start
+     /tmp/cccIfZDm.s:866    .data.config_section_first_start:0000000000000000 config_section_first_start
+     /tmp/cccIfZDm.s:862    .data.config_section_first_start:0000000000000000 $d
+     /tmp/cccIfZDm.s:869    .data.config_section_second_start:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.core_cm3.h.42.c33bb1302bf53de0580fb6140a46f2eb
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.main.h.8.55d65ee492038dbe94ebf355bcb87510
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+
+UNDEFINED SYMBOLS
+CRC_ResetDR
+CRC_CalcBlockCRC
+CRC_CalcCRC
+FLASH_Unlock
+FLASH_ErasePage
+FLASH_GetBank1Status
+memcmp
+FLASH_Lock
+config_data_basic_first
+config_data_basic_default
+config_data_wx_sources_first
+config_data_wx_sources_default
+config_data_umb_first
+config_data_umb_default
+config_data_rtu_first
+config_data_rtu_default
+config_data_mode_first
+config_data_mode_default
+config_data_pgm_cntr_first
+config_data_basic_second
+config_data_wx_sources_second
+config_data_umb_second
+config_data_rtu_second
+config_data_mode_second
+config_data_pgm_cntr_second
+main_config_data_mode
+main_config_data_basic
+main_config_data_wx_sources
+main_config_data_umb
+main_config_data_rtu

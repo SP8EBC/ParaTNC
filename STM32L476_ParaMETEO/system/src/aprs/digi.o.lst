@@ -1,0 +1,775 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"digi.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.digi_init,"ax",%progbits
+  18              		.align	1
+  19              		.global	digi_init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	digi_init:
+  26              	.LFB352:
+  27              		.file 1 "../system/src/aprs/digi.c"
+   1:../system/src/aprs/digi.c **** /*
+   2:../system/src/aprs/digi.c ****  * digi.c
+   3:../system/src/aprs/digi.c ****  *
+   4:../system/src/aprs/digi.c ****  *  Created on: 28.05.2017
+   5:../system/src/aprs/digi.c ****  *      Author: mateusz
+   6:../system/src/aprs/digi.c ****  */
+   7:../system/src/aprs/digi.c **** 
+   8:../system/src/aprs/digi.c **** #include <string.h>
+   9:../system/src/aprs/digi.c **** 
+  10:../system/src/aprs/digi.c **** #include "aprs/digi.h"
+  11:../system/src/aprs/digi.c **** #include "main.h"
+  12:../system/src/aprs/digi.c **** #include "TimerConfig.h"
+  13:../system/src/aprs/digi.c **** #include "delay.h"
+  14:../system/src/aprs/digi.c **** 
+  15:../system/src/aprs/digi.c **** #include "station_config.h"
+  16:../system/src/aprs/digi.c **** #include "config.h"
+  17:../system/src/aprs/digi.c **** 
+  18:../system/src/aprs/digi.c **** // global variables to store a frame content to be digipeated
+  19:../system/src/aprs/digi.c **** uint8_t digi_msg[CONFIG_AX25_FRAME_BUF_LEN];
+  20:../system/src/aprs/digi.c **** uint16_t digi_msg_len;
+  21:../system/src/aprs/digi.c **** AX25Call digi_path[7];
+  22:../system/src/aprs/digi.c **** uint8_t digi_call_len = 0;
+  23:../system/src/aprs/digi.c **** 
+  24:../system/src/aprs/digi.c **** // digipeater working mode
+  25:../system/src/aprs/digi.c **** digi_mode_t digi_mode;
+  26:../system/src/aprs/digi.c **** 
+  27:../system/src/aprs/digi.c **** uint8_t digi_viscous_delay_sec;
+  28:../system/src/aprs/digi.c **** uint8_t digi_viscous_counter_sec;
+  29:../system/src/aprs/digi.c **** 
+  30:../system/src/aprs/digi.c **** 
+  31:../system/src/aprs/digi.c **** void digi_init(const config_data_mode_t* const config_data_mode) {
+  28              		.loc 1 31 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.LVL0:
+  32:../system/src/aprs/digi.c **** 	digi_viscous_counter_sec = 0;
+  34              		.loc 1 32 0
+  35 0000 0023     		movs	r3, #0
+  36 0002 114A     		ldr	r2, .L9
+  37 0004 1370     		strb	r3, [r2]
+  33:../system/src/aprs/digi.c **** 
+  34:../system/src/aprs/digi.c **** 	digi_msg_len = 0;
+  38              		.loc 1 34 0
+  39 0006 114A     		ldr	r2, .L9+4
+  40 0008 1380     		strh	r3, [r2]	@ movhi
+  35:../system/src/aprs/digi.c **** 
+  36:../system/src/aprs/digi.c **** 	digi_mode = DIGI_OFF;
+  41              		.loc 1 36 0
+  42 000a 114A     		ldr	r2, .L9+8
+  43 000c 1370     		strb	r3, [r2]
+  37:../system/src/aprs/digi.c **** 
+  38:../system/src/aprs/digi.c **** 	if (config_data_mode->digi_viscous == 1) {
+  44              		.loc 1 38 0
+  45 000e 037A     		ldrb	r3, [r0, #8]	@ zero_extendqisi2
+  46 0010 012B     		cmp	r3, #1
+  47 0012 09D0     		beq	.L6
+  39:../system/src/aprs/digi.c **** 
+  40:../system/src/aprs/digi.c **** 		if (config_data_mode->digi_only_ssids == 1) {
+  41:../system/src/aprs/digi.c **** 			digi_mode = DIGI_VISCOUS_SSID_WIDE1;
+  42:../system/src/aprs/digi.c **** 		}
+  43:../system/src/aprs/digi.c **** 		else {
+  44:../system/src/aprs/digi.c **** 			digi_mode = DIGI_VISCOUS_ALL_WIDE1;
+  45:../system/src/aprs/digi.c **** 		}
+  46:../system/src/aprs/digi.c **** 	}
+  47:../system/src/aprs/digi.c **** 	else {
+  48:../system/src/aprs/digi.c **** 		if (config_data_mode->digi_only_ssids == 1) {
+  48              		.loc 1 48 0
+  49 0014 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+  50 0016 012B     		cmp	r3, #1
+  51 0018 11D0     		beq	.L7
+  49:../system/src/aprs/digi.c **** 			digi_mode = DIGI_ON_SSID_WIDE1;
+  50:../system/src/aprs/digi.c **** 		}
+  51:../system/src/aprs/digi.c **** 		else {
+  52:../system/src/aprs/digi.c **** 			digi_mode = DIGI_ON_ALL_WIDE1;
+  52              		.loc 1 52 0
+  53 001a 0D4B     		ldr	r3, .L9+8
+  54 001c 0122     		movs	r2, #1
+  55 001e 1A70     		strb	r2, [r3]
+  56              	.L4:
+  53:../system/src/aprs/digi.c **** 		}
+  54:../system/src/aprs/digi.c **** 	}
+  55:../system/src/aprs/digi.c **** 
+  56:../system/src/aprs/digi.c **** 	digi_viscous_delay_sec = config_data_mode->digi_viscous_delay_sec;
+  57              		.loc 1 56 0
+  58 0020 827A     		ldrb	r2, [r0, #10]	@ zero_extendqisi2
+  59 0022 0C4B     		ldr	r3, .L9+12
+  60 0024 1A70     		strb	r2, [r3]
+  57:../system/src/aprs/digi.c **** 
+  58:../system/src/aprs/digi.c **** //#ifdef _DIGI_VISCOUS
+  59:../system/src/aprs/digi.c **** //
+  60:../system/src/aprs/digi.c **** //	#ifdef _DIGI_ONLY_789
+  61:../system/src/aprs/digi.c **** //		digi_mode = DIGI_VISCOUS_SSID_WIDE1;
+  62:../system/src/aprs/digi.c **** //	#else
+  63:../system/src/aprs/digi.c **** //		digi_mode = DIGI_VISCOUS_ALL_WIDE1;
+  64:../system/src/aprs/digi.c **** //	#endif
+  65:../system/src/aprs/digi.c **** //
+  66:../system/src/aprs/digi.c **** //#else
+  67:../system/src/aprs/digi.c **** //
+  68:../system/src/aprs/digi.c **** //	#ifdef _DIGI_ONLY_789
+  69:../system/src/aprs/digi.c **** //		digi_mode = DIGI_ON_SSID_WIDE1;
+  70:../system/src/aprs/digi.c **** //	#else
+  71:../system/src/aprs/digi.c **** //		digi_mode = DIGI_ON_ALL_WIDE1;
+  72:../system/src/aprs/digi.c **** //	#endif
+  73:../system/src/aprs/digi.c **** //
+  74:../system/src/aprs/digi.c **** //#endif
+  75:../system/src/aprs/digi.c **** 
+  76:../system/src/aprs/digi.c **** //#ifdef _DIGI_VISCOUS_DEALY
+  77:../system/src/aprs/digi.c **** //		digi_viscous_delay_sec =_DIGI_VISCOUS_DEALY;
+  78:../system/src/aprs/digi.c **** //#else
+  79:../system/src/aprs/digi.c **** //		digi_viscous_delay_sec = 3;
+  80:../system/src/aprs/digi.c **** //#endif
+  81:../system/src/aprs/digi.c **** }
+  61              		.loc 1 81 0
+  62 0026 7047     		bx	lr
+  63              	.L6:
+  40:../system/src/aprs/digi.c **** 			digi_mode = DIGI_VISCOUS_SSID_WIDE1;
+  64              		.loc 1 40 0
+  65 0028 437A     		ldrb	r3, [r0, #9]	@ zero_extendqisi2
+  66 002a 012B     		cmp	r3, #1
+  67 002c 03D0     		beq	.L8
+  44:../system/src/aprs/digi.c **** 		}
+  68              		.loc 1 44 0
+  69 002e 084B     		ldr	r3, .L9+8
+  70 0030 0322     		movs	r2, #3
+  71 0032 1A70     		strb	r2, [r3]
+  72 0034 F4E7     		b	.L4
+  73              	.L8:
+  41:../system/src/aprs/digi.c **** 		}
+  74              		.loc 1 41 0
+  75 0036 1346     		mov	r3, r2
+  76 0038 0422     		movs	r2, #4
+  77 003a 1A70     		strb	r2, [r3]
+  78 003c F0E7     		b	.L4
+  79              	.L7:
+  49:../system/src/aprs/digi.c **** 		}
+  80              		.loc 1 49 0
+  81 003e 044B     		ldr	r3, .L9+8
+  82 0040 0222     		movs	r2, #2
+  83 0042 1A70     		strb	r2, [r3]
+  84 0044 ECE7     		b	.L4
+  85              	.L10:
+  86 0046 00BF     		.align	2
+  87              	.L9:
+  88 0048 00000000 		.word	digi_viscous_counter_sec
+  89 004c 00000000 		.word	digi_msg_len
+  90 0050 00000000 		.word	digi_mode
+  91 0054 00000000 		.word	digi_viscous_delay_sec
+  92              		.cfi_endproc
+  93              	.LFE352:
+  95              		.section	.text.digi_process,"ax",%progbits
+  96              		.align	1
+  97              		.global	digi_process
+  98              		.syntax unified
+  99              		.thumb
+ 100              		.thumb_func
+ 101              		.fpu fpv4-sp-d16
+ 103              	digi_process:
+ 104              	.LFB353:
+  82:../system/src/aprs/digi.c **** 
+  83:../system/src/aprs/digi.c **** uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const config, const config_dat
+ 105              		.loc 1 83 0
+ 106              		.cfi_startproc
+ 107              		@ args = 0, pretend = 0, frame = 0
+ 108              		@ frame_needed = 0, uses_anonymous_args = 0
+ 109              		@ link register save eliminated.
+ 110              	.LVL1:
+  84:../system/src/aprs/digi.c **** 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
+  85:../system/src/aprs/digi.c **** 
+  86:../system/src/aprs/digi.c **** #ifdef _DIGI
+  87:../system/src/aprs/digi.c **** 
+  88:../system/src/aprs/digi.c **** 	// check if the received message is not too long for the transmit buffers
+  89:../system/src/aprs/digi.c **** 	if (msg->len >= (CONFIG_AX25_FRAME_BUF_LEN - sizeof(AX25Call) * 7) ) {
+  90:../system/src/aprs/digi.c **** 		return DIGI_PACKET_TOO_LONG;
+  91:../system/src/aprs/digi.c **** 	}
+  92:../system/src/aprs/digi.c **** 
+  93:../system/src/aprs/digi.c **** 	if ((msg->src.ssid < 7 || msg->src.ssid > 9) && (digi_mode == DIGI_ON_SSID_WIDE1 || digi_mode == D
+  94:../system/src/aprs/digi.c **** 		return DIGI_PACKET_DIDNT_DIGIPEATED;
+  95:../system/src/aprs/digi.c **** 	}
+  96:../system/src/aprs/digi.c **** 
+  97:../system/src/aprs/digi.c **** 	if (after_tx_lock == 0) {
+  98:../system/src/aprs/digi.c **** 		// if the packet has any path and there is no packed waiting in viscous delay
+  99:../system/src/aprs/digi.c **** 		if(msg->rpt_cnt >= 1 && digi_msg_len == 0) {
+ 100:../system/src/aprs/digi.c **** 
+ 101:../system/src/aprs/digi.c **** 			// initialize global variables used to store digipeated packet
+ 102:../system/src/aprs/digi.c **** 			memset(digi_path, 0x00, sizeof(AX25Call) * 7);
+ 103:../system/src/aprs/digi.c **** 			memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
+ 104:../system/src/aprs/digi.c **** 
+ 105:../system/src/aprs/digi.c **** //			if (msg->rpt_cnt == 1 && strcmp("WIDE2", msg->rpt_lst[0].call) == 0 && (msg->rpt_lst[0].ssid =
+ 106:../system/src/aprs/digi.c **** //				/* Powtarzanie ścieżki WIDE2-1 i WIDE2-2 */
+ 107:../system/src/aprs/digi.c **** //				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 108:../system/src/aprs/digi.c **** //				digi_path[0].ssid = msg->dst.ssid;
+ 109:../system/src/aprs/digi.c **** //				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 110:../system/src/aprs/digi.c **** //				digi_path[1].ssid = msg->src.ssid;
+ 111:../system/src/aprs/digi.c **** //				sprintf(digi_path[2].call, "%s", "SR8WXO");	// zamiana WIDE2-2 albo WIDE2-1 na znak digi
+ 112:../system/src/aprs/digi.c **** //				digi_path[2].ssid = 0x40;
+ 113:../system/src/aprs/digi.c **** //				sprintf(digi_path[3].call, "%s", "WIDE2");	// dodawanie WIDE2*
+ 114:../system/src/aprs/digi.c **** //				digi_path[3].ssid = 0x40;			/* 0x40 oznacza jedynkę na 6 bicie (przy numeracji od zera). Po 
+ 115:../system/src/aprs/digi.c **** //													   otrzymuje się 0x80 czyli jedynkę na H-bicie */
+ 116:../system/src/aprs/digi.c **** //				digi_q = 1;
+ 117:../system/src/aprs/digi.c **** //				call_len = 4;	// długość ścieżki
+ 118:../system/src/aprs/digi.c **** 
+ 119:../system/src/aprs/digi.c **** //			}
+ 120:../system/src/aprs/digi.c **** 			if (msg->rpt_cnt == 1 && strcmp("WIDE1", msg->rpt_lst[0].call) == 0 && msg->rpt_lst[0].ssid == 1
+ 121:../system/src/aprs/digi.c **** 				/* Powtarzanie ścieżki WIDE1-1 */
+ 122:../system/src/aprs/digi.c **** 				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 123:../system/src/aprs/digi.c **** 				digi_path[0].ssid = msg->dst.ssid;
+ 124:../system/src/aprs/digi.c **** 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 125:../system/src/aprs/digi.c **** 				digi_path[1].ssid = msg->src.ssid;
+ 126:../system/src/aprs/digi.c **** 				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE2-2 albo WIDE2-1 na znak dig
+ 127:../system/src/aprs/digi.c **** 				digi_path[2].ssid = (config->ssid | 0x40);
+ 128:../system/src/aprs/digi.c **** 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE2*
+ 129:../system/src/aprs/digi.c **** 				digi_path[3].ssid = 0x40;			/* 0x40 oznacza jedynkę na 6 bicie (przy numeracji od zera). Po pr
+ 130:../system/src/aprs/digi.c **** 													   otrzymuje się 0x80 czyli jedynkę na H-bicie */
+ 131:../system/src/aprs/digi.c **** 				retval = DIGI_PACKET_DIGIPEATED;
+ 132:../system/src/aprs/digi.c **** 				digi_call_len = 4;	// długość ścieżki
+ 133:../system/src/aprs/digi.c **** 
+ 134:../system/src/aprs/digi.c **** 			}
+ 135:../system/src/aprs/digi.c **** 			else if(msg->rpt_cnt > 1 && strcmp("WIDE1", msg->rpt_lst[0].call) == 0 && strcmp("WIDE2", msg->r
+ 136:../system/src/aprs/digi.c **** 				/* Powtarzanie aliasu WIDE1-1 w sciezce typu WIDE1-1,WIDE2-1     */
+ 137:../system/src/aprs/digi.c **** 				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 138:../system/src/aprs/digi.c **** 				digi_path[0].ssid = msg->dst.ssid;
+ 139:../system/src/aprs/digi.c **** 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 140:../system/src/aprs/digi.c **** 				digi_path[1].ssid = msg->src.ssid;
+ 141:../system/src/aprs/digi.c **** 				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE1-1 na własny znak digi
+ 142:../system/src/aprs/digi.c **** 				digi_path[2].ssid =  (config->ssid | 0x40);
+ 143:../system/src/aprs/digi.c **** 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1* na końcu
+ 144:../system/src/aprs/digi.c **** 				digi_path[3].ssid = 0x40;
+ 145:../system/src/aprs/digi.c **** 				sprintf(digi_path[4].call, "%s", msg->rpt_lst[1].call);	// przepisywanie WIDE2-1
+ 146:../system/src/aprs/digi.c **** 				digi_path[4].ssid = msg->rpt_lst[1].ssid;
+ 147:../system/src/aprs/digi.c **** 				retval = DIGI_PACKET_DIGIPEATED;
+ 148:../system/src/aprs/digi.c **** 				digi_call_len = 5;
+ 149:../system/src/aprs/digi.c **** 			}
+ 150:../system/src/aprs/digi.c **** 			else if(msg->rpt_cnt > 1 && strcmp("WIDE1", msg->rpt_lst[0].call) == 0 && strcmp("WIDE2", msg->r
+ 151:../system/src/aprs/digi.c **** 				/* Powtarzanie aliasu WIDE1-1 w sciezce typu WIDE1-1,WIDE2-2     */
+ 152:../system/src/aprs/digi.c **** 				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 153:../system/src/aprs/digi.c **** 				digi_path[0].ssid = msg->dst.ssid;
+ 154:../system/src/aprs/digi.c **** 				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 155:../system/src/aprs/digi.c **** 				digi_path[1].ssid = msg->src.ssid;
+ 156:../system/src/aprs/digi.c **** 				sprintf(digi_path[2].call, "%s", config->callsign);	// zamiana WIDE1-1 na własny znak digi
+ 157:../system/src/aprs/digi.c **** 				digi_path[2].ssid = (config->ssid | 0x40);
+ 158:../system/src/aprs/digi.c **** 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1* na końcu
+ 159:../system/src/aprs/digi.c **** 				digi_path[3].ssid = 0x40;
+ 160:../system/src/aprs/digi.c **** 				sprintf(digi_path[4].call, "%s", "WIDE2");	// skracanie dalszej czesci do WIDE2-1
+ 161:../system/src/aprs/digi.c **** 				digi_path[4].ssid = 1;
+ 162:../system/src/aprs/digi.c **** 				retval = DIGI_PACKET_DIGIPEATED;
+ 163:../system/src/aprs/digi.c **** 				digi_call_len = 5;
+ 164:../system/src/aprs/digi.c **** 			}
+ 165:../system/src/aprs/digi.c **** //			else if (msg->rpt_cnt >= 2 && strcmp("WIDE2", msg->rpt_lst[1].call) == 0 && msg->rpt_lst[1].ss
+ 166:../system/src/aprs/digi.c **** //				/* Powtarzanie aliasu WIDE2-1 w sciezce WIDE2*,WIDE2-1 */
+ 167:../system/src/aprs/digi.c **** //				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 168:../system/src/aprs/digi.c **** //				digi_path[0].ssid = msg->dst.ssid;
+ 169:../system/src/aprs/digi.c **** //				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 170:../system/src/aprs/digi.c **** //				digi_path[1].ssid = msg->src.ssid;
+ 171:../system/src/aprs/digi.c **** //				sprintf(digi_path[2].call, "%s", msg->rpt_lst[0].call);	// dołączanie znaku poprzedniego di
+ 172:../system/src/aprs/digi.c **** //				digi_path[2].ssid = (msg->rpt_lst[0].ssid | 0x40);
+ 173:../system/src/aprs/digi.c **** //				sprintf(digi_path[3].call, "%s", "SR8WXO");	// zamiana WIDE2-1 na własny znak digi
+ 174:../system/src/aprs/digi.c **** //				digi_path[3].ssid = 0x40;
+ 175:../system/src/aprs/digi.c **** //				sprintf(digi_path[4].call, "%s", "WIDE2");	// dodawanie WIDE2* na końcu
+ 176:../system/src/aprs/digi.c **** //				digi_path[4].ssid = 0x40;
+ 177:../system/src/aprs/digi.c **** //				digi_q = 1;
+ 178:../system/src/aprs/digi.c **** //				call_len = 5;
+ 179:../system/src/aprs/digi.c **** //			}
+ 180:../system/src/aprs/digi.c **** //			else if(msg->rpt_cnt >= 2 && strcmp("WIDE2", msg->rpt_lst[2].call) == 0 && (msg->rpt_lst[2].ss
+ 181:../system/src/aprs/digi.c **** //				/* Powtarzanie aliasu WIDE2-1 oraz WIDE 2-2 w sciezce typu WIDE1*,WIDE2-n     */
+ 182:../system/src/aprs/digi.c **** //				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 183:../system/src/aprs/digi.c **** //				digi_path[0].ssid = msg->dst.ssid;
+ 184:../system/src/aprs/digi.c **** //				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 185:../system/src/aprs/digi.c **** //				digi_path[1].ssid = msg->src.ssid;
+ 186:../system/src/aprs/digi.c **** //				sprintf(digi_path[2].call, "%s", msg->rpt_lst[0].call);	// dołączanie znaku poprzedniego di
+ 187:../system/src/aprs/digi.c **** //				digi_path[2].ssid = (msg->rpt_lst[0].ssid | 0x40);
+ 188:../system/src/aprs/digi.c **** // 				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1 na końcu
+ 189:../system/src/aprs/digi.c **** //				digi_path[3].ssid = 0x40;
+ 190:../system/src/aprs/digi.c **** //				sprintf(digi_path[4].call, "%s", "SR8WXO");		// zamiana WIDE2-1 albo WIDE2-2 na własny znak 
+ 191:../system/src/aprs/digi.c **** //				digi_path[4].ssid = 0x40;
+ 192:../system/src/aprs/digi.c **** //				sprintf(digi_path[5].call, "%s", "WIDE2");	// dodawanie WIDE2* na końcu
+ 193:../system/src/aprs/digi.c **** //				digi_path[5].ssid = 0x40;
+ 194:../system/src/aprs/digi.c **** //				digi_q = 1;
+ 195:../system/src/aprs/digi.c **** //				call_len = 6;
+ 196:../system/src/aprs/digi.c **** //			}
+ 197:../system/src/aprs/digi.c **** //			else if(msg->rpt_cnt >= 4 && strcmp("WIDE2", msg->rpt_lst[3].call) == 0 && (msg->rpt_lst[3].ss
+ 198:../system/src/aprs/digi.c **** //				/* Powtarzanie aliasu WIDE2-1 w sciezce typu WIDE1*,WIDE2*,WIDE2-1     */
+ 199:../system/src/aprs/digi.c **** //				strcpy(digi_path[0].call, msg->dst.call);	// znak docelowy
+ 200:../system/src/aprs/digi.c **** //				digi_path[0].ssid = msg->dst.ssid;
+ 201:../system/src/aprs/digi.c **** //				strcpy(digi_path[1].call, msg->src.call);	// znak zrodlowy
+ 202:../system/src/aprs/digi.c **** //				digi_path[1].ssid = msg->src.ssid;
+ 203:../system/src/aprs/digi.c **** //				sprintf(digi_path[2].call, "%s", msg->rpt_lst[0].call);	// dołączanie znaku poprzedniego di
+ 204:../system/src/aprs/digi.c **** //				digi_path[2].ssid = (msg->rpt_lst[0].ssid | 0x40);
+ 205:../system/src/aprs/digi.c **** //				sprintf(digi_path[3].call, "%s", "WIDE1");	// dodawanie WIDE1
+ 206:../system/src/aprs/digi.c **** //				digi_path[3].ssid = 0x40;
+ 207:../system/src/aprs/digi.c **** //				sprintf(digi_path[4].call, "%s", msg->rpt_lst[2].call);	// dołączanie znaku poprzedniego di
+ 208:../system/src/aprs/digi.c **** //				digi_path[4].ssid = (msg->rpt_lst[2].ssid | 0x40);
+ 209:../system/src/aprs/digi.c **** //				sprintf(digi_path[5].call, "%s", "SR8WXO");		// zamiana WIDE2-1 na własny znak digi
+ 210:../system/src/aprs/digi.c **** //				digi_path[5].ssid = 0x40;
+ 211:../system/src/aprs/digi.c **** //				sprintf(digi_path[6].call, "%s", "WIDE2");	// dodawanie WIDE2* na końcu
+ 212:../system/src/aprs/digi.c **** //				digi_path[6].ssid = 0x40;
+ 213:../system/src/aprs/digi.c **** //				digi_q = 1;
+ 214:../system/src/aprs/digi.c **** //				call_len = 7;
+ 215:../system/src/aprs/digi.c **** //			}
+ 216:../system/src/aprs/digi.c **** 
+ 217:../system/src/aprs/digi.c **** 			if (retval == DIGI_PACKET_DIGIPEATED) {
+ 218:../system/src/aprs/digi.c **** 
+ 219:../system/src/aprs/digi.c **** 				// copying the content
+ 220:../system/src/aprs/digi.c **** 				digi_msg_len = msg->len+1;
+ 221:../system/src/aprs/digi.c **** 				snprintf(digi_msg, msg->len+1, "%s", msg->info);
+ 222:../system/src/aprs/digi.c **** 
+ 223:../system/src/aprs/digi.c **** 				// if Viscous mode is not enabled proceed to transmission immediately
+ 224:../system/src/aprs/digi.c **** 				if (digi_mode == DIGI_ON_SSID_WIDE1 || digi_mode == DIGI_ON_ALL_WIDE1) {
+ 225:../system/src/aprs/digi.c **** 					digi10m++;
+ 226:../system/src/aprs/digi.c **** 
+ 227:../system/src/aprs/digi.c **** 					// delaying retransmission.. well this will block I/O for a while
+ 228:../system/src/aprs/digi.c **** 					// and it could be refactor to ommit that but for now it needs to stay
+ 229:../system/src/aprs/digi.c **** 					// as it is.
+ 230:../system/src/aprs/digi.c **** 					delay_from_preset();
+ 231:../system/src/aprs/digi.c **** 
+ 232:../system/src/aprs/digi.c **** 					while(main_ax25.dcd == true);
+ 233:../system/src/aprs/digi.c **** 					ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);
+ 234:../system/src/aprs/digi.c **** 					after_tx_lock = 1;
+ 235:../system/src/aprs/digi.c **** 					afsk_txStart(&main_afsk);
+ 236:../system/src/aprs/digi.c **** 
+ 237:../system/src/aprs/digi.c **** 					// clear variables when there are not needed
+ 238:../system/src/aprs/digi.c **** 					memset(digi_path, 0x00, sizeof(AX25Call) * 7);
+ 239:../system/src/aprs/digi.c **** 					memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
+ 240:../system/src/aprs/digi.c **** 					digi_msg_len = 0;
+ 241:../system/src/aprs/digi.c **** 
+ 242:../system/src/aprs/digi.c **** 					return retval;
+ 243:../system/src/aprs/digi.c **** 
+ 244:../system/src/aprs/digi.c **** 				} // digi_mode == DIGI_ON_SSID_WIDE1 || digi_mode == DIGI_ON_ALL_WIDE1
+ 245:../system/src/aprs/digi.c **** 			}	// retval == DIGI_PACKET_DIGIPEATED
+ 246:../system/src/aprs/digi.c **** 		} // msg->rpt_cnt >= 1 && digi_msg_len == 0
+ 247:../system/src/aprs/digi.c **** 	}
+ 248:../system/src/aprs/digi.c **** 	else {
+ 249:../system/src/aprs/digi.c **** 		after_tx_lock = 0;
+ 250:../system/src/aprs/digi.c **** 	}
+ 251:../system/src/aprs/digi.c **** #endif
+ 252:../system/src/aprs/digi.c **** 	return retval;
+ 253:../system/src/aprs/digi.c **** }
+ 111              		.loc 1 253 0
+ 112 0000 0020     		movs	r0, #0
+ 113              	.LVL2:
+ 114 0002 7047     		bx	lr
+ 115              		.cfi_endproc
+ 116              	.LFE353:
+ 118              		.section	.text.digi_check_with_viscous,"ax",%progbits
+ 119              		.align	1
+ 120              		.global	digi_check_with_viscous
+ 121              		.syntax unified
+ 122              		.thumb
+ 123              		.thumb_func
+ 124              		.fpu fpv4-sp-d16
+ 126              	digi_check_with_viscous:
+ 127              	.LFB354:
+ 254:../system/src/aprs/digi.c **** 
+ 255:../system/src/aprs/digi.c **** uint8_t digi_check_with_viscous(struct AX25Msg *msg) {
+ 128              		.loc 1 255 0
+ 129              		.cfi_startproc
+ 130              		@ args = 0, pretend = 0, frame = 0
+ 131              		@ frame_needed = 0, uses_anonymous_args = 0
+ 132              	.LVL3:
+ 256:../system/src/aprs/digi.c **** 	uint8_t retval = 0;
+ 257:../system/src/aprs/digi.c **** 
+ 258:../system/src/aprs/digi.c **** 	// if there is a message waiting in buffer for digipeating
+ 259:../system/src/aprs/digi.c **** 	if (digi_msg_len > 0) {
+ 133              		.loc 1 259 0
+ 134 0000 134B     		ldr	r3, .L20
+ 135 0002 1B88     		ldrh	r3, [r3]
+ 136 0004 0BB9     		cbnz	r3, .L18
+ 260:../system/src/aprs/digi.c **** 		// check the source call
+ 261:../system/src/aprs/digi.c **** 		if (strncmp(msg->src.call, digi_path[1].call, 6) == 0)  {
+ 262:../system/src/aprs/digi.c **** 			// if the source call is the same check the SSID
+ 263:../system/src/aprs/digi.c **** 			if (msg->src.ssid == digi_path[1].ssid) {
+ 264:../system/src/aprs/digi.c **** 				// this is a message from the same station check the message content
+ 265:../system/src/aprs/digi.c **** 				if (memcmp(msg->info, digi_msg, msg->len) == 0) {
+ 266:../system/src/aprs/digi.c **** 					// if the message content is the same it means that current buffer content shall be discarded
+ 267:../system/src/aprs/digi.c **** 					// and frame shall not be retransmited
+ 268:../system/src/aprs/digi.c **** 					digi_msg_len = 0;
+ 269:../system/src/aprs/digi.c **** 					memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
+ 270:../system/src/aprs/digi.c **** 
+ 271:../system/src/aprs/digi.c **** 					// increase viscous drop counter
+ 272:../system/src/aprs/digi.c **** 					digidrop10m++;
+ 273:../system/src/aprs/digi.c **** 				}
+ 274:../system/src/aprs/digi.c **** 			}
+ 275:../system/src/aprs/digi.c **** 		}
+ 276:../system/src/aprs/digi.c **** 	}
+ 277:../system/src/aprs/digi.c **** 
+ 278:../system/src/aprs/digi.c **** 	return retval;
+ 279:../system/src/aprs/digi.c **** }
+ 137              		.loc 1 279 0
+ 138 0006 0020     		movs	r0, #0
+ 139              	.LVL4:
+ 140 0008 7047     		bx	lr
+ 141              	.LVL5:
+ 142              	.L18:
+ 255:../system/src/aprs/digi.c **** 	uint8_t retval = 0;
+ 143              		.loc 1 255 0
+ 144 000a 10B5     		push	{r4, lr}
+ 145              		.cfi_def_cfa_offset 8
+ 146              		.cfi_offset 4, -8
+ 147              		.cfi_offset 14, -4
+ 148 000c 0446     		mov	r4, r0
+ 261:../system/src/aprs/digi.c **** 			// if the source call is the same check the SSID
+ 149              		.loc 1 261 0
+ 150 000e 0622     		movs	r2, #6
+ 151 0010 1049     		ldr	r1, .L20+4
+ 152 0012 FFF7FEFF 		bl	strncmp
+ 153              	.LVL6:
+ 154 0016 20B9     		cbnz	r0, .L13
+ 263:../system/src/aprs/digi.c **** 				// this is a message from the same station check the message content
+ 155              		.loc 1 263 0
+ 156 0018 A279     		ldrb	r2, [r4, #6]	@ zero_extendqisi2
+ 157 001a 0F4B     		ldr	r3, .L20+8
+ 158 001c 5B7B     		ldrb	r3, [r3, #13]	@ zero_extendqisi2
+ 159 001e 9A42     		cmp	r2, r3
+ 160 0020 01D0     		beq	.L19
+ 161              	.L13:
+ 162              		.loc 1 279 0
+ 163 0022 0020     		movs	r0, #0
+ 164 0024 10BD     		pop	{r4, pc}
+ 165              	.LVL7:
+ 166              	.L19:
+ 265:../system/src/aprs/digi.c **** 					// if the message content is the same it means that current buffer content shall be discarded
+ 167              		.loc 1 265 0
+ 168 0026 B4F85020 		ldrh	r2, [r4, #80]
+ 169 002a 0C49     		ldr	r1, .L20+12
+ 170 002c E06C     		ldr	r0, [r4, #76]
+ 171 002e FFF7FEFF 		bl	memcmp
+ 172              	.LVL8:
+ 173 0032 0028     		cmp	r0, #0
+ 174 0034 F5D1     		bne	.L13
+ 268:../system/src/aprs/digi.c **** 					memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
+ 175              		.loc 1 268 0
+ 176 0036 0021     		movs	r1, #0
+ 177 0038 054B     		ldr	r3, .L20
+ 178 003a 1980     		strh	r1, [r3]	@ movhi
+ 269:../system/src/aprs/digi.c **** 
+ 179              		.loc 1 269 0
+ 180 003c 4FF40072 		mov	r2, #512
+ 181 0040 0648     		ldr	r0, .L20+12
+ 182 0042 FFF7FEFF 		bl	memset
+ 183              	.LVL9:
+ 272:../system/src/aprs/digi.c **** 				}
+ 184              		.loc 1 272 0
+ 185 0046 064A     		ldr	r2, .L20+16
+ 186 0048 1388     		ldrh	r3, [r2]
+ 187 004a 0133     		adds	r3, r3, #1
+ 188 004c 1380     		strh	r3, [r2]	@ movhi
+ 189 004e E8E7     		b	.L13
+ 190              	.L21:
+ 191              		.align	2
+ 192              	.L20:
+ 193 0050 00000000 		.word	digi_msg_len
+ 194 0054 07000000 		.word	digi_path+7
+ 195 0058 00000000 		.word	digi_path
+ 196 005c 00000000 		.word	digi_msg
+ 197 0060 00000000 		.word	digidrop10m
+ 198              		.cfi_endproc
+ 199              	.LFE354:
+ 201              		.section	.text.digi_pool_viscous,"ax",%progbits
+ 202              		.align	1
+ 203              		.global	digi_pool_viscous
+ 204              		.syntax unified
+ 205              		.thumb
+ 206              		.thumb_func
+ 207              		.fpu fpv4-sp-d16
+ 209              	digi_pool_viscous:
+ 210              	.LFB355:
+ 280:../system/src/aprs/digi.c **** 
+ 281:../system/src/aprs/digi.c **** uint8_t digi_pool_viscous(void) {
+ 211              		.loc 1 281 0
+ 212              		.cfi_startproc
+ 213              		@ args = 0, pretend = 0, frame = 0
+ 214              		@ frame_needed = 0, uses_anonymous_args = 0
+ 215              	.LVL10:
+ 282:../system/src/aprs/digi.c **** 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
+ 283:../system/src/aprs/digi.c **** 
+ 284:../system/src/aprs/digi.c **** 	// proceed only if Viscous mode is enabled
+ 285:../system/src/aprs/digi.c **** 	if (digi_mode == DIGI_VISCOUS_ALL_WIDE1 || digi_mode == DIGI_VISCOUS_SSID_WIDE1) {
+ 216              		.loc 1 285 0
+ 217 0000 244B     		ldr	r3, .L32
+ 218 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 219 0004 033B     		subs	r3, r3, #3
+ 220 0006 DBB2     		uxtb	r3, r3
+ 221 0008 012B     		cmp	r3, #1
+ 222 000a 01D9     		bls	.L31
+ 282:../system/src/aprs/digi.c **** 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
+ 223              		.loc 1 282 0
+ 224 000c 0020     		movs	r0, #0
+ 225 000e 7047     		bx	lr
+ 226              	.L31:
+ 286:../system/src/aprs/digi.c **** 
+ 287:../system/src/aprs/digi.c **** 		// if there is any message waiting in viscous delay
+ 288:../system/src/aprs/digi.c **** 		if (digi_msg_len > 0) {
+ 227              		.loc 1 288 0
+ 228 0010 214B     		ldr	r3, .L32+4
+ 229 0012 1988     		ldrh	r1, [r3]
+ 230 0014 0029     		cmp	r1, #0
+ 231 0016 36D0     		beq	.L24
+ 289:../system/src/aprs/digi.c **** 			digi_viscous_counter_sec++;
+ 232              		.loc 1 289 0
+ 233 0018 204A     		ldr	r2, .L32+8
+ 234 001a 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 235 001c 0133     		adds	r3, r3, #1
+ 236 001e DBB2     		uxtb	r3, r3
+ 237 0020 1370     		strb	r3, [r2]
+ 290:../system/src/aprs/digi.c **** 
+ 291:../system/src/aprs/digi.c **** 			// if the counter reach the delay limit and packet still waits
+ 292:../system/src/aprs/digi.c **** 			// so it hasn't been cleared by 'digi_check_with_viscous'
+ 293:../system/src/aprs/digi.c **** 			if (digi_viscous_counter_sec >= digi_viscous_delay_sec) {
+ 238              		.loc 1 293 0
+ 239 0022 1F4A     		ldr	r2, .L32+12
+ 240 0024 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 241 0026 9342     		cmp	r3, r2
+ 242 0028 31D3     		bcc	.L27
+ 281:../system/src/aprs/digi.c **** 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
+ 243              		.loc 1 281 0
+ 244 002a 70B5     		push	{r4, r5, r6, lr}
+ 245              		.cfi_def_cfa_offset 16
+ 246              		.cfi_offset 4, -16
+ 247              		.cfi_offset 5, -12
+ 248              		.cfi_offset 6, -8
+ 249              		.cfi_offset 14, -4
+ 250 002c 82B0     		sub	sp, sp, #8
+ 251              		.cfi_def_cfa_offset 24
+ 252              	.L25:
+ 294:../system/src/aprs/digi.c **** 
+ 295:../system/src/aprs/digi.c **** 				// wait when radio channel will became avaliable
+ 296:../system/src/aprs/digi.c **** 				while(main_ax25.dcd == true);
+ 253              		.loc 1 296 0 discriminator 1
+ 254 002e 1D4B     		ldr	r3, .L32+16
+ 255 0030 93F81432 		ldrb	r3, [r3, #532]	@ zero_extendqisi2
+ 256 0034 002B     		cmp	r3, #0
+ 257 0036 FAD1     		bne	.L25
+ 297:../system/src/aprs/digi.c **** 
+ 298:../system/src/aprs/digi.c **** 				// put message vaiting in viscous dealy into AX25 buffer in correct, encoded form
+ 299:../system/src/aprs/digi.c **** 				ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);
+ 258              		.loc 1 299 0
+ 259 0038 1B4D     		ldr	r5, .L32+20
+ 260 003a 1C4B     		ldr	r3, .L32+24
+ 261 003c 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 262 003e 1C4E     		ldr	r6, .L32+28
+ 263 0040 0139     		subs	r1, r1, #1
+ 264 0042 89B2     		uxth	r1, r1
+ 265 0044 0091     		str	r1, [sp]
+ 266 0046 2B46     		mov	r3, r5
+ 267 0048 3146     		mov	r1, r6
+ 268 004a 1648     		ldr	r0, .L32+16
+ 269 004c FFF7FEFF 		bl	ax25_sendVia
+ 270              	.LVL11:
+ 300:../system/src/aprs/digi.c **** 				after_tx_lock = 1;
+ 271              		.loc 1 300 0
+ 272 0050 0124     		movs	r4, #1
+ 273 0052 184B     		ldr	r3, .L32+32
+ 274 0054 1C70     		strb	r4, [r3]
+ 301:../system/src/aprs/digi.c **** 
+ 302:../system/src/aprs/digi.c **** 				// start transmission (non blicking call)
+ 303:../system/src/aprs/digi.c **** 				afsk_txStart(&main_afsk);
+ 275              		.loc 1 303 0
+ 276 0056 1848     		ldr	r0, .L32+36
+ 277 0058 FFF7FEFF 		bl	afsk_txStart
+ 278              	.LVL12:
+ 304:../system/src/aprs/digi.c **** 
+ 305:../system/src/aprs/digi.c **** 				// clear variables when there are not needed
+ 306:../system/src/aprs/digi.c **** 				memset(digi_path, 0x00, sizeof(AX25Call) * 7);
+ 279              		.loc 1 306 0
+ 280 005c 3122     		movs	r2, #49
+ 281 005e 0021     		movs	r1, #0
+ 282 0060 3046     		mov	r0, r6
+ 283 0062 FFF7FEFF 		bl	memset
+ 284              	.LVL13:
+ 307:../system/src/aprs/digi.c **** 				memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
+ 285              		.loc 1 307 0
+ 286 0066 4FF40072 		mov	r2, #512
+ 287 006a 0021     		movs	r1, #0
+ 288 006c 2846     		mov	r0, r5
+ 289 006e FFF7FEFF 		bl	memset
+ 290              	.LVL14:
+ 308:../system/src/aprs/digi.c **** 				digi_msg_len = 0;
+ 291              		.loc 1 308 0
+ 292 0072 094B     		ldr	r3, .L32+4
+ 293 0074 0022     		movs	r2, #0
+ 294 0076 1A80     		strh	r2, [r3]	@ movhi
+ 309:../system/src/aprs/digi.c **** 
+ 310:../system/src/aprs/digi.c **** 				digi10m++;
+ 295              		.loc 1 310 0
+ 296 0078 104A     		ldr	r2, .L32+40
+ 297 007a 1388     		ldrh	r3, [r2]
+ 298 007c 2344     		add	r3, r3, r4
+ 299 007e 1380     		strh	r3, [r2]	@ movhi
+ 300              	.LVL15:
+ 311:../system/src/aprs/digi.c **** 
+ 312:../system/src/aprs/digi.c **** 				retval = DIGI_PACKET_DIGIPEATED;
+ 301              		.loc 1 312 0
+ 302 0080 2046     		mov	r0, r4
+ 303              	.LVL16:
+ 313:../system/src/aprs/digi.c **** 			}
+ 314:../system/src/aprs/digi.c **** 
+ 315:../system/src/aprs/digi.c **** 		}
+ 316:../system/src/aprs/digi.c **** 		else {
+ 317:../system/src/aprs/digi.c **** 			// if there isn't only zero the counter and do nothing
+ 318:../system/src/aprs/digi.c **** 			digi_viscous_counter_sec = 0;
+ 319:../system/src/aprs/digi.c **** 		}
+ 320:../system/src/aprs/digi.c **** 
+ 321:../system/src/aprs/digi.c **** 	}
+ 322:../system/src/aprs/digi.c **** 
+ 323:../system/src/aprs/digi.c **** 	return retval;
+ 324:../system/src/aprs/digi.c **** }
+ 304              		.loc 1 324 0
+ 305 0082 02B0     		add	sp, sp, #8
+ 306              		.cfi_def_cfa_offset 16
+ 307              		@ sp needed
+ 308 0084 70BD     		pop	{r4, r5, r6, pc}
+ 309              	.LVL17:
+ 310              	.L24:
+ 311              		.cfi_def_cfa_offset 0
+ 312              		.cfi_restore 4
+ 313              		.cfi_restore 5
+ 314              		.cfi_restore 6
+ 315              		.cfi_restore 14
+ 318:../system/src/aprs/digi.c **** 		}
+ 316              		.loc 1 318 0
+ 317 0086 0020     		movs	r0, #0
+ 318 0088 044B     		ldr	r3, .L32+8
+ 319 008a 1870     		strb	r0, [r3]
+ 320 008c 7047     		bx	lr
+ 321              	.L27:
+ 282:../system/src/aprs/digi.c **** 
+ 322              		.loc 1 282 0
+ 323 008e 0020     		movs	r0, #0
+ 324              	.LVL18:
+ 325              		.loc 1 324 0
+ 326 0090 7047     		bx	lr
+ 327              	.L33:
+ 328 0092 00BF     		.align	2
+ 329              	.L32:
+ 330 0094 00000000 		.word	digi_mode
+ 331 0098 00000000 		.word	digi_msg_len
+ 332 009c 00000000 		.word	digi_viscous_counter_sec
+ 333 00a0 00000000 		.word	digi_viscous_delay_sec
+ 334 00a4 00000000 		.word	main_ax25
+ 335 00a8 00000000 		.word	digi_msg
+ 336 00ac 00000000 		.word	.LANCHOR0
+ 337 00b0 00000000 		.word	digi_path
+ 338 00b4 00000000 		.word	after_tx_lock
+ 339 00b8 00000000 		.word	main_afsk
+ 340 00bc 00000000 		.word	digi10m
+ 341              		.cfi_endproc
+ 342              	.LFE355:
+ 344              		.comm	digi_viscous_counter_sec,1,1
+ 345              		.comm	digi_viscous_delay_sec,1,1
+ 346              		.comm	digi_mode,1,1
+ 347              		.global	digi_call_len
+ 348              		.comm	digi_path,49,4
+ 349              		.comm	digi_msg_len,2,2
+ 350              		.comm	digi_msg,512,4
+ 351              		.section	.bss.digi_call_len,"aw",%nobits
+ 352              		.set	.LANCHOR0,. + 0
+ 355              	digi_call_len:
+ 356 0000 00       		.space	1
+ 357              		.text
+ 358              	.Letext0:
+ 359              		.file 2 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/lock.h"
+ 360              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/_types.h"
+ 361              		.file 4 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 362              		.file 5 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/sys/reent.h"
+ 363              		.file 6 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 364              		.file 7 "../system/include/aprs/cfifo.h"
+ 365              		.file 8 "../system/include/aprs/afsk.h"
+ 366              		.file 9 "../system/include/aprs/ax25.h"
+ 367              		.file 10 "../include/config_data.h"
+ 368              		.file 11 "../system/include/aprs/digi.h"
+ 369              		.file 12 "../system/include/cmsis/stm32l4xx/core_cm4.h"
+ 370              		.file 13 "../system/include/cmsis/stm32l4xx/device/system_stm32l4xx.h"
+ 371              		.file 14 "../system/include/cmsis/stm32l4xx/device/stm32l471xx.h"
+ 372              		.file 15 "../system/include/drivers/serial.h"
+ 373              		.file 16 "../include/main.h"
+ 374              		.file 17 "../include/delay.h"
+ 375              		.file 18 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/arm-none-eabi/include/string.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 digi.c
+     /tmp/ccPtnDTQ.s:18     .text.digi_init:0000000000000000 $t
+     /tmp/ccPtnDTQ.s:25     .text.digi_init:0000000000000000 digi_init
+     /tmp/ccPtnDTQ.s:88     .text.digi_init:0000000000000048 $d
+                            *COM*:0000000000000001 digi_viscous_counter_sec
+                            *COM*:0000000000000002 digi_msg_len
+                            *COM*:0000000000000001 digi_mode
+                            *COM*:0000000000000001 digi_viscous_delay_sec
+     /tmp/ccPtnDTQ.s:96     .text.digi_process:0000000000000000 $t
+     /tmp/ccPtnDTQ.s:103    .text.digi_process:0000000000000000 digi_process
+     /tmp/ccPtnDTQ.s:119    .text.digi_check_with_viscous:0000000000000000 $t
+     /tmp/ccPtnDTQ.s:126    .text.digi_check_with_viscous:0000000000000000 digi_check_with_viscous
+     /tmp/ccPtnDTQ.s:193    .text.digi_check_with_viscous:0000000000000050 $d
+                            *COM*:0000000000000031 digi_path
+                            *COM*:0000000000000200 digi_msg
+     /tmp/ccPtnDTQ.s:202    .text.digi_pool_viscous:0000000000000000 $t
+     /tmp/ccPtnDTQ.s:209    .text.digi_pool_viscous:0000000000000000 digi_pool_viscous
+     /tmp/ccPtnDTQ.s:330    .text.digi_pool_viscous:0000000000000094 $d
+     /tmp/ccPtnDTQ.s:355    .bss.digi_call_len:0000000000000000 digi_call_len
+     /tmp/ccPtnDTQ.s:356    .bss.digi_call_len:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4._newlib_version.h.4.875b979a44719054cd750d0952ad3fd6
+                           .group:0000000000000000 wm4.newlib.h.18.5e5ca3429233af402d406a202f1fc1ac
+                           .group:0000000000000000 wm4.ieeefp.h.77.220d9cccac42cd58761758bee2df4ce6
+                           .group:0000000000000000 wm4.features.h.22.fad1cec3bc7ff06488171438dbdcfd02
+                           .group:0000000000000000 wm4.config.h.220.6cac6a9685cfce5e83c17784171638d9
+                           .group:0000000000000000 wm4._ansi.h.31.de524f58584151836e90d8620a16f8e8
+                           .group:0000000000000000 wm4.stddef.h.39.a38874c8f8a57e66301090908ec2a69f
+                           .group:0000000000000000 wm4._default_types.h.6.959254cf5f09734ea7516c89e8bb21bd
+                           .group:0000000000000000 wm4.lock.h.2.1461d1fff82dffe8bfddc23307f6484f
+                           .group:0000000000000000 wm4._types.h.125.5cf8a495f1f7ef36777ad868a1e32068
+                           .group:0000000000000000 wm4.stddef.h.161.5349cb105733e8777bfb0cf53c4e3f34
+                           .group:0000000000000000 wm4._types.h.184.03611d4f6b5bec9997bcf4279eceba07
+                           .group:0000000000000000 wm4.reent.h.17.90c2574d4acdcfce933db5cb09ff35fe
+                           .group:0000000000000000 wm4.cdefs.h.47.0bcdf94cb40e176393dd1404056825b4
+                           .group:0000000000000000 wm4.string.h.15.dab3980bf35408a4c507182805e2de3a
+                           .group:0000000000000000 wm4.stddef.h.161.19e15733342b50ead2919490b095303e
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.macros.h.2.7a7a5ac48d4160b7481c806e80b68442
+                           .group:0000000000000000 wm4.config.h.2.f5e96167cb26b0ce97c5e7513a95bc8b
+                           .group:0000000000000000 wm4.afsk.h.17.cf8f922069680e152e1eddb76cd4cc82
+                           .group:0000000000000000 wm4.ax25.h.18.077e42a4af9016476e34900472a8fe18
+                           .group:0000000000000000 wm4.config_data.h.9.cbb5077079a900a357fa92ca07074f04
+                           .group:0000000000000000 wm4.digi.h.14.769ea2ae98162dd36806ccf4982c3c8a
+                           .group:0000000000000000 wm4.stm32l4xx.h.39.54a1fe1e096c7852edd649652f013a11
+                           .group:0000000000000000 wm4.stm32l471xx.h.35.e78ad65c513105dda311dc495ac74d04
+                           .group:0000000000000000 wm4.cmsis_version.h.32.46e8eccfa2cfeaae11d008bb2823a3ed
+                           .group:0000000000000000 wm4.core_cm4.h.66.e4ff136c4a17abc46741866f64f8e729
+                           .group:0000000000000000 wm4.cmsis_gcc.h.26.78077cef1206e937f7b56043ffca496a
+                           .group:0000000000000000 wm4.core_cm4.h.174.fcddd62df80231752fa39eb9b61dadfe
+                           .group:0000000000000000 wm4.mpu_armv7.h.32.4049752bb5792d4e15357775e9506cfc
+                           .group:0000000000000000 wm4.stm32l471xx.h.423.ceac761476affad641a3347d7727acfd
+                           .group:0000000000000000 wm4.stm32l4xx.h.197.fb1c68184133668ca24c44c29ba4361f
+                           .group:0000000000000000 wm4.stm32l4xx_ll_usart.h.22.ec2beebcd146668c5b35749264d7b58a
+                           .group:0000000000000000 wm4.serial.h.14.12640f911db3fed3671ed7e729a57e3f
+                           .group:0000000000000000 wm4.main.h.8.bc9cddc046c84d80bc9382d177e590b0
+                           .group:0000000000000000 wm4.station_config.h.9.dccf6b17ee2bf87c63fe0b152d34825f
+
+UNDEFINED SYMBOLS
+strncmp
+memcmp
+memset
+digidrop10m
+ax25_sendVia
+afsk_txStart
+main_ax25
+after_tx_lock
+main_afsk
+digi10m

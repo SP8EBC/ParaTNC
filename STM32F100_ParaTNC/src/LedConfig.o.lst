@@ -1,0 +1,417 @@
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"LedConfig.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.led_init,"ax",%progbits
+  16              		.align	1
+  17              		.global	led_init
+  18              		.syntax unified
+  19              		.thumb
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	led_init:
+  24              	.LFB69:
+  25              		.file 1 "../src/LedConfig.c"
+   1:../src/LedConfig.c **** /*
+   2:../src/LedConfig.c ****  * LedConfig.c
+   3:../src/LedConfig.c ****  *
+   4:../src/LedConfig.c ****  *  Created on: 05.07.2017
+   5:../src/LedConfig.c ****  *      Author: mateusz
+   6:../src/LedConfig.c ****  */
+   7:../src/LedConfig.c **** 
+   8:../src/LedConfig.c **** #include "LedConfig.h"
+   9:../src/LedConfig.c **** #include "station_config_target_hw.h"
+  10:../src/LedConfig.c **** 
+  11:../src/LedConfig.c **** #ifdef STM32F10X_MD_VL
+  12:../src/LedConfig.c **** #include <stm32f10x_gpio.h>
+  13:../src/LedConfig.c **** #endif
+  14:../src/LedConfig.c **** #ifdef STM32L471xx
+  15:../src/LedConfig.c **** #include <stm32l4xx.h>
+  16:../src/LedConfig.c **** #include <stm32l4xx_ll_gpio.h>
+  17:../src/LedConfig.c **** #endif
+  18:../src/LedConfig.c **** // PC8 - LED1 - upper
+  19:../src/LedConfig.c **** // PC9 - LED2 - lower
+  20:../src/LedConfig.c **** 
+  21:../src/LedConfig.c **** uint8_t led_blinking_led2;
+  22:../src/LedConfig.c **** uint8_t led_blinking_led1;
+  23:../src/LedConfig.c **** 
+  24:../src/LedConfig.c **** void led_init(void) {
+  26              		.loc 1 24 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 30B5     		push	{r4, r5, lr}
+  31              		.cfi_def_cfa_offset 12
+  32              		.cfi_offset 4, -12
+  33              		.cfi_offset 5, -8
+  34              		.cfi_offset 14, -4
+  35 0002 83B0     		sub	sp, sp, #12
+  36              		.cfi_def_cfa_offset 24
+  25:../src/LedConfig.c **** #ifdef STM32F10X_MD_VL
+  26:../src/LedConfig.c **** 	GPIO_InitTypeDef GPIO_InitStructure;
+  27:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+  37              		.loc 1 27 0
+  38 0004 4FF40073 		mov	r3, #512
+  39 0008 ADF80430 		strh	r3, [sp, #4]	@ movhi
+  28:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  40              		.loc 1 28 0
+  41 000c 0325     		movs	r5, #3
+  42 000e 8DF80650 		strb	r5, [sp, #6]
+  29:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  43              		.loc 1 29 0
+  44 0012 1023     		movs	r3, #16
+  45 0014 8DF80730 		strb	r3, [sp, #7]
+  30:../src/LedConfig.c **** 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+  46              		.loc 1 30 0
+  47 0018 104C     		ldr	r4, .L3
+  48 001a 01A9     		add	r1, sp, #4
+  49 001c 2046     		mov	r0, r4
+  50 001e FFF7FEFF 		bl	GPIO_Init
+  51              	.LVL0:
+  31:../src/LedConfig.c **** 
+  32:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+  52              		.loc 1 32 0
+  53 0022 4FF48073 		mov	r3, #256
+  54 0026 ADF80430 		strh	r3, [sp, #4]	@ movhi
+  33:../src/LedConfig.c **** 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+  55              		.loc 1 33 0
+  56 002a 01A9     		add	r1, sp, #4
+  57 002c 2046     		mov	r0, r4
+  58 002e FFF7FEFF 		bl	GPIO_Init
+  59              	.LVL1:
+  34:../src/LedConfig.c **** 
+  35:../src/LedConfig.c **** 	GPIO_SetBits(GPIOC, GPIO_Pin_9 | GPIO_Pin_8);
+  60              		.loc 1 35 0
+  61 0032 4FF44071 		mov	r1, #768
+  62 0036 2046     		mov	r0, r4
+  63 0038 FFF7FEFF 		bl	GPIO_SetBits
+  64              	.LVL2:
+  36:../src/LedConfig.c **** 
+  37:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+  65              		.loc 1 37 0
+  66 003c 0123     		movs	r3, #1
+  67 003e ADF80430 		strh	r3, [sp, #4]	@ movhi
+  38:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  68              		.loc 1 38 0
+  69 0042 8DF80650 		strb	r5, [sp, #6]
+  39:../src/LedConfig.c **** 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+  70              		.loc 1 39 0
+  71 0046 0423     		movs	r3, #4
+  72 0048 8DF80730 		strb	r3, [sp, #7]
+  40:../src/LedConfig.c **** 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+  73              		.loc 1 40 0
+  74 004c 0DEB0301 		add	r1, sp, r3
+  75 0050 0348     		ldr	r0, .L3+4
+  76 0052 FFF7FEFF 		bl	GPIO_Init
+  77              	.LVL3:
+  41:../src/LedConfig.c **** #endif
+  42:../src/LedConfig.c **** 
+  43:../src/LedConfig.c **** #ifdef STM32L471xx
+  44:../src/LedConfig.c **** 	/**
+  45:../src/LedConfig.c **** 	 * 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+  46:../src/LedConfig.c **** 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
+  47:../src/LedConfig.c **** 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+  48:../src/LedConfig.c **** 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+  49:../src/LedConfig.c **** 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_2;
+  50:../src/LedConfig.c **** 	 */
+  51:../src/LedConfig.c **** 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+  52:../src/LedConfig.c **** 
+  53:../src/LedConfig.c **** 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
+  54:../src/LedConfig.c **** 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+  55:../src/LedConfig.c **** 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+  56:../src/LedConfig.c **** 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  57:../src/LedConfig.c **** 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+  58:../src/LedConfig.c **** 
+  59:../src/LedConfig.c **** 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+  60:../src/LedConfig.c **** 
+  61:../src/LedConfig.c **** 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
+  62:../src/LedConfig.c **** 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+  63:../src/LedConfig.c **** 
+  64:../src/LedConfig.c **** 	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_9);
+  65:../src/LedConfig.c **** 	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_8);
+  66:../src/LedConfig.c **** 
+  67:../src/LedConfig.c **** #endif
+  68:../src/LedConfig.c **** 
+  69:../src/LedConfig.c **** }
+  78              		.loc 1 69 0
+  79 0056 03B0     		add	sp, sp, #12
+  80              		.cfi_def_cfa_offset 12
+  81              		@ sp needed
+  82 0058 30BD     		pop	{r4, r5, pc}
+  83              	.L4:
+  84 005a 00BF     		.align	2
+  85              	.L3:
+  86 005c 00100140 		.word	1073811456
+  87 0060 00080140 		.word	1073809408
+  88              		.cfi_endproc
+  89              	.LFE69:
+  91              		.section	.text.led_service_blink,"ax",%progbits
+  92              		.align	1
+  93              		.global	led_service_blink
+  94              		.syntax unified
+  95              		.thumb
+  96              		.thumb_func
+  97              		.fpu softvfp
+  99              	led_service_blink:
+ 100              	.LFB70:
+  70:../src/LedConfig.c **** 
+  71:../src/LedConfig.c **** void led_service_blink(void) {
+ 101              		.loc 1 71 0
+ 102              		.cfi_startproc
+ 103              		@ args = 0, pretend = 0, frame = 0
+ 104              		@ frame_needed = 0, uses_anonymous_args = 0
+ 105              		@ link register save eliminated.
+  72:../src/LedConfig.c **** 
+  73:../src/LedConfig.c **** 	if (led_blinking_led1 > 0) {
+ 106              		.loc 1 73 0
+ 107 0000 1B4B     		ldr	r3, .L15
+ 108 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 109 0004 13B1     		cbz	r3, .L6
+  74:../src/LedConfig.c **** 		led_blinking_led1 -= BLINK_MSEC_PER_SVC_CALL;
+ 110              		.loc 1 74 0
+ 111 0006 0A3B     		subs	r3, r3, #10
+ 112 0008 194A     		ldr	r2, .L15
+ 113 000a 1370     		strb	r3, [r2]
+ 114              	.L6:
+  75:../src/LedConfig.c **** 
+  76:../src/LedConfig.c **** 	}
+  77:../src/LedConfig.c **** 
+  78:../src/LedConfig.c **** 	if (led_blinking_led2 > 0) {
+ 115              		.loc 1 78 0
+ 116 000c 194B     		ldr	r3, .L15+4
+ 117 000e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 118 0010 13B1     		cbz	r3, .L7
+  79:../src/LedConfig.c **** 		led_blinking_led2 -= BLINK_MSEC_PER_SVC_CALL;
+ 119              		.loc 1 79 0
+ 120 0012 0A3B     		subs	r3, r3, #10
+ 121 0014 174A     		ldr	r2, .L15+4
+ 122 0016 1370     		strb	r3, [r2]
+ 123              	.L7:
+  80:../src/LedConfig.c **** 	}
+  81:../src/LedConfig.c **** 
+  82:../src/LedConfig.c **** 
+  83:../src/LedConfig.c **** 
+  84:../src/LedConfig.c **** 	if (led_blinking_led1 == BLINK_MSEC_PER_SVC_CALL) {
+ 124              		.loc 1 84 0
+ 125 0018 154B     		ldr	r3, .L15
+ 126 001a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 127 001c 0A2B     		cmp	r3, #10
+ 128 001e 04D0     		beq	.L12
+ 129              	.L8:
+  85:../src/LedConfig.c **** 		led_flip_led1_upper();
+  86:../src/LedConfig.c **** 	}
+  87:../src/LedConfig.c **** 
+  88:../src/LedConfig.c **** 	if (led_blinking_led2 == BLINK_MSEC_PER_SVC_CALL) {
+ 130              		.loc 1 88 0
+ 131 0020 144B     		ldr	r3, .L15+4
+ 132 0022 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 133 0024 0A2B     		cmp	r3, #10
+ 134 0026 11D0     		beq	.L13
+ 135              	.L5:
+  89:../src/LedConfig.c **** 		led_flip_led2_bottom();
+  90:../src/LedConfig.c **** 	}
+  91:../src/LedConfig.c **** 
+  92:../src/LedConfig.c **** 
+  93:../src/LedConfig.c **** 
+  94:../src/LedConfig.c **** }
+ 136              		.loc 1 94 0
+ 137 0028 7047     		bx	lr
+ 138              	.L12:
+ 139              	.LBB6:
+ 140              	.LBB7:
+ 141              		.file 2 "../include/LedConfig.h"
+   1:../include/LedConfig.h **** /*
+   2:../include/LedConfig.h ****  * LedConfig.h
+   3:../include/LedConfig.h ****  *
+   4:../include/LedConfig.h ****  *  Created on: 05.07.2017
+   5:../include/LedConfig.h ****  *      Author: mateusz
+   6:../include/LedConfig.h ****  */
+   7:../include/LedConfig.h **** 
+   8:../include/LedConfig.h **** #ifndef LEDCONFIG_H_
+   9:../include/LedConfig.h **** #define LEDCONFIG_H_
+  10:../include/LedConfig.h **** 
+  11:../include/LedConfig.h **** // PC8 - LED1 - upper
+  12:../include/LedConfig.h **** // PC9 - LED2 - lower
+  13:../include/LedConfig.h **** 
+  14:../include/LedConfig.h **** #ifdef STM32F10X_MD_VL
+  15:../include/LedConfig.h **** #include <stm32f10x.h>
+  16:../include/LedConfig.h **** #endif
+  17:../include/LedConfig.h **** #ifdef STM32L471xx
+  18:../include/LedConfig.h **** #include <stm32l4xx.h>
+  19:../include/LedConfig.h **** #include <stm32l4xx_ll_gpio.h>
+  20:../include/LedConfig.h **** #endif
+  21:../include/LedConfig.h **** 
+  22:../include/LedConfig.h **** #include <stdint.h>
+  23:../include/LedConfig.h **** #include <stdbool.h>
+  24:../include/LedConfig.h **** 
+  25:../include/LedConfig.h **** #define BLINK_DURATION_MSEC 		20 * BLINK_MSEC_PER_SVC_CALL
+  26:../include/LedConfig.h **** #define BLINK_MSEC_PER_SVC_CALL 	10
+  27:../include/LedConfig.h **** 
+  28:../include/LedConfig.h **** /* C++ detection */
+  29:../include/LedConfig.h **** #ifdef __cplusplus
+  30:../include/LedConfig.h **** extern "C" {
+  31:../include/LedConfig.h **** #endif
+  32:../include/LedConfig.h **** 
+  33:../include/LedConfig.h **** extern uint8_t led_blinking_led2;
+  34:../include/LedConfig.h **** extern uint8_t led_blinking_led1;
+  35:../include/LedConfig.h **** 
+  36:../include/LedConfig.h **** void led_config(void);
+  37:../include/LedConfig.h **** void led_init(void);
+  38:../include/LedConfig.h **** void led_service_blink(void);
+  39:../include/LedConfig.h **** 
+  40:../include/LedConfig.h **** #ifdef STM32F10X_MD_VL
+  41:../include/LedConfig.h **** inline void led_control_led1_upper(bool _in) {
+  42:../include/LedConfig.h **** 	if (_in == true) {
+  43:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS8;
+  44:../include/LedConfig.h **** 	}
+  45:../include/LedConfig.h **** 	else {
+  46:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
+  47:../include/LedConfig.h **** 	}
+  48:../include/LedConfig.h **** }
+  49:../include/LedConfig.h **** 
+  50:../include/LedConfig.h **** inline void led_control_led2_bottom(bool _in) {
+  51:../include/LedConfig.h **** 	if (_in == true) {
+  52:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS9;
+  53:../include/LedConfig.h **** 	}
+  54:../include/LedConfig.h **** 	else {
+  55:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+  56:../include/LedConfig.h **** 	}
+  57:../include/LedConfig.h **** }
+  58:../include/LedConfig.h **** 
+  59:../include/LedConfig.h **** inline void led_flip_led1_upper(void) {
+  60:../include/LedConfig.h **** 	if ((GPIOC->ODR & GPIO_ODR_ODR8)  == GPIO_ODR_ODR8) {
+ 142              		.loc 2 60 0
+ 143 002a 134B     		ldr	r3, .L15+8
+ 144 002c DB68     		ldr	r3, [r3, #12]
+ 145 002e 13F4807F 		tst	r3, #256
+ 146 0032 05D0     		beq	.L9
+  61:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR8;
+ 147              		.loc 2 61 0
+ 148 0034 104A     		ldr	r2, .L15+8
+ 149 0036 1369     		ldr	r3, [r2, #16]
+ 150 0038 43F08073 		orr	r3, r3, #16777216
+ 151 003c 1361     		str	r3, [r2, #16]
+ 152 003e EFE7     		b	.L8
+ 153              	.L9:
+  62:../include/LedConfig.h **** 	}
+  63:../include/LedConfig.h **** 	else {
+  64:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS8;
+ 154              		.loc 2 64 0
+ 155 0040 0D4A     		ldr	r2, .L15+8
+ 156 0042 1369     		ldr	r3, [r2, #16]
+ 157 0044 43F48073 		orr	r3, r3, #256
+ 158 0048 1361     		str	r3, [r2, #16]
+ 159 004a E9E7     		b	.L8
+ 160              	.L13:
+ 161              	.LBE7:
+ 162              	.LBE6:
+ 163              	.LBB8:
+ 164              	.LBB9:
+  65:../include/LedConfig.h **** 	}
+  66:../include/LedConfig.h **** }
+  67:../include/LedConfig.h **** 
+  68:../include/LedConfig.h **** inline void led_flip_led2_bottom(void) {
+  69:../include/LedConfig.h **** 	if ((GPIOC->ODR & GPIO_ODR_ODR9)  == GPIO_ODR_ODR9) {
+ 165              		.loc 2 69 0
+ 166 004c 0A4B     		ldr	r3, .L15+8
+ 167 004e DB68     		ldr	r3, [r3, #12]
+ 168 0050 13F4007F 		tst	r3, #512
+ 169 0054 05D1     		bne	.L14
+  70:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+  71:../include/LedConfig.h **** 	}
+  72:../include/LedConfig.h **** 	else {
+  73:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BS9;
+ 170              		.loc 2 73 0
+ 171 0056 084A     		ldr	r2, .L15+8
+ 172 0058 1369     		ldr	r3, [r2, #16]
+ 173 005a 43F40073 		orr	r3, r3, #512
+ 174 005e 1361     		str	r3, [r2, #16]
+ 175              	.LBE9:
+ 176              	.LBE8:
+ 177              		.loc 1 94 0
+ 178 0060 E2E7     		b	.L5
+ 179              	.L14:
+ 180              	.LBB11:
+ 181              	.LBB10:
+  70:../include/LedConfig.h **** 		GPIOC->BSRR |= GPIO_BSRR_BR9;
+ 182              		.loc 2 70 0
+ 183 0062 054A     		ldr	r2, .L15+8
+ 184 0064 1369     		ldr	r3, [r2, #16]
+ 185 0066 43F00073 		orr	r3, r3, #33554432
+ 186 006a 1361     		str	r3, [r2, #16]
+ 187 006c 7047     		bx	lr
+ 188              	.L16:
+ 189 006e 00BF     		.align	2
+ 190              	.L15:
+ 191 0070 00000000 		.word	led_blinking_led1
+ 192 0074 00000000 		.word	led_blinking_led2
+ 193 0078 00100140 		.word	1073811456
+ 194              	.LBE10:
+ 195              	.LBE11:
+ 196              		.cfi_endproc
+ 197              	.LFE70:
+ 199              		.comm	led_blinking_led1,1,1
+ 200              		.comm	led_blinking_led2,1,1
+ 201              		.text
+ 202              	.Letext0:
+ 203              		.file 3 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 204              		.file 4 "../system/include/cmsis/core_cm3.h"
+ 205              		.file 5 "../system/include/cmsis/system_stm32f10x.h"
+ 206              		.file 6 "../system/include/cmsis/stm32f10x.h"
+ 207              		.file 7 "../system/include/stm32f1-stdperiph/stm32f10x_gpio.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 LedConfig.c
+     /tmp/ccl7ZztZ.s:16     .text.led_init:0000000000000000 $t
+     /tmp/ccl7ZztZ.s:23     .text.led_init:0000000000000000 led_init
+     /tmp/ccl7ZztZ.s:86     .text.led_init:000000000000005c $d
+     /tmp/ccl7ZztZ.s:92     .text.led_service_blink:0000000000000000 $t
+     /tmp/ccl7ZztZ.s:99     .text.led_service_blink:0000000000000000 led_service_blink
+     /tmp/ccl7ZztZ.s:191    .text.led_service_blink:0000000000000070 $d
+                            *COM*:0000000000000001 led_blinking_led1
+                            *COM*:0000000000000001 led_blinking_led2
+                           .group:0000000000000000 wm4.0.879aed89c359f5856fe69c61b3590d34
+                           .group:0000000000000000 wm4.stm32f10x.h.51.c58ea26c5150470d52680f0bbaa7049c
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.core_cm3.h.82.57a0f9dd004efa579f86574376281d2f
+                           .group:0000000000000000 wm4.cmsis_gcc.h.36.67d2dcde6a14ff518eedc1d545d89a76
+                           .group:0000000000000000 wm4.core_cm3.h.183.ecfd9c316d6f10b73648f6e579b02c8b
+                           .group:0000000000000000 wm4.stm32f10x.h.522.a925aafc848b1f088438cf0e9b167b78
+                           .group:0000000000000000 wm4.stm32f10x_adc.h.89.9f2b285fa0070185d48a05b61a05798c
+                           .group:0000000000000000 wm4.stm32f10x_bkp.h.25.4622919f1e30efdad5eb44e12edd5513
+                           .group:0000000000000000 wm4.stm32f10x_can.h.25.e5e43f6bbc8fc7c8aa30ef2bc5610ced
+                           .group:0000000000000000 wm4.stm32f10x_cec.h.25.8f03450e7bbb704d96e7bc73ec0f66a7
+                           .group:0000000000000000 wm4.stm32f10x_dac.h.25.d946244edf026333094657d55ea894b8
+                           .group:0000000000000000 wm4.stm32f10x_dbgmcu.h.25.d3351200fc7f9c8615d1ae81d40db08a
+                           .group:0000000000000000 wm4.stm32f10x_dma.h.25.94e36204daa98cae5dcc70a10a9694d5
+                           .group:0000000000000000 wm4.stm32f10x_exti.h.25.f52c69aad7d1994be5b2c4e2b8f4c595
+                           .group:0000000000000000 wm4.stm32f10x_flash.h.25.4be61fcb02863962a1e006449d310650
+                           .group:0000000000000000 wm4.stm32f10x_fsmc.h.25.bca154da2699cdb6024c0c6c4fc5aa89
+                           .group:0000000000000000 wm4.stm32f10x_gpio.h.25.80c981af0e637567395034c576cfb3ce
+                           .group:0000000000000000 wm4.stm32f10x_i2c.h.25.b124ac2c620f8ebddd92b6d95ca62176
+                           .group:0000000000000000 wm4.stm32f10x_iwdg.h.25.da9374ab9856795610487f312ccf3122
+                           .group:0000000000000000 wm4.stm32f10x_pwr.h.25.37ef75009f751ef5fe27910e0bf00a62
+                           .group:0000000000000000 wm4.stm32f10x_rcc.h.25.fe8897e7491f2eb0cff54551d08eb765
+                           .group:0000000000000000 wm4.stm32f10x_rtc.h.25.361142606ba98ddcd10369f321f6e636
+                           .group:0000000000000000 wm4.stm32f10x_sdio.h.25.fb0db079f5c1412c40f359319f7c40b0
+                           .group:0000000000000000 wm4.stm32f10x_spi.h.25.3f6dfa4abe177efb3c6f5a717c06b323
+                           .group:0000000000000000 wm4.stm32f10x_tim.h.25.f709106ba77b314e6b070693f89f3c56
+                           .group:0000000000000000 wm4.stm32f10x_usart.h.25.2e65e396239d0cc41fd0bf6faa2a32cb
+                           .group:0000000000000000 wm4.stm32f10x_wwdg.h.25.dde12201d86b5aa9ecaafb5eccdc6549
+                           .group:0000000000000000 wm4.misc.h.25.068e106f368fa5369a681ef57c106f4b
+                           .group:0000000000000000 wm4.stm32f10x.h.8317.9a8e476d96d33bb2df9a9ad0775bd4a7
+                           .group:0000000000000000 wm4.stdbool.h.29.07dce69c3b78884144b7f7bd19483461
+                           .group:0000000000000000 wm4.LedConfig.h.25.e34280313dd460b98fa028e633c9dc70
+
+UNDEFINED SYMBOLS
+GPIO_Init
+GPIO_SetBits

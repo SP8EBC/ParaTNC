@@ -1,0 +1,185 @@
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"config_data_default.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	config_data_rtu_default
+  18              		.global	config_data_umb_default
+  19              		.global	config_data_wx_sources_default
+  20              		.global	config_data_basic_default
+  21              		.global	config_data_mode_default
+  22              		.section	.data.config_data_basic_default,"aw",%progbits
+  23              		.align	2
+  26              	config_data_basic_default:
+  27 0000 53523957 		.ascii	"SR9WXZ\000"
+  27      585A00
+  28 0007 00       		.byte	0
+  29 0008 857B9A45 		.word	1167752069
+  30 000c 4E       		.byte	78
+  31 000d 000000   		.space	3
+  32 0010 8503EF44 		.word	1156514693
+  33 0014 45       		.byte	69
+  34 0015 5758206F 		.ascii	"WX only = TXPower 1W = Klub Zeglarski Halny, plywaj"
+  34      6E6C7920 
+  34      3D205458 
+  34      506F7765 
+  34      72203157 
+  35 0048 61636120 		.ascii	"aca keja manewrowa na J. Zywieckim = sp8ebc@interia"
+  35      6B656A61 
+  35      206D616E 
+  35      6577726F 
+  35      7761206E 
+  36 007b 2E706C00 		.ascii	".pl\000"
+  37 007f 00000000 		.space	22
+  37      00000000 
+  37      00000000 
+  37      00000000 
+  37      00000000 
+  38 0095 05       		.byte	5
+  39 0096 00       		.byte	0
+  40 0097 01       		.byte	1
+  41 0098 05       		.byte	5
+  42 0099 2D       		.byte	45
+  43 009a 01       		.byte	1
+  44 009b 00       		.space	1
+  45              		.section	.data.config_data_mode_default,"aw",%progbits
+  46              		.align	2
+  49              	config_data_mode_default:
+  50 0000 00       		.byte	0
+  51 0001 01       		.byte	1
+  52 0002 00       		.byte	0
+  53 0003 00       		.byte	0
+  54 0004 00       		.space	1
+  55 0005 00       		.byte	0
+  56 0006 0A       		.byte	10
+  57 0007 00       		.byte	0
+  58 0008 00       		.byte	0
+  59 0009 00       		.byte	0
+  60 000a 03       		.byte	3
+  61 000b 03       		.byte	3
+  62 000c 01       		.byte	1
+  63              		.section	.data.config_data_rtu_default,"aw",%progbits
+  64              		.align	2
+  67              	config_data_rtu_default:
+  68 0000 8025     		.short	9600
+  69 0002 00       		.byte	0
+  70 0003 02       		.byte	2
+  71 0004 00       		.byte	0
+  72 0005 00       		.byte	0
+  73 0006 02       		.byte	2
+  74 0007 00       		.byte	0
+  75 0008 00       		.byte	0
+  76 0009 00       		.byte	0
+  77 000a 00       		.byte	0
+  78 000b 01       		.byte	1
+  79 000c 03       		.byte	3
+  80 000d 00       		.space	1
+  81 000e 0000     		.short	0
+  82 0010 0100     		.short	1
+  83 0012 00       		.byte	0
+  84 0013 01       		.byte	1
+  85 0014 00       		.byte	0
+  86 0015 0A       		.byte	10
+  87 0016 00       		.byte	0
+  88 0017 01       		.byte	1
+  89 0018 03       		.byte	3
+  90 0019 00       		.space	1
+  91 001a 0100     		.short	1
+  92 001c 0100     		.short	1
+  93 001e 00       		.byte	0
+  94 001f 01       		.byte	1
+  95 0020 00       		.byte	0
+  96 0021 01       		.byte	1
+  97 0022 00       		.byte	0
+  98 0023 01       		.byte	1
+  99 0024 03       		.byte	3
+ 100 0025 00       		.space	1
+ 101 0026 0200     		.short	2
+ 102 0028 0100     		.short	1
+ 103 002a 00       		.byte	0
+ 104 002b 01       		.byte	1
+ 105 002c 00       		.byte	0
+ 106 002d 01       		.byte	1
+ 107 002e 00       		.byte	0
+ 108 002f 01       		.byte	1
+ 109 0030 03       		.byte	3
+ 110 0031 00       		.space	1
+ 111 0032 0300     		.short	3
+ 112 0034 0100     		.short	1
+ 113 0036 00       		.byte	0
+ 114 0037 01       		.byte	1
+ 115 0038 00       		.byte	0
+ 116 0039 01       		.byte	1
+ 117 003a 00       		.byte	0
+ 118 003b 00       		.byte	0
+ 119 003c 00       		.byte	0
+ 120 003d 00       		.space	1
+ 121 003e 0300     		.short	3
+ 122 0040 0100     		.short	1
+ 123 0042 00       		.byte	0
+ 124 0043 01       		.byte	1
+ 125 0044 00       		.byte	0
+ 126 0045 01       		.byte	1
+ 127 0046 00       		.byte	0
+ 128 0047 00       		.byte	0
+ 129 0048 00       		.byte	0
+ 130 0049 00       		.space	1
+ 131 004a 0000     		.short	0
+ 132 004c 0100     		.short	1
+ 133 004e 00       		.byte	0
+ 134 004f 01       		.byte	1
+ 135 0050 00       		.byte	0
+ 136 0051 01       		.byte	1
+ 137 0052 00       		.byte	0
+ 138 0053 00       		.space	1
+ 139              		.section	.data.config_data_umb_default,"aw",%progbits
+ 140              		.align	2
+ 143              	config_data_umb_default:
+ 144 0000 0800     		.short	8
+ 145 0002 0100     		.short	1
+ 146 0004 CC01     		.short	460
+ 147 0006 B801     		.short	440
+ 148 0008 4402     		.short	580
+ 149 000a 6400     		.short	100
+ 150 000c 2C01     		.short	300
+ 151              		.section	.data.config_data_wx_sources_default,"aw",%progbits
+ 152              		.align	2
+ 155              	config_data_wx_sources_default:
+ 156 0000 01       		.byte	1
+ 157 0001 01       		.byte	1
+ 158 0002 01       		.byte	1
+ 159 0003 01       		.byte	1
+ 160              		.text
+ 161              	.Letext0:
+ 162              		.file 1 "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/lib/gcc/arm-none-eabi/7.3.1/include/std
+ 163              		.file 2 "../include/config_data.h"
+ 164              		.file 3 "../src/config_data_default.c"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 config_data_default.c
+     /tmp/cc21ZweS.s:67     .data.config_data_rtu_default:0000000000000000 config_data_rtu_default
+     /tmp/cc21ZweS.s:143    .data.config_data_umb_default:0000000000000000 config_data_umb_default
+     /tmp/cc21ZweS.s:155    .data.config_data_wx_sources_default:0000000000000000 config_data_wx_sources_default
+     /tmp/cc21ZweS.s:26     .data.config_data_basic_default:0000000000000000 config_data_basic_default
+     /tmp/cc21ZweS.s:49     .data.config_data_mode_default:0000000000000000 config_data_mode_default
+     /tmp/cc21ZweS.s:23     .data.config_data_basic_default:0000000000000000 $d
+     /tmp/cc21ZweS.s:46     .data.config_data_mode_default:0000000000000000 $d
+     /tmp/cc21ZweS.s:64     .data.config_data_rtu_default:0000000000000000 $d
+     /tmp/cc21ZweS.s:140    .data.config_data_umb_default:0000000000000000 $d
+     /tmp/cc21ZweS.s:152    .data.config_data_wx_sources_default:0000000000000000 $d
+                           .group:0000000000000000 wm4.0.95bc707da9dcffdc6c8c58936cbc8421
+                           .group:0000000000000000 wm4.stdintgcc.h.29.6d480f4ba0f60596e88234283d42444f
+                           .group:0000000000000000 wm4.config_data.h.40.13cd3b822d6a413ebd43f14128b4c023
+                           .group:0000000000000000 wm4.station_config.h.9.dccf6b17ee2bf87c63fe0b152d34825f
+
+NO UNDEFINED SYMBOLS
