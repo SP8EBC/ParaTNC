@@ -110,6 +110,8 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 		.digi_viscous_delay_sec = 3,
 #endif
 
+		.digi_delay_100msec = _DELAY_BASE,
+
 #if (defined _POWERSAVE_NORMAL)
 		.powersave = PWSAVE_NORMAL,
 #elif (defined _POWERSAVE_AGGRESIVE)

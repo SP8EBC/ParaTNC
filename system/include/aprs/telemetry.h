@@ -67,12 +67,14 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
 							uint8_t kiss_pkts,
+							uint8_t viscous_drop_pkts,
 							float temperature,
 							dallas_qf_t dallas_qf,
 							pressure_qf_t press_qf,
 							humidity_qf_t humid_qf,
-							wind_qf_t anemometer_qf);
-void telemetry_send_chns_description(const config_data_basic_t * const config_basic);
+							wind_qf_t anemometer_qf,
+							const config_data_mode_t * const config_mode);
+void telemetry_send_chns_description(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode);
 void telemetry_send_status(void);
 
 void telemetry_send_status_raw_values_modbus(void);

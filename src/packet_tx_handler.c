@@ -301,17 +301,17 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf);
+				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, digidrop10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
 			}
 			else {
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf);
+				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
 			}
 
 		}
 		packet_tx_telemetry_counter = 0;
 
-		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0;
+		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
 
 	}
 
@@ -329,7 +329,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
 		else {
-			telemetry_send_chns_description(config_basic);
+			telemetry_send_chns_description(config_basic, config_mode);
 
 			packet_tx_multi_per_call_handler();
 

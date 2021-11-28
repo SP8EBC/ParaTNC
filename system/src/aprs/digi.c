@@ -227,7 +227,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 					// delaying retransmission.. well this will block I/O for a while
 					// and it could be refactor to ommit that but for now it needs to stay
 					// as it is.
-					delay_from_preset();
+					delay_fixed(config_mode->digi_delay_100msec * 100);
 
 					while(main_ax25.dcd == true);
 					ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);
