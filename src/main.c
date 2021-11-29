@@ -919,14 +919,11 @@ int main(int argc, char* argv[]){
 
 			main_ax25.dcd = false;
 
-#ifndef _MUTE_OWN
-	#ifdef _DIGI
-			//digi_check_with_viscous(&ax25_rxed_frame);
+			digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
 			digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
-	#endif
-#endif
+
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
 		}
@@ -1076,6 +1073,8 @@ int main(int argc, char* argv[]){
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				analog_anemometer_direction_reset();
 			}
+
+			digi_pool_viscous();
 
 			main_one_second_pool_timer = 1000;
 		}

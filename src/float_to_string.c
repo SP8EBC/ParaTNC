@@ -35,16 +35,16 @@ void float_to_string(float in, char * out, uint8_t ln, int8_t precision, int8_t 
 	memset (out, 0x00, ln);
 
 	if (integer_ln == 3) {
-		snprintf(out, ln, "%03ld.%ld", integer_part, decimal_part);
+		snprintf(out, ln, "%03ld.%02ld", integer_part, decimal_part);
 	}
 	else if (integer_ln == 4) {
-		snprintf(out, ln, "%04ld.%ld", integer_part, decimal_part);
+		snprintf(out, ln, "%04ld.%02ld", integer_part, decimal_part);
 	}
 	else if (integer_ln == 5) {
-		snprintf(out, ln, "%05ld.%ld", integer_part, decimal_part);
+		snprintf(out, ln, "%05ld.%02ld", integer_part, decimal_part);
 	}
 	else {
-		snprintf(out, ln, "%ld.%ld", integer_part, decimal_part);
+		snprintf(out, ln, "%ld.%02ld", integer_part, decimal_part);
 	}
 
 

@@ -83,8 +83,6 @@ void digi_init(const config_data_mode_t* const config_data_mode) {
 uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const config, const config_data_mode_t* const config_mode) {
 	uint8_t retval = DIGI_PACKET_DIDNT_DIGIPEATED;
 
-#ifdef _DIGI
-
 	// check if the received message is not too long for the transmit buffers
 	if (msg->len >= (CONFIG_AX25_FRAME_BUF_LEN - sizeof(AX25Call) * 7) ) {
 		return DIGI_PACKET_TOO_LONG;
@@ -94,7 +92,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 		return DIGI_PACKET_DIDNT_DIGIPEATED;
 	}
 
-	if (after_tx_lock == 0) {
+//	if (after_tx_lock == 0) {
 		// if the packet has any path and there is no packed waiting in viscous delay
 		if(msg->rpt_cnt >= 1 && digi_msg_len == 0) {
 
@@ -242,13 +240,15 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 					return retval;
 
 				} // digi_mode == DIGI_ON_SSID_WIDE1 || digi_mode == DIGI_ON_ALL_WIDE1
+				else {
+					memset(msg, sizeof(AX25Msg), 0x00);
+				}
 			}	// retval == DIGI_PACKET_DIGIPEATED
 		} // msg->rpt_cnt >= 1 && digi_msg_len == 0
-	}
-	else {
-		after_tx_lock = 0;
-	}
-#endif
+//	}
+//	else {
+//		after_tx_lock = 0;
+//	}
 	return retval;
 }
 
@@ -270,6 +270,8 @@ uint8_t digi_check_with_viscous(struct AX25Msg *msg) {
 
 					// increase viscous drop counter
 					digidrop10m++;
+
+					digi_viscous_counter_sec = 0;
 				}
 			}
 		}
@@ -308,6 +310,8 @@ uint8_t digi_pool_viscous(void) {
 				digi_msg_len = 0;
 
 				digi10m++;
+
+				digi_viscous_counter_sec = 0;
 
 				retval = DIGI_PACKET_DIGIPEATED;
 			}
