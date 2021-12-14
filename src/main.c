@@ -1062,6 +1062,8 @@ int main(int argc, char* argv[]){
 
 			//digi_pool_viscous();
 
+			digi_pool_viscous();
+
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				analog_anemometer_direction_handler();
 			}
@@ -1073,8 +1075,6 @@ int main(int argc, char* argv[]){
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				analog_anemometer_direction_reset();
 			}
-
-			digi_pool_viscous();
 
 			main_one_second_pool_timer = 1000;
 		}
