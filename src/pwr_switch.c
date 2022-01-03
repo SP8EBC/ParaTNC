@@ -39,6 +39,10 @@ void wx_pwr_switch_case_under_reset_parameteo() {
 
 	io_5v_isol_sw___cntrl_vbat_s_enable();
 
+#ifdef PWR_SWITCH_BOTH
+	io_12v_sw___cntrl_vbat_g_enable();
+#endif
+
 	wx_force_i2c_sensor_reset = 1;
 
 	wx_pwr_state = WX_PWR_ON;
