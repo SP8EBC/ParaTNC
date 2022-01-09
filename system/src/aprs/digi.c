@@ -35,6 +35,7 @@ void digi_init(const config_data_mode_t* const config_data_mode) {
 
 	digi_mode = DIGI_OFF;
 
+
 	if (config_data_mode->digi_viscous == 1) {
 
 		if (config_data_mode->digi_only_ssids == 1) {
@@ -44,13 +45,16 @@ void digi_init(const config_data_mode_t* const config_data_mode) {
 			digi_mode = DIGI_VISCOUS_ALL_WIDE1;
 		}
 	}
-	else {
+	else if (config_data_mode->digi == 1) {
 		if (config_data_mode->digi_only_ssids == 1) {
 			digi_mode = DIGI_ON_SSID_WIDE1;
 		}
 		else {
 			digi_mode = DIGI_ON_ALL_WIDE1;
 		}
+	}
+	else {
+		;
 	}
 
 	digi_viscous_delay_sec = config_data_mode->digi_viscous_delay_sec;
