@@ -236,10 +236,36 @@ SECTIONS
     _etext = .;
     __etext = .;
     
-    __config_section_first_start = 	0x0801E800;
-    __config_section_second_start = 0x0801F000;
-    __config_section_third_start =	0x0801F800;
+    __config_section_default_start =    0x0801E000;     /* Page 120 and 121 */
+    __config_section_first_start = 	    0x0801E800;     /* Page 122 and 123 */
+    __config_section_second_start =     0x0801F000;     /* Page 124 and 125 */
+    __config_section_third_start =      0x0801F800;     /* Page 126 and 127 */
 
+    .config_section_default __config_section_default_start : 
+    {
+        FILL(0xDD)
+        
+        . = ALIGN(4);
+        
+        start = .;
+        
+        KEEP(*(.config_section_default));
+        
+        . = start + 0x10;
+        KEEP(*(.config_section_default.mode));
+        
+        . = start + 0x20;
+        KEEP(*(.config_section_default.basic));
+
+        . = start + 0x100;
+        KEEP(*(.config_section_default.sources));
+
+        . = start + 0x120;
+        KEEP(*(.config_section_default.umb));
+        
+        . = start + 0x140;
+        KEEP(*(.config_section_default.rtu));
+    }
     
     .config_section_first __config_section_first_start :
     {

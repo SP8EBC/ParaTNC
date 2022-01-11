@@ -159,7 +159,7 @@ void srl_keep_timeout(srl_context_t *ctx) {
 	}
 }
 
-uint8_t srl_send_data(srl_context_t *ctx, uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
+uint8_t srl_send_data(srl_context_t *ctx, const uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external) {
 	if (ctx->srl_tx_state == SRL_TXING)
 		return SRL_BUSY;
 

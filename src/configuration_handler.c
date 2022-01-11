@@ -37,12 +37,23 @@ const uint32_t * config_section_second_start = (uint32_t *)0x0801F000;
 
 #define CONFIG_SECTION_LN 0x7FF
 
+#define FEND	(uint8_t)0xC0
+#define FESC	(uint8_t)0xDB
+#define TFEND	(uint8_t)0xDC
+#define TFESC	(uint8_t)0xDD
+
+#define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20
+#define KISS_RUNNING_CONFIG			(uint8_t) 0x70
 
 volatile extern const config_data_basic_t config_data_basic_default;
 volatile extern const config_data_mode_t config_data_mode_default;
 volatile extern const config_data_umb_t config_data_umb_default;
 volatile extern const config_data_rtu_t config_data_rtu_default;
 volatile extern const config_data_wx_sources_t config_data_wx_sources_default;
+
+configuration_handler_region_t configuration_handler_loaded;
+
+static const uint8_t kiss_config_preamble[] = {FEND, KISS_RUNNING_CONFIG};
 
 uint32_t configuration_handler_check_crc(void) {
 
@@ -462,6 +473,8 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 		;
 	}
 
+	configuration_handler_loaded = region;
+
 }
 
 uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx) {
@@ -515,4 +528,36 @@ void configuration_clear_bits_register(uint32_t value) {
 	RTC->BKP3R &= (0xFFFFFFFF ^ value);
 
 #endif
+}
+
+int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len) {
+
+	// check if current configuration is set to something which make sense
+	if (configuration_handler_loaded != REGION_DEFAULT &&
+			configuration_handler_loaded != REGION_FIRST &&
+			configuration_handler_loaded != REGION_SECOND)
+	{
+		return -1;
+	}
+
+	// send the KISS preamble
+	srl_send_data(main_kiss_srl_ctx_ptr, kiss_config_preamble, 1, 2, 1);
+
+	// wait for preamble to send completely
+	srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
+	// check which configuration is in use now
+	switch(configuration_handler_loaded) {
+		case REGION_DEFAULT: {
+			break;
+		}
+		case REGION_FIRST: {
+			break;
+		}
+		case REGION_SECOND: {
+			break;
+		}
+	}
+
+	return 0;
 }

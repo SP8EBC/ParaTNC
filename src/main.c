@@ -984,8 +984,8 @@ int main(int argc, char* argv[]){
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
 				// parse i ncoming data and then transmit on radio freq
-				short res = ParseReceivedKISS(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
-				if (res == 0)
+				ln = kiss_parse_received(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk);
+				if (ln == 0)
 					kiss10m++;	// increase kiss messages counter
 
 				// restart KISS receiving to be ready for next frame

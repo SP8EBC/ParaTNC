@@ -14,7 +14,7 @@
 
 #include "stdint.h"
 
-#define KISS_BUFFER_LN 300
+#define KISS_BUFFER_LN 256
 
 #define KISS_TOO_LONG_FRM -1
 
@@ -29,7 +29,7 @@
   #endif
 
   int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len);
-  short ParseReceivedKISS(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a);
+  int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a);
 
   void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len);
   uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
