@@ -116,6 +116,102 @@ SECTIONS
     __exidx_end = .;
     . = ALIGN(8);
   } >FLASH
+  
+     __config_section_default_start =    0x0801E000;     /* Page 120 and 121 */
+    __config_section_first_start =      0x0801E800;     /* Page 122 and 123 */
+    __config_section_second_start =     0x0801F000;     /* Page 124 and 125 */
+    __config_section_third_start =      0x0801F800;     /* Page 126 and 127 */
+
+    .config_section_default __config_section_default_start : 
+    {
+        FILL(0xDD)
+        
+        . = ALIGN(8);
+        
+        start = .;
+        
+        KEEP(*(.config_section_default));
+        
+        . = start + 0x10;
+        KEEP(*(.config_section_default.mode));
+        
+        . = start + 0x20;
+        KEEP(*(.config_section_default.basic));
+
+        . = start + 0x100;
+        KEEP(*(.config_section_default.sources));
+
+        . = start + 0x120;
+        KEEP(*(.config_section_default.umb));
+        
+        . = start + 0x140;
+        KEEP(*(.config_section_default.rtu));
+    } >FLASH
+    
+    .config_section_first __config_section_first_start :
+    {
+        FILL(0xAA)
+        
+        . = ALIGN(8);
+        
+        start = .;
+        
+        KEEP(*(.config_section_first));
+        
+        . = start + 0x10;
+        KEEP(*(.config_section_first.mode));
+        
+        . = start + 0x20;
+        KEEP(*(.config_section_first.basic));
+
+        . = start + 0x100;
+        KEEP(*(.config_section_first.sources));
+
+        . = start + 0x120;
+        KEEP(*(.config_section_first.umb));
+        
+        . = start + 0x140;
+        KEEP(*(.config_section_first.rtu));
+        
+        . = 0x7FC;
+        KEEP(*(.config_section_first.crc));
+
+    } >FLASH
+    
+    .config_section_second __config_section_second_start :
+    {
+        FILL(0xBB)
+        
+        . = ALIGN(8);
+        
+        start = .;
+        
+        KEEP(*(.config_section_second));
+        
+        . = start + 0x10;
+        KEEP(*(.config_section_second.mode));
+        
+        . = start + 0x20;
+        KEEP(*(.config_section_second.basic));
+
+        . = start + 0x100;
+        KEEP(*(.config_section_second.sources));
+
+        . = start + 0x120;
+        KEEP(*(.config_section_second.umb));
+        
+        . = start + 0x140;
+        KEEP(*(.config_section_second.rtu));
+        
+        . = 0x7FC;
+        KEEP(*(.config_section_second.crc));
+
+    } >FLASH
+    
+   .config_section_third __config_section_third_start :
+    {
+           KEEP(*(.config_section_third))
+    } >FLASH
 
   .preinit_array     :
   {
