@@ -586,14 +586,12 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 						}
 					}
 					else {		// WX
-						if (minutes_to_wx > 1) {
-							// if there is more than one minute to send wx packet
-							reinit_sensors = pwr_save_switch_mode_to_m4();
+						if (minutes_to_wx > 2) {
+							// if there is more than two minutes to send wx packet
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
 						}
 						else {
-							if (pwr_save_seconds_to_wx <= 30) {
-								reinit_sensors = pwr_save_switch_mode_to_c1();
-							}
+							reinit_sensors= pwr_save_switch_mode_to_c1();
 						}
 					}
 				}
