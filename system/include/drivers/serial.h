@@ -26,6 +26,12 @@
 #define SRL_TIMEOUT_ENABLE	1
 #define SRL_TIMEOUT_DISABLE 0
 
+#define SRL_INTERNAL 0
+#define SRL_EXTERNAL 1
+
+#define SRL_MODE_ZERO	0
+#define SRL_MODE_DEFLN	1
+
 typedef uint8_t(*srl_rx_termination_callback_t)(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
 typedef enum srlRxState {

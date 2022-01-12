@@ -30,5 +30,6 @@ void configuration_set_bits_register(uint32_t value);
 void configuration_clear_bits_register(uint32_t value);
 
 int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len);
+int32_t configuration_kiss_flash_config(uint8_t* input_frame_from_host, uint16_t input_len);
 
 #endif /* CONFIGURATION_HANDLER_H_ */

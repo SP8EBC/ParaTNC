@@ -60,6 +60,8 @@ FLASH_Status FLASH_GetBank1Status(void)
 
 FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 
+	FLASH_Status out;
+
 	uint32_t Page = 0;
 
 	uint32_t Banks = 0;
@@ -71,6 +73,8 @@ FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 	else {
 		Banks = FLASH_BANK_2;
 	}
+
+	FLASH_Unlock();
 
 	Page = Page_Address - 0x08000000 - (0x80000 * (Banks - 1));
 
@@ -108,6 +112,19 @@ FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 	  SET_BIT(FLASH->CR, FLASH_CR_PER);
 	  SET_BIT(FLASH->CR, FLASH_CR_STRT);
 
+	  // wait for flash operation to finish
+	  while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+	  if ((FLASH->SR & FLASH_SR_EOP) == FLASH_SR_EOP) {
+		  out = FLASH_COMPLETE;
+	  }
+	  else {
+		  out = FLASH_ERROR_WRP;
+	  }
+
+	  FLASH_Lock();
+
+	  return out;
 }
 
 void FLASH_Unlock(void) {

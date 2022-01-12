@@ -28,8 +28,9 @@
 
 #include <string.h>
 
-const uint32_t * config_section_first_start = (uint32_t *)0x0801E800;
-const uint32_t * config_section_second_start = (uint32_t *)0x0801F000;
+const uint32_t * config_section_first_start = 		(uint32_t *)0x0801E800;
+const uint32_t * config_section_second_start = 		(uint32_t *)0x0801F000;
+const uint32_t * config_section_default_start = 	(uint32_t *)0x0801E000;
 
 #define CRC_OFFSET				0x7FC
 #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
@@ -53,7 +54,9 @@ volatile extern const config_data_wx_sources_t config_data_wx_sources_default;
 
 configuration_handler_region_t configuration_handler_loaded;
 
-static const uint8_t kiss_config_preamble[] = {FEND, KISS_RUNNING_CONFIG};
+static const uint8_t kiss_config_preamble[] = {FEND, KISS_RUNNING_CONFIG, CONFIG_SECTION_LN & 0xFF, (CONFIG_SECTION_LN & 0xFF00) >> 8};
+
+uint8_t config_kiss_flash_state = 0;
 
 uint32_t configuration_handler_check_crc(void) {
 
@@ -111,7 +114,7 @@ uint32_t configuration_handler_check_crc(void) {
 	crc_current = CRC_CalcCRC((uint32_t)0x0);
 #endif
 
-#ifdef STM32L471xx
+#ifdef STM32L471xxconfig_kiss_flash_state
 	// reset CRC engine
 	LL_CRC_ResetCRCCalculationUnit(CRC);
 
@@ -541,7 +544,7 @@ int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_ho
 	}
 
 	// send the KISS preamble
-	srl_send_data(main_kiss_srl_ctx_ptr, kiss_config_preamble, 1, 2, 1);
+	srl_send_data(main_kiss_srl_ctx_ptr, kiss_config_preamble, SRL_MODE_DEFLN, 4, SRL_EXTERNAL);
 
 	// wait for preamble to send completely
 	srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
@@ -549,15 +552,105 @@ int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_ho
 	// check which configuration is in use now
 	switch(configuration_handler_loaded) {
 		case REGION_DEFAULT: {
+			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_default_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
 			break;
 		}
 		case REGION_FIRST: {
+			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_first_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
+
 			break;
 		}
 		case REGION_SECOND: {
+			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_second_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
+
 			break;
 		}
 	}
 
+	// wait for data to send completely
+	srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
 	return 0;
+}
+
+int32_t configuration_kiss_flash_config(uint8_t* input_frame_from_host, uint16_t input_len) {
+
+	int32_t out = 0;
+
+	FLASH_Status flash_status = FLASH_COMPLETE;	// FLASH_COMPLETE
+
+	if (input_frame_from_host == 0x00 || input_len == 0) {
+		out = -1;
+	}
+	else {
+		// check which config is currently in use
+		switch(configuration_handler_loaded) {
+			case REGION_DEFAULT: {
+
+				// erase both regions
+
+				if (FLASH_ErasePage((uint32_t)config_section_second_start) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				if (FLASH_ErasePage((uint32_t)config_section_second_start + 0x400) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				if (FLASH_ErasePage((uint32_t)config_section_first_start) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				if (FLASH_ErasePage((uint32_t)config_section_first_start + 0x400) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				// check if operation successed
+				if (flash_status != FLASH_COMPLETE) {
+					out = -2;
+				}
+
+
+				break;
+			}
+
+			case REGION_FIRST: {
+				// erase second region
+				if (FLASH_ErasePage((uint32_t)config_section_second_start) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				if (FLASH_ErasePage((uint32_t)config_section_second_start + 0x400) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				// check if operation successed
+				if (flash_status != FLASH_COMPLETE) {
+					out = -2;
+				}
+
+				break;
+			}
+
+			case REGION_SECOND: {
+
+				if (FLASH_ErasePage((uint32_t)config_section_first_start) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				if (FLASH_ErasePage((uint32_t)config_section_first_start + 0x400) != FLASH_COMPLETE) {
+					flash_status = FLASH_ERROR_PG;
+				}
+
+				// check if operation successed
+				if (flash_status != FLASH_COMPLETE) {
+					out = -2;
+				}
+
+				break;
+			}
+		}
+	}
+
+	return out;
 }
