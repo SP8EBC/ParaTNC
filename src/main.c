@@ -319,6 +319,8 @@ int main(int argc, char* argv[]){
 		  // if not store the flag in the backup register to block
 		  // reinitializing once again in the consecutive restart
 		  configuration_set_bits_register(CONFIG_FIRST_FAIL_RESTORING);
+
+		  configuration_clear_bits_register(CONFIG_FIRST_CRC_OK);
 	  }
 
 

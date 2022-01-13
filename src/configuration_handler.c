@@ -114,7 +114,7 @@ uint32_t configuration_handler_check_crc(void) {
 	crc_current = CRC_CalcCRC((uint32_t)0x0);
 #endif
 
-#ifdef STM32L471xxconfig_kiss_flash_state
+#ifdef STM32L471xx
 	// reset CRC engine
 	LL_CRC_ResetCRCCalculationUnit(CRC);
 
@@ -130,6 +130,7 @@ uint32_t configuration_handler_check_crc(void) {
 #endif
 
 	//crc_expected = *__config_section_second_end;
+	crc_expected = *(config_section_second_start + CRC_32B_WORD_OFFSET);
 
 	// check if calculated CRC value match value stored in flash memory
 	if (crc_expected == crc_current) {
@@ -243,6 +244,9 @@ uint32_t configuration_handler_restore_default_first(void) {
 				return out;
 			}
 		}
+	}
+	else {
+		return -2;
 	}
 
 	// set programming counter. If second region is also screwed the first one will be used as a source
@@ -399,6 +403,9 @@ uint32_t configuration_handler_restore_default_second(void) {
 				return out;
 			}
 		}
+	}
+	else {
+		return -2;
 	}
 
 	// set programming counter. If second region is also screwed the first one will be used as a source

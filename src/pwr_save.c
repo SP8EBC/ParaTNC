@@ -591,7 +591,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
 						}
 						else {
-							reinit_sensors= pwr_save_switch_mode_to_c1();
+							// TODO: Workaround here for HW-RevB!!!
+							//reinit_sensors= pwr_save_switch_mode_to_c1();
+							reinit_sensors = pwr_save_switch_mode_to_c0();
 						}
 					}
 				}
@@ -670,7 +672,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
-								pwr_save_switch_mode_to_c1();
+								// TODO: Workaround here for HW-RevB!!!
+								//reinit_sensors= pwr_save_switch_mode_to_c1();
+								pwr_save_switch_mode_to_c0();
 
 								// do not reinitialize everything as reinitialization had been done when switching to m4 mode
 								reinit_sensors = 0;

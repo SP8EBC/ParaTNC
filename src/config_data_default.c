@@ -42,7 +42,7 @@
 /**
  *
  */
-volatile const config_data_mode_t __attribute__((section(".config_section_default.mode"))) config_data_mode_default = {
+const config_data_mode_t __attribute__((section(".config_section_default.mode"))) config_data_mode_default = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -126,7 +126,7 @@ volatile const config_data_mode_t __attribute__((section(".config_section_defaul
 /**
  *
  */
-volatile const config_data_basic_t __attribute__((section(".config_section_default.basic"))) config_data_basic_default = {
+const config_data_basic_t __attribute__((section(".config_section_default.basic"))) config_data_basic_default = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -194,7 +194,7 @@ volatile const config_data_basic_t __attribute__((section(".config_section_defau
  * Data sources for different parameters
  *
  */
-volatile const config_data_wx_sources_t __attribute__((section(".config_section_default.sources"))) config_data_wx_sources_default = {
+const config_data_wx_sources_t __attribute__((section(".config_section_default.sources"))) config_data_wx_sources_default = {
 #ifdef _TEMPERATURE_INTERNAL
 		.temperature = WX_SOURCE_INTERNAL,
 #endif
@@ -259,7 +259,7 @@ volatile const config_data_wx_sources_t __attribute__((section(".config_section_
 /**
  *
  */
-volatile const config_data_umb_t __attribute__((section(".config_section_default.umb"))) config_data_umb_default = {
+const config_data_umb_t __attribute__((section(".config_section_default.umb"))) config_data_umb_default = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -291,7 +291,7 @@ volatile const config_data_umb_t __attribute__((section(".config_section_default
 /**
  *
  */
-volatile const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) config_data_rtu_default = {
+const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) config_data_rtu_default = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
