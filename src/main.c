@@ -14,6 +14,8 @@
 #include <stm32l4xx_ll_rcc.h>
 #include <stm32l4xx_ll_gpio.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
+
+#include "gsm/sim800c.h"
 #endif
 
 #include <delay.h>
@@ -155,11 +157,19 @@ srl_context_t main_kiss_srl_ctx;
 // serial context for UART used for comm with wx sensors
 srl_context_t main_wx_srl_ctx;
 
+#if defined(PARAMETEO)
+// serial context for communication with GSM module
+srl_context_t main_gsm_srl_ctx;
+#endif
+
 // a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;
 
 // a pointer to wx comms context
 srl_context_t* main_wx_srl_ctx_ptr;
+
+// a pointer to gsm context
+srl_context_t* main_gsm_srl_ctx_ptr;
 
 // target USART1 (kiss) baudrate
 uint32_t main_target_kiss_baudrate;
@@ -206,8 +216,10 @@ char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+
+gsm_sim800_state_t main_gsm_state;
 #endif
 
 static void message_callback(struct AX25Msg *msg) {
@@ -263,7 +275,7 @@ int main(int argc, char* argv[]){
   BKP->DR6 = 0;
 #endif
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   system_clock_update_l4();
 
   if (system_clock_configure_l4() != 0) {
@@ -278,8 +290,8 @@ int main(int argc, char* argv[]){
 
   system_clock_configure_rtc_l4();
 
-  RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN);
-  RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN);
+  RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN | RCC_APB1ENR1_USART3EN);
+  RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN); // RCC_APB1ENR1_USART3EN
   RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
   RCC->AHB2ENR |= (RCC_AHB2ENR_ADCEN | RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN);
   RCC->BDCR |= RCC_BDCR_RTCEN;
@@ -445,7 +457,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
 #endif
@@ -509,6 +521,23 @@ int main(int argc, char* argv[]){
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
 
+	// USART3 - GSM
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// TX
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_11;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// RX
+
 #endif
 
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
@@ -538,9 +567,16 @@ int main(int argc, char* argv[]){
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
+#if defined(PARAMETEO)
+  main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
+#endif
 
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
+
+#if defined(PARAMETEO)
+
+#endif
 
 #if defined(PARAMETEO)
   // swtich power to M4. turn on sensors but keep GSM modem turned off
@@ -640,6 +676,8 @@ int main(int argc, char* argv[]){
 #if defined(PARAMETEO)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
+
+  srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_1_LN, srl_usart3_tx_buffer, TX_BUFFER_1_LN, 115200, 1);
 #endif
 
   // initialize APRS path with zeros
@@ -858,6 +896,10 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
+   if (main_config_data_mode->gsm == 1) {
+	   gsm_sim800_init(&main_gsm_state);
+   }
+
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 	   beacon_send_own();
    }
@@ -928,6 +970,17 @@ int main(int argc, char* argv[]){
 
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
+		}
+
+		// if GSM communication is enabled
+		if (main_config_data_mode->gsm == 1) {
+
+			// if data has been received
+			if (main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+
+				// receive callback for communicatio with the modem
+				gsm_sim800_rx_done_callback(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
 		}
 
 		// if Victron VE.direct client is enabled
@@ -1065,6 +1118,10 @@ int main(int argc, char* argv[]){
 			//digi_pool_viscous();
 
 			digi_pool_viscous();
+
+			#ifdef PARAMETEO
+			gsm_sim800_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			#endif
 
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				analog_anemometer_direction_handler();

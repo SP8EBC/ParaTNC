@@ -162,6 +162,11 @@ extern uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN];
 extern uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN];
 #endif
 
+#ifdef PARAMETEO
+extern uint8_t srl_usart3_tx_buffer[TX_BUFFER_1_LN];
+extern uint8_t srl_usart3_rx_buffer[TX_BUFFER_1_LN];
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {

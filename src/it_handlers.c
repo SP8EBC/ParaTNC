@@ -149,6 +149,15 @@ void USART2_IRQHandler(void) {
 	srl_irq_handler(main_wx_srl_ctx_ptr);
 }
 
+#ifdef STM32L471xx
+void USART3_IRQHandler() {
+	NVIC_ClearPendingIRQ(USART3_IRQn);
+	srl_irq_handler(main_gsm_srl_ctx_ptr);
+
+}
+
+#endif
+
 void I2C1_EV_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(I2C1_EV_IRQn);
 

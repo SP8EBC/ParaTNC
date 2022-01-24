@@ -48,6 +48,7 @@ extern char main_symbol_s;
 
 extern srl_context_t* main_kiss_srl_ctx_ptr;
 extern srl_context_t* main_wx_srl_ctx_ptr;
+extern srl_context_t* main_gsm_srl_ctx_ptr;
 
 extern  uint8_t main_kiss_enabled;
 

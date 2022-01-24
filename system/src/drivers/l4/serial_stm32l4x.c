@@ -29,6 +29,9 @@ uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN] = {'\0'};
 uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};
 #endif
 
+uint8_t srl_usart3_tx_buffer[TX_BUFFER_1_LN] = {'\0'};
+uint8_t srl_usart3_rx_buffer[TX_BUFFER_1_LN] = {'\0'};
+
 
 void srl_init(
 			srl_context_t *ctx,
@@ -83,6 +86,9 @@ void srl_init(
 	}
 	else if (port == USART2) {
 		NVIC_EnableIRQ( USART2_IRQn );
+	}
+	else if (port == USART3) {
+		NVIC_EnableIRQ( USART3_IRQn );
 	}
 
 	port->CR1 |= USART_CR1_UE;
@@ -330,7 +336,7 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 		ctx->srl_stop_trigger = 0;
 	}
 
-	if (ctx->srl_triggered_start == 1 || ctx->srl_triggered_stop == 1) {
+	if (ctx->srl_triggered_start == 1 /*|| ctx->srl_triggered_stop == 1*/) {
 		if (num < 3)
 			return SRL_WRONG_PARAMS_COMBINATION;
 
@@ -392,7 +398,7 @@ uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char 
 		ctx->srl_triggered_stop = 0;
 	}
 
-	if (ctx->srl_triggered_start == 1 || ctx->srl_triggered_stop == 1) {
+	if (ctx->srl_triggered_start == 1 /*|| ctx->srl_triggered_stop == 1*/) {
 		if (num < 3)
 			return SRL_WRONG_PARAMS_COMBINATION;
 

@@ -88,7 +88,7 @@ void srl_init(
 		NVIC_EnableIRQ( USART2_IRQn );
 	}
 
-	port->CR1 |= USART_CR1_UE;
+ 	port->CR1 |= USART_CR1_UE;
 	port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 
 	ctx->srl_rx_state = SRL_RX_IDLE;
