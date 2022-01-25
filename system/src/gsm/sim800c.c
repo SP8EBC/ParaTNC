@@ -10,13 +10,20 @@
 #include "main.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 static const char * AUTOBAUD_STRING 			= "AT\r\0";
 static const char * GET_SIGNAL_LEVEL 			= "AT+CSQ\r\0";
 static const char * GET_NETWORK_REGISTRATION 	= "AT+CREG?\r\0";
+static const char * GET_PIN_STATUS 				= "AT+CPIN?\r\0";
+static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
 
 static const char * OK = "OK\r\n\0";
-static const char * NETWORK_REGISTRATION = "+CREG\0";
+static const char * NETWORK_REGISTRATION = "+CREG:\0";
+static const char * CPIN = "+CPIN:\0";
+static const char * CPIN_READY = "READY";
+static const char * CPIN_SIMPIN = "SIMPIN";
+static const char * REGISTERED_NETWORK = "+COPS:\0";
 
 uint32_t gsm_time_of_last_command_send_to_module = 0;
 
@@ -29,12 +36,15 @@ uint8_t gsm_receive_newline_counter = 0;
 // first character of non-echo response from the module
 uint16_t gsm_response_start_idx = 0;
 
-//
+// a pointer to the last command string which sent in SIM800_INITIALIZING state
 const char * gsm_at_command_sent_last = 0;
 
+// set to one to lock 'gsm_sim800_pool' in SIM800_INITIALIZING state until the response is received
 uint8_t gsm_waiting_for_command_response = 0;
 
 uint8_t gsm_registration_status = 4;	// unknown
+
+char gsm_sim_status[10];
 
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 
@@ -72,23 +82,49 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	else if (*state == SIM800_INITIALIZING && gsm_waiting_for_command_response == 0) {
 
 		// check what command has been sent
-		switch ((uint32_t)gsm_at_command_sent_last) {
-			case 0: {	// no command has been send so far
+		//switch ((uint32_t)gsm_at_command_sent_last) {
+		if (gsm_at_command_sent_last == 0) {
+			// no command has been send so far
 
+			// ask for network registration status
+			srl_send_data(srl_context, (const uint8_t*) GET_NETWORK_REGISTRATION, SRL_MODE_ZERO, strlen(GET_NETWORK_REGISTRATION), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = GET_NETWORK_REGISTRATION;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+		}
+		else if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
 				// ask for network registration status
-				srl_send_data(srl_context, (const uint8_t*) GET_NETWORK_REGISTRATION, SRL_MODE_ZERO, strlen(GET_NETWORK_REGISTRATION), SRL_INTERNAL);
+				srl_send_data(srl_context, (const uint8_t*) GET_PIN_STATUS, SRL_MODE_ZERO, strlen(GET_PIN_STATUS), SRL_INTERNAL);
 
 				// wait for command completion
 				srl_wait_for_tx_completion(srl_context);
 
-				gsm_at_command_sent_last = GET_NETWORK_REGISTRATION;
+				gsm_at_command_sent_last = GET_PIN_STATUS;
 
 				gsm_waiting_for_command_response = 1;
 
 				srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
-				break;
-			}
+		}
+		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
+			// ask for network registration status
+			srl_send_data(srl_context, (const uint8_t*) GET_REGISTERED_NETWORK, SRL_MODE_ZERO, strlen(GET_REGISTERED_NETWORK), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = GET_REGISTERED_NETWORK;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 		}
 	}
 }
@@ -150,10 +186,24 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 		}
 	}
 	else if (*state == SIM800_INITIALIZING) {
-		comparision_result = strncmp(NETWORK_REGISTRATION, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
+		if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
+			comparision_result = strncmp(NETWORK_REGISTRATION, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
 
-		if (comparision_result == 0) {
-			gsm_registration_status = atoi((const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 9));
+			if (comparision_result == 0) {
+				gsm_registration_status = atoi((const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 9));
+			}
+		}
+		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
+			comparision_result = strncmp(CPIN, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
+
+			if (comparision_result == 0) {
+				strncpy(gsm_sim_status, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
+			}
+
+		}
+		else if (gsm_at_command_sent_last == GET_REGISTERED_NETWORK) {
+			comparision_result = strncmp(REGISTERED_NETWORK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
+
 		}
 	}
 }
