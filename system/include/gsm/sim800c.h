@@ -19,9 +19,9 @@ typedef enum gsm_sim800_state_t {
 	SIM800_GPRS_CONNECTED
 }gsm_sim800_state_t;
 
-void gsm_sim800_init(gsm_sim800_state_t * state);
+void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo);
 
 void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state);
-void gsm_sim800_rx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
+uint8_t gsm_sim800_rx_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);	// callback used to detect echo
 
 #endif /* INCLUDE_GSM_SIM800C_H_ */

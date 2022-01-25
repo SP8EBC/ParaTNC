@@ -897,7 +897,7 @@ int main(int argc, char* argv[]){
    io_ext_watchdog_service();
 
    if (main_config_data_mode->gsm == 1) {
-	   gsm_sim800_init(&main_gsm_state);
+	   gsm_sim800_init(&main_gsm_state, 1);
    }
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
@@ -976,10 +976,10 @@ int main(int argc, char* argv[]){
 		if (main_config_data_mode->gsm == 1) {
 
 			// if data has been received
-			if (main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+			if (main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 
 				// receive callback for communicatio with the modem
-				gsm_sim800_rx_done_callback(main_gsm_srl_ctx_ptr, &main_gsm_state);
+				//gsm_sim800_rx_done_callback(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 		}
 

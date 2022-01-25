@@ -32,6 +32,18 @@
 #define SRL_MODE_ZERO	0
 #define SRL_MODE_DEFLN	1
 
+#define SRL_NO_START_CHR	0
+#define SRL_NO_STOP_CHR		0
+
+#define SRL_ECHO_ENABLE		1
+#define SRL_ECHO_DISABLE	0
+
+/**
+ * Callback definition which may be called after receiving each byte by an UART
+ *
+ * @param current_data	received byte
+ * @param rx_bytes_counter receive bytes counter incremented AFTER this callback is processed so it's point to the byte which triggered this call
+ */
 typedef uint8_t(*srl_rx_termination_callback_t)(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
 typedef enum srlRxState {
