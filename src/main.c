@@ -16,6 +16,7 @@
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 
 #include "gsm/sim800c.h"
+#include "gsm/sim800c_engineering.h"
 #endif
 
 #include <delay.h>
@@ -983,6 +984,13 @@ int main(int argc, char* argv[]){
 
 				main_gsm_srl_ctx_ptr->srl_rx_state = SRL_RX_IDLE;
 			}
+
+			if (main_gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
+				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
+			gsm_sim800_engineering_enable(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			gsm_sim800_engineering_request_data(main_gsm_srl_ctx_ptr, &main_gsm_state);
 		}
 
 		// if Victron VE.direct client is enabled

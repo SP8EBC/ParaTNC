@@ -9,22 +9,22 @@
 #define INCLUDE_GSM_SIM800C_H_
 
 #include "drivers/serial.h"
+#include "gsm/sim800_state_t.h"
 
-typedef enum gsm_sim800_state_t {
-	SIM800_UNKNOWN,
-	SIM800_POWERED_OFF,
-	SIM800_NOT_YET_COMM,
-	SIM800_HANDSHAKING,
-	SIM800_INITIALIZING,
-	SIM800_INITIALIZING_WAIT_RESPONSE,
-	SIM800_ALIVE,
-	SIM800_GPRS_CONNECTED
-}gsm_sim800_state_t;
+extern const char * gsm_at_command_sent_last;
+
+extern char gsm_sim800_sim_status[10];
+extern char gsm_sim800_registered_network[16];
+extern int8_t gsm_sim800_signal_level_dbm;
+extern float gsm_sim800_bcch_frequency;
+extern char gsm_sim800_cellid[5];
+extern char gsm_sim800_lac[5];
 
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo);
 
 void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state);
 uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);	// callback used to detect echo
 void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state);
+void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state);
 
 #endif /* INCLUDE_GSM_SIM800C_H_ */
