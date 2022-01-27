@@ -15,7 +15,7 @@
 #include <stdlib.h>
 
 const char * ENGINEERING_ENABLE = "AT+CENG=4,0\r\0";
-const char * ENGINEERING_DISABLE = "AT+CENG=4,0\r\0";
+const char * ENGINEERING_DISABLE = "AT+CENG=0,0\r\0";
 const char * ENGINEERING_GET = "AT+CENG?\r\0";
 
 static const char * OK = "OK\r\n\0";
@@ -31,6 +31,10 @@ static const char * CENG0 = "+CENG: 0,\0";
 #define LAC_LN			4
 
 uint8_t gsm_sim800_engineering_is_enabled = 0;
+
+// set to one if correct response has been received for engineering data request. This is reset back to zero
+// after disabling CENG or after 'gsm_sim800_engineering_request_data' is called
+uint8_t gsm_sim800_engineering_successed = 0;
 
 
 static uint16_t gsm_sim800_rewind_to_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_t buffer_ln, uint16_t gsm_response_start_idx) {
@@ -113,12 +117,28 @@ void gsm_sim800_engineering_enable(srl_context_t * srl_context, gsm_sim800_state
 }
 
 void gsm_sim800_engineering_disable(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1) {
+		// send a command to module
+		srl_send_data(srl_context, (const uint8_t*) ENGINEERING_DISABLE, SRL_MODE_ZERO, strlen(ENGINEERING_DISABLE), SRL_INTERNAL);
 
+		// set what has been just send
+		gsm_at_command_sent_last = ENGINEERING_DISABLE;
+
+		// switch the internal state
+		*state = SIM800_ALIVE_SENDING_TO_MODEM;
+
+		// clear the flag
+		gsm_sim800_engineering_successed = 0;
+	}
 }
 
 void gsm_sim800_engineering_request_data(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1) {
+
+		// clear the flag
+		gsm_sim800_engineering_successed = 0;
+
 		// send a command to module
 		srl_send_data(srl_context, (const uint8_t*) ENGINEERING_GET, SRL_MODE_ZERO, strlen(ENGINEERING_GET), SRL_INTERNAL);
 
@@ -145,11 +165,34 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 		}
 	}
 	else if (gsm_at_command_sent_last == ENGINEERING_GET) {
+
+		// check if anything has been received
+		if (srl_context->srl_rx_state == SRL_RX_ERROR) {
+
+			gsm_sim800_engineering_successed = 0;
+
+			return;
+		}
+		else {
+			gsm_sim800_engineering_successed = 1;
+		}
+
 		// look for the start of '+CENG: 0,' record
 		uint16_t ceng_start = gsm_sim800_rewind_to_ceng_0(srl_context->srl_rx_buf_pointer, srl_context->srl_rx_buf_ln, gsm_response_start_idx);
 
 		// if it has been found
 		gsm_sim800_engineering_parse_ceng_0(srl_context->srl_rx_buf_pointer, ceng_start);
+	}
+	else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
+		int comparision_result = strcmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx));
+
+		if (comparision_result == 0) {
+			gsm_sim800_engineering_is_enabled = 0;
+
+		}
+		else {
+			;
+		}
 	}
 
 }

@@ -17,6 +17,7 @@
 
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
+#include "gsm/sim800c_poolers.h"
 #endif
 
 #include <delay.h>
@@ -989,8 +990,9 @@ int main(int argc, char* argv[]){
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
-			gsm_sim800_engineering_enable(main_gsm_srl_ctx_ptr, &main_gsm_state);
-			gsm_sim800_engineering_request_data(main_gsm_srl_ctx_ptr, &main_gsm_state);
+//			gsm_sim800_engineering_enable(main_gsm_srl_ctx_ptr, &main_gsm_state);
+//			gsm_sim800_engineering_request_data(main_gsm_srl_ctx_ptr, &main_gsm_state);
+//			gsm_sim800_engineering_disable(main_gsm_srl_ctx_ptr, &main_gsm_state);
 		}
 
 		// if Victron VE.direct client is enabled
@@ -1120,6 +1122,12 @@ int main(int argc, char* argv[]){
 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
 
+			#ifdef PARAMETEO
+			if (main_config_data_mode->gsm == 1) {
+				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+			#endif
+
 			main_one_minute_pool_timer = 60000;
 		}
 
@@ -1130,7 +1138,9 @@ int main(int argc, char* argv[]){
 			digi_pool_viscous();
 
 			#ifdef PARAMETEO
-			gsm_sim800_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
+			gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			#endif
 
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {

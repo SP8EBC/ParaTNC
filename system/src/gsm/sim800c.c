@@ -83,7 +83,7 @@ void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 	}
 }
 
-void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 	if (*state == SIM800_NOT_YET_COMM) {
 
@@ -101,6 +101,9 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 		// start data reception
 		srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+		// start timeout calculation
+		srl_context->srl_rx_timeout_calc_started = 1;
 
 		// record when the handshake has been sent
 		gsm_time_of_last_command_send_to_module = main_get_master_time();
@@ -124,6 +127,12 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+
 		}
 		else if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
 				// ask for network registration status
@@ -138,6 +147,12 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 				srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
+				// start timeout calculation
+				srl_context->srl_rx_timeout_calc_started = 1;
+
+				// record when the command has been sent
+				gsm_time_of_last_command_send_to_module = main_get_master_time();
+
 		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
 			// ask for network registration status
@@ -151,6 +166,12 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 			gsm_waiting_for_command_response = 1;
 
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 		else if (gsm_at_command_sent_last == GET_REGISTERED_NETWORK) {
 			// ask for signal level
@@ -164,6 +185,12 @@ void gsm_sim800_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 			gsm_waiting_for_command_response = 1;
 
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {
 			*state = SIM800_ALIVE;
@@ -272,7 +299,7 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				comparision_result = atoi((const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 6));
 
 				if (comparision_result > 1 && comparision_result < 32) {
-					gsm_sim800_signal_level_dbm = -110 + 2 * comparision_result;
+					gsm_sim800_signal_level_dbm = (int8_t)(-110 + 2 * (comparision_result - 2));
 				}
 				else if (comparision_result == 1) {
 					gsm_sim800_signal_level_dbm = -111;
@@ -292,6 +319,10 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 		else if (gsm_at_command_sent_last == ENGINEERING_GET) {
 			gsm_sim800_engineering_response_callback(srl_context, state, gsm_response_start_idx);
 		}
+		else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
+			gsm_sim800_engineering_response_callback(srl_context, state, gsm_response_start_idx);
+
+		}
 
 		*state = SIM800_ALIVE;
 	}
@@ -301,7 +332,12 @@ void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 	if (*state == SIM800_ALIVE_SENDING_TO_MODEM) {
 		srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
+		// start timeout calculation
+		srl_context->srl_rx_timeout_calc_started = 1;
+
 		*state = SIM800_ALIVE_WAITING_MODEM_RESP;
+
+		gsm_time_of_last_command_send_to_module = main_get_master_time();
 	}
 
 }
