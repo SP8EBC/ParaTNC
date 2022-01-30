@@ -16,7 +16,10 @@
 extern const char * START_CONFIG_APN;
 extern const char * SHUTDOWN_GPRS;
 extern const char * SHUTDOWN_GRPS_RESPONSE;
-
+extern const char * ENABLE_EDGE;
+extern const char * START_GPRS;
+extern const char * GET_IP_ADDRESS;
+extern const char * GET_CONNECTION_STATUS;
 
 extern int8_t gsm_sim800_gprs_ready;
 

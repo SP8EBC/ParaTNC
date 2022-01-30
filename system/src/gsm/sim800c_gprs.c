@@ -7,19 +7,28 @@
 #include <string.h>
 
 
-const char * START_CONFIG_APN 				= "AT+CSTT=\0";
+const char * START_CONFIG_APN 			= "AT+CSTT=\0";
 const char * SHUTDOWN_GPRS 				= "AT+CIPSHUT\r\0";
-const char * SHUTDOWN_GRPS_RESPONSE 		= "SHUT OK\0";
+const char * SHUTDOWN_GRPS_RESPONSE 	= "SHUT OK\0";
+const char * ENABLE_EDGE				= "AT+CEGPRS=1,10\r\0";
+const char * START_GPRS					= "AT+CIICR\r\0";
+const char * GET_IP_ADDRESS				= "AT+CIFSR\r\0";
+const char * GET_CONNECTION_STATUS		= "AT+CIPSTATUS\r\0";
 
 
 static const char * OK = "OK\r\n\0";
 static const char * QUOTATION = "\"\0";
 static const char * COMMA = ",\0";
 static const char * NEWLINE = "\r\0";
+static const char * STATE = "STATE\0";
 
 config_data_gsm_t * gsm_sim800_gprs_config_gsm;
 
 int8_t gsm_sim800_gprs_ready = 0;
+
+char gsm_sim800_ip_address[18];
+
+char gsm_sim800_connection_status_str[24];
 
 void sim800_gprs_initialize(srl_context_t * srl_context, gsm_sim800_state_t * state, config_data_gsm_t * config_gsm) {
 
@@ -80,15 +89,41 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 
 	int comparision_result = 0;
 
-	if (gsm_at_command_sent_last == SHUTDOWN_GPRS) {
+	if (gsm_at_command_sent_last == SHUTDOWN_GPRS && srl_context->srl_rx_state != SRL_RX_ERROR) {
 		comparision_result = strncmp(SHUTDOWN_GRPS_RESPONSE, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 7);
 	}
-	else {
+	else if (gsm_at_command_sent_last == START_GPRS && srl_context->srl_rx_state != SRL_RX_ERROR) {
+		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
+
+	}
+	else if (gsm_at_command_sent_last == GET_IP_ADDRESS) {
+		memset(gsm_sim800_ip_address, 0, 18);
+
+		strncpy(gsm_sim800_ip_address, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 18);
+
+		replace_non_printable_with_space(gsm_sim800_ip_address);
+	}
+	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS ) {
+			// TODO
+
+		//for (comparision_result = gsm_response_start_idx; comparision_result > 0 && (strncmp(STATE, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5)); comparision_result--);
+
+		/**
+		 * AT+CIPSTATUS
+OK
+
+STATE: IP STATUS
+		 *
+		 */
+
+		memset(gsm_sim800_connection_status_str, 0x00, 24);
+	}
+	else if (srl_context->srl_rx_state == SRL_RX_DONE || srl_context->srl_rx_state == SRL_RX_IDLE){
 		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
 	}
 
 	if (comparision_result != 0) {
-		*state = SIM800_HANDSHAKING;
+		*state = SIM800_NOT_YET_COMM;
 	}
 }
 

@@ -20,6 +20,18 @@ extern float gsm_sim800_bcch_frequency;
 extern char gsm_sim800_cellid[5];
 extern char gsm_sim800_lac[5];
 
+inline void replace_non_printable_with_space(char * str) {
+	for (int i = 0; *(str + i) != 0 ; i++) {
+		char current = *(str + i);
+
+		if (current != 0x00) {
+			if (current < 0x21 || current > 0x7A) {
+				*(str + i) = ' ';
+			}
+		}
+	}
+}
+
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo);
 
 void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_state_t * state);

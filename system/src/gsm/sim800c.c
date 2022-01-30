@@ -63,18 +63,6 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
 
-static void replace_non_printable_with_space(char * str) {
-	for (int i = 0; *(str + i) != 0 ; i++) {
-		char current = *(str + i);
-
-		if (current != 0x00) {
-			if (current < 0x21 || current > 0x7A) {
-				*(str + i) = ' ';
-			}
-		}
-	}
-}
-
 uint8_t gsm_sim800_get_waiting_for_command_response(void) {
 	return gsm_waiting_for_command_response;
 }
@@ -114,6 +102,8 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 		// record when the handshake has been sent
 		gsm_time_of_last_command_send_to_module = main_get_master_time();
+
+		gsm_at_command_sent_last = 0;
 	}
 	else if (*state == SIM800_INITIALIZING && gsm_waiting_for_command_response == 0) {
 
@@ -243,8 +233,95 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 			gsm_waiting_for_command_response = 1;
 
-			// 'AT+CIICR' has maximum response time of 85 seconds
-			srl_switch_timeout(srl_context, 1, 85000);
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			srl_switch_timeout(srl_context, 1, 0);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else if (gsm_at_command_sent_last == START_CONFIG_APN) {
+
+			srl_send_data(srl_context, (const uint8_t*) START_GPRS, SRL_MODE_ZERO, strlen(START_GPRS), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = START_GPRS;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// starting GPRS session has maximum response time of 65 seconds
+			srl_switch_timeout(srl_context, 1, 15000);		// TODO
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+
+		}
+		else if (gsm_at_command_sent_last == START_GPRS) {
+
+			srl_send_data(srl_context, (const uint8_t*) GET_IP_ADDRESS, SRL_MODE_ZERO, strlen(GET_IP_ADDRESS), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = GET_IP_ADDRESS;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// reverting back to default timeout
+			srl_switch_timeout(srl_context, 1, 0);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+
+//			srl_send_data(srl_context, (const uint8_t*) ENABLE_EDGE, SRL_MODE_ZERO, strlen(ENABLE_EDGE), SRL_INTERNAL);
+//
+//			// wait for command completion
+//			srl_wait_for_tx_completion(srl_context);
+//
+//			gsm_at_command_sent_last = ENABLE_EDGE;
+//
+//			gsm_waiting_for_command_response = 1;
+//
+//			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+//
+//			// this command has standard response time
+//			srl_switch_timeout(srl_context, 1, 0);
+//
+//			// start timeout calculation
+//			srl_context->srl_rx_timeout_calc_started = 1;
+//
+//			// record when the command has been sent
+//			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else if (gsm_at_command_sent_last == GET_IP_ADDRESS) {
+			srl_send_data(srl_context, (const uint8_t*) GET_CONNECTION_STATUS, SRL_MODE_ZERO, strlen(GET_CONNECTION_STATUS), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = GET_CONNECTION_STATUS;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// reverting back to default timeout
+			srl_switch_timeout(srl_context, 1, 0);
 
 			// start timeout calculation
 			srl_context->srl_rx_timeout_calc_started = 1;
@@ -269,6 +346,10 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 	// special case for CENG request
 	if (gsm_at_command_sent_last == ENGINEERING_GET) {
 		terminating_newline_counter = 4;
+	}
+
+	if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
+		terminating_newline_counter = 3;
 	}
 
 	if (rx_bytes_counter > 0) {
