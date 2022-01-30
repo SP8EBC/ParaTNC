@@ -458,6 +458,8 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 void configuration_handler_load_configuration(configuration_handler_region_t region) {
 
+	main_config_data_gsm = &config_data_gsm_default;
+
 	if (region == REGION_DEFAULT) {
 		main_config_data_mode = &config_data_mode_default;
 		main_config_data_basic = &config_data_basic_default;

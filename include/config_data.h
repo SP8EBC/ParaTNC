@@ -320,5 +320,17 @@ typedef struct config_data_rtu_t {
 
 } config_data_rtu_t;
 
+typedef struct config_data_gsm_t {
+
+	char pin[5];
+
+	char apn[24];
+
+	char username[24];
+
+	char password[24];
+
+
+} config_data_gsm_t;
 
 #endif /* CONFIG_DATA_H_ */

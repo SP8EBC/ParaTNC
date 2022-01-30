@@ -7,6 +7,7 @@
 
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
+#include "gsm/sim800c_gprs.h"
 
 #include "main.h"
 
@@ -18,6 +19,8 @@ static const char * GET_SIGNAL_LEVEL 			= "AT+CSQ\r\0";
 static const char * GET_NETWORK_REGISTRATION 	= "AT+CREG?\r\0";
 static const char * GET_PIN_STATUS 				= "AT+CPIN?\r\0";
 static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
+extern const char * START_CONFIG_APN;
+
 
 static const char * OK = "OK\r\n\0";
 static const char * SIGNAL_LEVEL = "+CSQ:\0";
@@ -70,6 +73,10 @@ static void replace_non_printable_with_space(char * str) {
 			}
 		}
 	}
+}
+
+uint8_t gsm_sim800_get_waiting_for_command_response(void) {
+	return gsm_waiting_for_command_response;
 }
 
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
@@ -194,6 +201,56 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {
 			*state = SIM800_ALIVE;
+
+			gsm_at_command_sent_last = 0;
+		}
+	}
+	else if (*state == SIM800_INITIALIZING_GPRS  && gsm_waiting_for_command_response == 0) {
+		// do not
+		if (gsm_at_command_sent_last == 0) {
+			srl_send_data(srl_context, (const uint8_t*) SHUTDOWN_GPRS, SRL_MODE_ZERO, strlen(SHUTDOWN_GPRS), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = SHUTDOWN_GPRS;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// 'AT+CIPSHUT' has maximum response time of 65 seconds
+			srl_switch_timeout(srl_context, 1, 65000);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else if (gsm_at_command_sent_last == SHUTDOWN_GPRS) {
+			// create GPRS APN configuration string
+			sim800_gprs_create_apn_config_str((char * )srl_context->srl_tx_buf_pointer, srl_context->srl_tx_buf_ln);
+
+			// send created data to GSM module
+			//srl_send_data(srl_context, srl_context->srl_tx_buf_pointer, SRL_MODE_ZERO, strlen((const char *)srl_context->srl_tx_buf_pointer), SRL_EXTERNAL);
+			srl_start_tx(srl_context, strlen((const char*) srl_context->srl_tx_buf_pointer));
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = START_CONFIG_APN;
+
+			gsm_waiting_for_command_response = 1;
+
+			// 'AT+CIICR' has maximum response time of 85 seconds
+			srl_switch_timeout(srl_context, 1, 85000);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 	}
 }
@@ -311,17 +368,25 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 		}
 	}
+	else if (*state == SIM800_INITIALIZING_GPRS) {
+		sim800_gprs_response_callback(srl_context, state, gsm_response_start_idx);
+	}
 	else if (*state == SIM800_ALIVE_WAITING_MODEM_RESP) {
 
 		if (gsm_at_command_sent_last == ENGINEERING_ENABLE) {
 			gsm_sim800_engineering_response_callback(srl_context, state, gsm_response_start_idx);
+
+			gsm_at_command_sent_last = 0;
 		}
 		else if (gsm_at_command_sent_last == ENGINEERING_GET) {
 			gsm_sim800_engineering_response_callback(srl_context, state, gsm_response_start_idx);
+
+			gsm_at_command_sent_last = 0;
 		}
 		else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
 			gsm_sim800_engineering_response_callback(srl_context, state, gsm_response_start_idx);
 
+			gsm_at_command_sent_last = 0;
 		}
 
 		*state = SIM800_ALIVE;

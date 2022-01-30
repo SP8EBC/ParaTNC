@@ -125,6 +125,9 @@ const config_data_basic_t * main_config_data_basic = 0;
 const config_data_wx_sources_t * main_config_data_wx_sources = 0;
 const config_data_umb_t * main_config_data_umb = 0;
 const config_data_rtu_t * main_config_data_rtu = 0;
+#ifdef PARAMETEO
+const config_data_gsm_t * main_config_data_gsm = 0;
+#endif
 
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
@@ -1140,7 +1143,7 @@ int main(int argc, char* argv[]){
 			#ifdef PARAMETEO
 			gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-			gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
 			#endif
 
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {

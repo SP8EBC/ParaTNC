@@ -456,3 +456,17 @@ const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) 
 		.slave_6_unsigned_signed = 0
 };
 
+#ifdef PARAMETEO
+
+const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) config_data_gsm_default = {
+		.pin = "\0\0\0\0\0",
+
+		.apn = "internet\0",
+
+		.username = "\0",
+
+		.password = "\0"
+};
+#endif
+
+

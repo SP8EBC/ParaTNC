@@ -30,5 +30,9 @@ extern const config_data_umb_t config_data_umb_second;
 extern const config_data_rtu_t config_data_rtu_second;
 extern const config_data_wx_sources_t config_data_wx_sources_second;
 
+#ifdef PARAMETEO
+extern const config_data_gsm_t config_data_gsm_default;
+#endif
+
 
 #endif /* CONFIG_DATA_EXTERNS_H_ */

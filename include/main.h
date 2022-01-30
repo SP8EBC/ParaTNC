@@ -6,7 +6,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA04"
-#define SW_DATE "12012022"
+#define SW_DATE "30012022"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -25,6 +25,9 @@ extern const config_data_basic_t * main_config_data_basic;
 extern const config_data_wx_sources_t * main_config_data_wx_sources;
 extern const config_data_umb_t * main_config_data_umb;
 extern const config_data_rtu_t * main_config_data_rtu;
+#ifdef PARAMETEO
+extern const config_data_gsm_t * main_config_data_gsm;
+#endif
 
 extern int32_t main_wx_sensors_pool_timer;
 extern int32_t main_one_minute_pool_timer;
