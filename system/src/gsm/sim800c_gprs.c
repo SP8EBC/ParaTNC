@@ -20,7 +20,8 @@ static const char * OK = "OK\r\n\0";
 static const char * QUOTATION = "\"\0";
 static const char * COMMA = ",\0";
 static const char * NEWLINE = "\r\0";
-static const char * STATE = "STATE\0";
+static const char * STATE = "STATE: \0";
+static const char * IPSTATUS = "IP STATUS\0";
 
 config_data_gsm_t * gsm_sim800_gprs_config_gsm;
 
@@ -89,6 +90,10 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 
 	int comparision_result = 0;
 
+	int stringln = 0;
+
+	int i = 0;
+
 	if (gsm_at_command_sent_last == SHUTDOWN_GPRS && srl_context->srl_rx_state != SRL_RX_ERROR) {
 		comparision_result = strncmp(SHUTDOWN_GRPS_RESPONSE, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 7);
 	}
@@ -104,19 +109,41 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 		replace_non_printable_with_space(gsm_sim800_ip_address);
 	}
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS ) {
-			// TODO
-
-		//for (comparision_result = gsm_response_start_idx; comparision_result > 0 && (strncmp(STATE, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5)); comparision_result--);
-
-		/**
-		 * AT+CIPSTATUS
-OK
-
-STATE: IP STATUS
-		 *
-		 */
 
 		memset(gsm_sim800_connection_status_str, 0x00, 24);
+
+		// check lenght of the response
+		stringln = strlen((const char * )srl_context->srl_rx_buf_pointer);
+
+		// check if the reponse has senseful lenght (not to short to be valid)
+		if (stringln > 8) {
+			// loop backwards from the end
+			for (i = stringln; i > 0; i--) {
+				comparision_result = strncmp(STATE, (const char * )srl_context->srl_rx_buf_pointer + i, 7);
+
+				if (comparision_result == 0) {
+					memcpy(gsm_sim800_connection_status_str, srl_context->srl_rx_buf_pointer + i + 7, stringln - i - 7);
+
+					replace_non_printable_with_space(gsm_sim800_connection_status_str);
+				}
+			}
+		}
+
+		// check if connection is alive and kickin'
+		stringln = strlen(gsm_sim800_ip_address);
+
+		// check ip address ln is greater than 7 (x.x.x.x)
+		if (stringln > 7) {
+			// check status
+			comparision_result = strncmp(IPSTATUS, gsm_sim800_connection_status_str, 9);
+
+			if (comparision_result == 0) {
+				gsm_sim800_gprs_ready = 1;
+			}
+			else {
+				gsm_sim800_gprs_ready = 0;
+			}
+		}
 	}
 	else if (srl_context->srl_rx_state == SRL_RX_DONE || srl_context->srl_rx_state == SRL_RX_IDLE){
 		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
