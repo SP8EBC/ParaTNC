@@ -29,11 +29,28 @@ static const char * CPIN = "+CPIN:\0";
 static const char * CPIN_READY = "READY";
 static const char * CPIN_SIMPIN = "SIMPIN";
 static const char * REGISTERED_NETWORK = "+COPS:\0";
+static const char * INCOMING_CALL = "RING\0";
+#define INCOMING_CALL_LN 4
+static const char * UVP_PDOWN = "UNDER-VOLTAGE POWER DOWN\0";
+#define UVP_PDOWN_LN 24
+static const char * UVP_WARNING = "UNDER-VOLTAGE WARNNING\0";
+#define UVP_WARNING_LN 22
+static const char * OVP_PDWON = "OVER-VOLTAGE POWER DOWN\0";
+#define IVP_PDWON_LN 23
+static const char * OVP_WARNING = "OVER-VOLTAGE WARNNING\0";
+#define OVP_WARNING_LN 21
+static const char * CALL_RDY = "Call Ready\0";
+#define CALL_RDY_LN 10
+static const char * SMS_RDY = "SMS Ready\0";
+#define SMS_RDY_LN 9
 
 uint32_t gsm_time_of_last_command_send_to_module = 0;
 
 // let's the library know if gsm module echoes every AT command send through serial port
 static uint8_t gsm_at_comm_echo = 1;
+
+// how many newlines
+volatile static int8_t gsm_terminating_newline_counter = 1;
 
 // used to receive echo and response separately
 static uint8_t gsm_receive_newline_counter = 0;
@@ -62,6 +79,53 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
+static void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
+
+	int comparision_result = 123;
+
+	comparision_result = strncmp(INCOMING_CALL, ptr, INCOMING_CALL_LN);
+}
+
+static uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size) {
+
+	// this bitmask stores positions of first four lines of text in input buffer
+	// the position value is set to 0xFF if a position of the newline is beyond 255 offset
+	uint32_t output_bitmask = 0;
+
+	int8_t newlines = 0;
+
+	int i = 0;
+
+	char current, previous;
+
+	current = (char)*ptr;
+
+	for (i = 0; (i < size) && *(ptr + i) != 0; i++) {
+
+		previous = current;
+
+		current = (char)*(ptr + i);
+
+		if (previous == '\n' && current >= 0x20 && current < 0x7F) {
+
+			output_bitmask |= (uint8_t)(i << (8 * newlines));
+
+			newlines++;
+		}
+
+
+		if (newlines > 3) {
+			break;
+		}
+	}
+
+	if (*(ptr + i - 1) == '\n' || *(ptr + i) == '\n') {
+		output_bitmask |= (uint8_t)i << (8 * newlines);
+
+	}
+
+	return output_bitmask;
+}
 
 uint8_t gsm_sim800_get_waiting_for_command_response(void) {
 	return gsm_waiting_for_command_response;
@@ -341,15 +405,15 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 
 	char before = '\0';
 
-	int8_t terminating_newline_counter = 1;
-
 	// special case for CENG request
 	if (gsm_at_command_sent_last == ENGINEERING_GET) {
-		terminating_newline_counter = 4;
+		gsm_terminating_newline_counter = 4;
 	}
-
-	if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
-		terminating_newline_counter = 3;
+	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
+		gsm_terminating_newline_counter = 4;
+	}
+	else {
+		gsm_terminating_newline_counter = 1;
 	}
 
 	if (rx_bytes_counter > 0) {
@@ -368,7 +432,7 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 	}
 
 	// if an echo is enabled and second newline has been received
-	if (gsm_at_comm_echo == 1 && gsm_receive_newline_counter > terminating_newline_counter && gsm_response_start_idx > 0) {
+	if (gsm_at_comm_echo == 1 && gsm_receive_newline_counter > gsm_terminating_newline_counter && gsm_response_start_idx > 0) {
 
 		gsm_receive_newline_counter = 0;
 
@@ -385,7 +449,26 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 	int comparision_result = 123;
 
+	uint8_t second_line, third_line, fourth_line;
+
+	uint32_t newlines = 0;
+
 	gsm_waiting_for_command_response = 0;
+
+	// check how many lines of text
+	newlines = gsm_sim800_check_for_extra_newlines(srl_context->srl_rx_buf_pointer + gsm_response_start_idx, srl_context->srl_rx_buf_ln);
+
+	// if a library expects only single line of response
+	if (gsm_terminating_newline_counter == 1) {
+		// if more than one line of response has been received
+		second_line = (newlines & 0x0000FF00) >> 8;
+		third_line = (newlines & 0x00FF0000) >> 16;
+		fourth_line = (newlines & 0xFF000000) >> 24;
+
+		if (second_line != 0) {
+			gsm_sim800_check_for_async_messages(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + second_line, srl_context->srl_rx_buf_ln, & gsm_response_start_idx);
+		}
+	}
 
 	// if the library expects to receive a handshake from gsm module
 	if (*state == SIM800_HANDSHAKING) {
@@ -417,7 +500,7 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				strncpy(gsm_sim800_sim_status, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
 
-				replace_non_printable_with_space(gsm_sim800_sim_status);
+				gsm_sim800_replace_non_printable_with_space(gsm_sim800_sim_status);
 			}
 
 		}
@@ -427,7 +510,7 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
 
-				replace_non_printable_with_space(gsm_sim800_registered_network);
+				gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network);
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {

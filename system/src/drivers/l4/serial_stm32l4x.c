@@ -110,6 +110,23 @@ void srl_init(
 	ctx->srl_rx_timeout_waiting_enable = 0;
 }
 
+void srl_reset(srl_context_t *ctx) {
+	ctx->srl_rx_state = SRL_RX_IDLE;
+	ctx->srl_tx_state = SRL_TX_IDLE;
+
+	ctx->srl_rx_error_reason = SRL_ERR_NONE;
+
+	ctx->srl_rx_timeout_calc_started = 0;
+	ctx->total_idle_counter = 0;
+	ctx->total_overrun_counter = 0;
+
+	ctx->srl_rx_start_time = 0;
+	ctx->srl_rx_waiting_start_time = 0;
+
+	ctx->srl_rx_timeout_enable = 0;
+	ctx->srl_rx_timeout_waiting_enable = 0;
+}
+
 void srl_close(srl_context_t *ctx) {
 	LL_USART_DeInit(ctx->port);
 

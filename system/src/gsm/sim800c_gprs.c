@@ -106,7 +106,7 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 
 		strncpy(gsm_sim800_ip_address, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 18);
 
-		replace_non_printable_with_space(gsm_sim800_ip_address);
+		gsm_sim800_replace_non_printable_with_space(gsm_sim800_ip_address);
 	}
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS ) {
 
@@ -124,7 +124,7 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 				if (comparision_result == 0) {
 					memcpy(gsm_sim800_connection_status_str, srl_context->srl_rx_buf_pointer + i + 7, stringln - i - 7);
 
-					replace_non_printable_with_space(gsm_sim800_connection_status_str);
+					gsm_sim800_replace_non_printable_with_space(gsm_sim800_connection_status_str);
 				}
 			}
 		}
