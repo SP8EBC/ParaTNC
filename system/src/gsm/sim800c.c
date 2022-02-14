@@ -8,6 +8,7 @@
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_gprs.h"
+#include "gsm/sim800c_inline.h"
 
 #include "main.h"
 
@@ -78,6 +79,18 @@ float gsm_sim800_bcch_frequency = 0;
 char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
+
+inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
+	for (int i = 0; *(str + i) != 0 ; i++) {
+		char current = *(str + i);
+
+		if (current != 0x00) {
+			if (current < 0x21 || current > 0x7A) {
+				*(str + i) = ' ';
+			}
+		}
+	}
+}
 
 static void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
 

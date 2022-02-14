@@ -1,5 +1,6 @@
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c.h"
+#include "gsm/sim800c_inline.h"
 
 #include "drivers/serial.h"
 
@@ -30,6 +31,18 @@ int8_t gsm_sim800_gprs_ready = 0;
 char gsm_sim800_ip_address[18];
 
 char gsm_sim800_connection_status_str[24];
+
+inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
+	for (int i = 0; *(str + i) != 0 ; i++) {
+		char current = *(str + i);
+
+		if (current != 0x00) {
+			if (current < 0x21 || current > 0x7A) {
+				*(str + i) = ' ';
+			}
+		}
+	}
+}
 
 void sim800_gprs_initialize(srl_context_t * srl_context, gsm_sim800_state_t * state, config_data_gsm_t * config_gsm) {
 
