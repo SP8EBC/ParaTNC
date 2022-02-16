@@ -15,6 +15,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define SIM800_DEFAULT_TIMEOUT 250	// in miliseconds
+
 static const char * AUTOBAUD_STRING 			= "AT\r\0";
 static const char * GET_SIGNAL_LEVEL 			= "AT+CSQ\r\0";
 static const char * GET_NETWORK_REGISTRATION 	= "AT+CREG?\r\0";
@@ -32,6 +34,8 @@ static const char * CPIN_SIMPIN = "SIMPIN";
 static const char * REGISTERED_NETWORK = "+COPS:\0";
 static const char * INCOMING_CALL = "RING\0";
 #define INCOMING_CALL_LN 4
+static const char * NOCARRIER = "NO CARRIER\0";
+#define NOCARRIER_LN 10
 static const char * UVP_PDOWN = "UNDER-VOLTAGE POWER DOWN\0";
 #define UVP_PDOWN_LN 24
 static const char * UVP_WARNING = "UNDER-VOLTAGE WARNNING\0";
@@ -92,14 +96,58 @@ inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
 	}
 }
 
-static void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
+
+void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
+	// offset is a pointer to variable where this function will store a position of first response character
+	// after the async message
+
 
 	int comparision_result = 123;
 
-	comparision_result = strncmp(INCOMING_CALL, ptr, INCOMING_CALL_LN);
+	// simplified check, not to waste time for full strncmp
+	if (*ptr == 'R') {
+		comparision_result = strncmp(INCOMING_CALL, (const char *)ptr, (size_t)INCOMING_CALL_LN);
+	}
+	else if (*ptr == 'N') {
+		comparision_result = strncmp(NOCARRIER, (const char *)ptr, (size_t)NOCARRIER_LN);
+	}
+	else if (*ptr == 'S') {
+		comparision_result = strncmp(SMS_RDY, (const char *)ptr, (size_t)SMS_RDY_LN);
+	}
+	else if (*ptr == 'C') {
+		comparision_result = strncmp(CALL_RDY, (const char *)ptr, (size_t)CALL_RDY_LN);
+	}
+	else if (*ptr == 'O') {
+		comparision_result = strncmp(OVP_WARNING, (const char *)ptr, (size_t)OVP_WARNING_LN);
+
+		if (comparision_result != 0) {
+			comparision_result = strncmp(OVP_PDWON, (const char *)ptr, (size_t)IVP_PDWON_LN);
+		}
+	}
+	else if (*ptr == 'U') {
+		comparision_result = strncmp(UVP_WARNING, (const char *)ptr, (size_t)UVP_WARNING_LN);
+
+		if (comparision_result != 0) {
+			comparision_result = strncmp(UVP_PDOWN, (const char *)ptr, (size_t)UVP_PDOWN_LN);
+		}
+	}
+
+	// check if this has been found
+	if (comparision_result == 0) {
+		// if yes rewind to the start of response
+		for (int i = INCOMING_CALL_LN; i < size && *(ptr + i) != 0; i++) {
+			if (*(ptr + i) > 0x2A && *(ptr + i) < 0x5B) {
+				// start the check from '+' and end on 'Z'
+				*offset = (uint16_t)i;
+
+				break;
+			}
+		}
+	}
+
 }
 
-static uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size) {
+uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size) {
 
 	// this bitmask stores positions of first four lines of text in input buffer
 	// the position value is set to 0xFF if a position of the newline is beyond 255 offset
@@ -121,7 +169,7 @@ static uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size
 
 		if (previous == '\n' && current >= 0x20 && current < 0x7F) {
 
-			output_bitmask |= (uint8_t)(i << (8 * newlines));
+			output_bitmask |= ((uint8_t)i << (8 * newlines));
 
 			newlines++;
 		}
@@ -132,8 +180,8 @@ static uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size
 		}
 	}
 
-	if (*(ptr + i - 1) == '\n' || *(ptr + i) == '\n') {
-		output_bitmask |= (uint8_t)i << (8 * newlines);
+	if (newlines < 4 && (*(ptr + i - 1) == '\n' || *(ptr + i) == '\n')) {
+		output_bitmask |= ((uint8_t)i << (8 * newlines));
 
 	}
 
@@ -287,7 +335,7 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
 			// 'AT+CIPSHUT' has maximum response time of 65 seconds
-			srl_switch_timeout(srl_context, 1, 65000);
+			srl_switch_timeout(srl_context, 1, 11000);
 
 			// start timeout calculation
 			srl_context->srl_rx_timeout_calc_started = 1;
@@ -312,7 +360,7 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
-			srl_switch_timeout(srl_context, 1, 0);
+			srl_switch_timeout(srl_context, 1, SIM800_DEFAULT_TIMEOUT);
 
 			// start timeout calculation
 			srl_context->srl_rx_timeout_calc_started = 1;
@@ -398,7 +446,7 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
 			// reverting back to default timeout
-			srl_switch_timeout(srl_context, 1, 0);
+			srl_switch_timeout(srl_context, 1, SIM800_DEFAULT_TIMEOUT);
 
 			// start timeout calculation
 			srl_context->srl_rx_timeout_calc_started = 1;
@@ -426,7 +474,7 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 		gsm_terminating_newline_counter = 4;
 	}
 	else {
-		gsm_terminating_newline_counter = 1;
+		gsm_terminating_newline_counter = 4;
 	}
 
 	if (rx_bytes_counter > 0) {
@@ -467,6 +515,10 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 	uint32_t newlines = 0;
 
 	gsm_waiting_for_command_response = 0;
+
+	if (srl_context->srl_rx_state == SRL_RX_ERROR) {
+		gsm_receive_newline_counter = 0;
+	}
 
 	// check how many lines of text
 	newlines = gsm_sim800_check_for_extra_newlines(srl_context->srl_rx_buf_pointer + gsm_response_start_idx, srl_context->srl_rx_buf_ln);

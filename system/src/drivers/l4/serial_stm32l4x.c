@@ -123,7 +123,7 @@ void srl_reset(srl_context_t *ctx) {
 	ctx->srl_rx_start_time = 0;
 	ctx->srl_rx_waiting_start_time = 0;
 
-	ctx->srl_rx_timeout_enable = 0;
+	//ctx->srl_rx_timeout_enable = 0;
 	ctx->srl_rx_timeout_waiting_enable = 0;
 }
 
