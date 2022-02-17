@@ -552,7 +552,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 					// checking if this byte in stream holds the protocol information about
 					// how many bytes needs to be received.
-					if (ctx->srl_rx_lenght_param_addres == ctx->srl_rx_bytes_counter) {
+					if (ctx->srl_rx_lenght_param_addres == ctx->srl_rx_bytes_counter && ctx->srl_rx_lenght_param_addres != 0xFF) {
 						len_temp = ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter];
 
 						// adding (or substracting) a length modifier

@@ -134,7 +134,7 @@ void gsm_sim800_engineering_disable(srl_context_t * srl_context, gsm_sim800_stat
 
 void gsm_sim800_engineering_request_data(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
-	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1) {
+	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1 && gsm_sim800_engineering_successed == 0) {
 
 		// clear the flag
 		gsm_sim800_engineering_successed = 0;
@@ -166,33 +166,25 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 	}
 	else if (gsm_at_command_sent_last == ENGINEERING_GET) {
 
-		// check if anything has been received
-		if (srl_context->srl_rx_state == SRL_RX_ERROR) {
-
-			gsm_sim800_engineering_successed = 0;
-
-			return;
-		}
-		else {
-			gsm_sim800_engineering_successed = 1;
-		}
-
 		// look for the start of '+CENG: 0,' record
 		uint16_t ceng_start = gsm_sim800_rewind_to_ceng_0(srl_context->srl_rx_buf_pointer, srl_context->srl_rx_buf_ln, gsm_response_start_idx);
 
-		// if it has been found
-		gsm_sim800_engineering_parse_ceng_0(srl_context->srl_rx_buf_pointer, ceng_start);
-	}
-	else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
-		int comparision_result = strcmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx));
+		if (ceng_start != 0xFFFF) {
+			// if it has been found
+			gsm_sim800_engineering_parse_ceng_0(srl_context->srl_rx_buf_pointer, ceng_start);
 
-		if (comparision_result == 0) {
-			gsm_sim800_engineering_is_enabled = 0;
+			gsm_sim800_engineering_successed = 1;
 
+			//gsm_sim800_engineering_disable(srl_context, state);
 		}
 		else {
-			;
+			gsm_sim800_engineering_successed = 0;
 		}
+
+	}
+	else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
+		gsm_sim800_engineering_is_enabled = 0;
+
 	}
 
 }

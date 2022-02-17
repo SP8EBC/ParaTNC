@@ -10,7 +10,7 @@
 #include "gsm/sim800c_gprs.h"
 #include <stdint.h>
 
-uint8_t sim800_poolers_five = 4;
+uint8_t sim800_poolers_five = 3;
 
 void gsm_sim800_poolers_one_minute(srl_context_t * srl_context, gsm_sim800_state_t * state){
 

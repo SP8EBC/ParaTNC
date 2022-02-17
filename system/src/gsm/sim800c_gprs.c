@@ -165,5 +165,9 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 	if (comparision_result != 0) {
 		*state = SIM800_NOT_YET_COMM;
 	}
+
+	if (gsm_sim800_gprs_ready == 1) {
+		*state = SIM800_ALIVE;
+	}
 }
 
