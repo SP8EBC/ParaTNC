@@ -29,5 +29,6 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state);
 void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state);
 uint8_t gsm_sim800_get_waiting_for_command_response(void);
+uint16_t gsm_sim800_get_response_start_idx(void);
 
 #endif /* INCLUDE_GSM_SIM800C_H_ */

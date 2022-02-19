@@ -8,6 +8,7 @@
 #include "gsm/sim800c_poolers.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_gprs.h"
+#include "gsm/sim800c_tcpip.h"
 #include <stdint.h>
 
 uint8_t sim800_poolers_five = 3;
@@ -18,7 +19,8 @@ void gsm_sim800_poolers_one_minute(srl_context_t * srl_context, gsm_sim800_state
 
 	if (sim800_poolers_five == 5) {
 
-		gsm_sim800_engineering_enable(srl_context, state);
+		gsm_sim800_tcpip_connect(TEST_IP, strlen(TEST_IP), TEST_PORT, strlen(TEST_PORT), srl_context, state);
+		//gsm_sim800_engineering_enable(srl_context, state);
 
 		sim800_poolers_five = 0;
 	}

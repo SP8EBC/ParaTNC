@@ -9,6 +9,7 @@
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c_inline.h"
+#include "gsm/sim800c_tcpip.h"
 
 #include "main.h"
 
@@ -24,6 +25,8 @@ static const char * GET_PIN_STATUS 				= "AT+CPIN?\r\0";
 static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
 extern const char * START_CONFIG_APN;
 
+static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
+static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
 
 static const char * OK = "OK\r\n\0";
 static const char * SIGNAL_LEVEL = "+CSQ:\0";
@@ -216,6 +219,11 @@ uint8_t gsm_sim800_get_waiting_for_command_response(void) {
 	return gsm_waiting_for_command_response;
 }
 
+//gsm_response_start_idx
+uint16_t gsm_sim800_get_response_start_idx(void) {
+	return gsm_response_start_idx;
+}
+
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 
 	gsm_at_comm_echo = enable_echo;
@@ -368,6 +376,27 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 		else if (gsm_at_command_sent_last == SHUTDOWN_GPRS) {
+			srl_send_data(srl_context, (const uint8_t*) TRANSPARENT_MODE_ON, SRL_MODE_ZERO, strlen(TRANSPARENT_MODE_ON), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = TRANSPARENT_MODE_ON;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// restore default timeout
+			srl_switch_timeout(srl_context, 1, SIM800_DEFAULT_TIMEOUT);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else if (gsm_at_command_sent_last == TRANSPARENT_MODE_ON) {
 			// create GPRS APN configuration string
 			sim800_gprs_create_apn_config_str((char * )srl_context->srl_tx_buf_pointer, srl_context->srl_tx_buf_ln);
 
@@ -495,6 +524,12 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 		gsm_terminating_newline_counter = 10;
 	}
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
+		gsm_terminating_newline_counter = 4;
+	}
+	else if (gsm_at_command_sent_last == TCP3) {
+		gsm_terminating_newline_counter = 3;
+	}
+	else if (gsm_at_command_sent_last == TCP4) {
 		gsm_terminating_newline_counter = 4;
 	}
 	else {
