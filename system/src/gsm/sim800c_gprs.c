@@ -162,8 +162,9 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
 	}
 
+	// check if modem response is the same with what the library actualy expects to get
 	if (comparision_result != 0) {
-		*state = SIM800_NOT_YET_COMM;
+		*state = SIM800_NOT_YET_COMM;	// if not reset the state to start reinitializing
 	}
 
 	if (gsm_sim800_gprs_ready == 1) {

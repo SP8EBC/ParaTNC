@@ -99,6 +99,21 @@ inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
 	}
 }
 
+inline static void gsm_sim800_power_off(void) {
+
+}
+
+inline static void gsm_sim800_power_on(void) {
+
+}
+
+inline static void gsm_sim800_press_pwr_button(void) {
+
+}
+
+inline static void gsm_sim800_depress_pwr_button(void) {
+
+}
 
 void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
 	// offset is a pointer to variable where this function will store a position of first response character
@@ -231,13 +246,33 @@ void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 	gsm_response_start_idx = 0;
 
 	if (state != 0x00) {
-		*state = SIM800_NOT_YET_COMM;
+		*state = SIM800_UNKNOWN;
 	}
 }
 
 void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
-	if (*state == SIM800_NOT_YET_COMM) {
+	if (*state == SIM800_UNKNOWN) {
+		// turn power off
+		gsm_sim800_power_off();
+
+		*state = SIM800_POWERED_OFF;
+	}
+	else if (*state == SIM800_POWERED_OFF) {
+		gsm_sim800_power_on();
+
+		*state = SIM800_POWERING_ON;
+	}
+	else if (*state == SIM800_POWERING_ON) {
+		gsm_sim800_press_pwr_button();
+
+		*state = SIM800_NOT_YET_COMM;
+
+	}
+	else if (*state == SIM800_NOT_YET_COMM) {
+
+		// depress power button
+		gsm_sim800_depress_pwr_button();
 
 		// configure rx timeout
 		srl_switch_timeout(srl_context, 1, 0);
@@ -526,6 +561,9 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
 		gsm_terminating_newline_counter = 4;
 	}
+	else if (gsm_at_command_sent_last == TCP2) {
+		gsm_terminating_newline_counter = 2;
+	}
 	else if (gsm_at_command_sent_last == TCP3) {
 		gsm_terminating_newline_counter = 3;
 	}
@@ -672,6 +710,9 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 	}
 	else if (*state == SIM800_INITIALIZING_GPRS) {
 		sim800_gprs_response_callback(srl_context, state, gsm_response_start_idx);
+	}
+	else if (*state == SIM800_TCP_CONNECTED) {
+		gsm_sim800_tcpip_rx_done_callback(srl_context, state);
 	}
 	else if (*state == SIM800_ALIVE_WAITING_MODEM_RESP) {
 

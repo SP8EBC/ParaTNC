@@ -22,6 +22,8 @@ void gsm_sim800_poolers_one_minute(srl_context_t * srl_context, gsm_sim800_state
 		gsm_sim800_tcpip_connect(TEST_IP, strlen(TEST_IP), TEST_PORT, strlen(TEST_PORT), srl_context, state);
 		//gsm_sim800_engineering_enable(srl_context, state);
 
+		gsm_sim800_tcpip_close(srl_context, state);
+
 		sim800_poolers_five = 0;
 	}
 }
