@@ -458,7 +458,9 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 void configuration_handler_load_configuration(configuration_handler_region_t region) {
 
+#ifdef STM32L471xx
 	main_config_data_gsm = &config_data_gsm_default;
+#endif
 
 	if (region == REGION_DEFAULT) {
 		main_config_data_mode = &config_data_mode_default;

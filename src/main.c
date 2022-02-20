@@ -125,7 +125,7 @@ const config_data_basic_t * main_config_data_basic = 0;
 const config_data_wx_sources_t * main_config_data_wx_sources = 0;
 const config_data_umb_t * main_config_data_umb = 0;
 const config_data_rtu_t * main_config_data_rtu = 0;
-#ifdef PARAMETEO
+#ifdef STM32L471xx
 const config_data_gsm_t * main_config_data_gsm = 0;
 #endif
 
@@ -162,7 +162,7 @@ srl_context_t main_kiss_srl_ctx;
 // serial context for UART used for comm with wx sensors
 srl_context_t main_wx_srl_ctx;
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
 // serial context for communication with GSM module
 srl_context_t main_gsm_srl_ctx;
 #endif
@@ -221,7 +221,7 @@ char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
@@ -280,7 +280,7 @@ int main(int argc, char* argv[]){
   BKP->DR6 = 0;
 #endif
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   system_clock_update_l4();
 
   if (system_clock_configure_l4() != 0) {
@@ -462,7 +462,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
 #endif
@@ -572,18 +572,15 @@ int main(int argc, char* argv[]){
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 #endif
 
   main_target_kiss_baudrate = 9600u;
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
 
-#if defined(PARAMETEO)
 
-#endif
-
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   // swtich power to M4. turn on sensors but keep GSM modem turned off
   pwr_save_switch_mode_to_m4();
 #endif
@@ -860,7 +857,7 @@ int main(int argc, char* argv[]){
   led_control_led1_upper(false);
   led_control_led2_bottom(false);
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
    pwr_save_switch_mode_to_c0();
 
    // sleep a little bit and wait for everything to power up completely
@@ -901,9 +898,11 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
+#ifdef STM32L471xx
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
    }
+#endif
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 	   beacon_send_own();
@@ -977,6 +976,7 @@ int main(int argc, char* argv[]){
 			rx10m++;
 		}
 
+#ifdef STM32L471xx
 		// if GSM communication is enabled
 		if (main_config_data_mode->gsm == 1) {
 
@@ -997,6 +997,7 @@ int main(int argc, char* argv[]){
 //			gsm_sim800_engineering_request_data(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			//gsm_sim800_engineering_disable(main_gsm_srl_ctx_ptr, &main_gsm_state);
 		}
+#endif
 
 		// if Victron VE.direct client is enabled
 		if (main_config_data_mode->victron == 1) {
@@ -1125,7 +1126,7 @@ int main(int argc, char* argv[]){
 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
 
-			#ifdef PARAMETEO
+			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
@@ -1140,7 +1141,7 @@ int main(int argc, char* argv[]){
 
 			digi_pool_viscous();
 
-			#ifdef PARAMETEO
+			#ifdef STM32L471xx
 			gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 			gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
