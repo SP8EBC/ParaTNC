@@ -112,7 +112,7 @@ uint8_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, c
 				out = 0;
 			}
 			else {
-				out = -1;
+				out = 1;
 			}
 		}
 
@@ -154,12 +154,52 @@ uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_s
 	return out;
 }
 
+uint8_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout) {
+
+	uint8_t waiting_result = 0xFF;
+
+	// temporary pointers to store current receive buffer
+	uint8_t * temp_buf = 0;
+	uint16_t temp_ln = 0;
+
+	if (buffer != 0 && buffer_size != 0) {
+		temp_buf = srl_context->srl_rx_buf_pointer;
+		temp_ln = srl_context->srl_rx_buf_ln;
+
+		srl_context->srl_rx_buf_pointer = buffer;
+		srl_context->srl_rx_buf_ln = buffer_size;
+	}
+
+	gsm_sim800_tcpip_async_receive(srl_context, state, rx_callback, timeout);
+
+	srl_wait_for_rx_completion_or_timeout(srl_context, &waiting_result);
+
+	if (buffer != 0 && buffer_size != 0) {
+		srl_context->srl_rx_buf_pointer = temp_buf;
+		srl_context->srl_rx_buf_ln = temp_ln;
+	}
+
+	return waiting_result;
+}
+
 uint8_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	uint8_t out = 0;
 
 	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
-		// send escape sequence to exit connection mode
 		srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+	}
+
+	return out;
+}
+
+uint8_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
+
+	uint8_t out = 0;
+
+	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
+		srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+
+		srl_wait_for_tx_completion(srl_context);
 	}
 
 	return out;

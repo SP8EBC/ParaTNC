@@ -695,7 +695,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 			}
 
 			if (ctx->srl_tx_bytes_counter >= ctx->srl_tx_buf_ln ||
-					ctx->srl_tx_bytes_req >= ctx->srl_tx_buf_ln) {
+					ctx->srl_tx_bytes_req > ctx->srl_tx_buf_ln) {
 
 				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
 				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);

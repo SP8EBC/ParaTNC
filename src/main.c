@@ -18,6 +18,8 @@
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_poolers.h"
+
+#include "aprsis.h"
 #endif
 
 #include <delay.h>
@@ -901,6 +903,8 @@ int main(int argc, char* argv[]){
 #ifdef STM32L471xx
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
+
+	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
    }
 #endif
 
