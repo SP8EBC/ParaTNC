@@ -28,15 +28,26 @@ const char * TCP4 = "TCP4\0";
 #define LOCAL_BUFFER_LN		48
 static char local_buffer[LOCAL_BUFFER_LN];
 
+/**
+ * This is set to one if TCP connection has died or the called party actively disconnected (CLOSED has been received from GSM module)
+ */
 uint8_t gsm_sim800_tcpip_connection_died = 0;
 
+/**
+ * This is set to one if acync receive is actually in progress
+ */
 uint8_t gsm_sim800_tcpip_receiving = 0;
 
 uint8_t gsm_sim800_tcpip_transmitting = 0;
 
+/**
+ * This is a timestamp when last data has been received
+ */
 uint32_t gsm_sim800_tcpip_last_receive_done = 0;
 
 static char gsm_sim800_previous = ' ';
+
+gsm_sim800_tcpip_receive_callback_t gsm_sim800_tcpip_async_receive_cbk = 0;
 
 static uint8_t gsm_sim800_escape_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
 	if (gsm_sim800_previous == 'O') {
@@ -121,7 +132,7 @@ uint8_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, c
 	return out;
 }
 
-uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout) {
+uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout, gsm_sim800_tcpip_receive_callback_t rx_done_callback) {
 
 	uint8_t out = 0;
 
@@ -137,6 +148,8 @@ uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_s
 		out = 1;
 	}
 	else {
+
+		gsm_sim800_tcpip_async_receive_cbk = rx_done_callback;
 
 		srl_switch_timeout(srl_context, 1, timeout);
 
@@ -170,7 +183,7 @@ uint8_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_con
 		srl_context->srl_rx_buf_ln = buffer_size;
 	}
 
-	gsm_sim800_tcpip_async_receive(srl_context, state, rx_callback, timeout);
+	gsm_sim800_tcpip_async_receive(srl_context, state, rx_callback, timeout, 0);
 
 	srl_wait_for_rx_completion_or_timeout(srl_context, &waiting_result);
 
@@ -255,6 +268,10 @@ void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_s
 		gsm_sim800_tcpip_connection_died = 0;
 
 		*state = SIM800_ALIVE;
+	}
+
+	if (gsm_sim800_tcpip_async_receive_cbk != 0) {
+		gsm_sim800_tcpip_async_receive_cbk(srl_context);
 	}
 }
 

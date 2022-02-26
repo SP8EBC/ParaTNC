@@ -707,9 +707,13 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			}
 
 		}
+
+		srl_reset(srl_context);
 	}
 	else if (*state == SIM800_INITIALIZING_GPRS) {
 		sim800_gprs_response_callback(srl_context, state, gsm_response_start_idx);
+
+		srl_reset(srl_context);
 	}
 	else if (*state == SIM800_TCP_CONNECTED) {
 		gsm_sim800_tcpip_rx_done_callback(srl_context, state);
@@ -731,6 +735,8 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 			gsm_at_command_sent_last = 0;
 		}
+
+		srl_reset(srl_context);
 
 		*state = SIM800_ALIVE;
 	}

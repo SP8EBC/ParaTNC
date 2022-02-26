@@ -25,6 +25,8 @@ uint8_t aprsis_connected;
 
 const char * aprsis_sucessfull_login = "# logresp\0";
 
+uint32_t aprsis_last_keepalive_ts = 0;
+
 void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode) {
 	aprsis_serial_port = context;
 
@@ -54,6 +56,8 @@ void aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port)
 
 	int8_t retval = 0xFF;
 
+	uint8_t offset = 0;
+
 	memset(port_str, 0x00, 0x6);
 
 	snprintf(port_str, 6, "%d", port);
@@ -77,9 +81,19 @@ void aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port)
 				if (retval == 0) {
 					receive_buff = srl_get_rx_buffer(aprsis_serial_port);
 
-					retval = strncmp(aprsis_sucessfull_login, (const char * )receive_buff, (size_t)9);
+					// fast forward to beginning of response
+					for (offset = 0; offset < 8; offset++) {
+						if (*(receive_buff + offset) == '#') {
+							break;
+						}
+					}
+
+					retval = strncmp(aprsis_sucessfull_login, (const char * )(receive_buff + offset), (size_t)9);
 					if (retval == 0) {
 						aprsis_connected = 1;
+
+						// wait for consecutive data
+						gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
 					}
 				}
@@ -87,4 +101,20 @@ void aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port)
 		}
 	}
 
+}
+
+void aprsis_receive_callback(srl_context_t* srl_context) {
+
+	// if something was actually received
+	if (srl_context->srl_rx_state == SRL_RX_DONE) {
+		// check if this is keepalive message
+		if (*(srl_get_rx_buffer(srl_context)) == '#') {
+			aprsis_last_keepalive_ts = main_get_master_time();
+
+			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
+		}
+		else {
+
+		}
+	}
 }

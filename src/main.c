@@ -990,7 +990,7 @@ int main(int argc, char* argv[]){
 				// receive callback for communicatio with the modem
 				gsm_sim800_rx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-				srl_reset(main_gsm_srl_ctx_ptr);
+				//srl_reset(main_gsm_srl_ctx_ptr);
 			}
 
 			if (main_gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
