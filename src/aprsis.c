@@ -67,10 +67,12 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 }
 
-void aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
+uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
+
+	uint8_t out = 2;
 
 	if (aprsis_serial_port == 0 || aprsis_gsm_modem_state == 0 || aprsis_logged == 1) {
-		return;
+		return 1;
 	}
 
 	if (*aprsis_gsm_modem_state == SIM800_ALIVE) {
@@ -122,12 +124,22 @@ void aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port)
 							// wait for consecutive data
 							gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
+							out = 0;
+
 						}
 					}
 				}
+				else {
+					gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+				}
+			}
+			else {
+				gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
 			}
 		}
 	}
+
+	return out;
 
 }
 
@@ -202,4 +214,21 @@ void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t windd
  	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+}
+
+void aprsis_send_beacon(uint8_t async) {
+
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+	aprsis_packet_tx_message_size = sprintf(aprsis_packet_tx_buffer, "%s>AKLPRZ,qAR,%s:=%s%c%c%s%c%c %s\r\n", aprsis_callsign_with_ssid, aprsis_callsign_with_ssid, main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
+	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
+
+	  if (async > 0) {
+		  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	  }
+	  else {
+		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	  }
 }

@@ -1201,7 +1201,11 @@ int main(int argc, char* argv[]){
 			}
 
 			if (main_config_data_mode->gsm == 1) {
-				aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
+				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
+
+				if (retval == 0) {
+					aprsis_send_beacon(0);
+				}
 			}
 			#endif
 
