@@ -8,18 +8,18 @@
 
 #define CONNECT_TCP_LN			18
 static const char * CONNECT_TCP 			= "AT+CIPSTART=\"TCP\",\0";
-const static char * COMMA = ",\0";
-const static char * QUOTATION_MARK = "\"\0";
-const static char * NEWLINE = "\r\0";
+const static char * COMMA 					= ",\0";
+const static char * QUOTATION_MARK 			= "\"\0";
+const static char * NEWLINE 				= "\r\0";
 
-const static char * CLOSE_TCP			= "AT+CIPCLOSE\r\0";
+const static char * CLOSE_TCP				= "AT+CIPCLOSE\r\0";
 
 static const char * ESCAPE					= "+++\0";
 
-static const char * CONNECT = "OK\r\n\r\nCONNECT\0";
-static const char * OK = "OK\0";
+static const char * CONNECT					= "OK\r\n\r\nCONNECT\0";
+static const char * OK 						= "OK\0";
 #define DISCONNECTED_LN		6
-static const char * DISCONNECTED = "CLOSED\0";
+static const char * DISCONNECTED 			= "CLOSED\0";
 
 const char * TCP2 = "TCP2\0";
 const char * TCP3 = "TCP3\0";
@@ -29,7 +29,8 @@ const char * TCP4 = "TCP4\0";
 static char local_buffer[LOCAL_BUFFER_LN];
 
 /**
- * This is set to one if TCP connection has died or the called party actively disconnected (CLOSED has been received from GSM module)
+ * This is set to one if gsm module detected that TCP connection has died
+ * or the called party actively disconnected (CLOSED has been received from GSM module)
  */
 uint8_t gsm_sim800_tcpip_connection_died = 0;
 
@@ -198,8 +199,12 @@ uint8_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_con
 uint8_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	uint8_t out = 0;
 
+	// check if library is in correct state
 	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
-		srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+		out = srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+
+		// this is async transfer so set a flat to block consecutive one
+		gsm_sim800_tcpip_transmitting = 1;
 	}
 
 	return out;
@@ -209,6 +214,7 @@ uint8_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t 
 
 	uint8_t out = 0;
 
+	// check if library is in correct state
 	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
 		srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
 
@@ -273,6 +279,10 @@ void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_s
 	if (gsm_sim800_tcpip_async_receive_cbk != 0) {
 		gsm_sim800_tcpip_async_receive_cbk(srl_context);
 	}
+}
+
+void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+	gsm_sim800_tcpip_transmitting = 0;
 }
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {

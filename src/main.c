@@ -1132,6 +1132,7 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
+
 				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 			#endif
@@ -1146,9 +1147,14 @@ int main(int argc, char* argv[]){
 			digi_pool_viscous();
 
 			#ifdef STM32L471xx
-			gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			if (main_config_data_mode->gsm == 1) {
 
-			gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
+				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
+				gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
+
+				aprsis_check_alive();
+			}
 			#endif
 
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
@@ -1192,6 +1198,10 @@ int main(int argc, char* argv[]){
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx());
+			}
+
+			if (main_config_data_mode->gsm == 1) {
+				aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
 			}
 			#endif
 

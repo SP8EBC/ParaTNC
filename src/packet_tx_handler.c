@@ -5,6 +5,7 @@
 #include "rte_main.h"
 
 #include "station_config.h"
+#include "station_config_target_hw.h"
 
 #include "./aprs/beacon.h"
 #include "./aprs/wx.h"
@@ -15,6 +16,10 @@
 #include "./umb_master/umb_master.h"
 
 #include "./modbus_rtu/rtu_configuration.h"
+
+#ifdef STM32L471xx
+#include "aprsis.h"
+#endif
 
 #include "main.h"
 #include "delay.h"
@@ -144,6 +149,12 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			packet_tx_meteo_counter = 0;
 		}
+
+#ifdef STM32L471xx
+		if (packet_tx_meteo_counter == packet_tx_meteo_interval - 1 && packet_tx_meteo_interval != 0) {
+			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+		}
+#endif
 
 		if ((main_config_data_mode->wx_modbus & WX_MODBUS_DEBUG) == WX_MODBUS_DEBUG) {
 			// send the status packet with raw values of all requested modbus-RTU registers

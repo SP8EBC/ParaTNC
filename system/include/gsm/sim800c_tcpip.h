@@ -31,6 +31,7 @@ uint8_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t 
 void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state);
 
 void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
+void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 

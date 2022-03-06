@@ -753,5 +753,8 @@ void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 		gsm_time_of_last_command_send_to_module = main_get_master_time();
 	}
+	else if (*state == SIM800_TCP_CONNECTED) {
+		gsm_sim800_tcpip_tx_done_callback(srl_context, state);
+	}
 
 }
