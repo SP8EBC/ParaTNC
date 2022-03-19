@@ -35,6 +35,7 @@ system/src/diag \
 system/src/drivers \
 system/src/drivers/l4 \
 system/src/gsm \
+system/src/http_client \
 system/src/modbus_rtu \
 system/src/stm32l4-hal-driver \
 system/src/umb_master \

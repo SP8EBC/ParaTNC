@@ -12,6 +12,7 @@ RM := rm -rf
 -include system/src/umb_master/subdir.mk
 -include system/src/stm32l4-hal-driver/subdir.mk
 -include system/src/modbus_rtu/subdir.mk
+-include system/src/http_client/subdir.mk
 -include system/src/gsm/subdir.mk
 -include system/src/drivers/l4/subdir.mk
 -include system/src/drivers/subdir.mk
