@@ -36,6 +36,12 @@ extern int16_t http_client_http_code;
 extern uint16_t http_client_content_lenght;
 
 /**
+ * Maximum content lenght which should be received by the client. Please bear in mind that THIS NOT include
+ * HTTP headers lenght
+ */
+extern uint16_t http_client_max_content_ln;
+
+/**
  * Temporary buffer for processing
  */
 extern char http_client_header_buffer[HEADER_BUFFER_LN];

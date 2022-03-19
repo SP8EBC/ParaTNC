@@ -36,6 +36,13 @@ typedef enum http_client_header_field {
 // set to one if we are still parsing HTTP response header
 static uint8_t http_client_response_header_processing = 1;
 
+
+// amount of bytes (octets) of a content of the HTTP response received so far
+static uint16_t http_client_content_received_so_far = 0;
+
+// an index where the first byte of response occurs
+uint16_t http_client_content_start_index = 0;
+
 /**
  * This function is responsible for checking what HTTP header has been received
  */
@@ -57,6 +64,17 @@ static http_client_header_field_t http_client_check_what_field_it_is(char * buff
 	}
 
 	return out;
+}
+
+/**
+ * This function resets all variables used by rx done termination callback back to theirs default values
+ */
+void http_client_rx_done_callback_init() {
+	http_client_response_header_processing = 1;
+	http_client_content_received_so_far = 0;
+	http_client_content_start_index = 0;
+	http_client_header_index= 0;
+	memset (http_client_header_buffer, 0x0, HEADER_BUFFER_LN);
 }
 
 /**
@@ -125,7 +143,7 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 
 					case HEADER_CONTENT_LN: {
 						// content ln may vary, so we need to copy data starting from the begining not the end
-						strncpy(local_buffer, http_client_header_buffer + http_client_header_index + 16, 6);
+						strncpy(local_buffer, http_client_header_buffer + 16, 6);
 
 						// convert to integer value
 						http_client_content_lenght = atoi(local_buffer);
@@ -177,6 +195,21 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 			if ((char)current_data == '\n') {
 				// everything what is now in 'http_client_header_buffer' is the size of chunk in hex!!
 				http_client_content_lenght = strtol(http_client_header_buffer, 0, 16);
+
+				// data starts from the next byte
+				http_client_content_start_index = rx_bytes_counter + 1;
+			}
+		}
+		else {
+			// chunk size is known so count data
+			http_client_content_received_so_far++;
+
+			// check if all bytes defined by chunk size or 'HEADER_CONTENT_LN' have been received
+			if (http_client_content_received_so_far >= http_client_content_lenght) {
+				out = 1;
+			}
+			else if (http_client_max_content_ln != 0 && (http_client_content_received_so_far > http_client_max_content_ln)) {
+				out = 1;
 			}
 		}
 	}
