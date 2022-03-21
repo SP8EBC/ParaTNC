@@ -23,6 +23,10 @@
 
 #define HEADER_BUFFER_LN 	64
 
+#define HTTP_CLIENT_RET_UNITIALIZED		1
+#define HTTP_CLIENT_RET_TCPIP_BSY		2
+#define HTTP_CLIENT_RET_WRONG_URL		3
+
 /**
  *	HTTP code returned by the latest query. It is zeroed after each successful call to async
  *	function. This indicate that a request is currently in progress. Negative values means some
@@ -51,9 +55,9 @@ extern char http_client_header_buffer[HEADER_BUFFER_LN];
  */
 extern uint8_t http_client_header_index;
 
-void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context);
-uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit);
-uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint8_t data_ln);
+void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context, uint8_t ignore_content_on_http_error);
+uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy);
+uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint8_t data_ln, uint8_t force_disconnect_on_busy);
 
 char * http_client_get_server_response();
 uint16_t http_client_get_latest_http_code();

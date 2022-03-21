@@ -33,15 +33,17 @@ typedef enum http_client_header_field {
 	HEADER_UNKNOWN
 } http_client_header_field_t;
 
+// an index where the first byte of response occurs
+uint16_t http_client_content_start_index = 0;
+
+// an index of last byte of
+uint16_t http_client_content_end_index = 0;
+
 // set to one if we are still parsing HTTP response header
 static uint8_t http_client_response_header_processing = 1;
 
-
 // amount of bytes (octets) of a content of the HTTP response received so far
 static uint16_t http_client_content_received_so_far = 0;
-
-// an index where the first byte of response occurs
-uint16_t http_client_content_start_index = 0;
 
 /**
  * This function is responsible for checking what HTTP header has been received
@@ -99,7 +101,7 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 	// if this is maybe the last character of 'CLOSED'
 	if ((char)current_data == 'D') {
 		// check 6 previous characters
-		compare_result = strncmp(DISCONNECTED, (const char *) (rx_buffer + rx_bytes_counter - 6), 6);
+		compare_result = strncmp(DISCONNECTED, (const char *) (rx_buffer + rx_bytes_counter - 5), 6);
 
 		// terminate reception if 'CLOSED' has been found.
 		if (compare_result == 0) {
@@ -206,9 +208,13 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 
 			// check if all bytes defined by chunk size or 'HEADER_CONTENT_LN' have been received
 			if (http_client_content_received_so_far >= http_client_content_lenght) {
+				http_client_content_end_index = rx_bytes_counter;
+
 				out = 1;
 			}
 			else if (http_client_max_content_ln != 0 && (http_client_content_received_so_far > http_client_max_content_ln)) {
+				http_client_content_end_index = rx_bytes_counter;
+
 				out = 1;
 			}
 		}
