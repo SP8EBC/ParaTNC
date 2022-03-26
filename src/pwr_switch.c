@@ -37,11 +37,7 @@ void wx_pwr_switch_case_under_reset_parameteo() {
 	if (pwr_save_get_inhibit_pwr_switch_periodic() == 1)
 		return;
 
-	io_5v_isol_sw___cntrl_vbat_s_enable();
-
-#ifdef PWR_SWITCH_BOTH
-	io_12v_sw___cntrl_vbat_g_enable();
-#endif
+	io___cntrl_vbat_s_enable();
 
 	wx_force_i2c_sensor_reset = 1;
 
@@ -52,10 +48,10 @@ void wx_pwr_switch_case_under_reset_parameteo() {
 void wx_pwr_switch_case_under_reset_paratnc() {
 
 	// Turn on the +5V_ISOL (VDD_SW) voltage
-	io_5v_isol_sw___cntrl_vbat_s_enable();
+	io_5v_isol_sw_enable();
 
 #ifdef PWR_SWITCH_BOTH
-	io_12v_sw___cntrl_vbat_g_enable();
+	io_12v_sw_enable();
 
 	wx_force_i2c_sensor_reset = 1;
 #endif
@@ -69,9 +65,7 @@ void wx_pwr_switch_case_off_parameteo() {
 		return;
 
 	// Turn on the +5V_ISOL (VDD_SW) voltage
-	io_5v_isol_sw___cntrl_vbat_s_enable();
-
-	io_12v_sw___cntrl_vbat_g_enable();
+	io___cntrl_vbat_s_enable();
 
 	wx_force_i2c_sensor_reset = 1;
 
@@ -88,7 +82,7 @@ void wx_pwr_switch_case_off_paratnc() {
 
 		// Turn on the +5V_ISOL (VDD_SW) voltage
 		//GPIO_SetBits(GPIOB, GPIO_Pin_8);
-		io_5v_isol_sw___cntrl_vbat_s_enable();
+		io_5v_isol_sw_enable();
 }
 
 void wx_pwr_switch_init(void) {
@@ -127,18 +121,16 @@ void wx_pwr_switch_init(void) {
 #if defined(STM32L471xx)
 			LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-			// PB8 - UC_CNTRL_VS
-			// in ParaMETEO HW-RevB it is connected internally to SENSORS_PWR_CNTRL and +5V_SW_C_PWR_CNTRL
+			// PC13 - UC_CNTRL_VS
 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
+			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_13;
 			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
+			LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
 			// PA6 - UC_CNTRL_VG
-			// in ParaMETEO HW-RevB it is connected internally to GSM_PWR_CNTRL and RADIO_PWR_CNTRL
 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
@@ -146,6 +138,24 @@ void wx_pwr_switch_init(void) {
 			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 			LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+
+			// PA1 - UC_CNTRL_VC
+			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_1;
+			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+			LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+
+			// PB1 - UC_CNTRL_VC
+			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_1;
+			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
 
 #endif
 }
@@ -175,13 +185,18 @@ void wx_pwr_switch_periodic_handle(void) {
 			// if timeout watchod expired there is a time to reset the supply voltage
 			wx_pwr_state = WX_PWR_UNDER_RESET;
 
+#if (defined STM32F10X_MD_VL)
 			// pull the output down to switch the relay and disable +5V_ISOL (VDD_SW)
-			io_5v_isol_sw___cntrl_vbat_s_disable();
+			io_5v_isol_sw_disable();
 
 #ifdef PWR_SWITCH_BOTH
-			io_12v_sw___cntrl_vbat_g_disable();
+			io_12v_sw_disable();
+#endif
 #endif
 
+#if (defined STM32L471xx)
+			io___cntrl_vbat_s_disable();
+#endif
 			// setting the last_good timers to current value to prevent reset loop
 			wx_last_good_temperature_time = master_time;
 			wx_last_good_wind_time = master_time;

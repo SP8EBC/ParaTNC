@@ -203,14 +203,17 @@ int pwr_save_switch_mode_to_c0(void) {
 		return 0;
 	}
 
-	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_enable();
+	// turn ON +5V_S
+	io___cntrl_vbat_s_enable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
 	// turn ON +4V_G
-	io_12v_sw___cntrl_vbat_g_enable();
+	io___cntrl_vbat_g_enable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -236,13 +239,16 @@ int pwr_save_switch_mode_to_c1(void) {
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_enable();
+	io___cntrl_vbat_s_enable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
 	// turn OFF +4V_G
-	io_12v_sw___cntrl_vbat_g_disable();
+	io___cntrl_vbat_g_disable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -269,13 +275,16 @@ void pwr_save_switch_mode_to_c2(void) {
 	}
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_disable();
+	io___cntrl_vbat_s_disable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
 	// turn OFF +4V_G
-	io_12v_sw___cntrl_vbat_g_disable();
+	io___cntrl_vbat_g_disable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -298,13 +307,16 @@ void pwr_save_switch_mode_to_c3(void) {
 	}
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_disable();
+	io___cntrl_vbat_s_disable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
 	// turn ON +4V_G
-	io_12v_sw___cntrl_vbat_g_enable();
+	io___cntrl_vbat_g_enable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -328,13 +340,16 @@ int pwr_save_switch_mode_to_m4(void) {
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_enable();
+	io___cntrl_vbat_s_enable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
 
 	// turn OFF +4V_G
-	io_12v_sw___cntrl_vbat_g_disable();
+	io___cntrl_vbat_g_disable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -358,13 +373,16 @@ void pwr_save_switch_mode_to_i5(void) {
 	}
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_disable();
+	io___cntrl_vbat_s_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
 
 	// turn OFF +4V_G
-	io_12v_sw___cntrl_vbat_g_disable();
+	io___cntrl_vbat_g_disable();
+
+	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_disable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -388,13 +406,16 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	}
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_disable();
+	io___cntrl_vbat_s_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
 
 	// turn ON +4V_G
-	io_12v_sw___cntrl_vbat_g_enable();
+	io___cntrl_vbat_g_enable();
+
+	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_disable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -429,13 +450,16 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	}
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
-	io_5v_isol_sw___cntrl_vbat_s_disable();
+	io___cntrl_vbat_s_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
 
 	// turn OFF +4V_G
-	io_12v_sw___cntrl_vbat_g_disable();
+	io___cntrl_vbat_g_disable();
+
+	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_disable();
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();

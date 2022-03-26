@@ -14,21 +14,21 @@
  * This header file defines all functions related to powersaving, switching between different power states,
  * stopping cpu core etc. Generally they are few power states as below
  *
- * /------------------------------------------------------------\
- * | State |  CPU  |  +5V_S  |  +5V_R and VBATT_SW_R  |  +4V_G  |
- * |       |       |         |                        |         |
- * |       |       | sensors |   Internal / external  |   GPRS  |
- * |       |       |         |        VHF Radio       |         |
- * =------------------------------------------------------------=
- * |   C0  |Running|   ON    |           ON           |   ON    |
- * |   C1  |Running|   ON    |           ON           |   OFF   |
- * |   C2  |Running|   OFF   |           ON           |   OFF   |
- * |   C3  |Running|   OFF   |           ON           |   ON    |
- * |   M4  |Running|   ON    |           OFF          |   OFF   |
- * |   I5  |Running|   OFF   |           OFF          |   OFF   |
- * |   L6  | Stop2 |   OFF   |           OFF          |   ON    |
- * |   L7  | Stop2 |   OFF   |           OFF          |   OFF   |
- * \------------------------------------------------------------/
+ * /----------------------------------------------------------------------\
+ * | State |  CPU  |  +5V_S  |  +5V_R and VBATT_SW_R  |  +4V_G  |  +5V_C  |
+ * |       |       |         |                        |         |         |
+ * |       |       | sensors |   Internal / external  |   GPRS  | SD card |
+ * |       |       |         |        VHF Radio       |         |  PT100  |
+ * =----------------------------------------------------------------------=
+ * |   C0  |Running|   ON    |           ON           |   ON    |   ON    |
+ * |   C1  |Running|   ON    |           ON           |   OFF   |   ON    |
+ * |   C2  |Running|   OFF   |           ON           |   OFF   |   ON    |
+ * |   C3  |Running|   OFF   |           ON           |   ON    |   ON    |
+ * |   M4  |Running|   ON    |           OFF          |   OFF   |   OFF   |
+ * |   I5  |Running|   OFF   |           OFF          |   OFF   |   OFF   |
+ * |   L6  | Stop2 |   OFF   |           OFF          |   ON    |   OFF   |
+ * |   L7  | Stop2 |   OFF   |           OFF          |   OFF   |   OFF   |
+ * \----------------------------------------------------------------------/
  *
  *      C = modes with communication enabled
  *      M = mode with measuremenet only w/o any communication
