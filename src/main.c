@@ -227,6 +227,8 @@ unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
+
+uint16_t main_battery_voltage;
 #endif
 
 static void message_callback(struct AX25Msg *msg) {
@@ -467,10 +469,16 @@ int main(int argc, char* argv[]){
 #if defined(STM32L471xx)
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
+
+  // initialize B+ measurement
+  io_vbat_meas_init(100, 10);
 #endif
 
   // initalizing separated Open Collector output
   io_oc_init();
+
+  // initializing GPIO used for swithing on and off voltages on pcb
+  io_pwr_init();
 
   // initialize sensor power control and switch off supply voltage
   wx_pwr_switch_init();
@@ -860,6 +868,8 @@ int main(int argc, char* argv[]){
   led_control_led2_bottom(false);
 
 #if defined(STM32L471xx)
+   main_battery_voltage = io_vbat_meas_get();
+
    pwr_save_switch_mode_to_c0();
 
    // sleep a little bit and wait for everything to power up completely
