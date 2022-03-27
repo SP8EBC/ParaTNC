@@ -228,7 +228,6 @@ LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
 
-uint16_t main_battery_voltage;
 #endif
 
 static void message_callback(struct AX25Msg *msg) {
@@ -868,7 +867,7 @@ int main(int argc, char* argv[]){
   led_control_led2_bottom(false);
 
 #if defined(STM32L471xx)
-   main_battery_voltage = io_vbat_meas_get();
+   rte_main_battery_voltage = io_vbat_meas_get();
 
    pwr_save_switch_mode_to_c0();
 
@@ -1101,6 +1100,8 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
+		    rte_main_battery_voltage = io_vbat_meas_get();
+
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
 			}
@@ -1207,7 +1208,7 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending) {
-				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx());
+				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_battery_voltage);
 			}
 
 			if (main_config_data_mode->gsm == 1) {

@@ -14,5 +14,6 @@ extern uint8_t rte_main_trigger_modbus_status;
 
 extern uint8_t rte_main_trigger_wx_packet;
 
+extern uint16_t rte_main_battery_voltage;
 
 #endif

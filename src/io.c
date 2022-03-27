@@ -155,6 +155,7 @@ void io_vbat_meas_init(int8_t a_coeff, int8_t b_coeff) {
 	io_vbat_a_coeff = a_coeff;
 	io_vbat_b_coeff = b_coeff;
 
+#ifdef STM32L471xx
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_5;
@@ -204,12 +205,13 @@ void io_vbat_meas_init(int8_t a_coeff, int8_t b_coeff) {
 	// ignore overrun and overwrite data register content with new conversion result
 	ADC2->CFGR |= ADC_CFGR_OVRMOD;
 
-
+#endif
 }
 
 uint16_t io_vbat_meas_get(void) {
 
 	uint16_t out = 0;
+#ifdef STM32L471xx
 
 	float temp = 0.0f;
 
@@ -235,7 +237,7 @@ uint16_t io_vbat_meas_get(void) {
 	temp = (float)out * 0.00081f;
 
 	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
-
+#endif
 	return out;
 }
 

@@ -389,6 +389,13 @@ void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
 		if (in->kiss_counter != 0)
 			packet_tx_meteo_kiss_counter = in->kiss_counter;
 	}
+	else {
+		packet_tx_beacon_counter = 0;
+		packet_tx_meteo_counter = 2;
+		packet_tx_telemetry_counter = 0;
+		packet_tx_telemetry_descr_counter = 10;
+		packet_tx_meteo_kiss_counter = 0;
+	}
 }
 
 int16_t packet_tx_get_minutes_to_next_wx(void) {

@@ -18,6 +18,8 @@
 #include "wx_handler.h"
 #include "main.h"
 
+#include "rte_main.h"
+
 #include "drivers/analog_anemometer.h"
 
 
@@ -40,6 +42,18 @@
 
 int8_t pwr_save_seconds_to_wx = 0;
 int16_t pwr_save_sleep_time_in_seconds = -1;
+int8_t pwr_save_currently_cutoff = 0;
+
+/**
+ * This is cutoff voltage at which the power saving subsystem will keep ParaMETEO constantly
+ * in L7 mode and wakeup once every 20 minutes to check B+ once again
+ */
+const uint16_t PWR_SAVE_CUTOFF_VOLTAGE = 			112;		// 11.2V
+
+/**
+ * This is the restore voltage a battery must be charged to for ParaMETEO to restore it's normal operation
+ */
+const uint16_t PWR_SAVE_STARTUP_RESTORE_VOLTAGE =	122;		// 12.2V
 
 static void pwr_save_unclock_rtc_backup_regs(void) {
 	// enable access to backup domain
@@ -122,6 +136,8 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
+    rte_main_battery_voltage = io_vbat_meas_get();
+
 	analog_anemometer_deinit();
 
 	// clear previous low power mode selection
@@ -186,8 +202,13 @@ void pwr_save_exit_from_stop2(void) {
 		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.telemetry_desc_counter += (pwr_save_sleep_time_in_seconds / 60);
 
-		// set counters back
-		packet_tx_set_current_counters(&timers);
+		if (pwr_save_currently_cutoff == 0) {
+			// set counters back
+			packet_tx_set_current_counters(&timers);
+		}
+		else {
+			packet_tx_set_current_counters(0);
+		}
 
 		break;
 
@@ -486,12 +507,33 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_enter_stop2();
 }
 
-void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx) {
+void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt) {
 	// this function should be called from 10 seconds pooler
 
 	int reinit_sensors = 0;
 
 	packet_tx_counter_values_t counters;
+
+	if (vbatt < 0xF) {
+		vbatt = 0xFFFFu;
+	}
+
+	if (vbatt <= PWR_SAVE_CUTOFF_VOLTAGE && pwr_save_currently_cutoff == 0) {
+		pwr_save_currently_cutoff = 1;
+
+		pwr_save_switch_mode_to_l7(60 * 20);
+
+		return;
+
+	}
+	else if (vbatt <= PWR_SAVE_STARTUP_RESTORE_VOLTAGE && pwr_save_currently_cutoff == 1)  {
+		pwr_save_switch_mode_to_l7(60 * 20);
+
+		return;
+	}
+	else {
+		pwr_save_currently_cutoff = 0;
+	}
 
 	// get current counter values
 	packet_tx_get_current_counters(&counters);

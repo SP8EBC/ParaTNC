@@ -109,7 +109,7 @@ int pwr_save_switch_mode_to_m4(void);
 void pwr_save_switch_mode_to_i5(void);
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time);
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time);
-void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx);		// this should be called from 10 seconds pooler
+void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt);		// this should be called from 10 seconds pooler
 
 #endif
 
