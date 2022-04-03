@@ -6,6 +6,7 @@
  */
 
 
+#include <wx_pwr_switch.h>
 #include "station_config_target_hw.h"
 
 #include "io.h"
@@ -136,26 +137,28 @@ void io_ext_watchdog_config(void) {
 
 void io_ext_watchdog_service(void) {
 #ifdef STM32F10X_MD_VL
-
-#endif
-
-#ifdef STM32L471xx
-	if ((GPIOA->ODR & GPIO_ODR_OD1) == 0) {
+	if ((GPIOA->ODR & GPIO_ODR_ODR12) == 0) {
 		// set high
-		GPIOA->BSRR |= GPIO_BSRR_BS1;
+		GPIOA->BSRR |= GPIO_BSRR_BS12;
 	}
 	else {
 		// set low
-		GPIOA->BSRR |= GPIO_BSRR_BR1;
+		GPIOA->BSRR |= GPIO_BSRR_BR12;
 	}
+#endif
+
+#ifdef STM32L471xx
+
 #endif
 }
 
 void io_vbat_meas_init(int8_t a_coeff, int8_t b_coeff) {
+
+#ifdef STM32L471xx
 	io_vbat_a_coeff = a_coeff;
 	io_vbat_b_coeff = b_coeff;
 
-#ifdef STM32L471xx
+
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_5;

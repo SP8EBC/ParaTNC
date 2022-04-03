@@ -44,7 +44,7 @@
 #include "io.h"
 #include "float_to_string.h"
 #include "pwr_save.h"
-#include "pwr_switch.h"
+#include <wx_pwr_switch.h>
 
 #include "it_handlers.h"
 

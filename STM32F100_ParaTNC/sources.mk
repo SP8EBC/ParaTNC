@@ -35,6 +35,7 @@ system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \
 system/src/drivers/f1 \
+system/src/http_client \
 system/src/modbus_rtu \
 system/src/newlib \
 system/src/stm32f1-stdperiph \

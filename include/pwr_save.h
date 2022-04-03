@@ -14,26 +14,32 @@
  * This header file defines all functions related to powersaving, switching between different power states,
  * stopping cpu core etc. Generally they are few power states as below
  *
- * /----------------------------------------------------------------------\
- * | State |  CPU  |  +5V_S  |  +5V_R and VBATT_SW_R  |  +4V_G  |  +5V_C  |
- * |       |       |         |                        |         |         |
- * |       |       | sensors |   Internal / external  |   GPRS  | SD card |
- * |       |       |         |        VHF Radio       |         |  PT100  |
- * =----------------------------------------------------------------------=
- * |   C0  |Running|   ON    |           ON           |   ON    |   ON    |
- * |   C1  |Running|   ON    |           ON           |   OFF   |   ON    |
- * |   C2  |Running|   OFF   |           ON           |   OFF   |   ON    |
- * |   C3  |Running|   OFF   |           ON           |   ON    |   ON    |
- * |   M4  |Running|   ON    |           OFF          |   OFF   |   OFF   |
- * |   I5  |Running|   OFF   |           OFF          |   OFF   |   OFF   |
- * |   L6  | Stop2 |   OFF   |           OFF          |   ON    |   OFF   |
- * |   L7  | Stop2 |   OFF   |           OFF          |   OFF   |   OFF   |
- * \----------------------------------------------------------------------/
+ * /-------------------------------------------------------------------------\
+ * | State |  CPU  |   +5V_S  	| +7V5_R and VBATT_SW_R  |  +4V_G  |  +5V_C  |
+ * |       |       | VBATT_SW_S |                        |         |         |
+ * =-------------------------------------------------------------------------=
+ * |   C0  |Running|   ON    	|           ON           |   ON    |   ON    |
+ * |   C1  |Running|   ON    	|           ON           |   OFF   |   ON    |
+ * |   C2  |Running|   OFF   	|           ON           |   OFF   |   ON    |
+ * |   C3  |Running|   OFF   	|           ON           |   ON    |   ON    |
+ * |   M4  |Running|   ON    	|           OFF          |   OFF   |   OFF   |
+ * |   I5  |Running|   OFF   	|           OFF          |   OFF   |   OFF   |
+ * |   L6  | Stop2 |   OFF   	|           OFF          |   ON    |   OFF   |
+ * |   L7  | Stop2 |   OFF   	|           OFF          |   OFF   |   OFF   |
+ * \-------------------------------------------------------------------------/
  *
  *      C = modes with communication enabled
  *      M = mode with measuremenet only w/o any communication
  *      I = idle / initialization mode with anything disabled
  *      L = low power consumption modes with CPU halted in STOP2 mode
+ *
+ *	What is supplied by which voltage
+ *	 +3V3_C - Microcontroller and UART-RS232 converter. It is always present
+ *	 +4V_G - GSM module
+ *	 +5V_C and +3V3_CC derived from it - LMV358 op amp, microSD Cards, PT100 interface
+ *	 +5V_S and +3V3_S derived from it - Wind sensor, one wire thermometer, RS485
+ *	 +7V5_R - external VHF radio
+ *
  *
  *  Stop2 mode is a power saving mode defined in STM paperwork (DM0083560
  *  aka Reference Manual RM0351). This mode halts CPU core completely and

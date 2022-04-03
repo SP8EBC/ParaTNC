@@ -5,8 +5,7 @@
  *      Author: mateusz
  */
 
-#include "pwr_switch.h"
-
+#include <wx_pwr_switch.h>
 #include "station_config.h"
 #include "main.h"
 #include "rte_wx.h"

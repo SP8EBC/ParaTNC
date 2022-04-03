@@ -16,6 +16,7 @@ typedef enum wx_pwr_state_t {
 	WX_PWR_DISABLED
 }wx_pwr_state_t;
 
+extern wx_pwr_state_t wx_pwr_state;
 
 void wx_pwr_switch_init(void);
 void wx_pwr_switch_periodic_handle(void);
