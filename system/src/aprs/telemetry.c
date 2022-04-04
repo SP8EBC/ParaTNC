@@ -288,10 +288,11 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 /**
  * This function sends telemetry values in 'typical configuration' when VICTRON VE.direct protocol parser is not enabled.
  */
+#ifdef STM32L471xx
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
-							uint8_t kiss_pkts,
+							uint16_t vbatt_voltage,
 							uint8_t viscous_drop_pkts,
 							float temperature,
 							dallas_qf_t dallas_qf,
@@ -299,7 +300,19 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							humidity_qf_t humid_qf,
 							wind_qf_t anemometer_qf,
 							const config_data_mode_t * const config_mode) {
-
+#else
+	void telemetry_send_values(	uint8_t rx_pkts,
+								uint8_t tx_pkts,
+								uint8_t digi_pkts,
+								uint8_t kiss_pkts,
+								uint8_t viscous_drop_pkts,
+								float temperature,
+								dallas_qf_t dallas_qf,
+								pressure_qf_t press_qf,
+								humidity_qf_t humid_qf,
+								wind_qf_t anemometer_qf,
+								const config_data_mode_t * const config_mode) {
+#endif
 
 	// local variables with characters to be inserted to APRS telemetry frame
 	char qf = '0', degr = '0', nav = '0';
@@ -381,6 +394,23 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
+#ifdef STM32L471xx
+	if (config_mode->digi_viscous == 0) {
+			// generate the telemetry frame from values
+		#ifdef _DALLAS_AS_TELEM
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+		#else
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+		#endif
+	}
+	else {
+		#ifdef _DALLAS_AS_TELEM
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+		#else
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+		#endif
+	}
+#else
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
 		#ifdef _DALLAS_AS_TELEM
@@ -396,6 +426,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
 		#endif
 	}
+#endif
 
 	// reset the frame counter if it overflowed
 	if (telemetry_counter > 999)

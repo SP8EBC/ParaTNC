@@ -11,7 +11,7 @@
 #include "system_stm32l4xx.h"
 #include <stdint.h>
 
-#include "pwr_switch.h"
+#include "wx_pwr_switch.h"
 #include "io.h"
 #include "LedConfig.h"
 #include "packet_tx_handler.h"

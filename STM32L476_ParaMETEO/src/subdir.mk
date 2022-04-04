@@ -22,7 +22,6 @@ C_SRCS += \
 ../src/main.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
-../src/pwr_switch.c \
 ../src/rte_main.c \
 ../src/rte_pv.c \
 ../src/rte_pwr.c \
@@ -31,7 +30,8 @@ C_SRCS += \
 ../src/wx_handler.c \
 ../src/wx_handler_humidity.c \
 ../src/wx_handler_pressure.c \
-../src/wx_handler_temperature.c 
+../src/wx_handler_temperature.c \
+../src/wx_pwr_switch.c 
 
 OBJS += \
 ./src/KissCommunication.o \
@@ -52,7 +52,6 @@ OBJS += \
 ./src/main.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
-./src/pwr_switch.o \
 ./src/rte_main.o \
 ./src/rte_pv.o \
 ./src/rte_pwr.o \
@@ -61,7 +60,8 @@ OBJS += \
 ./src/wx_handler.o \
 ./src/wx_handler_humidity.o \
 ./src/wx_handler_pressure.o \
-./src/wx_handler_temperature.o 
+./src/wx_handler_temperature.o \
+./src/wx_pwr_switch.o 
 
 C_DEPS += \
 ./src/KissCommunication.d \
@@ -82,7 +82,6 @@ C_DEPS += \
 ./src/main.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
-./src/pwr_switch.d \
 ./src/rte_main.d \
 ./src/rte_pv.d \
 ./src/rte_pwr.d \
@@ -91,7 +90,8 @@ C_DEPS += \
 ./src/wx_handler.d \
 ./src/wx_handler_humidity.d \
 ./src/wx_handler_pressure.d \
-./src/wx_handler_temperature.d 
+./src/wx_handler_temperature.d \
+./src/wx_pwr_switch.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
