@@ -25,7 +25,7 @@
 #if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-int8_t io_vbat_a_coeff, io_vbat_b_coeff;
+int16_t io_vbat_a_coeff, io_vbat_b_coeff;
 #endif
 
 void io_oc_init(void) {
@@ -152,7 +152,7 @@ void io_ext_watchdog_service(void) {
 #endif
 }
 
-void io_vbat_meas_init(int8_t a_coeff, int8_t b_coeff) {
+void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
 #ifdef STM32L471xx
 	io_vbat_a_coeff = a_coeff;
@@ -237,7 +237,8 @@ uint16_t io_vbat_meas_get(void) {
 	// disable ADC
 	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_ADEN);
 
-	temp = (float)out * 0.00081f;
+	// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
+	temp = (float)out * 0.00081f;		// real voltage on ADC input
 
 	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
 #endif

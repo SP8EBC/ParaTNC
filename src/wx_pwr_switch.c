@@ -24,6 +24,10 @@
 #include <stm32l4xx_ll_gpio.h>
 #endif
 
+/**
+ * This power state applies only to ParaTNC or ParaMETEO with powersaving disabled. Otherwise
+ * swithig on / off is handled by pwr_save.c
+ */
 wx_pwr_state_t wx_pwr_state;
 
 #define REGISTER RTC->BKP0R

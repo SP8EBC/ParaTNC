@@ -64,17 +64,17 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count);
 
 #ifdef STM32L471xx
-void telemetry_send_values(	uint8_t rx_pkts,
-							uint8_t tx_pkts,
-							uint8_t digi_pkts,
-							uint16_t vbatt_voltage,
-							uint8_t viscous_drop_pkts,
-							float temperature,
-							dallas_qf_t dallas_qf,
-							pressure_qf_t press_qf,
-							humidity_qf_t humid_qf,
-							wind_qf_t anemometer_qf,
-							const config_data_mode_t * const config_mode);
+void telemetry_send_values(		uint8_t rx_pkts,
+								uint8_t tx_pkts,
+								uint8_t digi_pkts,
+								uint16_t vbatt_voltage,
+								uint8_t viscous_drop_pkts,
+								float temperature,
+								dallas_qf_t dallas_qf,
+								pressure_qf_t press_qf,
+								humidity_qf_t humid_qf,
+								wind_qf_t anemometer_qf,
+								const config_data_mode_t * const config_mode);
 #else
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,

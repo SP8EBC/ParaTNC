@@ -470,7 +470,7 @@ int main(int argc, char* argv[]){
   pwr_save_init(main_config_data_mode->powersave);
 
   // initialize B+ measurement
-  io_vbat_meas_init(100, 10);
+  io_vbat_meas_init(1000, 95);
 #endif
 
   // initalizing separated Open Collector output
