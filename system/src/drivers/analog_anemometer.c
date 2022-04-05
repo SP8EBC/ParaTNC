@@ -566,10 +566,14 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	uint16_t downscaled_angle = 0;
 
+#ifdef STM32F10X_MD_VL
 	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+
+#else
+	if (io_get_cntrl_vbat_c() == 0) {
+#endif
 		return rte_wx_winddirection_last;
 	}
-
 
 #ifdef STM32F10X_MD_VL
 	TIM_Cmd(TIM3, DISABLE);

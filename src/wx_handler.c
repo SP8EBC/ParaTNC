@@ -178,7 +178,11 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 	int32_t modbus_retval;
 	uint16_t scaled_windspeed = 0;
 
+#ifdef STM32L471xx
+	if (io_get_cntrl_vbat_c() == 0) {
+#else
 	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+#endif
 		// inhibit any measurement when power is not applied to sensors
 		return;
 	}

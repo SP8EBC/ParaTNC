@@ -104,4 +104,15 @@ inline void io___cntrl_vbat_r_disable(void) {
 
 }
 
+inline uint8_t io_get_cntrl_vbat_c(void) {
+	uint8_t out = 0;
+
+	if ((GPIOA->ODR & GPIO_ODR_ODR_1) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
+
 #endif /* IO_H_ */
