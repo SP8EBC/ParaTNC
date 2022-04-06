@@ -17,8 +17,20 @@ typedef enum http_client_method {
 	HTTP_DELETE
 } http_client_method_t;
 
-void http_client_headers_preamble(http_client_method_t method, char * url, uint8_t url_ln, char * output, uint8_t output_ln);
-void http_client_headers_user_agent(char * output, uint8_t output_ln);
+/**
+ * All these functions appends HTTP headers to output buffer. Every function (except preamble) receives three
+ * parameters:
+ *
+ *  char * output - pointer to the output buffer
+ *  uint16_t output_ln - lenght of output buffer
+ *  uint16_t offset - an offset from which each function will print its header
+ *
+ *  functions return an offset of one character after the last character of header. this value can be used
+ *  afterwards as the value of 'offset'
+ */
+uint16_t http_client_headers_preamble(http_client_method_t method, char * url, uint8_t url_ln, char * output, uint16_t output_ln);
+uint16_t http_client_headers_user_agent(char * output, uint16_t output_ln, uint16_t offset);
+uint16_t http_client_headers_accept(char* output, uint16_t output_ln, uint16_t offset);
 
 
 #endif /* INCLUDE_HTTP_CLIENT_HTTP_CLIENT_HEADERS_H_ */

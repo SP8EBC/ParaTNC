@@ -6,6 +6,7 @@
  */
 
 #include "pwr_save.h"
+#include "pwr_save_configuration.h"
 
 #include "stm32l4xx.h"
 #include "system_stm32l4xx.h"
@@ -38,22 +39,34 @@
 
 #define ALL_STATES_BITMASK (0xFF << 2)
 
+#define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
+
 #if defined(STM32L471xx)
 
 int8_t pwr_save_seconds_to_wx = 0;
 int16_t pwr_save_sleep_time_in_seconds = -1;
+
+/**
+ * Variable stores cutoff state and to save RAM it also keeps a low battery voltage flag
+ */
 int8_t pwr_save_currently_cutoff = 0;
 
 /**
  * This is cutoff voltage at which the power saving subsystem will keep ParaMETEO constantly
  * in L7 mode and wakeup once every 20 minutes to check B+ once again
  */
-const uint16_t PWR_SAVE_CUTOFF_VOLTAGE = 			112;		// 11.2V
+const uint16_t pwr_save_cutoff_voltage = 			PWR_SAVE_CUTOFF_VOLTAGE_DEF;
 
 /**
  * This is the restore voltage a battery must be charged to for ParaMETEO to restore it's normal operation
  */
-const uint16_t PWR_SAVE_STARTUP_RESTORE_VOLTAGE =	122;		// 12.2V
+const uint16_t pwr_save_startup_restore_voltage =	PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF;
+
+/**
+ * Below this voltage (and above pwr_save_cutoff_voltage) software will switch powersaving
+ * mode to PWSAVE_AGGRESV
+ */
+const uint16_t pwr_save_aggressive_powersave_voltage = PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE;
 
 static void pwr_save_unclock_rtc_backup_regs(void) {
 	// enable access to backup domain
@@ -202,7 +215,7 @@ void pwr_save_exit_from_stop2(void) {
 		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.telemetry_desc_counter += (pwr_save_sleep_time_in_seconds / 60);
 
-		if (pwr_save_currently_cutoff == 0) {
+		if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) == 0) {
 			// set counters back
 			packet_tx_set_current_counters(&timers);
 		}
@@ -514,24 +527,40 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 	packet_tx_counter_values_t counters;
 
-	if (vbatt < 0xF) {
+	// by default use powersave mode from controller configuration
+	config_data_powersave_mode_t psave_mode = config->powersave;
+
+	// check if battery voltage measurement is done and senseful
+	if (vbatt < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
+		// inhibit both cutoff and aggresive powersave if vbatt measurement is either not
+		// done at all or scaling factor are really screwed
 		vbatt = 0xFFFFu;
 	}
 
-	if (vbatt <= PWR_SAVE_CUTOFF_VOLTAGE && pwr_save_currently_cutoff == 0) {
-		pwr_save_currently_cutoff = 1;
+	if (vbatt <= pwr_save_aggressive_powersave_voltage) {
+		// if battery voltage is low swtich to aggressive powersave mode
+		pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
 
-		pwr_save_switch_mode_to_l7(60 * 20);
+		psave_mode = PWSAVE_AGGRESV;
+	}
+	else if (vbatt <= pwr_save_cutoff_voltage && (pwr_save_currently_cutoff & CURRENTLY_CUTOFF) == 0) {
+		// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
+		pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
+
+		// go sleep immediately and periodically check if battery has been charged above restore level
+		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
 
 		return;
 
 	}
-	else if (vbatt <= PWR_SAVE_STARTUP_RESTORE_VOLTAGE && pwr_save_currently_cutoff == 1)  {
-		pwr_save_switch_mode_to_l7(60 * 20);
+	else if (vbatt <= pwr_save_startup_restore_voltage && (pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0)  {
+		// if the ParaMETEO is cutted off currently but battery hasn't been charged above restore voltage
+		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
 
 		return;
 	}
 	else {
+		// if battery level is above restore voltage and aggressive powersave voltage
 		pwr_save_currently_cutoff = 0;
 	}
 
@@ -554,7 +583,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	}
 
 	// handle depends on current powersave configuration
-	switch (config->powersave) {
+	switch (psave_mode) {
 		/**
 		 * 	PWSAVE_NONE = 0,
 			PWSAVE_NORMAL = 1,

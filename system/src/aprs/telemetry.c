@@ -208,22 +208,22 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	if (config_mode->digi_viscous == 0) {
 		// prepare a frame with channel names depending on SSID
 		if (config_basic->ssid == 0)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_basic->callsign);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
 		else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else
 			return;
 	}
 	else {
 		// prepare a frame with channel names depending on SSID
 		if (config_basic->ssid == 0)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_basic->callsign);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
 		else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else
 			return;
 	}
@@ -231,11 +231,11 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	if (config_mode->digi_viscous == 0) {
 		// prepare a frame with channel names depending on SSID
 		if (config_basic->ssid == 0)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", config_basic->callsign);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
 		else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB", message_prefix_buffer);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,HostTx10m,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 		else
 			return;
 	}
@@ -301,20 +301,20 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 #ifdef STM32L471xx
 	if (config_basic->ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else
 		return;
 #else
 	if (config_basic->ssid == 0)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-9s:UNIT.Pkt,Pkt,Pkt,Pkt,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 	else
 		return;
 #endif
@@ -346,6 +346,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							pressure_qf_t press_qf,
 							humidity_qf_t humid_qf,
 							wind_qf_t anemometer_qf,
+							int8_t cutoff_and_vbat_low,
 							const config_data_mode_t * const config_mode) {
 
 	uint8_t scaled_vbatt_voltage = 0;
@@ -383,6 +384,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	char humidity_qf_navaliable = '0';
 	char anemometer_degradated = '0';
 	char anemometer_navble = '0';
+	char vbatt_low = '0';
 
 	// temperature scaled to 0x00-0xFF range for fifth telemetry channel.
 	// if _METEO mode is enabled this channel sends the temperaure measure by
@@ -454,6 +456,11 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		humidity_qf_navaliable = '0';
 	}
 
+	// telemetry won't be sent during cutoff anyway so this simplification is correct here
+	if (cutoff_and_vbat_low > 0) {
+		vbatt_low = '1';
+	}
+
 	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
@@ -461,16 +468,16 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
 		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
 		#endif
 	}
 	else {
 		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
 		#endif
 	}
 #else

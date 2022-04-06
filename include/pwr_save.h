@@ -102,7 +102,12 @@
 
 #include "config_data.h"
 
+#define CURRENTLY_CUTOFF 		0x1
+#define CURRENTLY_VBATT_LOW		0x8
+
 #if defined(STM32L471xx)
+
+extern int8_t pwr_save_currently_cutoff;
 
 void pwr_save_init(config_data_powersave_mode_t mode);
 void pwr_save_enter_stop2(void);

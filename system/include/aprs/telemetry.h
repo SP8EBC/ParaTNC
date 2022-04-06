@@ -74,6 +74,7 @@ void telemetry_send_values(		uint8_t rx_pkts,
 								pressure_qf_t press_qf,
 								humidity_qf_t humid_qf,
 								wind_qf_t anemometer_qf,
+								int8_t cutoff_and_vbat_low,
 								const config_data_mode_t * const config_mode);
 #else
 void telemetry_send_values(	uint8_t rx_pkts,

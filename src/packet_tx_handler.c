@@ -19,6 +19,7 @@
 
 #ifdef STM32L471xx
 #include "aprsis.h"
+#include "pwr_save.h"
 #endif
 
 #include "main.h"
@@ -313,11 +314,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
 				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-				telemetry_send_values(rx10m, tx10m, digi10m, rte_main_battery_voltage, digidrop10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
+				telemetry_send_values(rx10m, tx10m, digi10m, rte_main_battery_voltage, digidrop10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf, pwr_save_currently_cutoff, config_mode);
 			}
 			else {
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-				telemetry_send_values(rx10m, tx10m, digi10m, rte_main_battery_voltage, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
+				telemetry_send_values(rx10m, tx10m, digi10m, rte_main_battery_voltage, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, pwr_save_currently_cutoff, config_mode);
 			}
 #else
 				// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
