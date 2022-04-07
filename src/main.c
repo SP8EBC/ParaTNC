@@ -971,11 +971,15 @@ int main(int argc, char* argv[]){
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
-			memset(main_kiss_srl_ctx.srl_tx_buf_pointer, 0x00, main_kiss_srl_ctx.srl_tx_buf_ln);
 
-			if (main_kiss_enabled == 1) {
-				// convert message to kiss format and send it to host
-				srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
+			// if serial port is currently not busy on transmission
+			if (main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TXING) {
+				memset(main_kiss_srl_ctx.srl_tx_buf_pointer, 0x00, main_kiss_srl_ctx.srl_tx_buf_ln);
+
+				if (main_kiss_enabled == 1) {
+					// convert message to kiss format and send it to host
+					srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
+				}
 			}
 
 			main_ax25.dcd = false;

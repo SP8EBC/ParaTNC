@@ -46,6 +46,16 @@ static uint8_t http_client_response_header_processing = 1;
 static uint16_t http_client_content_received_so_far = 0;
 
 /**
+ * Temporary buffer for processing
+ */
+char http_client_header_buffer[HEADER_BUFFER_LN];
+
+/**
+ * Index used to walk through 'http_client_header_buffer'
+ */
+uint8_t http_client_header_index = 0;
+
+/**
  * This function is responsible for checking what HTTP header has been received
  */
 static http_client_header_field_t http_client_check_what_field_it_is(char * buffer, uint16_t buffer_ln) {

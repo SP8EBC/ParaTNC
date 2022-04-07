@@ -58,7 +58,9 @@ uint16_t http_client_headers_user_agent(char *output, uint16_t output_ln,
 
 	uint16_t out = 0;
 
-	snprintf(output + offset, output_ln - offset, "User-Agent: %s");
+	snprintf(output + offset, output_ln - offset, "User-Agent: ParaMETEO %s-%s\r\n", SW_VER, SW_DATE);
+
+	out = strlen (output);
 
 	return out;
 }
@@ -67,6 +69,20 @@ uint16_t http_client_headers_accept(char *output, uint16_t output_ln,
 		uint16_t offset) {
 
 	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "Accept: application/json\r\n");
+
+	out = strlen (output);
+
+	return out;
+}
+
+uint16_t http_client_headers_terminate(char* output, uint16_t output_ln, uint16_t offset) {
+	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "\r\n\r\n");
+
+	out = strlen (output);
 
 	return out;
 }

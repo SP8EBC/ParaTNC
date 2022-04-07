@@ -45,16 +45,6 @@ extern uint16_t http_client_content_lenght;
  */
 extern uint16_t http_client_max_content_ln;
 
-/**
- * Temporary buffer for processing
- */
-extern char http_client_header_buffer[HEADER_BUFFER_LN];
-
-/**
- * Index used to walk through 'http_client_header_buffer'
- */
-extern uint8_t http_client_header_index;
-
 void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context, uint8_t ignore_content_on_http_error);
 uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy);
 uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint8_t data_ln, uint8_t force_disconnect_on_busy);

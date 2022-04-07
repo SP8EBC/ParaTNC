@@ -49,6 +49,9 @@ void srl_init(
 	ctx->srl_tx_buf_ln = rx_buffer_size;
 	#endif
 
+	ctx->srl_tx_internal_buf_pointer = tx_buffer;
+	ctx->srl_tx_internal_buf_ln = tx_buffer_size;
+
 	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
 	memset(ctx->srl_tx_buf_pointer, 0x00, ctx->srl_tx_buf_ln);
 
@@ -187,12 +190,12 @@ uint8_t srl_send_data(srl_context_t *ctx, const uint8_t* data, uint8_t mode, uin
 			return SRL_DATA_TOO_LONG;
 
 		// setting a pointer to transmit buffer to the internal buffer inside the driver
-		ctx->srl_tx_buf_pointer = srl_usart1_tx_buffer;
+		ctx->srl_tx_buf_pointer = ctx->srl_tx_internal_buf_pointer;
 
-		ctx->srl_tx_buf_ln = TX_BUFFER_1_LN;
+		ctx->srl_tx_buf_ln = ctx->srl_tx_internal_buf_ln;
 
 		// cleaning the buffer from previous content
-		memset(ctx->srl_tx_buf_pointer, 0x00, TX_BUFFER_1_LN);
+		memset(ctx->srl_tx_buf_pointer, 0x00, ctx->srl_tx_buf_ln);
 
 		// copying the data from provided pointer to internal buffer
 		if (mode == 0) {
@@ -663,6 +666,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 				ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				ctx->srl_tx_state = SRL_TX_IDLE;
 
+				// reset tx buffer pointer to internal one
+				ctx->srl_tx_buf_pointer = ctx->srl_tx_internal_buf_pointer;
+				ctx->srl_tx_buf_ln = ctx->srl_tx_internal_buf_ln;
+
 				if (ctx->te_port != 0)
 					GPIO_ResetBits(ctx->te_port, ctx->te_pin);
 
@@ -676,6 +683,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
 				ctx->port->SR &= (0xFFFFFFFF ^ USART_SR_TC);
 				ctx->srl_tx_state = SRL_TX_IDLE;
+
+				// reset tx buffer pointer to internal one
+				ctx->srl_tx_buf_pointer = ctx->srl_tx_internal_buf_pointer;
+				ctx->srl_tx_buf_ln = ctx->srl_tx_internal_buf_ln;
 
 				if (ctx->te_port != 0)
 					GPIO_ResetBits(ctx->te_port, ctx->te_pin);

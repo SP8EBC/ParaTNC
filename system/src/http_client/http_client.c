@@ -28,16 +28,6 @@ uint16_t http_client_content_lenght = 0;
 int16_t http_client_http_code = 0;
 
 /**
- * Temporary buffer for processing
- */
-char http_client_header_buffer[HEADER_BUFFER_LN];
-
-/**
- * Index used to walk through 'http_client_header_buffer'
- */
-uint8_t http_client_header_index = 0;
-
-/**
  * SIM800 state and serial context used to communication with gsm module.
  */
 gsm_sim800_state_t * http_client_deticated_sim800_state;
@@ -90,7 +80,7 @@ static uint16_t http_client_split_hostname_and_path(char * input, uint16_t input
 	return out;
 }
 
-static void http_client_get_port_from_url(char * input, uint16_t input_ln, char * port, uint16_t port_ln) {
+static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, char * port, uint16_t port_ln) {
 
 	char temp[5] = {0, 0, 0, 0, 0};
 
@@ -132,10 +122,11 @@ static void http_client_get_port_from_url(char * input, uint16_t input_ln, char 
 
 	}
 
+	return split_point;
 
 }
 
-static void http_client_get_address_from_url(char * input, uint16_t input_ln, char * address, uint16_t address_ln) {
+static uint16_t http_client_get_address_from_url(char * input, uint16_t input_ln, char * address, uint16_t address_ln) {
 
 	int first_index = 0, last_index = 0;
 
@@ -169,6 +160,8 @@ static void http_client_get_address_from_url(char * input, uint16_t input_ln, ch
 			memcpy(address, input + first_index, last_index - first_index);
 		}
 	}
+
+	return split_point;
 
 }
 
@@ -216,6 +209,11 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 			// set appropriate state
 			http_client_state = HTTP_CLIENT_CONNECTED_IDLE;
 		}
+
+		// clear a buffer to make a room for http request
+		memset(http_client_deticated_serial_context->srl_tx_buf_pointer, 0x00, http_client_deticated_serial_context->srl_tx_buf_ln);
+
+		//
 	}
 	else if (split_point == 0xFFFF) {
 		out = HTTP_CLIENT_RET_WRONG_URL;

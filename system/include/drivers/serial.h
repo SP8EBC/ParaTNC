@@ -85,11 +85,19 @@ typedef struct srl_context_t {
 	GPIO_TypeDef* te_port;
 	uint16_t te_pin;
 
+	// these pointers points to either internal buffer
+	// or external provided by caller, depends on 'uint8_t internal_external'
+	// parameter in send functions
 	uint8_t *srl_tx_buf_pointer;
 	uint8_t *srl_rx_buf_pointer;
 
+	// thatt pointer always points to internal buffer
+	uint8_t *srl_tx_internal_buf_pointer;
+
 	uint16_t srl_rx_buf_ln;
 	uint16_t srl_tx_buf_ln;
+
+	uint16_t srl_tx_internal_buf_ln;
 
 	uint16_t srl_rx_bytes_counter;
 	uint16_t srl_tx_bytes_counter;

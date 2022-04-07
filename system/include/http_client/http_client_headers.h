@@ -31,6 +31,7 @@ typedef enum http_client_method {
 uint16_t http_client_headers_preamble(http_client_method_t method, char * url, uint8_t url_ln, char * output, uint16_t output_ln);
 uint16_t http_client_headers_user_agent(char * output, uint16_t output_ln, uint16_t offset);
 uint16_t http_client_headers_accept(char* output, uint16_t output_ln, uint16_t offset);
+uint16_t http_client_headers_terminate(char* output, uint16_t output_ln, uint16_t offset);
 
 
 #endif /* INCLUDE_HTTP_CLIENT_HTTP_CLIENT_HEADERS_H_ */
