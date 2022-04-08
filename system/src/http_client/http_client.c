@@ -1,5 +1,6 @@
 #include "http_client/http_client.h"
 #include "http_client/http_client_rx_callback.h"
+#include "http_client/http_client_headers.h"
 
 #include "gsm/sim800c_tcpip.h"
 
@@ -50,6 +51,13 @@ const char * http_client_default_port = "80";
 #define PORT_LN			5
 static char http_client_hostname[HOSTNAME_LN];
 static char http_client_port[PORT_LN];
+
+/**
+ * Callback used when response has been received from HTTP server (or timeout occured)
+ */
+static void http_client_response_done_callback(srl_context_t* context) {
+
+}
 
 /**
  * This functions splits the URL string into hostname and path
@@ -181,6 +189,8 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 
 	uint8_t connect_result = -1;
 
+	uint16_t current_request_ln = 0;
+
 	// simple check if url seems to be corrected or not
 	if (split_point != 0xFFFF && http_client_state == HTTP_CLIENT_READY ) {
 
@@ -208,12 +218,34 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 		if (connect_result == 0) {
 			// set appropriate state
 			http_client_state = HTTP_CLIENT_CONNECTED_IDLE;
+
+			// wait for any serial transmission to finish
+			while (http_client_deticated_serial_context->srl_tx_state == SRL_TXING);
+
+			// clear a buffer to make a room for http request
+			memset(http_client_deticated_serial_context->srl_tx_buf_pointer, 0x00, http_client_deticated_serial_context->srl_tx_buf_ln);
+
+			// assemble headers
+			current_request_ln = http_client_headers_preamble(HTTP_GET, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);
+			current_request_ln = http_client_headers_accept((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+			current_request_ln = http_client_headers_user_agent((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+			current_request_ln = http_client_headers_terminate((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+
+			// send data through TCP/IP connection
+			connect_result = gsm_sim800_tcpip_write(http_client_deticated_serial_context->srl_tx_buf_pointer, current_request_ln, http_client_deticated_serial_context, http_client_deticated_sim800_state);
+
+			// check if data has been sent succesfully
+			if (connect_result == 0) {
+				// reset callback to initial state
+				http_client_rx_done_callback_init();
+
+				// wait for GET response
+				http_client_state = HTTP_CLIENT_WAITING_GET;
+
+				gsm_sim800_tcpip_async_receive(http_client_deticated_serial_context, http_client_deticated_sim800_state, http_client_rx_done_callback, 1000u, http_client_response_done_callback /** FIXME */);
+			}
 		}
 
-		// clear a buffer to make a room for http request
-		memset(http_client_deticated_serial_context->srl_tx_buf_pointer, 0x00, http_client_deticated_serial_context->srl_tx_buf_ln);
-
-		//
 	}
 	else if (split_point == 0xFFFF) {
 		out = HTTP_CLIENT_RET_WRONG_URL;
