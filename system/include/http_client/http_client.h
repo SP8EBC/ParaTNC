@@ -27,6 +27,8 @@
 #define HTTP_CLIENT_RET_TCPIP_BSY		2
 #define HTTP_CLIENT_RET_WRONG_URL		3
 
+typedef void(*http_client_response_available_t)(uint16_t http_code, char * content, uint16_t content_lenght);
+
 /**
  *	HTTP code returned by the latest query. It is zeroed after each successful call to async
  *	function. This indicate that a request is currently in progress. Negative values means some

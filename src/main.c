@@ -465,7 +465,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
 
@@ -589,9 +589,10 @@ int main(int argc, char* argv[]){
   main_target_wx_baudrate = _SERIAL_BAUDRATE;
 
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   // swtich power to M4. turn on sensors but keep GSM modem turned off
   pwr_save_switch_mode_to_m4();
+
 #endif
 
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
@@ -866,7 +867,7 @@ int main(int argc, char* argv[]){
   led_control_led1_upper(false);
   led_control_led2_bottom(false);
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
    rte_main_battery_voltage = io_vbat_meas_get();
 
    pwr_save_switch_mode_to_c0();
@@ -918,7 +919,12 @@ int main(int argc, char* argv[]){
 #endif
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
-	   beacon_send_own();
+#if defined(PARAMETEO)
+	   beacon_send_own(rte_main_battery_voltage);
+#else
+	   beacon_send_own(0);
+
+#endif
    }
 
   // Infinite loop
@@ -1209,12 +1215,14 @@ int main(int argc, char* argv[]){
 				rte_main_trigger_wx_packet = 0;
 			}
 
-			#ifdef STM32L471xx
+			#ifdef PARAMETEO
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_battery_voltage);
 			}
+			#endif
 
+			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
 

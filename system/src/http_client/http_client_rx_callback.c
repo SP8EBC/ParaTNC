@@ -181,6 +181,9 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 					case HEADER_END: {
 						http_client_response_header_processing = 0;
 
+						// set current offset to save a place
+						http_client_content_start_index = rx_bytes_counter + 1;
+
 						break;
 					}
 
