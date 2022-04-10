@@ -68,7 +68,8 @@ static char http_client_port[PORT_LN];
 static void http_client_response_done_callback(srl_context_t* context) {
 
 	if (http_client_on_response_callback != 0) {
-		http_client_on_response_callback(http_client_http_code, (char *)(context->srl_rx_buf_pointer + http_client_content_start_index), http_client_content_end_index - http_client_content_start_index);
+		// execute a callback. addition '+1' is requires because 'http_client_content_end_index' points to the last character of response
+		http_client_on_response_callback(http_client_http_code, (char *)(context->srl_rx_buf_pointer + http_client_content_start_index), http_client_content_end_index - http_client_content_start_index + 1);
 	}
 
 }
@@ -233,6 +234,8 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 			out = HTTP_CLIENT_RET_TCPIP_BSY;
 		}
 
+		http_client_on_response_callback = callback_on_response;
+
 		// get hotsname from URL (URI)
 		http_client_get_address_from_url(url, url_ln, http_client_hostname, HOSTNAME_LN);
 		http_client_get_port_from_url(url, url_ln, http_client_port, PORT_LN);
@@ -269,7 +272,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 				// wait for GET response
 				http_client_state = HTTP_CLIENT_WAITING_GET;
 
-				gsm_sim800_tcpip_async_receive(http_client_deticated_serial_context, http_client_deticated_sim800_state, http_client_rx_done_callback, 1000u, http_client_response_done_callback /** FIXME */);
+				gsm_sim800_tcpip_async_receive(http_client_deticated_serial_context, http_client_deticated_sim800_state, http_client_rx_done_callback, 5000u, http_client_response_done_callback /** FIXME */);
 			}
 		}
 

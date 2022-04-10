@@ -18,6 +18,7 @@
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_poolers.h"
+#include "gsm/sim800c_gprs.h"
 
 #include "aprsis.h"
 #endif
@@ -232,6 +233,15 @@ gsm_sim800_state_t main_gsm_state;
 
 static void message_callback(struct AX25Msg *msg) {
 
+}
+
+static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
+
+	if (http_code == 200) {
+		if (content_lenght > 0) {
+			kiss10m++;
+		}
+	}
 }
 
 int main(int argc, char* argv[]){
@@ -914,7 +924,9 @@ int main(int argc, char* argv[]){
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
 
-	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
+	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
+
+	   //aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
    }
 #endif
 
@@ -1170,6 +1182,11 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 
+				if (gsm_sim800_gprs_ready == 1) {
+					retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+				}
+
+
 				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 				gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
@@ -1224,11 +1241,11 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
-				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
-
-				if (retval == 0) {
-					aprsis_send_beacon(0);
-				}
+//				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
+//
+//				if (retval == 0) {
+//					aprsis_send_beacon(0);
+//				}
 			}
 			#endif
 
