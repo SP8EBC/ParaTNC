@@ -100,9 +100,12 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 			if (retval == 0) {
 				receive_buff = srl_get_rx_buffer(aprsis_serial_port);
 
+				// if hello message has been received
 				if (*receive_buff == '#' && *(receive_buff + 1) == ' ') {
+					// send long string to server
 					gsm_sim800_tcpip_write((uint8_t *)aprsis_login_string, strlen(aprsis_login_string), aprsis_serial_port, aprsis_gsm_modem_state);
 
+					// wait for server response
 					retval = gsm_sim800_tcpip_receive(0, 0, aprsis_serial_port, aprsis_gsm_modem_state, 0, 2000);
 
 					if (retval == 0) {
@@ -117,6 +120,7 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 							}
 						}
 
+						// check if authorization has been successfull
 						retval = strncmp(aprsis_sucessfull_login, (const char * )(receive_buff + offset), (size_t)9);
 						if (retval == 0) {
 							aprsis_logged = 1;
@@ -126,6 +130,10 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 
 							out = 0;
 
+						}
+						else {
+							// if authoruzation wasn't successfull drop a connection
+							gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
 						}
 					}
 				}

@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#define HTTP_PREFIX_LN 7
+
 typedef enum http_client_state {
 	HTTP_CLIENT_UNITIALIZED,
 	HTTP_CLIENT_READY,
@@ -16,10 +18,18 @@ typedef enum http_client_state {
 
 http_client_state_t http_client_state = HTTP_CLIENT_UNITIALIZED;
 
+http_client_response_available_t http_client_on_response_callback = 0;
+
 /**
  * Content lenght received from HTTP response headers or chunked encoding
  */
 uint16_t http_client_content_lenght = 0;
+
+/**
+ * Maximum content lenght which should be received by the client. Please bear in mind that THIS NOT include
+ * HTTP headers lenght
+ */
+uint16_t http_client_max_content_ln = 0;
 
 /**
  *	HTTP code returned by the latest query. It is zeroed after each successful call to async
@@ -57,6 +67,10 @@ static char http_client_port[PORT_LN];
  */
 static void http_client_response_done_callback(srl_context_t* context) {
 
+	if (http_client_on_response_callback != 0) {
+		http_client_on_response_callback(http_client_http_code, (char *)(context->srl_rx_buf_pointer + http_client_content_start_index), http_client_content_end_index - http_client_content_start_index);
+	}
+
 }
 
 /**
@@ -92,6 +106,8 @@ static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, c
 
 	char temp[5] = {0, 0, 0, 0, 0};
 
+	short i, j = 0;
+
 	// get split point
 	uint16_t split_point = http_client_split_hostname_and_path(input, input_ln);
 
@@ -106,7 +122,7 @@ static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, c
 		if (last_character >= '0' && last_character <= '9' ) {
 
 			// copy maximum of 5 characters until ':'
-			for (short i = 1; i < 6; i++) {
+			for (i = 1; i < 6; i++) {
 
 				// get current character
 				last_character = *(input + split_point - i);
@@ -121,7 +137,15 @@ static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, c
 			}
 
 			// copy port number into target buffer
-			memcpy(port, temp, 5);
+			//memcpy(port, temp, 5);
+			for (; i >= 0 ; i--) {
+
+				if (temp[i] == 0) {
+					continue;
+				}
+
+				port[j++] = temp[i];
+			}
 		}
 		else {
 			// copy default port
@@ -177,11 +201,13 @@ void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context
 
 	http_client_deticated_sim800_state = state;
 
+	http_client_deticated_serial_context = serial_context;
+
 	http_client_state = HTTP_CLIENT_READY;
 }
 
 
-uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy) {
+uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response) {
 
 	uint16_t split_point = http_client_split_hostname_and_path(url, url_ln);
 
@@ -226,7 +252,8 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 			memset(http_client_deticated_serial_context->srl_tx_buf_pointer, 0x00, http_client_deticated_serial_context->srl_tx_buf_ln);
 
 			// assemble headers
-			current_request_ln = http_client_headers_preamble(HTTP_GET, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);
+			current_request_ln = http_client_headers_preamble(HTTP_GET, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);\
+			current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, url_ln - split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_accept((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_user_agent((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_terminate((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);

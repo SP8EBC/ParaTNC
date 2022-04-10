@@ -29,6 +29,7 @@ typedef enum http_client_method {
  *  afterwards as the value of 'offset'
  */
 uint16_t http_client_headers_preamble(http_client_method_t method, char * url, uint8_t url_ln, char * output, uint16_t output_ln);
+uint16_t http_client_headers_host(char * host, uint16_t host_ln, char *output, uint16_t output_ln, uint16_t offset);
 uint16_t http_client_headers_user_agent(char * output, uint16_t output_ln, uint16_t offset);
 uint16_t http_client_headers_accept(char* output, uint16_t output_ln, uint16_t offset);
 uint16_t http_client_headers_terminate(char* output, uint16_t output_ln, uint16_t offset);
