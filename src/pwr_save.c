@@ -160,7 +160,7 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
-    rte_main_battery_voltage = io_vbat_meas_get();
+    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
 
 	analog_anemometer_deinit();
 
@@ -547,6 +547,10 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		// done at all or scaling factor are really screwed
 		vbatt = 0xFFFFu;
 	}
+
+	#ifdef INHIBIT_CUTOFF
+	vbatt = 0xFFFFu;
+	#endif
 
 	// check if battery voltage is below low voltage level
 	if (vbatt <= pwr_save_aggressive_powersave_voltage) {

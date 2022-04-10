@@ -18,6 +18,9 @@
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_poolers.h"
+#include "gsm/sim800c_gprs.h"
+
+#include "http_client/http_client.h"
 
 #include "aprsis.h"
 #endif
@@ -219,16 +222,20 @@ umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 // result of CRC calculation
 uint32_t main_crc_result = 0;
 
-char after_tx_lock;
-
-unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
-
 #if defined(STM32L471xx)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
 
 #endif
+
+#if defined(PARAMETEO)
+uint8_t main_woken_up = 0;
+#endif
+
+char after_tx_lock;
+
+unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -470,7 +477,7 @@ int main(int argc, char* argv[]){
   pwr_save_init(main_config_data_mode->powersave);
 
   // initialize B+ measurement
-  io_vbat_meas_init(1000, 95);
+  io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
 #endif
 
   // initalizing separated Open Collector output
@@ -685,7 +692,7 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 
@@ -868,7 +875,7 @@ int main(int argc, char* argv[]){
   led_control_led2_bottom(false);
 
 #if defined(PARAMETEO)
-   rte_main_battery_voltage = io_vbat_meas_get();
+   rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
 
    pwr_save_switch_mode_to_c0();
 
@@ -913,6 +920,8 @@ int main(int argc, char* argv[]){
 #ifdef STM32L471xx
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
+
+	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
 	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
    }
@@ -974,6 +983,15 @@ int main(int argc, char* argv[]){
 	  	}
 #endif
 
+#if defined(PARAMETEO)
+	  	if (main_woken_up == 1) {
+	  		io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
+
+	  	    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+
+	  		main_woken_up = 0;
+	  	}
+#endif
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
@@ -1110,7 +1128,7 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
-		    rte_main_battery_voltage = io_vbat_meas_get();
+		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
@@ -1154,7 +1172,13 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 
-				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
+
+			if (gsm_sim800_gprs_ready == 1) {
+				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
+			}
+
 			}
 			#endif
 
@@ -1162,8 +1186,6 @@ int main(int argc, char* argv[]){
 		}
 
 		if (main_one_second_pool_timer < 10) {
-
-			//digi_pool_viscous();
 
 			digi_pool_viscous();
 
@@ -1217,18 +1239,20 @@ int main(int argc, char* argv[]){
 
 			#ifdef PARAMETEO
 			// inhibit any power save switching when modem transmits data
-			if (!main_afsk.sending) {
+			if (!main_afsk.sending && main_woken_up == 0) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_battery_voltage);
 			}
 			#endif
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
-				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
+				// TODO
+//				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
+//
+//				if (retval == 0) {
+//					aprsis_send_beacon(0);
+//				}
 
-				if (retval == 0) {
-					aprsis_send_beacon(0);
-				}
 			}
 			#endif
 

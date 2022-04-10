@@ -30,7 +30,11 @@
  * How long in minutes the controller will sleep in L7 state between checking
  * if battery has been charged.
  */
-#define PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES	4
+#define PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES	10
 
+/**
+ * Do not uncomment this on production devices
+ */
+//#define INHIBIT_CUTOFF
 
 #endif /* INCLUDE_PWR_SAVE_CONFIGURATION_H_ */

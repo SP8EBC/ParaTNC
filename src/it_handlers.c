@@ -100,10 +100,7 @@ void RTC_WKUP_IRQHandler(void) {
 
 	pwr_save_exit_from_stop2();
 
-    rte_main_battery_voltage = io_vbat_meas_get();
-
-	pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, 1, rte_main_battery_voltage);
-
+	main_woken_up = 1;
 
 }
 #endif

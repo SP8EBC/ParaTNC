@@ -6,7 +6,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA05"
-#define SW_DATE "09042022"
+#define SW_DATE "10042022"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -54,6 +54,8 @@ extern srl_context_t* main_wx_srl_ctx_ptr;
 extern srl_context_t* main_gsm_srl_ctx_ptr;
 
 extern  uint8_t main_kiss_enabled;
+
+extern uint8_t main_woken_up;
 
 extern char after_tx_lock;
 
