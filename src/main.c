@@ -1128,7 +1128,7 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
-		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
+		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
@@ -1175,9 +1175,9 @@ int main(int argc, char* argv[]){
 			gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 
-			if (gsm_sim800_gprs_ready == 1) {
-				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
-			}
+//			if (gsm_sim800_gprs_ready == 1) {
+//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
+//			}
 
 			}
 			#endif

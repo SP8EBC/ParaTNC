@@ -160,7 +160,7 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
-    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
+    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
 
 	analog_anemometer_deinit();
 

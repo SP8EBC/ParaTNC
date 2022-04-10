@@ -296,7 +296,7 @@ uint16_t io_vbat_meas_get(int8_t average_or_current) {
 		}
 
 		// if whole buffer has been used for average calculation
-		if (i + 1 >= VBATT_HISTORY_LN) {
+		if (i >= VBATT_HISTORY_LN) {
 			// replace output
 			out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
 		}
