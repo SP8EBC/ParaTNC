@@ -934,6 +934,7 @@ int main(int argc, char* argv[]){
 	   beacon_send_own(0);
 
 #endif
+	   delay_fixed(1500);
    }
 
   // Infinite loop

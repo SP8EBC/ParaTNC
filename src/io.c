@@ -27,7 +27,7 @@ LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 int16_t io_vbat_a_coeff, io_vbat_b_coeff;
 
-#define VBATT_HISTORY_LN	8
+#define VBATT_HISTORY_LN	16
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
 
 static uint8_t io_vbatt_history_it = 0;

@@ -52,6 +52,12 @@ int16_t pwr_save_sleep_time_in_seconds = -1;
 int8_t pwr_save_currently_cutoff = 0;
 
 /**
+ * This stores a previous value of 'pwr_save_currently_cutoff' which is required to
+ * trigger a status message when controller goes into low battery voltage or cutoff state
+ */
+int8_t pwr_save_previously_cutoff = 0;
+
+/**
  * This is cutoff voltage at which the power saving subsystem will keep ParaMETEO constantly
  * in L7 mode and wakeup once every 20 minutes to check B+ once again
  */
@@ -541,6 +547,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	// by default use powersave mode from controller configuration
 	config_data_powersave_mode_t psave_mode = config->powersave;
 
+	// save previous state
+	pwr_save_previously_cutoff = pwr_save_currently_cutoff;
+
 	// check if battery voltage measurement is done and senseful
 	if (vbatt < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
 		// inhibit both cutoff and aggresive powersave if vbatt measurement is either not
@@ -553,10 +562,13 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	#endif
 
 	// check if battery voltage is below low voltage level
-	if (vbatt <= pwr_save_aggressive_powersave_voltage) {
+	if (vbatt <= pwr_save_aggressive_powersave_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) == 0)) {
 		// if battery voltage is low swtich to aggressive powersave mode
 		pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
 
+		psave_mode = PWSAVE_AGGRESV;
+	}
+	else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0)) {
 		psave_mode = PWSAVE_AGGRESV;
 	}
 	else {
@@ -589,6 +601,11 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	else {
 		// if battery level is above restore voltage and aggressive powersave voltage
 		pwr_save_currently_cutoff &= (0xFF ^ CURRENTLY_CUTOFF);
+	}
+
+	// check if cutoff status has changed
+	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
+		telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
 	}
 
 	// get current counter values

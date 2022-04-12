@@ -94,6 +94,8 @@ void telemetry_send_status(void);
 
 void telemetry_send_status_raw_values_modbus(void);
 
+void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
+
 #ifdef __cplusplus
 }
 #endif

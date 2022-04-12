@@ -670,7 +670,7 @@ void rtu_get_raw_values_string(char* out, uint16_t out_buffer_ln, uint8_t* gener
 
 	f6_value = rte_wx_modbus_rtu_f6.registers_values[0];
 
-	string_ln = snprintf(out, out_buffer_ln, ">F1V %X, F2V %X, F3V %X, F4V %X, F5V %X, F6V %X",
+	string_ln = snprintf(out, out_buffer_ln, ">[F1V: %X][F2V: %X][F3V: %X][F4V: %X][F5V: %X][F6V: %X]",
 												(int) f1_value,
 												(int) f2_value,
 												(int) f3_value,
