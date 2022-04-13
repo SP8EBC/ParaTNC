@@ -5,6 +5,7 @@
 #include "gsm/sim800c_tcpip.h"
 
 #include <string.h>
+#include <stdio.h>
 
 #define HTTP_PREFIX_LN 7
 
@@ -287,8 +288,91 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 	return out;
 }
 
-uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint8_t data_ln, uint8_t force_disconnect_on_busy) {
-	return 0;
+uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint16_t data_ln, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response) {
+
+	uint8_t out = 0;
+
+	uint16_t split_point = http_client_split_hostname_and_path(url, url_ln);
+
+	uint8_t connect_result = -1;
+
+	uint16_t current_request_ln = 0;
+
+	// simple check if url seems to be corrected or not
+	if (split_point != 0xFFFF && http_client_state == HTTP_CLIENT_READY ) {
+
+		// clear local buffers
+		memset(http_client_hostname, 0x00, HOSTNAME_LN);
+		memset(http_client_port, 0x00, PORT_LN);
+	}
+	else if (split_point == 0xFFFF) {
+		out = HTTP_CLIENT_RET_WRONG_URL;
+	}
+	else if (http_client_state != HTTP_CLIENT_READY) {
+		out = HTTP_CLIENT_RET_UNITIALIZED;
+	}
+
+	// check if module is busy on other TCP/IP connection
+	if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy != 0) {
+		// if client is connected end a user wants to force disconnect
+		gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state);
+	}
+	else if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy == 0) {
+		out = HTTP_CLIENT_RET_TCPIP_BSY;
+	}
+
+	http_client_on_response_callback = callback_on_response;
+
+	// get hotsname from URL (URI)
+	http_client_get_address_from_url(url, url_ln, http_client_hostname, HOSTNAME_LN);
+	http_client_get_port_from_url(url, url_ln, http_client_port, PORT_LN);
+
+	// establish TCP connection to HTTP server
+	connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state);
+
+	// if connection has been established
+	if (connect_result == 0) {
+
+		// set appropriate state
+		http_client_state = HTTP_CLIENT_CONNECTED_IDLE;
+
+		// wait for any serial transmission to finish
+		while (http_client_deticated_serial_context->srl_tx_state == SRL_TXING);
+
+		// clear a buffer to make a room for http request
+		memset(http_client_deticated_serial_context->srl_tx_buf_pointer, 0x00, http_client_deticated_serial_context->srl_tx_buf_ln);
+
+		// assemble headers
+		current_request_ln = http_client_headers_preamble(HTTP_POST, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);\
+		current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, url_ln - split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+		current_request_ln = http_client_headers_content_ln((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln, data_ln);
+		current_request_ln = http_client_headers_content_type_json((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+		current_request_ln = http_client_headers_user_agent((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+		current_request_ln = http_client_headers_terminate((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+
+		// check if there is a room for the content
+		if (http_client_deticated_serial_context->srl_tx_buf_ln > current_request_ln + data_ln) {
+			// if yes append HTTP content
+			current_request_ln = sprintf((char * )http_client_deticated_serial_context->srl_tx_buf_pointer + current_request_ln, "%s\r\n", data_to_post);
+
+			// send data through TCP/IP connection
+			connect_result = gsm_sim800_tcpip_write(http_client_deticated_serial_context->srl_tx_buf_pointer, current_request_ln, http_client_deticated_serial_context, http_client_deticated_sim800_state);
+
+			// check if data has been sent succesfully
+			if (connect_result == 0) {
+				// reset callback to initial state
+				http_client_rx_done_callback_init();
+
+				// wait for POST response
+				http_client_state = HTTP_CLIENT_WAITING_POST;
+
+				gsm_sim800_tcpip_async_receive(http_client_deticated_serial_context, http_client_deticated_sim800_state, http_client_rx_done_callback, 5000u, http_client_response_done_callback /** FIXME */);
+			}
+		}
+
+	}
+
+	return out;
 }
 
 

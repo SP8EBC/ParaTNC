@@ -96,7 +96,27 @@ uint16_t http_client_headers_accept(char *output, uint16_t output_ln,
 uint16_t http_client_headers_terminate(char* output, uint16_t output_ln, uint16_t offset) {
 	uint16_t out = 0;
 
-	snprintf(output + offset, output_ln - offset, "\r\n\r\n");
+	snprintf(output + offset, output_ln - offset, "\r\n");
+
+	out = strlen (output);
+
+	return out;
+}
+
+uint16_t http_client_headers_content_ln(char* output, uint16_t output_ln, uint16_t offset, uint16_t content_ln) {
+	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "User-Agent: %d\r\n", content_ln);
+
+	out = strlen (output);
+
+	return out;
+}
+
+uint16_t http_client_headers_content_type_json(char* output, uint16_t output_ln, uint16_t offset) {
+	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "Content-type: application/json\r\n");
 
 	out = strlen (output);
 
