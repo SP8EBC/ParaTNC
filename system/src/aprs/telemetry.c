@@ -595,7 +595,7 @@ void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t pre
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave cutoff change][Vbatt: %dV][previous: %d - %s][currently: %d - %s]", battery_voltage, previous_cutoff, p, current_cutoff, c);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	while (main_ax25.dcd == 1);
+	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
 	main_wait_for_tx_complete();
 

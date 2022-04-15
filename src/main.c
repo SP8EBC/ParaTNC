@@ -990,6 +990,11 @@ int main(int argc, char* argv[]){
 
 	  	    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
 
+	  	    // reinitialize APRS radio modem to clear all possible intermittent state caused by
+	  	    // switching power state in the middle of reception APRS packet
+			AFSK_Init(&main_afsk);
+			ax25_init(&main_ax25, &main_afsk, 0, 0x00);
+
 	  		main_woken_up = 0;
 	  	}
 #endif
@@ -1129,7 +1134,7 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
-		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
