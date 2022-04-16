@@ -140,13 +140,13 @@ static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, c
 
 			// copy port number into target buffer
 			//memcpy(port, temp, 5);
-			for (; i >= 0 ; i--) {
+			for (; i > 0 ; i--) {
 
-				if (temp[i] == 0) {
+				if (temp[i - 1] == 0) {
 					continue;
 				}
 
-				port[j++] = temp[i];
+				port[j++] = temp[i - 1];
 			}
 		}
 		else {

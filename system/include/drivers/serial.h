@@ -11,11 +11,14 @@
 #include <stm32l4xx_ll_usart.h>
 #endif
 
-#define RX_BUFFER_1_LN 512
-#define TX_BUFFER_1_LN 512
+#define RX_BUFFER_1_LN 384
+#define TX_BUFFER_1_LN 384
 
 #define RX_BUFFER_2_LN 96
 #define TX_BUFFER_2_LN 96
+
+#define RX_BUFFER_3_LN 768
+#define TX_BUFFER_3_LN 768
 
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
@@ -183,8 +186,8 @@ extern uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN];
 #endif
 
 #ifdef PARAMETEO
-extern uint8_t srl_usart3_tx_buffer[TX_BUFFER_1_LN];
-extern uint8_t srl_usart3_rx_buffer[TX_BUFFER_1_LN];
+extern uint8_t srl_usart3_tx_buffer[TX_BUFFER_3_LN];
+extern uint8_t srl_usart3_rx_buffer[RX_BUFFER_3_LN];
 #endif
 
 

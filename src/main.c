@@ -235,6 +235,23 @@ static void message_callback(struct AX25Msg *msg) {
 
 }
 
+const char * post_content = "{\
+  \"main_config_data_basic_callsign\": \"SP8EBC\",\
+  \"main_config_data_basic_ssid\": 8,\
+  \"master_time\": 12345,\
+  \"main_cpu_load\": 50,\
+  \"rx10m\": 30,\
+  \"tx10m\": 20,\
+  \"digi10m\": 50,\
+  \"digidrop10m\": 10,\
+  \"kiss10m\": 5,\
+  \"rte_main_rx_total\": 11,\
+  \"rte_main_tx_total\": 12,\
+  \"rte_main_average_battery_voltage\": 123,\
+  \"rte_main_wakeup_count\": 0,\
+  \"rte_main_going_sleep_count\": 2,\
+  \"rte_main_last_sleep_master_time\": 9}\0\0";
+
 static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
 
 	if (http_code == 200) {
@@ -1183,7 +1200,12 @@ int main(int argc, char* argv[]){
 			if (main_config_data_mode->gsm == 1) {
 
 				if (gsm_sim800_gprs_ready == 1) {
-					retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+					/***
+					 *
+					 * TEST TEST TEST TODO
+					 */
+					//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+					retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), post_content, strlen(post_content), 1, dupa);
 				}
 
 

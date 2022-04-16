@@ -29,8 +29,8 @@ uint8_t srl_usart2_tx_buffer[TX_BUFFER_2_LN] = {'\0'};
 uint8_t srl_usart2_rx_buffer[RX_BUFFER_2_LN] = {'\0'};
 #endif
 
-uint8_t srl_usart3_tx_buffer[TX_BUFFER_1_LN] = {'\0'};
-uint8_t srl_usart3_rx_buffer[TX_BUFFER_1_LN] = {'\0'};
+uint8_t srl_usart3_tx_buffer[TX_BUFFER_3_LN] = {'\0'};
+uint8_t srl_usart3_rx_buffer[RX_BUFFER_3_LN] = {'\0'};
 
 
 void srl_init(
