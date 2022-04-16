@@ -140,6 +140,16 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
+			/**
+			 * debug
+			 *
+			 *	#define REGISTER_LAST_SLEEP	RTC->BKP1R
+				#define REGISTER_LAST_WKUP	RTC->BKP2R
+				#define REGISTER_COUNTERS	RTC->BKP4R
+			 *
+			 */
+			telemetry_send_status_powersave_registers(RTC->BKP1R, RTC->BKP2R, RTC->BKP4R);
+
 			#ifdef EXTERNAL_WATCHDOG
 			io_ext_watchdog_service();
 			#endif

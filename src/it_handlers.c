@@ -89,6 +89,8 @@ void it_handlers_set_priorities(void) {
 #ifdef STM32L471xx
 void RTC_WKUP_IRQHandler(void) {
 
+	main_woken_up = 1;
+
 	// clear pending interrupt
 	NVIC_ClearPendingIRQ(RTC_WKUP_IRQn);
 
@@ -99,8 +101,6 @@ void RTC_WKUP_IRQHandler(void) {
 	system_clock_configure_l4();
 
 	pwr_save_exit_from_stop2();
-
-	main_woken_up = 1;
 
 }
 #endif

@@ -25,7 +25,7 @@
 #if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-int16_t io_vbat_a_coeff, io_vbat_b_coeff;
+int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 
 #define VBATT_HISTORY_LN	16
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
@@ -162,10 +162,12 @@ void io_ext_watchdog_service(void) {
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
 #ifdef PARAMETEO
-	io_vbat_a_coeff = a_coeff;
-	io_vbat_b_coeff = b_coeff;
+	if (a_coeff != io_vbat_a_coeff || b_coeff != io_vbat_b_coeff) {
+		io_vbat_a_coeff = a_coeff;
+		io_vbat_b_coeff = b_coeff;
 
-	memset(io_vbatt_history, 0x00, VBATT_HISTORY_LN);
+		memset(io_vbatt_history, 0x00, VBATT_HISTORY_LN);
+	}
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;

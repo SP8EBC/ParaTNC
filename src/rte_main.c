@@ -21,5 +21,11 @@ uint8_t rte_main_trigger_wx_packet = 0;
 uint16_t rte_main_battery_voltage;
 
 uint16_t rte_main_average_battery_voltage = 0;
+
+uint16_t rte_main_wakeup_count = 0;
+
+uint16_t rte_main_going_sleep_count = 0;
+
+uint32_t rte_main_last_sleep_master_time = 0;
 #endif
 

@@ -103,7 +103,10 @@
 
 // backup registers (ParaMETEO)
 // 0 -> powersave status
+// 1 -> last sleep rtc time
+// 2 -> last wakeup rtc time
 // 3 -> controller configuration status
+// 4 -> wakeup events MSB, sleep events LSB
 
 
 #define CONFIG_FIRST_RESTORED 			(1)
@@ -1134,7 +1137,8 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
-		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
+		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+		    rte_main_average_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();

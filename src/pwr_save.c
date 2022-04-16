@@ -23,8 +23,17 @@
 
 #include "drivers/analog_anemometer.h"
 
+// backup registers (ParaMETEO)
+// 0 -> powersave status
+// 1 -> last sleep rtc time
+// 2 -> last wakeup rtc time
+// 3 -> controller configuration status
+// 4 -> wakeup events MSB, sleep events LSB
 
 #define REGISTER RTC->BKP0R
+#define REGISTER_LAST_SLEEP	RTC->BKP1R
+#define REGISTER_LAST_WKUP	RTC->BKP2R
+#define REGISTER_COUNTERS	RTC->BKP4R
 
 #define INHIBIT_PWR_SWITCH_PERIODIC_H 1
 #define IN_STOP2_MODE (1 << 1)
@@ -166,7 +175,7 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
-    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+	uint16_t counter = 0;
 
 	analog_anemometer_deinit();
 
@@ -184,6 +193,14 @@ void pwr_save_enter_stop2(void) {
 
 	// save an information that STOP2 mode has been applied
 	RTC->BKP0R |= IN_STOP2_MODE;
+
+	REGISTER_LAST_SLEEP = RTC->TR;
+
+	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+
+	counter++;
+
+	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
 
 	pwr_save_lock_rtc_backup_regs();
 
@@ -203,6 +220,20 @@ void pwr_save_enter_stop2(void) {
  * This function has to be called within RTC wakepup interrupt.
  */
 void pwr_save_exit_from_stop2(void) {
+
+	uint32_t counter = 0;
+
+	pwr_save_unclock_rtc_backup_regs();
+
+	REGISTER_LAST_WKUP = RTC->TR;
+
+	counter = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000) >> 16);
+
+	counter++;
+
+	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0x0000FFFF) | (counter << 16);
+
+	pwr_save_lock_rtc_backup_regs();
 
 	// packet tx timers values
 	packet_tx_counter_values_t timers;
@@ -561,47 +592,49 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	vbatt = 0xFFFFu;
 	#endif
 
-	// check if battery voltage is below low voltage level
-	if (vbatt <= pwr_save_aggressive_powersave_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) == 0)) {
-		// if battery voltage is low swtich to aggressive powersave mode
-		pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
-
-		psave_mode = PWSAVE_AGGRESV;
-	}
-	else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0)) {
-		psave_mode = PWSAVE_AGGRESV;
+	if (vbatt > pwr_save_startup_restore_voltage) {
+		pwr_save_currently_cutoff = 0;
 	}
 	else {
-		pwr_save_currently_cutoff &= (0xFF ^ CURRENTLY_VBATT_LOW);
+		if (vbatt <= pwr_save_cutoff_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) == 0)) {
+			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
+			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
+
+			// send a satus message about cutoff
+			telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
+
+			// clear all previous powersave indication bits as we want to go sleep being already in L7 state
+			pwr_save_clear_powersave_idication_bits();
+
+			// go sleep immediately and periodically check if battery has been charged above restore level
+			pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
+
+			return;
+
+		}
+		else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0))  {
+			// clear all previous powersave indication bits as we want to go sleep being already in L7 state
+			pwr_save_clear_powersave_idication_bits();
+
+			// if the ParaMETEO is cutted off currently but battery hasn't been charged above restore voltage
+			pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
+
+			return;
+		}
+
+		// check if battery voltage is below low voltage level
+		if (vbatt <= pwr_save_aggressive_powersave_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) == 0)) {
+			// if battery voltage is low swtich to aggressive powersave mode
+			pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
+
+			psave_mode = PWSAVE_AGGRESV;
+		}
+		else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0)) {
+			psave_mode = PWSAVE_AGGRESV;
+		}
+
 	}
 
-
-	if (vbatt <= pwr_save_cutoff_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) == 0)) {
-		// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
-		pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
-
-		// clear all previous powersave indication bits as we want to go sleep being already in L7 state
-		pwr_save_clear_powersave_idication_bits();
-
-		// go sleep immediately and periodically check if battery has been charged above restore level
-		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
-
-		return;
-
-	}
-	else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0))  {
-		// clear all previous powersave indication bits as we want to go sleep being already in L7 state
-		pwr_save_clear_powersave_idication_bits();
-
-		// if the ParaMETEO is cutted off currently but battery hasn't been charged above restore voltage
-		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
-
-		return;
-	}
-	else {
-		// if battery level is above restore voltage and aggressive powersave voltage
-		pwr_save_currently_cutoff &= (0xFF ^ CURRENTLY_CUTOFF);
-	}
 
 	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
