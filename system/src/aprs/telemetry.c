@@ -601,11 +601,11 @@ void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t pre
 
 }
 
-void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters) {
+void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time) {
 	main_wait_for_tx_complete();
 
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave registers][register_last_sleep: 0x%lX][register_last_wakeup: 0x%lX][register_counters: 0x%lX]",register_last_sleep, register_last_wakeup, register_counters);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave registers][register_last_sleep: 0x%lX][register_last_wakeup: 0x%lX][register_counters: 0x%lX][monitor: 0x%lX][last_sleep_time: 0x%lX]",register_last_sleep, register_last_wakeup, register_counters, monitor, last_sleep_time);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);

@@ -18,22 +18,11 @@
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "main.h"
+#include "telemetry.h"
 
 #include "rte_main.h"
 
 #include "drivers/analog_anemometer.h"
-
-// backup registers (ParaMETEO)
-// 0 -> powersave status
-// 1 -> last sleep rtc time
-// 2 -> last wakeup rtc time
-// 3 -> controller configuration status
-// 4 -> wakeup events MSB, sleep events LSB
-
-#define REGISTER RTC->BKP0R
-#define REGISTER_LAST_SLEEP	RTC->BKP1R
-#define REGISTER_LAST_WKUP	RTC->BKP2R
-#define REGISTER_COUNTERS	RTC->BKP4R
 
 #define INHIBIT_PWR_SWITCH_PERIODIC_H 1
 #define IN_STOP2_MODE (1 << 1)
@@ -177,6 +166,8 @@ void pwr_save_enter_stop2(void) {
 
 	uint16_t counter = 0;
 
+	main_set_monitor(31);
+
 	analog_anemometer_deinit();
 
 	// clear previous low power mode selection
@@ -222,6 +213,8 @@ void pwr_save_enter_stop2(void) {
 void pwr_save_exit_from_stop2(void) {
 
 	uint32_t counter = 0;
+
+	main_set_monitor(30);
 
 	pwr_save_unclock_rtc_backup_regs();
 
@@ -277,6 +270,8 @@ void pwr_save_exit_from_stop2(void) {
 	default:
 		break;
 	}
+
+	main_set_monitor(29);
 }
 
 int pwr_save_switch_mode_to_c0(void) {
@@ -487,6 +482,8 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 		return;
 	}
 
+	main_set_monitor(28);
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
 
@@ -508,6 +505,8 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// set for C3 mode
 	REGISTER |= IN_L6_STATE;
 
+	REGISTER_LAST_SLTIM = sleep_time;
+
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
 
@@ -522,6 +521,8 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	pwr_save_enter_stop2();
 
+	main_set_monitor(27);
+
 
 }
 
@@ -530,6 +531,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
 		return;
 	}
+
+	main_set_monitor(26);
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
@@ -552,6 +555,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	// set for C3 mode
 	REGISTER |= IN_L7_STATE;
 
+	REGISTER_LAST_SLTIM = sleep_time;
+
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
 
@@ -566,6 +571,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	led_control_led2_bottom(false);
 
 	pwr_save_enter_stop2();
+
+	main_set_monitor(25);
 }
 
 void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt) {
@@ -577,6 +584,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 	// by default use powersave mode from controller configuration
 	config_data_powersave_mode_t psave_mode = config->powersave;
+
+	main_set_monitor(24);
 
 	// save previous state
 	pwr_save_previously_cutoff = pwr_save_currently_cutoff;
@@ -594,52 +603,58 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 	if (vbatt > pwr_save_startup_restore_voltage) {
 		pwr_save_currently_cutoff = 0;
+
+		main_set_monitor(23);
 	}
 	else {
-		if (vbatt <= pwr_save_cutoff_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) == 0)) {
+		if (vbatt <= pwr_save_cutoff_voltage) {
+			main_set_monitor(22);
+
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
 
-			// send a satus message about cutoff
-			telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
+//			// send a satus message about cutoff
+//			telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
 
-			// clear all previous powersave indication bits as we want to go sleep being already in L7 state
-			pwr_save_clear_powersave_idication_bits();
-
-			// go sleep immediately and periodically check if battery has been charged above restore level
-			pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
-
-			return;
-
-		}
-		else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0))  {
-			// clear all previous powersave indication bits as we want to go sleep being already in L7 state
-			pwr_save_clear_powersave_idication_bits();
-
-			// if the ParaMETEO is cutted off currently but battery hasn't been charged above restore voltage
-			pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
-
-			return;
 		}
 
 		// check if battery voltage is below low voltage level
-		if (vbatt <= pwr_save_aggressive_powersave_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) == 0)) {
+		if (vbatt <= pwr_save_aggressive_powersave_voltage) {
+			main_set_monitor(21);
+
 			// if battery voltage is low swtich to aggressive powersave mode
 			pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
 
-			psave_mode = PWSAVE_AGGRESV;
-		}
-		else if (vbatt <= pwr_save_startup_restore_voltage && ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0)) {
-			psave_mode = PWSAVE_AGGRESV;
 		}
 
 	}
 
+	main_set_monitor(20);
 
 	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
 		telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
 	}
+
+
+	if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
+		main_set_monitor(19);
+
+		// clear all previous powersave indication bits as we want to go sleep being already in L7 state
+		pwr_save_clear_powersave_idication_bits();
+
+		// go sleep immediately and periodically check if battery has been charged above restore level
+		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
+
+		return;
+	}
+
+	if ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0) {
+		main_set_monitor(18);
+
+		psave_mode = PWSAVE_AGGRESV;
+	}
+
 
 	// get current counter values
 	packet_tx_get_current_counters(&counters);
@@ -759,6 +774,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 					}
 					else {		// WX
 						if (minutes_to_wx > 2) {
+							main_set_monitor(17);
+
 							// if there is more than two minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
 						}
@@ -801,6 +818,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 							// if stations is configured to send wx packet less often than every 5 minutes
 
 							if (minutes_to_wx > 1) {
+								main_set_monitor(16);
+
 								// if there is more than one minute to wx packet
 								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
@@ -819,6 +838,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 							// if station is configured to sent wx packet in every 5 minutes or more often
 
 							if (minutes_to_wx > 1) {
+								main_set_monitor(15);
+
 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
 							else {
@@ -839,6 +860,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
+							main_set_monitor(14);
+
 							// if there is more than one minute to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
 						}
@@ -865,6 +888,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 			break;
 		}
 	}
+
+	main_set_monitor(13);
 
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors

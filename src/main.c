@@ -107,6 +107,7 @@
 // 2 -> last wakeup rtc time
 // 3 -> controller configuration status
 // 4 -> wakeup events MSB, sleep events LSB
+// 5 -> monitor
 
 
 #define CONFIG_FIRST_RESTORED 			(1)
@@ -239,6 +240,23 @@ uint8_t main_woken_up = 0;
 char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
+
+void main_set_monitor(int8_t bit) {
+#ifdef STM32L471xx
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
+	if (bit > 0) {
+		REGISTER_MONITOR |= (1 << bit);
+
+	}
+	else {
+		REGISTER_MONITOR = 0;
+	}
+
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+#endif
+}
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -938,11 +956,15 @@ int main(int argc, char* argv[]){
 
 #endif
 	   delay_fixed(1500);
+
+	   telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
    }
 
   // Infinite loop
   while (1)
     {
+	  main_set_monitor(-1);
+
 	  // incrementing current cpu ticks
 	  main_current_cpu_idle_ticks++;
 
@@ -953,6 +975,7 @@ int main(int argc, char* argv[]){
 	    	;
 	    }
 
+	  main_set_monitor(0);
 #if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
 	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
@@ -999,6 +1022,8 @@ int main(int argc, char* argv[]){
 			ax25_init(&main_ax25, &main_afsk, 0, 0x00);
 
 	  		main_woken_up = 0;
+
+	  		main_set_monitor(1);
 	  	}
 #endif
 
@@ -1133,12 +1158,13 @@ int main(int argc, char* argv[]){
 			rtu_serial_pool();
 		}
 
+		  main_set_monitor(2);
+
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
 		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
-		    rte_main_average_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
@@ -1170,14 +1196,20 @@ int main(int argc, char* argv[]){
 
 			}
 
+			  main_set_monitor(3);
+
 			main_wx_sensors_pool_timer = 65500;
 		}
 
 		if (main_one_minute_pool_timer < 10) {
 
+			main_set_monitor(4);
+
 			#ifndef _MUTE_OWN
 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
+
+			main_set_monitor(5);
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
@@ -1197,6 +1229,8 @@ int main(int argc, char* argv[]){
 
 		if (main_one_second_pool_timer < 10) {
 
+			main_set_monitor(6);
+
 			digi_pool_viscous();
 
 			#ifdef STM32L471xx
@@ -1213,6 +1247,8 @@ int main(int argc, char* argv[]){
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 				analog_anemometer_direction_handler();
 			}
+
+			main_set_monitor(7);
 
 			main_one_second_pool_timer = 1000;
 		}
@@ -1240,6 +1276,8 @@ int main(int argc, char* argv[]){
 
 		if (main_ten_second_pool_timer < 10) {
 
+			main_set_monitor(8);
+
 			if (rte_main_trigger_wx_packet == 1) {
 
 				packet_tx_send_wx_frame();
@@ -1253,6 +1291,8 @@ int main(int argc, char* argv[]){
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_battery_voltage);
 			}
 			#endif
+
+			main_set_monitor(9);
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
@@ -1289,6 +1329,8 @@ int main(int argc, char* argv[]){
 
 			main_ten_second_pool_timer = 10000;
 		}
+
+		  main_set_monitor(10);
 
 
     }

@@ -102,6 +102,8 @@ void RTC_WKUP_IRQHandler(void) {
 
 	pwr_save_exit_from_stop2();
 
+	main_set_monitor(12);
+
 }
 #endif
 

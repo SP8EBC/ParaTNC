@@ -18,6 +18,22 @@
 
 #define OWN_APRS_MSG_LN 	160
 
+// backup registers (ParaMETEO)
+// 0 -> powersave status
+// 1 -> last sleep rtc time
+// 2 -> last wakeup rtc time
+// 3 -> controller configuration status
+// 4 -> wakeup events MSB, sleep events LSB
+
+#ifdef STM32L471xx
+#define REGISTER 			RTC->BKP0R
+#define REGISTER_LAST_SLEEP	RTC->BKP1R
+#define REGISTER_LAST_WKUP	RTC->BKP2R
+#define REGISTER_COUNTERS	RTC->BKP4R
+#define REGISTER_MONITOR	RTC->BKP5R
+#define REGISTER_LAST_SLTIM	RTC->BKP6R
+#endif
+
 extern uint32_t master_time;
 
 extern const config_data_mode_t * main_config_data_mode;
@@ -60,6 +76,8 @@ extern uint8_t main_woken_up;
 extern char after_tx_lock;
 
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+
+void main_set_monitor(int8_t bit);
 
 uint16_t main_get_adc_sample(void);
 

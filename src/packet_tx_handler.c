@@ -148,7 +148,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				#define REGISTER_COUNTERS	RTC->BKP4R
 			 *
 			 */
-			telemetry_send_status_powersave_registers(RTC->BKP1R, RTC->BKP2R, RTC->BKP4R);
 
 			#ifdef EXTERNAL_WATCHDOG
 			io_ext_watchdog_service();
@@ -218,6 +217,8 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	}
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
+
+		   telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
 
 		packet_tx_multi_per_call_handler();
 
