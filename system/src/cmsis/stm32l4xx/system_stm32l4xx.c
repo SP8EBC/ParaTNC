@@ -498,6 +498,7 @@ int system_clock_configure_rtc_l4(void) {
 		while((RCC->BDCR & RCC_BDCR_LSERDY) == 0);
 	}
 
+	// starting and configuring the RTC itself
 	system_clock_start_rtc_l4();
 
 	// disable access do backup domain

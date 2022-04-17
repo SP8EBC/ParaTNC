@@ -83,6 +83,11 @@ uint16_t main_get_adc_sample(void);
 
 void main_service_cpu_load_ticks(void);
 
+/**
+ * Inline used to trace an execution flow across main for(;;) loop and some
+ * powersaving functions. In case of software fault it's value may help to trace
+ * at witch point the crash has occured
+ */
 inline void main_set_monitor(int8_t bit) {
 #ifdef STM32L471xx
 	// enable access to backup domain

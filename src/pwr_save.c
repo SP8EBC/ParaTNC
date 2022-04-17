@@ -166,8 +166,10 @@ void pwr_save_enter_stop2(void) {
 
 	uint16_t counter = 0;
 
+	// set 31st monitor bit
 	main_set_monitor(31);
 
+	// clear main battery voltage to be sure that it'd be updated???
 	rte_main_battery_voltage = 0;
 
 	analog_anemometer_deinit();
@@ -182,13 +184,16 @@ void pwr_save_enter_stop2(void) {
 	RTC->WPR = 0xCA;
 	RTC->WPR = 0x53;
 
+	// unlock an access to backup domain
 	pwr_save_unclock_rtc_backup_regs();
 
 	// save an information that STOP2 mode has been applied
 	RTC->BKP0R |= IN_STOP2_MODE;
 
+	// save a timestamp when micro has been switched to STOP2 mode
 	REGISTER_LAST_SLEEP = RTC->TR;
 
+	// increment the STOP2 sleep counters
 	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
 
 	counter++;
@@ -216,15 +221,24 @@ void pwr_save_exit_from_stop2(void) {
 
 	uint32_t counter = 0;
 
+	// set 30th minitor bit
 	main_set_monitor(30);
 
+	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
+	// save a timestamp of this wakeup event
 	REGISTER_LAST_WKUP = RTC->TR;
 
+	// increase wakeup counter
 	counter = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000) >> 16);
 
 	counter++;
+
+	// check counter overflow conditions
+	if (counter > 0xFFFF) {
+		counter = 0;
+	}
 
 	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0x0000FFFF) | (counter << 16);
 
@@ -614,10 +628,6 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
-
-//			// send a satus message about cutoff
-//			telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
-
 		}
 
 		// check if battery voltage is below low voltage level

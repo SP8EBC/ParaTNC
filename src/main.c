@@ -1143,7 +1143,7 @@ int main(int argc, char* argv[]){
 			rtu_serial_pool();
 		}
 
-		  main_set_monitor(2);
+		main_set_monitor(2);
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
@@ -1151,6 +1151,11 @@ int main(int argc, char* argv[]){
 
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
@@ -1182,7 +1187,7 @@ int main(int argc, char* argv[]){
 
 			}
 
-			  main_set_monitor(3);
+			main_set_monitor(3);
 
 			main_wx_sensors_pool_timer = 65500;
 		}
