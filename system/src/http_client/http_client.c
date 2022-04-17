@@ -257,7 +257,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 
 			// assemble headers
 			current_request_ln = http_client_headers_preamble(HTTP_GET, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);\
-			current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, url_ln - split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+			current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_accept((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_user_agent((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 			current_request_ln = http_client_headers_terminate((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
@@ -344,16 +344,21 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 
 		// assemble headers
 		current_request_ln = http_client_headers_preamble(HTTP_POST, url + split_point, url_ln - split_point, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln);\
-		current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, url_ln - split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
-		current_request_ln = http_client_headers_content_ln((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln, data_ln);
+		current_request_ln = http_client_headers_host(url + HTTP_PREFIX_LN, split_point - HTTP_PREFIX_LN, (char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 		current_request_ln = http_client_headers_content_type_json((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
 		current_request_ln = http_client_headers_user_agent((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+		current_request_ln = http_client_headers_accept((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+		current_request_ln = http_client_headers_content_ln((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln, data_ln);
 		current_request_ln = http_client_headers_terminate((char * )http_client_deticated_serial_context->srl_tx_buf_pointer, http_client_deticated_serial_context->srl_tx_buf_ln, current_request_ln);
+
 
 		// check if there is a room for the content
 		if (http_client_deticated_serial_context->srl_tx_buf_ln > current_request_ln + data_ln) {
 			// if yes append HTTP content
-			current_request_ln = sprintf((char * )http_client_deticated_serial_context->srl_tx_buf_pointer + current_request_ln, "%s\r\n", data_to_post);
+			sprintf((char * )http_client_deticated_serial_context->srl_tx_buf_pointer + current_request_ln, "%s", data_to_post);
+
+			// and calculate total request ln
+			current_request_ln = strlen((char * )http_client_deticated_serial_context->srl_tx_buf_pointer);
 
 			// send data through TCP/IP connection
 			connect_result = gsm_sim800_tcpip_write(http_client_deticated_serial_context->srl_tx_buf_pointer, current_request_ln, http_client_deticated_serial_context, http_client_deticated_sim800_state);

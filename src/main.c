@@ -250,7 +250,7 @@ const char * post_content = "{\
   \"rte_main_average_battery_voltage\": 123,\
   \"rte_main_wakeup_count\": 0,\
   \"rte_main_going_sleep_count\": 2,\
-  \"rte_main_last_sleep_master_time\": 9}\0\0";
+  \"rte_main_last_sleep_master_time\": 9}";
 
 static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
 
@@ -716,7 +716,7 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 
-  srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_1_LN, srl_usart3_tx_buffer, TX_BUFFER_1_LN, 115200, 1);
+  srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 #endif
 
   // initialize APRS path with zeros
@@ -1204,8 +1204,8 @@ int main(int argc, char* argv[]){
 					 *
 					 * TEST TEST TEST TODO
 					 */
-					//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
-					retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), post_content, strlen(post_content), 1, dupa);
+					retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+					//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
 				}
 
 
