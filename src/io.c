@@ -231,13 +231,10 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
  * This function will measure current B+ voltage using ADC and return
  * either average (if 0) or current / momentary value (non zero)
  */
-uint16_t io_vbat_meas_get(int8_t average_or_current) {
+uint16_t io_vbat_meas_get() {
 
 	uint16_t out = 0;
 
-	uint32_t average_acc = 0;
-
-	int i = 0;
 #ifdef PARAMETEO
 
 	float temp = 0.0f;
@@ -255,8 +252,10 @@ uint16_t io_vbat_meas_get(int8_t average_or_current) {
 	ADC2->CR |= ADC_CR_ADSTART;
 
 	// wait for conversion to finish
-    while((ADC2->ISR & ADC_ISR_EOC) != ADC_ISR_EOC) {
-    	;
+    while((ADC2->ISR & ADC_ISR_EOC) == 0) {
+    	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
+    		break;
+    	}
     }
 
     // get conversion result
@@ -275,6 +274,18 @@ uint16_t io_vbat_meas_get(int8_t average_or_current) {
 
 	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
 
+#endif
+	return out;
+}
+
+uint16_t io_vbat_meas_average(uint16_t sample) {
+
+	uint16_t out = 0;
+
+	int i = 0;
+
+	uint32_t average_acc = 0;
+
 	// if the iterator reached the end of buffer
 	if (io_vbatt_history_it >= VBATT_HISTORY_LN) {
 		// reset it to the begining
@@ -282,29 +293,27 @@ uint16_t io_vbat_meas_get(int8_t average_or_current) {
 	}
 
 	// but new sample in the buffer
-	io_vbatt_history[io_vbatt_history_it++] = out;
+	io_vbatt_history[io_vbatt_history_it++] = sample;
 
-	if (average_or_current == IO_VBAT_GET_AVERAGE) {
 
-		for (i = 0; i < VBATT_HISTORY_LN; i++) {
+	for (i = 0; i < VBATT_HISTORY_LN; i++) {
 
-			// break from the loop if buffer isn't fully filled with data
-			if (io_vbatt_history[i] < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
-				break;
-			}
-
-			// sum sample
-			average_acc += io_vbatt_history[i];
+		// break from the loop if buffer isn't fully filled with data
+		if (io_vbatt_history[i] < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
+			break;
 		}
 
-		// if whole buffer has been used for average calculation
-		if (i >= VBATT_HISTORY_LN) {
-			// replace output
-			out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
-		}
+		// sum sample
+		average_acc += io_vbatt_history[i];
 	}
 
-#endif
+	// if whole buffer has been used for average calculation
+	if (i >= VBATT_HISTORY_LN) {
+		// replace output
+		out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
+	}
+
+
 	return out;
 }
 

@@ -6,7 +6,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA05"
-#define SW_DATE "16042022"
+#define SW_DATE "17042022"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
@@ -77,11 +77,28 @@ extern char after_tx_lock;
 
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
-void main_set_monitor(int8_t bit);
+//void main_set_monitor(int8_t bit);
 
 uint16_t main_get_adc_sample(void);
 
 void main_service_cpu_load_ticks(void);
+
+inline void main_set_monitor(int8_t bit) {
+#ifdef STM32L471xx
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
+	if (bit >= 0) {
+		REGISTER_MONITOR |= (1 << bit);
+
+	}
+	else {
+		REGISTER_MONITOR = 0;
+	}
+
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+#endif
+}
 
 inline uint32_t main_get_master_time(void) {
 	return master_time;

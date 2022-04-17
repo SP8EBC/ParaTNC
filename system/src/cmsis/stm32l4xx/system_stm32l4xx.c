@@ -425,6 +425,39 @@ int system_clock_configure_l4(void)
   return 0;
 }
 
+void system_clock_start_rtc_l4(void) {
+	// starting RTC
+	RCC->BDCR |= RCC_BDCR_RTCEN;
+
+	// enable write access to RTC registers by writing two magic words
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+
+	// enter the clock set mode
+	RTC->ISR |= RTC_ISR_INIT;
+
+	// wait for going into clock set mode
+	while((RTC->ISR & RTC_ISR_INITF) == 0);
+
+	// set date
+	RTC->DR = 0x0021A820;
+
+	// set time
+	RTC->TR = 0x00232711;
+
+	// exit RTC set mode
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
+
+	// disable wakeup interrupt and wakeup interrupt
+	RTC->CR = 0;
+
+	// wait for wakeup timer to disable
+	while((RTC->ISR & RTC_ISR_WUTWF) == 0);
+
+	// set the source clock for RTC wakeup as CK_SPRE
+	RTC->CR |= RTC_CR_WUCKSEL_2;
+}
+
 int system_clock_configure_rtc_l4(void) {
 
 	int retval = 0;
@@ -433,6 +466,9 @@ int system_clock_configure_rtc_l4(void) {
 
 	// check if LSE is working now
 	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;
+
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
 
 	// if LSE is not working reinitialize everything
 	if (lse_is_working == 0) {
@@ -449,9 +485,6 @@ int system_clock_configure_rtc_l4(void) {
 		// but clear reset flag before
 		RCC->BDCR &= (0xFFFFFFFF ^ RCC_BDCR_BDRST);
 
-		// enable access to backup domain
-		PWR->CR1 |= PWR_CR1_DBP;
-
 		// set the clock source for RTC clock to LSE
 		RCC->BDCR |= RCC_BDCR_RTCSEL_0;
 
@@ -463,35 +496,12 @@ int system_clock_configure_rtc_l4(void) {
 
 		// wait for LSE to start
 		while((RCC->BDCR & RCC_BDCR_LSERDY) == 0);
-
-		// starting RTC
-		RCC->BDCR |= RCC_BDCR_RTCEN;
-
-		// enable write access to RTC registers by writing two magic words
-		RTC->WPR = 0xCA;
-		RTC->WPR = 0x53;
-
-		// enter the clock set mode
-		RTC->ISR |= RTC_ISR_INIT;
-
-		// wait for going into clock set mode
-		while((RTC->ISR & RTC_ISR_INITF) == 0);
-
-		// set date
-		RTC->DR = 0x0021A820;
-
-		// set time
-		RTC->TR = 0x00232711;
-
-		// exit RTC set mode
-		RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
-
-		// set the source clock for RTC wakeup as CK_SPRE
-		RTC->CR |= RTC_CR_WUCKSEL_2;
-
-
 	}
 
+	system_clock_start_rtc_l4();
+
+	// disable access do backup domain
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 
 	return retval;
 }
@@ -500,6 +510,11 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
+
+	// check if RTC is working
+	if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0) {
+		system_clock_start_rtc_l4();
+	}
 
 	// enable write access to RTC registers by writing two magic words
 	RTC->WPR = 0xCA;
@@ -534,6 +549,9 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 
 	// enable wakeup interrupt
 	NVIC_EnableIRQ(RTC_WKUP_IRQn);
+
+	// disable access do backup domain
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 }
 
 

@@ -312,11 +312,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
-		#ifdef PARAMETEO
-		rte_main_average_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_AVERAGE);
-		#endif
-
-
 		if (config_mode->victron == 1) {
 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 		}

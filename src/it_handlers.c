@@ -98,11 +98,12 @@ void RTC_WKUP_IRQHandler(void) {
 
 	EXTI->PR1 |= EXTI_PR1_PIF20;
 
+	main_set_monitor(12);
+
 	system_clock_configure_l4();
 
 	pwr_save_exit_from_stop2();
 
-	main_set_monitor(12);
 
 }
 #endif

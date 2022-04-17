@@ -168,6 +168,8 @@ void pwr_save_enter_stop2(void) {
 
 	main_set_monitor(31);
 
+	rte_main_battery_voltage = 0;
+
 	analog_anemometer_deinit();
 
 	// clear previous low power mode selection
@@ -601,13 +603,13 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	vbatt = 0xFFFFu;
 	#endif
 
-	if (vbatt > pwr_save_startup_restore_voltage) {
+	if (vbatt > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
 
 		main_set_monitor(23);
 	}
 	else {
-		if (vbatt <= pwr_save_cutoff_voltage) {
+		if (vbatt <= PWR_SAVE_CUTOFF_VOLTAGE_DEF) {
 			main_set_monitor(22);
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
@@ -619,7 +621,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		}
 
 		// check if battery voltage is below low voltage level
-		if (vbatt <= pwr_save_aggressive_powersave_voltage) {
+		if (vbatt <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {
 			main_set_monitor(21);
 
 			// if battery voltage is low swtich to aggressive powersave mode

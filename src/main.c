@@ -241,23 +241,6 @@ char after_tx_lock;
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
-void main_set_monitor(int8_t bit) {
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	if (bit > 0) {
-		REGISTER_MONITOR |= (1 << bit);
-
-	}
-	else {
-		REGISTER_MONITOR = 0;
-	}
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-#endif
-}
-
 static void message_callback(struct AX25Msg *msg) {
 
 }
@@ -896,7 +879,7 @@ int main(int argc, char* argv[]){
   led_control_led2_bottom(false);
 
 #if defined(PARAMETEO)
-   rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+   rte_main_battery_voltage = io_vbat_meas_get();
 
    pwr_save_switch_mode_to_c0();
 
@@ -1012,20 +995,22 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
 	  	if (main_woken_up == 1) {
-	  		io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
+//	  		io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
 
-	  	    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+	  	    rte_main_battery_voltage = io_vbat_meas_get();
 
 	  	    // reinitialize APRS radio modem to clear all possible intermittent state caused by
 	  	    // switching power state in the middle of reception APRS packet
-			AFSK_Init(&main_afsk);
-			ax25_init(&main_ax25, &main_afsk, 0, 0x00);
+			ax25_new_msg_rx_flag = 0;
+			main_ax25.dcd = false;
 
 	  		main_woken_up = 0;
 
 	  		main_set_monitor(1);
 	  	}
 #endif
+
+  		main_set_monitor(11);
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
@@ -1164,7 +1149,8 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
-		    rte_main_battery_voltage = io_vbat_meas_get(IO_VBAT_GET_CURRENT);
+		    rte_main_battery_voltage = io_vbat_meas_get();
+		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
 			if (main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_start();
