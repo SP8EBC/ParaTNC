@@ -54,6 +54,7 @@
  *	USART1_IRQHandler 			- 9 -> uart to comm with KISS host
  *	I2C1_ER_IRQHandler			- 10 -> I2C error interrupt
  *
+ *	TIM8_						- PWM input
  */
 
 
