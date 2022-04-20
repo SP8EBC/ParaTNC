@@ -38,6 +38,7 @@ system/src/gsm \
 system/src/http_client \
 system/src/modbus_rtu \
 system/src/stm32l4-hal-driver \
+system/src/tiny-aes \
 system/src/umb_master \
 system/src/ve_direct_protocol \
 

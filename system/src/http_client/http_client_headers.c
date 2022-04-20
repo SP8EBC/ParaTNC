@@ -53,12 +53,28 @@ uint16_t http_client_headers_preamble(http_client_method_t method, char *url,
 
 }
 
+uint16_t http_client_headers_host(char * host, uint16_t host_ln, char *output, uint16_t output_ln,
+		uint16_t offset) {
+
+	uint16_t out = 0;
+
+	snprintf(output + offset, 7 + host_ln, "Host: %s", host);
+
+	out = strlen (output);
+
+	sprintf(output + out, "\r\n");
+
+	out = strlen (output);
+
+	return out;
+}
+
 uint16_t http_client_headers_user_agent(char *output, uint16_t output_ln,
 		uint16_t offset) {
 
 	uint16_t out = 0;
 
-	snprintf(output + offset, output_ln - offset, "User-Agent: ParaMETEO %s-%s\r\n", SW_VER, SW_DATE);
+	snprintf(output + offset, output_ln - offset, "User-Agent: ParaMETEO/%s-%s\r\n", SW_VER, SW_DATE);
 
 	out = strlen (output);
 
@@ -70,7 +86,7 @@ uint16_t http_client_headers_accept(char *output, uint16_t output_ln,
 
 	uint16_t out = 0;
 
-	snprintf(output + offset, output_ln - offset, "Accept: application/json\r\n");
+	snprintf(output + offset, output_ln - offset, "Accept: */*\r\n");
 
 	out = strlen (output);
 
@@ -80,7 +96,27 @@ uint16_t http_client_headers_accept(char *output, uint16_t output_ln,
 uint16_t http_client_headers_terminate(char* output, uint16_t output_ln, uint16_t offset) {
 	uint16_t out = 0;
 
-	snprintf(output + offset, output_ln - offset, "\r\n\r\n");
+	snprintf(output + offset, output_ln - offset, "\r\n");
+
+	out = strlen (output);
+
+	return out;
+}
+
+uint16_t http_client_headers_content_ln(char* output, uint16_t output_ln, uint16_t offset, uint16_t content_ln) {
+	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "Content-Length: %d\r\n", content_ln);
+
+	out = strlen (output);
+
+	return out;
+}
+
+uint16_t http_client_headers_content_type_json(char* output, uint16_t output_ln, uint16_t offset) {
+	uint16_t out = 0;
+
+	snprintf(output + offset, output_ln - offset, "Content-Type: application/json\r\n");
 
 	out = strlen (output);
 

@@ -19,8 +19,8 @@
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_poolers.h"
 #include "gsm/sim800c_gprs.h"
-
 #include "http_client/http_client.h"
+
 
 #include "aprsis.h"
 #endif
@@ -243,6 +243,32 @@ unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 static void message_callback(struct AX25Msg *msg) {
 
+}
+
+const char * post_content = "{\
+  \"main_config_data_basic_callsign\": \"SP8EBC\",\
+  \"main_config_data_basic_ssid\": 8,\
+  \"master_time\": 12345,\
+  \"main_cpu_load\": 50,\
+  \"rx10m\": 30,\
+  \"tx10m\": 20,\
+  \"digi10m\": 50,\
+  \"digidrop10m\": 10,\
+  \"kiss10m\": 5,\
+  \"rte_main_rx_total\": 11,\
+  \"rte_main_tx_total\": 12,\
+  \"rte_main_average_battery_voltage\": 123,\
+  \"rte_main_wakeup_count\": 0,\
+  \"rte_main_going_sleep_count\": 2,\
+  \"rte_main_last_sleep_master_time\": 9}";
+
+static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
+
+	if (http_code == 200) {
+		if (content_lenght > 0) {
+			kiss10m++;
+		}
+	}
 }
 
 int main(int argc, char* argv[]){
@@ -700,7 +726,7 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 
-  srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_1_LN, srl_usart3_tx_buffer, TX_BUFFER_1_LN, 115200, 1);
+  srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 #endif
 
   // initialize APRS path with zeros
@@ -925,9 +951,8 @@ int main(int argc, char* argv[]){
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
 
-	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
-
-	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
+	   //http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
+	   //aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
    }
 #endif
 
@@ -1227,6 +1252,16 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 
+				if (gsm_sim800_gprs_ready == 1) {
+					/***
+					 *
+					 * TEST TEST TEST TODO
+					 */
+					retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+					//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
+				}
+
+
 				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 				gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
@@ -1288,12 +1323,12 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 				// TODO
+
 //				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
 //
 //				if (retval == 0) {
 //					aprsis_send_beacon(0);
 //				}
-
 			}
 			#endif
 
