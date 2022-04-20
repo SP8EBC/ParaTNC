@@ -24,9 +24,14 @@ void io_pwr_init(void);
 void io_ext_watchdog_config(void);
 void io_ext_watchdog_service(void);
 
+#ifdef PARAMETEO
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff);
 uint16_t io_vbat_meas_get(void);
+uint16_t io_vbat_meas_average(uint16_t sample);
+#endif
 
+#define VBAT_MEAS_A_COEFF 1000
+#define VBAT_MEAS_B_COEFF 95
 
 inline void io_5v_isol_sw_enable(void) {
 	// ParaMETEO - UC_CNTRL_VS

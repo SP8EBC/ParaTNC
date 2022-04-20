@@ -46,7 +46,6 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 
  	if (wind_speed_mph > wind_gusts_mph) {
  		return;
- 		rte_main_reboot_req = 1;
  	}
 
  	pressure = (unsigned)(cisnienie * 10);

@@ -15,5 +15,12 @@ extern uint8_t rte_main_trigger_modbus_status;
 extern uint8_t rte_main_trigger_wx_packet;
 
 extern uint16_t rte_main_battery_voltage;
+extern uint16_t rte_main_average_battery_voltage;
+
+extern uint16_t rte_main_wakeup_count;
+
+extern uint16_t rte_main_going_sleep_count;
+
+extern uint32_t rte_main_last_sleep_master_time;
 
 #endif

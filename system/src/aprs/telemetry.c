@@ -19,6 +19,16 @@
 
 uint16_t telemetry_counter = 0;
 
+#ifdef PARAMETEO
+#include "pwr_save.h"
+
+const char * telemetry_vbatt_normal 		= "VBATT_GOOD";
+const char * telemetry_vbatt_low 			= "VBATT_LOW";
+const char * telemetry_vbatt_cutoff 		= "VBATT_CUTOFF";
+const char * telemetry_vbatt_unknown		= "VBATT_UNKNOWN";
+
+#endif
+
 void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic) {
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
@@ -549,5 +559,56 @@ void telemetry_send_status_raw_values_modbus(void) {
 #endif
 }
 
+void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cutoff, int8_t current_cutoff) {
+	const char *p, *c;
 
+	// telemetry_vbatt_unknown
+
+	if ((previous_cutoff & CURRENTLY_CUTOFF) != 0) {
+		p = telemetry_vbatt_cutoff;
+	}
+	else if ((previous_cutoff & CURRENTLY_VBATT_LOW) != 0) {
+		p = telemetry_vbatt_low;
+	}
+	else if (((previous_cutoff & CURRENTLY_CUTOFF) == 0) && (previous_cutoff & CURRENTLY_VBATT_LOW) == 0){
+		p = telemetry_vbatt_normal;
+	}
+	else {
+		p = telemetry_vbatt_unknown;
+	}
+
+	if ((current_cutoff & CURRENTLY_CUTOFF) != 0) {
+		c = telemetry_vbatt_cutoff;
+	}
+	else if ((current_cutoff & CURRENTLY_VBATT_LOW) != 0) {
+		c = telemetry_vbatt_low;
+	}
+	else if (((current_cutoff & CURRENTLY_CUTOFF) == 0) && (current_cutoff & CURRENTLY_VBATT_LOW) == 0){
+		c = telemetry_vbatt_normal;
+	}
+	else {
+		c = telemetry_vbatt_unknown;
+	}
+
+	main_wait_for_tx_complete();
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave cutoff change][Vbatt: %dV][previous: %d - %s][currently: %d - %s]", battery_voltage, previous_cutoff, p, current_cutoff, c);
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	//while (main_ax25.dcd == 1);
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+
+}
+
+void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time) {
+	main_wait_for_tx_complete();
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave registers][register_last_sleep: 0x%lX][register_last_wakeup: 0x%lX][register_counters: 0x%lX][monitor: 0x%lX][last_sleep_time: 0x%lX]",register_last_sleep, register_last_wakeup, register_counters, monitor, last_sleep_time);
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	//while (main_ax25.dcd == 1);
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+}
 

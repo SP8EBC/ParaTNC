@@ -89,6 +89,8 @@ void it_handlers_set_priorities(void) {
 #ifdef STM32L471xx
 void RTC_WKUP_IRQHandler(void) {
 
+	main_woken_up = 1;
+
 	// clear pending interrupt
 	NVIC_ClearPendingIRQ(RTC_WKUP_IRQn);
 
@@ -96,13 +98,11 @@ void RTC_WKUP_IRQHandler(void) {
 
 	EXTI->PR1 |= EXTI_PR1_PIF20;
 
+	main_set_monitor(12);
+
 	system_clock_configure_l4();
 
 	pwr_save_exit_from_stop2();
-
-    rte_main_battery_voltage = io_vbat_meas_get();
-
-	pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, 1, rte_main_battery_voltage);
 
 
 }

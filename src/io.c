@@ -25,7 +25,14 @@
 #if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-int16_t io_vbat_a_coeff, io_vbat_b_coeff;
+int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
+
+#define VBATT_HISTORY_LN	16
+static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
+
+static uint8_t io_vbatt_history_it = 0;
+
+#define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
 #endif
 
 void io_oc_init(void) {
@@ -154,10 +161,13 @@ void io_ext_watchdog_service(void) {
 
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
-#ifdef STM32L471xx
-	io_vbat_a_coeff = a_coeff;
-	io_vbat_b_coeff = b_coeff;
+#ifdef PARAMETEO
+	if (a_coeff != io_vbat_a_coeff || b_coeff != io_vbat_b_coeff) {
+		io_vbat_a_coeff = a_coeff;
+		io_vbat_b_coeff = b_coeff;
 
+		memset(io_vbatt_history, 0x00, VBATT_HISTORY_LN);
+	}
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -176,8 +186,14 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 //	RCC->AHB2ENR &= (0xFFFFFFFF ^ RCC_AHB2ENR_ADCEN);
 //	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
 
-	// the adc should be disabled now, but just to be sure that this is a case
-	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_ADEN);
+	// check if ADC is enabled
+	if ((ADC2->CR & ADC_CR_ADEN) != 0) {
+		// disable it
+		ADC2->CR |= ADC_CR_ADDIS;
+
+		// and wait for disabling to complete
+	    while((ADC2->CR & ADC_CR_ADDIS) == ADC_CR_ADDIS);
+	}
 
 	// exit from deep-power-down mode
 	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_DEEPPWD);
@@ -211,37 +227,93 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 #endif
 }
 
-uint16_t io_vbat_meas_get(void) {
+/**
+ * This function will measure current B+ voltage using ADC and return
+ * either average (if 0) or current / momentary value (non zero)
+ */
+uint16_t io_vbat_meas_get() {
 
 	uint16_t out = 0;
-#ifdef STM32L471xx
+
+#ifdef PARAMETEO
 
 	float temp = 0.0f;
 
-	// start ADC
-	ADC2->CR |= ADC_CR_ADEN;
+	// if ADC is not enabled
+	if ((ADC2->CR & ADC_CR_ADEN) == 0) {
+		// start ADC
+		ADC2->CR |= ADC_CR_ADEN;
 
-	// wait for startup
-    while((ADC2->ISR & ADC_ISR_ADRDY) == 0);
+		// wait for startup
+	    while((ADC2->ISR & ADC_ISR_ADRDY) == 0);
+	}
 
 	// start conversion
 	ADC2->CR |= ADC_CR_ADSTART;
 
 	// wait for conversion to finish
-    while((ADC2->ISR & ADC_ISR_EOC) != ADC_ISR_EOC) {
-    	;
+    while((ADC2->ISR & ADC_ISR_EOC) == 0) {
+    	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
+    		break;
+    	}
     }
 
+    // get conversion result
 	out = ADC2->DR;
 
-	// disable ADC
-	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_ADEN);
+    // if end of sequence flag is not cleared
+	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
+		ADC2->ISR |= ADC_ISR_EOS;
+	}
+
+	// disable conversion
+	ADC2->CR |= ADC_CR_ADSTP;
 
 	// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
 	temp = (float)out * 0.00081f;		// real voltage on ADC input
 
 	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
+
 #endif
+	return out;
+}
+
+uint16_t io_vbat_meas_average(uint16_t sample) {
+
+	uint16_t out = 0;
+
+	int i = 0;
+
+	uint32_t average_acc = 0;
+
+	// if the iterator reached the end of buffer
+	if (io_vbatt_history_it >= VBATT_HISTORY_LN) {
+		// reset it to the begining
+		io_vbatt_history_it = 0;
+	}
+
+	// but new sample in the buffer
+	io_vbatt_history[io_vbatt_history_it++] = sample;
+
+
+	for (i = 0; i < VBATT_HISTORY_LN; i++) {
+
+		// break from the loop if buffer isn't fully filled with data
+		if (io_vbatt_history[i] < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
+			break;
+		}
+
+		// sum sample
+		average_acc += io_vbatt_history[i];
+	}
+
+	// if whole buffer has been used for average calculation
+	if (i >= VBATT_HISTORY_LN) {
+		// replace output
+		out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
+	}
+
+
 	return out;
 }
 
