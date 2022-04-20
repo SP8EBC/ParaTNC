@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "station_config_target_hw.h"
+
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 #include "config_data.h"

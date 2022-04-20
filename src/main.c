@@ -1,4 +1,4 @@
-#include "station_config_target_hw.h"
+#include "main.h"
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x_rcc.h>
@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
 #include "packet_tx_handler.h"
 
 #include "station_config.h"
