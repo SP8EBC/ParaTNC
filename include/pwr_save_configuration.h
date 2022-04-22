@@ -14,17 +14,17 @@
  * This is cutoff voltage at which the power saving subsystem will keep ParaMETEO constantly
  * in L7 mode and wakeup once every 20 minutes to check B+ once again
  */
-#define PWR_SAVE_CUTOFF_VOLTAGE_DEF 			1120u		// 11.2V
+#define PWR_SAVE_CUTOFF_VOLTAGE_DEF 			1100u		// 11.0V
 
 /**
  * This is the restore voltage a battery must be charged to for ParaMETEO to restore it's normal operation
  */
-#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1220u		// 12.2V
+#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1230u		// 12.3V
 
 /**
  * This is voltage above which controller will switch to PWSAVE_AGGRESV
  */
-#define PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE (PWR_SAVE_CUTOFF_VOLTAGE_DEF + 50u)
+#define PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE 	1150u		// 11.5V
 
 /**
  * How long in minutes the controller will sleep in L7 state between checking

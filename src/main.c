@@ -905,6 +905,7 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
    rte_main_battery_voltage = io_vbat_meas_get();
+   rte_main_average_battery_voltage = rte_main_battery_voltage;
 
    pwr_save_switch_mode_to_c0();
 
@@ -958,13 +959,15 @@ int main(int argc, char* argv[]){
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 #if defined(PARAMETEO)
 	   beacon_send_own(rte_main_battery_voltage);
+	   delay_fixed(1500);
 #else
 	   beacon_send_own(0);
 
 #endif
-	   delay_fixed(1500);
 
+#if defined(PARAMETEO)
 	   telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+#endif
    }
 
   // Infinite loop
@@ -1019,9 +1022,14 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
 	  	if (main_woken_up == 1) {
-//	  		io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
 
-	  	    rte_main_battery_voltage = io_vbat_meas_get();
+		    rte_main_battery_voltage = io_vbat_meas_get();
+		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
 
 	  	    // reinitialize APRS radio modem to clear all possible intermittent state caused by
 	  	    // switching power state in the middle of reception APRS packet
@@ -1256,7 +1264,7 @@ int main(int argc, char* argv[]){
 					 *
 					 * TEST TEST TEST TODO
 					 */
-					retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+					//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
 					//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
 				}
 
@@ -1313,7 +1321,7 @@ int main(int argc, char* argv[]){
 			#ifdef PARAMETEO
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending && main_woken_up == 0) {
-				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_battery_voltage);
+				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
 			}
 			#endif
 
