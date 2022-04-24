@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#include "modbus_rtu/rtu_configuration.h"
+#include "../include/etc/rtu_configuration.h"
 
 /**
  * This type stores the queue of RTU functions to be queued

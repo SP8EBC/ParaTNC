@@ -5,7 +5,8 @@
  *      Author: mateusz
  */
 
-#include "modbus_rtu/rtu_configuration.h"
+#include "../include/etc/rtu_configuration.h"
+
 #include "modbus_rtu/rtu_serial_io.h"
 #include "modbus_rtu/rtu_crc.h"
 #include "modbus_rtu/rtu_parser.h"

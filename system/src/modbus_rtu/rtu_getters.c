@@ -13,7 +13,7 @@
 #include "modbus_rtu/rtu_return_values.h"
 #include "modbus_rtu/rtu_register_data_t.h"
 
-#include "modbus_rtu/rtu_configuration.h"
+#include "../include/etc/rtu_configuration.h"
 
 #include "rte_wx.h"
 #include "rte_rtu.h"

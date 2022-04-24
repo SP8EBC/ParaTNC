@@ -1,6 +1,8 @@
 #ifndef __SERIAL_H
 #define __SERIAL_H
 
+#include "../include/etc/serial_config.h"
+
 #include "stdint.h"
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
@@ -10,21 +12,6 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_usart.h>
 #endif
-
-#define RX_BUFFER_1_LN 384
-#define TX_BUFFER_1_LN 384
-
-#define RX_BUFFER_2_LN 96
-#define TX_BUFFER_2_LN 96
-
-#define RX_BUFFER_3_LN 768
-#define TX_BUFFER_3_LN 768
-
-#define SEPARATE_RX_BUFF
-#define SEPARATE_TX_BUFF
-
-#define SRL_TX_DELAY_IN_MS	30
-#define SRL_DEFAULT_RX_TIMEOUT_IN_MS 1200
 
 #define SRL_TIMEOUT_ENABLE	1
 #define SRL_TIMEOUT_DISABLE 0

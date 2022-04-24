@@ -9,14 +9,12 @@
 #define RTE_RTU_H_
 
 #include "station_config.h"
+#include "../include/etc/rtu_configuration.h"
 
-//#ifdef _MODBUS_RTU
-#include "modbus_rtu/rtu_configuration.h"
 #include "modbus_rtu/rtu_register_data_t.h"
 #include "modbus_rtu/rtu_exception_t.h"
 #include "modbus_rtu/rtu_getters.h"
 #include "modbus_rtu/rtu_pool_queue_t.h"
-//#endif
 
 #include <stdint.h>
 

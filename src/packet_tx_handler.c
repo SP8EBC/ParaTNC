@@ -15,7 +15,7 @@
 
 #include "./umb_master/umb_master.h"
 
-#include "./modbus_rtu/rtu_configuration.h"
+#include "../include/etc/rtu_configuration.h"
 
 #ifdef STM32L471xx
 #include "aprsis.h"
