@@ -6,8 +6,8 @@
 #include <stm32l4xx_ll_gpio.h>
 
 uint8_t pwm_input_current_channel = 0;
-uint16_t pwm_first_channel = 0;
-uint16_t pwm_second_channel = 0;
+uint32_t pwm_first_channel = 0;
+uint32_t pwm_second_channel = 0;
 
 
 void pwm_input_io_init(void) {
@@ -18,7 +18,7 @@ void pwm_input_io_init(void) {
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_DOWN;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_3;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
@@ -108,19 +108,21 @@ void pwm_input_init(uint8_t channel) {
 
 void pwm_input_pool(void) {
 
-	uint16_t pwm_rising_edge = TIM8->CCR2 + 1;
-	uint16_t pwm_falling_edge = TIM8->CCR1 + 1;
-
-	uint16_t pwm_result = 0;
+	uint32_t pwm_rising_edge = TIM8->CCR1 + 1;
+	uint32_t pwm_falling_edge = TIM8->CCR2 + 1;
+	uint32_t pwm_result = 0;
 
 	// check preconditions
-	if (pwm_rising_edge != 0 && pwm_falling_edge != 0) {
+	if ((pwm_rising_edge != 0) && (pwm_falling_edge != 0)) {
 		if (pwm_rising_edge > pwm_falling_edge) {
+			// result value is in percents scaled * 10 (100 means 10 percents)
+			pwm_falling_edge *= 1000;
+
 			pwm_result = (pwm_falling_edge / pwm_rising_edge );
 		}
 	}
 	else {
-		;
+		; // if not do nothing and keeps result to zero
 	}
 
 	if (pwm_input_current_channel == 1) {
