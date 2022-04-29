@@ -75,6 +75,8 @@ extern  uint8_t main_kiss_enabled;
 
 extern uint8_t main_woken_up;
 
+extern int8_t main_cpu_load;
+
 extern char after_tx_lock;
 
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
@@ -84,6 +86,11 @@ extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 uint16_t main_get_adc_sample(void);
 
 void main_service_cpu_load_ticks(void);
+
+#if defined(STM32L471xx)
+extern uint32_t rte_main_rx_total;
+extern uint32_t rte_main_tx_total;
+#endif
 
 /**
  * Inline used to trace an execution flow across main for(;;) loop and some

@@ -326,10 +326,16 @@ typedef struct config_data_gsm_t {
 
 	char apn[24];
 
+	// username for APN connection
 	char username[24];
 
+	// password for APN connection
 	char password[24];
 
+	// http://pogoda.cc:8080/meteo_backend
+	char api_base_url[64];
+
+	char api_station_name[32];
 
 } config_data_gsm_t;
 

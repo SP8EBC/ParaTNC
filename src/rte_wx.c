@@ -20,15 +20,26 @@ float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
 float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
 uint8_t rte_wx_pressure_it;
 
+#if defined(STM32L471xx)
+/**
+ * These values are scaled * 10. As for now 'rte_wx_temperature_average_dallas'
+ * is rescaled version of 'rte_wx_temperature_average_external_valid'
+ */
+int16_t rte_wx_temperature_average_dallas = 0;
+int16_t rte_wx_temperature_average_pt = 0;
+int16_t rte_wx_temperature_average_internal = 0;
+uint16_t rte_wx_pressure_average = 0;
+#endif
+int16_t rte_wx_average_winddirection = 0;
+uint16_t rte_wx_average_windspeed = 0;
+uint16_t rte_wx_max_windspeed = 0;
+
 uint16_t rte_wx_windspeed_pulses = 0;
 uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
 uint8_t rte_wx_windspeed_it = 0;
 uint16_t rte_wx_winddirection[WIND_AVERAGE_LEN];
 uint8_t rte_wx_winddirection_it = 0;
 uint16_t rte_wx_winddirection_last = 0;
-uint16_t rte_wx_average_windspeed = 0;
-uint16_t rte_wx_max_windspeed = 0;
-int16_t rte_wx_average_winddirection = 0;
 
 int8_t rte_wx_humidity = 0, rte_wx_humidity_valid = 0;
 

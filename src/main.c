@@ -23,6 +23,7 @@
 
 
 #include "aprsis.h"
+#include "api/api.h"
 #endif
 
 #include <delay.h>
@@ -229,6 +230,9 @@ uint32_t main_crc_result = 0;
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
+
+uint32_t rte_main_rx_total = 0;
+uint32_t rte_main_tx_total = 0;
 
 #endif
 
@@ -951,7 +955,9 @@ int main(int argc, char* argv[]){
    if (main_config_data_mode->gsm == 1) {
 	   gsm_sim800_init(&main_gsm_state, 1);
 
-	   //http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
+	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
+
+	   api_init("http://pogoda.cc:8080/meteo_backend\0", "skrzyczne\0");
 	   //aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
    }
 #endif
@@ -1240,9 +1246,11 @@ int main(int argc, char* argv[]){
 			gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 
-//			if (gsm_sim800_gprs_ready == 1) {
+			if (gsm_sim800_gprs_ready == 1) {
+
+				api_send_json_status();
 //				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
-//			}
+			}
 
 			}
 			#endif

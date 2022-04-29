@@ -9,6 +9,7 @@
 #define RTE_WX_H_
 
 #include "station_config.h"
+#include "station_config_target_hw.h"
 
 #include "drivers/dallas.h"
 #include "drivers/analog_anemometer.h"
@@ -17,14 +18,8 @@
 #include "umb_master/umb_master.h"
 #include "umb_master/umb_qf_t.h"
 
-
-//#ifdef _SENSOR_MS5611
 #include "drivers/ms5611.h"
-//#endif
-
-//#ifdef _SENSOR_BME280
 #include "drivers/bme280.h"
-//#endif
 
 
 #define WIND_AVERAGE_LEN 18
@@ -43,6 +38,13 @@ extern float rte_wx_temperature_internal, rte_wx_temperature_internal_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
 extern float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
 extern uint8_t rte_wx_pressure_it;
+
+#if defined(STM32L471xx)
+extern int16_t rte_wx_temperature_average_dallas;
+extern int16_t rte_wx_temperature_average_pt;
+extern int16_t rte_wx_temperature_average_internal;
+extern uint16_t rte_wx_pressure_average;
+#endif
 
 extern uint16_t rte_wx_windspeed_pulses;
 extern uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];
