@@ -13,6 +13,7 @@
 #include "main.h"
 #include "rte_main.h"
 #include "rte_wx.h"
+#include "drivers/l4/pwm_input_stm32l4x.h"
 
 #define ENTRIES_STRING(ENTRY)			\
 	ENTRY(main_config_data_basic->callsign, callsign)	\
@@ -44,6 +45,10 @@
 	ENTRY(rte_wx_average_winddirection, wind_direction)				\
 	ENTRY(rte_wx_average_windspeed, wind_speed)					\
 	ENTRY(rte_wx_max_windspeed, wind_gust)					\
+
+#define ENTRIES_32INT_WEATHER(ENTRY)		\
+	ENTRY(pwm_first_channel, pwm_first)		\
+	ENTRY(pwm_second_channel, pwm_second)	\
 
 #endif /* API_STATUS_CONTENT_H_ */
 

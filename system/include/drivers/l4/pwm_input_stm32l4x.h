@@ -10,6 +10,9 @@
 
 #include <stdint.h>
 
+extern uint32_t pwm_first_channel;
+extern uint32_t pwm_second_channel;
+
 void pwm_input_io_init(void);
 void pwm_input_init(uint8_t channel);
 void pwm_input_pool(void);

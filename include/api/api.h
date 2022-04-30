@@ -10,5 +10,6 @@
 
 void api_init(char * api_base, char * station_name);
 void api_send_json_status(void);
+void api_send_json_measuremenets(void);
 
 #endif /* API_H_ */

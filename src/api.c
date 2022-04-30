@@ -72,7 +72,7 @@ static void api_construct_url_status(api_endpoint_t endpoint) {
 			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/status", api_base_url, api_station_name);
 			break;
 		case PARAMETEO_WX:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/wx", api_base_url, api_station_name);
+			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/measurements", api_base_url, api_station_name);
 			break;
 		}
 	}
@@ -97,7 +97,7 @@ void api_send_json_status(void) {
 	if (api_buffer_idx < API_BUFFER_LN) {
 		api_construct_url_status(PARAMETEO_STATUS);
 
-		api_retval = http_client_async_post(api_url_buffer, strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), OUT, strlen(OUT), 0, api_callback);
+		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
 	}
 }
 
@@ -107,27 +107,10 @@ void api_send_json_measuremenets(void) {
 	END
 
 	if (api_buffer_idx < API_BUFFER_LN) {
-		api_construct_url_status(PARAMETEO_STATUS);
+		api_construct_url_status(PARAMETEO_WX);
 
-		api_retval = http_client_async_post(api_url_buffer, strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), OUT, strlen(OUT), 0, api_callback);
+		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
 	}
 }
 
-void api_pooler(void) {
-
-	api_cycle_counter++;
-
-	if (api_cycle_counter > 100) {
-		api_cycle_counter = 0;
-	}
-
-	if ((api_cycle_counter % API_STATUS_CALL_CYCLE_INTERVAL) == 0) {
-		api_send_json_status();
-	}
-
-	if ((api_cycle_counter % API_MEASUREMENTS_CALL_CYCLE_INTERVAL) == 0) {
-		api_send_json_measuremenets();
-	}
-
-}
 

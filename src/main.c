@@ -1250,7 +1250,8 @@ int main(int argc, char* argv[]){
 
 			if (gsm_sim800_gprs_ready == 1) {
 
-				api_send_json_status();
+				//api_send_json_status();
+				api_send_json_measuremenets();
 //				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
 			}
 
