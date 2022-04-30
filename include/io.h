@@ -8,6 +8,12 @@
 #ifndef IO_H_
 #define IO_H_
 
+/**
+ * This header file (and corresponding .c file is responsible for configuring and servicing
+ * various things connected to GPIO pins. Watchdog, Output collector out (for ParaTNC) and
+ * switching on/off different voltages across both ParaTNC and ParaMETEO
+ */
+
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
 #endif

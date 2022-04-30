@@ -24,6 +24,7 @@
 
 #include "aprsis.h"
 #include "api/api.h"
+#include "drivers/l4/pwm_input_stm32l4x.h"
 #endif
 
 #include <delay.h>
@@ -282,7 +283,7 @@ int main(int argc, char* argv[]){
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
   RCC->AHBENR |= RCC_AHBENR_CRCEN;
@@ -339,7 +340,7 @@ int main(int argc, char* argv[]){
   system_clock_configure_rtc_l4();
 
   RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN | RCC_APB1ENR1_USART3EN);
-  RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN); // RCC_APB1ENR1_USART3EN
+  RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN | RCC_APB2ENR_TIM8EN); // RCC_APB1ENR1_USART3EN
   RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
   RCC->AHB2ENR |= (RCC_AHB2ENR_ADCEN | RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN);
   RCC->BDCR |= RCC_BDCR_RTCEN;
@@ -455,7 +456,7 @@ int main(int argc, char* argv[]){
   // set packets intervals
   packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   // disabling access to BKP registers
   RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
   PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
@@ -528,7 +529,7 @@ int main(int argc, char* argv[]){
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
 
   // Configure I/O pins for USART1 (Kiss modem)
   Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
@@ -540,7 +541,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
   	// USART1 - KISS
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
@@ -594,16 +595,12 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
-  Configure_GPIO(GPIOA,7,GPPP_OUTPUT_2MHZ);	// re/te
-  GPIO_ResetBits(GPIOA, GPIO_Pin_7);
-#endif
-#if defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   Configure_GPIO(GPIOA,8,GPPP_OUTPUT_2MHZ);	// re/te
   GPIO_ResetBits(GPIOA, GPIO_Pin_8);
 #endif
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
@@ -613,7 +610,7 @@ int main(int argc, char* argv[]){
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
 #endif
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   // enabling the clock for both USARTs
   RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
@@ -717,11 +714,7 @@ int main(int argc, char* argv[]){
 	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
   }
 
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B)
-  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_7;
-  main_wx_srl_ctx_ptr->te_port = GPIOA;
-#endif
-#if defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
@@ -739,7 +732,7 @@ int main(int argc, char* argv[]){
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
   // enable write access to watchdog registers
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 
@@ -780,11 +773,11 @@ int main(int argc, char* argv[]){
   digi_init(main_config_data_mode);
 
   if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+#if defined(STM32F10X_MD_VL)
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 #endif
 
-#if defined(PARAMETEO)
+#if defined(STM32L471xx)
 
 	  // switch on voltages exclusively for ParaMETEO
 
@@ -961,6 +954,10 @@ int main(int argc, char* argv[]){
 
 	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220, TEST_IP, 14580);
    }
+
+   pwm_input_io_init();
+
+   pwm_input_init(1);
 #endif
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
@@ -993,7 +990,8 @@ int main(int argc, char* argv[]){
 	    }
 
 	  main_set_monitor(0);
-#if defined(PARATNC_HWREV_A) || defined(PARATNC_HWREV_B) || defined(PARATNC_HWREV_C)
+
+#if defined(STM32F10X_MD_VL)
 	    // read the state of a button input
 	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
 
@@ -1344,6 +1342,8 @@ int main(int argc, char* argv[]){
 			if (!main_afsk.sending && main_woken_up == 0) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
 			}
+
+			pwm_input_pool();
 			#endif
 
 			main_set_monitor(9);

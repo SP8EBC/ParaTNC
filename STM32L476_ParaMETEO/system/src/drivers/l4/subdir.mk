@@ -6,16 +6,19 @@
 C_SRCS += \
 ../system/src/drivers/l4/flash_stm32l4x.c \
 ../system/src/drivers/l4/i2c_stm32l4x.c \
+../system/src/drivers/l4/pwm_input_stm32l4x.c \
 ../system/src/drivers/l4/serial_stm32l4x.c 
 
 OBJS += \
 ./system/src/drivers/l4/flash_stm32l4x.o \
 ./system/src/drivers/l4/i2c_stm32l4x.o \
+./system/src/drivers/l4/pwm_input_stm32l4x.o \
 ./system/src/drivers/l4/serial_stm32l4x.o 
 
 C_DEPS += \
 ./system/src/drivers/l4/flash_stm32l4x.d \
 ./system/src/drivers/l4/i2c_stm32l4x.d \
+./system/src/drivers/l4/pwm_input_stm32l4x.d \
 ./system/src/drivers/l4/serial_stm32l4x.d 
 
 
