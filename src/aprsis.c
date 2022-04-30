@@ -40,17 +40,35 @@ int32_t aprsis_passcode;
  */
 char aprsis_login_string[64];
 
+/**
+ * Default APRS-IS address to be used by
+ */
+const char * aprsis_default_server_address;
+
+uint16_t aprsis_default_server_address_ln = 0;
+
+uint16_t aprsis_default_server_port;
+
+/**
+ * Set to one if connections is established AND user is logged
+ */
 uint8_t aprsis_logged = 0;
 
+/**
+ * Set to one if connection to server is established (but maybe not logged)
+ */
 uint8_t aprsis_connected = 0;
 
 const char * aprsis_sucessfull_login = "# logresp\0";
 
+/**
+ * A timestamp when server has send anything
+ */
 uint32_t aprsis_last_keepalive_ts = 0;
 
 #define APRSIS_TIMEOUT_MS	123000//123000
 
-void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode) {
+void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port) {
 	aprsis_serial_port = context;
 
 	aprsis_gsm_modem_state = gsm_modem_state;
@@ -65,10 +83,16 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 	aprsis_logged = 0;
 
+	aprsis_default_server_port = default_port;
+
+	aprsis_default_server_address = default_server;
+
+	aprsis_default_server_address_ln = strlen(aprsis_default_server_address);
+
 }
 
 uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
-
+	// this function has blocking io
 	uint8_t out = 2;
 
 	if (aprsis_serial_port == 0 || aprsis_gsm_modem_state == 0 || aprsis_logged == 1) {
@@ -149,6 +173,19 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 
 	return out;
 
+}
+
+uint8_t aprsis_connect_and_login_default(void) {
+
+	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port);
+}
+
+void aprsis_disconnect(void) {
+	gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+
+	aprsis_logged = 0;
+
+	aprsis_connected = 0;
 }
 
 void aprsis_receive_callback(srl_context_t* srl_context) {

@@ -958,7 +958,8 @@ int main(int argc, char* argv[]){
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
 	   api_init("http://pogoda.cc:8080/meteo_backend\0", "skrzyczne\0");
-	   //aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220);
+
+	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220, TEST_IP, 14580);
    }
 #endif
 
@@ -1230,6 +1231,9 @@ int main(int argc, char* argv[]){
 			main_wx_sensors_pool_timer = 65500;
 		}
 
+		/**
+		 * ONE MINUTE POOLING
+		 */
 		if (main_one_minute_pool_timer < 10) {
 
 			main_set_monitor(4);
@@ -1258,6 +1262,9 @@ int main(int argc, char* argv[]){
 			main_one_minute_pool_timer = 60000;
 		}
 
+		/**
+		 * ONE SECOND POOLING
+		 */
 		if (main_one_second_pool_timer < 10) {
 
 			main_set_monitor(6);
@@ -1302,6 +1309,9 @@ int main(int argc, char* argv[]){
 			main_one_second_pool_timer = 1000;
 		}
 
+		/**
+		 * TWO SECOND POOLING
+		 */
 		if (main_two_second_pool_timer < 10) {
 
 			wx_check_force_i2c_reset();
@@ -1315,6 +1325,9 @@ int main(int argc, char* argv[]){
 			main_two_second_pool_timer = 2000;
 		}
 
+		/**
+		 * TEN SECOND POOLING
+		 */
 		if (main_ten_second_pool_timer < 10) {
 
 			main_set_monitor(8);

@@ -14,6 +14,9 @@
 #include "rte_main.h"
 #include "rte_wx.h"
 
+#define ENTRIES_STRING(ENTRY)			\
+	ENTRY(main_config_data_basic->callsign, callsign)	\
+
 #define ENTRIES_32INT_STATUS(ENTRY)							\
 	ENTRY(master_time, master_time)						\
 	ENTRY(rte_main_rx_total, rx_total)			\
@@ -30,6 +33,7 @@
 	ENTRY(rte_main_average_battery_voltage, average_battery_voltage)		\
 	ENTRY(rte_main_wakeup_count, wakeup_count)	\
 	ENTRY(rte_main_going_sleep_count, going_sleep_count)	\
+	ENTRY(main_config_data_basic->ssid, ssid)	\
 
 
 #define ENTRIES_16INT_WEATHER(ENTRY)							\
@@ -38,7 +42,7 @@
 	ENTRY(rte_wx_temperature_average_internal, temperature_internal)\
 	ENTRY(rte_wx_pressure_average, pressure)						\
 	ENTRY(rte_wx_average_winddirection, wind_direction)				\
-	ENTRY(rte_wx_average_windspeed, wind_gust)					\
+	ENTRY(rte_wx_average_windspeed, wind_speed)					\
 	ENTRY(rte_wx_max_windspeed, wind_gust)					\
 
 #endif /* API_STATUS_CONTENT_H_ */

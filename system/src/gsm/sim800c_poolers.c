@@ -26,16 +26,6 @@ void gsm_sim800_poolers_one_minute(srl_context_t * srl_context, gsm_sim800_state
 
 }
 
-
-void gsm_sim800_poolers_five_minutes(srl_context_t * srl_context, gsm_sim800_state_t * state) {
-	sim800_poolers_five++;
-
-	if (sim800_poolers_five == 5) {
-		sim800_poolers_five  = 0;
-	}
-
-}
-
 void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state_t * state, const config_data_gsm_t * config) {
 
 	if (*state == SIM800_ALIVE) {
