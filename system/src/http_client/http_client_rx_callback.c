@@ -233,6 +233,10 @@ uint8_t http_client_rx_done_callback(uint8_t current_data, const uint8_t * const
 		}
 	}
 
+	// check if this response doesn't have a content
+	if (http_client_response_header_processing == 0 && http_client_content_lenght == 0) {
+		out = 1;
+	}
 
 	return out;
 }

@@ -68,6 +68,8 @@ static char http_client_port[PORT_LN];
  */
 static void http_client_response_done_callback(srl_context_t* context) {
 
+	gsm_sim800_tcpip_close(context, http_client_deticated_sim800_state, 1);
+
 	if (http_client_on_response_callback != 0) {
 		// execute a callback. addition '+1' is requires because 'http_client_content_end_index' points to the last character of response
 		http_client_on_response_callback(http_client_http_code, (char *)(context->srl_rx_buf_pointer + http_client_content_start_index), http_client_content_end_index - http_client_content_start_index + 1);
@@ -229,7 +231,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 		// check if module is busy on other TCP/IP connection
 		if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy != 0) {
 			// if client is connected end a user wants to force disconnect
-			gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state);
+			gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state, 0);
 		}
 		else if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy == 0) {
 			out = HTTP_CLIENT_RET_TCPIP_BSY;
@@ -315,7 +317,7 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 	// check if module is busy on other TCP/IP connection
 	if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy != 0) {
 		// if client is connected end a user wants to force disconnect
-		gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state);
+		gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state, 0);
 	}
 	else if (*http_client_deticated_sim800_state == SIM800_TCP_CONNECTED && force_disconnect_on_busy == 0) {
 		out = HTTP_CLIENT_RET_TCPIP_BSY;

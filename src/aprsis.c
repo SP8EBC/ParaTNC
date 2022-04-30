@@ -157,16 +157,16 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 						}
 						else {
 							// if authoruzation wasn't successfull drop a connection
-							gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+							gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 						}
 					}
 				}
 				else {
-					gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+					gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 				}
 			}
 			else {
-				gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+				gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
 			}
 		}
 	}
@@ -181,7 +181,7 @@ uint8_t aprsis_connect_and_login_default(void) {
 }
 
 void aprsis_disconnect(void) {
-	gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+	gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 
 	aprsis_logged = 0;
 
@@ -215,7 +215,7 @@ void aprsis_check_alive(void) {
 		// reset the flag
 		aprsis_logged = 0;
 
-		gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state);
+		gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
 	}
 }
 

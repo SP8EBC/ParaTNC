@@ -12,6 +12,7 @@
 #include <string.h>
 
 #define BEGIN	\
+	LN = 0;		\
 	memset(OUT, 0x00, sizeof(OUT));		\
 	LN = sprintf(OUT + LN, "{\r\n");	\
 

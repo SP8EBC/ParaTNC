@@ -224,11 +224,11 @@ uint8_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t 
 	return out;
 }
 
-void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t force) {
 
 	uint8_t receive_result = 0;
 
-	if (*state == SIM800_TCP_CONNECTED) {
+	if (*state == SIM800_TCP_CONNECTED || force == 1) {
 		// send escape sequence to exit connection mode
 		srl_send_data(srl_context, (const uint8_t*) ESCAPE, SRL_MODE_ZERO, strlen(ESCAPE), SRL_INTERNAL);
 
