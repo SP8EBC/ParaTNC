@@ -29,6 +29,8 @@ char DrawCounter;
 
 extern unsigned short tx10m;
 
+extern uint32_t  	rte_main_tx_total;
+
 
 /**
  * Sine table for the first quarter of wave.
@@ -308,6 +310,7 @@ void afsk_txStart(Afsk *af) {
 	if (!af->sending)
 	{
 		tx10m++;
+		rte_main_tx_total++;
 		
 		af->phase_inc = MARK_INC;
 		af->phase_acc = 0;

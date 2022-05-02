@@ -19,6 +19,7 @@
 
 #ifdef STM32L471xx
 #include "aprsis.h"
+#include "api/api.h"
 #include "pwr_save.h"
 #endif
 

@@ -59,8 +59,6 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 	after_tx_lock = 1;
 	while(main_ax25.dcd == true);
  	afsk_txStart(&main_afsk);
-
-
 }
 
 

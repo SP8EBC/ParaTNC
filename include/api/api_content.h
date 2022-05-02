@@ -17,6 +17,8 @@
 
 #define ENTRIES_STRING(ENTRY)			\
 	ENTRY(main_config_data_basic->callsign, callsign)	\
+	ENTRY(SW_VER, sw_ver)	\
+	ENTRY(SW_DATE, sw_data)	\
 
 #define ENTRIES_32INT_STATUS(ENTRY)							\
 	ENTRY(master_time, master_time)						\
@@ -42,9 +44,12 @@
 	ENTRY(rte_wx_temperature_average_pt, temperature_pt)			\
 	ENTRY(rte_wx_temperature_average_internal, temperature_internal)\
 	ENTRY(rte_wx_pressure_average, pressure)						\
+	ENTRY(rte_wx_humidity_valid, humidity)						\
 	ENTRY(rte_wx_average_winddirection, wind_direction)				\
-	ENTRY(rte_wx_average_windspeed, wind_speed)					\
+	ENTRY(rte_wx_average_windspeed, wind_average)					\
 	ENTRY(rte_wx_max_windspeed, wind_gust)					\
+	ENTRY(rte_wx_windspeed[rte_wx_windspeed_it], wind_current)					\
+	ENTRY(rte_wx_get_minimum_windspeed(), wind_minimal)					\
 
 #define ENTRIES_32INT_WEATHER(ENTRY)		\
 	ENTRY(pwm_first_channel, pwm_first)		\

@@ -950,9 +950,9 @@ int main(int argc, char* argv[]){
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
-	   api_init("http://pogoda.cc:8080/meteo_backend\0", "skrzyczne\0");
+	   api_init(main_config_data_gsm->api_base_url, main_config_data_gsm->api_station_name);
 
-	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, "SP8EBC", 10, 23220, TEST_IP, 14580);
+	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, main_config_data_basic->callsign, main_config_data_basic->ssid, main_config_data_gsm->aprsis_passcode, main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
    }
 
    pwm_input_io_init();
@@ -1071,6 +1071,7 @@ int main(int argc, char* argv[]){
 
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
+			rte_main_rx_total++;
 		}
 
 #ifdef STM32L471xx

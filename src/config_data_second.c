@@ -463,7 +463,21 @@ const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) c
 
 		.username = "\0",
 
-		.password = "\0"
+		.password = "\0",
+
+		.api_enable = 1,
+
+		.api_base_url = "http://pogoda.cc:8080/meteo_backend",
+
+		.api_station_name = "pilsko",
+
+		.aprsis_enable = 1,
+
+		.aprsis_passcode = 16823,
+
+		.aprsis_server_port = 14580,
+
+		.aprsis_server_address = "euro.aprs2.net\0"
 };
 #endif
 

@@ -56,6 +56,18 @@ extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
 extern int16_t rte_wx_average_winddirection;
 
+inline uint16_t rte_wx_get_minimum_windspeed(void) {
+	uint16_t out = 0xFFFF;
+
+	for (int i = 0 ; i < WIND_AVERAGE_LEN; i++) {
+		if (rte_wx_windspeed[i] < out) {
+			out = rte_wx_windspeed[i];
+		}
+	}
+
+	return out;
+}
+
 extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 
 extern uint8_t rte_wx_tx20_excessive_slew_rate;

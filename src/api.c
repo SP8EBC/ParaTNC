@@ -8,7 +8,7 @@
  *      19 maja, Krszystof Binek, miedy 12 a 13
  */
 
-#include "api/api_status_content.h"
+#include <api/api_content.h>
 #include "etc/api_configuration.h"
 
 #include "http_client/http_client.h"
@@ -18,7 +18,7 @@
 /**
  * Buffers for generating JSON and URL
  */
-#define API_BUFFER_LN	384
+#define API_BUFFER_LN	512
 char api_buffer[API_BUFFER_LN];
 #define URL_BUFFER_LN	96
 char api_url_buffer[URL_BUFFER_LN];

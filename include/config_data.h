@@ -332,10 +332,20 @@ typedef struct config_data_gsm_t {
 	// password for APN connection
 	char password[24];
 
+	uint8_t api_enable;
+
 	// http://pogoda.cc:8080/meteo_backend
 	char api_base_url[64];
 
 	char api_station_name[32];
+
+	uint8_t aprsis_enable;
+
+	char aprsis_server_address[64];
+
+	uint16_t aprsis_server_port;
+
+	uint32_t aprsis_passcode;
 
 } config_data_gsm_t;
 
