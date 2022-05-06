@@ -43,6 +43,18 @@ void io_oc_init(void) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 #endif
+
+#if defined(STM32L471xx)
+	// PA7 - GPRS power key
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+
+#endif
 }
 
 void io_oc_output_low(void) {

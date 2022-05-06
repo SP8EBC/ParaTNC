@@ -115,6 +115,15 @@ inline void io___cntrl_vbat_r_disable(void) {
 
 }
 
+inline void io___cntrl_gprs_pwrkey_press() {
+	GPIOA->BSRR |= GPIO_BSRR_BS7;
+
+}
+inline void io___cntrl_gprs_pwrkey_release() {
+	GPIOA->BSRR |= GPIO_BSRR_BR7;
+
+}
+
 inline uint8_t io_get_cntrl_vbat_c(void) {
 	uint8_t out = 0;
 

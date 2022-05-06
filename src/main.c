@@ -577,7 +577,7 @@ int main(int argc, char* argv[]){
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
 
 	// USART3 - GSM
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;	// LL_GPIO_MODE_ALTERNATE
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
@@ -585,7 +585,7 @@ int main(int argc, char* argv[]){
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// TX
 
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;  // LL_GPIO_MODE_ALTERNATE
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_11;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
@@ -912,6 +912,8 @@ int main(int argc, char* argv[]){
    led_control_led1_upper(true);
    led_control_led2_bottom(false);
 
+   io___cntrl_gprs_pwrkey_press();
+
    delay_fixed(1000);
 
    led_control_led1_upper(false);
@@ -926,6 +928,8 @@ int main(int argc, char* argv[]){
 
    led_control_led1_upper(false);
    led_control_led2_bottom(false);
+
+   io___cntrl_gprs_pwrkey_release();
 
 #endif
 
@@ -1246,15 +1250,15 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 
-			gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
+				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 
-			if (gsm_sim800_gprs_ready == 1) {
+				if (gsm_sim800_gprs_ready == 1) {
 
-				//api_send_json_status();
-				api_send_json_measuremenets();
-//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
-			}
+					//api_send_json_status();
+					api_send_json_measuremenets();
+	//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
+				}
 
 			}
 			#endif
