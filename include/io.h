@@ -134,5 +134,15 @@ inline uint8_t io_get_cntrl_vbat_c(void) {
 	return out;
 }
 
+inline uint8_t io_get_cntrl_vbat_s(void) {
+	uint8_t out = 0;
+
+	if ((GPIOC->ODR & GPIO_ODR_ODR_13) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 
 #endif /* IO_H_ */

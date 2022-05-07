@@ -75,9 +75,11 @@ static uint8_t gsm_waiting_for_command_response = 0;
 uint8_t gsm_sim800_registration_status = 4;	// unknown
 
 // string with sim status
-char gsm_sim800_sim_status[10];
+#define SIM_STATUS_LENGHT	10
+char gsm_sim800_sim_status[SIM_STATUS_LENGHT];
 
-char gsm_sim800_registered_network[16];
+#define REGISTERED_NETWORK_LN	16
+char gsm_sim800_registered_network[REGISTERED_NETWORK_LN];
 
 int8_t gsm_sim800_signal_level_dbm = 0;
 
@@ -87,8 +89,8 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
-inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
-	for (int i = 0; *(str + i) != 0 ; i++) {
+inline static void gsm_sim800_replace_non_printable_with_space(char * str, int8_t size) {
+	for (int i = 0; *(str + i) != 0 && i < size; i++) {
 		char current = *(str + i);
 
 		if (current != 0x00) {
@@ -97,6 +99,28 @@ inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
 			}
 		}
 	}
+}
+
+inline static void gsm_sim800_replace_space_with_null(char * str, int8_t size) {
+	for (int i = size - 1; i > 0; i--) {
+		char current = *(str + i);
+
+		if (current == '\"') {
+			break;
+		}
+
+		if (current == 0x20) {
+			*(str + i) = 0x00;
+		}
+	}
+
+//	for (int i = 0; *(str + i) != 0 && i < size; i++) {
+//		char current = *(str + i);
+//
+//		if (current == 0x20) {
+//			*(str + i) = 0x00;
+//		}
+//	}
 }
 
 inline static void gsm_sim800_power_off(void) {
@@ -676,7 +700,9 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				strncpy(gsm_sim800_sim_status, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
 
-				gsm_sim800_replace_non_printable_with_space(gsm_sim800_sim_status);
+				gsm_sim800_replace_non_printable_with_space(gsm_sim800_sim_status, SIM_STATUS_LENGHT);
+
+				gsm_sim800_replace_space_with_null(gsm_sim800_sim_status, SIM_STATUS_LENGHT);
 			}
 
 		}
@@ -686,7 +712,9 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
 
-				gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network);
+				gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+
+				gsm_sim800_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {

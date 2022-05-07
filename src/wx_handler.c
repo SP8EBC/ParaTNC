@@ -84,7 +84,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	int32_t backup_parameter_result = 0;				// uses during retrieving backup
 
-	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
+	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0 && io_get_cntrl_vbat_s() == 0) {
 		// inhibit any measurement when power is not applied to sensors
 		return;
 	}
