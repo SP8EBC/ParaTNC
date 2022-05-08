@@ -11,6 +11,11 @@
 #include "drivers/serial.h"
 #include "gsm/sim800c_tcpip.h"
 
+#define APRSIS_OK					0
+#define APRSIS_NOT_CONFIGURED		1
+#define APRSIS_WRONG_STATE			2
+#define APRSIS_ALREADY_CONNECTED	3
+
 extern uint8_t aprsis_connected;
 
 void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port);

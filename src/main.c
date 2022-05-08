@@ -632,6 +632,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
+#ifndef PARAMETEO
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
   if (main_config_data_mode->victron == 1) {
     main_target_kiss_baudrate = 19200u;
@@ -639,6 +640,7 @@ int main(int argc, char* argv[]){
     // and disable the kiss TNC option as it shares the same port
     main_kiss_enabled = 0;
   }
+#endif
 
 
   if (main_config_data_mode->wx_davis == 1) {
@@ -778,9 +780,6 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(STM32L471xx)
-
-	  // switch on voltages exclusively for ParaMETEO
-
 	  // initialize dallas one-wire driver for termometer
 	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 #endif
@@ -801,15 +800,16 @@ int main(int argc, char* argv[]){
   // configuring interrupt priorities
   it_handlers_set_priorities();
 
+  // read calibration data from I2C pressure / humidity sensor
 	if (main_config_data_mode->wx_ms5611_or_bme == 0) {
-	 ms5611_reset(&rte_wx_ms5611_qf);
-	 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
-	 ms5611_trigger_measure(0, 0);
+		ms5611_reset(&rte_wx_ms5611_qf);
+		ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
+		ms5611_trigger_measure(0, 0);
 	}
 	else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
-	 bme280_reset(&rte_wx_bme280_qf);
-	 bme280_setup();
-	 bme280_read_calibration(bme280_calibration_data);
+		bme280_reset(&rte_wx_bme280_qf);
+		bme280_setup();
+		bme280_read_calibration(bme280_calibration_data);
 	}
 
  if (main_kiss_enabled == 1) {
@@ -877,6 +877,7 @@ int main(int argc, char* argv[]){
 	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 	}
 
+#ifndef PARAMETEO
   // start serial port i/o transaction depending on station configuration
   if (main_config_data_mode->victron == 1) {
 	  // initializing protocol parser
@@ -894,6 +895,10 @@ int main(int argc, char* argv[]){
 	  // switching UART to receive mode to be ready for KISS frames from host
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
   }
+#else
+  // switching UART to receive mode to be ready for KISS frames from host
+  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+#endif
 
   io_oc_output_low();
 
@@ -954,9 +959,9 @@ int main(int argc, char* argv[]){
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
-	   api_init(main_config_data_gsm->api_base_url, main_config_data_gsm->api_station_name);
+	   api_init((const char *)main_config_data_gsm->api_base_url, (const char *)main_config_data_gsm->api_station_name);
 
-	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, main_config_data_basic->callsign, main_config_data_basic->ssid, main_config_data_gsm->aprsis_passcode, main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
+	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, (const char *)main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
    }
 
    pwm_input_io_init();
@@ -1103,7 +1108,7 @@ int main(int argc, char* argv[]){
 
 		// if Victron VE.direct client is enabled
 		if (main_config_data_mode->victron == 1) {
-
+#ifndef PARAMETEO
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 
@@ -1137,6 +1142,7 @@ int main(int argc, char* argv[]){
 
 				srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
 			}
+#endif
 		}
 		else if (main_config_data_mode->wx_umb == 1) {
 			// if some UMB data have been received
@@ -1191,7 +1197,10 @@ int main(int argc, char* argv[]){
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
 
+			// get current battery voltage. for non parameteo this will return 0
 		    rte_main_battery_voltage = io_vbat_meas_get();
+
+		    // get average battery voltage
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
 		    // meas average will return 0 if internal buffer isn't filled completely
@@ -1199,24 +1208,35 @@ int main(int argc, char* argv[]){
 		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
 		    }
 
-			if (main_modbus_rtu_master_enabled == 1) {
-				rtu_serial_start();
-			}
-
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+
+				// notice: UMB-master and Modbus-RTU uses the same UART
+				// so they cannot be enabled both at once
+
+				// check if modbus rtu master is enabled and configured properly
+				if (main_modbus_rtu_master_enabled == 1) {
+					// start quering all Modbus RTU devices & registers one after another
+					rtu_serial_start();
+				}
+				else if (main_config_data_mode->wx_umb == 1) {
+					// request status from the slave if UMB master is enabled
+					umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
+				}
+				else {
+					;
+				}
+
+				// davis serial weather station is connected using UART / RS232 used normally
+				// for KISS communcation between modem and host PC
+				if (main_davis_serial_enabled == 1) {
+					davis_trigger_rxcheck_packet();
+				}
+
+				// get all measurements from 'internal' sensors (except wind which is handled separately)
 				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
 
-
-			if (main_config_data_mode->wx_umb == 1) {
-				//
-				umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
-			}
-
-			if (main_davis_serial_enabled == 1) {
-				davis_trigger_rxcheck_packet();
-			}
-
+			// check if there is a request to send ModbusRTU error status message
 			if (rte_main_trigger_modbus_status == 1 && main_modbus_rtu_master_enabled == 1) {
 				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
 
@@ -1252,13 +1272,14 @@ int main(int argc, char* argv[]){
 
 				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
+				aprsis_connect_and_login_default();
 
-				if (gsm_sim800_gprs_ready == 1) {
-
-					//api_send_json_status();
-					api_send_json_measuremenets();
-	//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
-				}
+//				if (gsm_sim800_gprs_ready == 1) {
+//
+//					//api_send_json_status();
+//					api_send_json_measuremenets();
+//	//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
+//				}
 
 			}
 			#endif
@@ -1336,6 +1357,7 @@ int main(int argc, char* argv[]){
 
 			main_set_monitor(8);
 
+			// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 			if (rte_main_trigger_wx_packet == 1) {
 
 				packet_tx_send_wx_frame();
@@ -1356,13 +1378,8 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
-				// TODO
 
-//				retval = aprsis_connect_and_login(TEST_IP, strlen(TEST_IP), 14580);
-//
-//				if (retval == 0) {
-//					aprsis_send_beacon(0);
-//				}
+				packet_tx_tcp_handler();
 			}
 			#endif
 

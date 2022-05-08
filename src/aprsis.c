@@ -93,10 +93,14 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
 	// this function has blocking io
-	uint8_t out = 2;
+	uint8_t out = APRSIS_WRONG_STATE;
 
-	if (aprsis_serial_port == 0 || aprsis_gsm_modem_state == 0 || aprsis_logged == 1) {
-		return 1;
+	if (aprsis_logged == 1) {
+		return APRSIS_ALREADY_CONNECTED;
+	}
+
+	if (aprsis_serial_port == 0 || aprsis_gsm_modem_state == 0) {
+		return APRSIS_NOT_CONFIGURED;
 	}
 
 	if (*aprsis_gsm_modem_state == SIM800_ALIVE) {
@@ -149,10 +153,12 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 						if (retval == 0) {
 							aprsis_logged = 1;
 
+							aprsis_send_beacon(0);
+
 							// wait for consecutive data
 							gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
-							out = 0;
+							out = APRSIS_OK;
 
 						}
 						else {

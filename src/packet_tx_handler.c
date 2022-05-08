@@ -52,6 +52,15 @@ uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL
 
 uint8_t packet_tx_more_than_one = 0;
 
+#ifdef STM32L471xx
+uint8_t packet_tx_trigger_tcp = 0;
+#define API_TRIGGER_STATUS 		(1 << 1)
+#define API_TRIGGER_METEO		(1 << 2)
+#define APRSIS_TRIGGER_METEO	(1 << 3)
+#define RECONNECT_APRSIS		(1 << 7)
+
+#endif
+
 void packet_tx_send_wx_frame(void) {
 	main_wait_for_tx_complete();
 
@@ -91,7 +100,61 @@ inline void packet_tx_multi_per_call_handler(void) {
 	}
 }
 
-// this shall be called in 60 seconds periods
+// this shall be called in 10 seconds interval
+void packet_tx_tcp_handler(void) {
+#ifdef STM32L471xx
+
+	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
+		// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+		aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+
+		// clear the bit
+		packet_tx_trigger_tcp ^= APRSIS_TRIGGER_METEO;
+	}
+	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
+
+		// check if APRS-IS is connected
+		if (aprsis_connected != 0) {
+			// disconnect it before call to API - this disconnection has blocking IO
+			aprsis_disconnect();
+
+			// remember to reconnect APRSIS after all API comm will be done
+			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+
+		}
+
+		// send status (async)
+		api_send_json_status();
+
+		// clear the bit
+		packet_tx_trigger_tcp ^= API_TRIGGER_STATUS;
+	}
+	else if ((packet_tx_trigger_tcp & API_TRIGGER_METEO) != 0) {
+
+		// check if APRS-IS is connected
+		if (aprsis_connected != 0) {
+			// disconnect it before call to API - this disconnection has blocking IO
+			aprsis_disconnect();
+
+			// remember to reconnect APRSIS after all API comm will be done
+			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+
+		}
+
+		api_send_json_measuremenets();
+
+		// clear the bit
+		packet_tx_trigger_tcp ^= API_TRIGGER_METEO;
+	}
+	else if ((packet_tx_trigger_tcp & RECONNECT_APRSIS) != 0) {
+		aprsis_connect_and_login_default();
+
+		packet_tx_trigger_tcp ^= RECONNECT_APRSIS;
+	}
+#endif
+}
+
+// this shall be called in 60 seconds intervals
 void packet_tx_handler(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode) {
 	dallas_qf_t dallas_qf = DALLAS_QF_UNKNOWN;
 
@@ -104,25 +167,18 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	// set to one if more than one packet will be send from this function at once (like beacon + telemetry)
 	packet_tx_more_than_one = 0;
 
+	// increase beacon transmit counters
 	packet_tx_beacon_counter++;
 	packet_tx_error_status_counter++;
 	packet_tx_telemetry_counter++;
 	packet_tx_telemetry_descr_counter++;
 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
+		// increse these counters only when WX is enabled
 		packet_tx_meteo_counter++;
 		packet_tx_meteo_kiss_counter++;
 	}
 
-	if (packet_tx_error_status_counter >= packet_tx_error_status_interval) {
-		if (config_mode->wx_umb) {
-			umb_construct_status_str(&rte_wx_umb_context, main_own_aprs_msg, sizeof(main_own_aprs_msg), &ln, master_time);
-
-			packet_tx_multi_per_call_handler();
-		}
-
-		packet_tx_error_status_counter = 0;
-	}
-
+	// check if there is a time to send own beacon
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval && packet_tx_beacon_interval != 0) {
 
 		packet_tx_multi_per_call_handler();
@@ -134,11 +190,25 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 	}
 
+	// if WX is enabled
 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
+	#ifdef STM32L471xx
+		// send wx packet to APRSIS one minute before radio transmission
+		if (packet_tx_meteo_counter == packet_tx_meteo_interval - 1 && packet_tx_meteo_interval != 0) {
+			packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
+
+			//aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+		}
+	#endif
+
+		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
 
+			// this function is required if more than one RF frame will be send from this function at once
+			// it waits for transmission completion and add some delay to let digipeaters do theris job
 			packet_tx_multi_per_call_handler();
 
+			// send WX frame through RF
 			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
 			/**
@@ -150,22 +220,20 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			 *
 			 */
 
-			#ifdef EXTERNAL_WATCHDOG
 			io_ext_watchdog_service();
-			#endif
 
+#ifdef STM32L471xx
+			// and trigger API wx packet transmission
+			packet_tx_trigger_tcp |= API_TRIGGER_METEO;
+#endif
+
+			// check if user want's to send two wx packets one after another
 			if (main_config_data_basic->wx_double_transmit == 1) {
 				rte_main_trigger_wx_packet = 1;
 			}
 
 			packet_tx_meteo_counter = 0;
 		}
-
-#ifdef STM32L471xx
-		if (packet_tx_meteo_counter == packet_tx_meteo_interval - 1 && packet_tx_meteo_interval != 0) {
-			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-		}
-#endif
 
 		if ((main_config_data_mode->wx_modbus & WX_MODBUS_DEBUG) == WX_MODBUS_DEBUG) {
 			// send the status packet with raw values of all requested modbus-RTU registers
@@ -178,20 +246,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 				telemetry_send_status_raw_values_modbus();
 			}
-
-			// trigger the status packet with modbus-rtu state like error counters, timestamps etc.
-			if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
-					packet_tx_telemetry_descr_counter > packet_tx_modbus_status &&
-					packet_tx_telemetry_descr_counter <= packet_tx_modbus_status * 2)
-			{
-
-				packet_tx_multi_per_call_handler();
-
-				rte_main_trigger_modbus_status = 1;
-			}
 		}
 
-
+// there is no sense to include support for Victron VE.Direct in parameteo
+// which has its own charging controller
+#ifndef PARAMETEO
 		// check if Victron VE.Direct serial protocol client is enabled and it is
 		// a time to send the status message
 		if (config_mode->victron == 1 &&
@@ -203,10 +262,12 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state, master_time, rte_pv_messages_count, rte_pv_corrupted_messages_count);
 
 		}
+#endif
 
 		// send wx frame to KISS host once every two minutes
 		if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval && main_kiss_enabled == 1) {
 
+			// wait if serial port is currently used
 			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
 			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln, &ln);
@@ -219,11 +280,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
-		   telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
-
 		packet_tx_multi_per_call_handler();
 
-		// if there weren't any erros related to communication with DS12B20 from previous function call
+		// ASSEMBLY QUALITY FACTORS
+
+		// if there weren't any erros related to the communication with DS12B20 from previous function call
 		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
 			dallas_qf = rte_wx_current_dallas_qf;	// it might be DEGRADATED so we need to copy a value directly
 
@@ -318,7 +379,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		}
 		else {
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 			// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
 			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf, rte_wx_umb_qf);
 			if (config_mode->wx == 1) {
@@ -353,6 +414,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	}
 
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
+
+#ifdef PARAMETEO
+		telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+#endif
+
 		packet_tx_multi_per_call_handler();
 
 		if (config_mode->victron == 1) {
@@ -380,6 +446,10 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			umb_clear_error_history(&rte_wx_umb_context);
 		}
+
+		#ifdef STM32L471xx
+		packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
+		#endif
 
 		packet_tx_telemetry_descr_counter = 0;
 	}

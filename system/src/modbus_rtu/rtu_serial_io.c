@@ -549,7 +549,7 @@ int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl
 	memset(out, 0x00, out_buffer_ln);
 //#ifdef _MODBUS_RTU
 
-	string_ln = snprintf(out, out_buffer_ln, ">MT %lX, LRET %lX, LSCT %lX, NSSC %X, NSE %X, RXB %lX, RXI %X, TXB %lX",
+	string_ln = snprintf(out, out_buffer_ln, ">[MT: %lX][LRET: %lX][LSCT: %lX][NSSC: %X][NSE: %X][RXB: %lX][RXI %X][TXB %lX]",
 												main_get_master_time(),
 												rte_rtu_last_modbus_rx_error_timestamp,
 												rtu_time_of_last_successfull_comm,
