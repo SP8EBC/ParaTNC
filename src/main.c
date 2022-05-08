@@ -119,6 +119,23 @@
 #define CONFIG_SECOND_FAIL_RESTORING	  	(1 << 4)
 #define CONFIG_SECOND_CRC_OK				(1 << 5)
 
+/**
+ * A foreword about '#define' mess. This software is indented to run on at least two
+ * different hardware platform. First which is ParaTNC basing on STM32F100 and second
+ * ParaMETEO using STM32L476. In future more platforms may appear. Like ParaTNC2 which
+ * will be a ParaMETEO without battery charging and in form factor similar to ParaTNC.
+ *
+ * To obtain such compatibility a lot of #defines and different makefiles has to be used.
+ * Some parts of the code are 'included' per target CPU basis, as are independent from
+ * target platform either directly (like handling serial port or GPIO configuration), or
+ * as a result of an assumption that all target plaforms with STML476 will have GSM modem.
+ *
+ * Some platforms had or may have in the future few hadware revisions. ParaTNC had
+ * revisions A, B and C. Currently A and B are abandoned an assumption is that all ParaTNC
+ * builds applies to C. A choose of hardware revision is done in file 'station_config_target_hw.h'
+ * which is currently empty
+ */
+
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at

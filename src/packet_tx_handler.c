@@ -104,6 +104,8 @@ inline void packet_tx_multi_per_call_handler(void) {
 void packet_tx_tcp_handler(void) {
 #ifdef STM32L471xx
 
+	uint8_t result = 0;
+
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
 		aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
@@ -147,9 +149,11 @@ void packet_tx_tcp_handler(void) {
 		packet_tx_trigger_tcp ^= API_TRIGGER_METEO;
 	}
 	else if ((packet_tx_trigger_tcp & RECONNECT_APRSIS) != 0) {
-		aprsis_connect_and_login_default();
+		result = aprsis_connect_and_login_default();
 
-		packet_tx_trigger_tcp ^= RECONNECT_APRSIS;
+		if (result == APRSIS_OK) {
+			packet_tx_trigger_tcp ^= RECONNECT_APRSIS;
+		}
 	}
 #endif
 }

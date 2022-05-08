@@ -76,7 +76,7 @@ void wx_pwr_switch_case_off_parameteo() {
 }
 
 void wx_pwr_switch_case_off_paratnc() {
-#if (defined PARATNC_HWREV_C)
+#if (defined STM32F10X_MD_VL)
 		// Turn on the +12V_SW voltage
 		GPIO_SetBits(GPIOA, GPIO_Pin_6);
 #endif

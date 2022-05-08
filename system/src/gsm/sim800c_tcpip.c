@@ -238,6 +238,9 @@ void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * st
 		// wait for OK to be received
 		srl_receive_data_with_callback(srl_context, gsm_sim800_escape_terminating_callback);
 
+		// start timeout calculation
+		srl_context->srl_rx_timeout_calc_started = 1;
+
 		// wait for it to finish
 		srl_wait_for_rx_completion_or_timeout(srl_context, & receive_result);
 

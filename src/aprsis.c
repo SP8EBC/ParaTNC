@@ -75,7 +75,12 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 	aprsis_passcode = (int32_t)passcode;
 
-	sprintf(aprsis_callsign_with_ssid, "%s-%d", callsign, ssid);
+	if (ssid != 0) {
+		sprintf(aprsis_callsign_with_ssid, "%s-%d", callsign, ssid);
+	}
+	else {
+		sprintf(aprsis_callsign_with_ssid, "%s", callsign);
+	}
 
 	memset(aprsis_login_string, 0x00, 0x40);
 
@@ -91,7 +96,7 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 }
 
-uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
+aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
 	// this function has blocking io
 	uint8_t out = APRSIS_WRONG_STATE;
 
@@ -181,7 +186,7 @@ uint8_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t po
 
 }
 
-uint8_t aprsis_connect_and_login_default(void) {
+aprsis_return_t aprsis_connect_and_login_default(void) {
 
 	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port);
 }

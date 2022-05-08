@@ -81,6 +81,8 @@ static void api_construct_url_status(api_endpoint_t endpoint) {
 
 static void api_callback(uint16_t http_code, char * content, uint16_t content_lenght) {
 
+	http_client_close();
+
 
 }
 

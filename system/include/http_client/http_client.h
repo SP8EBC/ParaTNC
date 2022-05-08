@@ -50,6 +50,7 @@ extern uint16_t http_client_max_content_ln;
 void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context, uint8_t ignore_content_on_http_error);
 uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response);
 uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint16_t data_ln, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response);
+void http_client_close(void);
 
 char * http_client_get_server_response();
 uint16_t http_client_get_latest_http_code();

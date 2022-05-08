@@ -79,29 +79,19 @@ void io_pwr_init(void) {
 			GPIO_InitTypeDef GPIO_InitStructure;
 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
 			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-		#if (defined PARATNC_HWREV_A || defined PARATNC_HWREV_B)
-			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-		#elif (defined PARATNC_HWREV_C)
 			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-		#else
-		#error ("Hardware Revision not chosen.")
-		#endif
 			GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-		#if (defined PARATNC_HWREV_C)
 			// +12V PWR_CNTRL
 			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
 			GPIO_Init(GPIOA, &GPIO_InitStructure);
-		#endif
 
 			wx_pwr_state = WX_PWR_OFF;
 
 			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
 
-		#if (defined PARATNC_HWREV_C)
 			// +12V_SW PWR_CNTRL
 			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
-		#endif
 
 #endif
 

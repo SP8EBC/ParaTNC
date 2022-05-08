@@ -382,6 +382,10 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 	return out;
 }
 
+void http_client_close(void) {
+	gsm_sim800_tcpip_close(http_client_deticated_serial_context, http_client_deticated_sim800_state, 1);
+
+}
 
 char * http_client_get_server_response() {
 	return 0;
