@@ -18,7 +18,7 @@
 #define ENTRIES_STRING(ENTRY)			\
 	ENTRY(main_config_data_basic->callsign, callsign)	\
 	ENTRY(SW_VER, sw_ver)	\
-	ENTRY(SW_DATE, sw_data)	\
+	ENTRY(SW_DATE, sw_date)	\
 
 #define ENTRIES_32INT_STATUS(ENTRY)							\
 	ENTRY(master_time, master_time)						\

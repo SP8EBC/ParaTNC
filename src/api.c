@@ -69,10 +69,10 @@ static void api_construct_url_status(api_endpoint_t endpoint) {
 
 		switch (endpoint) {
 		case PARAMETEO_STATUS:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/status", api_base_url, api_station_name);
+			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/status/v1", api_base_url, api_station_name);
 			break;
 		case PARAMETEO_WX:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/measurements", api_base_url, api_station_name);
+			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/measurements/v1", api_base_url, api_station_name);
 			break;
 		}
 	}

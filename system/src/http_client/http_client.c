@@ -1,6 +1,7 @@
 #include "http_client/http_client.h"
 #include "http_client/http_client_rx_callback.h"
 #include "http_client/http_client_headers.h"
+#include "http_client_configuration.h"
 
 #include "gsm/sim800c_tcpip.h"
 
@@ -269,6 +270,9 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 
 			// check if data has been sent succesfully
 			if (connect_result == 0) {
+				// configure timeout for reception
+				srl_switch_timeout(http_client_deticated_serial_context, 1, HTTP_CLIENT_DEFAULT_TIMEOUT_MSEC);
+
 				// reset callback to initial state
 				http_client_rx_done_callback_init();
 
@@ -367,6 +371,9 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 
 			// check if data has been sent succesfully
 			if (connect_result == 0) {
+				// configure timeout for reception
+				srl_switch_timeout(http_client_deticated_serial_context, 1, HTTP_CLIENT_DEFAULT_TIMEOUT_MSEC);
+
 				// reset callback to initial state
 				http_client_rx_done_callback_init();
 

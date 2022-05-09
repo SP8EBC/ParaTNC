@@ -96,7 +96,7 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 }
 
-aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port) {
+aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon) {
 	// this function has blocking io
 	uint8_t out = APRSIS_WRONG_STATE;
 
@@ -158,7 +158,15 @@ aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uin
 						if (retval == 0) {
 							aprsis_logged = 1;
 
-							aprsis_send_beacon(0);
+							// set current timestamp as last
+							aprsis_last_keepalive_ts = master_time;
+
+							if (auto_send_beacon != 0) {
+								aprsis_send_beacon(0);
+							}
+
+							// set timeout for aprs-is server
+							srl_switch_timeout(aprsis_serial_port, 1, APRSIS_TIMEOUT_MS);
 
 							// wait for consecutive data
 							gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
@@ -186,9 +194,9 @@ aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uin
 
 }
 
-aprsis_return_t aprsis_connect_and_login_default(void) {
+aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon) {
 
-	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port);
+	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port, auto_send_beacon);
 }
 
 void aprsis_disconnect(void) {

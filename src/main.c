@@ -121,7 +121,7 @@
 
 /**
  * A foreword about '#define' mess. This software is indented to run on at least two
- * different hardware platform. First which is ParaTNC basing on STM32F100 and second
+ * different hardware platforms. First which is ParaTNC basing on STM32F100 and second
  * ParaMETEO using STM32L476. In future more platforms may appear. Like ParaTNC2 which
  * will be a ParaMETEO without battery charging and in form factor similar to ParaTNC.
  *
@@ -1289,7 +1289,7 @@ int main(int argc, char* argv[]){
 
 				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-				aprsis_connect_and_login_default();
+				aprsis_connect_and_login_default(1);
 
 //				if (gsm_sim800_gprs_ready == 1) {
 //
