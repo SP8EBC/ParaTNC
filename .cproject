@@ -537,6 +537,8 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="STM32L476_ParaMETEO"/>
+		<configuration configurationName="STM32F100_ParaTNC"/>
 		<configuration configurationName="STM32F100"/>
 		<configuration configurationName="Debug"/>
 		<configuration configurationName="Release">
