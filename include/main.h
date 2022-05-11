@@ -122,6 +122,22 @@ inline void main_wait_for_tx_complete(void) {
 	while(main_afsk.sending == 1);
 }
 
+inline void main_reset_pooling_timers(void) {
+	main_wx_sensors_pool_timer = 35000;
+
+	// global variable used as a timer to trigger packet sending
+	main_one_minute_pool_timer = 60000;
+
+	// one second pool interval
+	main_one_second_pool_timer = 1000;
+
+	// two second pool interval
+	main_two_second_pool_timer = 2000;
+
+	// ten second pool interval
+	main_ten_second_pool_timer = 10000;
+}
+
 inline void main_wx_decremenet_counter(void) {
 	if (main_wx_sensors_pool_timer > 0)
 		main_wx_sensors_pool_timer -= SYSTICK_TICKS_PERIOD;

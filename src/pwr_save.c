@@ -256,6 +256,7 @@ void pwr_save_exit_from_stop2(void) {
 		pwr_save_sleep_time_in_seconds = 60;
 	}
 
+	main_reset_pooling_timers();
 
 	switch(powersave_mode) {
 	case IN_L6_STATE:
@@ -880,8 +881,8 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
 								// TODO: Workaround here for HW-RevB!!!
-								//reinit_sensors= pwr_save_switch_mode_to_c1();
-								pwr_save_switch_mode_to_c0();
+								reinit_sensors= pwr_save_switch_mode_to_c1();
+								//pwr_save_switch_mode_to_c0();
 
 								// do not reinitialize everything as reinitialization had been done when switching to m4 mode
 								reinit_sensors = 0;

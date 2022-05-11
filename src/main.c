@@ -645,7 +645,7 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
   // swtich power to M4. turn on sensors but keep GSM modem turned off
-  pwr_save_switch_mode_to_m4();
+  pwr_save_switch_mode_to_c1();
 
 #endif
 
@@ -926,7 +926,9 @@ int main(int argc, char* argv[]){
    rte_main_battery_voltage = io_vbat_meas_get();
    rte_main_average_battery_voltage = rte_main_battery_voltage;
 
-   pwr_save_switch_mode_to_c0();
+   if (main_config_data_mode->gsm == 1) {
+	   pwr_save_switch_mode_to_c0();
+   }
 
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
