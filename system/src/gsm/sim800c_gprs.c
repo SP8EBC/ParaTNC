@@ -15,6 +15,7 @@ const char * ENABLE_EDGE				= "AT+CEGPRS=1,10\r\0";
 const char * START_GPRS					= "AT+CIICR\r\0";
 const char * GET_IP_ADDRESS				= "AT+CIFSR\r\0";
 const char * GET_CONNECTION_STATUS		= "AT+CIPSTATUS\r\0";
+const char * CONFIGURE_DTR				= "AT&D1\r\0";
 
 
 static const char * OK = "OK\r\n\0";
@@ -121,6 +122,9 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 
 		gsm_sim800_replace_non_printable_with_space(gsm_sim800_ip_address);
 	}
+	else if (gsm_at_command_sent_last == CONFIGURE_DTR) {
+		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
+	}
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS ) {
 
 		memset(gsm_sim800_connection_status_str, 0x00, 24);
@@ -161,6 +165,7 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 	else if (srl_context->srl_rx_state == SRL_RX_DONE || srl_context->srl_rx_state == SRL_RX_IDLE){
 		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);
 	}
+
 
 	// check if modem response is the same with what the library actualy expects to get
 	if (comparision_result != 0) {

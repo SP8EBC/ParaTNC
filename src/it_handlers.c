@@ -177,8 +177,9 @@ void I2C1_ER_IRQHandler(void) {
 
 void TIM2_IRQHandler( void ) {
 	TIM2->SR &= ~(1<<0);
-	if (delay_5us > 0)
+	if (delay_5us > 0) {
 		delay_5us--;
+	}
 
 }
 

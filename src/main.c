@@ -546,86 +546,8 @@ int main(int argc, char* argv[]){
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
-#if defined(STM32F10X_MD_VL)
-
-  // Configure I/O pins for USART1 (Kiss modem)
-  Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
-  Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
-
-  // Configure I/O pins for USART2 (wx meteo comm)
-  Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
-  Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
-
-#endif
-
-#if defined(STM32L471xx)
-  	// USART1 - KISS
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
-
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
-
-	// USART2 - METEO
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_3;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RX
-
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// TX
-
-	// USART3 - GSM
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;	// LL_GPIO_MODE_ALTERNATE
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_10;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// TX
-
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;  // LL_GPIO_MODE_ALTERNATE
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_11;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// RX
-
-#endif
-
-#if defined(STM32F10X_MD_VL)
-  Configure_GPIO(GPIOA,8,GPPP_OUTPUT_2MHZ);	// re/te
-  GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-#endif
-
-#if defined(STM32L471xx)
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// RE-TE
-#endif
+  // initializing UART gpio pins
+  io_uart_init();
 
 #if defined(STM32F10X_MD_VL)
   // enabling the clock for both USARTs

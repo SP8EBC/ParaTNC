@@ -20,6 +20,7 @@ extern const char * ENABLE_EDGE;
 extern const char * START_GPRS;
 extern const char * GET_IP_ADDRESS;
 extern const char * GET_CONNECTION_STATUS;
+extern const char * CONFIGURE_DTR;
 
 extern int8_t gsm_sim800_gprs_ready;
 

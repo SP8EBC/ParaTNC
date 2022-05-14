@@ -25,6 +25,25 @@ volatile char timm = 0;
 
 dallas_struct_t dallas;
 
+static void dallas_delay_stop(void) {
+	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
+
+	NVIC_DisableIRQ( TIM2_IRQn );
+}
+
+static void dallas_delay_start(void) {
+	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
+
+	NVIC_SetPriority(TIM2_IRQn, 1);
+	TIM2->PSC = 0;
+	TIM2->ARR = 119;
+	TIM2->CR1 |= TIM_CR1_DIR;
+	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
+	TIM2->CR1 |= TIM_CR1_CEN;
+	TIM2->DIER |= 1;
+	NVIC_EnableIRQ( TIM2_IRQn );	// enabling in case that it wasn't been enabled earlier
+}
+
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average) {
 
 #ifdef STM32F10X_MD_VL
@@ -88,14 +107,9 @@ void dallas_config_timer(void) {
 	NVIC_DisableIRQ( TIM7_IRQn );			// data transmission initializer
 	//NVIC_DisableIRQ( 25 );	// TODO: probably remainder of TX20 driver to be deleted
 
-	NVIC_SetPriority(TIM2_IRQn, 1);
-	TIM2->PSC = 0;
-	TIM2->ARR = 119;
-	TIM2->CR1 |= TIM_CR1_DIR;
-	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
-	TIM2->CR1 |= TIM_CR1_CEN;
-	TIM2->DIER |= 1;
-	NVIC_EnableIRQ( TIM2_IRQn );	// enabling in case that it weren't been enabled earlier
+
+	dallas_delay_start();
+
 	//timm = 1;
 }
 
@@ -107,14 +121,7 @@ void dallas_deconfig_timer(void) {
 	NVIC_EnableIRQ( TIM7_IRQn );	// data transmission initializer
 	//NVIC_EnableIRQ( 25 ); // TODO: probably remainder of TX20 driver to be deleted
 
-	// reverting back to APRS timings
-	//NVIC_SetPriority(TIM4_IRQn, 1);
-	//TIM4->PSC = 0;
-	//TIM4->ARR = 2499;
-	//TIM4->CR1 |= TIM_CR1_DIR;
-	//TIM4->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
-	//TIM4->DIER |= 1;
-//	NVIC_EnableIRQ( TIM4_IRQn );
+	dallas_delay_stop();
 	//timm = 0;
 }
 

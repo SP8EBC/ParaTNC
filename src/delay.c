@@ -7,13 +7,13 @@
 
 #include "main.h"
 
-uint16_t preset_delay_msecs = 0;
+int32_t preset_delay_msecs = 0;
 uint8_t preset_use_random = 0;
 
 // counter decrement in Systick handler
-volatile uint16_t delay_cnt = 0;
+volatile int32_t delay_cnt = 0;
 
-void delay_fixed(uint16_t delay_in_msecs) {
+void delay_fixed(int32_t delay_in_msecs) {
 
 	delay_cnt = delay_in_msecs;
 
@@ -23,7 +23,7 @@ void delay_fixed(uint16_t delay_in_msecs) {
 
 }
 
-uint32_t delay_fixed_with_count(uint16_t delay_in_msecs) {
+uint32_t delay_fixed_with_count(int32_t delay_in_msecs) {
 
 	uint32_t ret = 0;
 
@@ -41,7 +41,7 @@ void delay_random(void) {
 	uint16_t sample = main_get_adc_sample();
 
 	// random element of delay value could vary from 0 to 300msecs in 20msec steps
-	delay_cnt = (uint16_t)(preset_delay_msecs / 4) + (sample % 15) * 20;
+	delay_cnt = (int32_t)(preset_delay_msecs / 4) + (sample % 15) * 20;
 
 }
 
@@ -60,11 +60,12 @@ void delay_from_preset(void) {
 
 	delay_cnt = preset_delay_msecs;
 
-	while(delay_cnt > (uint16_t)0);
+
+	while(delay_cnt > (int32_t)0);
 
 	if (preset_use_random == 1) {
 		delay_random();
 	}
 
-
 }
+

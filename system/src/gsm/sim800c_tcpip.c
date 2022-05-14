@@ -4,6 +4,7 @@
 
 #include "main.h"
 #include "delay.h"
+#include "io.h"
 
 #include <string.h>
 
@@ -229,51 +230,59 @@ void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * st
 
 	uint8_t receive_result = 0;
 
-	volatile uint8_t escape_counter = 0;
-
 	if (*state == SIM800_TCP_CONNECTED || force == 1) {
 
-		do {
-			// set default timeout of 1200msec
-			srl_switch_timeout(srl_context, SRL_TIMEOUT_ENABLE, 2222);
+//		do {
+//			// set default timeout of 1200msec
+//			srl_switch_timeout(srl_context, SRL_TIMEOUT_ENABLE, 2222);
+//
+//			// send escape sequence to exit connection mode
+//			srl_send_data(srl_context, (const uint8_t*) ESCAPE, SRL_MODE_ZERO, strlen(ESCAPE), SRL_INTERNAL);
+//
+//			// wait for transmission to finish
+//			srl_wait_for_tx_completion(srl_context);
+//
+//			// wait for OK to be received
+//			srl_receive_data(srl_context, 4, SRL_NO_START_CHR, SRL_NO_STOP_CHR, SRL_ECHO_DISABLE, 0x7F, 0);
+//
+//			// start timeout calculation
+//			srl_switch_timeout_for_waiting(srl_context, SRL_TIMEOUT_ENABLE);
+//
+//			// wait for it to finish
+//			srl_wait_for_rx_completion_or_timeout(srl_context, & receive_result);
+//
+//			// check if we escaped from data mode
+//			if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), NEWLINE, 1) == 0) {
+//				break;
+//			}
+//			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), OK, 2) == 0) {
+//				break;
+//			}
+//			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), ESCAPE, 3) == 0) {
+//				// if module has already returned to command mode it will echo all input
+//				break;
+//			}
+//			else {
+//				if (receive_result == SRL_OK) {
+//					delay_fixed(200);
+//
+//				}
+//			}
+//
+//
+//		} while(escape_counter++ < 3);
 
-			// send escape sequence to exit connection mode
-			srl_send_data(srl_context, (const uint8_t*) ESCAPE, SRL_MODE_ZERO, strlen(ESCAPE), SRL_INTERNAL);
+		io___cntrl_gprs_dtr_low();
 
-			// wait for transmission to finish
-			srl_wait_for_tx_completion(srl_context);
+		// one second delay
+		delay_fixed(500);
 
-			// wait for OK to be received
-			srl_receive_data(srl_context, 4, SRL_NO_START_CHR, SRL_NO_STOP_CHR, SRL_ECHO_DISABLE, 0x7F, 0);
+		// release DTR
+		io___cntrl_gprs_dtr_high();
 
-			// start timeout calculation
-			srl_switch_timeout_for_waiting(srl_context, SRL_TIMEOUT_ENABLE);
+		delay_fixed(500);
 
-			// wait for it to finish
-			srl_wait_for_rx_completion_or_timeout(srl_context, & receive_result);
-
-			// check if we escaped from data mode
-			if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), NEWLINE, 1) == 0) {
-				break;
-			}
-			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), OK, 2) == 0) {
-				break;
-			}
-			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), ESCAPE, 3) == 0) {
-				// if module has already returned to command mode it will echo all input
-				break;
-			}
-			else {
-				if (receive_result == SRL_OK) {
-					delay_fixed(200);
-
-				}
-			}
-
-
-		} while(escape_counter++ < 3);
-
-		// send escape sequence to exit connection mode
+		// send tcp close command
 		srl_send_data(srl_context, (const uint8_t*) CLOSE_TCP, SRL_MODE_ZERO, strlen(CLOSE_TCP), SRL_INTERNAL);
 
 		// wait for transmission to finish

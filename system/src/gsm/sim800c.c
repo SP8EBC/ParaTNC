@@ -456,6 +456,29 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 		else if (gsm_at_command_sent_last == TRANSPARENT_MODE_ON) {
+
+			srl_send_data(srl_context, (const uint8_t*) CONFIGURE_DTR, SRL_MODE_ZERO, strlen(CONFIGURE_DTR), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = CONFIGURE_DTR;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// starting GPRS session has maximum response time of 65 seconds
+			srl_switch_timeout(srl_context, 1, 1000);		// TODO
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+
+		}
+		else if (gsm_at_command_sent_last == CONFIGURE_DTR) {
 			// create GPRS APN configuration string
 			sim800_gprs_create_apn_config_str((char * )srl_context->srl_tx_buf_pointer, srl_context->srl_tx_buf_ln);
 

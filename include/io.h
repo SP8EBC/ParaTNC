@@ -21,6 +21,8 @@
 #include <stm32l4xx.h>
 #endif
 
+void io_uart_init(void);
+
 void io_oc_init(void);
 void io_oc_output_low(void);
 void io_oc_output_hiz(void);
@@ -122,6 +124,14 @@ inline void io___cntrl_gprs_pwrkey_press() {
 inline void io___cntrl_gprs_pwrkey_release() {
 	GPIOA->BSRR |= GPIO_BSRR_BR7;
 
+}
+
+inline void io___cntrl_gprs_dtr_low() {
+	GPIOB->BSRR |= GPIO_BSRR_BR8;
+}
+
+inline void io___cntrl_gprs_dtr_high() {
+	GPIOB->BSRR |= GPIO_BSRR_BS8;
 }
 
 inline uint8_t io_get_cntrl_vbat_c(void) {
