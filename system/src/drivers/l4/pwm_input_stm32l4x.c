@@ -31,6 +31,10 @@ void pwm_input_io_init(void) {
 
 void pwm_input_init(uint8_t channel) {
 
+	RCC->APB2RSTR |= RCC_APB2RSTR_TIM8RST;
+	RCC->APB2RSTR &= (0xFFFFFFFF ^ RCC_APB2RSTR_TIM8RST);
+
+
 	// check if user provided a channel which make any sense
 	if (channel == 0 || channel > 2) {
 		return;
@@ -115,10 +119,15 @@ void pwm_input_pool(void) {
 	// check preconditions
 	if ((pwm_rising_edge != 0) && (pwm_falling_edge != 0)) {
 		if (pwm_rising_edge > pwm_falling_edge) {
-			// result value is in percents scaled * 10 (100 means 10 percents)
+			// result value is in percents scaled * 1000 (10 means 1 percent of Pulse width)
 			pwm_falling_edge *= 1000;
 
 			pwm_result = (pwm_falling_edge / pwm_rising_edge );
+
+			/**
+			 * We have a schmidt inverter at the input!!!
+			 */
+			pwm_result = 1000 - pwm_result;
 		}
 	}
 	else {
@@ -133,7 +142,7 @@ void pwm_input_pool(void) {
 		// switch the channel to second
 		pwm_input_init(2);
 	}
-	else if (pwm_input_current_channel == 1) {
+	else if (pwm_input_current_channel == 2) {
 		pwm_second_channel = pwm_result;
 
 		pwm_input_init(1);

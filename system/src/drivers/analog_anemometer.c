@@ -261,6 +261,8 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	// deinitialize TIM4 (windspeed)
 	LL_TIM_DeInit(TIM4);
 
+	LL_DMA_DeInit(DMA1, LL_DMA_CHANNEL_5);
+
 	// initialize timer basics
 	LL_TIM_Init(TIM4, &TIM_InitTypeDef);
 
