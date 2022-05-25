@@ -4,6 +4,7 @@
 #include "http_client_configuration.h"
 
 #include "gsm/sim800c_tcpip.h"
+#include "gsm/sim800_return_t.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -60,7 +61,7 @@ const char * http_client_default_port = "80";
  * Local, static buffers to fetch domain name or IP address from URI
  */
 #define HOSTNAME_LN 	32
-#define PORT_LN			5
+#define PORT_LN			6
 static char http_client_hostname[HOSTNAME_LN];
 static char http_client_port[PORT_LN];
 
@@ -69,12 +70,12 @@ static char http_client_port[PORT_LN];
  */
 static void http_client_response_done_callback(srl_context_t* context) {
 
-	gsm_sim800_tcpip_close(context, http_client_deticated_sim800_state, 1);
-
 	if (http_client_on_response_callback != 0) {
 		// execute a callback. addition '+1' is requires because 'http_client_content_end_index' points to the last character of response
 		http_client_on_response_callback(http_client_http_code, (char *)(context->srl_rx_buf_pointer + http_client_content_start_index), http_client_content_end_index - http_client_content_start_index + 1);
 	}
+
+	gsm_sim800_tcpip_close(context, http_client_deticated_sim800_state, 1);
 
 }
 
@@ -109,7 +110,7 @@ static uint16_t http_client_split_hostname_and_path(char * input, uint16_t input
 
 static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, char * port, uint16_t port_ln) {
 
-	char temp[5] = {0, 0, 0, 0, 0};
+	char temp[6] = {0, 0, 0, 0, 0, 0};
 
 	short i, j = 0;
 
@@ -127,7 +128,7 @@ static uint16_t http_client_get_port_from_url(char * input, uint16_t input_ln, c
 		if (last_character >= '0' && last_character <= '9' ) {
 
 			// copy maximum of 5 characters until ':'
-			for (i = 1; i < 6; i++) {
+			for (i = 1; i < 7; i++) {
 
 				// get current character
 				last_character = *(input + split_point - i);
@@ -216,9 +217,9 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 
 	uint16_t split_point = http_client_split_hostname_and_path(url, url_ln);
 
-	uint8_t out = 0;
+	uint8_t out = HTTP_CLIENT_OK;
 
-	uint8_t connect_result = -1;
+	sim800_return_t connect_result = -1;
 
 	uint16_t current_request_ln = 0;
 
@@ -248,7 +249,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 		connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state);
 
 		// if connection has been established
-		if (connect_result == 0) {
+		if (connect_result == SIM800_OK) {
 			// set appropriate state
 			http_client_state = HTTP_CLIENT_CONNECTED_IDLE;
 
@@ -269,7 +270,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 			connect_result = gsm_sim800_tcpip_write(http_client_deticated_serial_context->srl_tx_buf_pointer, current_request_ln, http_client_deticated_serial_context, http_client_deticated_sim800_state);
 
 			// check if data has been sent succesfully
-			if (connect_result == 0) {
+			if (connect_result == SIM800_OK) {
 				// configure timeout for reception
 				srl_switch_timeout(http_client_deticated_serial_context, 1, HTTP_CLIENT_DEFAULT_TIMEOUT_MSEC);
 
@@ -296,11 +297,11 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 
 uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, uint16_t data_ln, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response) {
 
-	uint8_t out = 0;
+	uint8_t out = HTTP_CLIENT_OK;
 
 	uint16_t split_point = http_client_split_hostname_and_path(url, url_ln);
 
-	uint8_t connect_result = -1;
+	sim800_return_t connect_result = -1;
 
 	uint16_t current_request_ln = 0;
 
@@ -337,7 +338,7 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 	connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state);
 
 	// if connection has been established
-	if (connect_result == 0) {
+	if (connect_result == SIM800_OK) {
 
 		// set appropriate state
 		http_client_state = HTTP_CLIENT_CONNECTED_IDLE;
@@ -370,7 +371,7 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 			connect_result = gsm_sim800_tcpip_write(http_client_deticated_serial_context->srl_tx_buf_pointer, current_request_ln, http_client_deticated_serial_context, http_client_deticated_sim800_state);
 
 			// check if data has been sent succesfully
-			if (connect_result == 0) {
+			if (connect_result == SIM800_OK) {
 				// configure timeout for reception
 				srl_switch_timeout(http_client_deticated_serial_context, 1, HTTP_CLIENT_DEFAULT_TIMEOUT_MSEC);
 

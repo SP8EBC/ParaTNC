@@ -467,7 +467,7 @@ const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) c
 
 		.api_enable = 1,
 
-		.api_base_url = "http://pogoda.cc:8080/meteo_backend",
+		.api_base_url = "http://157.25.103.93:22910/",
 
 		.api_station_name = "pilsko",
 

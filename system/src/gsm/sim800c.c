@@ -10,6 +10,7 @@
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c_inline.h"
 #include "gsm/sim800c_tcpip.h"
+#include "gsm/sim800_return_t.h"
 
 #include "main.h"
 

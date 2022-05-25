@@ -126,7 +126,7 @@ aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uin
 		retval = gsm_sim800_tcpip_connect(address, address_ln, port_str, 0x6, aprsis_serial_port, aprsis_gsm_modem_state);
 
 		// if connection was successful
-		if (retval == 0) {
+		if (retval == SIM800_OK) {
 			// wait for hello message '# aprsc 2.1.10-gd72a17c'
 			retval = gsm_sim800_tcpip_receive(0, 0, aprsis_serial_port, aprsis_gsm_modem_state, 0, 2000);
 
@@ -141,7 +141,7 @@ aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uin
 					// wait for server response
 					retval = gsm_sim800_tcpip_receive(0, 0, aprsis_serial_port, aprsis_gsm_modem_state, 0, 2000);
 
-					if (retval == 0) {
+					if (retval == SIM800_OK) {
 						receive_buff = srl_get_rx_buffer(aprsis_serial_port);
 
 						aprsis_connected = 1;

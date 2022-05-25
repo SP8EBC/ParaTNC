@@ -27,7 +27,7 @@ const char * TCP2 = "TCP2\0";
 const char * TCP3 = "TCP3\0";
 const char * TCP4 = "TCP4\0";
 
-#define LOCAL_BUFFER_LN		48
+#define LOCAL_BUFFER_LN		64
 static char local_buffer[LOCAL_BUFFER_LN];
 
 /**
@@ -66,20 +66,20 @@ static uint8_t gsm_sim800_escape_terminating_callback(uint8_t current_data, cons
 	return 0;
 }
 
-uint8_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, char * port, uint8_t port_ln, srl_context_t * srl_context, gsm_sim800_state_t * state) {
+sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, char * port, uint8_t port_ln, srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	// this function has blocking io
 
-	uint8_t out = 0;
+	sim800_return_t out = SIM800_OK;
 
-	uint8_t receive_result = 0xFF;
+	uint8_t receive_result = SIM800_UNSET;
 
 	int comparision_result = 0;
 
 	if (*state != SIM800_ALIVE) {
-		out = 1;
+		out = SIM800_WRONG_STATE_TO_CONNECT;
 	}
 	else if (address_ln + port_ln >= LOCAL_BUFFER_LN - sizeof(CONNECT_TCP) - 6) {
-		out = 2;
+		out = SIM800_ADDRESS_AND_PORT_TO_LONG;
 	}
 	else {
 		// reset the buffer
@@ -123,11 +123,14 @@ uint8_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, c
 			if (comparision_result == 0) {
 				*state = SIM800_TCP_CONNECTED;
 
-				out = 0;
+				out = SIM800_OK;
 			}
 			else {
-				out = 1;
+				out = SIM800_CONNECTING_FAILED;
 			}
+		}
+		else {
+			out = SIM800_CONNECTING_FAILED;
 		}
 
 	}
@@ -135,9 +138,9 @@ uint8_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, c
 	return out;
 }
 
-uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout, gsm_sim800_tcpip_receive_callback_t rx_done_callback) {
+sim800_return_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout, gsm_sim800_tcpip_receive_callback_t rx_done_callback) {
 
-	uint8_t out = 0;
+	sim800_return_t out = SIM800_OK;
 
 	// check if connection died
 	if (gsm_sim800_tcpip_connection_died == 1) {
@@ -147,10 +150,7 @@ uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_s
 	}
 
 	// check if library is in state when reception could be done
-	if (*state != SIM800_TCP_CONNECTED && gsm_sim800_tcpip_receiving == 1) {
-		out = 1;
-	}
-	else {
+	if (state == SIM800_TCP_CONNECTED || gsm_sim800_tcpip_receiving == 0) {
 
 		gsm_sim800_tcpip_async_receive_cbk = rx_done_callback;
 
@@ -165,12 +165,19 @@ uint8_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_s
 		}
 
 		srl_context->srl_rx_timeout_calc_started = 1;
+
+	}
+	else {
+		out = SIM800_WRONG_STATE_TO_RX;
+
 	}
 
 	return out;
 }
 
-uint8_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout) {
+sim800_return_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout) {
+
+	sim800_return_t out = SIM800_UNSET;
 
 	uint8_t waiting_result = 0xFF;
 
@@ -195,32 +202,52 @@ uint8_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_con
 		srl_context->srl_rx_buf_ln = temp_ln;
 	}
 
-	return waiting_result;
+	if (waiting_result == SRL_TIMEOUT) {
+		out = SIM800_RECEIVING_TIMEOUT;
+	}
+	else {
+		out = SIM800_OK;
+	}
+
+	return out;
+//	return waiting_result;
 }
 
-uint8_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
-	uint8_t out = 0;
+sim800_return_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
+	sim800_return_t out = SIM800_OK;
+
+	uint8_t serial_result;
 
 	// check if library is in correct state
 	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
-		out = srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+		serial_result = srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
+
+		if (serial_result != SRL_OK) {
+			out = SIM800_SEND_FAILED;
+		}
 
 		// this is async transfer so set a flat to block consecutive one
 		gsm_sim800_tcpip_transmitting = 1;
+	}
+	else {
+		out = SIM800_WRONG_STATE_TO_TX;
 	}
 
 	return out;
 }
 
-uint8_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
+sim800_return_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
-	uint8_t out = 0;
+	sim800_return_t out = SIM800_OK;
 
 	// check if library is in correct state
 	if (*state == SIM800_TCP_CONNECTED && gsm_sim800_tcpip_transmitting == 0) {
 		srl_send_data(srl_context, (const uint8_t*) data, SRL_MODE_ZERO, data_len, SRL_EXTERNAL);
 
 		srl_wait_for_tx_completion(srl_context);
+	}
+	else {
+		out = SIM800_WRONG_STATE_TO_TX;
 	}
 
 	return out;
@@ -328,7 +355,7 @@ void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_s
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
 
-	uint8_t out = 0;
+	sim800_return_t out = SIM800_OK;
 
 	int comparision_result = 0;
 
@@ -340,14 +367,14 @@ uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint
 		// if 'CLOSED' has been found
 		if (comparision_result == 0) {
 			// end the reception as connections is dead
-			out = 1;
+			out = SIM800_RX_TERMINATED;
 
 			// yes, we are not protected against sentence 'CLOSED' appeared among protocol data
 			gsm_sim800_tcpip_connection_died = 1;
 		}
 	}
 	else if (current_data == '\n') {
-		out = 1;
+		out = SIM800_RX_TERMINATED;
 	}
 
 	return out;
