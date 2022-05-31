@@ -43,6 +43,7 @@ extern uint8_t rte_wx_pressure_it;
 extern int16_t rte_wx_temperature_average_dallas;
 extern int16_t rte_wx_temperature_average_pt;
 extern int16_t rte_wx_temperature_average_internal;
+extern int16_t rte_wx_temperature_average_modbus;
 extern uint16_t rte_wx_pressure_average;
 #endif
 

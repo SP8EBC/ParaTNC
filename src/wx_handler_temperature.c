@@ -177,6 +177,10 @@ int32_t wx_get_temperature_dallas() {
 		output = -1;
 	}
 
+#if defined(STM32L471xx)
+		rte_wx_temperature_average_dallas = (int16_t)(rte_wx_temperature_average_external_valid * 10.0f);
+#endif
+
 	return output;
 }
 

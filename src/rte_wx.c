@@ -23,10 +23,15 @@ uint8_t rte_wx_pressure_it;
 #if defined(STM32L471xx)
 /**
  * These values are scaled * 10. As for now 'rte_wx_temperature_average_dallas'
- * is rescaled version of 'rte_wx_temperature_average_external_valid'
+ * is rescaled version of 'rte_wx_temperature_average_external_valid'. Some of
+ * values are redundant as for now. Normally 'rte_wx_temperature_external'
+ * stores the temperature measured by the sensor of choice (like dallas), which are
+ * then used to send meteo packets. In normal circumstances they might be more
+ * sensors which are measuring temperature
  */
 int16_t rte_wx_temperature_average_dallas = 0;
 int16_t rte_wx_temperature_average_pt = 0;
+int16_t rte_wx_temperature_average_modbus = 0;
 int16_t rte_wx_temperature_average_internal = 0;
 uint16_t rte_wx_pressure_average = 0;
 #endif
