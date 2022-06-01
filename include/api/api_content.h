@@ -43,6 +43,7 @@
 	ENTRY(rte_wx_temperature_average_dallas, temperature_dallas)	\
 	ENTRY(rte_wx_temperature_average_pt, temperature_pt)			\
 	ENTRY(rte_wx_temperature_average_internal, temperature_internal)\
+	ENTRY(rte_wx_temperature_average_modbus, temperature_modbus)\
 	ENTRY(rte_wx_pressure_average, pressure)						\
 	ENTRY(rte_wx_humidity_valid, humidity)						\
 	ENTRY(rte_wx_average_winddirection, wind_direction)				\
