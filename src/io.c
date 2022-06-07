@@ -112,7 +112,7 @@ void io_uart_init(void) {
 #if defined(STM32L471xx)
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
