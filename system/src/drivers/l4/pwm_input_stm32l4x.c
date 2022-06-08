@@ -19,6 +19,9 @@ uint32_t pwm_second_channel = 0;
 uint32_t pwm_first_rising = 0;
 uint32_t pwm_first_falling = 0;
 
+/**
+ * PWM_CH2 - contact towards the right side of a connector on HW-RevC. 2.5um dust from SDS sensor
+ */
 uint32_t pwm_second_rising = 0;
 uint32_t pwm_second_falling = 0;
 
@@ -59,8 +62,8 @@ void pwm_input_init(uint8_t channel) {
 	// disable timer
 	TIM8->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
 
-	// this will produce 10kHz timebase, counter will overflow every ~6.5 seconds
-	TIM8->PSC = 2399;
+	// this will produce 24kHz timebase, counter will overflow every ~2.7 seconds
+	TIM8->PSC = 999;
 
 	// reset CCER value
 	TIM8->CCER = 0;
