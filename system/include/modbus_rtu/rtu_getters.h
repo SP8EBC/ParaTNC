@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "config_data.h"
 
-int32_t rtu_get_temperature(float* out, const config_data_rtu_t * const config);
+int32_t rtu_get_temperature(int16_t* out, const config_data_rtu_t * const config);
 int32_t rtu_get_pressure(float* out, const config_data_rtu_t * const config);
 int32_t rtu_get_wind_direction(uint16_t* out, const config_data_rtu_t * const config);
 int32_t rtu_get_wind_speed(uint16_t* out, const config_data_rtu_t * const config);

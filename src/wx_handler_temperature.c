@@ -28,8 +28,9 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 	int32_t measurement_result = -1;						// used for return values from various functions
 	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
+	int16_t temp = 0;
 
-	// choose a temperature source from the configuration
+	// choose main temperature source from the configuration. main sensor is something which is used to send data though aprs
 	switch(config_sources->temperature) {
 		// controller measures two temperatures
 		//	internal - provided by pressure/humidity sensor on PCB
@@ -97,7 +98,9 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		case WX_SOURCE_FULL_RTU: {
 
 			// get the value read from RTU registers
-			measurement_result = rtu_get_temperature(&rte_wx_temperature_external, config_rtu);
+			measurement_result = rtu_get_temperature(&temp, config_rtu);
+
+			rte_wx_temperature_external = (float)temp / 10.0f;
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
@@ -112,6 +115,18 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			break;
 
 	}
+
+#if defined(STM32L471xx)
+	// get modbus temperature reading regardless if it has been chosen as main
+	if (config_mode->wx_modbus == 1) {
+		rtu_get_temperature(&rte_wx_temperature_average_modbus, config_rtu);
+	}
+
+	// get temperature from dallas sensor if this isn't a sensor of choice
+	if (config_sources->temperature != WX_SOURCE_INTERNAL) {
+		wx_get_temperature_dallas();
+	}
+#endif
 
 	return parameter_result;
 }

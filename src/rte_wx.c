@@ -10,6 +10,16 @@
 #include <wx_handler.h>
 #include "main.h"
 
+/**
+ * A little word of explanataion:
+ * 	-> rte_wx_temperature_external_xxxxxx - these are default temperature readings provided
+ * 											by a sensor of choice. It might be dallas, modbus-rtu or other
+ *
+ * 	-> rte_wx_temperature_inernal_xxxxx - 	this is always a temperature measured by inernal pressure and/or
+ * 											humidity sensor. The intension here is to monitor how hot the
+ * 											controller internally
+ *
+ */
 
 float rte_wx_temperature_external = 0.0f, rte_wx_temperature_external_valid = 0.0f;
 float rte_wx_temperature_external_slew_rate = 0.0f;
@@ -26,8 +36,10 @@ uint8_t rte_wx_pressure_it;
  * is rescaled version of 'rte_wx_temperature_average_external_valid'. Some of
  * values are redundant as for now. Normally 'rte_wx_temperature_external'
  * stores the temperature measured by the sensor of choice (like dallas), which are
- * then used to send meteo packets. In normal circumstances they might be more
- * sensors which are measuring temperature
+ * then used to send APRS meteo packets. In normal circumstances they might be more
+ * sensors which are measuring temperature. Values below are used by API client
+ * to POST them directly into Meteo System backend, which accepts more than one
+ * source of temperature at once
  */
 int16_t rte_wx_temperature_average_dallas = 0;
 int16_t rte_wx_temperature_average_pt = 0;

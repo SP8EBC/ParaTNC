@@ -6,8 +6,21 @@
 #include <stm32l4xx_ll_gpio.h>
 
 uint8_t pwm_input_current_channel = 0;
+
+/**
+ * PWM values are scaled * 10. Value of 399 means 39.9% of pulse width
+ */
 uint32_t pwm_first_channel = 0;
 uint32_t pwm_second_channel = 0;
+
+/**
+ * PWM_CH1 - contact towards the right side of a connector on HW-RevC. 1um dust from SDS sensor
+ */
+uint32_t pwm_first_rising = 0;
+uint32_t pwm_first_falling = 0;
+
+uint32_t pwm_second_rising = 0;
+uint32_t pwm_second_falling = 0;
 
 
 void pwm_input_io_init(void) {
@@ -116,18 +129,42 @@ void pwm_input_pool(void) {
 	uint32_t pwm_falling_edge = TIM8->CCR2 + 1;
 	uint32_t pwm_result = 0;
 
+	int8_t inverted = 1;
+
+	if (pwm_input_current_channel == 1) {
+		pwm_first_falling = pwm_falling_edge;
+		pwm_first_rising = pwm_rising_edge;
+
+	}
+	else if (pwm_input_current_channel == 2) {
+		pwm_second_falling = pwm_falling_edge;
+		pwm_second_rising = pwm_rising_edge;
+	}
+
 	// check preconditions
-	if ((pwm_rising_edge != 0) && (pwm_falling_edge != 0)) {
-		if (pwm_rising_edge > pwm_falling_edge) {
+	if ((pwm_rising_edge > 1) && (pwm_falling_edge > 1)) {
+		if (pwm_rising_edge != pwm_falling_edge) {
+			if (pwm_rising_edge < pwm_falling_edge) {
+				// swap counter values if falling edge is bigger
+				pwm_result = pwm_falling_edge;
+				pwm_falling_edge = pwm_rising_edge;
+				pwm_rising_edge = pwm_result;
+
+				inverted = 0;
+			}
+
 			// result value is in percents scaled * 1000 (10 means 1 percent of Pulse width)
 			pwm_falling_edge *= 1000;
 
 			pwm_result = (pwm_falling_edge / pwm_rising_edge );
 
-			/**
-			 * We have a schmidt inverter at the input!!!
-			 */
-			pwm_result = 1000 - pwm_result;
+
+			if (inverted == 1) {
+				/**
+				 * We have a schmidt inverter at the input!!!
+				 */
+				pwm_result = 1000 - pwm_result;
+			}
 		}
 	}
 	else {
@@ -135,7 +172,6 @@ void pwm_input_pool(void) {
 	}
 
 	if (pwm_input_current_channel == 1) {
-
 		// save a result of PWM measurement
 		pwm_first_channel = pwm_result;
 

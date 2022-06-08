@@ -19,15 +19,15 @@
 #include "rte_rtu.h"
 #include "main.h"
 
-int32_t rtu_get_temperature(float* out, const config_data_rtu_t * const config) {
+int32_t rtu_get_temperature(int16_t* out, const config_data_rtu_t * const config) {
 
 	int32_t retval = MODBUS_RET_UNINITIALIZED;
 
 	rtu_register_data_t* source = 0;
 
-	uint16_t raw_register_value = 0;
+	int16_t signed_raw_reguster_value = 0;
 
-	float physical_register_value = 0.0f;
+	int16_t physical_register_value = 0.0f;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -94,12 +94,12 @@ int32_t rtu_get_temperature(float* out, const config_data_rtu_t * const config) 
 
 	if (retval == MODBUS_RET_UNINITIALIZED && source != 0) {
 		// copy the raw value from modbus register data
-		raw_register_value = source->registers_values[0];
+		signed_raw_reguster_value = (int16_t)source->registers_values[0];
 
 		// rescale the raw value to target value in degrees C
 		physical_register_value = 	(
-				scaling_a * (float)raw_register_value * (float)raw_register_value +
-				scaling_b * (float)raw_register_value +
+				scaling_a * signed_raw_reguster_value * signed_raw_reguster_value +
+				scaling_b * signed_raw_reguster_value +
 				scaling_c
 				) /
 				scaling_d;
