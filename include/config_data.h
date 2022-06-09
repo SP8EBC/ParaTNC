@@ -70,6 +70,9 @@ typedef struct config_data_mode_t {
 	// only for ParaMETEO
 	config_data_powersave_mode_t powersave;
 
+	// only for ParaMETEO - keeps GSM modem always on if GSM is configured to be used
+	uint8_t powersave_keep_gsm_always_enabled;
+
 	// only for ParaMETEO
 	uint8_t gsm;
 

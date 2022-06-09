@@ -6,6 +6,7 @@
  */
 
 #include "wx_handler_pressure.h"
+#include "wx_handler_temperature.h"
 #include "wx_handler.h"
 
 #include "rte_wx.h"
@@ -25,7 +26,7 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 	float pressure_average_sum = 0.0f;
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// quality factor for UMB communication
 
-	switch(config_sources->temperature) {
+	switch(config_sources->pressure) {
 	case WX_SOURCE_INTERNAL: {
 
 		// switch between MS5611 and BME280 depends on user configuration
@@ -40,6 +41,14 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 		if (measurement_retval == BME280_OK || measurement_retval == MS5611_OK) {
 			// BME280 measures all three things at one call to the driver
 			output |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;
+
+			// get internal temperature
+			if (config_mode->wx_ms5611_or_bme == 1) {
+				measurement_retval = wx_get_temperature_bme280(&rte_wx_temperature_internal);
+			}
+			else {
+				measurement_retval = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
+			}
 
 			// add the current pressure into buffer for average calculation
 			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
@@ -114,6 +123,11 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 	case WX_SOURCE_DAVIS_SERIAL:
 		break;
 	}
+
+#if defined(STM32L471xx)
+	rte_wx_pressure_average = (uint16_t)(rte_wx_pressure_valid * 10.0f);
+
+#endif
 
 	return output;
 

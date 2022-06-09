@@ -460,6 +460,38 @@ int pwr_save_switch_mode_to_m4(void) {
 	return 1;
 }
 
+int pwr_save_switch_mode_to_m4a(void) {
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+		return 0;
+	}
+
+	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
+	io___cntrl_vbat_s_enable();
+
+	// turn OFF +5V_R and VBATT_SW_R
+	io___cntrl_vbat_r_disable();
+
+	// turn OFF +4V_G
+	io___cntrl_vbat_g_enable();
+
+	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
+	io___cntrl_vbat_c_enable();
+
+	// unlock access to backup registers
+	pwr_save_unclock_rtc_backup_regs();
+
+	// clear all previous powersave indication bits
+	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+
+	// set for C3 mode
+	REGISTER |= IN_M4_STATE;
+
+	// lock access to backup
+	pwr_save_lock_rtc_backup_regs();
+
+	return 1;
+}
+
 void pwr_save_switch_mode_to_i5(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
@@ -717,7 +749,12 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 					}
 					else {		// WX
 						if (minutes_to_wx > 2) {
-							reinit_sensors = pwr_save_switch_mode_to_m4();
+							if (config->powersave_keep_gsm_always_enabled == 0){
+								reinit_sensors = pwr_save_switch_mode_to_m4();
+							}
+							else {
+								reinit_sensors = pwr_save_switch_mode_to_m4a();
+							}
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c0();
@@ -768,7 +805,12 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 					}
 					else {		// WX + GSM
 						if (minutes_to_wx > 1) {
-							reinit_sensors = pwr_save_switch_mode_to_m4();
+							if (config->powersave_keep_gsm_always_enabled == 0){
+								reinit_sensors = pwr_save_switch_mode_to_m4();
+							}
+							else {
+								reinit_sensors = pwr_save_switch_mode_to_m4a();
+							}
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c0();
@@ -843,7 +885,12 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 								}
 								else {
 									// if there is 30 to 60 seconds to next wx packet
-									reinit_sensors = pwr_save_switch_mode_to_m4();
+									if (config->powersave_keep_gsm_always_enabled == 0){
+										reinit_sensors = pwr_save_switch_mode_to_m4();
+									}
+									else {
+										reinit_sensors = pwr_save_switch_mode_to_m4a();
+									}
 								}
 							}
 						}
@@ -888,7 +935,12 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 								reinit_sensors = 0;
 							}
 							else {
-								reinit_sensors= pwr_save_switch_mode_to_m4();
+								if (config->powersave_keep_gsm_always_enabled == 0){
+									reinit_sensors = pwr_save_switch_mode_to_m4();
+								}
+								else {
+									reinit_sensors = pwr_save_switch_mode_to_m4a();
+								}
 							}
 						}
 					}

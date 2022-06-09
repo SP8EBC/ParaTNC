@@ -23,6 +23,7 @@
  * |   C2  |Running|   OFF   	|           ON           |   OFF   |   ON    |
  * |   C3  |Running|   OFF   	|           ON           |   ON    |   ON    |
  * |   M4  |Running|   ON    	|           OFF          |   OFF   |   OFF   |
+ * |   M4a |Running|   ON    	|           OFF          |   ON	   |   OFF   |
  * |   I5  |Running|   OFF   	|           OFF          |   OFF   |   OFF   |
  * |   L6  | Stop2 |   OFF   	|           OFF          |   ON    |   OFF   |
  * |   L7  | Stop2 |   OFF   	|           OFF          |   OFF   |   OFF   |
@@ -76,7 +77,8 @@
  *
  *
  *
- *  Transitions between states depends on configuration and value of config_data_powersave_mode_t
+ *  Transitions between states depends on configuration and value of config_data_powersave_mode_t.
+ *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will swtich to modem M4a instead of M4
  *
  *  ====================================================================================================================================|
  *  |   Mode                |   Powersave Mode  |                                                                                       |
@@ -117,6 +119,7 @@ int pwr_save_switch_mode_to_c1(void);
 void pwr_save_switch_mode_to_c2(void);
 void pwr_save_switch_mode_to_c3(void);
 int pwr_save_switch_mode_to_m4(void);
+int pwr_save_switch_mode_to_m4a(void);
 void pwr_save_switch_mode_to_i5(void);
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time);
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time);

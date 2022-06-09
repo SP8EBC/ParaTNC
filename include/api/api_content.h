@@ -45,14 +45,15 @@
 	ENTRY(rte_wx_temperature_average_internal, temperature_internal)\
 	ENTRY(rte_wx_temperature_average_modbus, temperature_modbus)\
 	ENTRY(rte_wx_pressure_average, pressure)						\
-	ENTRY(rte_wx_humidity_valid, humidity)						\
+	ENTRY(rte_wx_humidity, humidity)						\
 	ENTRY(rte_wx_average_winddirection, wind_direction)				\
 	ENTRY(rte_wx_average_windspeed, wind_average)					\
 	ENTRY(rte_wx_max_windspeed, wind_gust)					\
 	ENTRY(rte_wx_windspeed[rte_wx_windspeed_it], wind_current)					\
 	ENTRY(rte_wx_get_minimum_windspeed(), wind_minimal)					\
-	ENTRY(rte_wx_pm2_5, rte_wx_pm2_5)		\
-	ENTRY(rte_wx_pm10, rte_wx_pm10)	\
+	ENTRY(rte_wx_pm2_5, pm2_5)		\
+	ENTRY(rte_wx_pm10, pm10)	\
+	ENTRY(main_config_data_basic->ssid, ssid)	\
 
 #define ENTRIES_32INT_WEATHER(ENTRY)		\
 	ENTRY(master_time, master_time)						\
@@ -60,6 +61,7 @@
 
 #define ENTRIES_STRING_WEATHER(ENTRY)			\
 	ENTRY(main_config_data_basic->callsign, callsign)	\
+	ENTRY(api_mac, api_mac)	\
 
 
 #endif /* API_STATUS_CONTENT_H_ */

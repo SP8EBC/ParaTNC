@@ -14,6 +14,7 @@
 #include "http_client/http_client.h"
 
 #include "stdint.h"
+#include "aes.h"
 
 /**
  * Buffers for generating JSON and URL
@@ -37,6 +38,22 @@ uint8_t api_retval = 0xFF;
  * Cycle counter to control the frequency of api calls
  */
 int8_t api_cycle_counter = 0;
+
+/**
+ * Message authentication code encrypted by AES128 and converted to hex string
+ */
+char api_mac[33];
+
+/**
+ * Buffer to perform encryption of the MAC
+ */
+uint8_t api_aes_mac_buffer[16];
+
+struct AES_ctx api_aes_context;
+
+const uint8_t api_shared_secret[] = API_SHARED_SECRET;
+
+const uint8_t api_iv[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /**
  * This is used to retrigger specific api communication in case of any request
@@ -89,6 +106,9 @@ static void api_callback(uint16_t http_code, char * content, uint16_t content_le
 void api_init(const char * api_base, const char * station_name) {
 	api_base_url = api_base;
 	api_station_name = station_name;
+	AES_init_ctx_iv(&api_aes_context, api_shared_secret, api_iv);
+	memset(api_mac, 0x00, 33);
+	memset(api_mac, '0', 32);
 }
 
 void api_send_json_status(void) {

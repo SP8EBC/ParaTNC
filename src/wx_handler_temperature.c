@@ -126,6 +126,8 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 	if (config_sources->temperature != WX_SOURCE_INTERNAL) {
 		wx_get_temperature_dallas();
 	}
+
+	rte_wx_temperature_average_internal = (int16_t)(rte_wx_temperature_internal * 10.0f);
 #endif
 
 	return parameter_result;
