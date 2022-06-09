@@ -15,7 +15,7 @@
 #define TX_BUFFER_2_LN 96
 
 #define RX_BUFFER_3_LN 768
-#define TX_BUFFER_3_LN 768
+#define TX_BUFFER_3_LN 800
 
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF

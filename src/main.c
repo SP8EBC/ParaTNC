@@ -1313,6 +1313,14 @@ int main(int argc, char* argv[]){
 			}
 
 			pwm_input_pool();
+
+			if (pwm_first_channel != 0) {
+				rte_wx_pm2_5 = pwm_first_channel;
+			}
+
+			if (pwm_second_channel != 0) {
+				rte_wx_pm10 = pwm_second_channel;
+			}
 			#endif
 
 			main_set_monitor(9);

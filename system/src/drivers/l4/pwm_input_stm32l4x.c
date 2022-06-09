@@ -10,17 +10,25 @@ uint8_t pwm_input_current_channel = 0;
 /**
  * PWM values are scaled * 10. Value of 399 means 39.9% of pulse width
  */
+
+/**
+ * 1um, PM2.5 dust from SDS sensor
+ */
 uint32_t pwm_first_channel = 0;
+
+/**
+ * 2.5um/PM10 dust from SDS sensor
+ */
 uint32_t pwm_second_channel = 0;
 
 /**
- * PWM_CH1 - contact towards the right side of a connector on HW-RevC. 1um dust from SDS sensor
+ * PWM_CH1 - contact towards the right side of a connector on HW-RevC. 1um, PM2.5 dust from SDS sensor
  */
 uint32_t pwm_first_rising = 0;
 uint32_t pwm_first_falling = 0;
 
 /**
- * PWM_CH2 - contact towards the right side of a connector on HW-RevC. 2.5um dust from SDS sensor
+ * PWM_CH2 - contact towards the right side of a connector on HW-RevC. 2.5um/PM10 dust from SDS sensor
  */
 uint32_t pwm_second_rising = 0;
 uint32_t pwm_second_falling = 0;

@@ -51,10 +51,16 @@
 	ENTRY(rte_wx_max_windspeed, wind_gust)					\
 	ENTRY(rte_wx_windspeed[rte_wx_windspeed_it], wind_current)					\
 	ENTRY(rte_wx_get_minimum_windspeed(), wind_minimal)					\
+	ENTRY(rte_wx_pm2_5, rte_wx_pm2_5)		\
+	ENTRY(rte_wx_pm10, rte_wx_pm10)	\
 
 #define ENTRIES_32INT_WEATHER(ENTRY)		\
-	ENTRY(pwm_first_channel, pwm_first)		\
-	ENTRY(pwm_second_channel, pwm_second)	\
+	ENTRY(master_time, master_time)						\
+
+
+#define ENTRIES_STRING_WEATHER(ENTRY)			\
+	ENTRY(main_config_data_basic->callsign, callsign)	\
+
 
 #endif /* API_STATUS_CONTENT_H_ */
 

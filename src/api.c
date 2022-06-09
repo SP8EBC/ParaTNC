@@ -18,7 +18,7 @@
 /**
  * Buffers for generating JSON and URL
  */
-#define API_BUFFER_LN	512
+#define API_BUFFER_LN	640
 char api_buffer[API_BUFFER_LN];
 #define URL_BUFFER_LN	96
 char api_url_buffer[URL_BUFFER_LN];
