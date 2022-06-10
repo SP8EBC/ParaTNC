@@ -478,8 +478,9 @@ const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) 
 		// 78.88.56.14
 		//.api_base_url = "http://78.88.56.14:8080/",
 		.api_base_url = "http://157.25.103.93:22910/",
+		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
 
-		.api_station_name = "pilsko",
+		.api_station_name = "abakus",
 
 		.aprsis_enable = 1,
 
