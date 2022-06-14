@@ -115,7 +115,7 @@
   * @{
   */
 
-#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0xFFFF
+#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0x3FFFF
 
 
 #if !defined  (HSE_VALUE)
@@ -426,6 +426,11 @@ int system_clock_configure_l4(void)
 }
 
 void system_clock_start_rtc_l4(void) {
+
+	if ((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
+		return;
+	}
+
 	// starting RTC
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
@@ -482,6 +487,9 @@ int system_clock_configure_rtc_l4(void) {
 			timeout_counter++;
 		}
 
+		// reset timeout timer
+		timeout_counter = 0;
+
 		// but clear reset flag before
 		RCC->BDCR &= (0xFFFFFFFF ^ RCC_BDCR_BDRST);
 
@@ -495,7 +503,13 @@ int system_clock_configure_rtc_l4(void) {
 		RCC->BDCR |= RCC_BDCR_LSEON;
 
 		// wait for LSE to start
-		while((RCC->BDCR & RCC_BDCR_LSERDY) == 0);
+		while((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
+			if (timeout_counter++ > SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT) {
+				retval = -1;
+
+				break;
+			}
+		}
 	}
 
 	// starting and configuring the RTC itself
