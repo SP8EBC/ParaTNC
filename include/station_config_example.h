@@ -8,26 +8,38 @@
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
+#define _POWERSAVE_NORMAL
+//#define _POWERSAVE_AGGRESIVE
 /*  ------------------ */
 /* 	MODES OF OPERATION */
 
 #define _METEO				// Enable meteo station
-#define _DIGI				// Enable WIDE1-1 digipeater
-//#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
-//#define _VICTRON			// Enable support for Victron VE.Direct protocol
 
+//#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI_VISCOUS
+#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+
+#define	_GSM			// only for ParaMETEO
+#define _GSM_KEEP_MODEM_ALWAYS_ON
+
+#define _WX_DOUBLE_TRANSMIT
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
 
-//#define PARATNC_HWREV_A
-//#define PARATNC_HWREV_B
-#define PARATNC_HWREV_C
+/**
+ * Enable support for Victron VE.Direct protocol. This is independent from wx sensor configuration
+ */
+//#define _VICTRON
 
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */
 
-// If none of those three sources are chosen (uncommented) the software will use internal sensors
+
+/**
+ * Three defines below enables or disabled listed communication drivers. Enabling any of then doesn't means
+ * that these are used as a data source automatically. That shall be set in 'DATA SOURCES CONFIG' section.
+ */
 
 //#define _UMB_MASTER
 //#define _DAVIS_SERIAL
@@ -42,6 +54,9 @@
 							// May be used even if _METEO is not enabled
 #define _DALLAS_SPLIT_PIN		// Must be enabled for all ParaTNC hardware revisions
 
+/* 	WEATHER/METEO CONFIGURATION */
+/* ---------------------------- */
+
 
 /******** 	INTERNAL SENSORS CONFIGURATION *****************/
 
@@ -49,9 +64,12 @@
 #define _ANEMOMETER_ANALOGUE	// Use analogue/mechanical (like Davis 6410) as an internal anemometr
 #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
 
-//#define _SENSOR_MS5611
-#define _SENSOR_BME280
+#define _SENSOR_MS5611
+//#define _SENSOR_BME280
+/******** 	INTERNAL SENSORS CONFIGURATION *****************/
 
+
+/******** 	UMB MASTER CONFIGURATION *****************/
 #define _UMB_SLAVE_ID 	 		1
 #define _UMB_SLAVE_CLASS 		8
 #define _UMB_CHANNEL_WINDSPEED			460
@@ -59,8 +77,33 @@
 #define _UMB_CHANNEL_WINDDIRECTION		580
 #define _UMB_CHANNEL_TEMPERATURE		100
 #define _UMB_CHANNEL_QFE				300
+/******** 	UMB MASTER CONFIGURATION *****************/
 
-/******** 	INTERNAL SENSORS CONFIGURATION *****************/
+
+/*************** DATA SOURCES CONFIG ***********************/
+//#define _TEMPERATURE_INTERNAL
+//#define _TEMPERATURE_UMB
+#define _TEMPERATURE_RTU
+//#define _TEMPERATURE_DAVIS
+//
+#define _PRESSURE_INTERNAL
+//#define _PRESSURE_UMB
+//#define _PRESSURE_RTU
+//#define _PRESSURE_DAVIS
+//
+//#define _HUMIDITY_INTERNAL
+//#define _HUMIDITY_UMB
+#define _HUMIDITY_RTU
+//#define _HUMIDITY_DAVIS
+//
+//
+#define _WIND_INTERNAL
+//#define _WIND_UMB
+//#define _WIND_RTU
+//#define _WIND_FULL_RTU
+//#define _WIND_DAVIS
+/*************** DATA SOURCES CONFIG ***********************/
+
 
 /* 	WEATHER/METEO CONFIGURATION */
 /* ---------------------------- */
@@ -70,20 +113,21 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "N0CALL"
-#define _SSID 0
-#define _LAT		4935.00
+#define _CALL "ABAKUS"
+#define _SSID 1
+#define _LAT		4948.11
 #define _LATNS		'N'
-#define _LON		01919.19
+#define _LON		01903.22
 #define _LONWE		'E'
 #define _COMMENT	"Set Your configuration in this file and rename to station_config.h"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
-#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
+//#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
 //#define _SYMBOL_HOUSE			// uncomment if you want house symbol
 //#define _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
 //#define _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
+#define _SYMBOL_SAILBOAT
 
 // Or you can keep commented all symbol defines and choose custom one based on data from APRS symbols table
 //#define _SYMBOL_F	'/'
@@ -91,17 +135,19 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
+//#define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 //#define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
-//#define _BCN_ON_STARTUP
+#define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 7		// WX packet interval in minutes
-#define _BCN_INTERVAL 45	// Own beacon interval in minutes
+#define _WX_INTERVAL 4		// WX packet interval in minutes
+#define _BCN_INTERVAL 125	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 #define _SERIAL_BAUDRATE 9600
+
+#define _DIGI_VISCOUS_DEALY 2
 
 // Transmitting delay
 #define _DELAY_BASE 20	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
@@ -135,6 +181,9 @@
 //							D
 //
 // because of that D cannot be set to zero
+//
+// scaling for temperature shall be set to get *10 temperature
+// as an output of getter / 123 -> 12.3 oC
 #define _RTU_SLAVE_SPEED		9600u
 #define _RTU_SLAVE_PARITY		0
 #define _RTU_SLAVE_STOP_BITS	2
@@ -142,7 +191,7 @@
 #define _RTU_SLAVE_ID_1				0x01
 #define _RTU_SLAVE_FUNC_1			0x03
 #define _RTU_SLAVE_ADDR_1			0x00
-#define _RTU_SLAVE_LENGHT_1			0x05
+#define _RTU_SLAVE_LENGHT_1			0x01
 #define _RTU_SLAVE_SCALING_A_1	0
 #define _RTU_SLAVE_SCALING_B_1	1
 #define _RTU_SLAVE_SCALING_C_1	0
@@ -175,11 +224,30 @@
 #define _RTU_SLAVE_SCALING_C_4	0
 #define _RTU_SLAVE_SCALING_D_4  1
 
+#define _RTU_SLAVE_ID_5				0x00
+#define _RTU_SLAVE_FUNC_5			0x00
+#define _RTU_SLAVE_ADDR_5			0x03
+//#define _RTU_SLAVE_LENGHT_4			0x01
+#define _RTU_SLAVE_SCALING_A_5	0
+#define _RTU_SLAVE_SCALING_B_5	1
+#define _RTU_SLAVE_SCALING_C_5	0
+#define _RTU_SLAVE_SCALING_D_5  1
+
+
+#define _RTU_SLAVE_ID_6				0x00
+#define _RTU_SLAVE_FUNC_6			0x00
+#define _RTU_SLAVE_ADDR_6			0x00
+//#define _RTU_SLAVE_LENGHT_4			0x01
+#define _RTU_SLAVE_SCALING_A_6	0
+#define _RTU_SLAVE_SCALING_B_6	1
+#define _RTU_SLAVE_SCALING_C_6	0
+#define _RTU_SLAVE_SCALING_D_6  1
+
 #define _RTU_SLAVE_TEMPERATURE_SOURCE 		1
 #define _RTU_SLAVE_HUMIDITY_SOURCE			2
-#define _RTU_SLAVE_PRESSURE_SOURCE			3
-#define _RTU_SLAVE_WIND_DIRECTION_SORUCE	4
-#define _RTU_SLAVE_WIND_SPEED_SOURCE		4
+//#define _RTU_SLAVE_PRESSURE_SOURCE			3
+//#define _RTU_SLAVE_WIND_DIRECTION_SORUCE	4
+//#define _RTU_SLAVE_WIND_SPEED_SOURCE		4
 
 
 /* 	MODBUS RTU CONFIGURATION    */
@@ -206,23 +274,20 @@
 	defined (_SYMBOL_IGATE)
 #define _SYMBOL_F	'R'
 #define _SYMBOL_S	'&'
+#elif !defined (_SYMBOL_DIGI) && !defined (_SYMBOL_WIDE1_DIGI) && !defined (_SYMBOL_HOUSE) && !defined (_SYMOL_RXIGATE) &&\
+	!defined (_SYMBOL_IGATE) && defined(_SYMBOL_SAILBOAT)
+#define _SYMBOL_F	'/'
+#define _SYMBOL_S	'Y'
 #elif !defined (_SYMBOL_F) && !defined (_SYMBOL_S)
 #error "Missing symbol configuration in station_config.h"
 #elif defined (_SYMBOL_F) && defined (_SYMBOL_S)
 #else
 #error "Wrong symbol configuration in station_config.h"
 #endif
-#if defined (_METEO) && !defined (_DIGI)
-#define _DIGI
-#endif
+//#if defined (_METEO) && !defined (_DIGI)
+//#define _DIGI
+//#endif
 
-#if defined(PARATNC_HWREV_A) && (defined (_METEO) || defined (_DALLAS_AS_TELEM)) && !defined(_DALLAS_SPLIT_PIN)
-#define _DALLAS_SPLIT_PIN
-#endif
-
-#if defined(PARATNC_HWREV_B) && (defined (_METEO) || defined (_DALLAS_AS_TELEM)) && !defined(_DALLAS_SPLIT_PIN)
-#define _DALLAS_SPLIT_PIN
-#endif
 
 #if defined(_ANEMOMETER_TX20) && defined(_ANEMOMETER_ANALOGUE)
 #error "You cannot use two anemometers at once!!!"
