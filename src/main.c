@@ -662,6 +662,7 @@ int main(int argc, char* argv[]){
 #if defined(STM32L471xx)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
+  main_wx_srl_ctx_ptr->early_tx_assert = 1;		// TODO: move to configuration!!
 
   srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 #endif

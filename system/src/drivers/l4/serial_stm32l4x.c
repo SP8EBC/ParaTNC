@@ -240,6 +240,10 @@ uint8_t srl_send_data(srl_context_t *ctx, const uint8_t* data, uint8_t mode, uin
 	}
 	else return SRL_WRONG_BUFFER_PARAM;
 
+	if (ctx->te_port != 0 && ctx->early_tx_assert != 0) {
+		LL_GPIO_SetOutputPin(ctx->te_port, ctx->te_pin);
+	}
+
 	// enabling transmitter
 	ctx->port->CR1 |= USART_CR1_TE;
 	ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
@@ -268,8 +272,9 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 	// setting a pointer to transmit buffer to the internal buffer inside the driver
 	//ctx->srl_tx_buf_pointer = srl_usart1_tx_buffer;
 
-//	if (ctx->te_port != 0)
-//		GPIO_SetBits(ctx->te_port, ctx->te_pin);
+	if (ctx->te_port != 0 && ctx->early_tx_assert != 0) {
+		LL_GPIO_SetOutputPin(ctx->te_port, ctx->te_pin);
+	}
 
 	// check if delay should be applied to transmission
 	if (ctx->srl_tx_start_time == 0xFFFFFFFFu) {

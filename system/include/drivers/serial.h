@@ -74,6 +74,7 @@ typedef struct srl_context_t {
 
 	GPIO_TypeDef* te_port;
 	uint16_t te_pin;
+	uint16_t early_tx_assert;
 
 	// these pointers points to either internal buffer
 	// or external provided by caller, depends on 'uint8_t internal_external'

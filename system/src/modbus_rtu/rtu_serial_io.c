@@ -225,7 +225,7 @@ int32_t rtu_serial_pool(void) {
 
 			// stupid workaround. If there is a lot of I/O errors reset the controller
 
-			if (rte_rtu_number_of_serial_io_errors >= (0xFF - RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS))
+			if (rte_rtu_number_of_serial_io_errors >= 0xF0)
 			{
 				rte_main_reboot_req = 1;
 			}

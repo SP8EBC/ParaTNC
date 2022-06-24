@@ -181,6 +181,8 @@
   */
   uint32_t SystemCoreClock = 4000000U;
 
+  uint32_t SystemRtcHasFailed = 0;
+
   const uint8_t  AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
   const uint8_t  APBPrescTable[8] =  {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
   const uint32_t MSIRangeTable[12] = {100000U,   200000U,   400000U,   800000U,  1000000U,  2000000U, \
@@ -427,7 +429,9 @@ int system_clock_configure_l4(void)
 
 void system_clock_start_rtc_l4(void) {
 
-	if ((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
+	volatile uint32_t timeout_counter = 0;
+
+	if ((RCC->BDCR & RCC_BDCR_LSERDY) == 0 || SystemRtcHasFailed == 1) {
 		return;
 	}
 
@@ -442,7 +446,13 @@ void system_clock_start_rtc_l4(void) {
 	RTC->ISR |= RTC_ISR_INIT;
 
 	// wait for going into clock set mode
-	while((RTC->ISR & RTC_ISR_INITF) == 0);
+	while((RTC->ISR & RTC_ISR_INITF) == 0) {
+		if (timeout_counter++ > SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT) {
+			SystemRtcHasFailed = 1;
+
+			return;
+		}
+	}
 
 	// set date
 	RTC->DR = 0x0021A820;
@@ -507,13 +517,17 @@ int system_clock_configure_rtc_l4(void) {
 			if (timeout_counter++ > SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT) {
 				retval = -1;
 
+				SystemRtcHasFailed = 1;
+
 				break;
 			}
 		}
 	}
 
-	// starting and configuring the RTC itself
-	system_clock_start_rtc_l4();
+	if (SystemRtcHasFailed == 0) {
+		// starting and configuring the RTC itself
+		system_clock_start_rtc_l4();
+	}
 
 	// disable access do backup domain
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
@@ -522,6 +536,10 @@ int system_clock_configure_rtc_l4(void) {
 }
 
 void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
+
+	if (SystemRtcHasFailed == 1) {
+		return;
+	}
 
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
@@ -567,6 +585,27 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 
 	// disable access do backup domain
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+}
+
+int system_is_rtc_ok(void) {
+	int result = 1;
+
+	// check if LSE is working now
+	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;
+
+	if (SystemRtcHasFailed == 1) {
+		result = 0;
+	}
+
+	if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0) {
+		result = 0;
+	}
+
+	if (lse_is_working == 0) {
+		result = 0;
+	}
+
+	return result;
 }
 
 

@@ -531,6 +531,10 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 		return;
 	}
 
+	if (system_is_rtc_ok() == 0) {
+		return;
+	}
+
 	main_set_monitor(28);
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
@@ -578,6 +582,10 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+		return;
+	}
+
+	if (system_is_rtc_ok() == 0) {
 		return;
 	}
 
