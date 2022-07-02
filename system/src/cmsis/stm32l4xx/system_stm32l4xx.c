@@ -115,7 +115,7 @@
   * @{
   */
 
-#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0x3FFFF
+#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0x44444
 
 
 #if !defined  (HSE_VALUE)
@@ -431,7 +431,9 @@ void system_clock_start_rtc_l4(void) {
 
 	volatile uint32_t timeout_counter = 0;
 
-	if ((RCC->BDCR & RCC_BDCR_LSERDY) == 0 || SystemRtcHasFailed == 1) {
+	if ((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
+		SystemRtcHasFailed = 1;
+
 		return;
 	}
 
@@ -537,16 +539,17 @@ int system_clock_configure_rtc_l4(void) {
 
 void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 
-	if (SystemRtcHasFailed == 1) {
-		return;
-	}
-
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
 
 	// check if RTC is working
 	if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0) {
 		system_clock_start_rtc_l4();
+	}
+
+	// check if RTC initialization has succeded
+	if (SystemRtcHasFailed == 1) {
+		return;
 	}
 
 	// enable write access to RTC registers by writing two magic words

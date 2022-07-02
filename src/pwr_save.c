@@ -527,11 +527,13 @@ void pwr_save_switch_mode_to_i5(void) {
 // this will keep external VHF radio working in HW-RevB
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
+	if (system_is_rtc_ok() == 0) {
+		pwr_save_switch_mode_to_i5();
+
 		return;
 	}
 
-	if (system_is_rtc_ok() == 0) {
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
 		return;
 	}
 
@@ -581,11 +583,13 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+	if (system_is_rtc_ok() == 0) {
+		pwr_save_switch_mode_to_i5();
+
 		return;
 	}
 
-	if (system_is_rtc_ok() == 0) {
+	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
 		return;
 	}
 
@@ -654,9 +658,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		vbatt = 0xFFFFu;
 	}
 
-	#ifdef INHIBIT_CUTOFF
-	vbatt = 0xFFFFu;
-	#endif
+//	#ifdef INHIBIT_CUTOFF
+//	vbatt = 0xFFFFu;
+//	#endif
 
 	if (vbatt > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
@@ -983,6 +987,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
 
 	if ((REGISTER & INHIBIT_PWR_SWITCH_PERIODIC_H) != 0){
+		return 1;
+	}
+	else if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
 		return 1;
 	}
 	else {

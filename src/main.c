@@ -913,7 +913,7 @@ int main(int argc, char* argv[]){
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 #if defined(PARAMETEO)
-	   beacon_send_own(rte_main_battery_voltage);
+	   beacon_send_own(system_is_rtc_ok());
 	   delay_fixed(1500);
 #else
 	   beacon_send_own(0);

@@ -467,6 +467,10 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		#ifdef STM32L471xx
 		packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
+
+		if (system_is_rtc_ok() == 0) {
+			rte_main_reboot_req = 1;
+		}
 		#endif
 
 		packet_tx_telemetry_descr_counter = 0;
