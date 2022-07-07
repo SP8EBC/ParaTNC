@@ -465,7 +465,8 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) config_data_gsm_second = {
 		.pin = "\0\0\0\0\0",
 
-		.apn = "internet\0",
+		//.apn = "internet\0",
+		.apn = "virgin-internet\0",
 
 		.username = "\0",
 

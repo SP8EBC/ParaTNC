@@ -467,7 +467,8 @@ const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) 
 const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) config_data_gsm_default = {
 		.pin = "\0\0\0\0\0",
 
-		.apn = "internet\0",
+		//.apn = "internet\0",				// PlusGSM
+		.apn = "virgin-internet\0",			// Virgin Mobile
 
 		.username = "\0",
 

@@ -13,6 +13,7 @@
 #include "main.h"
 #include "rte_main.h"
 #include "rte_wx.h"
+#include "rte_rtu.h"
 #include "drivers/l4/pwm_input_stm32l4x.h"
 
 #define ENTRIES_STRING(ENTRY)			\
@@ -53,14 +54,15 @@
 	ENTRY(rte_wx_get_minimum_windspeed(), wind_minimal)					\
 	ENTRY(rte_wx_pm2_5, pm2_5)		\
 	ENTRY(rte_wx_pm10, pm10)	\
-	ENTRY(main_config_data_basic->ssid, ssid)	\
+	ENTRY(rte_main_average_battery_voltage, average_battery_voltage)		\
 
 #define ENTRIES_32INT_WEATHER(ENTRY)		\
 	ENTRY(master_time, master_time)						\
-
+	ENTRY((int32_t)rte_wx_current_dallas_qf, dallas_qf_curr)		\
+	ENTRY((int32_t)rte_wx_error_dallas_qf, dallas_qf_err)		\
+	ENTRY((int32_t)rte_rtu_number_of_serial_io_errors, rtu_io_errors)		\
 
 #define ENTRIES_STRING_WEATHER(ENTRY)			\
-	ENTRY(main_config_data_basic->callsign, callsign)	\
 	ENTRY(api_mac, api_mac)	\
 
 
