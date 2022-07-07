@@ -19,6 +19,8 @@
 #include <stm32l471xx.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 #include "pwr_save.h"
+
+uint8_t it_handlers_inhibit_radiomodem_dcd_led = 0;
 #endif
 
 #include "drivers/dallas.h"
@@ -143,6 +145,10 @@ void SysTick_Handler(void) {
 
 	delay_decrement_counter();
 
+	if (it_handlers_inhibit_radiomodem_dcd_led == 0) {
+		led_control_led1_upper(main_ax25.dcd);
+	}
+
 }
 
 void USART1_IRQHandler(void) {
@@ -255,7 +261,6 @@ void TIM7_IRQHandler(void) {
 //		io_ext_watchdog_service();
 		AdcValue = (short int)(( AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
 		AFSK_ADC_ISR(&main_afsk, (AdcValue - 4095) );
-		led_control_led1_upper(main_ax25.dcd);
 		ASC = 0;
 
 		if (ASC2++ == 2) {

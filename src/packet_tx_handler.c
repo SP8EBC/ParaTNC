@@ -109,19 +109,19 @@ void packet_tx_tcp_handler(void) {
 	aprsis_return_t aprsis_result = APRSIS_UNKNOWN;
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
-
-		if (aprsis_connected == 0) {
-			aprsis_result = aprsis_connect_and_login_default(0);
-
-			if (aprsis_result == APRSIS_OK) {
-				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-				aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-			}
-		}
-		else {
-			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-		}
+		// TODO: fixme
+//		if (aprsis_connected == 0) {
+//			aprsis_result = aprsis_connect_and_login_default(0);
+//
+//			if (aprsis_result == APRSIS_OK) {
+//				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+//				aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+//			}
+//		}
+//		else {
+//			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+//			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+//		}
 
 
 		// clear the bit
@@ -129,15 +129,16 @@ void packet_tx_tcp_handler(void) {
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
 
-		// check if APRS-IS is connected
-		if (aprsis_connected != 0) {
-			// disconnect it before call to API - this disconnection has blocking IO
-			aprsis_disconnect();
-
-			// remember to reconnect APRSIS after all API comm will be done
-			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
-
-		}
+		// TODO: fixme
+//		// check if APRS-IS is connected
+//		if (aprsis_connected != 0) {
+//			// disconnect it before call to API - this disconnection has blocking IO
+//			aprsis_disconnect();
+//
+//			// remember to reconnect APRSIS after all API comm will be done
+//			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+//
+//		}
 
 		// send status (async)
 		api_send_json_status();
@@ -147,15 +148,16 @@ void packet_tx_tcp_handler(void) {
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_METEO) != 0) {
 
-		// check if APRS-IS is connected
-		if (aprsis_connected != 0) {
-			// disconnect it before call to API - this disconnection has blocking IO
-			aprsis_disconnect();
-
-			// remember to reconnect APRSIS after all API comm will be done
-			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
-
-		}
+		// TODO: fixme
+//		// check if APRS-IS is connected
+//		if (aprsis_connected != 0) {
+//			// disconnect it before call to API - this disconnection has blocking IO
+//			aprsis_disconnect();
+//
+//			// remember to reconnect APRSIS after all API comm will be done
+//			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+//
+//		}
 
 		api_send_json_measuremenets();
 
@@ -163,11 +165,12 @@ void packet_tx_tcp_handler(void) {
 		packet_tx_trigger_tcp ^= API_TRIGGER_METEO;
 	}
 	else if ((packet_tx_trigger_tcp & RECONNECT_APRSIS) != 0) {
-		result = aprsis_connect_and_login_default(1);
-
-		if (result == APRSIS_OK) {
+		// TODO: fixme
+//		result = aprsis_connect_and_login_default(1);
+//
+//		if (result == APRSIS_OK) {
 			packet_tx_trigger_tcp ^= RECONNECT_APRSIS;
-		}
+//		}
 	}
 #endif
 }
@@ -213,7 +216,8 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	#ifdef STM32L471xx
 		// send wx packet to APRSIS one minute before radio transmission
 		if (packet_tx_meteo_counter == packet_tx_meteo_interval - 1 && packet_tx_meteo_interval != 0) {
-			packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
+			// TODO: fixme
+			//packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
 
 			//aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 		}

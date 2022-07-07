@@ -897,6 +897,10 @@ int main(int argc, char* argv[]){
 
 #ifdef STM32L471xx
    if (main_config_data_mode->gsm == 1) {
+	   it_handlers_inhibit_radiomodem_dcd_led = 1;
+
+		led_control_led1_upper(false);
+
 	   gsm_sim800_init(&main_gsm_state, 1);
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
@@ -1212,9 +1216,13 @@ int main(int argc, char* argv[]){
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
 
+				if (http_client_connection_errors > HTTP_CLIENT_MAX_CONNECTION_ERRORS) {
+					NVIC_SystemReset();
+				}
+
 				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-				aprsis_connect_and_login_default(1);
+				//aprsis_connect_and_login_default(1);
 
 //				if (gsm_sim800_gprs_ready == 1) {
 //
@@ -1240,6 +1248,13 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
+
+				if (gsm_sim800_gprs_ready == 1) {
+					led_control_led1_upper(true);
+				}
+				else {
+					led_control_led1_upper(false);
+				}
 
 				if (gsm_sim800_gprs_ready == 1) {
 					/***
@@ -1328,7 +1343,6 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
-
 				packet_tx_tcp_handler();
 			}
 			#endif

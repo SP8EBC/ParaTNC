@@ -27,6 +27,8 @@
 #define HTTP_CLIENT_RET_TCPIP_BSY		2
 #define HTTP_CLIENT_RET_WRONG_URL		3
 
+#define HTTP_CLIENT_MAX_CONNECTION_ERRORS	8
+
 typedef void(*http_client_response_available_t)(uint16_t http_code, char * content, uint16_t content_lenght);
 
 /**
@@ -46,6 +48,8 @@ extern uint16_t http_client_content_lenght;
  * HTTP headers lenght
  */
 extern uint16_t http_client_max_content_ln;
+
+extern uint8_t http_client_connection_errors;
 
 void http_client_init(gsm_sim800_state_t * state, srl_context_t * serial_context, uint8_t ignore_content_on_http_error);
 uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_limit, uint8_t force_disconnect_on_busy, http_client_response_available_t callback_on_response);

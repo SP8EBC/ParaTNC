@@ -52,6 +52,8 @@ srl_context_t * http_client_deticated_serial_context;
  */
 uint8_t http_client_ignore_content_on_http_error;
 
+uint8_t http_client_connection_errors = 0;
+
 /**
  * Default port for http
  */
@@ -283,7 +285,9 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 				gsm_sim800_tcpip_async_receive(http_client_deticated_serial_context, http_client_deticated_sim800_state, http_client_rx_done_callback, 5000u, http_client_response_done_callback /** FIXME */);
 			}
 		}
-
+		else {
+			http_client_connection_errors++;
+		}
 	}
 	else if (split_point == 0xFFFF) {
 		out = HTTP_CLIENT_RET_WRONG_URL;
@@ -385,6 +389,9 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 			}
 		}
 
+	}
+	else {
+		http_client_connection_errors++;
 	}
 
 	return out;

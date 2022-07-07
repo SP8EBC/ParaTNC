@@ -465,8 +465,8 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) config_data_gsm_second = {
 		.pin = "\0\0\0\0\0",
 
-		//.apn = "internet\0",
-		.apn = "virgin-internet\0",
+		.apn = "internet\0",
+		//.apn = "virgin-internet\0",
 
 		.username = "\0",
 
@@ -474,12 +474,12 @@ const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) c
 
 		.api_enable = 1,
 
-		.api_base_url = "http://157.25.103.93:22910/",
+		.api_base_url = "http://157.25.103.93:8080/",
 		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
 
 		.api_station_name = "abakus",
 
-		.aprsis_enable = 1,
+		.aprsis_enable = 0,
 
 		.aprsis_passcode = 16823,
 
