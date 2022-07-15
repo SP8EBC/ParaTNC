@@ -465,16 +465,17 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) config_data_gsm_second = {
 		.pin = "\0\0\0\0\0",
 
-		.apn = "internet\0",
-		//.apn = "virgin-internet\0",
+		.apn = "internet\0",				// PlusGSM  - abonament
+		//.apn = "plus\0",				// PlusGSM  - karta
+		//.apn = "virgin-internet\0",			// Virgin Mobile
 
-		.username = "\0",
+		.username = "internet\0",
 
-		.password = "\0",
+		.password = "internet\0",
 
 		.api_enable = 1,
 
-		.api_base_url = "http://157.25.103.93:8080/",
+		.api_base_url = "http://157.25.103.93:22910/",
 		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
 
 		.api_station_name = "abakus",
