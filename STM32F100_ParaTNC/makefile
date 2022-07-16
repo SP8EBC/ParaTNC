@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include system/src/ve_direct_protocol/subdir.mk
 -include system/src/umb_master/subdir.mk
+-include system/src/tiny-aes/subdir.mk
 -include system/src/stm32f1-stdperiph/subdir.mk
 -include system/src/newlib/subdir.mk
 -include system/src/modbus_rtu/subdir.mk

@@ -959,7 +959,7 @@ int main(int argc, char* argv[]){
 
 	  			if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
 
-	  				beacon_send_own();
+	  				beacon_send_own(0);
 	  			}
 	  			else {
 
@@ -1026,7 +1026,9 @@ int main(int argc, char* argv[]){
 
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
+#ifdef STM32L471xx
 			rte_main_rx_total++;
+#endif
 		}
 
 #ifdef STM32L471xx
@@ -1142,7 +1144,7 @@ int main(int argc, char* argv[]){
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
-
+#ifdef PARAMETEO
 			// get current battery voltage. for non parameteo this will return 0
 		    rte_main_battery_voltage = io_vbat_meas_get();
 
@@ -1153,7 +1155,7 @@ int main(int argc, char* argv[]){
 		    if (rte_main_average_battery_voltage == 0) {
 		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
 		    }
-
+#endif
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 
 				// notice: UMB-master and Modbus-RTU uses the same UART

@@ -58,6 +58,9 @@ endif
 SECONDARY_FLASH += \
 ParaTNC.hex \
 
+SECONDARY_LIST += \
+ParaTNC.lst \
+
 SECONDARY_SIZE += \
 ParaTNC.siz \
 
@@ -79,6 +82,12 @@ ParaTNC.hex: ParaTNC.elf
 	@echo 'Finished building: $@'
 	@echo ' '
 
+ParaTNC.lst: ParaTNC.elf
+	@echo 'Invoking: Cross ARM GNU Create Listing'
+	arm-none-eabi-objdump --source --all-headers --demangle --line-numbers --wide "ParaTNC.elf" > "ParaTNC.lst"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 ParaTNC.siz: ParaTNC.elf
 	@echo 'Invoking: Cross ARM GNU Print Size'
 	arm-none-eabi-size --format=berkeley "ParaTNC.elf"
@@ -87,10 +96,10 @@ ParaTNC.siz: ParaTNC.elf
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(SECONDARY_FLASH)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(CPP_DEPS) ParaTNC.elf
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(CPP_DEPS) ParaTNC.elf
 	-@echo ' '
 
-secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
+secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents
 

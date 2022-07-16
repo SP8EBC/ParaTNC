@@ -345,7 +345,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 /**
  * This function sends telemetry values in 'typical configuration' when VICTRON VE.direct protocol parser is not enabled.
  */
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 void telemetry_send_values(	uint8_t rx_pkts,
 							uint8_t tx_pkts,
 							uint8_t digi_pkts,
@@ -466,10 +466,12 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		humidity_qf_navaliable = '0';
 	}
 
+#ifdef PARAMETEO
 	// telemetry won't be sent during cutoff anyway so this simplification is correct here
 	if (cutoff_and_vbat_low > 0) {
 		vbatt_low = '1';
 	}
+#endif
 
 	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
@@ -559,7 +561,9 @@ void telemetry_send_status_raw_values_modbus(void) {
 #endif
 }
 
+
 void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cutoff, int8_t current_cutoff) {
+#ifdef PARAMETEO
 	const char *p, *c;
 
 	// telemetry_vbatt_unknown
@@ -598,7 +602,7 @@ void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t pre
 	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
 	main_wait_for_tx_complete();
-
+#endif
 }
 
 void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time) {

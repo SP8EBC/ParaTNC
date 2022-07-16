@@ -39,6 +39,7 @@ system/src/http_client \
 system/src/modbus_rtu \
 system/src/newlib \
 system/src/stm32f1-stdperiph \
+system/src/tiny-aes \
 system/src/umb_master \
 system/src/ve_direct_protocol \
 

@@ -8,19 +8,19 @@
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
-//#define _POWERSAVE_NORMAL
+#define _POWERSAVE_NORMAL
 //#define _POWERSAVE_AGGRESIVE
 /*  ------------------ */
 /* 	MODES OF OPERATION */
 
 #define _METEO				// Enable meteo station
 
-#define _DIGI				// Enable WIDE1-1 digipeater
-#define _DIGI_VISCOUS
-//#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+//#define _DIGI				// Enable WIDE1-1 digipeater
+//#define _DIGI_VISCOUS
+#define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
 
-//#define	_GSM			// only for ParaMETEO
-//#define _GSM_KEEP_MODEM_ALWAYS_ON
+#define	_GSM			// only for ParaMETEO
+#define _GSM_KEEP_MODEM_ALWAYS_ON
 
 #define _WX_DOUBLE_TRANSMIT
 
@@ -81,9 +81,9 @@
 
 
 /*************** DATA SOURCES CONFIG ***********************/
-#define _TEMPERATURE_INTERNAL
+//#define _TEMPERATURE_INTERNAL
 //#define _TEMPERATURE_UMB
-//#define _TEMPERATURE_RTU
+#define _TEMPERATURE_RTU
 //#define _TEMPERATURE_DAVIS
 //
 #define _PRESSURE_INTERNAL
@@ -113,21 +113,21 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "SR9WXP"
-#define _SSID 0
-#define _LAT		4932.18
+#define _CALL "ABAKUS"
+#define _SSID 1
+#define _LAT		4948.11
 #define _LATNS		'N'
-#define _LON		01919.18
+#define _LON		01903.22
 #define _LONWE		'E'
-#define _COMMENT	"DigiW1 + WX = TXPower 1W = Pilsko, wyciag orczykowy VII, 1400m AMSL = sp8ebc@interia.pl"
+#define _COMMENT	"Set Your configuration in this file and rename to station_config.h"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
-#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
+//#define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
 //#define _SYMBOL_HOUSE			// uncomment if you want house symbol
 //#define _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
 //#define _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
-//#define _SYMBOL_SAILBOAT
+#define _SYMBOL_SAILBOAT
 
 // Or you can keep commented all symbol defines and choose custom one based on data from APRS symbols table
 //#define _SYMBOL_F	'/'
@@ -142,7 +142,7 @@
 #define _BCN_ON_STARTUP
 
 #define _WX_INTERVAL 4		// WX packet interval in minutes
-#define _BCN_INTERVAL 124	// Own beacon interval in minutes
+#define _BCN_INTERVAL 125	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
 #define _SERIAL_BAUDRATE 9600
@@ -150,7 +150,7 @@
 #define _DIGI_VISCOUS_DEALY 2
 
 // Transmitting delay
-#define _DELAY_BASE 14	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 20	// * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 //#define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional time can be
 						// from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
 						// so it is better to use Unsquelched output in radio to provide much more randomness

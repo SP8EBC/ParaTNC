@@ -7,6 +7,7 @@
 
 #ifndef API_STATUS_CONTENT_H_
 #define API_STATUS_CONTENT_H_
+#ifdef STM32L471xx
 
 #include "api_xmacro_helpers.h"
 
@@ -65,7 +66,7 @@
 #define ENTRIES_STRING_WEATHER(ENTRY)			\
 	ENTRY(api_mac, api_mac)	\
 
-
+#endif
 #endif /* API_STATUS_CONTENT_H_ */
 
 /**

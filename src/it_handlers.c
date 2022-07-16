@@ -19,8 +19,6 @@
 #include <stm32l471xx.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 #include "pwr_save.h"
-
-uint8_t it_handlers_inhibit_radiomodem_dcd_led = 0;
 #endif
 
 #include "drivers/dallas.h"
@@ -68,6 +66,8 @@ unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości reje
 short int AdcValue;
 
 uint8_t it_handlers_cpu_load_pool = 0;
+
+uint8_t it_handlers_inhibit_radiomodem_dcd_led = 0;
 
 // this function will set all iterrupt priorities except systick
 void it_handlers_set_priorities(void) {

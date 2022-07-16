@@ -378,6 +378,7 @@ uint16_t io_vbat_meas_get() {
 uint16_t io_vbat_meas_average(uint16_t sample) {
 
 	uint16_t out = 0;
+#ifdef PARAMETEO
 
 	int i = 0;
 
@@ -410,7 +411,7 @@ uint16_t io_vbat_meas_average(uint16_t sample) {
 		out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
 	}
 
-
+#endif
 	return out;
 }
 

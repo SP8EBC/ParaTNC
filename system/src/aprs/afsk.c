@@ -310,7 +310,9 @@ void afsk_txStart(Afsk *af) {
 	if (!af->sending)
 	{
 		tx10m++;
+		#ifdef STM32L471xx
 		rte_main_tx_total++;
+		#endif
 		
 		af->phase_inc = MARK_INC;
 		af->phase_acc = 0;

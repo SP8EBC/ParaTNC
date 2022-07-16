@@ -79,6 +79,7 @@ inline uint8_t io_get_12v_sw___cntrl_vbat_g(void) {
 	}
 }
 
+#ifdef STM32L471xx
 inline void io___cntrl_vbat_g_enable(void) {
 	GPIOA->BSRR |= GPIO_BSRR_BS6;
 }
@@ -153,6 +154,11 @@ inline uint8_t io_get_cntrl_vbat_s(void) {
 
 	return out;
 }
+#else
+inline uint8_t io_get_cntrl_vbat_s(void) {
+	return 0;
+}
 
+#endif
 
 #endif /* IO_H_ */
