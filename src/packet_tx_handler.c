@@ -110,18 +110,19 @@ void packet_tx_tcp_handler(void) {
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		// TODO: fixme
-//		if (aprsis_connected == 0) {
-//			aprsis_result = aprsis_connect_and_login_default(0);
-//
-//			if (aprsis_result == APRSIS_OK) {
-//				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-//				aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-//			}
-//		}
-//		else {
-//			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-//			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-//		}
+		if (aprsis_connected == 0) {
+			aprsis_result = aprsis_connect_and_login_default(0);
+
+			if (aprsis_result == APRSIS_OK) {
+				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+				aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+			}
+		}
+		else {
+			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+		}
+		// TODO: fixme
 
 
 		// clear the bit
@@ -130,15 +131,16 @@ void packet_tx_tcp_handler(void) {
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
 
 		// TODO: fixme
-//		// check if APRS-IS is connected
-//		if (aprsis_connected != 0) {
-//			// disconnect it before call to API - this disconnection has blocking IO
-//			aprsis_disconnect();
-//
-//			// remember to reconnect APRSIS after all API comm will be done
-//			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
-//
-//		}
+		// check if APRS-IS is connected
+		if (aprsis_connected != 0) {
+			// disconnect it before call to API - this disconnection has blocking IO
+			aprsis_disconnect();
+
+			// remember to reconnect APRSIS after all API comm will be done
+			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+
+		}
+		// TODO: fixme
 
 		// send status (async)
 		api_send_json_status();
@@ -149,15 +151,16 @@ void packet_tx_tcp_handler(void) {
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_METEO) != 0) {
 
 		// TODO: fixme
-//		// check if APRS-IS is connected
-//		if (aprsis_connected != 0) {
-//			// disconnect it before call to API - this disconnection has blocking IO
-//			aprsis_disconnect();
-//
-//			// remember to reconnect APRSIS after all API comm will be done
-//			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
-//
-//		}
+		// check if APRS-IS is connected
+		if (aprsis_connected != 0) {
+			// disconnect it before call to API - this disconnection has blocking IO
+			aprsis_disconnect();
+
+			// remember to reconnect APRSIS after all API comm will be done
+			packet_tx_trigger_tcp |= RECONNECT_APRSIS;
+
+		}
+		// TODO: fixme
 
 		api_send_json_measuremenets();
 
@@ -245,8 +248,13 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			io_ext_watchdog_service();
 
 #ifdef STM32L471xx
-			// and trigger API wx packet transmission
-			packet_tx_trigger_tcp |= API_TRIGGER_METEO;
+			if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
+				// and trigger API wx packet transmission
+				packet_tx_trigger_tcp |= API_TRIGGER_METEO;
+			}
+			else {
+				packet_tx_trigger_tcp = 0;
+			}
 #endif
 
 			// check if user want's to send two wx packets one after another
@@ -470,7 +478,13 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		}
 
 		#ifdef STM32L471xx
-		packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
+		if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
+			// and trigger API wx packet transmission
+			packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
+		}
+		else {
+			packet_tx_trigger_tcp = 0;
+		}
 
 		if (system_is_rtc_ok() == 0) {
 			rte_main_reboot_req = 1;

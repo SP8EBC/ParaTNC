@@ -471,28 +471,38 @@ const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) co
 const config_data_gsm_t __attribute__((section(".config_section_first.gsm"))) config_data_gsm_first = {
 		.pin = "\0\0\0\0\0",
 
-		.apn = "internet\0",				// PlusGSM  - abonament
+		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
 		//.apn = "plus\0",				// PlusGSM  - karta
 		//.apn = "virgin-internet\0",			// Virgin Mobile
 
-		.username = "internet\0",
+		.username = _GSM_APN_USER,
 
-		.password = "internet\0",
+		.password = _GSM_APN_PASS,
 
+#ifdef _GSM_API_ENABLE
 		.api_enable = 1,
+#else
+		.api_enable = 0,
+#endif
 
-		.api_base_url = "http://157.25.103.93:22910/",
+		// 78.88.56.14
+		//.api_base_url = "http://78.88.56.14:8080/",
+		.api_base_url = _GSM_API_BASE_URL,		// 22910
 		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
 
-		.api_station_name = "abakus",
+		.api_station_name = _GSM_API_STATION_NAME,
 
+#ifdef _GSM_APRSIS_ENABLE
+		.aprsis_enable = 1,
+#else
 		.aprsis_enable = 0,
+#endif
 
-		.aprsis_passcode = 16823,
+		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
 
-		.aprsis_server_port = 14580,
+		.aprsis_server_port = _GSM_APRSIS_PORT,
 
-		.aprsis_server_address = "euro.aprs2.net\0"
+		.aprsis_server_address = _GSM_APRSIS_ADDRES
 
 };
 #endif

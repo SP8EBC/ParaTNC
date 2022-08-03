@@ -899,15 +899,19 @@ int main(int argc, char* argv[]){
    if (main_config_data_mode->gsm == 1) {
 	   it_handlers_inhibit_radiomodem_dcd_led = 1;
 
-		led_control_led1_upper(false);
+	   led_control_led1_upper(false);
 
 	   gsm_sim800_init(&main_gsm_state, 1);
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
-	   api_init((const char *)main_config_data_gsm->api_base_url, (const char *)main_config_data_gsm->api_station_name);
+	   if (main_config_data_gsm->api_enable == 1 && main_config_data_gsm->aprsis_enable == 0) {
+		   api_init((const char *)main_config_data_gsm->api_base_url, (const char *)(main_config_data_gsm->api_station_name));
+	   }
 
-	   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, (const char *)main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
+	   if (main_config_data_gsm->api_enable == 0 && main_config_data_gsm->aprsis_enable == 1) {
+		   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, (const char *)main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
+	   }
    }
 
    pwm_input_io_init();
