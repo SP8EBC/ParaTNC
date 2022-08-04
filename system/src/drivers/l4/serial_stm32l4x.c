@@ -484,7 +484,7 @@ uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_ca
 
 			ctx->srl_rx_bytes_counter = 0;
 
-			ctx->srl_rx_lenght_param_addres = ctx->srl_rx_buf_ln - 1;
+			ctx->srl_rx_lenght_param_addres = 0xFF;
 			ctx->srl_rx_lenght_param_modifier = 0;
 
 			ctx->srl_triggered_start = 0;

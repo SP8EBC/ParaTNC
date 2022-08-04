@@ -18,6 +18,7 @@ const static char * CLOSE_TCP				= "AT+CIPCLOSE\r\0";
 
 static const char * ESCAPE					= "+++\0";
 
+#define CONNECT_LN	13
 static const char * CONNECT					= "OK\r\n\r\nCONNECT\0";
 static const char * OK 						= "OK\0";
 #define DISCONNECTED_LN		6
@@ -52,10 +53,41 @@ static char gsm_sim800_previous = ' ';
 
 gsm_sim800_tcpip_receive_callback_t gsm_sim800_tcpip_async_receive_cbk = 0;
 
+/**
+ * Index at which 'CONNECT' or 'ERROR' response ends. Set by @link{gsm_sim800_connecting_terminating_callback}
+ */
+uint16_t gsm_sim800_connect_response_idx = 0;
+
 static uint8_t gsm_sim800_escape_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
 	if (gsm_sim800_previous == 'O') {
 		if ((char)current_data == 'K') {
 			gsm_sim800_previous = ' ';
+
+			return 1;
+		}
+	}
+
+	gsm_sim800_previous = (char) current_data;
+
+	return 0;
+}
+
+static uint8_t gsm_sim800_connecting_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
+	if (gsm_sim800_previous == 'C') {
+		if ((char)current_data == 'T') {
+			gsm_sim800_previous = ' ';
+
+			gsm_sim800_connect_response_idx = rx_bytes_counter;
+
+			return 1;
+		}
+	}
+
+	if (gsm_sim800_previous == 'O') {
+		if ((char)current_data == 'R') {
+			gsm_sim800_previous = ' ';
+
+			gsm_sim800_connect_response_idx = rx_bytes_counter;
 
 			return 1;
 		}
@@ -106,7 +138,7 @@ sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t addre
 		srl_switch_timeout(srl_context, 1, 2000);
 
 		// trigger reception
-		srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+		srl_receive_data_with_callback(srl_context, gsm_sim800_connecting_terminating_callback);
 		gsm_at_command_sent_last = TCP3;
 
 		// start timeout calculation
@@ -118,7 +150,7 @@ sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t addre
 		// if response from the modem has been received
 		if (receive_result == SRL_OK) {
 			// check if 'OK and 'CONNECT' has been received which means that connection has been established
-			comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_sim800_get_response_start_idx()), 2);
+			comparision_result = strncmp(CONNECT, (const char *)(srl_context->srl_rx_buf_pointer + gsm_sim800_connect_response_idx - CONNECT_LN + 1), CONNECT_LN);
 
 			if (comparision_result == 0) {
 				*state = SIM800_TCP_CONNECTED;
