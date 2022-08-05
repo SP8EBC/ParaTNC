@@ -102,13 +102,13 @@
 					// and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL "N0CALL"
+#define _CALL "SR9WXP"
 #define _SSID 0
-#define _LAT		4949.49
+#define _LAT		4932.19
 #define _LATNS		'N'
 #define _LON		01919.19
 #define _LONWE		'E'
-#define _COMMENT	"WARNING! Put Your configuration in this file and then rename it to 'station_config.h'"
+#define _COMMENT	"WX only = TXPower 1W = Pilsko, wyciag orczykowy VII, 1400m AMSL  = testy sprzetu"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
@@ -130,7 +130,7 @@
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback occur)
 #define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL 10		// WX packet interval in minutes
+#define _WX_INTERVAL 3		// WX packet interval in minutes
 #define _BCN_INTERVAL 125	// Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open Drain
@@ -247,7 +247,7 @@
 #define _GSM_APN_PASS			"internet\0"
 
 #define _GSM_API_ENABLE
-#define _GSM_API_BASE_URL		"http://78.88.56.14:8080/" //"http://157.25.103.93:22910/"
+#define _GSM_API_BASE_URL		"http://78.88.56.14:8080/meteo_backend" //"http://157.25.103.93:22910/"
 #define _GSM_API_STATION_NAME		"pilsko"
 
 //#define _GSM_APRSIS_ENABLE
