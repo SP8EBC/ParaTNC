@@ -58,6 +58,14 @@ _estack = 0x20018000;    /* end of RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
+__config_section_default_start =        0x0801E000;     /* Page 120 and 121 */
+__config_section_default_checksum =     0x0801E7FC;     /* Page 120 and 121 */
+__config_section_first_start =          0x0801E800;     /* Page 122 and 123 */
+__config_section_first_checksum =       0x0801E7FC;     /* Page 122 and 123 */
+__config_section_second_start =         0x0801F000;     /* Page 124 and 125 */
+__config_section_second_checksum =      0x0801EFFC;     /* Page 124 and 125 */
+__config_section_third_start =          0x0801F800;     /* Page 126 and 127 */
+
 /* Specify the memory areas */
 MEMORY
 {
@@ -199,6 +207,68 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+     .config_section_default __config_section_default_start : ALIGN(4)
+    {
+        FILL(0xDD)
+        
+        KEEP(*(.config_section_default));
+        
+        KEEP(*(.config_section_default.mode));
+        
+        KEEP(*(.config_section_default.basic));
+
+        KEEP(*(.config_section_default.sources));
+
+        KEEP(*(.config_section_default.umb));
+        
+        KEEP(*(.config_section_default.rtu));
+    } >FLASH
+    
+    .config_section_first __config_section_first_start : ALIGN(4)
+    {
+        FILL(0xAA)
+        
+        KEEP(*(.config_section_first));
+        
+        KEEP(*(.config_section_first.mode));
+        
+        KEEP(*(.config_section_first.basic));
+
+        KEEP(*(.config_section_first.sources));
+
+        KEEP(*(.config_section_first.umb));
+        
+        KEEP(*(.config_section_first.rtu));
+        
+        KEEP(*(.config_section_first.crc));
+
+    } >FLASH
+    
+    .config_section_second __config_section_second_start : ALIGN(4)
+    {
+        FILL(0xBB)
+        
+        KEEP(*(.config_section_second));
+        
+        KEEP(*(.config_section_second.mode));
+        
+        KEEP(*(.config_section_second.basic));
+
+        KEEP(*(.config_section_second.sources));
+
+        KEEP(*(.config_section_second.umb));
+        
+        KEEP(*(.config_section_second.rtu));
+        
+        KEEP(*(.config_section_second.crc));
+
+    } >FLASH
+    
+   .config_section_third __config_section_third_start : ALIGN(4)
+    {
+           KEEP(*(.config_section_third))
+    } >FLASH
 }
 
 
