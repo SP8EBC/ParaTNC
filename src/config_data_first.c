@@ -14,6 +14,7 @@
 
 #include "station_config.h"
 
+#ifndef STM32L471xx
 
 #ifndef _RTU_SLAVE_LENGHT_1
 	#define _RTU_SLAVE_LENGHT_1 0x1
@@ -466,43 +467,45 @@ const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) co
 		.slave_6_unsigned_signed = 0
 };
 
-#ifdef PARAMETEO
+//#ifdef PARAMETEO
+//
+//const config_data_gsm_t __attribute__((section(".config_section_first.gsm"))) config_data_gsm_first = {
+//		.pin = "\0\0\0\0\0",
+//
+//		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
+//		//.apn = "plus\0",				// PlusGSM  - karta
+//		//.apn = "virgin-internet\0",			// Virgin Mobile
+//
+//		.username = _GSM_APN_USER,
+//
+//		.password = _GSM_APN_PASS,
+//
+//#ifdef _GSM_API_ENABLE
+//		.api_enable = 1,
+//#else
+//		.api_enable = 0,
+//#endif
+//
+//		// 78.88.56.14
+//		//.api_base_url = "http://78.88.56.14:8080/",
+//		.api_base_url = _GSM_API_BASE_URL,		// 22910
+//		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
+//
+//		.api_station_name = _GSM_API_STATION_NAME,
+//
+//#ifdef _GSM_APRSIS_ENABLE
+//		.aprsis_enable = 1,
+//#else
+//		.aprsis_enable = 0,
+//#endif
+//
+//		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
+//
+//		.aprsis_server_port = _GSM_APRSIS_PORT,
+//
+//		.aprsis_server_address = _GSM_APRSIS_ADDRES
+//
+//};
+//#endif
 
-const config_data_gsm_t __attribute__((section(".config_section_first.gsm"))) config_data_gsm_first = {
-		.pin = "\0\0\0\0\0",
-
-		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
-		//.apn = "plus\0",				// PlusGSM  - karta
-		//.apn = "virgin-internet\0",			// Virgin Mobile
-
-		.username = _GSM_APN_USER,
-
-		.password = _GSM_APN_PASS,
-
-#ifdef _GSM_API_ENABLE
-		.api_enable = 1,
-#else
-		.api_enable = 0,
-#endif
-
-		// 78.88.56.14
-		//.api_base_url = "http://78.88.56.14:8080/",
-		.api_base_url = _GSM_API_BASE_URL,		// 22910
-		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
-
-		.api_station_name = _GSM_API_STATION_NAME,
-
-#ifdef _GSM_APRSIS_ENABLE
-		.aprsis_enable = 1,
-#else
-		.aprsis_enable = 0,
-#endif
-
-		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
-
-		.aprsis_server_port = _GSM_APRSIS_PORT,
-
-		.aprsis_server_address = _GSM_APRSIS_ADDRES
-
-};
 #endif

@@ -25,12 +25,75 @@
 #include <stm32l4xx_ll_crc.h>
 #endif
 
+/**
+ * STM32L476RE, last flash memory page
+ * 0x0807F800 - 0x0807FFFF; 2 K; Page 383
+ *
+ *  __config_section_default_start =    0x0801E000;
+    __config_section_first_start = 	    0x0801E800;		// page 61, 0x3D
+    __config_section_second_start =     0x0801F000;		// page 62, 0x3E
+    __config_section_third_start =      0x0801F800;		// page 63, 0x3F
+ *
+ */
+
+#define CONFIG_SECTION_FIRST_START 		0x0801E800
+#define CONFIG_SECTION_SECOND_START		0x0801F000
+#define CONFIG_SECTION_DEFAULT_START	0x0801E000
+
+#define CONFIG_MODE_PGM_CNTR	0x0
+#define CONFIG_MODE_OFSET		0x20			//	Current size: 0xF
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9C
+#define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4
+#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0xE
+#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54
+#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8
+#define CONFIG__END__OFFSET		0x300
 
 #include <string.h>
 
-const uint32_t * config_section_first_start = 		(uint32_t *)0x0801E800;
-const uint32_t * config_section_second_start = 		(uint32_t *)0x0801F000;
-const uint32_t * config_section_default_start = 	(uint32_t *)0x0801E000;
+const uint32_t * const config_section_first_start = 		(const uint32_t *)CONFIG_SECTION_FIRST_START;
+const uint32_t * const config_section_second_start = 		(const uint32_t *)CONFIG_SECTION_SECOND_START;
+const uint32_t * const config_section_default_start = 		(const uint32_t *)CONFIG_SECTION_DEFAULT_START;
+
+#ifdef STM32L471xx
+const uint16_t * config_data_pgm_cntr_first_ptr		= (uint16_t*)(CONFIG_SECTION_FIRST_START + CONFIG_MODE_PGM_CNTR);
+const uint16_t * config_data_pgm_cntr_second_ptr	= (uint16_t*)(CONFIG_SECTION_SECOND_START + CONFIG_MODE_PGM_CNTR);
+
+const config_data_mode_t * config_data_mode_first_ptr 				= (const config_data_mode_t * )		(CONFIG_SECTION_FIRST_START + CONFIG_MODE_OFSET);
+const config_data_basic_t * config_data_basic_first_ptr 			= (const config_data_basic_t *)		(CONFIG_SECTION_FIRST_START + CONFIG_BASIC_OFFSET);
+const config_data_wx_sources_t * config_data_wx_sources_first_ptr 	= (const config_data_wx_sources_t *)(CONFIG_SECTION_FIRST_START + CONFIG_SOURCES_OFFSET);
+const config_data_umb_t * config_data_umb_first_ptr					= (const config_data_umb_t *)		(CONFIG_SECTION_FIRST_START + CONFIG_UMB_OFFSET);
+const config_data_rtu_t * config_data_rtu_first_ptr					= (const config_data_rtu_t *)		(CONFIG_SECTION_FIRST_START + CONFIG_RTU_OFFSET);
+const config_data_gsm_t * config_data_gsm_first_ptr					= (const config_data_gsm_t *)		(CONFIG_SECTION_FIRST_START + CONFIG_GSM_OFFSET);
+
+const config_data_mode_t * config_data_mode_second_ptr 						= (const config_data_mode_t * )		(CONFIG_SECTION_SECOND_START + CONFIG_MODE_OFSET);
+const config_data_basic_t * config_data_basic_second_ptr 					= (const config_data_basic_t *)		(CONFIG_SECTION_SECOND_START + CONFIG_BASIC_OFFSET);
+const config_data_wx_sources_t * config_data_wx_sources_second_ptr			= (const config_data_wx_sources_t *)(CONFIG_SECTION_SECOND_START + CONFIG_SOURCES_OFFSET);
+const config_data_umb_t * config_data_umb_second_ptr 						= (const config_data_umb_t *)		(CONFIG_SECTION_SECOND_START + CONFIG_UMB_OFFSET);
+const config_data_rtu_t * config_data_rtu_second_ptr						= (const config_data_rtu_t *)		(CONFIG_SECTION_SECOND_START + CONFIG_RTU_OFFSET);
+const config_data_gsm_t * config_data_gsm_second_ptr						= (const config_data_gsm_t *)		(CONFIG_SECTION_SECOND_START + CONFIG_GSM_OFFSET);
+
+const config_data_gsm_t * config_data_gsm_default_ptr = (const config_data_gsm_t *)&config_data_gsm_default;
+
+#endif
+
+#ifdef STM32F10X_MD_VL
+const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first;
+const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second;
+
+const config_data_mode_t * config_data_mode_first_ptr 				= &config_data_mode_first;
+const config_data_basic_t * config_data_basic_first_ptr 			= &config_data_basic_first;
+const config_data_wx_sources_t * config_data_wx_sources_first_ptr 	= &config_data_wx_sources_first;
+const config_data_umb_t * config_data_umb_first_ptr					= &config_data_umb_first;
+const config_data_rtu_t * config_data_rtu_first_ptr					= &config_data_rtu_first;
+
+const config_data_mode_t * config_data_mode_second_ptr 						= &config_data_mode_second;
+const config_data_basic_t * config_data_basic_second_ptr 					= &config_data_basic_second;
+const config_data_wx_sources_t * config_data_wx_sources_second_ptr			= &config_data_wx_sources_second;
+const config_data_umb_t * config_data_umb_second_ptr 						= &config_data_umb_second;
+const config_data_rtu_t * config_data_rtu_second_ptr						= &config_data_rtu_second;
+
+#endif
 
 #define CRC_OFFSET				0x7FC
 #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
@@ -180,27 +243,27 @@ uint32_t configuration_handler_restore_default_first(void) {
 			switch (config_struct_it) {
 				case 0:	// mode
 					source = (uint16_t *) &config_data_mode_default;
-					target = (uint16_t *) &config_data_mode_first;
+					target = (uint16_t *) config_data_mode_first_ptr;
 					size = sizeof(config_data_mode_t) / 2;
 					break;
 				case 1:	// basic
 					source = (uint16_t *) &config_data_basic_default;
-					target = (uint16_t *) &config_data_basic_first;
+					target = (uint16_t *) config_data_basic_first_ptr;
 					size = sizeof(config_data_basic_t) / 2;
 					break;
 				case 2:	// sources
 					source = (uint16_t *) &config_data_wx_sources_default;
-					target = (uint16_t *) &config_data_wx_sources_first;
+					target = (uint16_t *) config_data_wx_sources_first_ptr;
 					size = sizeof(config_data_wx_sources_t) / 2;
 					break;
 				case 3:
 					source = (uint16_t *) &config_data_umb_default;
-					target = (uint16_t *) &config_data_umb_first;
+					target = (uint16_t *) config_data_umb_first_ptr;
 					size = sizeof(config_data_umb_t) / 2;
 					break;
 				case 4:
 					source = (uint16_t *) &config_data_rtu_default;
-					target = (uint16_t *) &config_data_rtu_first;
+					target = (uint16_t *) config_data_rtu_first_ptr;
 					size = sizeof(config_data_umb_t) / 2;
 					break;
 			}
@@ -339,27 +402,27 @@ uint32_t configuration_handler_restore_default_second(void) {
 			switch (config_struct_it) {
 				case 0:	// mode
 					source = (uint16_t *) &config_data_mode_default;
-					target = (uint16_t *) &config_data_mode_second;
+					target = (uint16_t *) config_data_mode_second_ptr;
 					size = sizeof(config_data_mode_t) / 2;
 					break;
 				case 1:	// basic
 					source = (uint16_t *) &config_data_basic_default;
-					target = (uint16_t *) &config_data_basic_second;
+					target = (uint16_t *) config_data_basic_second_ptr;
 					size = sizeof(config_data_basic_t) / 2;
 					break;
 				case 2:	// sources
 					source = (uint16_t *) &config_data_wx_sources_default;
-					target = (uint16_t *) &config_data_wx_sources_second;
+					target = (uint16_t *) config_data_wx_sources_second_ptr;
 					size = sizeof(config_data_wx_sources_t) / 2;
 					break;
 				case 3:
 					source = (uint16_t *) &config_data_umb_default;
-					target = (uint16_t *) &config_data_umb_second;
+					target = (uint16_t *) config_data_umb_second_ptr;
 					size = sizeof(config_data_umb_t) / 2;
 					break;
 				case 4:
 					source = (uint16_t *) &config_data_rtu_default;
-					target = (uint16_t *) &config_data_rtu_second;
+					target = (uint16_t *) config_data_rtu_second_ptr;
 					size = sizeof(config_data_umb_t) / 2;
 					break;
 			}
@@ -459,7 +522,18 @@ uint32_t configuration_handler_restore_default_second(void) {
 void configuration_handler_load_configuration(configuration_handler_region_t region) {
 
 #ifdef STM32L471xx
-	main_config_data_gsm = &config_data_gsm_default;
+	if (region == REGION_DEFAULT) {
+		main_config_data_gsm = config_data_gsm_default_ptr;
+	}
+	else if (region == REGION_FIRST) {
+		main_config_data_gsm = config_data_gsm_first_ptr;
+	}
+	else if (region == REGION_SECOND) {
+		main_config_data_gsm = config_data_gsm_second_ptr;
+	}
+	else {
+		;
+	}
 #endif
 
 	if (region == REGION_DEFAULT) {
@@ -470,18 +544,18 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 		main_config_data_rtu = &config_data_rtu_default;
 	}
 	else if (region == REGION_FIRST) {
-		main_config_data_mode = &config_data_mode_first;
-		main_config_data_basic = &config_data_basic_first;
-		main_config_data_wx_sources = &config_data_wx_sources_first;
-		main_config_data_umb = &config_data_umb_first;
-		main_config_data_rtu = &config_data_rtu_first;
+		main_config_data_mode = config_data_mode_first_ptr;
+		main_config_data_basic = config_data_basic_first_ptr;
+		main_config_data_wx_sources = config_data_wx_sources_first_ptr;
+		main_config_data_umb = config_data_umb_first_ptr;
+		main_config_data_rtu = config_data_rtu_first_ptr;
 	}
 	else if (region == REGION_SECOND) {
-		main_config_data_mode = &config_data_mode_second;
-		main_config_data_basic = &config_data_basic_second;
-		main_config_data_wx_sources = &config_data_wx_sources_second;
-		main_config_data_umb = &config_data_umb_second;
-		main_config_data_rtu = &config_data_rtu_second;
+		main_config_data_mode = config_data_mode_second_ptr;
+		main_config_data_basic = config_data_basic_second_ptr;
+		main_config_data_wx_sources = config_data_wx_sources_second_ptr;
+		main_config_data_umb = config_data_umb_second_ptr;
+		main_config_data_rtu = config_data_rtu_second_ptr;
 	}
 	else {
 		;
