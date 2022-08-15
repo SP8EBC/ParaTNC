@@ -266,7 +266,7 @@ SECTIONS
 		. = start + 0x160;
 		KEEP(*(.config_section_first.rtu));
 		
-		. = 0x7FC;
+		. = 0x7F8;
 		KEEP(*(.config_section_first.crc));
 
     } >FLASH
@@ -296,7 +296,7 @@ SECTIONS
 		. = start + 0x160;
 		KEEP(*(.config_section_second.rtu));
 		
-		. = 0x7FC;
+		. = 0x7F8;
 		KEEP(*(.config_section_second.crc));
 
     } >FLASH

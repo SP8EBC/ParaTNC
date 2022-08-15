@@ -41,10 +41,10 @@
 #define CONFIG_SECTION_DEFAULT_START	0x0801E000
 
 #define CONFIG_MODE_PGM_CNTR	0x0
-#define CONFIG_MODE_OFSET		0x20			//	Current size: 0xF
+#define CONFIG_MODE_OFSET		0x20			//	Current size: 0x10
 #define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9C
 #define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4
-#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0xE
+#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10
 #define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54
 #define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8
 #define CONFIG__END__OFFSET		0x300
@@ -95,7 +95,7 @@ const config_data_rtu_t * config_data_rtu_second_ptr						= &config_data_rtu_sec
 
 #endif
 
-#define CRC_OFFSET				0x7FC
+#define CRC_OFFSET				0x7F8
 #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
 #define CRC_32B_WORD_OFFSET		CRC_OFFSET / 4
 
@@ -120,6 +120,204 @@ configuration_handler_region_t configuration_handler_loaded;
 static const uint8_t kiss_config_preamble[] = {FEND, KISS_RUNNING_CONFIG, CONFIG_SECTION_LN & 0xFF, (CONFIG_SECTION_LN & 0xFF00) >> 8};
 
 uint8_t config_kiss_flash_state = 0;
+
+#define WAIT_FOR_PGM_COMPLETION			\
+	while (1) {\
+		flash_status = FLASH_GetBank1Status();				\
+															\
+		if (flash_status == FLASH_BUSY) {					\
+			;												\
+		}													\
+		else if (flash_status == FLASH_ERROR_PG) {			\
+			out = -1;										\
+			break;											\
+		}													\
+		else {												\
+			break;											\
+		}													\
+	}														\
+
+static int configuration_handler_program_counter(uint16_t counter, int8_t bank) {
+
+	int out = 0;
+
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	// unlock flash memory
+	FLASH_Unlock();
+
+	// enable programming
+	FLASH->CR |= FLASH_CR_PG;
+
+#ifdef STM32F10X_MD_VL
+	if (bank == 1) {
+		// set programming counter. If second region is also screwed the first one will be used as a source
+		// if second is OK it will be used instead (if its programming counter has value three or more).
+		*(uint16_t*)&config_data_pgm_cntr_first = counter;
+	}
+	else {
+		// set programming counter. If second region is also screwed the first one will be used as a source
+		// if second is OK it will be used instead (if its programming counter has value three or more).
+		*(uint16_t*)&config_data_pgm_cntr_second = counter;
+	}
+
+#endif
+
+#ifdef STM32L471xx
+	if (bank == 1) {
+		// set programming counter. If second region is also screwed the first one will be used as a source
+		// if second is OK it will be used instead (if its programming counter has value three or more).
+		*((uint32_t*)(config_data_pgm_cntr_first_ptr)) = counter;
+		WAIT_FOR_PGM_COMPLETION
+
+		*((uint32_t*)(config_data_pgm_cntr_first_ptr)+ 1) = 0xFFFFFFFFu;
+		WAIT_FOR_PGM_COMPLETION
+
+	}
+	else {
+		// set programming counter. If second region is also screwed the first one will be used as a source
+		// if second is OK it will be used instead (if its programming counter has value three or more).
+		*((uint32_t*)(config_data_pgm_cntr_second_ptr)) = counter;
+		WAIT_FOR_PGM_COMPLETION
+
+		*((uint32_t*)(config_data_pgm_cntr_second_ptr) + 1) = 0xFFFFFFFFu;
+		WAIT_FOR_PGM_COMPLETION
+
+	}
+#endif
+	// disable programming
+	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
+	// lock the memory back
+	FLASH_Lock();
+
+	return out;
+}
+
+static int configuration_handler_program_crc(uint32_t crc, int8_t bank) {
+
+	int out = 0;
+
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	// unlock flash memory
+	FLASH_Unlock();
+
+	// enable programming
+	FLASH->CR |= FLASH_CR_PG;
+
+#ifdef STM32F10X_MD_VL
+	// program the CRC value
+	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);
+	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((target_crc_value & 0xFFFF0000) >> 16);
+
+	flash_status = FLASH_GetBank1Status();
+
+	if (flash_status != FLASH_COMPLETE) {
+		out = -2;	// exit from the loop in case of programming error
+	}
+#endif
+
+#ifdef STM32L471xx
+	if (bank == 1) {
+		// program the CRC value
+		*(uint32_t*)((uint32_t *)config_section_first_start + CRC_32B_WORD_OFFSET) = (uint32_t)(crc);
+		WAIT_FOR_PGM_COMPLETION
+		*(uint32_t*)((uint32_t *)config_section_first_start + CRC_32B_WORD_OFFSET + 1) = 0xFFFFFFFFu;
+		WAIT_FOR_PGM_COMPLETION
+
+	}
+	else if (bank == 2) {
+		// program the CRC value
+		*(uint32_t*)((uint32_t *)config_section_second_start + CRC_32B_WORD_OFFSET) = (uint32_t)(crc);
+		WAIT_FOR_PGM_COMPLETION
+		*(uint32_t*)((uint32_t *)config_section_second_start + CRC_32B_WORD_OFFSET + 1) = 0xFFFFFFFFu;
+		WAIT_FOR_PGM_COMPLETION
+
+	}
+	else {
+		out = -3;
+	}
+
+
+#endif
+
+	// disable programming
+	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
+	// lock the memory back
+	FLASH_Lock();
+
+	return out;
+}
+
+static int configuration_handler_program_data(volatile void * source, volatile void * destination, uint16_t size) {
+
+	int out = 0;
+
+	int i = 0;
+
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	// unlock flash memory
+	FLASH_Unlock();
+
+#ifdef STM32F10X_MD_VL
+	// source pointer
+	volatile uint16_t * src = (uint16_t *)source;
+
+	// destination pointer for flash reprogramming
+	volatile uint16_t * dst = (uint16_t *)destination;
+
+	// amount of 16 bit words to copy across the memory
+	uint16_t siz = size / 2;
+#endif
+
+#ifdef STM32L471xx
+	// source pointer
+	volatile uint32_t * src = (uint32_t *)source;
+
+	// destination pointer for flash reprogramming
+	volatile uint32_t * dst = (uint32_t *)destination;
+
+	// amount of 32 bit words to copy across the memory
+	uint16_t siz = size / 4;
+#endif
+
+	// enable programming
+	FLASH->CR |= FLASH_CR_PG;
+
+	// if so reprogram first section
+	for (i = 0; i < siz; i++) {
+
+		// copy data
+		*(dst + i) = *(src + i);
+
+		WAIT_FOR_PGM_COMPLETION
+	}
+
+#ifdef STM32L471xx
+	// this family supports only 64 bit aligned in-application flash programming
+	if ((siz % 2) != 0) {
+		// if size is an odd number pad with extra 0xFFFFFF
+		*(dst + i) = 0xFFFFFFFFu;
+
+		// check current status
+		flash_status = FLASH_GetBank1Status();
+	}
+#endif
+
+	// disable programming
+	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
+	// lock the memory back
+	FLASH_Lock();
+
+	return out;
+}
 
 uint32_t configuration_handler_check_crc(void) {
 
@@ -211,10 +409,10 @@ uint32_t configuration_handler_restore_default_first(void) {
 	int8_t config_struct_it = 0;
 
 	// source pointer
-	volatile uint16_t * source = 0x00;
+	volatile void * source = 0x00;
 
 	// destination pointer for flash reprogramming
-	volatile uint16_t * target = 0x00;
+	volatile void * target = 0x00;
 
 	// amount of 16 bit words to copy across the memory
 	uint16_t size = 0;
@@ -226,9 +424,6 @@ uint32_t configuration_handler_restore_default_first(void) {
 	FLASH_Status flash_status = 0;
 
 	int comparision_result = 0;
-
-	// unlock flash memory
-	FLASH_Unlock();
 
 	// erase first page
 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start);
@@ -242,63 +437,37 @@ uint32_t configuration_handler_restore_default_first(void) {
 			// set pointers
 			switch (config_struct_it) {
 				case 0:	// mode
-					source = (uint16_t *) &config_data_mode_default;
-					target = (uint16_t *) config_data_mode_first_ptr;
-					size = sizeof(config_data_mode_t) / 2;
+					source = (void *) &config_data_mode_default;
+					target = (void *) config_data_mode_first_ptr;
+					size = sizeof(config_data_mode_t);			// divide two for 16bit programming, divide four for
 					break;
 				case 1:	// basic
-					source = (uint16_t *) &config_data_basic_default;
-					target = (uint16_t *) config_data_basic_first_ptr;
-					size = sizeof(config_data_basic_t) / 2;
+					source = (void *) &config_data_basic_default;
+					target = (void *) config_data_basic_first_ptr;
+					size = sizeof(config_data_basic_t);
 					break;
 				case 2:	// sources
-					source = (uint16_t *) &config_data_wx_sources_default;
-					target = (uint16_t *) config_data_wx_sources_first_ptr;
-					size = sizeof(config_data_wx_sources_t) / 2;
+					source = (void *) &config_data_wx_sources_default;
+					target = (void *) config_data_wx_sources_first_ptr;
+					size = sizeof(config_data_wx_sources_t);
 					break;
 				case 3:
-					source = (uint16_t *) &config_data_umb_default;
-					target = (uint16_t *) config_data_umb_first_ptr;
-					size = sizeof(config_data_umb_t) / 2;
+					source = (void *) &config_data_umb_default;
+					target = (void *) config_data_umb_first_ptr;
+					size = sizeof(config_data_umb_t);
 					break;
 				case 4:
-					source = (uint16_t *) &config_data_rtu_default;
-					target = (uint16_t *) config_data_rtu_first_ptr;
-					size = sizeof(config_data_umb_t) / 2;
+					source = (void *) &config_data_rtu_default;
+					target = (void *) config_data_rtu_first_ptr;
+					size = sizeof(config_data_umb_t);
 					break;
 			}
 
-
-			// enable programming
-			FLASH->CR |= FLASH_CR_PG;
-
-			// if so reprogram first section
-			for (i = 0; i < size; i++) {
-
-				// copy data
-				*(target + i) = *(source + i);
-
-				// wait for flash operation to finish
-				while (1) {
-					// check current status
-					flash_status = FLASH_GetBank1Status();
-
-					if (flash_status == FLASH_BUSY) {
-						;
-					}
-					else {
-						break;
-					}
-				}
-
-				if (flash_status != FLASH_COMPLETE) {
-					break;	// exit from the loop in case of programming error
-				}
-
-			}
+			// program data
+			configuration_handler_program_data(source, target, size);
 
 			// verify programming
-			comparision_result = memcmp((const void * )target, (const void * )source, size * 2);
+			comparision_result = memcmp((const void * )target, (const void * )source, size);
 
 			if (comparision_result != 0) {
 				// quit from the
@@ -312,9 +481,11 @@ uint32_t configuration_handler_restore_default_first(void) {
 		return -2;
 	}
 
+	configuration_handler_program_counter(0x0002u, 1);
+
 	// set programming counter. If second region is also screwed the first one will be used as a source
 	// if second is OK it will be used instead (if its programming counter has value three or more).
-	*(uint16_t*)&config_data_pgm_cntr_first = 0x0002u;
+	//*(uint16_t*)&config_data_pgm_cntr_first = 0x0002u;
 
 #ifdef STM32F10X_MD_VL
 	// resetting CRC engine
@@ -342,15 +513,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 	target_crc_value = CRC->DR;
 #endif
 
-	// program the CRC value
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((target_crc_value & 0xFFFF0000) >> 16);
-
-	flash_status = FLASH_GetBank1Status();
-
-	if (flash_status != FLASH_COMPLETE) {
-		out = -2;	// exit from the loop in case of programming error
-	}
+	configuration_handler_program_crc(target_crc_value, 1);
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
@@ -370,10 +533,10 @@ uint32_t configuration_handler_restore_default_second(void) {
 	int8_t config_struct_it = 0;
 
 	// source pointer
-	volatile uint16_t * source = 0x00;
+	volatile void * source = 0x00;
 
 	// destination pointer for flash reprogramming
-	volatile uint16_t * target = 0x00;
+	volatile void * target = 0x00;
 
 	// amount of 16 bit words to copy across the memory
 	uint16_t size = 0;
@@ -401,63 +564,37 @@ uint32_t configuration_handler_restore_default_second(void) {
 			// set pointers
 			switch (config_struct_it) {
 				case 0:	// mode
-					source = (uint16_t *) &config_data_mode_default;
-					target = (uint16_t *) config_data_mode_second_ptr;
-					size = sizeof(config_data_mode_t) / 2;
+					source = (void *) &config_data_mode_default;
+					target = (void *) config_data_mode_second_ptr;
+					size = sizeof(config_data_mode_t);
 					break;
 				case 1:	// basic
-					source = (uint16_t *) &config_data_basic_default;
-					target = (uint16_t *) config_data_basic_second_ptr;
-					size = sizeof(config_data_basic_t) / 2;
+					source = (void *) &config_data_basic_default;
+					target = (void *) config_data_basic_second_ptr;
+					size = sizeof(config_data_basic_t);
 					break;
 				case 2:	// sources
-					source = (uint16_t *) &config_data_wx_sources_default;
-					target = (uint16_t *) config_data_wx_sources_second_ptr;
-					size = sizeof(config_data_wx_sources_t) / 2;
+					source = (void *) &config_data_wx_sources_default;
+					target = (void *) config_data_wx_sources_second_ptr;
+					size = sizeof(config_data_wx_sources_t);
 					break;
 				case 3:
-					source = (uint16_t *) &config_data_umb_default;
-					target = (uint16_t *) config_data_umb_second_ptr;
-					size = sizeof(config_data_umb_t) / 2;
+					source = (void *) &config_data_umb_default;
+					target = (void *) config_data_umb_second_ptr;
+					size = sizeof(config_data_umb_t);
 					break;
 				case 4:
-					source = (uint16_t *) &config_data_rtu_default;
-					target = (uint16_t *) config_data_rtu_second_ptr;
-					size = sizeof(config_data_umb_t) / 2;
+					source = (void *) &config_data_rtu_default;
+					target = (void *) config_data_rtu_second_ptr;
+					size = sizeof(config_data_umb_t);
 					break;
 			}
 
-
-			// enable programming
-			FLASH->CR |= FLASH_CR_PG;
-
-			// if so reprogram first section
-			for (i = 0; i < size; i++) {
-
-				// copy data
-				*(target + i) = *(source + i);
-
-				// wait for flash operation to finish
-				while (1) {
-					// check current status
-					flash_status = FLASH_GetBank1Status();
-
-					if (flash_status == FLASH_BUSY) {
-						;
-					}
-					else {
-						break;
-					}
-				}
-
-				if (flash_status != FLASH_COMPLETE) {
-					break;	// exit from the loop in case of programming error
-				}
-
-			}
+			// program data
+			configuration_handler_program_data(source, target, size);
 
 			// verify programming
-			comparision_result = memcmp((const void * )target, (const void * )source, size * 2);
+			comparision_result = memcmp((const void * )target, (const void * )source, size);
 
 			if (comparision_result != 0) {
 				// quit from the
@@ -471,9 +608,11 @@ uint32_t configuration_handler_restore_default_second(void) {
 		return -2;
 	}
 
+	configuration_handler_program_counter(0x0003u, 2);
+
 	// set programming counter. If second region is also screwed the first one will be used as a source
 	// if second is OK it will be used instead (if its programming counter has value three or more).
-	*(uint16_t*)&config_data_pgm_cntr_second = 0x0002u;
+	//*(uint16_t*)&config_data_pgm_cntr_second = 0x0002u;
 
 #ifdef STM32F10X_MD_VL
 	// resetting CRC engine
@@ -492,7 +631,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
 		// feed the data into CRC engine
-		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
+		LL_CRC_FeedData32(CRC, *(config_section_second_start + i));
 	}
 
 	// placeholder for CRC value itself
@@ -501,15 +640,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 	target_crc_value = CRC->DR;
 #endif
 
-	// program the CRC value
-	*(uint16_t*)((uint16_t *)config_section_second_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);
-	*(uint16_t*)((uint16_t *)config_section_second_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((target_crc_value & 0xFFFF0000) >> 16);
-
-	flash_status = FLASH_GetBank1Status();
-
-	if (flash_status != FLASH_COMPLETE) {
-		out = -2;	// exit from the loop in case of programming error
-	}
+	configuration_handler_program_crc(target_crc_value, 2);
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
@@ -517,7 +648,8 @@ uint32_t configuration_handler_restore_default_second(void) {
 	// lock the memory back
 	FLASH_Lock();
 
-	return out;}
+	return out;
+}
 
 void configuration_handler_load_configuration(configuration_handler_region_t region) {
 
@@ -591,7 +723,12 @@ void configuration_set_register(uint32_t value) {
 #endif
 
 #ifdef STM32L471xx
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
 	RTC->BKP3R = value;
+
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 
 #endif
 }
@@ -602,7 +739,12 @@ void configuration_set_bits_register(uint32_t value) {
 #endif
 
 #ifdef STM32L471xx
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
 	RTC->BKP3R |= value;
+
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 
 #endif
 }
@@ -613,7 +755,12 @@ void configuration_clear_bits_register(uint32_t value) {
 #endif
 
 #ifdef STM32L471xx
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
 	RTC->BKP3R &= (0xFFFFFFFF ^ value);
+
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 
 #endif
 }

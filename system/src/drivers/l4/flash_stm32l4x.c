@@ -42,6 +42,14 @@ FLASH_Status FLASH_GetBank1Status(void)
     {
         flashstatus = FLASH_ERROR_PG;
     }
+    else if ((FLASH->SR & FLASH_SR_SIZERR) != 0)
+    {
+        flashstatus = FLASH_ERROR_PG;
+    }
+    else if ((FLASH->SR & FLASH_SR_PGSERR) != 0)
+    {
+        flashstatus = FLASH_ERROR_PG;
+    }
     else
     {
       if((FLASH->SR & FLASH_SR_WRPERR) != 0 )
@@ -107,10 +115,13 @@ FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 	  UNUSED(Banks);
 	#endif
 
+	  SET_BIT(FLASH->CR, FLASH_CR_EOPIE);
+
 	  /* Proceed to erase the page */
 	  MODIFY_REG(FLASH->CR, FLASH_CR_PNB, ((Page & 0xFFU) << FLASH_CR_PNB_Pos));
 	  SET_BIT(FLASH->CR, FLASH_CR_PER);
 	  SET_BIT(FLASH->CR, FLASH_CR_STRT);
+
 
 	  // wait for flash operation to finish
 	  while((FLASH->SR & FLASH_SR_BSY) != 0);
@@ -121,6 +132,9 @@ FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 	  else {
 		  out = FLASH_ERROR_WRP;
 	  }
+
+	  CLEAR_BIT(FLASH->CR, FLASH_CR_PER);
+	  CLEAR_BIT(FLASH->CR, FLASH_CR_EOPIE);
 
 	  FLASH_Lock();
 

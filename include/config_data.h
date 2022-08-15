@@ -35,7 +35,7 @@ typedef enum config_data_powersave_mode_t {
 
 }config_data_powersave_mode_t;
 
-typedef struct config_data_mode_t {
+typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 #define WX_ENABLED 					(1)
 #define WX_INTERNAL_AS_BACKUP 		(1 << 1)
@@ -78,7 +78,7 @@ typedef struct config_data_mode_t {
 
 } config_data_mode_t;
 
-typedef struct config_data_basic_t {
+typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
 	char callsign[7];
 
@@ -151,7 +151,7 @@ typedef enum config_data_wx_sources_enum_t {
 	WX_SOURCE_DAVIS_SERIAL = 5
 } config_data_wx_sources_enum_t;
 
-typedef struct config_data_wx_sources_t {
+typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {
 
 	config_data_wx_sources_enum_t temperature;
 	config_data_wx_sources_enum_t pressure;
@@ -160,7 +160,7 @@ typedef struct config_data_wx_sources_t {
 
 } config_data_wx_sources_t;
 
-typedef struct config_data_umb_t {
+typedef struct __attribute__((aligned (4))) config_data_umb_t {
 
 	uint16_t slave_class;
 
@@ -184,7 +184,7 @@ typedef struct config_data_umb_t {
  */
 } config_data_umb_t;
 
-typedef struct config_data_rtu_t {
+typedef struct __attribute__((aligned (4))) config_data_rtu_t {
 	uint16_t slave_speed;
 
 	uint8_t slave_parity;
@@ -323,7 +323,7 @@ typedef struct config_data_rtu_t {
 
 } config_data_rtu_t;
 
-typedef struct config_data_gsm_t {
+typedef struct __attribute__((aligned (4))) config_data_gsm_t {
 
 	char pin[5];
 
