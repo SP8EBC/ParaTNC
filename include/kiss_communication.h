@@ -14,7 +14,7 @@
 
 #include "stdint.h"
 
-#define KISS_BUFFER_LN 256
+//#define KISS_BUFFER_LN 256
 
 #define KISS_TOO_LONG_FRM -1
 
@@ -23,12 +23,22 @@
 	#define TFEND	(uint8_t)0xDC
 	#define TFESC	(uint8_t)0xDD
 
+#define KISS_DATA	 				(uint8_t) 0x00
+#define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20
+#define KISS_RUNNING_CONFIG			(uint8_t) 0x70
+
+#define KISS_GET_VERSION			(uint8_t) 0x15
+
+#define KISS_RETURN_IDLE		1
+
   /* C++ detection */
   #ifdef __cplusplus
   extern "C" {
   #endif
 
-  int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len);
+  uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len );
+
+  int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len);
   int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a);
 
   void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len);
@@ -36,9 +46,6 @@
   uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
   void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc);
   void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len);
-
-
-  uint8_t* kiss_get_buff_ptr(void);
 
   #ifdef __cplusplus
   }

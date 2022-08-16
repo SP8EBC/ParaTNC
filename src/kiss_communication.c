@@ -5,7 +5,8 @@
  *      Author: mateusz
  */
 
-#include "KissCommunication.h"
+#include <kiss_communication.h>
+#include "kiss_callback.h"
 
 
 #include "main.h"
@@ -22,13 +23,43 @@
 
 extern unsigned short tx10m;
 
-#define KISS_DATA	 				(uint8_t) 0x00
-#define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20
-#define KISS_RUNNING_CONFIG			(uint8_t) 0x70
+/**
+ * ID of asynchronous message which is currently transmitteed asynchronously do host PC.
+ * If it is set to 0xFF then no async message is transmitted
+ */
+uint8_t kiss_current_async_message = 0xFF;
 
-uint8_t kiss_buffer[KISS_BUFFER_LN];
+/**
+ * This an id of segment of multiframe message, like running config
+ */
+uint8_t kiss_current_message_frame_segment = 0;
 
-int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len) {
+uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
+
+	int16_t pooling_result = 0;
+
+	uint8_t out = 0;
+
+	if (kiss_current_async_message == 0xFF) {
+		return KISS_RETURN_IDLE;
+	}
+
+	switch(kiss_current_async_message) {
+	case KISS_RUNNING_CONFIG:
+		pooling_result = kiss_pool_callback_get_running_config(output, output_len, kiss_current_message_frame_segment);
+
+		break;
+	}
+
+	// positive return value
+	if (pooling_result > 0) {
+
+	}
+
+	return out;
+}
+
+int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len) {
 	#define FEND	(uint8_t)0xC0
 	#define FESC	(uint8_t)0xDB
 	#define TFEND	(uint8_t)0xDC
@@ -72,18 +103,17 @@ int32_t SendKISSToHost(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* 
 int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a) {
 	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
 	int j/* zmienna do poruszania sie po lokalnej tablicy do przepisywania*/;
-//	uint8_t FrameBuff[100];
 
 	if (input_frame_from_host == 0x00 || ax25 == 0x00 || a == 0x00) {
 		return 2;
 	}
 
-	uint8_t *FrameBuff = kiss_buffer;
+	uint8_t *FrameBuff = (uint8_t *)main_own_aprs_msg;
 
 	uint8_t frame_type = *(input_frame_from_host+1);
 
 	// check if frame from host is not too long
-	if (input_len >= KISS_BUFFER_LN)
+	if (input_len >= OWN_APRS_MSG_LN)
 		return 1;
 
 	if (*(input_frame_from_host) != FEND) {
@@ -91,9 +121,11 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 	}
 
 	// check input frame type
-	switch (frame_type != 0x00) {
+	switch (frame_type) {
 
 		case KISS_DATA: {
+			memset(FrameBuff, 0x00, OWN_APRS_MSG_LN);
+
 			// if this is data frame
 			for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
 				if (*(input_frame_from_host+i) == FESC) {
@@ -121,7 +153,7 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 			afsk_txStart(a);
 		} break;
 
-		case KISS_RUNNING_CONFIG: {
+		case KISS_GET_RUNNING_CONFIG: {
 
 		} break;
 
@@ -250,8 +282,5 @@ void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* curren
 	*current_len = ln;
 }
 
-uint8_t* kiss_get_buff_ptr(void) {
-	return kiss_buffer;
-}
 
 

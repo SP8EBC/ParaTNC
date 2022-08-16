@@ -18,7 +18,7 @@
 
 #define PWR_SWITCH_BOTH
 
-#define OWN_APRS_MSG_LN 	160
+#define OWN_APRS_MSG_LN 	256
 
 // backup registers (ParaMETEO)
 // 0 -> powersave status

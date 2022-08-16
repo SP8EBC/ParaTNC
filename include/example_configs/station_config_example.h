@@ -5,6 +5,13 @@
  *      Author: mateusz
  */
 
+/**
+ * Important warning for ParaMETEO target!! Starting from EA15 software the configuration is kept in separate NvMem area,
+ * outside application software area. It isn't erased or reprogrammed during loading HEX file generated with this build.
+ * After NvMem is initialized, changing only this configuration won't affect ParaMETEO. To force update flash mass erase
+ * shall be performed.
+ */
+
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
@@ -25,9 +32,6 @@
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
-
-//#define PARATNC_HWREV_C
-#define PARAMETEO
 
 /* ---------------------------- */
 /* 	WEATHER/METEO CONFIGURATION */

@@ -4,7 +4,6 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/KissCommunication.c \
 ../src/LedConfig.c \
 ../src/PathConfig.c \
 ../src/TimerConfig.c \
@@ -20,6 +19,7 @@ C_SRCS += \
 ../src/float_to_string.c \
 ../src/io.c \
 ../src/it_handlers.c \
+../src/kiss_communication.c \
 ../src/main.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
@@ -35,7 +35,6 @@ C_SRCS += \
 ../src/wx_pwr_switch.c 
 
 OBJS += \
-./src/KissCommunication.o \
 ./src/LedConfig.o \
 ./src/PathConfig.o \
 ./src/TimerConfig.o \
@@ -51,6 +50,7 @@ OBJS += \
 ./src/float_to_string.o \
 ./src/io.o \
 ./src/it_handlers.o \
+./src/kiss_communication.o \
 ./src/main.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
@@ -66,7 +66,6 @@ OBJS += \
 ./src/wx_pwr_switch.o 
 
 C_DEPS += \
-./src/KissCommunication.d \
 ./src/LedConfig.d \
 ./src/PathConfig.d \
 ./src/TimerConfig.d \
@@ -82,6 +81,7 @@ C_DEPS += \
 ./src/float_to_string.d \
 ./src/io.d \
 ./src/it_handlers.d \
+./src/kiss_communication.d \
 ./src/main.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \

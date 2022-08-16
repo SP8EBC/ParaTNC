@@ -8,10 +8,10 @@
 #include <afsk.h>
 #include <cfifo.h>
 #include <crc.h>
+#include <kiss_communication.h>
 
 #include "station_config.h"
 
-#include "KissCommunication.h"
 
 AX25Msg ax25_rxed_frame;
 char ax25_new_msg_rx_flag;

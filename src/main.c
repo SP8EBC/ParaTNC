@@ -84,7 +84,7 @@
 
 #include "drivers/dallas.h"
 
-#include "KissCommunication.h"
+#include <kiss_communication.h>
 
 #define SOH 0x01
 
@@ -1017,7 +1017,7 @@ int main(int argc, char* argv[]){
 
 				if (main_kiss_enabled == 1) {
 					// convert message to kiss format and send it to host
-					srl_start_tx(main_kiss_srl_ctx_ptr, SendKISSToHost(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
+					srl_start_tx(main_kiss_srl_ctx_ptr, kiss_send_ax25_to_host(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
 				}
 			}
 
