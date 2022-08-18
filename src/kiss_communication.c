@@ -13,13 +13,12 @@
 #include "config_data_externs.h"
 #include "configuration_handler.h"
 
-#include "drivers/serial.h"
-
 #include "station_config.h"
 
 
 #include <crc.h>
 #include <string.h>
+#include <stdlib.h>
 
 extern unsigned short tx10m;
 
@@ -28,6 +27,7 @@ extern unsigned short tx10m;
  * If it is set to 0xFF then no async message is transmitted
  */
 uint8_t kiss_current_async_message = 0xFF;
+
 
 /**
  * This an id of segment of multiframe message, like running config
@@ -51,9 +51,18 @@ uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 		break;
 	}
 
-	// positive return value
+	// positive return value means that there is something to transmit to host
+	// and the value itself points how big the response is
 	if (pooling_result > 0) {
 
+	}
+	else if (pooling_result == 0) {
+		// if result equals to zero it means that there is nothing more to send
+		kiss_current_async_message = 0xFF;
+	}
+	else {
+		// an error has occured if pooling result is negative
+		out = 0 - abs(pooling_result);
 	}
 
 	return out;
@@ -100,69 +109,78 @@ int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, u
 	return j;
 }
 
-int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a) {
+/**
+ * Function responsible for parsing a KISS message send by a host PC to the controller. If the frame contains
+ * some diagnostics request or configuration (NOT regular KISS data with frame to be transmitted), this function
+ * might generate a response
+ */
+int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a, uint8_t * response_buffer, uint16_t resp_buf_ln ) {
 	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
 	int j/* zmienna do poruszania sie po lokalnej tablicy do przepisywania*/;
 
+	int32_t output = 0;
+
 	if (input_frame_from_host == 0x00 || ax25 == 0x00 || a == 0x00) {
-		return 2;
+		output = -2;
 	}
-
-	uint8_t *FrameBuff = (uint8_t *)main_own_aprs_msg;
-
-	uint8_t frame_type = *(input_frame_from_host+1);
-
-	// check if frame from host is not too long
-	if (input_len >= OWN_APRS_MSG_LN)
-		return 1;
-
-	if (*(input_frame_from_host) != FEND) {
-		return 1;
+	else if (input_len >= OWN_APRS_MSG_LN) {
+		output = -1;
 	}
+	else if (*(input_frame_from_host) != FEND) {
+		output = -1;
+	}
+	else {
 
-	// check input frame type
-	switch (frame_type) {
+		uint8_t *FrameBuff = (uint8_t *)main_own_aprs_msg;
 
-		case KISS_DATA: {
-			memset(FrameBuff, 0x00, OWN_APRS_MSG_LN);
+		uint8_t frame_type = *(input_frame_from_host+1);
 
-			// if this is data frame
-			for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
-				if (*(input_frame_from_host+i) == FESC) {
-					if(*(input_frame_from_host+i+1) == TFEND)
-						FrameBuff[j]=FEND;
-					else if(*(input_frame_from_host+i+1) == TFESC)
-						FrameBuff[j]=FESC;
-					else {
-						;
+		// check input frame type
+		switch (frame_type) {
+
+			case KISS_DATA: {
+				memset(FrameBuff, 0x00, OWN_APRS_MSG_LN);
+
+				// if this is data frame
+				for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
+					if (*(input_frame_from_host+i) == FESC) {
+						if(*(input_frame_from_host+i+1) == TFEND)
+							FrameBuff[j]=FEND;
+						else if(*(input_frame_from_host+i+1) == TFESC)
+							FrameBuff[j]=FESC;
+						else {
+							;
+						}
+						i++;
 					}
-					i++;
+					else
+						FrameBuff[j] = *(input_frame_from_host+i);
 				}
-				else
-					FrameBuff[j] = *(input_frame_from_host+i);
-			}
 
-			tx10m++;
+				tx10m++;
 
-			// keep this commented until reseting the DCD variable will be moved outside main for (;;) loop
-			//	while(ax25->dcd == true);
-			while(a->sending == true);
+				// keep this commented until reseting the DCD variable will be moved outside main for (;;) loop
+				//	while(ax25->dcd == true);
+				while(a->sending == true);
 
 
-			ax25_sendRaw(ax25,FrameBuff,j);
-			afsk_txStart(a);
-		} break;
+				ax25_sendRaw(ax25,FrameBuff,j);
+				afsk_txStart(a);
+			} break;
 
-		case KISS_GET_RUNNING_CONFIG: {
+			case KISS_GET_RUNNING_CONFIG: {
+				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
 
-		} break;
+				kiss_current_message_frame_segment = 0;
+			} break;
 
 
-		default: return 1;
+			default: output = -3;
+		}
 	}
 
 
-	return 0;
+	return output;
 }
 
 

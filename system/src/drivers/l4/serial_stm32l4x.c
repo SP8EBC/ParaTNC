@@ -267,6 +267,9 @@ uint8_t srl_start_tx(srl_context_t *ctx, short leng) {
 	if (leng >= ctx->srl_rx_buf_ln)
 		return SRL_DATA_TOO_LONG;
 
+	if (leng == 0)
+		return SRL_WRONG_PARAMS_COMBINATION;
+
 	ctx->srl_tx_bytes_req = leng;
 
 	// setting a pointer to transmit buffer to the internal buffer inside the driver

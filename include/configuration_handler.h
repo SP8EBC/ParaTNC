@@ -16,8 +16,6 @@ typedef enum configuration_handler_region_t {
 	REGION_SECOND
 } configuration_handler_region_t;
 
-extern configuration_handler_region_t configuration_handler_loaded;
-
 uint32_t configuration_handler_check_crc(void);
 uint32_t configuration_handler_restore_default_first(void);
 uint32_t configuration_handler_restore_default_second(void);
@@ -29,7 +27,6 @@ void configuration_set_register(uint32_t value);
 void configuration_set_bits_register(uint32_t value);
 void configuration_clear_bits_register(uint32_t value);
 
-int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len);
-int32_t configuration_kiss_flash_config(uint8_t* input_frame_from_host, uint16_t input_len);
+configuration_handler_region_t configuration_get_current(uint32_t * size);
 
 #endif /* CONFIGURATION_HANDLER_H_ */

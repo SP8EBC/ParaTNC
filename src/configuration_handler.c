@@ -41,12 +41,12 @@
 #define CONFIG_SECTION_DEFAULT_START	0x0801E000
 
 #define CONFIG_MODE_PGM_CNTR	0x0
-#define CONFIG_MODE_OFSET		0x20			//	Current size: 0x10
-#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9C
-#define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4
-#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10
-#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54
-#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8
+#define CONFIG_MODE_OFSET		0x20			//	Current size: 0x10, free: 0x10
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9C, free: 0x44
+#define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4,  free: 0x1C
+#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10, free: 0x10
+#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54, free: 0x4C
+#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8,
 #define CONFIG__END__OFFSET		0x300
 
 #include <string.h>
@@ -99,7 +99,7 @@ const config_data_rtu_t * config_data_rtu_second_ptr						= &config_data_rtu_sec
 #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
 #define CRC_32B_WORD_OFFSET		CRC_OFFSET / 4
 
-#define CONFIG_SECTION_LN 0x7FF
+#define CONFIG_SECTION_LN 0x800
 
 #define FEND	(uint8_t)0xC0
 #define FESC	(uint8_t)0xDB
@@ -116,8 +116,6 @@ volatile extern const config_data_rtu_t config_data_rtu_default;
 volatile extern const config_data_wx_sources_t config_data_wx_sources_default;
 
 configuration_handler_region_t configuration_handler_loaded;
-
-static const uint8_t kiss_config_preamble[] = {FEND, KISS_RUNNING_CONFIG, CONFIG_SECTION_LN & 0xFF, (CONFIG_SECTION_LN & 0xFF00) >> 8};
 
 uint8_t config_kiss_flash_state = 0;
 
@@ -765,124 +763,11 @@ void configuration_clear_bits_register(uint32_t value) {
 #endif
 }
 
-int32_t configuration_kiss_parse_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len) {
-
-	// check if current configuration is set to something which make sense
-	if (configuration_handler_loaded != REGION_DEFAULT &&
-			configuration_handler_loaded != REGION_FIRST &&
-			configuration_handler_loaded != REGION_SECOND)
-	{
-		return -1;
+configuration_handler_region_t configuration_get_current(uint32_t * size) {
+	if (size != 0x00) {
+		*size = CONFIG_SECTION_LN;
 	}
 
-	// send the KISS preamble
-	srl_send_data(main_kiss_srl_ctx_ptr, kiss_config_preamble, SRL_MODE_DEFLN, 4, SRL_EXTERNAL);
-
-	// wait for preamble to send completely
-	srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
-
-	// check which configuration is in use now
-	switch(configuration_handler_loaded) {
-		case REGION_DEFAULT: {
-			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_default_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
-			break;
-		}
-		case REGION_FIRST: {
-			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_first_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
-
-			break;
-		}
-		case REGION_SECOND: {
-			srl_send_data(main_kiss_srl_ctx_ptr, (const uint8_t*)config_section_second_start, SRL_MODE_DEFLN, CONFIG_SECTION_LN, SRL_EXTERNAL);
-
-			break;
-		}
-	}
-
-	// wait for data to send completely
-	srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
-
-	return 0;
+	return configuration_handler_loaded;
 }
 
-int32_t configuration_kiss_flash_config(uint8_t* input_frame_from_host, uint16_t input_len) {
-
-	int32_t out = 0;
-
-	FLASH_Status flash_status = FLASH_COMPLETE;	// FLASH_COMPLETE
-
-	if (input_frame_from_host == 0x00 || input_len == 0) {
-		out = -1;
-	}
-	else {
-		// check which config is currently in use
-		switch(configuration_handler_loaded) {
-			case REGION_DEFAULT: {
-
-				// erase both regions
-
-				if (FLASH_ErasePage((uint32_t)config_section_second_start) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				if (FLASH_ErasePage((uint32_t)config_section_second_start + 0x400) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				if (FLASH_ErasePage((uint32_t)config_section_first_start) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				if (FLASH_ErasePage((uint32_t)config_section_first_start + 0x400) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				// check if operation successed
-				if (flash_status != FLASH_COMPLETE) {
-					out = -2;
-				}
-
-
-				break;
-			}
-
-			case REGION_FIRST: {
-				// erase second region
-				if (FLASH_ErasePage((uint32_t)config_section_second_start) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				if (FLASH_ErasePage((uint32_t)config_section_second_start + 0x400) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				// check if operation successed
-				if (flash_status != FLASH_COMPLETE) {
-					out = -2;
-				}
-
-				break;
-			}
-
-			case REGION_SECOND: {
-
-				if (FLASH_ErasePage((uint32_t)config_section_first_start) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				if (FLASH_ErasePage((uint32_t)config_section_first_start + 0x400) != FLASH_COMPLETE) {
-					flash_status = FLASH_ERROR_PG;
-				}
-
-				// check if operation successed
-				if (flash_status != FLASH_COMPLETE) {
-					out = -2;
-				}
-
-				break;
-			}
-		}
-	}
-
-	return out;
-}

@@ -19,6 +19,7 @@ C_SRCS += \
 ../src/float_to_string.c \
 ../src/io.c \
 ../src/it_handlers.c \
+../src/kiss_callback.c \
 ../src/kiss_communication.c \
 ../src/main.c \
 ../src/packet_tx_handler.c \
@@ -50,6 +51,7 @@ OBJS += \
 ./src/float_to_string.o \
 ./src/io.o \
 ./src/it_handlers.o \
+./src/kiss_callback.o \
 ./src/kiss_communication.o \
 ./src/main.o \
 ./src/packet_tx_handler.o \
@@ -81,6 +83,7 @@ C_DEPS += \
 ./src/float_to_string.d \
 ./src/io.d \
 ./src/it_handlers.d \
+./src/kiss_callback.d \
 ./src/kiss_communication.d \
 ./src/main.d \
 ./src/packet_tx_handler.d \
