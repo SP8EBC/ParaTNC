@@ -78,8 +78,8 @@ const config_data_gsm_t * config_data_gsm_default_ptr = (const config_data_gsm_t
 #endif
 
 #ifdef STM32F10X_MD_VL
-const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first;
-const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second;
+const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first_ptr;
+const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second_ptr;
 
 const config_data_mode_t * config_data_mode_first_ptr 				= &config_data_mode_first;
 const config_data_basic_t * config_data_basic_first_ptr 			= &config_data_basic_first;
@@ -208,8 +208,9 @@ static int configuration_handler_program_crc(uint32_t crc, int8_t bank) {
 
 #ifdef STM32F10X_MD_VL
 	// program the CRC value
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(target_crc_value & 0xFFFF);
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((target_crc_value & 0xFFFF0000) >> 16);
+	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(crc & 0xFFFF);
+	WAIT_FOR_PGM_COMPLETION
+	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((crc & 0xFFFF0000) >> 16);
 
 	flash_status = FLASH_GetBank1Status();
 
@@ -423,6 +424,10 @@ uint32_t configuration_handler_restore_default_first(void) {
 
 	int comparision_result = 0;
 
+#ifdef STM32F10X_MD_VL
+	FLASH_Unlock();
+#endif
+
 	// erase first page
 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start);
 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start + 0x400);
@@ -547,8 +552,9 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 	int comparision_result = 0;
 
-	// unlock flash memory
+#ifdef STM32F10X_MD_VL
 	FLASH_Unlock();
+#endif
 
 	// erase first page
 	flash_status = FLASH_ErasePage((uint32_t)config_section_second_start);
