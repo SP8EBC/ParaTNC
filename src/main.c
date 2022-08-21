@@ -295,6 +295,8 @@ static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
 	}
 }
 
+//#define SERIAL_TX_TEST_MODE
+
 int main(int argc, char* argv[]){
 
   int32_t ln = 0;
@@ -780,7 +782,7 @@ int main(int argc, char* argv[]){
 		  // infinite loop for testing UART transmission
 		  for (;;) {
 
-			  retval = srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+			  retval = srl_receive_data(main_kiss_srl_ctx_ptr, 100, '\r', '\r', 0, 0, 0);
 	#endif
 			  retval = srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
@@ -1124,7 +1126,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 
-		if (main_kiss_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE && kiss_current_async_message != 0xFF) {
+		if (kiss_current_async_message != 0xFF && main_kiss_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
 			srl_start_tx(main_kiss_srl_ctx_ptr, kiss_async_pooler(main_kiss_srl_ctx.srl_tx_buf_pointer, main_kiss_srl_ctx.srl_tx_buf_ln));
 		}
 

@@ -497,7 +497,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 	uint8_t value = 0;
 
 	if ((ctx->port->SR & USART_SR_IDLE) == USART_SR_IDLE) {
-		ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
+		//ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
 
 		ctx->total_idle_counter++;
 	}

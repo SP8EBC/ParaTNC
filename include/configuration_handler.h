@@ -28,5 +28,6 @@ void configuration_set_bits_register(uint32_t value);
 void configuration_clear_bits_register(uint32_t value);
 
 configuration_handler_region_t configuration_get_current(uint32_t * size);
+const uint32_t * configuration_get_address(configuration_handler_region_t region);
 
 #endif /* CONFIGURATION_HANDLER_H_ */

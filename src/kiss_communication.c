@@ -29,11 +29,6 @@ extern unsigned short tx10m;
 uint8_t kiss_current_async_message = 0xFF;
 
 
-/**
- * This an id of segment of multiframe message, like running config
- */
-uint8_t kiss_current_message_frame_segment = 0;
-
 uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 
 	int16_t pooling_result = 0;
@@ -45,16 +40,16 @@ uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 	}
 
 	switch(kiss_current_async_message) {
-	case KISS_RUNNING_CONFIG:
-		pooling_result = kiss_pool_callback_get_running_config(output, output_len, kiss_current_message_frame_segment);
+		case KISS_RUNNING_CONFIG:
+			pooling_result = kiss_pool_callback_get_running_config(output, output_len);
 
-		break;
+			break;
 	}
 
 	// positive return value means that there is something to transmit to host
 	// and the value itself points how big the response is
 	if (pooling_result > 0) {
-
+		out = pooling_result;
 	}
 	else if (pooling_result == 0) {
 		// if result equals to zero it means that there is nothing more to send
@@ -170,8 +165,6 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 
 			case KISS_GET_RUNNING_CONFIG: {
 				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
-
-				kiss_current_message_frame_segment = 0;
 			} break;
 
 

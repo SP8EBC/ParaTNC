@@ -78,8 +78,8 @@ const config_data_gsm_t * config_data_gsm_default_ptr = (const config_data_gsm_t
 #endif
 
 #ifdef STM32F10X_MD_VL
-const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first_ptr;
-const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second_ptr;
+const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first;
+const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second;
 
 const config_data_mode_t * config_data_mode_first_ptr 				= &config_data_mode_first;
 const config_data_basic_t * config_data_basic_first_ptr 			= &config_data_basic_first;
@@ -775,5 +775,19 @@ configuration_handler_region_t configuration_get_current(uint32_t * size) {
 	}
 
 	return configuration_handler_loaded;
+}
+
+const uint32_t * configuration_get_address(configuration_handler_region_t region) {
+	switch (region) {
+	case REGION_FIRST:
+		return config_section_first_start;
+		break;
+	case REGION_SECOND:
+		return config_section_second_start;
+		break;
+	default:
+		return config_section_default_start;
+	}
+
 }
 

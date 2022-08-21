@@ -16,8 +16,8 @@ extern const int __config_section_second_crc;
 extern const uint16_t * config_data_pgm_cntr_first_ptr;
 extern const uint16_t * config_data_pgm_cntr_second_ptr;
 
-#define config_data_pgm_cntr_first 		*(config_data_pgm_cntr_first_ptr)
-#define config_data_pgm_cntr_second 	*(config_data_pgm_cntr_second_ptr)
+extern const uint16_t 	config_data_pgm_cntr_first;
+extern const uint16_t  	config_data_pgm_cntr_second;
 
 extern const config_data_mode_t * config_data_mode_first_ptr;
 extern const config_data_basic_t * config_data_basic_first_ptr;
@@ -32,6 +32,9 @@ extern const config_data_umb_t * config_data_umb_second_ptr;
 extern const config_data_rtu_t * config_data_rtu_second_ptr;
 
 #ifdef PARAMETEO
+#define config_data_pgm_cntr_first 		*(config_data_pgm_cntr_first_ptr)
+#define config_data_pgm_cntr_second 	*(config_data_pgm_cntr_second_ptr)
+
 extern const config_data_gsm_t * config_data_gsm_first_ptr;
 extern const config_data_gsm_t * config_data_gsm_second_ptr;
 extern const config_data_gsm_t * config_data_gsm_default_ptr;
