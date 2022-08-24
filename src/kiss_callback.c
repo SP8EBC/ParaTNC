@@ -86,7 +86,7 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 
 	// place KISS header
 	output_buffer[0] = FEND;
-	output_buffer[1] = config_payload_size + 4;
+	output_buffer[1] = config_payload_size + 6;
 	output_buffer[2] = KISS_RUNNING_CONFIG;
 	output_buffer[3] = 0xAB;				// THIS IS A DATA FRAME, not ACK
 	output_buffer[4] = kiss_async_message_counter - 1;	// frame sequence number
@@ -95,5 +95,5 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 
 	output_buffer[config_payload_size + 5] = FEND;
 
-	return config_payload_size + 5;
+	return config_payload_size + 6;
 }
