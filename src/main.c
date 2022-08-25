@@ -1114,6 +1114,8 @@ int main(int argc, char* argv[]){
 
 					// wait for any pending transmission to complete
 					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+
+					srl_send_data(main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln, SRL_INTERNAL);
 				}
 
 				// restart KISS receiving to be ready for next frame
