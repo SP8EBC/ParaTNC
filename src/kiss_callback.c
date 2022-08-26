@@ -57,6 +57,10 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 
 	configuration_handler_region_t current_region;
 
+	uint8_t config_payload_size = 0;
+
+	const uint8_t * config_base_address = 0;
+
 	// terminate if no more packets needs to be send
 	if (kiss_async_message_counter == KISS_LAST_ASYNC_MSG) {
 		return 0;
@@ -65,7 +69,8 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 	// get currently used configuration and its size in flash memory
 	current_region = configuration_get_current(&conf_size);
 
-	uint8_t config_payload_size = 0;
+	// get base address of current config
+	config_base_address = (const uint8_t *)configuration_get_address(current_region);
 
 	if (kiss_async_message_counter * KISS_MAX_CONFIG_PAYLOAD_SIZE < conf_size) {
 		config_payload_size = KISS_MAX_CONFIG_PAYLOAD_SIZE;
@@ -91,7 +96,7 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 	output_buffer[3] = 0xAB;				// THIS IS A DATA FRAME, not ACK
 	output_buffer[4] = kiss_async_message_counter - 1;	// frame sequence number
 
-	memcpy(output_buffer + 5, configuration_get_address(current_region) + offset, config_payload_size);
+	memcpy(output_buffer + 5, config_base_address + offset, config_payload_size);
 
 	output_buffer[config_payload_size + 5] = FEND;
 
