@@ -207,10 +207,19 @@ static int configuration_handler_program_crc(uint32_t crc, int8_t bank) {
 	FLASH->CR |= FLASH_CR_PG;
 
 #ifdef STM32F10X_MD_VL
+	uint16_t * dst = 0;
+
+	if (bank == 1) {
+		dst = (uint16_t *)(config_section_first_start) + CRC_16B_WORD_OFFSET;
+	}
+	else if (bank == 2) {
+		dst = (uint16_t *)(config_section_second_start) + CRC_16B_WORD_OFFSET;
+	}
+
 	// program the CRC value
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET) = (uint16_t)(crc & 0xFFFF);
+	*dst = (uint16_t)(crc & 0xFFFF);
 	WAIT_FOR_PGM_COMPLETION
-	*(uint16_t*)((uint16_t *)config_section_first_start + CRC_16B_WORD_OFFSET + 1) = (uint16_t)((crc & 0xFFFF0000) >> 16);
+	*(dst + 1) = (uint16_t)((crc & 0xFFFF0000) >> 16);
 
 	flash_status = FLASH_GetBank1Status();
 
@@ -333,10 +342,10 @@ uint32_t configuration_handler_check_crc(void) {
 	CRC_ResetDR();
 
 	// calculate CRC over everything from config_section_first except the last word which constit crc value itself
-	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+	crc_current = CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
 
 	// add 0x0 as a placeholder for CRC value
-	crc_current = CRC_CalcCRC(0x0);
+	//crc_current = CRC_CalcCRC(0x0);
 #endif
 
 #ifdef STM32L471xx
@@ -350,7 +359,7 @@ uint32_t configuration_handler_check_crc(void) {
 	}
 
 	// placeholder for CRC value itself
-	CRC->DR = 0x00;
+	//CRC->DR = 0x00;
 
 	crc_current = CRC->DR;
 #endif
@@ -368,10 +377,10 @@ uint32_t configuration_handler_check_crc(void) {
 	CRC_ResetDR();
 
 	// and do the same but for second section
-	CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
+	crc_current = CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
 
 	// add 0x0 as a placeholder for CRC value
-	crc_current = CRC_CalcCRC((uint32_t)0x0);
+	//crc_current = CRC_CalcCRC((uint32_t)0x0);
 #endif
 
 #ifdef STM32L471xx
@@ -495,10 +504,10 @@ uint32_t configuration_handler_restore_default_first(void) {
 	CRC_ResetDR();
 
 	// calculate CRC checksum of the first block
-	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+	target_crc_value = CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
 
 	// adding finalizing 0x00
-	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+	//target_crc_value = CRC_CalcCRC((uint32_t)0x0);
 #endif
 
 #ifdef STM32L471xx
@@ -511,12 +520,12 @@ uint32_t configuration_handler_restore_default_first(void) {
 	}
 
 	// placeholder for CRC value itself
-	CRC->DR = 0x00;
+	//CRC->DR = 0x00;
 
 	target_crc_value = CRC->DR;
 #endif
 
-	configuration_handler_program_crc(target_crc_value, 1);
+	out = configuration_handler_program_crc(target_crc_value, 1);
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
@@ -623,10 +632,10 @@ uint32_t configuration_handler_restore_default_second(void) {
 	CRC_ResetDR();
 
 	// calculate CRC checksum of the first block
-	CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
+	target_crc_value = CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
 
 	// adding finalizing 0x00
-	target_crc_value = CRC_CalcCRC((uint32_t)0x0);
+	//target_crc_value = CRC_CalcCRC((uint32_t)0x0);
 #endif
 
 #ifdef STM32L471xx
@@ -639,12 +648,12 @@ uint32_t configuration_handler_restore_default_second(void) {
 	}
 
 	// placeholder for CRC value itself
-	CRC->DR = 0x00;
+	//CRC->DR = 0x00;
 
 	target_crc_value = CRC->DR;
 #endif
 
-	configuration_handler_program_crc(target_crc_value, 2);
+	out = configuration_handler_program_crc(target_crc_value, 2);
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
