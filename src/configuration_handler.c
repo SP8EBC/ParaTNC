@@ -55,6 +55,10 @@ const uint32_t * const config_section_first_start = 		(const uint32_t *)CONFIG_S
 const uint32_t * const config_section_second_start = 		(const uint32_t *)CONFIG_SECTION_SECOND_START;
 const uint32_t * const config_section_default_start = 		(const uint32_t *)CONFIG_SECTION_DEFAULT_START;
 
+#ifdef PARAMETEO
+#define STRUCT_COUNT 6
+#endif
+
 #ifdef STM32L471xx
 const uint16_t * config_data_pgm_cntr_first_ptr		= (uint16_t*)(CONFIG_SECTION_FIRST_START + CONFIG_MODE_PGM_CNTR);
 const uint16_t * config_data_pgm_cntr_second_ptr	= (uint16_t*)(CONFIG_SECTION_SECOND_START + CONFIG_MODE_PGM_CNTR);
@@ -78,6 +82,8 @@ const config_data_gsm_t * config_data_gsm_default_ptr = (const config_data_gsm_t
 #endif
 
 #ifdef STM32F10X_MD_VL
+
+#define STRUCT_COUNT 5
 const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first;
 const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second;
 
@@ -329,6 +335,12 @@ static int configuration_handler_program_data(volatile void * source, volatile v
 
 uint32_t configuration_handler_check_crc(void) {
 
+	// last four bytes of a configuration blocks holds the CRC32 value itself.
+	// four bytes before CRC is used to store programming timestamp,
+	// which is not included into CRC calculation.
+	// four bytes AFTER a crc is not used at all and is kept due to
+	// STM32L4xx target limitations which require 64 bit aligned write block size
+
 	uint32_t out = 0;
 
 	// crc stored in the configuration section
@@ -337,32 +349,8 @@ uint32_t configuration_handler_check_crc(void) {
 	// calculated CRC value
 	uint32_t crc_current = 0;
 
-#ifdef STM32F10X_MD_VL
-	// reset CRC engine
-	CRC_ResetDR();
-
-	// calculate CRC over everything from config_section_first except the last word which constit crc value itself
-	crc_current = CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
-
-	// add 0x0 as a placeholder for CRC value
-	//crc_current = CRC_CalcCRC(0x0);
-#endif
-
-#ifdef STM32L471xx
-
-	// reset CRC engine
-	LL_CRC_ResetCRCCalculationUnit(CRC);
-
-	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
-		// feed the data into CRC engine
-		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
-	}
-
-	// placeholder for CRC value itself
-	//CRC->DR = 0x00;
-
-	crc_current = CRC->DR;
-#endif
+	// calculate CRC over everything from config_section_first except last 12 bytes
+	crc_current = calcCRC32std(config_section_first_start, CRC_OFFSET - 4, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
 
 	// expected crc is stored in the last 32b word of the configuration section
 	crc_expected = *(config_section_first_start + CRC_32B_WORD_OFFSET);
@@ -372,31 +360,8 @@ uint32_t configuration_handler_check_crc(void) {
 		out |= 0x01;
 	}
 
-#ifdef STM32F10X_MD_VL
-	// reset the CRC engine
-	CRC_ResetDR();
-
 	// and do the same but for second section
-	crc_current = CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
-
-	// add 0x0 as a placeholder for CRC value
-	//crc_current = CRC_CalcCRC((uint32_t)0x0);
-#endif
-
-#ifdef STM32L471xx
-	// reset CRC engine
-	LL_CRC_ResetCRCCalculationUnit(CRC);
-
-	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
-		// feed the data into CRC engine
-		LL_CRC_FeedData32(CRC, *(config_section_second_start + i));
-	}
-
-	// placeholder for CRC value itself
-	CRC->DR = 0x00;
-
-	crc_current = CRC->DR;
-#endif
+	crc_current = calcCRC32std(config_section_second_start, CRC_OFFSET - 4, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
 
 	//crc_expected = *__config_section_second_end;
 	crc_expected = *(config_section_second_start + CRC_32B_WORD_OFFSET);
@@ -444,7 +409,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 	// check if erasure was completed successfully
 	if (flash_status == FLASH_COMPLETE) {
 
-		for (config_struct_it = 0; config_struct_it < 5; config_struct_it++) {
+		for (config_struct_it = 0; config_struct_it < STRUCT_COUNT; config_struct_it++) {
 
 			// set pointers
 			switch (config_struct_it) {
@@ -473,6 +438,13 @@ uint32_t configuration_handler_restore_default_first(void) {
 					target = (void *) config_data_rtu_first_ptr;
 					size = sizeof(config_data_umb_t);
 					break;
+#ifdef PARAMETEO
+				case 5:
+					source = (void *) &config_data_gsm_default;
+					target = (void *) config_data_gsm_first_ptr;
+					size = sizeof(config_data_umb_t);
+					break;
+#endif
 			}
 
 			// program data
@@ -499,31 +471,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 	// if second is OK it will be used instead (if its programming counter has value three or more).
 	//*(uint16_t*)&config_data_pgm_cntr_first = 0x0002u;
 
-#ifdef STM32F10X_MD_VL
-	// resetting CRC engine
-	CRC_ResetDR();
-
-	// calculate CRC checksum of the first block
-	target_crc_value = CRC_CalcBlockCRC(config_section_first_start, CRC_32B_WORD_OFFSET - 1);
-
-	// adding finalizing 0x00
-	//target_crc_value = CRC_CalcCRC((uint32_t)0x0);
-#endif
-
-#ifdef STM32L471xx
-	// reset CRC engine
-	LL_CRC_ResetCRCCalculationUnit(CRC);
-
-	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
-		// feed the data into CRC engine
-		LL_CRC_FeedData32(CRC, *(config_section_first_start + i));
-	}
-
-	// placeholder for CRC value itself
-	//CRC->DR = 0x00;
-
-	target_crc_value = CRC->DR;
-#endif
+	target_crc_value = calcCRC32std(config_section_first_start, CRC_OFFSET - 4, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
 
 	out = configuration_handler_program_crc(target_crc_value, 1);
 
@@ -572,7 +520,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 	// check if erasure was completed successfully
 	if (flash_status == FLASH_COMPLETE) {
 
-		for (config_struct_it = 0; config_struct_it < 5; config_struct_it++) {
+		for (config_struct_it = 0; config_struct_it < STRUCT_COUNT; config_struct_it++) {
 
 			// set pointers
 			switch (config_struct_it) {
@@ -601,6 +549,13 @@ uint32_t configuration_handler_restore_default_second(void) {
 					target = (void *) config_data_rtu_second_ptr;
 					size = sizeof(config_data_umb_t);
 					break;
+#ifdef PARAMETEO
+				case 5:
+					source = (void *) &config_data_gsm_default;
+					target = (void *) config_data_gsm_first_ptr;
+					size = sizeof(config_data_umb_t);
+					break;
+#endif
 			}
 
 			// program data
@@ -627,31 +582,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 	// if second is OK it will be used instead (if its programming counter has value three or more).
 	//*(uint16_t*)&config_data_pgm_cntr_second = 0x0002u;
 
-#ifdef STM32F10X_MD_VL
-	// resetting CRC engine
-	CRC_ResetDR();
-
-	// calculate CRC checksum of the first block
-	target_crc_value = CRC_CalcBlockCRC(config_section_second_start, CRC_32B_WORD_OFFSET - 1);
-
-	// adding finalizing 0x00
-	//target_crc_value = CRC_CalcCRC((uint32_t)0x0);
-#endif
-
-#ifdef STM32L471xx
-	// reset CRC engine
-	LL_CRC_ResetCRCCalculationUnit(CRC);
-
-	for (int i = 0; i < CRC_32B_WORD_OFFSET - 1; i++) {
-		// feed the data into CRC engine
-		LL_CRC_FeedData32(CRC, *(config_section_second_start + i));
-	}
-
-	// placeholder for CRC value itself
-	//CRC->DR = 0x00;
-
-	target_crc_value = CRC->DR;
-#endif
+	target_crc_value = calcCRC32std(config_section_second_start, CRC_OFFSET - 4, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
 
 	out = configuration_handler_program_crc(target_crc_value, 2);
 
