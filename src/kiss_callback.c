@@ -89,6 +89,11 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 		kiss_async_message_counter = KISS_LAST_ASYNC_MSG;
 	}
 
+	// a case for 'config_size' being a multiply of 'KISS_MAX_CONFIG_PAYLOAD_SIZE'
+	if (config_payload_size == 0) {
+		return 0;
+	}
+
 	// place KISS header
 	output_buffer[0] = FEND;
 	output_buffer[1] = config_payload_size + 6;

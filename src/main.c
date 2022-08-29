@@ -217,6 +217,8 @@ uint8_t main_davis_serial_enabled = 0;
 
 uint8_t main_modbus_rtu_master_enabled = 0;
 
+uint8_t main_reset_config_to_default = 0;
+
 // global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
@@ -385,6 +387,13 @@ int main(int argc, char* argv[]){
 
   // calculate CRC over configuration blocks
   main_crc_result = configuration_handler_check_crc();
+
+  // restore config to default if requested
+  if (main_reset_config_to_default == 1) {
+	  main_crc_result = 0;
+
+	  configuration_set_register(0);
+  }
 
   // if first section has wrong CRC and it hasn't been restored before
   if ((main_crc_result & 0x01) == 0 && (configuration_get_register() & CONFIG_FIRST_FAIL_RESTORING) == 0) {

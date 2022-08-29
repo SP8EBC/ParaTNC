@@ -442,7 +442,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 				case 5:
 					source = (void *) &config_data_gsm_default;
 					target = (void *) config_data_gsm_first_ptr;
-					size = sizeof(config_data_umb_t);
+					size = sizeof(config_data_gsm_t);
 					break;
 #endif
 			}
@@ -552,8 +552,8 @@ uint32_t configuration_handler_restore_default_second(void) {
 #ifdef PARAMETEO
 				case 5:
 					source = (void *) &config_data_gsm_default;
-					target = (void *) config_data_gsm_first_ptr;
-					size = sizeof(config_data_umb_t);
+					target = (void *) config_data_gsm_second_ptr;
+					size = sizeof(config_data_gsm_t);
 					break;
 #endif
 			}
