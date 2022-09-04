@@ -232,7 +232,7 @@ char main_own_aprs_msg[OWN_APRS_MSG_LN];
 char main_string_latitude[9];
 char main_string_longitude[9];
 
-#define MAIN_SMALL_BUFFER_LN	8
+#define MAIN_SMALL_BUFFER_LN	20
 uint8_t main_small_buffer[MAIN_SMALL_BUFFER_LN];
 
 char main_symbol_f = '/';

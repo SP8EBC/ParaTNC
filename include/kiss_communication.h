@@ -26,8 +26,8 @@
 #define KISS_DATA	 				(uint8_t) 0x00
 #define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20
 #define KISS_RUNNING_CONFIG			(uint8_t) 0x70
-
-#define KISS_GET_VERSION			(uint8_t) 0x15
+#define KISS_GET_VERSION_AND_ID		(uint8_t) 0x21
+#define KISS_VERSION_AND_ID			(uint8_t) 0x71
 
 #define KISS_RETURN_IDLE		1
 

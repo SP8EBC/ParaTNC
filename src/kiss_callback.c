@@ -7,8 +7,10 @@
 
 #include "kiss_communication.h"
 #include "configuration_handler.h"
+#include "main.h"
 
 #include <string.h>
+#include <stdio.h>
 
 #define KISS_MAX_CONFIG_PAYLOAD_SIZE	0x80
 #define KISS_LAST_ASYNC_MSG				0xFF
@@ -106,4 +108,25 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 	output_buffer[config_payload_size + 5] = FEND;
 
 	return config_payload_size + 6;
+}
+
+int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+	uint8_t config_payload_size = 0;
+
+#ifdef Par
+	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
+#else
+	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
+#endif
+
+	// construct a response
+	response_buffer[0] = FEND;
+	response_buffer[1] = config_payload_size + 4;				// message lenght
+	response_buffer[2] = KISS_VERSION_AND_ID;
+	// string here
+	response_buffer[config_payload_size + 4] = FEND;
+
+	return config_payload_size + 5;
+
 }

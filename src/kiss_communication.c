@@ -167,6 +167,10 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
 			} break;
 
+			case KISS_GET_VERSION_AND_ID:
+				output = kiss_callback_get_version_id(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				break;
+
 
 			default: output = -3;
 		}
