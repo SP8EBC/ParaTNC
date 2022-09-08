@@ -641,8 +641,91 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 
 }
 
-uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx) {
-	return -1;
+configuration_erase_startup_t configuration_handler_erase_startup(void) {
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	uint32_t page_address;
+
+	if (configuration_handler_loaded == REGION_FIRST) {
+		page_address = (uint32_t)config_section_second_start;
+	}
+	else if (configuration_handler_loaded == REGION_SECOND) {
+		page_address = (uint32_t)config_section_first_start;
+	}
+	else {
+		return ERASE_STARTUP_IDLE;
+	}
+
+
+#ifdef STM32F10X_MD_VL
+	FLASH_Unlock();
+#endif
+
+	// erase page
+	flash_status = FLASH_ErasePage((uint32_t)page_address);
+	flash_status = FLASH_ErasePage((uint32_t)page_address + 0x400);
+
+	// lock the memory back
+	FLASH_Lock();
+
+	if (flash_status == FLASH_COMPLETE) {
+		return ERASE_STARTUP_ERASED;
+	}
+	else {
+		return ERASE_STARTUP_ERROR;
+	}
+}
+
+configuration_erase_startup_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset) {
+
+	int comparision_result;
+
+	// flash operation result
+	int flash_status = 0;
+
+	// source pointer
+	volatile void * source = data;
+
+	// destination pointer for flash reprogramming
+	volatile void * target = 0x00;
+
+	if (configuration_handler_loaded == REGION_FIRST) {
+		target = (void *)config_section_second_start + offset;
+	}
+	else if (configuration_handler_loaded == REGION_SECOND) {
+		target = (void *)config_section_first_start + offset;
+	}
+	else {
+		return ERASE_STARTUP_IDLE;
+	}
+
+	if ((dataln % 8) != 0) {
+		return ERASE_STARTUP_IDLE;
+
+	}
+
+	// program data
+	flash_status = configuration_handler_program_data(source, target, dataln);
+
+	if (flash_status == 0) {
+
+		// verify programming
+		comparision_result = memcmp((const void * )target, (const void * )source, dataln);
+
+		if (comparision_result == 0) {
+			return ERASE_STARTUP_ERASED;
+		}
+		else {
+			return ERASE_STARTUP_ERROR;
+		}
+
+		return ERASE_STARTUP_ERASED;
+	}
+	else {
+		return ERASE_STARTUP_ERROR;
+	}
+
 }
 
 uint32_t configuration_get_register(void) {

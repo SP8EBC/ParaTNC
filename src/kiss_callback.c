@@ -114,10 +114,10 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 
 	uint8_t config_payload_size = 0;
 
-#ifdef Par
-	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
+#ifdef PARAMETEO
+	config_payload_size = snprintf((char *)response_buffer + 3, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
 #else
-	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
+	config_payload_size = snprintf((char *)response_buffer + 3, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
 #endif
 
 	// construct a response
@@ -125,8 +125,57 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 	response_buffer[1] = config_payload_size + 4;				// message lenght
 	response_buffer[2] = KISS_VERSION_AND_ID;
 	// string here
-	response_buffer[config_payload_size + 4] = FEND;
+	response_buffer[config_payload_size + 3] = FEND;
 
-	return config_payload_size + 5;
+	return config_payload_size + 4;
 
+}
+
+int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+	configuration_erase_startup_t result = configuration_handler_erase_startup();
+
+	// construct a response
+	response_buffer[0] = FEND;
+	response_buffer[1] = 5;				// message lenght
+	response_buffer[2] = KISS_ERASE_STARTUP_CFG_RESP;
+	response_buffer[3] = result;
+	response_buffer[4] = FEND;
+
+	return 5;
+}
+
+/**
+ * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
+ * what it receices and program. It is up to host PC to provide senseful configuration with properly calculated checksum as this isn't
+ * recalculated ruing programming.
+ */
+int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+	/**
+	 * The structure of input frame goes like that:
+	 * FEND, LN, KISS_PROGRAM_STARTUP_CFG, OFFSET, data, data, (...), FEND
+	 *
+	 * LN is a lenght of complete frame, so data size is LN - 5 (two FENDs, LN itself, OFFSET and KISS_PROGRAM_STARTUP_CFG)
+	 * OFFSET is an offset calculated from the begining of configuration block. Host PC doesn't know anything about TNC memory layout
+	 */
+
+	// result to be returned to the host PC
+	configuration_erase_startup_t result;
+
+	// offset within input frame where config start begining
+
+	// configuration_handler_program_startup
+	uint8_t * data_ptr = input_frame_from_host + 4;
+
+	// size of data to be programmed into flash memory
+
+	// construct a response
+	response_buffer[0] = FEND;
+	response_buffer[1] = 5;				// message lenght
+	response_buffer[2] = KISS_PROGRAM_STARTUP_CFG_RESP;
+	response_buffer[3] = result;
+	response_buffer[4] = FEND;
+
+	return 5;
 }

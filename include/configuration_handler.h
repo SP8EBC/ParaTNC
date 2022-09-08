@@ -16,11 +16,19 @@ typedef enum configuration_handler_region_t {
 	REGION_SECOND
 } configuration_handler_region_t;
 
+typedef enum configuration_erase_startup_t {
+	ERASE_STARTUP_IDLE		= 0xAA,
+	ERASE_STARTUP_PENDING	= 0xAB,
+	ERASE_STARTUP_ERASED	= 0xAC,
+	ERASE_STARTUP_ERROR		= 0xAD
+}configuration_erase_startup_t;
+
 uint32_t configuration_handler_check_crc(void);
 uint32_t configuration_handler_restore_default_first(void);
 uint32_t configuration_handler_restore_default_second(void);
 void configuration_handler_load_configuration(configuration_handler_region_t region);
-uint32_t configuration_handler_program(uint8_t* data, uint16_t data_ln, uint8_t config_idx);
+configuration_erase_startup_t configuration_handler_erase_startup(void);
+configuration_erase_startup_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset);
 
 uint32_t configuration_get_register(void);
 void configuration_set_register(uint32_t value);
