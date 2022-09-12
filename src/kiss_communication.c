@@ -177,8 +177,15 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 				break;
 			}
 
+			case KISS_ERASE_STARTUP_CFG: {
+				output = kiss_callback_erase_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				break;
+			}
 
-			default: output = -3;
+
+			default: {
+				output = -3;
+			}
 		}
 	}
 
