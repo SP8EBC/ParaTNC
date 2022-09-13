@@ -164,11 +164,14 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	configuration_erase_startup_t result;
 
 	// offset within input frame where config start begining
-
-	// configuration_handler_program_startup
-	uint8_t * data_ptr = input_frame_from_host + 4;
+	uint8_t * data_ptr = input_frame_from_host + 5;
 
 	// size of data to be programmed into flash memory
+	uint8_t data_size =  *(input_frame_from_host + 2);
+
+	uint16_t config_block_offset = *(input_frame_from_host + 3) | (*(input_frame_from_host + 4) << 8);
+
+	result = configuration_handler_program_startup(data_ptr, data_size, config_block_offset);
 
 	// construct a response
 	response_buffer[0] = FEND;
