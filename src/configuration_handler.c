@@ -670,7 +670,7 @@ configuration_erase_startup_t configuration_handler_erase_startup(void) {
 	FLASH_Lock();
 
 	if (flash_status == FLASH_COMPLETE) {
-		return ERASE_STARTUP_ERASED;
+		return ERASE_STARTUP_DONE;
 	}
 	else {
 		return ERASE_STARTUP_ERROR;
@@ -714,13 +714,13 @@ configuration_erase_startup_t configuration_handler_program_startup(uint8_t * da
 		comparision_result = memcmp((const void * )target, (const void * )source, dataln);
 
 		if (comparision_result == 0) {
-			return ERASE_STARTUP_ERASED;
+			return ERASE_STARTUP_DONE;
 		}
 		else {
 			return ERASE_STARTUP_ERROR;
 		}
 
-		return ERASE_STARTUP_ERASED;
+		return ERASE_STARTUP_DONE;
 	}
 	else {
 		return ERASE_STARTUP_ERROR;

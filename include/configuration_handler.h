@@ -19,7 +19,7 @@ typedef enum configuration_handler_region_t {
 typedef enum configuration_erase_startup_t {
 	ERASE_STARTUP_IDLE		= 0xAA,
 	ERASE_STARTUP_PENDING	= 0xAB,
-	ERASE_STARTUP_ERASED	= 0xAC,
+	ERASE_STARTUP_DONE		= 0xAC,
 	ERASE_STARTUP_ERROR		= 0xAD
 }configuration_erase_startup_t;
 

@@ -664,9 +664,18 @@ int main(int argc, char* argv[]){
 	  rtu_serial_start();
   }
   else {
-	  // initializing UART drvier
-	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+	  if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_SERIAL) > 0) {
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, 9600u, 1);
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+
+		  // disable kiss as UART will be now used for dust sensor
+		  main_kiss_enabled = 0;
+	  }
+	  else {
+		  // initializing UART drvier
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+	  }
   }
 
 #if defined(STM32F10X_MD_VL)
@@ -850,8 +859,13 @@ int main(int argc, char* argv[]){
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
   }
 #else
-  // switching UART to receive mode to be ready for KISS frames from host
-  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+  if (main_kiss_enabled == 1) {
+	  // switching UART to receive mode to be ready for KISS frames from host
+	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+  }
+  else {
+	  srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
+  }
 #endif
 
   io_oc_output_low();
@@ -928,9 +942,11 @@ int main(int argc, char* argv[]){
 	   }
    }
 
-   pwm_input_io_init();
+   if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
+	   pwm_input_io_init();
 
-   pwm_input_init(1);
+	   pwm_input_init(1);
+   }
 #endif
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
@@ -1010,7 +1026,7 @@ int main(int argc, char* argv[]){
 		    }
 
 	  	    // reinitialize APRS radio modem to clear all possible intermittent state caused by
-	  	    // switching power state in the middle of reception APRS packet
+	  	    // switching power state in the middle of APRS packet reception
 			ax25_new_msg_rx_flag = 0;
 			main_ax25.dcd = false;
 
@@ -1109,6 +1125,14 @@ int main(int argc, char* argv[]){
 				srl_receive_data(main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
 			}
 #endif
+		}
+		else if ((main_config_data_mode & WX_DUST_SDS011_SERIAL) > 0) {
+			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+
+				// restart reception
+				srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
+
+			}
 		}
 		else {
 			// if new KISS message has been received from the host
@@ -1361,7 +1385,9 @@ int main(int argc, char* argv[]){
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
 			}
 
-			pwm_input_pool();
+			if (main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM > 0) {
+				pwm_input_pool();
+			}
 
 			if (pwm_first_channel != 0) {
 				rte_wx_pm2_5 = pwm_first_channel;
