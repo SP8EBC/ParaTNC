@@ -46,9 +46,9 @@ extern int16_t rte_wx_temperature_average_internal;
 extern int16_t rte_wx_temperature_average_modbus;
 extern uint16_t rte_wx_pressure_average;
 
+#endif
 extern uint16_t rte_wx_pm10;		// 2.5um
 extern uint16_t rte_wx_pm2_5;		// 1um
-#endif
 
 extern uint16_t rte_wx_windspeed_pulses;
 extern uint16_t rte_wx_windspeed[WIND_AVERAGE_LEN];

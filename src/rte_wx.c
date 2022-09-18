@@ -46,10 +46,10 @@ int16_t rte_wx_temperature_average_pt = 0;
 int16_t rte_wx_temperature_average_modbus = 0;
 int16_t rte_wx_temperature_average_internal = 0;
 uint16_t rte_wx_pressure_average = 0;
-
+#endif
 uint16_t rte_wx_pm10 = 0;		// 2.5um
 uint16_t rte_wx_pm2_5 = 0;		// 1um
-#endif
+
 int16_t rte_wx_average_winddirection = 0;
 uint16_t rte_wx_average_windspeed = 0;
 uint16_t rte_wx_max_windspeed = 0;

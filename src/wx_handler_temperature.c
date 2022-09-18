@@ -55,6 +55,8 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// check if temperature from pressure sensor has been retrieved w/o errors
 			if (measurement_result == BME280_OK || measurement_result == MS5611_OK) {
 
+				rte_wx_temperature_internal_valid = rte_wx_temperature_internal;
+
 				// set the flag for internal temperature
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 

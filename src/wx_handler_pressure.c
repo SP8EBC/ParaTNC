@@ -42,24 +42,27 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 			// BME280 measures all three things at one call to the driver
 			output |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;
 
-			// get internal temperature
-			if (config_mode->wx_ms5611_or_bme == 1) {
-				measurement_retval = wx_get_temperature_bme280(&rte_wx_temperature_internal);
-			}
-			else {
-				measurement_retval = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
-			}
+//			// get internal temperature
+//			if (config_mode->wx_ms5611_or_bme == 1) {
+//				measurement_retval = wx_get_temperature_bme280(&rte_wx_temperature_internal);
+//			}
+//			else {
+//				measurement_retval = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
+//			}
 
-			// add the current pressure into buffer for average calculation
-			rte_wx_pressure_history[rte_wx_pressure_it++] = rte_wx_pressure;
-
-			// reseting the average length iterator
-			j = 0;
+			// incrementing iterator over pressure history
+			rte_wx_pressure_it++;
 
 			// check if and end of the buffer was reached
 			if (rte_wx_pressure_it >= PRESSURE_AVERAGE_LN) {
 				rte_wx_pressure_it = 0;
 			}
+
+			// add the current pressure into buffer for average calculation
+			rte_wx_pressure_history[rte_wx_pressure_it] = rte_wx_pressure;
+
+			// reseting the average length iterator
+			j = 0;
 
 			// calculating the average of pressure measuremenets
 			for (i = 0; i < PRESSURE_AVERAGE_LN; i++) {
