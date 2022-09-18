@@ -5,15 +5,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../system/src/davis_vantage/davis.c \
-../system/src/davis_vantage/davis_parsers.c 
+../system/src/davis_vantage/davis_parsers.c \
+../system/src/davis_vantage/sds011.c 
 
 OBJS += \
 ./system/src/davis_vantage/davis.o \
-./system/src/davis_vantage/davis_parsers.o 
+./system/src/davis_vantage/davis_parsers.o \
+./system/src/davis_vantage/sds011.o 
 
 C_DEPS += \
 ./system/src/davis_vantage/davis.d \
-./system/src/davis_vantage/davis_parsers.d 
+./system/src/davis_vantage/davis_parsers.d \
+./system/src/davis_vantage/sds011.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

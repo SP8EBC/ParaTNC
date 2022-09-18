@@ -18,23 +18,28 @@ int sds011_get_pms(uint8_t * data, uint16_t data_ln, uint16_t * pm_10, uint16_t 
 	// values received from sensor
 	uint8_t head = 			*(data + 0);
 	uint8_t command_id = 	*(data + 1);
-	uint8_t checksum = 		*(data + 9);
+	uint8_t checksum = 		*(data + 8);
 
-	// calculate checksum
-	for (int i = 2; i < 9; i++) {
-		local_checksum += *(data + i);
+	if (command_id == 0xC0) {
+		// calculate checksum
+		for (int i = 2; i < 8; i++) {
+			local_checksum += *(data + i);
+		}
+
+		if ((local_checksum & 0xFF) != checksum) {
+			return -2;
+		}
+
+		local_checksum = *(data + 2) | (*(data + 3) << 8);
+		*pm_2_5 = local_checksum;
+
+		local_checksum = *(data + 4) | (*(data + 5) << 8);
+		*pm_10 = local_checksum;
+
+		return 0;
 	}
-
-	if ((local_checksum & 0xFF) != checksum) {
-		return -2;
+	else {
+		return -3;
 	}
-
-	local_checksum = *(data + 1) | (*(data + 2) << 8);
-	*pm_2_5 = local_checksum;
-
-	local_checksum = *(data + 4) | (*(data + 5) << 8);
-	*pm_10 = local_checksum;
-
-	return 0;
 
 }

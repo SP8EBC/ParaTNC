@@ -93,6 +93,10 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 
 		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,
 
+#ifdef _DUST_SDS011_SERIAL
+		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
+#endif
+
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,
 #else

@@ -68,6 +68,7 @@
 #include "drivers/dallas.h"
 #include "drivers/i2c.h"
 #include "drivers/analog_anemometer.h"
+#include "dust_sensor/sds011.h"
 #include "aprs/wx.h"
 
 #include "../system/include/modbus_rtu/rtu_serial_io.h"
@@ -1126,8 +1127,10 @@ int main(int argc, char* argv[]){
 			}
 #endif
 		}
-		else if ((main_config_data_mode & WX_DUST_SDS011_SERIAL) > 0) {
+		else if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_SERIAL) > 0) {
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+
+				sds011_get_pms(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, 10, &rte_wx_pm10, &rte_wx_pm2_5);
 
 				// restart reception
 				srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
