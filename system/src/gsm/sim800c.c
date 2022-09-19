@@ -27,14 +27,14 @@ static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
 extern const char * START_CONFIG_APN;
 
 static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
-static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
+//static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
 
 static const char * OK = "OK\r\n\0";
 static const char * SIGNAL_LEVEL = "+CSQ:\0";
 static const char * NETWORK_REGISTRATION = "+CREG:\0";
 static const char * CPIN = "+CPIN:\0";
-static const char * CPIN_READY = "READY";
-static const char * CPIN_SIMPIN = "SIMPIN";
+//static const char * CPIN_READY = "READY";
+//static const char * CPIN_SIMPIN = "SIMPIN";
 static const char * REGISTERED_NETWORK = "+COPS:\0";
 static const char * INCOMING_CALL = "RING\0";
 #define INCOMING_CALL_LN 4

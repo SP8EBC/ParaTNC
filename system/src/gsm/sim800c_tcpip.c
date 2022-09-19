@@ -16,11 +16,11 @@ const static char * NEWLINE 				= "\r\0";
 
 const static char * CLOSE_TCP				= "AT+CIPCLOSE\r\0";
 
-static const char * ESCAPE					= "+++\0";
+//static const char * ESCAPE					= "+++\0";
 
 #define CONNECT_LN	13
 static const char * CONNECT					= "OK\r\n\r\nCONNECT\0";
-static const char * OK 						= "OK\0";
+//static const char * OK 						= "OK\0";
 #define DISCONNECTED_LN		6
 static const char * DISCONNECTED 			= "CLOSED\0";
 

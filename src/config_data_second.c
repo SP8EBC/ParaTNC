@@ -193,9 +193,15 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
 #endif
 
 #ifdef _WX_DOUBLE_TRANSMIT
-		.wx_double_transmit = 1
+		.wx_double_transmit = 1,
 #else
-		.wx_double_transmit = 0
+		.wx_double_transmit = 0,
+#endif
+
+#ifdef ENG1
+		.engineering1 = ENG1
+#else
+		.engineering1 = 0xFF
 #endif
 };
 

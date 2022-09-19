@@ -85,6 +85,9 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
+	#define ENGINEERING1					(1)
+	#define ENGINEERING1_INH_WX_PWR_HNDL	(1 << 1)
+
 	char callsign[7];
 
 	uint8_t ssid;
@@ -121,6 +124,18 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	uint8_t beacon_transmit_period;
 
 	uint8_t wx_double_transmit;
+
+	/**
+	 *	bit0 - must be set to zero to enable this engineering
+	 *	bit1 - inhibit 'wx_pwr_switch_periodic_handle'
+	 *	bit2 -
+	 *	bit3 -
+	 *	bit4 -
+	 *	bit5 -
+	 *	bit6 -
+	 *	bit7 -
+	 */
+	uint8_t engineering1;
 
 } config_data_basic_t;
 

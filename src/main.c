@@ -289,15 +289,6 @@ const char * post_content = "{\
   \"rte_main_going_sleep_count\": 2,\
   \"rte_main_last_sleep_master_time\": 9}";
 
-static void dupa(uint16_t http_code, char * content, uint16_t content_lenght) {
-
-	if (http_code == 200) {
-		if (content_lenght > 0) {
-			kiss10m++;
-		}
-	}
-}
-
 //#define SERIAL_TX_TEST_MODE
 
 int main(int argc, char* argv[]){
@@ -1356,9 +1347,11 @@ int main(int argc, char* argv[]){
 		 */
 		if (main_two_second_pool_timer < 10) {
 
-			wx_check_force_i2c_reset();
+			if (configuration_get_inhibit_wx_pwr_handle() == 0) {
+				wx_pwr_switch_periodic_handle();
+			}
 
-			wx_pwr_switch_periodic_handle();
+			wx_check_force_i2c_reset();
 
 			#ifdef INTERNAL_WATCHDOG
 			IWDG_ReloadCounter();

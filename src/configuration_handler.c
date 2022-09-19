@@ -814,3 +814,16 @@ const uint32_t * configuration_get_address(configuration_handler_region_t region
 
 }
 
+int configuration_get_inhibit_wx_pwr_handle(void) {
+
+	int out = 0;
+
+	if ((main_config_data_basic->engineering1 & ENGINEERING1) == 0) {
+		if ((main_config_data_basic->engineering1 & ENGINEERING1_INH_WX_PWR_HNDL) != 0) {
+			out = 1;
+		}
+	}
+
+	return out;
+}
+
