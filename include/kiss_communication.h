@@ -23,6 +23,8 @@
 	#define TFEND	(uint8_t)0xDC
 	#define TFESC	(uint8_t)0xDD
 
+	#define NONSTANDARD	(uint8_t)0x0F
+
 #define KISS_DATA	 				(uint8_t) 0x00
 
 #define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20

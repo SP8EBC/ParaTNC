@@ -19,7 +19,7 @@ uint8_t kiss_async_message_counter = 0;
 
 int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
-	#define CALLBACK_GET_RUNNING_CFG_LN	6
+	#define CALLBACK_GET_RUNNING_CFG_LN	7
 
 	uint32_t conf_size = 0;
 
@@ -40,14 +40,15 @@ int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_
 
 	// construct a response
 	response_buffer[0] = FEND;
-	response_buffer[1] = CALLBACK_GET_RUNNING_CFG_LN;				// message lenght
-	response_buffer[2] = KISS_RUNNING_CONFIG;
-	response_buffer[3] = (uint8_t)(current_region & 0xFF);
+	response_buffer[1] = NONSTANDARD;
+	response_buffer[2] = CALLBACK_GET_RUNNING_CFG_LN;				// message lenght
+	response_buffer[3] = KISS_RUNNING_CONFIG;
+	response_buffer[4] = (uint8_t)(current_region & 0xFF);
 	if ((conf_size % KISS_MAX_CONFIG_PAYLOAD_SIZE) == 0)
-		response_buffer[4] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE);
+		response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE);
 	else
-		response_buffer[4] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE + 1);
-	response_buffer[5] = FEND;
+		response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE + 1);
+	response_buffer[6] = FEND;
 
 	return CALLBACK_GET_RUNNING_CFG_LN;
 
@@ -98,16 +99,17 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 
 	// place KISS header
 	output_buffer[0] = FEND;
-	output_buffer[1] = config_payload_size + 6;
-	output_buffer[2] = KISS_RUNNING_CONFIG;
-	output_buffer[3] = 0xAB;				// THIS IS A DATA FRAME, not ACK
-	output_buffer[4] = kiss_async_message_counter - 1;	// frame sequence number
+	output_buffer[1] = NONSTANDARD;
+	output_buffer[2] = config_payload_size + 7;
+	output_buffer[3] = KISS_RUNNING_CONFIG;
+	output_buffer[4] = 0xAB;				// THIS IS A DATA FRAME, not ACK
+	output_buffer[5] = kiss_async_message_counter - 1;	// frame sequence number
 
-	memcpy(output_buffer + 5, config_base_address + offset, config_payload_size);
+	memcpy(output_buffer + 6, config_base_address + offset, config_payload_size);
 
-	output_buffer[config_payload_size + 5] = FEND;
+	output_buffer[config_payload_size + 6] = FEND;
 
-	return config_payload_size + 6;
+	return config_payload_size + 7;
 }
 
 int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
@@ -122,27 +124,31 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 
 	// construct a response
 	response_buffer[0] = FEND;
-	response_buffer[1] = config_payload_size + 4;				// message lenght
-	response_buffer[2] = KISS_VERSION_AND_ID;
+	response_buffer[1] = NONSTANDARD;
+	response_buffer[2] = config_payload_size + 5;				// message lenght
+	response_buffer[3] = KISS_VERSION_AND_ID;
 	// string here
-	response_buffer[config_payload_size + 3] = FEND;
+	response_buffer[config_payload_size + 4] = FEND;
 
-	return config_payload_size + 4;
+	return config_payload_size + 5;
 
 }
 
 int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
+#define ERASE_STARTUP_LN	6
+
 	configuration_erase_startup_t result = configuration_handler_erase_startup();
 
 	// construct a response
 	response_buffer[0] = FEND;
-	response_buffer[1] = 5;				// message lenght
-	response_buffer[2] = KISS_ERASE_STARTUP_CFG_RESP;
-	response_buffer[3] = result;
-	response_buffer[4] = FEND;
+	response_buffer[1] = NONSTANDARD;
+	response_buffer[2] = ERASE_STARTUP_LN;				// message lenght
+	response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
+	response_buffer[4] = result;
+	response_buffer[5] = FEND;
 
-	return 5;
+	return ERASE_STARTUP_LN;
 }
 
 /**
@@ -151,6 +157,8 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
  * recalculated ruing programming.
  */
 int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+#define PROGRAM_STARTUP_LN	6
 
 	/**
 	 * The structure of input frame goes like that:
@@ -175,10 +183,11 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 
 	// construct a response
 	response_buffer[0] = FEND;
-	response_buffer[1] = 5;				// message lenght
-	response_buffer[2] = KISS_PROGRAM_STARTUP_CFG_RESP;
-	response_buffer[3] = result;
-	response_buffer[4] = FEND;
+	response_buffer[1] = NONSTANDARD;
+	response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
+	response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
+	response_buffer[4] = result;
+	response_buffer[5] = FEND;
 
-	return 5;
+	return PROGRAM_STARTUP_LN;
 }

@@ -111,6 +111,41 @@ void api_init(const char * api_base, const char * station_name) {
 	memset(api_mac, '0', 32);
 }
 
+
+void api_calculate_mac(void) {
+
+	// iterators used during conversion to hex string after encryption
+	int i = 0, j = 0;
+
+	memset(api_aes_mac_buffer, 0x00, 16);
+	memset(api_mac, 0x00, 33);
+
+	api_aes_mac_buffer[0] = (uint8_t)((master_time & 0xFF));
+	api_aes_mac_buffer[1] = (uint8_t)((master_time & 0xFF00) >> 8);
+	api_aes_mac_buffer[2] = (uint8_t)((master_time & 0xFF0000) >> 16);
+	api_aes_mac_buffer[3] = (uint8_t)((master_time & 0xFF000000) >> 24);
+	api_aes_mac_buffer[4] = (uint8_t)((rte_main_average_battery_voltage & 0xFF));
+	api_aes_mac_buffer[5] = (uint8_t)((rte_main_average_battery_voltage & 0xFF00) >> 8);
+	api_aes_mac_buffer[6] = (uint8_t)((rte_wx_average_winddirection & 0xFF));
+	api_aes_mac_buffer[7] = (uint8_t)((rte_wx_average_winddirection & 0xFF00) >> 8);
+	api_aes_mac_buffer[8] = (uint8_t)((rte_wx_average_windspeed & 0xFF));
+	api_aes_mac_buffer[9] = (uint8_t)((rte_wx_average_windspeed & 0xFF00) >> 8);
+	api_aes_mac_buffer[10] = (uint8_t)((rte_wx_max_windspeed & 0xFF));
+	api_aes_mac_buffer[11] = (uint8_t)((rte_wx_max_windspeed & 0xFF00) >> 8);
+	api_aes_mac_buffer[12] = (uint8_t)((rte_wx_pm2_5 & 0xFF));
+	api_aes_mac_buffer[13] = (uint8_t)((rte_wx_pm2_5 & 0xFF00) >> 8);
+	api_aes_mac_buffer[14] = (uint8_t)((rte_wx_temperature_average_dallas & 0xFF));
+	api_aes_mac_buffer[15] = (uint8_t)((rte_wx_temperature_average_dallas & 0xFF00) >> 8);
+
+	AES_CBC_encrypt_buffer(&api_aes_context, api_aes_mac_buffer, 16);
+
+	for (i = 0; i < 16; i++) {
+		snprintf(api_mac + j, 3, "%02X", api_aes_mac_buffer[i]);
+		j += 2;
+	}
+
+}
+
 void api_send_json_status(void) {
 	BEGIN
 	PRINT_ALL_STATUS

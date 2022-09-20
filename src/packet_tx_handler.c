@@ -162,6 +162,7 @@ void packet_tx_tcp_handler(void) {
 		}
 		// TODO: fixme
 
+		api_calculate_mac();
 		api_send_json_measuremenets();
 
 		// clear the bit

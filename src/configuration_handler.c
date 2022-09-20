@@ -42,9 +42,9 @@
 
 #define CONFIG_MODE_PGM_CNTR	0x0
 #define CONFIG_MODE_OFSET		0x20			//	Current size: 0x10, free: 0x10
-#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9C, free: 0x44
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9D, free: 0x43
 #define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4,  free: 0x1C
-#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10, free: 0x10
+#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x12, free: 0xE
 #define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54, free: 0x4C
 #define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8,
 #define CONFIG__END__OFFSET		0x300
@@ -820,6 +820,18 @@ int configuration_get_inhibit_wx_pwr_handle(void) {
 
 	if ((main_config_data_basic->engineering1 & ENGINEERING1) == 0) {
 		if ((main_config_data_basic->engineering1 & ENGINEERING1_INH_WX_PWR_HNDL) != 0) {
+			out = 1;
+		}
+	}
+
+	return out;
+}
+
+int configuration_get_early_tx_assert(void) {
+	int out = 0;
+
+	if ((main_config_data_basic->engineering1 & ENGINEERING1) == 0) {
+		if ((main_config_data_basic->engineering1 & ENGINEERING1_EARLY_TX_ASSERT) != 0) {
 			out = 1;
 		}
 	}

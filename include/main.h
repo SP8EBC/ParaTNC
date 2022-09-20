@@ -8,7 +8,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA16"
-#define SW_DATE "19092022"
+#define SW_DATE "20092022"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
@@ -36,6 +36,17 @@
 #define REGISTER_MONITOR	RTC->BKP5R
 #define REGISTER_LAST_SLTIM	RTC->BKP6R
 #endif
+
+typedef enum main_usart_mode_t {
+	USART_MODE_UNDEF,
+	USART_MODE_KISS,
+	USART_MODE_VICTRON,
+	USART_MODE_DUST_SDS,
+	USART_MODE_DAVIS,
+	USART_MODE_MODBUS,
+	USART_MODE_UMB_MASTER,
+	USART_MODE_UNINIT
+}main_usart_mode_t;
 
 extern uint32_t master_time;
 

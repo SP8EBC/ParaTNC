@@ -35,6 +35,7 @@ system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \
 system/src/drivers/l4 \
+system/src/dust_sensor \
 system/src/gsm \
 system/src/http_client \
 system/src/modbus_rtu \

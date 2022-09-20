@@ -195,6 +195,12 @@ srl_context_t main_wx_srl_ctx;
 srl_context_t main_gsm_srl_ctx;
 #endif
 
+// operation mode of USART1 (RS232 on RJ45 socket)
+main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
+
+// operation mode of USART2 (RS485)
+main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
+
 // a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;
 
@@ -568,7 +574,6 @@ int main(int argc, char* argv[]){
 #endif
 
   main_target_kiss_baudrate = 9600u;
-  main_target_wx_baudrate = _SERIAL_BAUDRATE;
 
 
 #if defined(PARAMETEO)
@@ -587,88 +592,151 @@ int main(int argc, char* argv[]){
   }
 #endif
 
-
+  // get target working mode of USART1
   if (main_config_data_mode->wx_davis == 1) {
-	  // reinitialize the KISS serial port temporary to davis baudrate
-	  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
-
-	  // reset RX state to allow reinitialization with changed baudrate
-	  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-
-	  // reinitializing serial hardware to wake up Davis wx station
-	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-
-	  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
-
-	  davis_init(main_kiss_srl_ctx_ptr);
-
-	  // try to wake up the davis base
-	  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
-
-	  // if davis weather stations is connected to SERIAL port
-	  if (rte_wx_davis_station_avaliable == 1) {
-		  // turn LCD backlight on..
-		  davis_control_backlight(1);
-
-		  // wait for a while
-		  delay_fixed(1000);
-
-		  // and then off to let the user know that communication is working
-		  davis_control_backlight(0);
-
-		  // disable the KISS modem as the UART will be used for DAVIS wx station
-		  main_kiss_enabled = 0;
-
-		  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
-		  // This only controls the callback it doesn't mean that the station itself is responding to
-		  // communication. It stays set to one event if Davis station
-		  main_davis_serial_enabled = 1;
-
-		  // trigger the rxcheck to get all counter values
-		  davis_trigger_rxcheck_packet();
-
-	  }
-	  else {
-		  // if not revert back to KISS configuration
-		  main_target_kiss_baudrate = 9600u;
-		  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
-
-		  // initializing UART drvier
-		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-
-	  }
+	  main_usart1_kiss_mode = USART_MODE_DAVIS;
   }
-  else if (main_config_data_mode->wx_modbus == 1) {
-
-	  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
-
-	  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
-
-	  // initialize serial ports according to RS485 network configuration for Modbus-RTU
-	  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-	  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
-	  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
-
-	  // enabling rtu master code
-	  main_modbus_rtu_master_enabled = 1;
-
-	  rtu_serial_start();
+  else if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_SERIAL) > 0) {
+	  main_usart1_kiss_mode = USART_MODE_DUST_SDS;
+  }
+  else if (main_config_data_mode->victron == 1) {
+	  main_usart1_kiss_mode = USART_MODE_VICTRON;
   }
   else {
-	  if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_SERIAL) > 0) {
-		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, 9600u, 1);
-		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-
-		  // disable kiss as UART will be now used for dust sensor
-		  main_kiss_enabled = 0;
-	  }
-	  else {
-		  // initializing UART drvier
-		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
-	  }
+	  main_usart1_kiss_mode = USART_MODE_KISS;
   }
+
+  // get target working mode for USART2
+  if (main_config_data_mode->wx_modbus == 1) {
+	  main_usart2_wx_mode = USART_MODE_MODBUS;
+  }
+  else if (main_config_data_mode->wx_umb == 1) {
+	  main_usart2_wx_mode = USART_MODE_UMB_MASTER;
+  }
+  else {
+	  main_usart2_wx_mode = USART_MODE_UNINIT;
+  }
+
+  switch (main_usart1_kiss_mode) {
+	  case USART_MODE_DAVIS: {
+		  // reinitialize the KISS serial port temporary to davis baudrate
+		  main_target_kiss_baudrate = DAVIS_DEFAULT_BAUDRATE;
+
+		  // reset RX state to allow reinitialization with changed baudrate
+		  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+
+		  // reinitializing serial hardware to wake up Davis wx station
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+
+		  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 3000);
+
+		  davis_init(main_kiss_srl_ctx_ptr);
+
+		  // try to wake up the davis base
+		  rte_wx_davis_station_avaliable = (davis_wake_up(DAVIS_BLOCKING_IO) == 0 ? 1 : 0);
+
+		  // if davis weather stations is connected to SERIAL port
+		  if (rte_wx_davis_station_avaliable == 1) {
+			  // turn LCD backlight on..
+			  davis_control_backlight(1);
+
+			  // wait for a while
+			  delay_fixed(1000);
+
+			  // and then off to let the user know that communication is working
+			  davis_control_backlight(0);
+
+			  // disable the KISS modem as the UART will be used for DAVIS wx station
+			  main_kiss_enabled = 0;
+
+			  // enable the davis serial protocol client to allow pooling callbacks to be called in main loop.
+			  // This only controls the callback it doesn't mean that the station itself is responding to
+			  // communication. It stays set to one event if Davis station
+			  main_davis_serial_enabled = 1;
+
+			  // trigger the rxcheck to get all counter values
+			  davis_trigger_rxcheck_packet();
+
+		  }
+		  else {
+			  // if not revert back to KISS configuration
+			  main_target_kiss_baudrate = 9600u;
+			  main_kiss_srl_ctx_ptr->srl_rx_state = SRL_RX_NOT_CONFIG;
+
+			  // initializing UART drvier
+			  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+
+			  main_usart1_kiss_mode = USART_MODE_KISS;
+		  }
+		  break;
+	  }
+	  case USART_MODE_DUST_SDS: {
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, 9600u, 1);
+
+		  main_kiss_enabled = 0;
+
+		  break;
+	  }
+	  case USART_MODE_VICTRON: {
+		  break;
+	  }
+	  case USART_MODE_KISS: {
+		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+
+		  main_kiss_enabled = 1;
+
+		  break;
+	  }
+	  case USART_MODE_MODBUS:
+	  case USART_MODE_UMB_MASTER:
+	  case USART_MODE_UNINIT:
+	  case USART_MODE_UNDEF:
+		  main_kiss_enabled = 0;
+		  break;
+  }
+
+  switch (main_usart2_wx_mode) {
+	  case USART_MODE_MODBUS: {
+		  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
+
+		  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
+
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
+		  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
+
+		  // enabling rtu master code
+		  main_modbus_rtu_master_enabled = 1;
+
+		  rtu_serial_start();
+
+		  break;
+	  }
+	  case USART_MODE_UMB_MASTER: {
+		  main_target_wx_baudrate = main_config_data_umb->serial_speed;
+
+		  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+
+		  break;
+	  }
+	  case USART_MODE_DAVIS:
+	  case USART_MODE_DUST_SDS:
+	  case USART_MODE_VICTRON:
+	  case USART_MODE_KISS:
+	  case USART_MODE_UNINIT:
+	  case USART_MODE_UNDEF:
+		  break;
+  }
+
+//  if (main_config_data_mode->wx_davis == 1) {
+//	  ;
+//  }
+//  else if (main_config_data_mode->wx_modbus == 1) {
+//	  ;
+//  }
+//  else {
+//	  ;
+//  }
 
 #if defined(STM32F10X_MD_VL)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
@@ -677,7 +745,7 @@ int main(int argc, char* argv[]){
 #if defined(STM32L471xx)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
-  main_wx_srl_ctx_ptr->early_tx_assert = 1;		// TODO: move to configuration!!
+  main_wx_srl_ctx_ptr->early_tx_assert = configuration_get_early_tx_assert();		// TODO: was 1
 
   srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 #endif
@@ -739,10 +807,10 @@ int main(int argc, char* argv[]){
 	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 #endif
 
-	  if (main_config_data_mode->wx_umb == 1) {
-		  // client initialization
-		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
-	  }
+//	  if (main_config_data_mode->wx_umb == 1) {
+//		  // client initialization
+//		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+//	  }
 
 	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
 		  analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);

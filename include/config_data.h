@@ -87,6 +87,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
 	#define ENGINEERING1					(1)
 	#define ENGINEERING1_INH_WX_PWR_HNDL	(1 << 1)
+	#define ENGINEERING1_EARLY_TX_ASSERT	(1 << 2)
 
 	char callsign[7];
 
@@ -128,7 +129,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	/**
 	 *	bit0 - must be set to zero to enable this engineering
 	 *	bit1 - inhibit 'wx_pwr_switch_periodic_handle'
-	 *	bit2 -
+	 *	bit2 - early_tx_assert
 	 *	bit3 -
 	 *	bit4 -
 	 *	bit5 -
@@ -195,6 +196,8 @@ typedef struct __attribute__((aligned (4))) config_data_umb_t {
 	uint16_t channel_temperature;
 
 	uint16_t channel_qnh;
+
+	uint16_t serial_speed;
 /**
  * #define _UMB_CHANNEL_WINDSPEED			460
 #define _UMB_CHANNEL_WINDGUSTS			440
