@@ -15,6 +15,7 @@ RM := rm -rf
 -include system/src/modbus_rtu/subdir.mk
 -include system/src/http_client/subdir.mk
 -include system/src/gsm/subdir.mk
+-include system/src/fatfs/subdir.mk
 -include system/src/dust_sensor/subdir.mk
 -include system/src/drivers/l4/subdir.mk
 -include system/src/drivers/subdir.mk
