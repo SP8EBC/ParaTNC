@@ -25,10 +25,18 @@ static const char * NEWLINE = "\r\0";
 static const char * STATE = "STATE: \0";
 static const char * IPSTATUS = "IP STATUS\0";
 
-config_data_gsm_t * gsm_sim800_gprs_config_gsm;
+const config_data_gsm_t * gsm_sim800_gprs_config_gsm;
 
+/**
+ * Set to one if GSM radio is connected to a network and
+ * GPRS connection is established
+ */
 int8_t gsm_sim800_gprs_ready = 0;
 
+/**
+ * IP Address of GPRS connection retrieved from module
+ * using AT commands
+ */
 char gsm_sim800_ip_address[18];
 
 char gsm_sim800_connection_status_str[24];
@@ -45,7 +53,7 @@ inline static void gsm_sim800_replace_non_printable_with_space(char * str) {
 	}
 }
 
-void sim800_gprs_initialize(srl_context_t * srl_context, gsm_sim800_state_t * state, config_data_gsm_t * config_gsm) {
+void sim800_gprs_initialize(srl_context_t * srl_context, gsm_sim800_state_t * state, const config_data_gsm_t * config_gsm) {
 
 	if (*state != SIM800_ALIVE) {
 		return;
@@ -100,6 +108,9 @@ void sim800_gprs_create_apn_config_str(char * buffer, uint16_t buffer_ln) {
 
 }
 
+/**
+ * This callback
+ */
 void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state_t * state, uint16_t gsm_response_start_idx) {
 
 	int comparision_result = 0;

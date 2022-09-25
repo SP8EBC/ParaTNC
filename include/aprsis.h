@@ -24,7 +24,7 @@ typedef enum aprsis_return {
 extern uint8_t aprsis_connected;
 
 void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port);
-aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon);
+aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon);
 aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon);
 void aprsis_disconnect(void);
 void aprsis_receive_callback(srl_context_t* srl_context);

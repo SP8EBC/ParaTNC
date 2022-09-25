@@ -651,6 +651,9 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 
 }
 
+/**
+ *	This is a main callback invoked, when any data has been received from GSM modem
+ */
 void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
 	int comparision_result = 123;

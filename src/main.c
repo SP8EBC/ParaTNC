@@ -25,6 +25,8 @@
 #include "aprsis.h"
 #include "api/api.h"
 #include "drivers/l4/pwm_input_stm32l4x.h"
+#include "drivers/l4/spi_speed_stm32l4x.h"
+#include "drivers/max31865.h"
 #endif
 
 #include <delay.h>
@@ -67,6 +69,7 @@
 #include <wx_handler.h>
 #include "drivers/dallas.h"
 #include "drivers/i2c.h"
+#include "drivers/spi.h"
 #include "drivers/analog_anemometer.h"
 #include "dust_sensor/sds011.h"
 #include "aprs/wx.h"
@@ -361,7 +364,7 @@ int main(int argc, char* argv[]){
 
   system_clock_configure_rtc_l4();
 
-  RCC->APB1ENR1 |= (RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN | RCC_APB1ENR1_USART3EN);
+  RCC->APB1ENR1 |= (RCC_APB1ENR1_SPI2EN | RCC_APB1ENR1_TIM2EN | RCC_APB1ENR1_TIM3EN | RCC_APB1ENR1_TIM4EN | RCC_APB1ENR1_TIM5EN | RCC_APB1ENR1_TIM7EN | RCC_APB1ENR1_USART2EN | RCC_APB1ENR1_USART3EN | RCC_APB1ENR1_DAC1EN | RCC_APB1ENR1_I2C1EN | RCC_APB1ENR1_USART3EN);
   RCC->APB2ENR |= (RCC_APB2ENR_TIM1EN | RCC_APB2ENR_USART1EN | RCC_APB2ENR_TIM8EN); // RCC_APB1ENR1_USART3EN
   RCC->AHB1ENR |= (RCC_AHB1ENR_CRCEN | RCC_AHB1ENR_DMA1EN);
   RCC->AHB2ENR |= (RCC_AHB2ENR_ADCEN | RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN | RCC_AHB2ENR_GPIOCEN | RCC_AHB2ENR_GPIODEN);
@@ -778,9 +781,15 @@ int main(int argc, char* argv[]){
 #endif
 #endif
 
-#ifdef _METEO
   // initialize i2c controller
   i2cConfigure();
+
+#if defined(STM32L471xx)
+  // initialize SPI
+  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_NORMAL_FALLING, SPI_SPEED_DIV32, SPI_ENDIAN_MSB);
+
+  // initialize MAX RDT amplifier
+  max31865_init(MAX_3WIRE);
 #endif
 
   // initialize GPIO pins leds are connecting to

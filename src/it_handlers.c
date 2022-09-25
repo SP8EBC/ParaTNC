@@ -26,6 +26,7 @@
 #include "drivers/ms5611.h"
 #include "drivers/serial.h"
 #include "drivers/i2c.h"
+#include "drivers/spi.h"
 #include "drivers/analog_anemometer.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
@@ -81,6 +82,7 @@ void it_handlers_set_priorities(void) {
 #endif
 	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
 	// systick
+	NVIC_SetPriority(SPI2_IRQn, 6);
 	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
 	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
 	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
@@ -109,6 +111,12 @@ void RTC_WKUP_IRQHandler(void) {
 	pwr_save_exit_from_stop2();
 
 
+}
+
+void SPI2_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(SPI2_IRQn);
+
+	spi_irq_handler();
 }
 #endif
 

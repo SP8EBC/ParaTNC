@@ -14,6 +14,7 @@
 #define SPI_BUSY_DIFF_SLAVE		10
 #define SPI_BUSY				11
 #define SPI_TX_DATA_TO_LONG		20
+#define SPI_WRONG_SLAVE_ID		30
 #define SPI_UKNOWN				255
 
 typedef enum spi_transfer_mode_t {
@@ -24,10 +25,10 @@ typedef enum spi_transfer_mode_t {
 }spi_transfer_mode_t;
 
 typedef enum spi_clock_polarity_strobe_t {
-	CLOCK_NORMAL_FALLING,
-	CLOCK_NORMAL_RISING,
-	CLOCK_REVERSED_FALLING,
-	CLOCK_REVERSED_RISING
+	CLOCK_NORMAL_FALLING,				// CPOL 0, CPHA 1
+	CLOCK_NORMAL_RISING,				// CPOL 0, CPHA 0
+	CLOCK_REVERSED_FALLING,				// CPOL 1, CPHA 0
+	CLOCK_REVERSED_RISING				// CPOL 1, CPHA 1
 }spi_clock_polarity_strobe_t;
 
 #define SPI_ENDIAN_LSB	0
@@ -56,6 +57,9 @@ uint8_t spi_rx_data(uint32_t slave_id, uint8_t * rx_buffer, uint16_t ln_to_rx);
 uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx);
 uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_rx, uint16_t ln_to_tx);
 uint8_t * spi_get_rx_data(void);
+
+uint8_t spi_wait_for_comms_done(void);
+void spi_reset_errors(void);
 
 void spi_irq_handler(void);
 void spi_timeout_handler(void);

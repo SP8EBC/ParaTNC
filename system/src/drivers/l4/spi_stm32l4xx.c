@@ -13,6 +13,7 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_spi.h>
 #include <stm32l4xx_ll_gpio.h>
+#include <stm32l4xx_ll_rcc.h>
 
 #include <string.h>
 
@@ -21,17 +22,17 @@
 /**
  * State of RX part
  */
-spi_rx_state_t spi_rx_state;
+volatile spi_rx_state_t spi_rx_state;
 
 /**
  * State of TX part
  */
-spi_tx_state_t spi_tx_state;
+volatile spi_tx_state_t spi_tx_state;
 
 /**
  * ID of current slave the communication is established with.
  */
-uint32_t spi_current_slave;
+uint32_t spi_current_slave = 1;
 
 /**
  * Amount of bytes requested to be received
@@ -84,12 +85,19 @@ uint8_t spi_garbage;
  */
 uint32_t spi_timestamp_rx_start;
 
+/**
+ * How many bytes has been discarded into garbage storage
+ */
+uint8_t spi_garbage_counter = 0;
+
 EVAL_SLAVE_ARR
 
 uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_strobe_t strobe, int speed, int endianess) {
 
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 	LL_SPI_InitTypeDef SPI_InitTypeDef;
+
+	RCC->APB1RSTR1 |= RCC_APB1RSTR1_SPI2RST;
 
 	spi_rx_state = SPI_RX_IDLE;
 	spi_tx_state = SPI_TX_IDLE;
@@ -133,6 +141,7 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// SPI_NSS_PT100
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -141,6 +150,9 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_NSS
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
+
+	RCC->APB1RSTR1 &= (0xFFFFFFFF ^ RCC_APB1RSTR1_SPI2RST);
 
 	LL_SPI_Disable(SPI2);
 	LL_SPI_StructInit(&SPI_InitTypeDef);
@@ -172,8 +184,8 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	// Configure the CPOL and CPHA bits combination
 	switch(strobe) {
 		case CLOCK_NORMAL_FALLING:
-			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;
-			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;
+			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;		// CPOL
+			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;			// CPHA
 
 			break;
 		case CLOCK_NORMAL_RISING:
@@ -229,6 +241,8 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	LL_SPI_EnableIT_RXNE(SPI2);
 	LL_SPI_EnableIT_TXE(SPI2);
 
+	NVIC_EnableIRQ(SPI2_IRQn);
+
 	return SPI_OK;
 }
 
@@ -267,7 +281,7 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 //#define SPI_CR1_CPOL             SPI_CR1_CPOL_Msk                              /*!<Clock Polarity   */
 
 uint8_t spi_rx_data(uint32_t slave_id, uint8_t * rx_buffer, uint16_t ln_to_rx) {
-
+	return 0xFF;
 }
 
 /**
@@ -277,42 +291,58 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 
 	uint8_t out = SPI_UKNOWN;
 
+	if (slave_id == 0 || slave_id > 2) {
+		return SPI_WRONG_SLAVE_ID;
+	}
+
 	// check if tx is idle
-	if (spi_tx_state == SPI_TX_IDLE) {
+	if (spi_tx_state == SPI_TX_IDLE || spi_tx_state == SPI_TX_DONE) {
 
-		// if yes clear counter
-		spi_current_tx_cntr = 0;
+		// usually SPI communications conducts in two schemas
+		// 1. Transmit w/o reception (like writing to register)
+		// 2. Transmit and then receive (writing an address of memory/register
+		//								 to read and then receive that data)
+		// In both cases transmission is a first communication relation,
+		// so it can't be initialized if other reception is currently
+		// pending.
+		if (spi_rx_state == SPI_RX_IDLE || spi_rx_state == SPI_RX_DONE) {
 
-		// check if external or internal buffer shall be used
-		if (tx_buffer == 0) {
-			spi_tx_buffer_ptr = spi_tx_buffer;
+			spi_tx_state = SPI_TX_TXING;
 
-			// check if internal buffer has enought room for data
-			if (ln_to_tx <= SPI_BUFFER_LN) {
-				// clear the buffer
-				memset(spi_tx_buffer, 0x00, SPI_BUFFER_LN);
+			spi_current_slave = slave_id;
 
-				// set the lenght
+			// if yes clear counter
+			spi_current_tx_cntr = 0;
+
+			// check if external or internal buffer shall be used
+			if (tx_buffer == 0) {
 				spi_tx_buffer_ptr = spi_tx_buffer;
 
-				// copy the content into a buffer
-				memcpy(spi_tx_buffer_ptr, tx_buffer, ln_to_tx);
+				// check if internal buffer has enought room for data
+				if (ln_to_tx <= SPI_BUFFER_LN) {
+					// clear the buffer
+					memset(spi_tx_buffer, 0x00, SPI_BUFFER_LN);
 
-				// set amount of data for transmission
-				spi_tx_bytes_rq = ln_to_tx;
+					// set the lenght
+					spi_tx_buffer_ptr = spi_tx_buffer;
+
+					// copy the content into a buffer
+					memcpy(spi_tx_buffer_ptr, tx_buffer, ln_to_tx);
+
+					// set amount of data for transmission
+					spi_tx_bytes_rq = ln_to_tx;
+				}
+				else {
+					out = SPI_TX_DATA_TO_LONG;
+				}
 			}
 			else {
-				out = SPI_TX_DATA_TO_LONG;
+				// if external buffer shall be sent
+				spi_tx_buffer_ptr = tx_buffer;
+
+				spi_tx_bytes_rq = ln_to_tx;
 			}
-		}
-		else {
-			// if external buffer shall be sent
-			spi_tx_buffer_ptr = tx_buffer;
 
-			spi_tx_bytes_rq = ln_to_tx;
-		}
-
-		if (spi_rx_state == SPI_RX_IDLE || spi_rx_state == SPI_RX_DONE) {
 			spi_enable();
 		}
 	}
@@ -332,8 +362,14 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 
 	uint8_t out = SPI_UKNOWN;
 
+	if (slave_id == 0 || slave_id > 2) {
+		return SPI_WRONG_SLAVE_ID;
+	}
+
 	// check if SPI is busy
-	if (spi_rx_state == SPI_RX_IDLE && spi_tx_state == SPI_TX_IDLE) {
+	if (spi_rx_state == SPI_RX_IDLE && (spi_tx_state == SPI_TX_IDLE || spi_tx_state == SPI_TX_DONE)) {
+
+		spi_current_slave = slave_id;
 
 		spi_current_rx_cntr = 0;
 		spi_current_tx_cntr = 0;
@@ -345,9 +381,23 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 
 			// clear the buffer
 			memset (spi_rx_buffer_ptr, 0x00, SPI_BUFFER_LN);
+		}
+		else {
+			spi_rx_buffer_ptr = rx_buffer;
 
-			// set the lenght
-			spi_rx_bytes_rq = ln_to_rx;
+			// clear the buffer
+			memset (spi_rx_buffer_ptr, 0x00, ln_to_rx);
+		}
+
+		// set the lenght
+		spi_rx_bytes_rq = ln_to_rx;
+
+		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+			// clear RX fifo queue
+			do {
+				spi_garbage_counter++;
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
 		}
 
 		// check if external TX buffer shall be user or not
@@ -385,10 +435,14 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 		// set first byte for transmission
 		SPI2->DR = spi_tx_buffer_ptr[0];
 
+		spi_rx_state = SPI_RX_RXING;
+		spi_tx_state = SPI_TX_TXING;
+
 		// start trasmission
 		spi_enable();
 	}
 	else {
+		// exit if either transmission or reception is ongoing
 		out = SPI_BUSY;
 	}
 
@@ -399,6 +453,33 @@ uint8_t * spi_get_rx_data(void) {
 	spi_rx_state = SPI_RX_IDLE;
 
 	return spi_rx_buffer_ptr;
+}
+
+uint8_t spi_wait_for_comms_done(void) {
+	if (spi_tx_state == SPI_TX_TXING) {
+		while (spi_tx_state == SPI_TX_TXING);
+	}
+
+	// set the tx state to ile
+	spi_tx_state = SPI_TX_IDLE;
+
+	// check if read operation was successful or not
+	if (spi_rx_state == SPI_RX_DONE) {
+		spi_rx_state = SPI_RX_IDLE;
+
+		return SPI_OK;
+	}
+	else {
+		spi_rx_state = SPI_RX_IDLE;
+
+		return SPI_UKNOWN;
+	}
+}
+
+void spi_reset_errors(void) {
+	if (spi_rx_state == SPI_RX_ERROR_MODF || spi_rx_state == SPI_RX_ERROR_OVERRUN || spi_rx_state == SPI_RX_ERROR_TIMEOUT) {
+		spi_rx_state = SPI_RX_IDLE;
+	}
 }
 
 void spi_irq_handler(void) {
@@ -418,16 +499,22 @@ void spi_irq_handler(void) {
 
 			// get all data from RX FIFO
 			do {
+				// put received data into a buffer
+				spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+
+
 				// check if all data has been received
 				if (spi_current_rx_cntr >= spi_rx_bytes_rq) {
-					// if yes empty the FIFO
-					spi_garbage = SPI2->DR & 0xFF;
+					// set slave select line high
+					LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 					// and switch the state
 					spi_rx_state = SPI_RX_DONE;
-				}
-				else {
-					spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+
+					// and exit the loop
+					break;
+
+					// RXFIFO will be purged by 'spi_disable'
 				}
 			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
 		}
@@ -452,7 +539,11 @@ void spi_irq_handler(void) {
 				else {
 					// finish transmission
 					spi_tx_state = SPI_TX_DONE;
+
+					break;
 				}
+				// if there are only two or one byte for slave device
+				// TXE flag won't be cleared
 			} while ((SPI2->SR & SPI_SR_TXE));
 		}
 	}
@@ -506,7 +597,7 @@ void spi_irq_handler(void) {
 	}
 
 	// disable SPI if all communication is done
-	if (spi_rx_state == SPI_RX_DONE && spi_tx_state == SPI_TX_DONE) {
+	if ((spi_rx_state == SPI_RX_IDLE || spi_rx_state == SPI_RX_DONE) && spi_tx_state == SPI_TX_DONE) {
 		spi_disable(0);
 	}
 
@@ -536,6 +627,8 @@ void spi_enable(void) {
 	SPI2->CR2 |= SPI_CR2_RXNEIE;
 	SPI2->CR2 |= SPI_CR2_TXEIE;
 
+	LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
 	LL_SPI_Enable(SPI2);
 }
 
@@ -544,15 +637,30 @@ void spi_enable(void) {
  * it can wait until the peripheral will be released
  */
 void spi_disable(uint8_t immediately) {
+
 	if (immediately == 0) {
 		while ((SPI2->SR & SPI_SR_BSY) != 0);
+
+		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+		LL_SPI_Disable(SPI2);
+
+		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+			// clear RX fifo queue
+			do {
+				spi_garbage_counter++;
+
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
 	}
+	else {
+		// disable all interrupts
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
 
-	// disable all interrupts
-	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
-	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
-	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
-
-	LL_SPI_Disable(SPI2);
+		LL_SPI_Disable(SPI2);
+	}
 
 }

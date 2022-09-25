@@ -96,7 +96,7 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 }
 
-aprsis_return_t aprsis_connect_and_login(char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon) {
+aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon) {
 	// this function has blocking io
 	uint8_t out = APRSIS_WRONG_STATE;
 

@@ -8,6 +8,7 @@ C_SRCS += \
 ../system/src/drivers/bme280.c \
 ../system/src/drivers/dallas.c \
 ../system/src/drivers/dma_helper_functions.c \
+../system/src/drivers/max31865.c \
 ../system/src/drivers/ms5611.c 
 
 OBJS += \
@@ -15,6 +16,7 @@ OBJS += \
 ./system/src/drivers/bme280.o \
 ./system/src/drivers/dallas.o \
 ./system/src/drivers/dma_helper_functions.o \
+./system/src/drivers/max31865.o \
 ./system/src/drivers/ms5611.o 
 
 C_DEPS += \
@@ -22,6 +24,7 @@ C_DEPS += \
 ./system/src/drivers/bme280.d \
 ./system/src/drivers/dallas.d \
 ./system/src/drivers/dma_helper_functions.d \
+./system/src/drivers/max31865.d \
 ./system/src/drivers/ms5611.d 
 
 
