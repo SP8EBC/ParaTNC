@@ -21,6 +21,7 @@
 #include "pwr_save.h"
 #endif
 
+#include "drivers/spi.h"
 #include "drivers/dallas.h"
 #include "drivers/ms5611.h"
 #include "drivers/serial.h"
@@ -142,6 +143,8 @@ void SysTick_Handler(void) {
 	srl_keep_tx_delay(main_wx_srl_ctx_ptr);
 
 	i2cKeepTimeout();
+
+	spi_timeout_handler();
 
 	delay_decrement_counter();
 

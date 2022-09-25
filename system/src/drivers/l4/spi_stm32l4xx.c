@@ -7,25 +7,86 @@
 
 #include "drivers/spi.h"
 
+#include "main.h"
 #include "etc/spi_slave_config.h"
 
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_spi.h>
 #include <stm32l4xx_ll_gpio.h>
 
+#include <string.h>
+
 #define SPI_BUFFER_LN	32
 
+/**
+ * State of RX part
+ */
 spi_rx_state_t spi_rx_state;
 
+/**
+ * State of TX part
+ */
 spi_tx_state_t spi_tx_state;
 
+/**
+ * ID of current slave the communication is established with.
+ */
+uint32_t spi_current_slave;
+
+/**
+ * Amount of bytes requested to be received
+ */
+uint16_t spi_rx_bytes_rq;
+
+/**
+ * Current number of bytes recieved from slave
+ */
+uint16_t spi_current_rx_cntr;
+
+/**
+ * Amount of bytes requested to be transmitted
+ */
+uint16_t spi_tx_bytes_rq;
+
+/**
+ * Current number of bytes transmitted to slave device
+ */
+uint16_t spi_current_tx_cntr;
+
+/**
+ * receive buffer
+ */
 uint8_t spi_rx_buffer[SPI_BUFFER_LN];
 
+/**
+ * transmision buffer
+ */
 uint8_t spi_tx_buffer[SPI_BUFFER_LN];
+
+/**
+ * Pointer to receive buffer. A user can request to receive data into
+ * internal buffer which will set that pointer to `spi_rx_buffer`.
+ * This will point to an external buffer if it is requested by
+ * an user.
+ */
+uint8_t * spi_rx_buffer_ptr;
+
+uint8_t * spi_tx_buffer_ptr;
+
+/**
+ * A byte to store garbage and unwanted data when SPI got more data
+ * than spi_rx_bytes_rq or reception hasn't been initiated (tx - only)
+ */
+uint8_t spi_garbage;
+
+/**
+ * Timestamp when receiving has been initiated
+ */
+uint32_t spi_timestamp_rx_start;
 
 EVAL_SLAVE_ARR
 
-uint8_t spi_init_full_duplex(spi_transfer_mode_t mode, spi_clock_polarity_strobe_t strobe, int speed, int endianess) {
+uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_strobe_t strobe, int speed, int endianess) {
 
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 	LL_SPI_InitTypeDef SPI_InitTypeDef;
@@ -209,18 +270,289 @@ uint8_t spi_rx_data(uint32_t slave_id, uint8_t * rx_buffer, uint16_t ln_to_rx) {
 
 }
 
+/**
+ * Initiate tx only transaction. Data will be sent to chosen slave, any receive data will be discarded
+ */
 uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 
+	uint8_t out = SPI_UKNOWN;
+
+	// check if tx is idle
+	if (spi_tx_state == SPI_TX_IDLE) {
+
+		// if yes clear counter
+		spi_current_tx_cntr = 0;
+
+		// check if external or internal buffer shall be used
+		if (tx_buffer == 0) {
+			spi_tx_buffer_ptr = spi_tx_buffer;
+
+			// check if internal buffer has enought room for data
+			if (ln_to_tx <= SPI_BUFFER_LN) {
+				// clear the buffer
+				memset(spi_tx_buffer, 0x00, SPI_BUFFER_LN);
+
+				// set the lenght
+				spi_tx_buffer_ptr = spi_tx_buffer;
+
+				// copy the content into a buffer
+				memcpy(spi_tx_buffer_ptr, tx_buffer, ln_to_tx);
+
+				// set amount of data for transmission
+				spi_tx_bytes_rq = ln_to_tx;
+			}
+			else {
+				out = SPI_TX_DATA_TO_LONG;
+			}
+		}
+		else {
+			// if external buffer shall be sent
+			spi_tx_buffer_ptr = tx_buffer;
+
+			spi_tx_bytes_rq = ln_to_tx;
+		}
+
+		if (spi_rx_state == SPI_RX_IDLE || spi_rx_state == SPI_RX_DONE) {
+			spi_enable();
+		}
+	}
+	else {
+		out = SPI_BUSY;
+	}
+
+	return out;
+}
+
+/**
+ *	Initiate full duplex communication with the slave. After this call the SPI bus
+ *	will be enabled and all data from tx_buffer will be send. SPI bus will be disabled
+ *	after requested amount of data will be received or timeout occured.
+ */
+uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_rx, uint16_t ln_to_tx) {
+
+	uint8_t out = SPI_UKNOWN;
+
+	// check if SPI is busy
+	if (spi_rx_state == SPI_RX_IDLE && spi_tx_state == SPI_TX_IDLE) {
+
+		spi_current_rx_cntr = 0;
+		spi_current_tx_cntr = 0;
+
+		// check if external RX buffer shall be used or not
+		if (rx_buffer == 0) {
+			// no, internal one is needed
+			spi_rx_buffer_ptr = spi_rx_buffer;
+
+			// clear the buffer
+			memset (spi_rx_buffer_ptr, 0x00, SPI_BUFFER_LN);
+
+			// set the lenght
+			spi_rx_bytes_rq = ln_to_rx;
+		}
+
+		// check if external TX buffer shall be user or not
+		if (tx_buffer == 0) {
+			spi_tx_buffer_ptr = spi_tx_buffer;
+
+			// check if internal buffer has enought room for data
+			if (ln_to_tx <= SPI_BUFFER_LN) {
+				// clear the buffer
+				memset(spi_tx_buffer, 0x00, SPI_BUFFER_LN);
+
+				// set the lenght
+				spi_tx_buffer_ptr = spi_tx_buffer;
+
+				// copy the content into a buffer
+				memcpy(spi_tx_buffer_ptr, tx_buffer, ln_to_tx);
+
+				// set amount of data for transmission
+				spi_tx_bytes_rq = ln_to_tx;
+			}
+			else {
+				out = SPI_TX_DATA_TO_LONG;
+			}
+		}
+		else {
+			// if external buffer shall be sent
+			spi_tx_buffer_ptr = tx_buffer;
+
+			spi_tx_bytes_rq = ln_to_tx;
+		}
+
+		// latch a timestamp when reception has been triggered
+		spi_timestamp_rx_start = master_time;
+
+		// set first byte for transmission
+		SPI2->DR = spi_tx_buffer_ptr[0];
+
+		// start trasmission
+		spi_enable();
+	}
+	else {
+		out = SPI_BUSY;
+	}
+
+	return out;
 }
 
 uint8_t * spi_get_rx_data(void) {
+	spi_rx_state = SPI_RX_IDLE;
 
+	return spi_rx_buffer_ptr;
 }
 
+void spi_irq_handler(void) {
+
+	//	The RXNE flag is set depending on the FRXTH bit value in the SPIx_CR2 register:
+	//	• If FRXTH is set, RXNE goes high and stays high until the RXFIFO level is greater or
+	//	equal to 1/4 (8-bit).
+	//	• If FRXTH is cleared, RXNE goes high and stays high until the RXFIFO level is greater
+	//	than or equal to 1/2 (16-bit).
+	//	An interrupt can be generated if the RXNEIE bit in the SPIx_CR2 register is set.
+	//	The RXNE is cleared by hardware automatically when the above conditions are no longer
+	//	true.
+	if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+
+		// check if receiving is pending
+		if (spi_rx_state == SPI_RX_RXING) {
+
+			// get all data from RX FIFO
+			do {
+				// check if all data has been received
+				if (spi_current_rx_cntr >= spi_rx_bytes_rq) {
+					// if yes empty the FIFO
+					spi_garbage = SPI2->DR & 0xFF;
+
+					// and switch the state
+					spi_rx_state = SPI_RX_DONE;
+				}
+				else {
+					spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+				}
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
+	}
+
+	//	The TXE flag is set when transmission TXFIFO has enough space to store data to send.
+	//	TXE flag is linked to the TXFIFO level. The flag goes high and stays high until the TXFIFO
+	//	level is lower or equal to 1/2 of the FIFO depth. An interrupt can be generated if the TXEIE
+	//	bit in the SPIx_CR2 register is set. The bit is cleared automatically when the TXFIFO level
+	//	becomes greater than 1/2.
+	if ((SPI2->SR & SPI_SR_TXE) != 0) {
+
+		// check if transmission is pending
+		if (spi_tx_state == SPI_TX_TXING) {
+
+			do {
+
+				if (spi_current_tx_cntr < spi_tx_bytes_rq) {
+					// put next byte into the data register
+					SPI2->DR = spi_tx_buffer[spi_current_tx_cntr++];
+				}
+				else {
+					// finish transmission
+					spi_tx_state = SPI_TX_DONE;
+				}
+			} while ((SPI2->SR & SPI_SR_TXE));
+		}
+	}
+
+	//	Mode fault occurs when the master device has its internal NSS signal (NSS pin in NSS
+	//	hardware mode, or SSI bit in NSS software mode) pulled low. This automatically sets the
+	//	MODF bit. Master mode fault affects the SPI interface in the following ways:
+	//	• The MODF bit is set and an SPI interrupt is generated if the ERRIE bit is set.
+	//	• The SPE bit is cleared. This blocks all output from the device and disables the SPI
+	//	interface.
+	//	• The MSTR bit is cleared, thus forcing the device into slave mode.
+	if ((SPI2->SR & SPI_SR_MODF) != 0) {
+		spi_tx_state = SPI_TX_ERROR_MODF;
+		spi_rx_state = SPI_RX_ERROR_MODF;
+
+		spi_disable(1);
+	}
+
+	//	An overrun condition occurs when data is received by a master or slave and the RXFIFO
+	//has not enough space to store this received data. This can happen if the software or the
+	//DMA did not have enough time to read the previously received data (stored in the RXFIFO)
+	//or when space for data storage is limited e.g. the RXFIFO is not available when CRC is
+	//enabled in receive only mode so in this case the reception buffer is limited into a single data
+	//frame buffer
+	if ((SPI2->SR & SPI_SR_OVR) != 0) {
+
+		// get all data from RX FIFO
+		do {
+			// check if all data has been received
+			if (spi_current_rx_cntr >= spi_rx_bytes_rq) {
+				// if yes empty the FIFO
+				spi_garbage = SPI2->DR & 0xFF;
+			}
+			else {
+				spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+			}
+		} while ((SPI2->SR & SPI_SR_RXNE) != 0 && (SPI2->SR & SPI_SR_OVR) != 0);
+
+		spi_rx_state = SPI_RX_ERROR_OVERRUN;
+	}
+
+	//	A TI mode frame format error is detected when an NSS pulse occurs during an ongoing
+	//	communication when the SPI is operating in slave mode and configured to conform to the TI
+	//	mode protocol. When this error occurs, the FRE flag is set in the SPIx_SR register. The SPI
+	//	is not disabled when an error occurs, the NSS pulse is ignored, and the SPI waits for the
+	//	next NSS pulse before starting a new transfer. The data may be corrupted since the error
+	//	detection may result in the loss of two data bytes.
+	if ((SPI2->SR & SPI_SR_FRE) != 0) {
+		spi_disable(1);
+
+	}
+
+	// disable SPI if all communication is done
+	if (spi_rx_state == SPI_RX_DONE && spi_tx_state == SPI_TX_DONE) {
+		spi_disable(0);
+	}
+
+	if (spi_rx_state == SPI_RX_ERROR_OVERRUN) {
+		spi_disable(1);
+	}
+}
+
+/**
+ * This function should be caller from SysTick Interrupt
+ */
+void spi_timeout_handler(void) {
+
+	if (spi_rx_state == SPI_RX_RXING) {
+		if (master_time - spi_timestamp_rx_start > SPI_RX_ERROR_TIMEOUT) {
+			spi_rx_state = SPI_RX_ERROR_TIMEOUT;
+			spi_tx_state = SPI_TX_IDLE;
+
+			spi_disable(1);
+		}
+	}
+ }
+
 void spi_enable(void) {
+
+	SPI2->CR2 |= SPI_CR2_ERRIE;
+	SPI2->CR2 |= SPI_CR2_RXNEIE;
+	SPI2->CR2 |= SPI_CR2_TXEIE;
+
 	LL_SPI_Enable(SPI2);
 }
 
-void spi_disable(void) {
+/**
+ * This function will disable SPI and close bus communication, optionally
+ * it can wait until the peripheral will be released
+ */
+void spi_disable(uint8_t immediately) {
+	if (immediately == 0) {
+		while ((SPI2->SR & SPI_SR_BSY) != 0);
+	}
+
+	// disable all interrupts
+	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
+	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
+	SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
+
+	LL_SPI_Disable(SPI2);
 
 }

@@ -62,6 +62,8 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 	uint8_t wx_dust_sensor;
 
+	uint8_t wx_pt_sensor;
+
 	uint8_t victron;
 
 	uint8_t digi_viscous;
@@ -372,6 +374,12 @@ typedef struct __attribute__((aligned (4))) config_data_gsm_t {
 	uint16_t aprsis_server_port;
 
 	uint32_t aprsis_passcode;
+
+	uint8_t sms_wx_info;
+
+	char sms_wx_inf_first[12];
+
+	char sms_wx_inf_second[12];
 
 } config_data_gsm_t;
 

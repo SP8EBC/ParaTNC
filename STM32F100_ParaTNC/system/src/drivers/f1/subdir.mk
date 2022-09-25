@@ -6,17 +6,20 @@
 C_SRCS += \
 ../system/src/drivers/f1/gpio_conf_stm32f1x.c \
 ../system/src/drivers/f1/i2c_stm32f1x.c \
-../system/src/drivers/f1/serial_stm32f1x.c 
+../system/src/drivers/f1/serial_stm32f1x.c \
+../system/src/drivers/f1/spi_stm32f1x.c 
 
 OBJS += \
 ./system/src/drivers/f1/gpio_conf_stm32f1x.o \
 ./system/src/drivers/f1/i2c_stm32f1x.o \
-./system/src/drivers/f1/serial_stm32f1x.o 
+./system/src/drivers/f1/serial_stm32f1x.o \
+./system/src/drivers/f1/spi_stm32f1x.o 
 
 C_DEPS += \
 ./system/src/drivers/f1/gpio_conf_stm32f1x.d \
 ./system/src/drivers/f1/i2c_stm32f1x.d \
-./system/src/drivers/f1/serial_stm32f1x.d 
+./system/src/drivers/f1/serial_stm32f1x.d \
+./system/src/drivers/f1/spi_stm32f1x.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
