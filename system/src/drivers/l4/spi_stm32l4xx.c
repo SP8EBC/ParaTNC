@@ -311,6 +311,8 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 
 			spi_current_slave = slave_id;
 
+			LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
 			// if yes clear counter
 			spi_current_tx_cntr = 0;
 
@@ -343,7 +345,7 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 				spi_tx_bytes_rq = ln_to_tx;
 			}
 
-			spi_enable();
+			spi_enable(0);
 		}
 	}
 	else {
@@ -370,6 +372,8 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 	if (spi_rx_state == SPI_RX_IDLE && (spi_tx_state == SPI_TX_IDLE || spi_tx_state == SPI_TX_DONE)) {
 
 		spi_current_slave = slave_id;
+
+		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 		spi_current_rx_cntr = 0;
 		spi_current_tx_cntr = 0;
@@ -432,14 +436,14 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 		// latch a timestamp when reception has been triggered
 		spi_timestamp_rx_start = master_time;
 
-		// set first byte for transmission
-		SPI2->DR = spi_tx_buffer_ptr[0];
+//		// set first byte for transmission
+//		SPI2->DR = spi_tx_buffer_ptr[0];
 
-		spi_rx_state = SPI_RX_RXING;
+		spi_rx_state = SPI_RX_WAITING_FOR_RX;
 		spi_tx_state = SPI_TX_TXING;
 
 		// start trasmission
-		spi_enable();
+		spi_enable(0);
 	}
 	else {
 		// exit if either transmission or reception is ongoing
@@ -458,6 +462,10 @@ uint8_t * spi_get_rx_data(void) {
 uint8_t spi_wait_for_comms_done(void) {
 	if (spi_tx_state == SPI_TX_TXING) {
 		while (spi_tx_state == SPI_TX_TXING);
+	}
+
+	if (spi_rx_state == SPI_RX_RXING) {
+		while (spi_rx_state == SPI_RX_RXING);
 	}
 
 	// set the tx state to ile
@@ -494,18 +502,20 @@ void spi_irq_handler(void) {
 	//	true.
 	if ((SPI2->SR & SPI_SR_RXNE) != 0) {
 
+		if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
+			spi_garbage = SPI2->DR & 0xFF;
+		}
 		// check if receiving is pending
-		if (spi_rx_state == SPI_RX_RXING) {
+		else if (spi_rx_state == SPI_RX_RXING) {
 
 			// get all data from RX FIFO
 			do {
 				// put received data into a buffer
 				spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
 
-
 				// check if all data has been received
 				if (spi_current_rx_cntr >= spi_rx_bytes_rq) {
-					// set slave select line high
+					// if yes, set slave select line high
 					LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 					// and switch the state
@@ -540,11 +550,21 @@ void spi_irq_handler(void) {
 					// finish transmission
 					spi_tx_state = SPI_TX_DONE;
 
+					// check if reception shall begin
+					if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
+						spi_rx_state = SPI_RX_RXING;
+					}
+
 					break;
 				}
 				// if there are only two or one byte for slave device
 				// TXE flag won't be cleared
 			} while ((SPI2->SR & SPI_SR_TXE));
+		}
+		else if (spi_tx_state == SPI_TX_DONE) {
+			if (spi_rx_state == SPI_RX_RXING) {
+				SPI2->DR = 0xFF;
+			}
 		}
 	}
 
@@ -621,13 +641,16 @@ void spi_timeout_handler(void) {
 	}
  }
 
-void spi_enable(void) {
+void spi_enable(uint8_t cs_assert) {
 
 	SPI2->CR2 |= SPI_CR2_ERRIE;
 	SPI2->CR2 |= SPI_CR2_RXNEIE;
 	SPI2->CR2 |= SPI_CR2_TXEIE;
 
-	LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+	if (cs_assert != 0) {
+		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+	}
 
 	LL_SPI_Enable(SPI2);
 }
@@ -644,6 +667,11 @@ void spi_disable(uint8_t immediately) {
 		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 		LL_SPI_Disable(SPI2);
+
+		// disable all interrupts
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
 
 		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
 			// clear RX fifo queue

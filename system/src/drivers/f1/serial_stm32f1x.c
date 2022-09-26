@@ -497,6 +497,11 @@ void srl_irq_handler(srl_context_t *ctx) {
 	uint8_t value = 0;
 
 	if ((ctx->port->SR & USART_SR_IDLE) == USART_SR_IDLE) {
+		// commented as a part of change in commit 641db9c
+		// https://github.com/SP8EBC/ParaTNC/commit/641db9ce1e6089ad09178b4cec2f48241e9f9e99
+		//  		bufix stm32f100: do not read a content of DR register in IDLE
+		//			state handler within irq handler
+
 		//ctx->srl_garbage_storage = (uint8_t)ctx->port->DR;
 
 		ctx->total_idle_counter++;

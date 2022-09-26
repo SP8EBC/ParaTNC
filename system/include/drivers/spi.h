@@ -35,12 +35,13 @@ typedef enum spi_clock_polarity_strobe_t {
 #define SPI_ENDIAN_MSB	1
 
 typedef enum spi_rx_state_t {
-	SPI_RX_IDLE,
-	SPI_RX_RXING,
-	SPI_RX_DONE,
-	SPI_RX_ERROR_OVERRUN,
+	SPI_RX_IDLE,			// SPI is configured and ready for operation
+	SPI_RX_RXING,			// SPI is currently receiving
+	SPI_RX_DONE,			// Reception is done
+	SPI_RX_WAITING_FOR_RX,	// SPI is currently transmitting and reception is queued
+	SPI_RX_ERROR_OVERRUN,	// Overrun had been detected and reception was terminated
 	SPI_RX_ERROR_MODF,
-	SPI_RX_ERROR_TIMEOUT
+	SPI_RX_ERROR_TIMEOUT	// Timeout has been detected
 }spi_rx_state_t;
 
 typedef enum spi_tx_state_t {
@@ -64,7 +65,7 @@ void spi_reset_errors(void);
 void spi_irq_handler(void);
 void spi_timeout_handler(void);
 
-void spi_enable(void);
+void spi_enable(uint8_t cs_assert);
 void spi_disable(uint8_t immediately);
 
 #endif /* INCLUDE_DRIVERS_SPI_H_ */

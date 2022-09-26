@@ -96,7 +96,7 @@ void max31865_init(uint8_t rdt_type) {
 	bytes[1] = 0x00;
 
 	// read data for verifiaction
-	spi_rx_tx_data(1, max31865_buffer, bytes, 1, 1);
+	spi_rx_tx_data(1, 0, bytes, 30, 1);
 
 	spi_wait_for_comms_done();
 

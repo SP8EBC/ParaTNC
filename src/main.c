@@ -1007,7 +1007,7 @@ int main(int argc, char* argv[]){
 	   }
 
 	   if (main_config_data_gsm->api_enable == 0 && main_config_data_gsm->aprsis_enable == 1) {
-		   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, (const char *)main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
+		   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
 	   }
    }
 
