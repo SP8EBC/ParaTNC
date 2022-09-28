@@ -70,8 +70,6 @@ static uint8_t max31865_get_config_register(void) {
 
 void max31865_init(uint8_t rdt_type) {
 
-	uint8_t bytes[2];
-
 	if (rdt_type == MAX_3WIRE) {
 		max31865_rdt_sensor_type = 1;
 	}
@@ -84,19 +82,19 @@ void max31865_init(uint8_t rdt_type) {
 
 	max31865_vbias = 1;
 
-	bytes[0] = 0x80;
-	bytes[1] = max31865_get_config_register();
+	max31865_buffer[0] = 0x80;
+	max31865_buffer[1] = max31865_get_config_register();
 
-	spi_tx_data(1, bytes, 2);
+	spi_tx_data(1, max31865_buffer, 2);
 
 	spi_wait_for_comms_done();
 
 	// read adres of configuation register
-	bytes[0] = 0x00;
-	bytes[1] = 0x00;
+	max31865_buffer[0] = 0x03;
+	max31865_buffer[1] = 0x03;
 
 	// read data for verifiaction
-	spi_rx_tx_data(1, 0, bytes, 30, 1);
+	spi_rx_tx_data(1, 0, max31865_buffer, 30, 1);
 
 	spi_wait_for_comms_done();
 

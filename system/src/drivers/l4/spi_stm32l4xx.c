@@ -462,6 +462,7 @@ uint8_t * spi_get_rx_data(void) {
 uint8_t spi_wait_for_comms_done(void) {
 	if (spi_tx_state == SPI_TX_TXING) {
 		while (spi_tx_state == SPI_TX_TXING);
+		while ((SPI2->SR & SPI_SR_BSY) != 0);
 	}
 
 	if (spi_rx_state == SPI_RX_RXING) {
@@ -502,11 +503,8 @@ void spi_irq_handler(void) {
 	//	true.
 	if ((SPI2->SR & SPI_SR_RXNE) != 0) {
 
-		if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
-			spi_garbage = SPI2->DR & 0xFF;
-		}
 		// check if receiving is pending
-		else if (spi_rx_state == SPI_RX_RXING) {
+		if (spi_rx_state == SPI_RX_RXING) {
 
 			// get all data from RX FIFO
 			do {
@@ -528,6 +526,11 @@ void spi_irq_handler(void) {
 				}
 			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
 		}
+		else {
+			do {
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
 	}
 
 	//	The TXE flag is set when transmission TXFIFO has enough space to store data to send.
@@ -547,12 +550,16 @@ void spi_irq_handler(void) {
 					SPI2->DR = spi_tx_buffer[spi_current_tx_cntr++];
 				}
 				else {
+					while((SPI2->SR & SPI_SR_BSY) != 0);	// blocking!!
+
 					// finish transmission
 					spi_tx_state = SPI_TX_DONE;
 
 					// check if reception shall begin
 					if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
 						spi_rx_state = SPI_RX_RXING;
+
+						SPI2->DR = 0xFF;
 					}
 
 					break;
@@ -683,6 +690,8 @@ void spi_disable(uint8_t immediately) {
 		}
 	}
 	else {
+		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
 		// disable all interrupts
 		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
 		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
