@@ -105,7 +105,6 @@ void dallas_config_timer(void) {
 	//NVIC_DisableIRQ( TIM3_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM4_IRQn );			// data transmission initializer
 	NVIC_DisableIRQ( TIM7_IRQn );			// data transmission initializer
-	//NVIC_DisableIRQ( 25 );	// TODO: probably remainder of TX20 driver to be deleted
 
 
 	dallas_delay_start();
@@ -119,7 +118,6 @@ void dallas_deconfig_timer(void) {
 	//NVIC_EnableIRQ( TIM3_IRQn );	// adc
 	NVIC_EnableIRQ( TIM4_IRQn );	// data transmission initializer
 	NVIC_EnableIRQ( TIM7_IRQn );	// data transmission initializer
-	//NVIC_EnableIRQ( 25 ); // TODO: probably remainder of TX20 driver to be deleted
 
 	dallas_delay_stop();
 	//timm = 0;

@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+#define SPI_CS_TO_SCLK_SETUP_DELAY	0x2FF
 #define SPI_BUFFER_LN	32
 
 /**
@@ -274,15 +275,17 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
  *
  *
 //#define SPI_CR1_CPHA_Pos         (0U)
-//#define SPI_CR1_CPHA_Msk         (0x1UL << SPI_CR1_CPHA_Pos)                   /*!< 0x00000001 */
-//#define SPI_CR1_CPHA             SPI_CR1_CPHA_Msk                              /*!<Clock Phase      */
+//#define SPI_CR1_CPHA_Msk         (0x1UL << SPI_CR1_CPHA_Pos)                   //!< 0x00000001
+//#define SPI_CR1_CPHA             SPI_CR1_CPHA_Msk                              //!<Clock Phase
 //#define SPI_CR1_CPOL_Pos         (1U)
-//#define SPI_CR1_CPOL_Msk         (0x1UL << SPI_CR1_CPOL_Pos)                   /*!< 0x00000002 */
-//#define SPI_CR1_CPOL             SPI_CR1_CPOL_Msk                              /*!<Clock Polarity   */
+//#define SPI_CR1_CPOL_Msk         (0x1UL << SPI_CR1_CPOL_Pos)                   //!< 0x00000002
+//#define SPI_CR1_CPOL             SPI_CR1_CPOL_Msk                              //!<Clock Polarity
 
 uint8_t spi_rx_data(uint32_t slave_id, uint8_t * rx_buffer, uint16_t ln_to_rx) {
 	return 0xFF;
 }
+
+*/
 
 /**
  * Initiate tx only transaction. Data will be sent to chosen slave, any receive data will be discarded
@@ -310,8 +313,6 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 			spi_tx_state = SPI_TX_TXING;
 
 			spi_current_slave = slave_id;
-
-			LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 			// if yes clear counter
 			spi_current_tx_cntr = 0;
@@ -345,7 +346,7 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 				spi_tx_bytes_rq = ln_to_tx;
 			}
 
-			spi_enable(0);
+			spi_enable(1);
 		}
 	}
 	else {
@@ -372,8 +373,6 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 	if (spi_rx_state == SPI_RX_IDLE && (spi_tx_state == SPI_TX_IDLE || spi_tx_state == SPI_TX_DONE)) {
 
 		spi_current_slave = slave_id;
-
-		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
 		spi_current_rx_cntr = 0;
 		spi_current_tx_cntr = 0;
@@ -443,7 +442,7 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 		spi_tx_state = SPI_TX_TXING;
 
 		// start trasmission
-		spi_enable(0);
+		spi_enable(1);
 	}
 	else {
 		// exit if either transmission or reception is ongoing
@@ -550,7 +549,10 @@ void spi_irq_handler(void) {
 					SPI2->DR = spi_tx_buffer[spi_current_tx_cntr++];
 				}
 				else {
-					while((SPI2->SR & SPI_SR_BSY) != 0);	// blocking!!
+					while((SPI2->SR & SPI_SR_BSY) != 0) {	// blocking!!
+						// clear RX fifo while rest of bytes are transmitted
+						spi_garbage = SPI2->DR & 0xFF;
+					}
 
 					// finish transmission
 					spi_tx_state = SPI_TX_DONE;
@@ -650,6 +652,9 @@ void spi_timeout_handler(void) {
 
 void spi_enable(uint8_t cs_assert) {
 
+	// delay between asserting chip select and starting SPI
+	volatile int delay = 0;
+
 	SPI2->CR2 |= SPI_CR2_ERRIE;
 	SPI2->CR2 |= SPI_CR2_RXNEIE;
 	SPI2->CR2 |= SPI_CR2_TXEIE;
@@ -657,6 +662,8 @@ void spi_enable(uint8_t cs_assert) {
 	if (cs_assert != 0) {
 		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
 
+		// delay required by CS to SCLK Setup (MAX31865)
+		for (delay = 0; delay < SPI_CS_TO_SCLK_SETUP_DELAY; delay++);
 	}
 
 	LL_SPI_Enable(SPI2);
