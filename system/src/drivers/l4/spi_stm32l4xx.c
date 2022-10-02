@@ -185,23 +185,23 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	// Configure the CPOL and CPHA bits combination
 	switch(strobe) {
 		case CLOCK_NORMAL_FALLING:
-			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;		// CPOL
-			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;			// CPHA
+			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;		// CPOL - 0
+			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;			// CPHA - 1
 
 			break;
 		case CLOCK_NORMAL_RISING:
-			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;
-			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_1EDGE;
+			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_LOW;		// CPOL - 0
+			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_1EDGE;			// CPHA - 0
 
 			break;
 		case CLOCK_REVERSED_FALLING:
-			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_HIGH;
-			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_1EDGE;
+			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_HIGH;		// CPOL - 1
+			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_1EDGE;			// CPHA - 0
 
 			break;
 		case CLOCK_REVERSED_RISING:
-			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_HIGH;
-			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;
+			SPI_InitTypeDef.ClockPolarity = LL_SPI_POLARITY_HIGH;		// CPOL - 1
+			SPI_InitTypeDef.ClockPhase = LL_SPI_PHASE_2EDGE;			// CPHA - 1
 
 			break;
 	}
@@ -546,12 +546,14 @@ void spi_irq_handler(void) {
 
 				if (spi_current_tx_cntr < spi_tx_bytes_rq) {
 					// put next byte into the data register
-					SPI2->DR = spi_tx_buffer[spi_current_tx_cntr++];
+					*(uint8_t *)(&SPI2->DR) = spi_tx_buffer_ptr[spi_current_tx_cntr++];
 				}
 				else {
 					while((SPI2->SR & SPI_SR_BSY) != 0) {	// blocking!!
 						// clear RX fifo while rest of bytes are transmitted
-						spi_garbage = SPI2->DR & 0xFF;
+						do {
+							spi_garbage = SPI2->DR & 0xFF;
+						} while ((SPI2->SR & SPI_SR_RXNE) != 0);
 					}
 
 					// finish transmission
@@ -561,7 +563,7 @@ void spi_irq_handler(void) {
 					if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
 						spi_rx_state = SPI_RX_RXING;
 
-						SPI2->DR = 0xFF;
+						*(uint8_t *)(&SPI2->DR) = 0xFF;
 					}
 
 					break;
@@ -572,7 +574,7 @@ void spi_irq_handler(void) {
 		}
 		else if (spi_tx_state == SPI_TX_DONE) {
 			if (spi_rx_state == SPI_RX_RXING) {
-				SPI2->DR = 0xFF;
+				*(uint8_t *)(&SPI2->DR) = 0xFF;
 			}
 		}
 	}

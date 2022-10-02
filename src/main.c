@@ -786,7 +786,7 @@ int main(int argc, char* argv[]){
 
 #if defined(STM32L471xx)
   // initialize SPI
-  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_NORMAL_FALLING, SPI_SPEED_DIV32, SPI_ENDIAN_MSB);
+  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
   // initialize MAX RDT amplifier
   max31865_init(MAX_3WIRE);

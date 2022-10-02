@@ -82,6 +82,8 @@ void max31865_init(uint8_t rdt_type) {
 
 	max31865_vbias = 1;
 
+	max31865_conversion_mode = 1;
+
 	max31865_buffer[0] = 0x80;
 	max31865_buffer[1] = max31865_get_config_register();
 
@@ -90,8 +92,8 @@ void max31865_init(uint8_t rdt_type) {
 	spi_wait_for_comms_done();
 
 	// read adres of configuation register
-	max31865_buffer[0] = 0x03;
-	max31865_buffer[1] = 0x03;
+	max31865_buffer[0] = 0x00;
+	max31865_buffer[1] = 0x00;
 
 	// read data for verifiaction
 	spi_rx_tx_data(1, 0, max31865_buffer, 30, 1);
