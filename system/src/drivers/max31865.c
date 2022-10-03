@@ -40,7 +40,7 @@ uint8_t max31865_vbias = 0;
 uint8_t max31865_conversion_mode = 0;
 
 /**
- *
+ *	Set to one and send config register to trigger single measurement
  */
 uint8_t max31865_start_singleshot = 0;
 
@@ -72,6 +72,11 @@ uint8_t max31865_buffer[3] = {0u};
  * Set to one if MAX has been initialized correctly
  */
 uint8_t max31865_ok = 0;
+
+/**
+ * Last raw result read from MAX
+ */
+uint16_t max31865_raw_result = 0;
 
 /**
  * Function generates a content of configuration register basing on
@@ -107,9 +112,13 @@ static void max31865_request_registers(void) {
 	else {
 		max31865_current_state = MAX_ERROR;
 	}
+
+	if (result != SPI_OK) {
+		max31865_current_state = MAX_ERROR;
+	}
 }
 
-static void max31865_send_config_measurement(void) {
+static void max31865_send_config_register(void) {
 	uint8_t result = 0;
 
 	// check if SPI is busy now
@@ -121,6 +130,10 @@ static void max31865_send_config_measurement(void) {
 		spi_tx_data(1, SPI_TX_FROM_EXTERNAL, max31865_buffer, 2);
 	}
 	else {
+		max31865_current_state = MAX_ERROR;
+	}
+
+	if (result != SPI_OK) {
 		max31865_current_state = MAX_ERROR;
 	}
 }
@@ -139,25 +152,13 @@ void max31865_init(uint8_t rdt_type) {
 	// set filter to 50Hz
 	max31865_filter_select = 1;
 
-	max31865_vbias = 1;
+	max31865_vbias = 0;
 
-	max31865_conversion_mode = 1;
+	max31865_conversion_mode = 0;
 
-//	max31865_buffer[0] = 0x80;
-//	max31865_buffer[1] = max31865_get_config_register();
-//
-//	spi_tx_data(1, SPI_TX_FROM_EXTERNAL, max31865_buffer, 2);
-
-	max31865_send_config_measurement();
+	max31865_send_config_register();
 
 	spi_wait_for_comms_done();
-
-//	// read adres of configuation register
-//	max31865_buffer[0] = 0x00;
-//	max31865_buffer[1] = 0x00;
-//
-//	// read data for verifiaction
-//	spi_rx_tx_data(1, SPI_TX_FROM_EXTERNAL, SPI_USE_INTERNAL_RX_BUF, max31865_buffer, 30, 1);
 
 	max31865_request_registers();
 
@@ -167,6 +168,8 @@ void max31865_init(uint8_t rdt_type) {
 
 	if (rx_data[0] == max31865_get_config_register()) {
 		max31865_ok = 1;
+
+		max31865_current_state = MAX_INITIALIZED;
 	}
 	else {
 		max31865_ok = 0;
@@ -179,6 +182,8 @@ void max31865_init(uint8_t rdt_type) {
  */
 void max31865_pool(void) {
 
+	uint8_t * result_ptr;
+
 	switch (max31865_current_state) {
 		case MAX_IDLE:
 			// MAX31865 is powered up but not initialized
@@ -189,23 +194,72 @@ void max31865_pool(void) {
 				max31865_init(MAX_4WIRE);
 			}
 
-			max31865_current_state = MAX_INITIALIZED;
+			if (max31865_ok == 1) {
+				max31865_current_state = MAX_INITIALIZED;
+			}
+
 			break;
 		case MAX_INITIALIZED:
 			// initialized and ready to start measurement
+			max31865_current_state = MAX_MEASUREMENT_STARTED;
+
 			max31865_start_singleshot = 1;
 
+			max31865_vbias = 1;
+
+			// this function may change 'max31865_current_state' internally due to errors
+			max31865_send_config_register();
+
+			// disable VBIAS to reduce power consumption
+			max31865_vbias = 0;
+
+			max31865_start_singleshot = 0;
 
 			break;
 		case MAX_ERROR:
+			// go back to idle in case of any error
+			max31865_current_state = MAX_IDLE;
 			break;
 		case MAX_MEASUREMENT_STARTED:
+			// measurement has been started before, so now it's time to request for results
+			max31865_request_registers();
+
+			max31865_current_state = MAX_REGISTER_REQUESTED;
+
 			break;
 		case MAX_REGISTER_REQUESTED:
+			// results shall be available
+			max31865_current_state = MAX_SHUTDOWN;
+
+			// check a SPI status
+			if (spi_get_rx_state() != SPI_RX_DONE) {
+				// if SPI is not done
+				max31865_current_state = MAX_ERROR;
+			}
+			else {
+				// get a pointer to results
+				result_ptr = spi_get_rx_data();
+
+				// disable VBIAS to reduce power consumption
+				max31865_vbias = 0;
+
+				// this function may change 'max31865_current_state' internally due to errors
+				max31865_send_config_register();
+
+				max31865_shutdown_ticks = 0;
+			}
+
+
 			break;
 		case MAX_SHUTDOWN:
 			// MAX31965 is powered up and initialized but PT bias is disabled
 			// and no measurement is ongoing
+			if (max31865_shutdown_ticks++ > 9) {
+				max31865_current_state = MAX_INITIALIZED;
+
+				max31865_shutdown_ticks = 0;
+			}
+
 			break;
 		case MAX_POWER_OFF:
 			// supply voltage for MAX31865 is powered off and no communication

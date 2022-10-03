@@ -658,9 +658,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		vbatt = 0xFFFFu;
 	}
 
-//	#ifdef INHIBIT_CUTOFF
-//	vbatt = 0xFFFFu;
-//	#endif
+	#ifdef INHIBIT_CUTOFF
+	vbatt = 0xFFFFu;
+	#endif
 
 	if (vbatt > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
