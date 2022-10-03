@@ -1,6 +1,9 @@
 /*
  * spi_stm32l4xx.c
  *
+ * This module consist an implementation of SPI driver for STM32L4xx micro, but with some
+ * limitations over what this micro actually supports.
+ *
  *  Created on: Sep 22, 2022
  *      Author: mateusz
  */
@@ -82,16 +85,70 @@ uint8_t * spi_tx_buffer_ptr;
 uint8_t spi_garbage;
 
 /**
- * Timestamp when receiving has been initiated
- */
-uint32_t spi_timestamp_rx_start;
-
-/**
  * How many bytes has been discarded into garbage storage
  */
 uint8_t spi_garbage_counter = 0;
 
 EVAL_SLAVE_ARR
+
+static void spi_enable(uint8_t cs_assert) {
+
+	// delay between asserting chip select and starting SPI
+	volatile int delay = 0;
+
+	SPI2->CR2 |= SPI_CR2_ERRIE;
+	SPI2->CR2 |= SPI_CR2_RXNEIE;
+	SPI2->CR2 |= SPI_CR2_TXEIE;
+
+	if (cs_assert != 0) {
+		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+		// delay required by CS to SCLK Setup (MAX31865)
+		for (delay = 0; delay < SPI_CS_TO_SCLK_SETUP_DELAY; delay++);
+	}
+
+	LL_SPI_Enable(SPI2);
+}
+
+/**
+ * This function will disable SPI and close bus communication, optionally
+ * it can wait until the peripheral will be released
+ */
+static void spi_disable(uint8_t immediately) {
+
+	if (immediately == 0) {
+		while ((SPI2->SR & SPI_SR_BSY) != 0);
+
+		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+		LL_SPI_Disable(SPI2);
+
+		// disable all interrupts
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
+
+		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+			// clear RX fifo queue
+			do {
+				spi_garbage_counter++;
+
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
+	}
+	else {
+		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+		// disable all interrupts
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
+		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
+
+		LL_SPI_Disable(SPI2);
+	}
+
+}
 
 uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_strobe_t strobe, int speed, int endianess) {
 
@@ -290,7 +347,7 @@ uint8_t spi_rx_data(uint32_t slave_id, uint8_t * rx_buffer, uint16_t ln_to_rx) {
 /**
  * Initiate tx only transaction. Data will be sent to chosen slave, any receive data will be discarded
  */
-uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
+uint8_t spi_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 
 	uint8_t out = SPI_UKNOWN;
 
@@ -318,7 +375,7 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 			spi_current_tx_cntr = 0;
 
 			// check if external or internal buffer shall be used
-			if (tx_buffer == 0) {
+			if (tx_from_internal == SPI_TX_FROM_INTERNAL) {
 				spi_tx_buffer_ptr = spi_tx_buffer;
 
 				// check if internal buffer has enought room for data
@@ -358,10 +415,11 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t * tx_buffer, uint16_t ln_to_tx) {
 
 /**
  *	Initiate full duplex communication with the slave. After this call the SPI bus
- *	will be enabled and all data from tx_buffer will be send. SPI bus will be disabled
- *	after requested amount of data will be received or timeout occured.
+ *	will be enabled and all data from tx_buffer will be send. After transmitting all bytes
+ *	the master will transmit 0xFF on MOSI in the loop, until requested number of bytes
+ *	will be received. Then SPI is disabled
  */
-uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_rx, uint16_t ln_to_tx) {
+uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_rx, uint16_t ln_to_tx) {
 
 	uint8_t out = SPI_UKNOWN;
 
@@ -404,7 +462,7 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 		}
 
 		// check if external TX buffer shall be user or not
-		if (tx_buffer == 0) {
+		if (tx_from_internal == SPI_TX_FROM_INTERNAL) {
 			spi_tx_buffer_ptr = spi_tx_buffer;
 
 			// check if internal buffer has enought room for data
@@ -431,9 +489,6 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t * rx_buffer, uint8_t * tx_buff
 
 			spi_tx_bytes_rq = ln_to_tx;
 		}
-
-		// latch a timestamp when reception has been triggered
-		spi_timestamp_rx_start = master_time;
 
 //		// set first byte for transmission
 //		SPI2->DR = spi_tx_buffer_ptr[0];
@@ -485,8 +540,25 @@ uint8_t spi_wait_for_comms_done(void) {
 }
 
 void spi_reset_errors(void) {
-	if (spi_rx_state == SPI_RX_ERROR_MODF || spi_rx_state == SPI_RX_ERROR_OVERRUN || spi_rx_state == SPI_RX_ERROR_TIMEOUT) {
+	if (spi_rx_state == SPI_RX_ERROR_MODF || spi_rx_state == SPI_RX_ERROR_OVERRUN) {
 		spi_rx_state = SPI_RX_IDLE;
+	}
+}
+
+spi_rx_state_t spi_get_rx_state(void) {
+	return spi_rx_state;
+}
+
+spi_tx_state_t spi_get_tx_state(void) {
+	return spi_tx_state;
+}
+
+uint32_t spi_get_current_slave(void) {
+	if (spi_rx_state != SPI_RX_RXING && spi_tx_state != SPI_TX_TXING) {
+		return 0;
+	}
+	else {
+		return spi_current_slave;
 	}
 }
 
@@ -635,78 +707,4 @@ void spi_irq_handler(void) {
 	if (spi_rx_state == SPI_RX_ERROR_OVERRUN) {
 		spi_disable(1);
 	}
-}
-
-/**
- * This function should be caller from SysTick Interrupt
- */
-void spi_timeout_handler(void) {
-
-	if (spi_rx_state == SPI_RX_RXING) {
-		if (master_time - spi_timestamp_rx_start > SPI_RX_ERROR_TIMEOUT) {
-			spi_rx_state = SPI_RX_ERROR_TIMEOUT;
-			spi_tx_state = SPI_TX_IDLE;
-
-			spi_disable(1);
-		}
-	}
- }
-
-void spi_enable(uint8_t cs_assert) {
-
-	// delay between asserting chip select and starting SPI
-	volatile int delay = 0;
-
-	SPI2->CR2 |= SPI_CR2_ERRIE;
-	SPI2->CR2 |= SPI_CR2_RXNEIE;
-	SPI2->CR2 |= SPI_CR2_TXEIE;
-
-	if (cs_assert != 0) {
-		LL_GPIO_ResetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
-
-		// delay required by CS to SCLK Setup (MAX31865)
-		for (delay = 0; delay < SPI_CS_TO_SCLK_SETUP_DELAY; delay++);
-	}
-
-	LL_SPI_Enable(SPI2);
-}
-
-/**
- * This function will disable SPI and close bus communication, optionally
- * it can wait until the peripheral will be released
- */
-void spi_disable(uint8_t immediately) {
-
-	if (immediately == 0) {
-		while ((SPI2->SR & SPI_SR_BSY) != 0);
-
-		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
-
-		LL_SPI_Disable(SPI2);
-
-		// disable all interrupts
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
-
-		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
-			// clear RX fifo queue
-			do {
-				spi_garbage_counter++;
-
-				spi_garbage = SPI2->DR & 0xFF;
-			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
-		}
-	}
-	else {
-		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
-
-		// disable all interrupts
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_ERRIE);
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_RXNEIE);
-		SPI2->CR2 &= (0xFFFFFFFF ^ SPI_CR2_TXEIE);
-
-		LL_SPI_Disable(SPI2);
-	}
-
 }

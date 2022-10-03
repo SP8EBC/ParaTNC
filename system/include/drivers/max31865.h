@@ -20,7 +20,7 @@ typedef enum max31865_qf_t {
 }max31865_qf_t;
 
 void max31865_init(uint8_t rdt_type);
-void max31865_start_measurement(void);
+void max31865_pool(void);
 int32_t max31865_get_result(max31865_qf_t * quality_factor);
 
 

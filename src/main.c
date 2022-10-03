@@ -1430,6 +1430,8 @@ int main(int argc, char* argv[]){
 
 			wx_check_force_i2c_reset();
 
+			max31865_pool();
+
 			#ifdef INTERNAL_WATCHDOG
 			IWDG_ReloadCounter();
 			#endif

@@ -152,8 +152,6 @@ void SysTick_Handler(void) {
 
 	i2cKeepTimeout();
 
-	spi_timeout_handler();
-
 	delay_decrement_counter();
 
 	if (it_handlers_inhibit_radiomodem_dcd_led == 0) {
