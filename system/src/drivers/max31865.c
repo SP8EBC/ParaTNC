@@ -79,6 +79,12 @@ uint8_t max31865_ok = 0;
 uint16_t max31865_raw_result = 0;
 
 /**
+ * Value of configuration register which should be currently stored in
+ * amplifier
+ */
+uint8_t max31865_current_config_register = 0;
+
+/**
  * Function generates a content of configuration register basing on
  */
 static uint8_t max31865_get_config_register(void) {
@@ -123,11 +129,14 @@ static void max31865_send_config_register(void) {
 
 	// check if SPI is busy now
 	if (spi_get_current_slave() == 0) {
+		max31865_current_config_register = max31865_get_config_register();
+
 		// read adres of configuation register
 		max31865_buffer[0] = 0x80;
-		max31865_buffer[1] = max31865_get_config_register();
+		max31865_buffer[1] = max31865_current_config_register;
 
 		spi_tx_data(1, SPI_TX_FROM_EXTERNAL, max31865_buffer, 2);
+
 	}
 	else {
 		max31865_current_state = MAX_ERROR;
@@ -240,6 +249,12 @@ void max31865_pool(void) {
 				// get a pointer to results
 				result_ptr = spi_get_rx_data();
 
+				// check communication results by comparing a value of config register
+				if ((max31865_current_config_register & 0xDF) == *result_ptr) {	// fifth bit read always zero
+					// save raw results
+					max31865_raw_result = *(result_ptr + 2) | (*(result_ptr + 1) << 8);
+				}
+
 				// disable VBIAS to reduce power consumption
 				max31865_vbias = 0;
 
@@ -252,7 +267,7 @@ void max31865_pool(void) {
 
 			break;
 		case MAX_SHUTDOWN:
-			// MAX31965 is powered up and initialized but PT bias is disabled
+			// MAX31865 is powered up and initialized but PT bias is disabled
 			// and no measurement is ongoing
 			if (max31865_shutdown_ticks++ > 9) {
 				max31865_current_state = MAX_INITIALIZED;
