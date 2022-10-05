@@ -7,6 +7,10 @@
 
 #include "drivers/max31865.h"
 
+#define REFERENCE_RESISTOR 4300.0f
+
+int32_t test;
+
 typedef enum max31865_pool_state_t {
 	MAX_IDLE,
 	MAX_INITIALIZED,
@@ -16,7 +20,6 @@ typedef enum max31865_pool_state_t {
 	MAX_SHUTDOWN,
 	MAX_POWER_OFF
 }max31865_pool_state_t;
-
 
 max31865_pool_state_t max31865_current_state = MAX_IDLE;
 
@@ -253,6 +256,13 @@ void max31865_pool(void) {
 				if ((max31865_current_config_register & 0xDF) == *result_ptr) {	// fifth bit read always zero
 					// save raw results
 					max31865_raw_result = *(result_ptr + 2) | (*(result_ptr + 1) << 8);
+
+					max31865_raw_result = max31865_raw_result >> 1;
+
+					test = max31865_get_pt100_result(0);
+				}
+				else {
+					max31865_current_state = MAX_ERROR;
 				}
 
 				// disable VBIAS to reduce power consumption
@@ -283,6 +293,28 @@ void max31865_pool(void) {
 	}
 }
 
-int32_t max31865_get_result(max31865_qf_t * quality_factor) {
+int32_t max31865_get_pt100_result(max31865_qf_t * quality_factor) {
 
+	int32_t temperature_scaled = 0;
+
+	float R_ohms = (max31865_raw_result * REFERENCE_RESISTOR) / 32768.0f;
+
+	float num, denom, T ;
+
+	float c0= -245.19 ;
+	float c1 = 2.5293 ;
+	float c2 = -0.066046 ;
+	float c3 = 4.0422E-3 ;
+	float c4 = -2.0697E-6 ;
+	float c5 = -0.025422 ;
+	float c6 = 1.6883E-3 ;
+	float c7 = -1.3601E-6 ;
+
+	num = R_ohms * (c1 + R_ohms * (c2 + R_ohms * (c3 + R_ohms * c4))) ;
+	denom = 1.0 + R_ohms * (c5 + R_ohms * (c6 + R_ohms * c7)) ;
+	T = c0 + (num / denom) ;
+
+	temperature_scaled = (int32_t) (T * 10.0f);
+
+	return temperature_scaled;
 }
