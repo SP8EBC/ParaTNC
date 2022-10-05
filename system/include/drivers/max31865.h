@@ -22,6 +22,7 @@ typedef enum max31865_qf_t {
 void max31865_init(uint8_t rdt_type);
 void max31865_pool(void);
 int32_t max31865_get_pt100_result(max31865_qf_t * quality_factor);
+int32_t max31865_get_result(uint32_t RTDnominal);
 
 
 #endif /* INCLUDE_DRIVERS_MAX31865_H_ */

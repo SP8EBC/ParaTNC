@@ -6,8 +6,12 @@
  */
 
 #include "drivers/max31865.h"
+#include <math.h>
 
 #define REFERENCE_RESISTOR 4300.0f
+
+#define RTD_A 3.9083e-3
+#define RTD_B -5.775e-7
 
 int32_t test;
 
@@ -259,7 +263,8 @@ void max31865_pool(void) {
 
 					max31865_raw_result = max31865_raw_result >> 1;
 
-					test = max31865_get_pt100_result(0);
+					//test = max31865_get_pt100_result(0);
+					test = max31865_get_result(100);
 				}
 				else {
 					max31865_current_state = MAX_ERROR;
@@ -317,4 +322,49 @@ int32_t max31865_get_pt100_result(max31865_qf_t * quality_factor) {
 	temperature_scaled = (int32_t) (T * 10.0f);
 
 	return temperature_scaled;
+}
+
+int32_t max31865_get_result(uint32_t RTDnominal) {
+
+	  float Z1, Z2, Z3, Z4, Rt, temp;
+
+	  //float R_ohms = (max31865_raw_result * REFERENCE_RESISTOR) / 32768.0f;
+
+	  Rt = max31865_raw_result;
+	  Rt /= 32768.0f;
+	  Rt *= REFERENCE_RESISTOR;
+
+	  // Serial.print("\nResistance: "); Serial.println(Rt, 8);
+
+	  Z1 = -RTD_A;
+	  Z2 = RTD_A * RTD_A - (4 * RTD_B);
+	  Z3 = (4 * RTD_B) / RTDnominal;
+	  Z4 = 2 * RTD_B;
+
+	  temp = Z2 + (Z3 * Rt);
+	  temp = (sqrt(temp) + Z1) / Z4;
+
+	  if (temp >= 0)
+		  return (int32_t) (temp * 10.0f);
+
+	  // ugh.
+	  Rt /= RTDnominal;
+	  Rt *= 100; // normalize to 100 ohm
+
+	  float rpoly = Rt;
+
+	  temp = -242.02;
+	  temp += 2.2228 * rpoly;
+	  rpoly *= Rt; // square
+	  temp += 2.5859e-3 * rpoly;
+	  rpoly *= Rt; // ^3
+	  temp -= 4.8260e-6 * rpoly;
+	  rpoly *= Rt; // ^4
+	  temp -= 2.8183e-8 * rpoly;
+	  rpoly *= Rt; // ^5
+	  temp += 1.5243e-10 * rpoly;
+
+	  return (int32_t) (temp * 10.0f);
+
+	//return 0;
 }
