@@ -16,6 +16,7 @@
 int32_t test;
 
 typedef enum max31865_pool_state_t {
+	MAX_UNINITIALIZED,
 	MAX_IDLE,
 	MAX_INITIALIZED,
 	MAX_ERROR,
@@ -25,7 +26,49 @@ typedef enum max31865_pool_state_t {
 	MAX_POWER_OFF
 }max31865_pool_state_t;
 
-max31865_pool_state_t max31865_current_state = MAX_IDLE;
+static const float max31865_rref_lookup_table[32] =
+{
+		430.0f,
+		432.0f,
+		442.0f,
+		470.0f,
+		499.0f,
+		510.0f,
+		560.0f,
+		620.0f,
+		680.0f,
+		768.0f,	// 9
+		1000.0f,
+		1100.0f,
+		1200.0f,
+		1300.0f,
+		1400.0f,
+		1500.0f,
+		1600.0f,
+		1740.0f,
+		1800.0f,
+		1910.0f,	// 19
+		2000.0f,	// 20
+		2100.0f,
+		2400.0f,
+		2700.0f,
+		3000.0f,
+		3090.0f,
+		3400.0f,
+		3900.0f,
+		4300.0f,	// 28
+		4700.0f,	// 29
+		4990.0f,	// 30
+		5600.0f		// 31
+
+};
+
+max31865_pool_state_t max31865_current_state = MAX_UNINITIALIZED;
+
+/**
+ *	reference resistor value
+ */
+float max31865_rref = 0;
 
 /**
  * This variable is incremented from 0 up to 9 to pause measurement
@@ -154,15 +197,29 @@ static void max31865_send_config_register(void) {
 	}
 }
 
-void max31865_init(uint8_t rdt_type) {
+void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
 
 	uint8_t * rx_data;
 
 	if (rdt_type == MAX_3WIRE) {
 		max31865_rdt_sensor_type = 1;
 	}
-	else {
+	else if (rdt_type == MAX_4WIRE) {
 		max31865_rdt_sensor_type = 0;
+	}
+	else {
+		max31865_current_state = MAX_UNINITIALIZED;
+
+		return;
+	}
+
+	if (reference_resistor > 31) {
+		max31865_current_state = MAX_UNINITIALIZED;
+
+		return;
+	}
+	else {
+		max31865_rref = max31865_rref_lookup_table[reference_resistor];
 	}
 
 	// set filter to 50Hz
@@ -204,10 +261,10 @@ void max31865_pool(void) {
 		case MAX_IDLE:
 			// MAX31865 is powered up but not initialized
 			if (max31865_rdt_sensor_type == 1) {
-				max31865_init(MAX_3WIRE);
+				max31865_init(MAX_3WIRE, max31865_rref);
 			}
 			else {
-				max31865_init(MAX_4WIRE);
+				max31865_init(MAX_4WIRE, max31865_rref);
 			}
 
 			if (max31865_ok == 1) {
@@ -264,7 +321,7 @@ void max31865_pool(void) {
 					max31865_raw_result = max31865_raw_result >> 1;
 
 					//test = max31865_get_pt100_result(0);
-					test = max31865_get_result(100);
+//					test = max31865_get_result(100);
 				}
 				else {
 					max31865_current_state = MAX_ERROR;
@@ -291,6 +348,7 @@ void max31865_pool(void) {
 			}
 
 			break;
+		case MAX_UNINITIALIZED:
 		case MAX_POWER_OFF:
 			// supply voltage for MAX31865 is powered off and no communication
 			// is currently possible
@@ -302,7 +360,7 @@ int32_t max31865_get_pt100_result(max31865_qf_t * quality_factor) {
 
 	int32_t temperature_scaled = 0;
 
-	float R_ohms = (max31865_raw_result * REFERENCE_RESISTOR) / 32768.0f;
+	float R_ohms = (max31865_raw_result * max31865_rref) / 32768.0f;
 
 	float num, denom, T ;
 
@@ -332,7 +390,7 @@ int32_t max31865_get_result(uint32_t RTDnominal) {
 
 	  Rt = max31865_raw_result;
 	  Rt /= 32768.0f;
-	  Rt *= REFERENCE_RESISTOR;
+	  Rt *= max31865_rref;
 
 	  // Serial.print("\nResistance: "); Serial.println(Rt, 8);
 

@@ -659,7 +659,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	}
 
 	#ifdef INHIBIT_CUTOFF
-	vbatt = 0xFFFFu;
+	vbatt = 0xFFFFu;		// TODO:: THis shall not be uncommented on production!!!
 	#endif
 
 	if (vbatt > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {

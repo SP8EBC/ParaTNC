@@ -14,7 +14,6 @@ C_SRCS += \
 ../src/config_data_first.c \
 ../src/config_data_second.c \
 ../src/configuration_handler.c \
-../src/crc_.c \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/float_to_string.c \
@@ -47,7 +46,6 @@ OBJS += \
 ./src/config_data_first.o \
 ./src/config_data_second.o \
 ./src/configuration_handler.o \
-./src/crc_.o \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/float_to_string.o \
@@ -80,7 +78,6 @@ C_DEPS += \
 ./src/config_data_first.d \
 ./src/config_data_second.d \
 ./src/configuration_handler.d \
-./src/crc_.d \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/float_to_string.d \

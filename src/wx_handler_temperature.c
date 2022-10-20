@@ -20,8 +20,6 @@
 
 #define WX_MAX_TEMPERATURE_SLEW_RATE 4.0f
 
-uint8_t wx_inhibit_slew_rate_check = 1;
-
 int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 
@@ -61,6 +59,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 
 			}
+
 
 			// measure an external temperature using Dallas one wire sensor.
 			// this function has blockin I/O which also adds a delay required by MS5611
@@ -102,7 +101,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// get the value read from RTU registers
 			measurement_result = rtu_get_temperature(&temp, config_rtu);
 
-			rte_wx_temperature_external = (float)temp / 10.0f;
+			rte_wx_temperature_average_external_valid = (float)temp / 10.0f;
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
@@ -139,54 +138,27 @@ int32_t wx_get_temperature_dallas() {
 
 	int32_t output = 0;
 
+	float temperature = 0.0f;
+
 	// get the value from dallas one-wire sensor
-	rte_wx_temperature_external = dallas_query(&rte_wx_current_dallas_qf);
+	temperature = dallas_query(&rte_wx_current_dallas_qf);
 
 	// checking if communication was successfull
-	if (rte_wx_temperature_external != -128.0f) {
-
-		// calculate the slew rate
-		rte_wx_temperature_external_slew_rate = rte_wx_temperature_external - rte_wx_temperature_external_valid;
-
-		// chcecking the positive (ascending) slew rate of the temperature measuremenets
-		if (rte_wx_temperature_external_slew_rate >  WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
-
-			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
-			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
-
-			// and increase the temperature only by 1.0f to decrease slew rate
-			rte_wx_temperature_external += 1.0f;
-
-		}
-
-		// chcecking the negaive (descending) slew rate of the temperature measuremenets
-		if (rte_wx_temperature_external_slew_rate < -WX_MAX_TEMPERATURE_SLEW_RATE && wx_inhibit_slew_rate_check == 0) {
-
-			// if temeperature measuremenet has changed more than maximum allowed slew rate set degradadet QF
-			rte_wx_error_dallas_qf = DALLAS_QF_DEGRADATED;
-
-			// and decrease the temperature only by 1.0f to decrease slew rate
-			rte_wx_temperature_external -= 1.0f;
-
-		}
-
-		// store current value
-		rte_wx_temperature_external_valid = rte_wx_temperature_external;
+	if (temperature != -128.0f) {
 
 		// include current temperature into the average
-		dallas_average(rte_wx_temperature_external, &rte_wx_dallas_average);
+		float_average(temperature, &rte_wx_dallas_average);
 
 		// update the current temperature with current average
-		rte_wx_temperature_average_external_valid = dallas_get_average(&rte_wx_dallas_average);
-
-		// update current minimal temperature
-		rte_wx_temperature_min_external_valid = dallas_get_min(&rte_wx_dallas_average);
-
-		// and update maximum also
-		rte_wx_temperature_max_external_valid = dallas_get_max(&rte_wx_dallas_average);
+		rte_wx_temperature_average_external_valid = float_get_average(&rte_wx_dallas_average);
 
 		// updating last good measurement time
 		wx_last_good_temperature_time = master_time;
+
+#if defined(STM32L471xx)
+		rte_wx_temperature_average_dallas = (int16_t)(rte_wx_temperature_average_external_valid * 10.0f);
+#endif
+
 	}
 	else {
 		// if there were a communication error set the error to unavaliable
@@ -195,10 +167,6 @@ int32_t wx_get_temperature_dallas() {
 		// set the output value
 		output = -1;
 	}
-
-#if defined(STM32L471xx)
-		rte_wx_temperature_average_dallas = (int16_t)(rte_wx_temperature_average_external_valid * 10.0f);
-#endif
 
 	return output;
 }

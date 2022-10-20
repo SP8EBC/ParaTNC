@@ -21,10 +21,7 @@
  *
  */
 
-float rte_wx_temperature_external = 0.0f, rte_wx_temperature_external_valid = 0.0f;
-float rte_wx_temperature_external_slew_rate = 0.0f;
 float rte_wx_temperature_average_external_valid = 0.0f;
-float rte_wx_temperature_min_external_valid = 0.0f, rte_wx_temperature_max_external_valid = 0.0f;
 float rte_wx_temperature_internal = 0.0f, rte_wx_temperature_internal_valid = 0.0f;
 float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
 float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
@@ -64,7 +61,7 @@ uint16_t rte_wx_winddirection_last = 0;
 int8_t rte_wx_humidity = 0, rte_wx_humidity_valid = 0;
 
 dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf = DALLAS_QF_UNKNOWN;
-dallas_average_t rte_wx_dallas_average;
+float_average_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf = MS5611_QF_UNKNOWN;
 bme280_qf_t rte_wx_bme280_qf = BME280_QF_UKNOWN;
 analog_wind_qf_t rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;

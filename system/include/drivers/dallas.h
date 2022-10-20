@@ -25,9 +25,9 @@ extern "C" {
 #include <stm32l4xx_ll_gpio.h>
 #endif
 
+#include "float_average.h"
 #include "station_config.h"
 
-#define DALLAS_AVERAGE_LN 9
 #define DALLAS_INIT_VALUE -128.0f
 
 extern volatile int delay_5us;
@@ -45,11 +45,6 @@ typedef struct dallas_struct_t {
 	uint8_t shift;
 }dallas_struct_t;
 
-typedef struct dallas_average_t {
-	float values[DALLAS_AVERAGE_LN];
-	float *begin, *end, *current;
-}dallas_average_t;
-
 typedef enum dallas_qf_t {
 	DALLAS_QF_UNKNOWN = 0,
 	DALLAS_QF_FULL,
@@ -57,7 +52,7 @@ typedef enum dallas_qf_t {
 	DALLAS_QF_NOT_AVALIABLE
 }dallas_qf_t;
 
-void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average);
+void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, float_average_t* average);
 void dallas_config_timer(void);
 void dallas_deconfig_timer(void);
 char dallas_reset(void);
@@ -65,10 +60,6 @@ float dallas_query(dallas_qf_t *qf);
 void dallas_send_byte(char data);
 char dallas_receive_byte(void);
 uint8_t dallas_calculate_crc8(uint8_t *addr, uint8_t len);
-void dallas_average(float in, dallas_average_t* average);
-float dallas_get_average(const dallas_average_t* average);
-float dallas_get_min(const dallas_average_t* average);
-float dallas_get_max(const dallas_average_t* average);
 
 
 

@@ -789,7 +789,8 @@ int main(int argc, char* argv[]){
   spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
   // initialize MAX RDT amplifier
-  max31865_init(MAX_3WIRE);
+  max31865_init(main_config_data_mode->wx_pt_sensor & 0x3, (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
+
 #endif
 
   // initialize GPIO pins leds are connecting to

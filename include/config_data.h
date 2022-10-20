@@ -62,6 +62,12 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 	uint8_t wx_dust_sensor;
 
+	/**
+	 * 0x00 or 0xFF - PT sensor disabled
+	 * bit0 - enabled / disabled
+	 * bit1 - PT100 (0) or PT1000 (1)
+	 * bit2 through bit7 - resistor value from lookup table
+	 * 	 */
 	uint8_t wx_pt_sensor;
 
 	uint8_t victron;
@@ -171,7 +177,12 @@ typedef enum config_data_wx_sources_enum_t {
 	 * the controller queries for average and maximum wind speed.
 	 */
 	WX_SOURCE_FULL_RTU = 4,
-	WX_SOURCE_DAVIS_SERIAL = 5
+	WX_SOURCE_DAVIS_SERIAL = 5,
+
+	/**
+	 * This position is valid only for temperature
+	 */
+	WX_SOURCE_INTERNAL_PT100 = 6,
 } config_data_wx_sources_enum_t;
 
 typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {

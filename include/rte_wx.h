@@ -21,6 +21,8 @@
 #include "drivers/ms5611.h"
 #include "drivers/bme280.h"
 
+#include "float_average.h"
+
 
 #define WIND_AVERAGE_LEN 18
 
@@ -30,10 +32,7 @@
 #define RTE_WX_MEASUREMENT_TEMPERATURE	100
 #define RTE_WX_MEASUREMENT_PRESSUERE	300
 
-extern float rte_wx_temperature_external, rte_wx_temperature_external_valid;
-extern float rte_wx_temperature_external_slew_rate;
 extern float rte_wx_temperature_average_external_valid;
-extern float rte_wx_temperature_min_external_valid, rte_wx_temperature_max_external_valid;
 extern float rte_wx_temperature_internal, rte_wx_temperature_internal_valid;
 extern float rte_wx_pressure, rte_wx_pressure_valid;
 extern float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
@@ -77,7 +76,7 @@ extern int8_t rte_wx_humidity, rte_wx_humidity_valid;
 extern uint8_t rte_wx_tx20_excessive_slew_rate;
 
 extern dallas_qf_t rte_wx_current_dallas_qf, rte_wx_error_dallas_qf;
-extern dallas_average_t rte_wx_dallas_average;
+extern float_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
 extern bme280_qf_t rte_wx_bme280_qf;
 extern analog_wind_qf_t rte_wx_wind_qf;

@@ -31,6 +31,7 @@ SUBDIRS := \
 src \
 system/src/aprs \
 system/src/cmsis/stm32l4xx \
+system/src \
 system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \

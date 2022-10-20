@@ -44,7 +44,7 @@ static void dallas_delay_start(void) {
 	NVIC_EnableIRQ( TIM2_IRQn );	// enabling in case that it wasn't been enabled earlier
 }
 
-void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, dallas_average_t* average) {
+void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, float_average_t* average) {
 
 #ifdef STM32F10X_MD_VL
 	GPIO_InitTypeDef GPIO_input;
@@ -92,12 +92,12 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 
 #endif
 
-	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
-		average->values[i] = DALLAS_INIT_VALUE;
+	for (int i = 0; i < FLOAT_AVERAGE_LN; i++) {
+		average->values[i] = FLOAT_INIT_VALUE;
 	}
 	average->current = average->values;
 	average->begin = average->values;
-	average->end = average->values + DALLAS_AVERAGE_LN - 1;
+	average->end = average->values + FLOAT_AVERAGE_LN - 1;
 }
 
 void dallas_config_timer(void) {
@@ -269,64 +269,4 @@ uint8_t dallas_calculate_crc8(uint8_t *addr, uint8_t len) {
 
 	/* Return calculated CRC */
 	return crc;
-}
-
-void dallas_average(float in, dallas_average_t* average) {
-	*average->current = in;
-
-	if (average->current == average->end) {
-		average->current = average->begin;
-	}
-	else {
-		average->current++;
-	}
-
-}
-
-float dallas_get_average(const dallas_average_t* average) {
-	float out = 0.0f;
-	uint8_t j = 0;
-
-	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
-		if (average->values[i] == DALLAS_INIT_VALUE)
-			continue;
-
-		out += average->values[i];
-		j++;
-	}
-	if (j > 0) {
-		out /= j;
-		return out;
-	}
-	else {
-		return DALLAS_INIT_VALUE;
-	}
-}
-
-float dallas_get_min(const dallas_average_t* average) {
-	float out = 128.0f;
-
-	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
-		if (average->values[i] == DALLAS_INIT_VALUE)
-			continue;
-
-		if (average->values[i] < out)
-			out = average->values[i];
-	}
-
-	return out;
-}
-
-float dallas_get_max(const dallas_average_t* average) {
-	float out = -128.0f;
-
-	for (int i = 0; i < DALLAS_AVERAGE_LN; i++) {
-		if (average->values[i] == DALLAS_INIT_VALUE)
-			continue;
-
-		if (average->values[i] > out)
-			out = average->values[i];
-	}
-
-	return out;
 }

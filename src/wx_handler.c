@@ -22,6 +22,7 @@
 #ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
+#include "drivers/max31865.h"
 #endif
 #include "drivers/analog_anemometer.h"
 
@@ -64,6 +65,10 @@ void wx_check_force_i2c_reset(void) {
 
 	if (wx_force_i2c_sensor_reset == 1) {
 		wx_force_i2c_sensor_reset = 0;
+
+#ifdef STM32L471xx
+		max31865_init(main_config_data_mode->wx_pt_sensor & 0x3, (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
+#endif
 
 		if (main_config_data_mode->wx_ms5611_or_bme == 0) {
 		 ms5611_reset(&rte_wx_ms5611_qf);
