@@ -64,6 +64,7 @@ int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const confi
 			break;
 		}
 		case WX_SOURCE_DAVIS_SERIAL:
+		case WX_SOURCE_INTERNAL_PT100:
 			break;
 	}
 

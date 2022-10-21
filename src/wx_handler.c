@@ -94,7 +94,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 		return;
 	}
 
-	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config_rtu);
+	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config_rtu, &rte_wx_temperature_average_external_valid);
 	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb, config_rtu);
 	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb, config_rtu);
 
@@ -109,7 +109,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 			// check what is the primary source of temperature
 			if (config_sources->temperature != WX_SOURCE_INTERNAL) {
 				// if this is something different than an internal source use the internal sensor
-				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb, config_rtu);
+				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb, config_rtu, &rte_wx_temperature_average_external_valid);
 			}
 			else {
 				; //

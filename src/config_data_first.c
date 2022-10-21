@@ -216,6 +216,9 @@ const config_data_basic_t __attribute__((section(".config_section_first.basic"))
  *
  */
 const config_data_wx_sources_t __attribute__((section(".config_section_first.sources"))) config_data_wx_sources_first = {
+
+		.temperature_telemetry = WX_SOURCE_INTERNAL,
+
 #ifdef _TEMPERATURE_INTERNAL
 		.temperature = WX_SOURCE_INTERNAL,
 #endif

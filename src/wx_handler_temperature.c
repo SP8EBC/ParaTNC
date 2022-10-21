@@ -14,13 +14,14 @@
 #include <drivers/dallas.h>
 #include <drivers/ms5611.h>
 #include <drivers/bme280.h>
+#include <drivers/max31865.h>
 
 #include <modbus_rtu/rtu_getters.h>
 #include <modbus_rtu/rtu_return_values.h>
 
 #define WX_MAX_TEMPERATURE_SLEW_RATE 4.0f
 
-int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
+int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu, float * output) {
 
 
 	int32_t measurement_result = -1;						// used for return values from various functions
@@ -34,7 +35,8 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		//	internal - provided by pressure/humidity sensor on PCB
 		//  external - usually dallas one wire but it might by something different
 
-		case WX_SOURCE_INTERNAL: {
+		case WX_SOURCE_INTERNAL:
+		case WX_SOURCE_INTERNAL_PT100: {
 			// internal means sensors connected directly to the controller - one-wire and/or I2C on the PCB
 			// it has nothing to do with distinction between external and internal temperature
 
@@ -67,6 +69,16 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// is triggered.
 			measurement_result = wx_get_temperature_dallas();
 
+			// measure temperature from PT100 sensor if it is selected as main temperature sensor
+			// (main means sensor which is used to send WX packets)
+			if (config_sources->temperature == WX_SOURCE_INTERNAL_PT100 && max31865_get_qf() == MAX_QF_FULL) {
+				*output = (float)rte_wx_temperature_average_pt / 10.0f;
+			}
+
+			if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf != DALLAS_QF_NOT_AVALIABLE) {
+				*output = float_get_average(&rte_wx_dallas_average);
+			}
+
 			// check if communication with dallas sensor has successed
 			if (measurement_result == 0) {
 				// if yes set the local variable with flag signalling that we have an external temperature
@@ -83,7 +95,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			if (umb_quality_factor == UMB_QF_FULL || umb_quality_factor == UMB_QF_DEGRADED) {
 
 				// get the average temperature directly, there is no need for any further processing
-				rte_wx_temperature_average_external_valid = umb_get_temperature(config_umb);
+				*output = umb_get_temperature(config_umb);
 
 				// set the flag that external temperature is available
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
@@ -101,7 +113,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// get the value read from RTU registers
 			measurement_result = rtu_get_temperature(&temp, config_rtu);
 
-			rte_wx_temperature_average_external_valid = (float)temp / 10.0f;
+			*output = (float)temp / 10.0f;
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
@@ -117,19 +129,19 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 
 	}
 
-#if defined(STM32L471xx)
-	// get modbus temperature reading regardless if it has been chosen as main
-	if (config_mode->wx_modbus == 1) {
-		rtu_get_temperature(&rte_wx_temperature_average_modbus, config_rtu);
-	}
-
-	// get temperature from dallas sensor if this isn't a sensor of choice
-	if (config_sources->temperature != WX_SOURCE_INTERNAL) {
-		wx_get_temperature_dallas();
-	}
-
-	rte_wx_temperature_average_internal = (int16_t)(rte_wx_temperature_internal * 10.0f);
-#endif
+//#if defined(STM32L471xx)
+//	// get modbus temperature reading regardless if it has been chosen as main
+//	if (config_mode->wx_modbus == 1) {
+//		rtu_get_temperature(&rte_wx_temperature_average_modbus, config_rtu);
+//	}
+//
+//	// get temperature from dallas sensor if this isn't a sensor of choice
+//	if (config_sources->temperature != WX_SOURCE_INTERNAL) {
+//		wx_get_temperature_dallas();
+//	}
+//
+//	rte_wx_temperature_average_internal = (int16_t)(rte_wx_temperature_internal * 10.0f);
+//#endif
 
 	return parameter_result;
 }
@@ -150,7 +162,7 @@ int32_t wx_get_temperature_dallas() {
 		float_average(temperature, &rte_wx_dallas_average);
 
 		// update the current temperature with current average
-		rte_wx_temperature_average_external_valid = float_get_average(&rte_wx_dallas_average);
+//		rte_wx_temperature_average_external_valid = float_get_average(&rte_wx_dallas_average);
 
 		// updating last good measurement time
 		wx_last_good_temperature_time = master_time;

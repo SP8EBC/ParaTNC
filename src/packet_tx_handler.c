@@ -1,4 +1,5 @@
 #include "packet_tx_handler.h"
+#include "wx_handler.h"
 
 #include "rte_wx.h"
 #include "rte_pv.h"
@@ -312,6 +313,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
 		packet_tx_multi_per_call_handler();
+
+		// GET TEMPERATURE FOR TELEMETRY - HAS SIDE EFFECTS
+		wx_get_temperature_measurement(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu, &rte_wx_temperature_internal_valid);
 
 		// ASSEMBLY QUALITY FACTORS
 

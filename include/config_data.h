@@ -156,6 +156,7 @@ typedef enum config_data_wx_sources_enum_t {
 	 * 	- analog/mechanical anemometer for wind
 	 */
 	WX_SOURCE_INTERNAL = 1,
+	WX_SOURCE_INTERNAL_PT100 = 6,
 
 	/**
 	 * Lufft UMB devices
@@ -177,12 +178,7 @@ typedef enum config_data_wx_sources_enum_t {
 	 * the controller queries for average and maximum wind speed.
 	 */
 	WX_SOURCE_FULL_RTU = 4,
-	WX_SOURCE_DAVIS_SERIAL = 5,
-
-	/**
-	 * This position is valid only for temperature
-	 */
-	WX_SOURCE_INTERNAL_PT100 = 6,
+	WX_SOURCE_DAVIS_SERIAL = 5
 } config_data_wx_sources_enum_t;
 
 typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {
@@ -191,6 +187,9 @@ typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {
 	config_data_wx_sources_enum_t pressure;
 	config_data_wx_sources_enum_t humidity;
 	config_data_wx_sources_enum_t wind;
+
+	config_data_wx_sources_enum_t temperature_telemetry;
+
 
 } config_data_wx_sources_t;
 

@@ -7,8 +7,8 @@
 #include "drivers/serial.h"
 #include "config_data.h"
 
-#define SW_VER "EA16"
-#define SW_DATE "24092022"
+#define SW_VER "EA17"
+#define SW_DATE "21102022"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100

@@ -5,6 +5,7 @@
  *      Author: mateusz
  */
 
+#include "rte_wx.h"
 #include "drivers/max31865.h"
 #include <math.h>
 
@@ -133,6 +134,8 @@ uint16_t max31865_raw_result = 0;
  * amplifier
  */
 uint8_t max31865_current_config_register = 0;
+
+max31865_qf_t max31865_quality_factor = MAX_QF_UNKNOWN;
 
 /**
  * Function generates a content of configuration register basing on
@@ -292,6 +295,9 @@ void max31865_pool(void) {
 		case MAX_ERROR:
 			// go back to idle in case of any error
 			max31865_current_state = MAX_IDLE;
+
+			max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
+
 			break;
 		case MAX_MEASUREMENT_STARTED:
 			// measurement has been started before, so now it's time to request for results
@@ -320,11 +326,15 @@ void max31865_pool(void) {
 
 					max31865_raw_result = max31865_raw_result >> 1;
 
-					//test = max31865_get_pt100_result(0);
+					rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
 //					test = max31865_get_result(100);
+
+					max31865_quality_factor = MAX_QF_FULL;
 				}
 				else {
 					max31865_current_state = MAX_ERROR;
+
+					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 				}
 
 				// disable VBIAS to reduce power consumption
@@ -356,7 +366,7 @@ void max31865_pool(void) {
 	}
 }
 
-int32_t max31865_get_pt100_result(max31865_qf_t * quality_factor) {
+int32_t max31865_get_pt100_result(void) {
 
 	int32_t temperature_scaled = 0;
 
@@ -425,4 +435,8 @@ int32_t max31865_get_result(uint32_t RTDnominal) {
 	  return (int32_t) (temp * 10.0f);
 
 	//return 0;
+}
+
+max31865_qf_t max31865_get_qf(void) {
+	return max31865_quality_factor;
 }
