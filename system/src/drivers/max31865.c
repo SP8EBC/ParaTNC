@@ -326,8 +326,13 @@ void max31865_pool(void) {
 
 					max31865_raw_result = max31865_raw_result >> 1;
 
-					rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
-//					test = max31865_get_result(100);
+//					rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
+					if (max31865_rdt_sensor_type == 0) {
+						rte_wx_temperature_average_pt = max31865_get_result(1000);
+					}
+					else {
+						rte_wx_temperature_average_pt = max31865_get_result(100);
+					}
 
 					max31865_quality_factor = MAX_QF_FULL;
 				}

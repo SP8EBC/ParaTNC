@@ -1431,8 +1431,9 @@ int main(int argc, char* argv[]){
 
 			wx_check_force_i2c_reset();
 
+#ifdef STM32L471xx
 			max31865_pool();
-
+#endif
 			#ifdef INTERNAL_WATCHDOG
 			IWDG_ReloadCounter();
 			#endif

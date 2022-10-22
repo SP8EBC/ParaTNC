@@ -29,6 +29,8 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// wuality factor for UMB communication
 	int16_t temp = 0;
 
+	float temperature = 0.0f;
+
 	// choose main temperature source from the configuration. main sensor is something which is used to send data though aprs
 	switch(config_sources->temperature) {
 		// controller measures two temperatures
@@ -67,21 +69,21 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// this function has blockin I/O which also adds a delay required by MS5611
 			// sensor to finish data acquisition after the pressure measurement
 			// is triggered.
-			measurement_result = wx_get_temperature_dallas();
+			wx_get_temperature_dallas();
 
+	#ifdef STM32L471xx
 			// measure temperature from PT100 sensor if it is selected as main temperature sensor
 			// (main means sensor which is used to send WX packets)
 			if (config_sources->temperature == WX_SOURCE_INTERNAL_PT100 && max31865_get_qf() == MAX_QF_FULL) {
-				*output = (float)rte_wx_temperature_average_pt / 10.0f;
+				temperature = (float)rte_wx_temperature_average_pt / 10.0f;
+
+				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 			}
+	#endif
 
 			if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf != DALLAS_QF_NOT_AVALIABLE) {
-				*output = float_get_average(&rte_wx_dallas_average);
-			}
+				temperature = float_get_average(&rte_wx_dallas_average);
 
-			// check if communication with dallas sensor has successed
-			if (measurement_result == 0) {
-				// if yes set the local variable with flag signalling that we have an external temperature
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 			}
 
@@ -95,7 +97,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			if (umb_quality_factor == UMB_QF_FULL || umb_quality_factor == UMB_QF_DEGRADED) {
 
 				// get the average temperature directly, there is no need for any further processing
-				*output = umb_get_temperature(config_umb);
+				temperature = umb_get_temperature(config_umb);
 
 				// set the flag that external temperature is available
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
@@ -113,7 +115,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// get the value read from RTU registers
 			measurement_result = rtu_get_temperature(&temp, config_rtu);
 
-			*output = (float)temp / 10.0f;
+			temperature = (float)temp / 10.0f;
 
 			// check
 			if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
@@ -127,6 +129,10 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		case WX_SOURCE_DAVIS_SERIAL:
 			break;
 
+	}
+
+	if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_TEMPERATURE) != 0) {
+		*output = temperature;
 	}
 
 //#if defined(STM32L471xx)

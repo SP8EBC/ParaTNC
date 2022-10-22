@@ -65,7 +65,7 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 	/**
 	 * 0x00 or 0xFF - PT sensor disabled
 	 * bit0 - enabled / disabled
-	 * bit1 - PT100 (0) or PT1000 (1)
+	 * bit1 - PT100 (1) or PT1000 (0)
 	 * bit2 through bit7 - resistor value from lookup table
 	 * 	 */
 	uint8_t wx_pt_sensor;
