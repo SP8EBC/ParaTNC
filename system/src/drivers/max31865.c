@@ -9,6 +9,8 @@
 #include "drivers/max31865.h"
 #include <math.h>
 
+#define DATA_RACE_WORKAROUND
+
 #define REFERENCE_RESISTOR 4300.0f
 
 #define RTD_A 3.9083e-3
@@ -318,6 +320,12 @@ void max31865_pool(void) {
 			else {
 				// get a pointer to results
 				result_ptr = spi_get_rx_data();
+
+#ifdef DATA_RACE_WORKAROUND
+				if ((max31865_current_config_register & 0xDF) == *(result_ptr + 1)) {
+					result_ptr++;
+				}
+#endif
 
 				// check communication results by comparing a value of config register
 				if ((max31865_current_config_register & 0xDF) == *result_ptr) {	// fifth bit read always zero

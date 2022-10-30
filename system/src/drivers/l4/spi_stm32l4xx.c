@@ -621,22 +621,22 @@ void spi_irq_handler(void) {
 					*(uint8_t *)(&SPI2->DR) = spi_tx_buffer_ptr[spi_current_tx_cntr++];
 				}
 				else {
-					while((SPI2->SR & SPI_SR_BSY) != 0) {	// blocking!!
+					do {	// blocking!!
 						// clear RX fifo while rest of bytes are transmitted
 						do {
 							spi_garbage = SPI2->DR & 0xFF;
 						} while ((SPI2->SR & SPI_SR_RXNE) != 0);
-					}
+					} while ((SPI2->SR & SPI_SR_BSY) != 0);
 
 					// finish transmission
 					spi_tx_state = SPI_TX_DONE;
 
 					// check if reception shall begin
-					if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
-						spi_rx_state = SPI_RX_RXING;
-
-						*(uint8_t *)(&SPI2->DR) = 0xFF;
-					}
+//					if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
+//						spi_rx_state = SPI_RX_RXING;
+//
+//						*(uint8_t *)(&SPI2->DR) = 0xFF;
+//					}
 
 					break;
 				}
@@ -646,6 +646,11 @@ void spi_irq_handler(void) {
 		}
 		else if (spi_tx_state == SPI_TX_DONE) {
 			if (spi_rx_state == SPI_RX_RXING) {
+				*(uint8_t *)(&SPI2->DR) = 0xFF;
+			}
+			else if (spi_rx_state == SPI_RX_WAITING_FOR_RX) {
+				spi_rx_state = SPI_RX_RXING;
+
 				*(uint8_t *)(&SPI2->DR) = 0xFF;
 			}
 		}
