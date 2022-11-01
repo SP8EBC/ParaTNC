@@ -22,6 +22,7 @@ C_SRCS += \
 ../src/kiss_callback.c \
 ../src/kiss_communication.c \
 ../src/main.c \
+../src/nvm.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
 ../src/rte_main.c \
@@ -54,6 +55,7 @@ OBJS += \
 ./src/kiss_callback.o \
 ./src/kiss_communication.o \
 ./src/main.o \
+./src/nvm.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
 ./src/rte_main.o \
@@ -86,6 +88,7 @@ C_DEPS += \
 ./src/kiss_callback.d \
 ./src/kiss_communication.d \
 ./src/main.d \
+./src/nvm.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
 ./src/rte_main.d \

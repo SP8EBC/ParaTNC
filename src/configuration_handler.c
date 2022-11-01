@@ -26,7 +26,7 @@
 #endif
 
 /**
- * STM32L476RE, last flash memory page
+ * STM32L476RE, 512KB flash mem, last flash memory page
  * 0x0807F800 - 0x0807FFFF; 2 K; Page 383
  *
  *  __config_section_default_start =    0x0801E000;

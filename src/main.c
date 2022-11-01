@@ -21,6 +21,7 @@
 #include "gsm/sim800c_gprs.h"
 #include "http_client/http_client.h"
 
+#include "nvm.h"
 
 #include "aprsis.h"
 #include "api/api.h"
@@ -994,6 +995,9 @@ int main(int argc, char* argv[]){
    io_ext_watchdog_service();
 
 #ifdef STM32L471xx
+
+   nvm_measurement_init();
+
    if (main_config_data_mode->gsm == 1) {
 	   it_handlers_inhibit_radiomodem_dcd_led = 1;
 
@@ -1462,7 +1466,7 @@ int main(int argc, char* argv[]){
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
 			}
 
-			if (main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM > 0) {
+			if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
 				pwm_input_pool();
 			}
 

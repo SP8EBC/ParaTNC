@@ -139,6 +139,8 @@ uint8_t max31865_current_config_register = 0;
 
 max31865_qf_t max31865_quality_factor = MAX_QF_UNKNOWN;
 
+uint8_t max31865_measurements_counter = 0;
+
 /**
  * Function generates a content of configuration register basing on
  */
@@ -341,6 +343,8 @@ void max31865_pool(void) {
 					else {
 						rte_wx_temperature_average_pt = max31865_get_result(100);
 					}
+
+					max31865_measurements_counter++;
 
 					max31865_quality_factor = MAX_QF_FULL;
 				}

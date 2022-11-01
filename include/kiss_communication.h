@@ -39,6 +39,18 @@
 #define KISS_PROGRAM_STARTUP_CFG		(uint8_t) 0x23
 #define KISS_PROGRAM_STARTUP_CFG_RESP	(uint8_t) 0x73
 
+#define KISS_CONFIG_CRC			(uint8_t) 0x24
+#define KISS_CONFIG_CRC_RESP	(uint8_t) 0x74
+
+#define KISS_RESTART			(uint8_t) 0x25
+#define KISS_RESTART_RESP		(uint8_t) 0x75
+
+#define KISS_TOGGLE_PTT			(uint8_t) 0x26
+//#define KISS_RESTART_RESP		(uint8_t) 0x76
+
+#define KISS_CONTROL_VOLTAGE			(uint8_t) 0x27
+#define KISS_CONTROL_VOLTAGE_RESP		(uint8_t) 0x77
+
 #define KISS_RETURN_IDLE		1
 
 extern uint8_t kiss_current_async_message;
