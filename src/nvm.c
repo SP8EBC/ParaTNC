@@ -155,7 +155,7 @@ nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 
 			// move data pointer
 
-			// and check if an end has been found
+			// and check if an end has
 		}
 	}
 

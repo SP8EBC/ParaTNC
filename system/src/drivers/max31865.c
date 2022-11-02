@@ -6,6 +6,7 @@
  */
 
 #include "rte_wx.h"
+#include "int_average.h"
 #include "drivers/max31865.h"
 #include <math.h>
 
@@ -15,6 +16,8 @@
 
 #define RTD_A 3.9083e-3
 #define RTD_B -5.775e-7
+
+#define MAX31865_INTERVAL	5		//!< Interval between measurements. To convert to second add one and multiply times two
 
 int32_t test;
 
@@ -40,7 +43,7 @@ static const float max31865_rref_lookup_table[32] =
 		560.0f,
 		620.0f,
 		680.0f,
-		768.0f,	// 9
+		768.0f,	// index 9
 		1000.0f,
 		1100.0f,
 		1200.0f,
@@ -50,8 +53,8 @@ static const float max31865_rref_lookup_table[32] =
 		1600.0f,
 		1740.0f,
 		1800.0f,
-		1910.0f,	// 19
-		2000.0f,	// 20
+		1910.0f,	// index 19
+		2000.0f,	// index 20
 		2100.0f,
 		2400.0f,
 		2700.0f,
@@ -59,10 +62,10 @@ static const float max31865_rref_lookup_table[32] =
 		3090.0f,
 		3400.0f,
 		3900.0f,
-		4300.0f,	// 28
-		4700.0f,	// 29
-		4990.0f,	// 30
-		5600.0f		// 31
+		4300.0f,	// index 28
+		4700.0f,	// index 29
+		4990.0f,	// index 30
+		5600.0f		// index 31
 
 };
 
@@ -131,15 +134,25 @@ uint8_t max31865_ok = 0;
  */
 uint16_t max31865_raw_result = 0;
 
+uint16_t max31865_physical_result = 0;
+
 /**
  * Value of configuration register which should be currently stored in
  * amplifier
  */
 uint8_t max31865_current_config_register = 0;
 
+/**
+ *
+ */
 max31865_qf_t max31865_quality_factor = MAX_QF_UNKNOWN;
 
+/**
+ *
+ */
 uint8_t max31865_measurements_counter = 0;
+
+int_average_t max31865_average;
 
 /**
  * Function generates a content of configuration register basing on
@@ -207,6 +220,8 @@ static void max31865_send_config_register(void) {
 void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
 
 	uint8_t * rx_data;
+
+	int_average_init(&max31865_average);
 
 	if (rdt_type == MAX_3WIRE) {
 		max31865_rdt_sensor_type = 1;
@@ -338,11 +353,15 @@ void max31865_pool(void) {
 
 //					rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
 					if (max31865_rdt_sensor_type == 0) {
-						rte_wx_temperature_average_pt = max31865_get_result(1000);
+						max31865_physical_result = max31865_get_result(1000);
 					}
 					else {
-						rte_wx_temperature_average_pt = max31865_get_result(100);
+						max31865_physical_result = max31865_get_result(100);
 					}
+
+					int_average(max31865_physical_result, &max31865_average);
+
+					rte_wx_temperature_average_pt = (int16_t)int_get_average(&max31865_average);
 
 					max31865_measurements_counter++;
 
@@ -368,7 +387,7 @@ void max31865_pool(void) {
 		case MAX_SHUTDOWN:
 			// MAX31865 is powered up and initialized but PT bias is disabled
 			// and no measurement is ongoing
-			if (max31865_shutdown_ticks++ > 9) {
+			if (max31865_shutdown_ticks++ > MAX31865_INTERVAL) {
 				max31865_current_state = MAX_INITIALIZED;
 
 				max31865_shutdown_ticks = 0;

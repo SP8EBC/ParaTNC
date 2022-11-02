@@ -21,7 +21,7 @@
  *
  */
 
-float rte_wx_temperature_average_external_valid = 0.0f;
+float rte_wx_temperature_average_external_valid = 0.0f;	//<! This name should be refactored
 float rte_wx_temperature_internal = 0.0f, rte_wx_temperature_internal_valid = 0.0f;
 float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
 float rte_wx_pressure_history[PRESSURE_AVERAGE_LN];
