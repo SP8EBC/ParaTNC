@@ -23,6 +23,7 @@ typedef enum max31865_qf_t {
 }max31865_qf_t;
 
 void max31865_init(uint8_t rdt_type, uint8_t reference_resistor);
+void max31865_init_average(void);
 void max31865_pool(void);
 int32_t max31865_get_pt100_result();
 int32_t max31865_get_result(uint32_t RTDnominal);

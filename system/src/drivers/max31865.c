@@ -17,7 +17,7 @@
 #define RTD_A 3.9083e-3
 #define RTD_B -5.775e-7
 
-#define MAX31865_INTERVAL	5		//!< Interval between measurements. To convert to second add one and multiply times two
+#define MAX31865_INTERVAL	9		//!< Interval between measurements. To convert to second add one and multiply times two
 
 int32_t test;
 
@@ -221,8 +221,6 @@ void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
 
 	uint8_t * rx_data;
 
-	int_average_init(&max31865_average);
-
 	if (rdt_type == MAX_3WIRE) {
 		max31865_rdt_sensor_type = 1;
 	}
@@ -270,6 +268,10 @@ void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
 		max31865_ok = 0;
 	}
 
+}
+
+void max31865_init_average(void) {
+	int_average_init(&max31865_average);
 }
 
 /**
@@ -361,7 +363,7 @@ void max31865_pool(void) {
 
 					int_average(max31865_physical_result, &max31865_average);
 
-					rte_wx_temperature_average_pt = (int16_t)int_get_average(&max31865_average);
+					rte_wx_temperature_average_pt = (int16_t)int_get_min(&max31865_average);
 
 					max31865_measurements_counter++;
 
