@@ -118,3 +118,26 @@ void DACStartConfig(void) {
 #endif
 
 }
+
+void ADCStop(void) {
+	if ((ADC1->CR & ADC_CR_ADEN) != 0) {
+		// disable conversion
+		ADC1->CR |= ADC_CR_ADSTP;
+
+		while((ADC1->CR & ADC_CR_ADSTP) == ADC_CR_ADSTP);
+	}
+
+	// disable the ADC
+	ADC1->CR |= ADC_CR_ADDIS;
+
+	// wait for disable to complete
+	while((ADC1->CR & ADC_CR_ADDIS) != 0);
+
+	ADC1->CR |= ADC_CR_DEEPPWD;
+}
+
+void DACStop(void) {
+	RCC->CR &= (0xFFFFFFFF ^ DAC_CR_EN2);
+
+}
+

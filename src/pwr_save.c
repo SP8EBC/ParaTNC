@@ -19,6 +19,7 @@
 #include "wx_handler.h"
 #include "main.h"
 #include "telemetry.h"
+#include "afsk_pr.h"
 
 #include "rte_main.h"
 
@@ -542,6 +543,10 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
 
+	// stop DAC and ADC used for APRS
+	ADCStop();
+	DACStop();
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
 
@@ -585,7 +590,7 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 }
 
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
-
+	///////////
 	if (system_is_rtc_ok() == 0) {
 		pwr_save_switch_mode_to_i5();
 
@@ -600,6 +605,10 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
+
+	// stop DAC and ADC used for APRS
+	ADCStop();
+	DACStop();
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();

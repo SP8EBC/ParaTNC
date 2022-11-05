@@ -484,11 +484,16 @@ int system_clock_configure_rtc_l4(void) {
 	// check if LSE is working now
 	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;
 
+	// check the current clock source for RTC
+	uint8_t valid_rtc_clk_source = ((RCC->BDCR & RCC_BDCR_RTCSEL) == RCC_BDCR_RTCSEL_0) ? 1 : 0;
+
+	uint8_t rtc_started = ((RCC->BDCR & RCC_BDCR_RTCEN) > 0) ? 1 : 0;
+
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
 
 	// if LSE is not working reinitialize everything
-	if (lse_is_working == 0) {
+	if (lse_is_working == 0 || valid_rtc_clk_source == 0 || rtc_started == 0) {
 
 		// reset backup domain
 		RCC->BDCR |= RCC_BDCR_BDRST;

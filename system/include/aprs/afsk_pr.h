@@ -11,6 +11,9 @@ extern "C"
 void ADCStartConfig(void);
 void DACStartConfig(void);
 
+void ADCStop(void);
+void DACStop(void);
+
 #ifdef __cplusplus
 }
 #endif

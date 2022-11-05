@@ -93,6 +93,7 @@
 
 #define SOH 0x01
 
+//#include "variant.h"
 
 //#define SERIAL_TX_TEST_MODE
 
@@ -789,6 +790,9 @@ int main(int argc, char* argv[]){
   // initialize SPI
   spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
+  // initialize measurements averager
+  max31865_init_average();
+
   // initialize MAX RDT amplifier
   max31865_init(main_config_data_mode->wx_pt_sensor & 0x3, (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
 
@@ -1092,7 +1096,10 @@ int main(int argc, char* argv[]){
 #if defined(PARAMETEO)
 	  	if (main_woken_up == 1) {
 
+	  		// restart ADCs
 	  		io_vbat_meas_enable();
+	  		ADCStartConfig();
+	  		DACStartConfig();
 
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
