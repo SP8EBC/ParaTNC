@@ -539,6 +539,9 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	main_set_monitor(28);
 
+	// disable ADC used for vbat measurement
+	io_vbat_meas_disable();
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
 
@@ -594,6 +597,9 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	}
 
 	main_set_monitor(26);
+
+	// disable ADC used for vbat measurement
+	io_vbat_meas_disable();
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();

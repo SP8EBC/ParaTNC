@@ -276,50 +276,7 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
 	LL_GPIO_EnablePinAnalogControl(GPIOC, LL_GPIO_PIN_5);
 
-
-	volatile int stupid_delay = 0;
-
-	// reset the clock for ADC
-//	RCC->AHB2ENR &= (0xFFFFFFFF ^ RCC_AHB2ENR_ADCEN);
-//	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
-
-	// check if ADC is enabled
-	if ((ADC2->CR & ADC_CR_ADEN) != 0) {
-		// disable it
-		ADC2->CR |= ADC_CR_ADDIS;
-
-		// and wait for disabling to complete
-	    while((ADC2->CR & ADC_CR_ADDIS) == ADC_CR_ADDIS);
-	}
-
-	// exit from deep-power-down mode
-	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_DEEPPWD);
-
-	// start ADC voltage regulator
-	ADC2->CR |= ADC_CR_ADVREGEN;
-
-	// wait for voltage regulator to start
-	for (; stupid_delay < 0x1FFFF; stupid_delay++);
-
-	// start the calibration
-	ADC2->CR |= ADC_CR_ADCAL;
-
-	// wait for calibration to finish
-    while((ADC2->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL);
-
-    // set the first (and only channel in a conversion sequence) channel 14
-    ADC2->SQR1 |= (14 << 6);
-
-    // set the sampling rate to 12.5 ADC clock cycles
-    ADC2->SMPR1 |= 0x2;
-
-	ADC2->CFGR &= (0xFFFFFFFF ^ ADC_CFGR_CONT);
-
-    // set discontinous conversion
-	ADC2->CFGR |= ADC_CFGR_DISCEN;
-
-	// ignore overrun and overwrite data register content with new conversion result
-	ADC2->CFGR |= ADC_CFGR_OVRMOD;
+	io_vbat_meas_enable();
 
 #endif
 }
@@ -335,6 +292,13 @@ uint16_t io_vbat_meas_get() {
 #ifdef PARAMETEO
 
 	float temp = 0.0f;
+
+#ifdef VBAT_MEAS_CONTINOUS
+
+    // get conversion result
+	out = ADC2->DR;
+
+#else
 
 	// if ADC is not enabled
 	if ((ADC2->CR & ADC_CR_ADEN) == 0) {
@@ -363,8 +327,13 @@ uint16_t io_vbat_meas_get() {
 		ADC2->ISR |= ADC_ISR_EOS;
 	}
 
-	// disable conversion
-	ADC2->CR |= ADC_CR_ADSTP;
+	// disable the ADC
+	ADC2->CR |= ADC_CR_ADDIS;
+
+	// wait for disable to complete
+	while((ADC2->CR & ADC_CR_ADDIS) != 0);
+
+#endif
 
 	// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
 	temp = (float)out * 0.00081f;		// real voltage on ADC input
@@ -415,3 +384,90 @@ uint16_t io_vbat_meas_average(uint16_t sample) {
 	return out;
 }
 
+/**
+ * This funstion has to be called before switching to IDLE state to turn off the ADC
+ */
+void io_vbat_meas_disable(void) {
+	if ((ADC2->CR & ADC_CR_ADEN) != 0) {
+		// disable conversion
+		ADC2->CR |= ADC_CR_ADSTP;
+
+		while((ADC2->CR & ADC_CR_ADSTP) == ADC_CR_ADSTP);
+	}
+
+	// disable the ADC
+	ADC2->CR |= ADC_CR_ADDIS;
+
+	// wait for disable to complete
+	while((ADC2->CR & ADC_CR_ADDIS) != 0);
+
+	ADC2->CR |= ADC_CR_DEEPPWD;
+
+}
+
+void io_vbat_meas_enable(void) {
+
+	volatile int stupid_delay = 0;
+
+	// reset the clock for ADC
+//	RCC->AHB2ENR &= (0xFFFFFFFF ^ RCC_AHB2ENR_ADCEN);
+//	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN;
+
+	// check if ADC is enabled
+	if ((ADC2->CR & ADC_CR_ADEN) != 0) {
+		// disable it
+		ADC2->CR |= ADC_CR_ADDIS;
+
+		// and wait for disabling to complete
+	    while((ADC2->CR & ADC_CR_ADDIS) == ADC_CR_ADDIS);
+	}
+
+	// exit from deep-power-down mode
+	ADC2->CR &= (0xFFFFFFFF ^ ADC_CR_DEEPPWD);
+
+	// start ADC voltage regulator
+	ADC2->CR |= ADC_CR_ADVREGEN;
+
+	// wait for voltage regulator to start
+	for (; stupid_delay < 0x1FFFF; stupid_delay++);
+
+	// start the calibration
+	ADC2->CR |= ADC_CR_ADCAL;
+
+	// wait for calibration to finish
+    while((ADC2->CR & ADC_CR_ADCAL) == ADC_CR_ADCAL);
+
+    // set the first (and only channel in a conversion sequence) channel 14
+    ADC2->SQR1 |= (14 << 6);
+
+    // set the sampling rate to 24.5 ADC clock cycles
+    ADC2->SMPR1 |= 0x3;
+
+#ifdef VBAT_MEAS_CONTINOUS
+
+    // disable discontinous mode
+	ADC2->CFGR &= (0xFFFFFFFF ^ ADC_CFGR_DISCEN);
+
+    // set continous conversion
+	ADC2->CFGR |= ADC_CFGR_CONT;
+
+	// ignore overrun and overwrite data register content with new conversion result
+	ADC2->CFGR |= ADC_CFGR_OVRMOD;
+
+	// start ADC
+	ADC2->CR |= ADC_CR_ADEN;
+
+	// start conversion
+	ADC2->CR |= ADC_CR_ADSTART;
+
+#else
+    // disable continous mode
+	ADC2->CFGR &= (0xFFFFFFFF ^ ADC_CFGR_CONT);
+
+    // set discontinous conversion
+	ADC2->CFGR |= ADC_CFGR_DISCEN;
+
+	// ignore overrun and overwrite data register content with new conversion result
+	ADC2->CFGR |= ADC_CFGR_OVRMOD;
+#endif
+}

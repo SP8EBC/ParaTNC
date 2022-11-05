@@ -989,7 +989,7 @@ int main(int argc, char* argv[]){
 
 #ifdef INTERNAL_WATCHDOG
    // reload watchdog counter
-   IWDG_ReloadCounter();
+	main_reload_internal_wdg();
 #endif
 
    io_ext_watchdog_service();
@@ -1026,6 +1026,7 @@ int main(int argc, char* argv[]){
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 #if defined(PARAMETEO)
 	   beacon_send_own(system_is_rtc_ok());
+		main_wait_for_tx_complete();
 	   delay_fixed(1500);
 #else
 	   beacon_send_own(0);
@@ -1090,6 +1091,8 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
 	  	if (main_woken_up == 1) {
+
+	  		io_vbat_meas_enable();
 
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
@@ -1439,7 +1442,7 @@ int main(int argc, char* argv[]){
 			max31865_pool();
 #endif
 			#ifdef INTERNAL_WATCHDOG
-			IWDG_ReloadCounter();
+			main_reload_internal_wdg();
 			#endif
 
 			main_two_second_pool_timer = 2000;
@@ -1534,6 +1537,20 @@ void main_service_cpu_load_ticks(void) {
 
 	// reset the tick counter back to zero;
 	main_current_cpu_idle_ticks = 0;
+}
+
+void main_reload_internal_wdg(void){
+#ifdef INTERNAL_WATCHDOG
+#ifdef STM32F10X_MD_VL
+
+	  // reload watchdog counter
+	  IWDG_ReloadCounter();
+
+#endif
+#ifdef STM32L471xx
+
+#endif
+#endif
 }
 
 

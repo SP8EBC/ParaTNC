@@ -36,10 +36,18 @@ void io_ext_watchdog_service(void);
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff);
 uint16_t io_vbat_meas_get(void);
 uint16_t io_vbat_meas_average(uint16_t sample);
+void io_vbat_meas_disable(void);
+void io_vbat_meas_enable(void);
 #endif
 
-#define VBAT_MEAS_A_COEFF 1000
-#define VBAT_MEAS_B_COEFF 95
+#define VBAT_MEAS_A_COEFF 1200
+#define VBAT_MEAS_B_COEFF 40
+
+/**
+ * Keep this uncommented to configure ADC which monitor Vbatt to
+ * continous mode, instead of single shot
+ */
+//#define VBAT_MEAS_CONTINOUS
 
 inline void io_5v_isol_sw_enable(void) {
 	// ParaMETEO - UC_CNTRL_VS
