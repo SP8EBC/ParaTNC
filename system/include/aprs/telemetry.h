@@ -24,6 +24,7 @@
 #include "ve_direct_protocol/parser.h"
 
 #include "stdint.h"
+#include "variant.h"
 
 typedef enum pressure_qf {
 	PRESSURE_QF_UNKNOWN = 0,
@@ -96,6 +97,14 @@ void telemetry_send_status_raw_values_modbus(void);
 
 void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
 void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time);
+
+/**
+ * These are very special telemetry format for scientific weather stations in TATRY
+ */
+#ifdef TATRY
+void telemetry_send_chns_description_tatry(const config_data_basic_t * const config_basic);
+void telemetry_send_values_tatry();
+#endif
 
 #ifdef __cplusplus
 }

@@ -537,7 +537,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 void telemetry_send_status(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 #ifdef STM32L471xx
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaMETEO firmware %s-%s by SP8EBC - PV powered, fully outdoor, 3in1 APRS device", SW_VER, SW_DATE);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaMETEO firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
 #else
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
 #endif
@@ -615,4 +615,144 @@ void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uin
 	afsk_txStart(&main_afsk);
 	main_wait_for_tx_complete();
 }
+
+#ifdef TATRY
+
+#include "rte_main.h"
+#include "drivers/max31865.h"
+#include "int_average.h"
+#include "math.h"
+
+void telemetry_send_chns_description_tatry(const config_data_basic_t * const config_basic) {
+	// a buffer to assembly the 'call-ssid' string at the begining of the frame
+	char message_prefix_buffer[9];
+
+	memset(message_prefix_buffer, 0x00, 0x09);
+
+	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+
+	// wait for any RF transmission to finish
+	main_wait_for_tx_complete();
+
+	// clear the output frame buffer
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Spi,LastTempr,MaxTempr,Vbatt,PtSts,LSERDY,RTCEN,N,N,N,N,N,N", config_basic->callsign);
+
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	after_tx_lock = 1;
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+	delay_fixed(1500);
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));//          /          /          /         /
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,0.25,-40,0,0.25,-40,0,0.02,10,0,1,0", config_basic->callsign);
+
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	after_tx_lock = 1;
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+	delay_fixed(1500);
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Cnt,DegC,DegC,V,Raw,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	after_tx_lock = 1;
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+	delay_fixed(1500);
+}
+
+void telemetry_send_values_tatry() {
+
+	uint8_t spi_transmission_counter = max31865_measurements_counter;
+	uint8_t scaled_last_temperature = 0;
+	uint8_t scaled_max_temperature = 0;
+	uint8_t scaled_vbatt_voltage = 0;
+	uint8_t pt_status = max31865_current_fault_status;
+
+	float value = 0.0f;
+
+	uint16_t vbatt_voltage = rte_main_average_battery_voltage;
+
+	// this is B+ voltage, which is scaled * 100 what means that 1152 equals to 11.52V
+	if (vbatt_voltage < 1511 && vbatt_voltage > 1000) {
+		// mininum value will be 10.01V (0x0) and maximum 15.11V (0xFF), with the step of .02V
+		scaled_vbatt_voltage = (uint8_t)((vbatt_voltage - 1000u) / 2u);
+	}
+	else if (vbatt_voltage > 1510) {
+		scaled_vbatt_voltage = 0xFF;
+	}
+	else {
+		;
+	}
+
+	value = int_get_last(&max31865_average);
+	if (value < -400.0f) {
+		scaled_last_temperature = (uint8_t)0;
+	}
+	else if (value > 240.0f) {
+		scaled_last_temperature = (uint8_t)255;
+	}
+	else {
+		scaled_last_temperature = (uint8_t)roundf(((value + 400.0f) * 0.4f));
+	}
+
+	value = int_get_max(&max31865_average);
+	if (value < -400.0f) {
+		scaled_max_temperature = (uint8_t)0;
+	}
+	else if (value > 240.0f) {
+		scaled_max_temperature = (uint8_t)255;
+	}
+	else {
+		scaled_max_temperature = (uint8_t)roundf(((value + 400.0f) * 0.4f));
+	}
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
+										telemetry_counter++,
+										spi_transmission_counter,
+										scaled_last_temperature,
+										scaled_max_temperature,
+										scaled_vbatt_voltage,
+										pt_status,
+										((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? '1' : '0',
+										((RCC->BDCR & RCC_BDCR_RTCEN) > 0) ? '1' : '0',
+										'0',
+										'0',
+										'0',
+										'0',
+										'0',
+										'0');
+
+
+	// reset the frame counter if it overflowed
+	if (telemetry_counter > 999)
+		telemetry_counter = 0;
+
+	// put a null terminator at the end of frame (but it should be placed there anyway)
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+
+	// wait for completing any previous transmission (afsk_txStart will exit with failure if the modem is transmitting)
+	main_wait_for_tx_complete();
+
+	// prepare transmission of the frame
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+
+ 	// ??
+	after_tx_lock = 1;
+
+	// check if RF channel is free from other transmissions and wait for the clearance if it is needed
+	while (main_ax25.dcd == 1);
+
+	// key up a transmitter and start transmission
+	afsk_txStart(&main_afsk);
+
+}
+
+#endif
 
