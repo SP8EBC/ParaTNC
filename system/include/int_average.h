@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 #define INT_AVERAGE_LN 4
-#define INT_INIT_VALUE 0xFFFFFFFF
+#define INT_INIT_VALUE (INT32_MIN + 1)
 
 
 typedef struct int_average_t {

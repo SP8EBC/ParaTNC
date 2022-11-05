@@ -12,7 +12,7 @@
 void int_average_init(int_average_t* average) {
 
 	average->begin = average->values;
-	average->end = average->values + INT_AVERAGE_LN + 1;
+	average->end = average->values + INT_AVERAGE_LN;
 
 	average->current = average->begin;
 
@@ -83,4 +83,3 @@ int32_t int_get_max(const int_average_t* average) {
 
 	return out;
 }
-
