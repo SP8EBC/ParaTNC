@@ -30,6 +30,8 @@
 
 #define _TELEM_DESCR_INTERVAL	150
 
+#include "variant.h"
+
 uint8_t packet_tx_beacon_interval = 0;
 uint8_t packet_tx_beacon_counter = 0;
 
@@ -278,8 +280,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 
 				packet_tx_multi_per_call_handler();
-
+				#ifndef TATRY
 				telemetry_send_status_raw_values_modbus();
+				#else
+
+				#endif
 			}
 		}
 
@@ -412,6 +417,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
+#ifndef TATRY
 		if (config_mode->victron == 1) {
 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 		}
@@ -443,8 +449,12 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
 			}
-#endif
 		}
+#endif
+#else
+		telemetry_send_values_tatry();
+#endif
+
 		packet_tx_telemetry_counter = 0;
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
@@ -458,6 +468,8 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 #endif
 
 		packet_tx_multi_per_call_handler();
+
+#ifndef TATRY
 
 		if (config_mode->victron == 1) {
 			telemetry_send_chns_description_pv(config_basic);
@@ -476,6 +488,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			//telemetry_send_status();
 		}
+#else
+		telemetry_send_chns_description_tatry(config_basic);
+#endif
 
 		telemetry_send_status();
 
