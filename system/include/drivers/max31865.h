@@ -26,6 +26,7 @@ typedef enum max31865_qf_t {
 extern uint8_t max31865_current_fault_status;
 extern uint8_t max31865_measurements_counter;
 extern int_average_t max31865_average;
+extern uint8_t max31865_ok;
 
 void max31865_init(uint8_t rdt_type, uint8_t reference_resistor);
 void max31865_init_average(void);

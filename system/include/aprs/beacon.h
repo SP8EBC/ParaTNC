@@ -15,7 +15,7 @@ extern "C"
 {
 #endif
 
-void beacon_send_own(uint16_t voltage, uint8_t rtc_ok);
+void beacon_send_own(uint16_t voltage, uint8_t rtc_ok, uint8_t max_ok);
 void beacon_send_on_startup(void);
 void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr);
 
