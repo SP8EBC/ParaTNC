@@ -212,7 +212,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		packet_tx_multi_per_call_handler();
 
-		beacon_send_own(0);
+		beacon_send_own(0, 0);
 
 		packet_tx_beacon_counter = 0;
 
