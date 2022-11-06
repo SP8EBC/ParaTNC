@@ -636,7 +636,7 @@ void telemetry_send_chns_description_tatry(const config_data_basic_t * const con
 
 	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Spi,LastTempr,MaxTempr,Vbatt,PtSts,LSERDY,RTCEN,MAX_OK,N,N,N,N,N", config_basic->callsign);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Spi,LastTempr,MaxTempr,Vbatt,PtSts,LSERDY,RTCEN,MAX_OK,SLEEP,N,N,N,N", config_basic->callsign);
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -723,12 +723,13 @@ void telemetry_send_values_tatry() {
 										((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? '1' : '0',
 										((RCC->BDCR & RCC_BDCR_RTCEN) > 0) ? '1' : '0',
 										(max31865_ok) ? '1' : '0',
-										'0',
+										(main_woken_up_for_telemetry > 0) ? '1' : '0',
 										'0',
 										'0',
 										'0',
 										'0');
 
+	main_woken_up_for_telemetry = 0;
 
 	// reset the frame counter if it overflowed
 	if (telemetry_counter > 999)

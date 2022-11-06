@@ -276,6 +276,7 @@ uint32_t rte_main_tx_total = 0;
 
 #if defined(PARAMETEO)
 uint8_t main_woken_up = 0;
+uint8_t main_woken_up_for_telemetry = 0;
 #endif
 
 char after_tx_lock;
