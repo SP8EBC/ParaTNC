@@ -78,7 +78,7 @@ void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config
 
 	// if user selected aggressive powersave mode the meteo counter must be set back to zero
 	// to prevent quirks with waking from sleep mode
-	packet_tx_meteo_counter = 0;
+	packet_tx_meteo_counter = meteo_interval - 1;
 
 }
 
@@ -214,7 +214,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		packet_tx_multi_per_call_handler();
 
-		beacon_send_own(0, 0);
+		beacon_send_own(0, 0, 0);
 
 		packet_tx_beacon_counter = 0;
 
