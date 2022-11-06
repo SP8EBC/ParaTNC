@@ -560,6 +560,14 @@ int main(int argc, char* argv[]){
   // call periodic handle to wait for 1 second and then switch on voltage
   wx_pwr_switch_periodic_handle();
 
+#if defined(PARAMETEO)
+  // swtich power to M4. turn on sensors but keep GSM modem turned off
+  pwr_save_switch_mode_to_c1();
+
+  delay_fixed(300);
+
+#endif
+
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
@@ -579,13 +587,6 @@ int main(int argc, char* argv[]){
 #endif
 
   main_target_kiss_baudrate = 9600u;
-
-
-#if defined(PARAMETEO)
-  // swtich power to M4. turn on sensors but keep GSM modem turned off
-  pwr_save_switch_mode_to_c1();
-
-#endif
 
 #ifndef PARAMETEO
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u

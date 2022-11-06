@@ -227,6 +227,10 @@ void io_pwr_init(void) {
 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
 
+			io___cntrl_vbat_r_disable();
+			io___cntrl_vbat_g_disable();
+			io___cntrl_vbat_c_disable();
+			io___cntrl_vbat_s_disable();
 #endif
 }
 
