@@ -69,7 +69,7 @@ nvm_measurement_t packet_tx_nvm;
 void packet_tx_send_wx_frame(void) {
 	main_wait_for_tx_complete();
 
-	delay_fixed(1100);
+	delay_fixed(1500);
 
 	SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
