@@ -154,6 +154,8 @@ uint8_t max31865_measurements_counter = 0;
 
 int_average_t max31865_average;
 
+uint8_t max31865_current_fault_status = 0;
+
 /**
  * Function generates a content of configuration register basing on
  */
@@ -364,6 +366,8 @@ void max31865_pool(void) {
 					int_average(max31865_physical_result, &max31865_average);
 
 					rte_wx_temperature_average_pt = (int16_t)int_get_min(&max31865_average);
+
+					max31865_current_fault_status = *(result_ptr + 7);
 
 					max31865_measurements_counter++;
 

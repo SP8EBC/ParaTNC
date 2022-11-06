@@ -83,3 +83,17 @@ int32_t int_get_max(const int_average_t* average) {
 
 	return out;
 }
+
+int32_t int_get_last(const int_average_t* average) {
+
+	int32_t out = 0;
+
+	if (average->current == average->begin) {
+		out = *average->end;
+	}
+	else {
+		out = *(average->current - 1);
+	}
+
+	return out;
+}
