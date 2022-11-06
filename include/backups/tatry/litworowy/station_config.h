@@ -108,7 +108,7 @@
 #define _LATNS		'N'
 #define _LON		01954.77
 #define _LONWE		'E'
-#define _COMMENT	"Stacja badawcza Litworowy Kocioł - https://mrozowiska.pl/"
+#define _COMMENT	"Stacja badawcza Litworowy Kociol - https://mrozowiska.pl/"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
