@@ -36,7 +36,7 @@
 
 //#define _UMB_MASTER
 //#define _DAVIS_SERIAL
-#define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
+//#define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For more configuration
 						// (slave ids, registers...) please look into MODBUS RTU CONFIGURATION section of this file
 
 #define _INTERNAL_AS_BACKUP		// if defined ParaTNC will switch to internal sensors in case of
