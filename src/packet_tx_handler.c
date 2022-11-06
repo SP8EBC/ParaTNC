@@ -67,6 +67,8 @@ uint8_t packet_tx_trigger_tcp = 0;
 void packet_tx_send_wx_frame(void) {
 	main_wait_for_tx_complete();
 
+	delay_fixed(1100);
+
 	SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
 
 }
@@ -78,7 +80,7 @@ void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config
 
 	// if user selected aggressive powersave mode the meteo counter must be set back to zero
 	// to prevent quirks with waking from sleep mode
-	packet_tx_meteo_counter = meteo_interval - 1;
+	packet_tx_meteo_counter = meteo_interval - 3;
 
 }
 

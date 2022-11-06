@@ -96,6 +96,7 @@ void it_handlers_set_priorities(void) {
 void RTC_WKUP_IRQHandler(void) {
 
 	main_woken_up = 1;
+	main_woken_up_for_telemetry = 1;
 
 	// clear pending interrupt
 	NVIC_ClearPendingIRQ(RTC_WKUP_IRQn);

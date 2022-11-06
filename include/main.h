@@ -86,6 +86,7 @@ extern srl_context_t* main_gsm_srl_ctx_ptr;
 extern  uint8_t main_kiss_enabled;
 
 extern uint8_t main_woken_up;
+extern uint8_t main_woken_up_for_telemetry;
 
 extern int8_t main_cpu_load;
 
