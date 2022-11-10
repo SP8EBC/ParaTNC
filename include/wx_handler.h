@@ -25,6 +25,7 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressure, int8_t * const humidity);
 void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu);
 void wx_check_force_i2c_reset(void);
-
+uint16_t wx_get_nvm_record_temperature(void);
+uint16_t wx_get_nvm_record_wind(void);
 
 #endif /* WX_HANDLER_H_ */

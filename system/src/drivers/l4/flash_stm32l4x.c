@@ -8,6 +8,9 @@
 #include "./drivers/l4/flash_stm32l4x.h"
 #include "stm32l4xx.h"
 
+#define KB *1024
+
+
 #define FLASH_KEY1                0x45670123U                          /*!< Flash key1 */
 #define FLASH_KEY2                0xCDEF89ABU                          /*!< Flash key2: used with FLASH_KEY1
                                                                             to unlock the FLASH registers access */
@@ -74,13 +77,26 @@ FLASH_Status FLASH_ErasePage(uint32_t Page_Address) {
 
 	uint32_t Banks = 0;
 
-	// calculate the bank number
-	if (Page_Address < 0x08080000) {
-		Banks = FLASH_BANK_1;
+	if (FLASH_SIZE == 1024 KB) {
+		// calculate the bank number
+		if (Page_Address < 0x08080000) {
+			Banks = FLASH_BANK_1;
+		}
+		else {
+			Banks = FLASH_BANK_2;
+		}
 	}
-	else {
-		Banks = FLASH_BANK_2;
+	else if (FLASH_SIZE == 512 KB) {
+		// calculate the bank number
+		if (Page_Address < 0x08040000) {
+			Banks = FLASH_BANK_1;
+		}
+		else {
+			Banks = FLASH_BANK_2;
+		}
 	}
+
+
 
 	FLASH_Unlock();
 

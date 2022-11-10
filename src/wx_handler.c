@@ -349,4 +349,72 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 
 }
 
+uint16_t wx_get_nvm_record_temperature(void) {
+
+	uint16_t out = 0;
+	uint16_t scaled_temperature = 0;
+	uint16_t scaled_humidity = 0;
+
+	if (rte_wx_temperature_average_external_valid > -50.0f && rte_wx_temperature_average_external_valid < 50.0f) {
+		scaled_temperature = (uint16_t)((rte_wx_temperature_average_external_valid + 50.0f) * 5.0f);
+	}
+
+	scaled_humidity = rte_wx_humidity_valid / 2;
+
+	out = (scaled_temperature & 0x1FF) | ((scaled_humidity & 0x1F) << 10);
+
+	return out;
+}
+
+uint16_t wx_get_nvm_record_wind(void) {
+
+	uint16_t out = 0;
+
+	uint8_t scaled_average_windspeed = 0;
+	uint8_t scaled_windgusts = 0;
+	uint8_t wind_direction = 0;
+
+	scaled_average_windspeed = rte_wx_average_windspeed / 2;
+	if ((rte_wx_max_windspeed - scaled_average_windspeed) < 52) {
+		scaled_windgusts = (uint8_t)lroundf((rte_wx_max_windspeed - scaled_average_windspeed) / 3.0f);
+	}
+
+	if (wind_direction <= 11 && wind_direction >= 349)
+		wind_direction = 0;
+	else if (wind_direction <= 34 && wind_direction > 11)
+		wind_direction = 1;
+	else if (wind_direction <= 56 && wind_direction > 34)
+		wind_direction = 2;
+	else if (wind_direction <= 79 && wind_direction > 56)
+		wind_direction = 3;
+	else if (wind_direction <= 101 && wind_direction > 79)
+		wind_direction = 4;
+	else if (wind_direction <= 124 && wind_direction > 101)
+		wind_direction = 5;
+	else if (wind_direction <= 146 && wind_direction > 124)
+		wind_direction = 6;
+	else if (wind_direction <= 169 && wind_direction > 146)
+		wind_direction = 7;
+	else if (wind_direction <= 191 && wind_direction > 169)
+		wind_direction = 8;
+	else if (wind_direction <= 214 && wind_direction > 191)
+		wind_direction = 9;
+	else if (wind_direction <= 236 && wind_direction > 214)
+		wind_direction = 10;
+	else if (wind_direction <= 259 && wind_direction > 236)
+		wind_direction = 11;
+	else if (wind_direction <= 281 && wind_direction > 259)
+		wind_direction = 12;
+	else if (wind_direction <= 304 && wind_direction > 281)
+		wind_direction = 13;
+	else if (wind_direction <= 327 && wind_direction > 304)
+		wind_direction = 14;
+	else if (wind_direction <= 349 && wind_direction > 327)
+		wind_direction = 15;
+	else;
+
+	out = (scaled_average_windspeed | (scaled_windgusts & 0xF) << 8 | (wind_direction & 0xF) << 12 );
+
+	return out;
+}
 

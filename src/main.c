@@ -165,6 +165,9 @@ const config_data_gsm_t * main_config_data_gsm = 0;
 // global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
+// current timestamp from RTC in NVM format
+uint32_t main_nvm_timestamp = 0;
+
 // this global variable stores numbers of ticks of idling CPU
 uint32_t main_idle_cpu_ticks = 0;
 
@@ -396,6 +399,12 @@ int main(int argc, char* argv[]){
 	  main_crc_result = 0;
 
 	  configuration_set_register(0);
+
+#if defined(STM32L471xx)
+	  nvm_erase_all();
+
+	  nvm_test_prefill();
+#endif
   }
 
   // if first section has wrong CRC and it hasn't been restored before
@@ -1043,6 +1052,8 @@ int main(int argc, char* argv[]){
 #endif
    }
 
+	main_nvm_timestamp = main_get_nvm_timestamp();
+
   // Infinite loop
   while (1)
     {
@@ -1351,6 +1362,8 @@ int main(int argc, char* argv[]){
 
 			main_set_monitor(4);
 
+			main_nvm_timestamp = main_get_nvm_timestamp();
+
 			#ifndef _MUTE_OWN
 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
@@ -1561,6 +1574,66 @@ void main_reload_internal_wdg(void){
 #endif
 }
 
+uint32_t main_get_nvm_timestamp(void) {
+	uint32_t out = 0;
+
+	/**
+	 * Date-time timestamp in timezone local for a place where station is installed.
+	 * Mixture of BCD and integer format, this is just sligtly processed RTC registers
+	 * content.
+	 *	bit 0  - bit 12 === number of minutes starting from midnight (max 1440)
+	 *	bit 16 - bit 24 === days from new year (max 356)
+	 *	bit 25 - bit 31 === years (from 00 to 99, from 2000 up to 2099)
+	 */
+
+#ifdef STM32L471xx
+
+	uint16_t temp = 0;
+
+	// minutes
+	temp = 600 * ((RTC->TR & RTC_TR_HT) >> RTC_TR_HT_Pos) +
+			60 * ((RTC->TR & RTC_TR_HU) >> RTC_TR_HU_Pos) +
+			10 * ((RTC->TR & RTC_TR_MNT) >> RTC_TR_MNT_Pos) +
+			 1 * ((RTC->TR & RTC_TR_MNU) >> RTC_TR_MNU_Pos);
+
+	out = out | (temp & 0x7FF);
+
+	// current month
+	temp = 	 1 * ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos) +
+			10 * ((RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos);
+
+	switch (temp) {
+	case 1: temp = 0; break;
+	case 2: temp = 31; break;
+	case 3: temp = 31 + 28; break;
+	case 4:	temp = 31 + 28 + 31; break;
+	case 5: temp = 31 + 28 + 31 + 30; break;
+	case 6: temp = 31 + 28 + 31 + 30 + 31; break;
+	case 7: temp = 31 + 28 + 31 + 30 + 31 + 30; break;
+	case 8: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31; break;
+	case 9: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31; break;
+	case 10:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30; break;
+	case 11:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31; break;
+	case 12:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30; break;
+	}
+
+	// then add number of days from current month
+	temp = temp +
+			 1 * ((RTC->DR & RTC_DR_DU) >> RTC_DR_DU_Pos) +
+			10 * ((RTC->DR & RTC_DR_DT) >> RTC_DR_DT_Pos);
+
+	out = out | ((temp & 0x1FF) << 16);
+
+	// years
+	temp = 	10 * ((RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos) +
+			 1 * ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos);
+
+	out = out | ((temp & 0x7F) << 25);
+
+#endif
+
+	return out;
+}
 
 #pragma GCC diagnostic pop
 

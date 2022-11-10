@@ -22,6 +22,7 @@
 #include "aprsis.h"
 #include "api/api.h"
 #include "pwr_save.h"
+#include "nvm.h"
 #endif
 
 #include "main.h"
@@ -60,6 +61,7 @@ uint8_t packet_tx_trigger_tcp = 0;
 #define APRSIS_TRIGGER_METEO	(1 << 3)
 #define RECONNECT_APRSIS		(1 << 7)
 
+nvm_measurement_t packet_tx_nvm;
 #endif
 
 void packet_tx_send_wx_frame(void) {
@@ -233,6 +235,15 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
+
+#ifdef STM32L471xx
+			packet_tx_nvm.temperature_humidity = wx_get_nvm_record_temperature();
+			packet_tx_nvm.wind = wx_get_nvm_record_wind();
+			packet_tx_nvm.timestamp = main_get_nvm_timestamp();
+
+			// write to NVM if it is enabled
+			nvm_measurement_store(&packet_tx_nvm);
+#endif
 
 			// this function is required if more than one RF frame will be send from this function at once
 			// it waits for transmission completion and add some delay to let digipeaters do theris job

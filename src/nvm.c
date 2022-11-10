@@ -20,7 +20,10 @@
 #endif
 
 #define NVM_MEASUREMENT_OFFSET			0
-#define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * 96)
+#define NVM_MEASUREMENT_PAGES_USED		96
+#define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * NVM_MEASUREMENT_PAGES_USED)
+
+#define START_OF_LAST_NVM_PAGE			(nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
 
 uint32_t nvm_base_address = 0;
 
@@ -63,11 +66,11 @@ void nvm_measurement_init(void) {
 	// check current flash size
 	if (FLASH_SIZE == 1024 KB) {
 		// 1024KB
-		nvm_base_address = 0x08040000;
+		nvm_base_address = 0x08080000;
 	}
 	else if (FLASH_SIZE == 512 KB) {
 		// 512KB
-		nvm_base_address = 0x08080000;
+		nvm_base_address = 0x08040000;
 	}
 	else {
 		// unknown device ??
@@ -136,6 +139,9 @@ void nvm_measurement_init(void) {
 			nvm_general_state = NVM_OK;
 		}
 
+		// disable programming
+		FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
 		FLASH_Lock();
 	}
 	else {
@@ -147,16 +153,190 @@ void nvm_measurement_init(void) {
 
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 
+	nvm_state_result_t out = NVM_OK;
+
+#if defined(STM32L471xx)
+
+	volatile uint32_t * src = (uint32_t *)data;
+
+	uint32_t next_page_addr = 0;
+
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	// check if there is a room for storage
+	if (nvm_general_state == NVM_NO_SPACE_LEFT) {
+		// erase first page of NVM flash area
+
+		nvm_data_ptr = (uint8_t*)nvm_base_address;
+
+		flash_status = FLASH_ErasePage(nvm_data_ptr);
+
+		if (flash_status == FLASH_COMPLETE) {
+			nvm_general_state = NVM_OK;
+		}
+		else {
+			nvm_general_state = NVM_PGM_ERROR;
+		}
+
+	}
+	else {
+		// check if currently last page is used
+		if ((uint32_t)nvm_data_ptr < START_OF_LAST_NVM_PAGE) {
+			// if not check if next page of flash memory is erased or not
+			if (*(nvm_data_ptr + NVM_PAGE_SIZE) != 0xFF) {
+				// an address somewhere within the next page of memory
+				next_page_addr = (uint32_t)nvm_data_ptr + NVM_PAGE_SIZE;
+
+				// a start of next flash page
+				next_page_addr = (next_page_addr / NVM_PAGE_SIZE) * NVM_PAGE_SIZE;
+
+				flash_status = FLASH_ErasePage(next_page_addr);
+
+				if (flash_status != FLASH_COMPLETE) {
+					nvm_general_state = NVM_PGM_ERROR;
+				}
+			}
+		}
+	}
+
+	FLASH_Unlock();
+
 	// check if NVM has been initialized and it is ready to work
 	if (nvm_general_state != NVM_UNINITIALIZED) {
 		// check if there is a room to store this measurement
 		if (nvm_general_state != NVM_NO_SPACE_LEFT) {
+
+			// enable programming
+			FLASH->CR |= FLASH_CR_PG;
+
 			// progam this measurement
+			for (int i = 0 ; i < NVM_RECORD_SIZE / 4; i++) {
+				*((uint32_t*)(nvm_data_ptr) + i) = *(src + i);
+				WAIT_FOR_PGM_COMPLETION
+
+				if (flash_status != FLASH_COMPLETE) {
+					break;
+				}
+			}
 
 			// move data pointer
+			nvm_data_ptr += NVM_WRITE_BYTE_ALIGN;
 
 			// and check if an end has
+			if ((uint32_t)nvm_data_ptr < nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ) {
+				;
+			}
+			else {
+				out = NVM_NO_SPACE_LEFT;
+				nvm_general_state = NVM_NO_SPACE_LEFT;
+			}
+
+			// disable programming
+			FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
 		}
 	}
 
+	FLASH_Lock();
+
+#endif
+	return out;
+}
+
+void nvm_erase_all(void) {
+#if defined(STM32L471xx)
+
+	uint32_t base_address = 0;
+
+	FLASH_Unlock();
+
+	// check current flash size
+	if (FLASH_SIZE == 1024 KB) {
+		// 1024KB
+		base_address = 0x08080000;
+	}
+	else if (FLASH_SIZE == 512 KB) {
+		// 512KB
+		base_address = 0x08040000;
+	}
+	else {
+		return;
+	}
+
+	for (int i = 0; i < NVM_MEASUREMENT_PAGES_USED; i++) {
+		FLASH_ErasePage(base_address + (i * NVM_PAGE_SIZE));
+	}
+
+	FLASH_Lock();
+#endif
+}
+
+void nvm_test_prefill(void) {
+#if defined(STM32L471xx)
+
+	uint32_t * base_address = 0;
+
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
+	FLASH_Unlock();
+
+	// enable programming
+	FLASH->CR |= FLASH_CR_PG;
+
+	// check current flash size
+	if (FLASH_SIZE == 1024 KB) {
+		// 1024KB
+		base_address = (uint32_t *)0x08080000;
+	}
+	else if (FLASH_SIZE == 512 KB) {
+		// 512KB
+		base_address = (uint32_t *)0x08040000;
+	}
+	else {
+		return;
+	}
+
+	// program first 10 pages of flash with 0xABCDABCD / 0x99889988
+	for (int i = 0; i < 10; i++) {
+
+		// flash programming must be 64 bit (8 bytes) aligned
+		for (int j = 0; j < NVM_PAGE_SIZE / 8; j++) {
+			*(base_address++) = 0xABCDABCD;
+			WAIT_FOR_PGM_COMPLETION
+
+			*(base_address++) = 0x99889988;
+			WAIT_FOR_PGM_COMPLETION
+		}
+	}
+
+	if (FLASH_SIZE == 1024 KB) {
+		// 1024KB
+		base_address = (uint32_t *)(0x08080000 + 11 * NVM_PAGE_SIZE);
+	}
+	else if (FLASH_SIZE == 512 KB) {
+		// 512KB
+		base_address = (uint32_t *)(0x08040000 + 11 * NVM_PAGE_SIZE);
+	}
+	else {
+		return;
+	}
+
+	for (int i = 11; i < NVM_MEASUREMENT_PAGES_USED; i++) {
+		// flash programming must be 64 bit (8 bytes) aligned
+		for (int j = 0; j < NVM_PAGE_SIZE / 8; j++) {
+			*(base_address++) = 0x12345678;
+			WAIT_FOR_PGM_COMPLETION
+
+			*(base_address++) = 0x99999999;
+			WAIT_FOR_PGM_COMPLETION
+		}
+	}
+	// disable programming
+	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
+
+	FLASH_Lock();
+
+#endif
 }

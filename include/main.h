@@ -101,6 +101,8 @@ void main_service_cpu_load_ticks(void);
 
 void main_reload_internal_wdg(void);
 
+uint32_t main_get_nvm_timestamp(void);
+
 #if defined(STM32L471xx)
 extern uint32_t rte_main_rx_total;
 extern uint32_t rte_main_tx_total;

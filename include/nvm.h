@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+#define NVM_RECORD_SIZE		8		// in bytes!!
+
 typedef struct __attribute__((packed)) nvm_measurement_t {
 	/**
 	 * Date-time timestamp in timezone local for a place where station is installed.
@@ -22,16 +24,19 @@ typedef struct __attribute__((packed)) nvm_measurement_t {
 	uint32_t timestamp;
 
 	/**
-	 * Temperature represented as 0.1 degrees increment and
+	 * Temperature represented as 0.2 degrees increment and
 	 * humidity in 2% steps
-	 * bit 0  - bit 9  === raw temperature, physical: raw / 10 - 50 (from -50.0 to +52.3)
+	 * bit 0  - bit 9  === raw temperature, physical: raw / 5 - 50 (from -50.0 to +52.3)
 	 * bit 10 - bit 15 === raw humidity, physical: raw * 2 (from 0% to 100%)
 	 */
 	uint16_t temperature_humidity;
 
 	/**
 	 * Average windspeed and gust windspeed stored in 0.2m/s increments
-	 * bit 0  - bit 7 === raw average windspeed, physical: raw / 5 (from 0m/s up to 50m/s)
+	 * bit 0  - bit 7  === raw average windspeed, physical: raw / 5 (from 0m/s up to 50m/s)
+	 * bit 9  - bit 12 === raw maximum windspeed, physical: physical_average + raw / 3
+	 * bit 13 - bit 16 === wind direction. lookup table:
+	 * 						0 -
 	 */
 	uint16_t wind;
 
@@ -47,5 +52,8 @@ typedef enum nvm_state_result_t {
 
 void nvm_measurement_init(void);
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
+void nvm_erase_all(void);
+
+void nvm_test_prefill(void);	///<! Only for test purposes!
 
 #endif /* NVM_H_ */
