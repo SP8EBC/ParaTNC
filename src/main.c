@@ -403,7 +403,7 @@ int main(int argc, char* argv[]){
 #if defined(STM32L471xx)
 	  nvm_erase_all();
 
-	  nvm_test_prefill();
+//	  nvm_test_prefill();
 #endif
   }
 
