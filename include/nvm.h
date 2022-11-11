@@ -50,6 +50,8 @@ typedef enum nvm_state_result_t {
 	NVM_PGM_ERROR
 }nvm_state_result_t;
 
+extern uint8_t * nvm_data_ptr;
+
 void nvm_measurement_init(void);
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
 void nvm_erase_all(void);

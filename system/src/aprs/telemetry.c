@@ -622,6 +622,18 @@ void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uin
 #include "drivers/max31865.h"
 #include "int_average.h"
 #include "math.h"
+#include "nvm.h"
+
+void telemetry_send_nvm_status_tatry(void) {
+	main_wait_for_tx_complete();
+
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[nvm status][[nvm_timestamp: 0x%lX][nvm_data_ptr: 0x%p]", main_get_nvm_timestamp(), nvm_data_ptr);
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	//while (main_ax25.dcd == 1);
+	afsk_txStart(&main_afsk);
+	main_wait_for_tx_complete();
+}
 
 void telemetry_send_chns_description_tatry(const config_data_basic_t * const config_basic) {
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
@@ -636,7 +648,7 @@ void telemetry_send_chns_description_tatry(const config_data_basic_t * const con
 
 	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.Spi,LastTempr,MaxTempr,Vbatt,PtSts,LSERDY,RTCEN,MAX_OK,SLEEP,N,N,N,N", config_basic->callsign);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :PARM.MaxLsb,MaxMsb,LastTempr,Vbatt,PtSts,LSERDY,RTCEN,MAX_OK,SLEEP,SPI_ER,SPI_OK,N,N", config_basic->callsign);
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -645,8 +657,8 @@ void telemetry_send_chns_description_tatry(const config_data_basic_t * const con
 	main_wait_for_tx_complete();
 	delay_fixed(1500);
 
-	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));//          /          /          /         /
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,0.25,-40,0,0.25,-40,0,0.02,10,0,1,0", config_basic->callsign);
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));//          /     /          /         /
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,0.25,-40,0,0.02,10,0,1,0", config_basic->callsign);
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -656,7 +668,7 @@ void telemetry_send_chns_description_tatry(const config_data_basic_t * const con
 	delay_fixed(1500);
 
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Cnt,DegC,DegC,V,Raw,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Raw,Raw,DegC,V,Raw,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
@@ -668,11 +680,11 @@ void telemetry_send_chns_description_tatry(const config_data_basic_t * const con
 
 void telemetry_send_values_tatry() {
 
-	uint8_t spi_transmission_counter = max31865_measurements_counter;
 	uint8_t scaled_last_temperature = 0;
-	uint8_t scaled_max_temperature = 0;
 	uint8_t scaled_vbatt_voltage = 0;
 	uint8_t pt_status = max31865_current_fault_status;
+	uint8_t pt_raw_lsb = (uint8_t)(max31865_raw_result & 0xFF);
+	uint8_t pt_raw_msb = (uint8_t)((max31865_raw_result & 0xFF00) >> 8);
 
 	float value = 0.0f;
 
@@ -701,35 +713,26 @@ void telemetry_send_values_tatry() {
 		scaled_last_temperature = (uint8_t)roundf(((value + 400.0f) * 0.4f));
 	}
 
-	value = int_get_max(&max31865_average);
-	if (value < -400.0f) {
-		scaled_max_temperature = (uint8_t)0;
-	}
-	else if (value > 240.0f) {
-		scaled_max_temperature = (uint8_t)255;
-	}
-	else {
-		scaled_max_temperature = (uint8_t)roundf(((value + 400.0f) * 0.4f));
-	}
-
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
 										telemetry_counter++,
-										spi_transmission_counter,
+										pt_raw_lsb,
+										pt_raw_msb,
 										scaled_last_temperature,
-										scaled_max_temperature,
 										scaled_vbatt_voltage,
 										pt_status,
 										((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? '1' : '0',
 										((RCC->BDCR & RCC_BDCR_RTCEN) > 0) ? '1' : '0',
 										(max31865_ok) ? '1' : '0',
 										(main_woken_up_for_telemetry > 0) ? '1' : '0',
-										'0',
-										'0',
+										(max31865_merasurements_error_counter > 0) ? '1' : '0',
+										(max31865_measurements_counter > 0) ? '1' : '0',
 										'0',
 										'0');
 
 	main_woken_up_for_telemetry = 0;
+	max31865_merasurements_error_counter = 0;
+	max31865_measurements_counter = 0;
 
 	// reset the frame counter if it overflowed
 	if (telemetry_counter > 999)

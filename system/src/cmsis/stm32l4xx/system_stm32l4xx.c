@@ -457,10 +457,10 @@ void system_clock_start_rtc_l4(void) {
 	}
 
 	// set date
-	RTC->DR = 0x0021A820;
+	RTC->DR = 0x00229110;
 
 	// set time
-	RTC->TR = 0x00232711;
+	RTC->TR = 0x00191311;
 
 	// exit RTC set mode
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);

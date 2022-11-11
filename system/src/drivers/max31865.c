@@ -151,6 +151,7 @@ max31865_qf_t max31865_quality_factor = MAX_QF_UNKNOWN;
  *
  */
 uint8_t max31865_measurements_counter = 0;
+uint8_t max31865_merasurements_error_counter = 0;
 
 int_average_t max31865_average;
 
@@ -374,6 +375,8 @@ void max31865_pool(void) {
 					max31865_quality_factor = MAX_QF_FULL;
 				}
 				else {
+					max31865_merasurements_error_counter++;
+
 					max31865_current_state = MAX_ERROR;
 
 					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;

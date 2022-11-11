@@ -102,6 +102,7 @@ void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uin
  * These are very special telemetry format for scientific weather stations in TATRY
  */
 #ifdef TATRY
+void telemetry_send_nvm_status_tatry(void);
 void telemetry_send_chns_description_tatry(const config_data_basic_t * const config_basic);
 void telemetry_send_values_tatry();
 #endif

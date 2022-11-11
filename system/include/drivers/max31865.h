@@ -23,8 +23,10 @@ typedef enum max31865_qf_t {
 	MAX_QF_NOT_AVALIABLE
 }max31865_qf_t;
 
+extern uint16_t max31865_raw_result;
 extern uint8_t max31865_current_fault_status;
 extern uint8_t max31865_measurements_counter;
+extern uint8_t max31865_merasurements_error_counter;
 extern int_average_t max31865_average;
 extern uint8_t max31865_ok;
 
