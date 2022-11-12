@@ -523,7 +523,7 @@ int main(int argc, char* argv[]){
 
   LL_IWDG_EnableWriteAccess(IWDG);
 
-  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_128);
+  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_256);
 
   while (LL_IWDG_IsActiveFlag_PVU(IWDG) != 0) {
 	  i++;

@@ -22,7 +22,7 @@
 //#define	_GSM			// only for ParaMETEO
 //#define _GSM_KEEP_MODEM_ALWAYS_ON
 
-#define _WX_DOUBLE_TRANSMIT
+//#define _WX_DOUBLE_TRANSMIT
 
 /* 	MODES OF OPERATION */
 /*  ------------------ */
@@ -104,11 +104,11 @@
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
 #define _CALL "SR0L"
 #define _SSID 0
-#define _LAT		4914.14
+#define _LAT		4914.15
 #define _LATNS		'N'
 #define _LON		01954.77
 #define _LONWE		'E'
-#define _COMMENT	"Stacja badawcza Litworowy Kociol - https://mrozowiska.pl/"
+#define _COMMENT	"Stacja badawcza Litworowy Kociol -- https://mrozowiska.pl/"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always transmitted with blue WX symbol
 //#define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
