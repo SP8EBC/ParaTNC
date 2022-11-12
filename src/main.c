@@ -160,6 +160,8 @@ const config_data_umb_t * main_config_data_umb = 0;
 const config_data_rtu_t * main_config_data_rtu = 0;
 #ifdef STM32L471xx
 const config_data_gsm_t * main_config_data_gsm = 0;
+
+volatile int i = 0;
 #endif
 
 // global variable incremented by the SysTick handler to measure time in miliseconds
@@ -309,8 +311,6 @@ const char * post_content = "{\
 int main(int argc, char* argv[]){
 
   int32_t ln = 0;
-
-  uint8_t button_inhibit = 0;
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
@@ -496,6 +496,49 @@ int main(int argc, char* argv[]){
   else {
 	  configuration_handler_load_configuration(REGION_DEFAULT);
   }
+
+#ifdef INTERNAL_WATCHDOG
+#if defined(STM32F10X_MD_VL)
+  // enable write access to watchdog registers
+  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+
+  // Set watchdog prescaler
+  IWDG_SetPrescaler(IWDG_Prescaler_128);
+
+  // Set the counter value to program watchdog for about 13 seconds
+  IWDG_SetReload(0xFFF);
+
+  // enable the watchdog
+  IWDG_Enable();
+
+  // do not disable the watchdog when the core is halted on a breakpoint
+  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);
+
+  // reload watchdog counter
+  IWDG_ReloadCounter();
+#endif
+
+#if defined(STM32L471xx)
+  LL_IWDG_Enable(IWDG);
+
+  LL_IWDG_EnableWriteAccess(IWDG);
+
+  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_128);
+
+  while (LL_IWDG_IsActiveFlag_PVU(IWDG) != 0) {
+	  i++;
+
+	  if (i > 0x9FF) {
+		  break;
+	  }
+  }
+
+  LL_IWDG_ReloadCounter(IWDG);
+
+  i = 0;
+#endif
+
+#endif
 
   // set packets intervals
   packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
@@ -771,28 +814,6 @@ int main(int argc, char* argv[]){
 
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
-
-#ifdef INTERNAL_WATCHDOG
-#if defined(STM32F10X_MD_VL)
-  // enable write access to watchdog registers
-  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-
-  // Set watchdog prescaler
-  IWDG_SetPrescaler(IWDG_Prescaler_128);
-
-  // Set the counter value to program watchdog for about 13 seconds
-  IWDG_SetReload(0xFFF);
-
-  // enable the watchdog
-  IWDG_Enable();
-
-  // do not disable the watchdog when the core is halted on a breakpoint
-  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);
-
-  // reload watchdog counter
-  IWDG_ReloadCounter();
-#endif
-#endif
 
   // initialize i2c controller
   i2cConfigure();
@@ -1402,6 +1423,11 @@ int main(int argc, char* argv[]){
 
 			main_set_monitor(6);
 
+		#ifdef INTERNAL_WATCHDOG
+		   // reload watchdog counter
+			main_reload_internal_wdg();
+		#endif
+
 			digi_pool_viscous();
 
 			#ifdef STM32L471xx
@@ -1463,9 +1489,6 @@ int main(int argc, char* argv[]){
 #ifdef STM32L471xx
 			max31865_pool();
 #endif
-			#ifdef INTERNAL_WATCHDOG
-			main_reload_internal_wdg();
-			#endif
 
 			main_two_second_pool_timer = 2000;
 		}
@@ -1570,6 +1593,7 @@ void main_reload_internal_wdg(void){
 
 #endif
 #ifdef STM32L471xx
+	  LL_IWDG_ReloadCounter(IWDG);
 
 #endif
 #endif
