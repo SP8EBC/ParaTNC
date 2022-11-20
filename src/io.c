@@ -388,6 +388,7 @@ uint16_t io_vbat_meas_average(uint16_t sample) {
 	return out;
 }
 
+#ifdef PARAMETEO
 /**
  * This funstion has to be called before switching to IDLE state to turn off the ADC
  */
@@ -475,3 +476,6 @@ void io_vbat_meas_enable(void) {
 	ADC2->CFGR |= ADC_CFGR_OVRMOD;
 #endif
 }
+
+#endif
+

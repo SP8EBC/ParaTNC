@@ -261,6 +261,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			 *
 			 */
 
+			// service external watchdog while sending weather frame
 			io_ext_watchdog_service();
 
 #ifdef STM32L471xx
@@ -457,6 +458,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 #endif
 		}
 		packet_tx_telemetry_counter = 0;
+
+		// service external watchdog while sending telemetry
+		io_ext_watchdog_service();
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
 

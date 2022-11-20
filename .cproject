@@ -215,7 +215,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry excluding="nvm.c|aprsis.c|api.c|pwr_save.c|Timer.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
-						<entry excluding="src/fatfs|src/gsm|src/cmsis/stm32l4xx|src/drivers/l4|src/stm32l4-hal-driver|src/dsp|src/stm32f1-stdperiph/stm32f10x_adc.c|src/stm32f1-stdperiph/stm32f10x_wwdg.c|src/drivers/tm_stm32fonewire/tm_stm32f1_onewire.c|src/stm32f1-stdperiph/stm32f10x_bkp.c|src/stm32f1-stdperiph/stm32f10x_dac.c|src/stm32f1-stdperiph/stm32f10x_can.c|src/stm32f1-stdperiph/stm32f10x_spi.c|src/stm32f1-stdperiph/stm32f10x_pwr.c|src/stm32f1-stdperiph/stm32f10x_sdio.c|src/stm32f1-stdperiph/stm32f10x_fsmc.c|src/stm32f1-stdperiph/stm32f10x_cec.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="system"/>
+						<entry excluding="src/drivers/max31865.c|src/fatfs|src/gsm|src/cmsis/stm32l4xx|src/drivers/l4|src/stm32l4-hal-driver|src/dsp|src/stm32f1-stdperiph/stm32f10x_adc.c|src/stm32f1-stdperiph/stm32f10x_wwdg.c|src/drivers/tm_stm32fonewire/tm_stm32f1_onewire.c|src/stm32f1-stdperiph/stm32f10x_bkp.c|src/stm32f1-stdperiph/stm32f10x_dac.c|src/stm32f1-stdperiph/stm32f10x_can.c|src/stm32f1-stdperiph/stm32f10x_spi.c|src/stm32f1-stdperiph/stm32f10x_pwr.c|src/stm32f1-stdperiph/stm32f10x_sdio.c|src/stm32f1-stdperiph/stm32f10x_fsmc.c|src/stm32f1-stdperiph/stm32f10x_cec.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="system"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

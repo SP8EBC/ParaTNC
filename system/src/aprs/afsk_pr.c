@@ -119,6 +119,7 @@ void DACStartConfig(void) {
 
 }
 
+#ifdef STM32L471xx
 void ADCStop(void) {
 	if ((ADC1->CR & ADC_CR_ADEN) != 0) {
 		// disable conversion
@@ -140,4 +141,4 @@ void DACStop(void) {
 	RCC->CR &= (0xFFFFFFFF ^ DAC_CR_EN2);
 
 }
-
+#endif

@@ -311,6 +311,8 @@ int main(int argc, char* argv[]){
 
   uint8_t button_inhibit = 0;
 
+  it_handlers_inhibit_radiomodem_dcd_led = 1;
+
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
 #if defined(STM32F10X_MD_VL)
@@ -1054,6 +1056,8 @@ int main(int argc, char* argv[]){
 
 	main_nvm_timestamp = main_get_nvm_timestamp();
 
+	it_handlers_inhibit_radiomodem_dcd_led = 0;
+
   // Infinite loop
   while (1)
     {
@@ -1084,7 +1088,7 @@ int main(int argc, char* argv[]){
 
 	  			if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
 
-	  				beacon_send_own(0);
+	  				beacon_send_own(0, 0);
 	  			}
 	  			else {
 
