@@ -73,7 +73,7 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 		.wx_umb = 0,
 #endif
 
-		.wx_pt_sensor = 0x71,		// TODO:
+		.wx_pt_sensor = 0x75,		// TODO:  was 71
 
 #ifdef _DUST_SDS011_SERIAL
 		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
