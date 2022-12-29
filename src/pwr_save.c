@@ -775,7 +775,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 						reinit_sensors = pwr_save_switch_mode_to_c1();
 					}
 					else {		// WX
-						if (minutes_to_wx > 2) {
+						if (minutes_to_wx > 4) {
 							if (config->powersave_keep_gsm_always_enabled == 0){
 								reinit_sensors = pwr_save_switch_mode_to_m4();
 							}
