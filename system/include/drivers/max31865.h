@@ -30,7 +30,7 @@ extern uint8_t max31865_merasurements_error_counter;
 extern int_average_t max31865_average;
 extern uint8_t max31865_ok;
 
-void max31865_init(uint8_t rdt_type, uint8_t reference_resistor);
+void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index);
 void max31865_init_average(void);
 void max31865_pool(void);
 int32_t max31865_get_pt100_result();

@@ -21,6 +21,9 @@
 
 int32_t test;
 
+//tary specific
+#include "io.h"
+
 typedef enum max31865_pool_state_t {
 	MAX_UNINITIALIZED,
 	MAX_IDLE,
@@ -75,6 +78,11 @@ max31865_pool_state_t max31865_current_state = MAX_UNINITIALIZED;
  *	reference resistor value
  */
 float max31865_rref = 0;
+
+/**
+ * And it's index from the table
+ */
+uint8_t max31865_rref_index = 0;
 
 /**
  * This variable is incremented from 0 up to 9 to pause measurement
@@ -220,7 +228,7 @@ static void max31865_send_config_register(void) {
 	}
 }
 
-void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
+void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index) {
 
 	uint8_t * rx_data;
 
@@ -236,14 +244,16 @@ void max31865_init(uint8_t rdt_type, uint8_t reference_resistor) {
 		return;
 	}
 
-	if (reference_resistor > 31) {
+	if (reference_resistor_index > 31) {
 		max31865_current_state = MAX_UNINITIALIZED;
 
 		return;
 	}
 	else {
-		max31865_rref = max31865_rref_lookup_table[reference_resistor];
+		max31865_rref = max31865_rref_lookup_table[reference_resistor_index];
 	}
+
+	max31865_rref_index = reference_resistor_index;
 
 	// set filter to 50Hz
 	max31865_filter_select = 1;
@@ -288,10 +298,10 @@ void max31865_pool(void) {
 		case MAX_IDLE:
 			// MAX31865 is powered up but not initialized
 			if (max31865_rdt_sensor_type == 1) {
-				max31865_init(MAX_3WIRE, max31865_rref);
+				max31865_init(MAX_3WIRE, max31865_rref_index);
 			}
 			else {
-				max31865_init(MAX_4WIRE, max31865_rref);
+				max31865_init(MAX_4WIRE, max31865_rref_index);
 			}
 
 			if (max31865_ok == 1) {
@@ -386,18 +396,22 @@ void max31865_pool(void) {
 				max31865_vbias = 0;
 
 				// this function may change 'max31865_current_state' internally due to errors
-				max31865_send_config_register();
+				//max31865_send_config_register();
 
 				max31865_shutdown_ticks = 0;
 			}
 
+			// tatry specific
+			io___cntrl_vbat_s_disable();
 
 			break;
 		case MAX_SHUTDOWN:
 			// MAX31865 is powered up and initialized but PT bias is disabled
 			// and no measurement is ongoing
 			if (max31865_shutdown_ticks++ > MAX31865_INTERVAL) {
-				max31865_current_state = MAX_INITIALIZED;
+				io___cntrl_vbat_s_enable();
+
+				max31865_current_state = MAX_IDLE;	//
 
 				max31865_shutdown_ticks = 0;
 			}

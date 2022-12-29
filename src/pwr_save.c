@@ -299,7 +299,7 @@ int pwr_save_switch_mode_to_c0(void) {
 	}
 
 	// turn ON +5V_S
-	io___cntrl_vbat_s_enable();
+	//io___cntrl_vbat_s_enable();	//TODO: Tatry specific!!!
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -334,7 +334,7 @@ int pwr_save_switch_mode_to_c1(void) {
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io___cntrl_vbat_s_enable();
+	//io___cntrl_vbat_s_enable();	// TODO: tatry specific!!!
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -435,7 +435,7 @@ int pwr_save_switch_mode_to_m4(void) {
 	}
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io___cntrl_vbat_s_enable();
+	//io___cntrl_vbat_s_enable();	// TODO: tatry specific!!
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
