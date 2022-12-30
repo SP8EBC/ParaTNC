@@ -330,6 +330,8 @@ void max31865_pool(void) {
 			// go back to idle in case of any error
 			max31865_current_state = MAX_IDLE;
 
+			io___cntrl_vbat_s_enable();
+
 			max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 
 			break;
@@ -409,9 +411,10 @@ void max31865_pool(void) {
 			// MAX31865 is powered up and initialized but PT bias is disabled
 			// and no measurement is ongoing
 			if (max31865_shutdown_ticks++ > MAX31865_INTERVAL) {
-				io___cntrl_vbat_s_enable();
 
 				max31865_current_state = MAX_IDLE;	//
+
+				io___cntrl_vbat_s_enable();
 
 				max31865_shutdown_ticks = 0;
 			}
