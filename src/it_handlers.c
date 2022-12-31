@@ -28,6 +28,7 @@
 #include "drivers/i2c.h"
 #include "drivers/spi.h"
 #include "drivers/analog_anemometer.h"
+#include "drivers/max31865.h"
 #include "aprs/wx.h"
 #include "aprs/telemetry.h"
 #include "aprs/beacon.h"
@@ -111,6 +112,7 @@ void RTC_WKUP_IRQHandler(void) {
 
 	pwr_save_exit_from_stop2();
 
+	max31865_set_state_after_wkup();	// TODO: tatry variant
 
 }
 

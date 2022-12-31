@@ -502,3 +502,9 @@ int32_t max31865_get_result(uint32_t RTDnominal) {
 max31865_qf_t max31865_get_qf(void) {
 	return max31865_quality_factor;
 }
+
+void max31865_set_state_after_wkup(void) {
+	max31865_current_state = MAX_SHUTDOWN;
+
+	max31865_shutdown_ticks = MAX31865_INTERVAL - 1;
+}

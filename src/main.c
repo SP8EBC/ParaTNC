@@ -617,6 +617,9 @@ int main(int argc, char* argv[]){
   // swtich power to M4. turn on sensors but keep GSM modem turned off
   pwr_save_switch_mode_to_c1();
 
+  // TODO: tatry specific!!!
+  io___cntrl_vbat_s_enable();
+
   delay_fixed(300);
 
 #endif
