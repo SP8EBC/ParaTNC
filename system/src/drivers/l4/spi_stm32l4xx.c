@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#define SPI_CS_TO_SCLK_SETUP_DELAY	0x2FF
+#define SPI_CS_TO_SCLK_SETUP_DELAY	0x2FF		// 0x6FF in tatry variant
 #define SPI_BUFFER_LN	32
 
 /**
@@ -171,7 +171,7 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_13;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_UP;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_CLK
@@ -179,7 +179,7 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_14;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_UP;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_MISO
@@ -187,7 +187,7 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_15;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_UP;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_MOSI
