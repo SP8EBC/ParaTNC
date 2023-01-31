@@ -24,7 +24,7 @@ typedef enum max31865_qf_t {
 
 extern uint8_t max31865_current_fault_status;
 
-void max31865_init(uint8_t rdt_type, uint8_t reference_resistor);
+void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index);
 void max31865_init_average(void);
 void max31865_pool(void);
 int32_t max31865_get_pt100_result();
