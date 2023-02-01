@@ -18,6 +18,16 @@
 #ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
+
+/**
+ * Internal state of VBAT R pooler
+ */
+typedef enum io_pool_vbat_r_state_t {
+	POOL_VBAT_R_TURNED_ON,		//!< VBAT_R is turned on but it is still 2 minutes remaining
+	POOL_VBAT_R_TURNED_OFF,		//!< 2 minutes remaining and VBAT_R was turned off
+	POOL_VBAT_R_WAIT,			//!< VBAT_R was turned off but wait
+	POOL_VBAT_R_DONT_SWITCH		//!< more or less than 2 minutes to wx packet or VBAT_R was restarted already
+}io_pool_vbat_r_state_t;
 #endif
 
 #include "station_config.h"
@@ -33,6 +43,10 @@ static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
 static uint8_t io_vbatt_history_it = 0;
 
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
+
+//! An instance of VBAT_R pooler internal state
+io_pool_vbat_r_state_t io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
+
 #endif
 
 
@@ -475,6 +489,43 @@ void io_vbat_meas_enable(void) {
 	// ignore overrun and overwrite data register content with new conversion result
 	ADC2->CFGR |= ADC_CFGR_OVRMOD;
 #endif
+}
+
+void io_pool_vbat_r(uint8_t minutes_to_wx) {
+
+	// check how many minutes reamins to weather packet
+	if (minutes_to_wx == 2) {
+		// hardcoded to 2 minutes
+
+		switch(io_vbat_r_state) {
+		case POOL_VBAT_R_TURNED_ON:
+			// turn off VBAT_R
+			io___cntrl_vbat_r_disable();
+
+			io_vbat_r_state = POOL_VBAT_R_TURNED_OFF;
+
+			break;
+		case POOL_VBAT_R_TURNED_OFF:
+			// wait few more seconds before turning on back
+			io_vbat_r_state = POOL_VBAT_R_WAIT;
+
+			break;
+		case POOL_VBAT_R_WAIT:
+			// turn back on
+			io___cntrl_vbat_r_enable();
+
+			io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
+
+			break;
+		case POOL_VBAT_R_DONT_SWITCH:
+			// VBAT_R has been already power cycled, do nothing more
+			break;
+		}
+	}
+	else {
+		// don't do nothing with VBAT_R and keep it turned on
+		io_vbat_r_state = POOL_VBAT_R_TURNED_ON;
+	}
 }
 
 #endif

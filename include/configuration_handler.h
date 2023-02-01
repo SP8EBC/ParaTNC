@@ -40,5 +40,6 @@ const uint32_t * configuration_get_address(configuration_handler_region_t region
 
 int configuration_get_inhibit_wx_pwr_handle(void);
 int configuration_get_early_tx_assert(void);
+int configuration_get_power_cycle_vbat_r(void);
 
 #endif /* CONFIGURATION_HANDLER_H_ */

@@ -89,6 +89,9 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 	// only for ParaMETEO
 	uint8_t gsm;
 
+	// only for ParaMETEO
+	uint8_t nvm_logger;
+
 } config_data_mode_t;
 
 typedef struct __attribute__((aligned (4))) config_data_basic_t {
@@ -96,6 +99,9 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	#define ENGINEERING1					(1)
 	#define ENGINEERING1_INH_WX_PWR_HNDL	(1 << 1)
 	#define ENGINEERING1_EARLY_TX_ASSERT	(1 << 2)
+
+	#define ENGINEERING2					(1)
+	#define ENGINEERING2_POWER_CYCLE_R		(1 << 2)
 
 	char callsign[7];
 
@@ -145,6 +151,16 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 *	bit7 -
 	 */
 	uint8_t engineering1;
+
+	/**
+	 * Ugly and nasty workarounds of (mostly hardware) problems. Use only
+	 * where there is no hope left.
+	 *
+	 *	bit0 - must be set to zero to enable this engineering
+	 *  bit1 - reboot after 99 telemetry frames
+	 *  bit2 - power cycle vbat_r two minutes before weather frame
+	 */
+	uint8_t engineering2;
 
 } config_data_basic_t;
 

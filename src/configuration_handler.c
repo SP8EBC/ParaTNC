@@ -839,3 +839,9 @@ int configuration_get_early_tx_assert(void) {
 	return out;
 }
 
+int configuration_get_power_cycle_vbat_r(void) {
+
+	int out = 0;
+
+	return out;
+}

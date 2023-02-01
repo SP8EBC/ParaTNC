@@ -130,7 +130,13 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #if (defined _GSM_KEEP_MODEM_ALWAYS_ON)
 		.powersave_keep_gsm_always_enabled = 1
 #else
-		.powersave_keep_gsm_always_enabled = 0
+		.powersave_keep_gsm_always_enabled = 0,
+#endif
+
+#if (defined _NVM_LOGGER)
+		.nvm_logger = 1
+#else
+		.nvm_logger = 0
 #endif
 };
 

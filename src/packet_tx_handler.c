@@ -204,7 +204,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	packet_tx_telemetry_counter++;
 	packet_tx_telemetry_descr_counter++;
 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
-		// increse these counters only when WX is enabled
+		// increase these counters only when WX is enabled
 		packet_tx_meteo_counter++;
 		packet_tx_meteo_kiss_counter++;
 	}
@@ -236,14 +236,14 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
 
-#ifdef STM32L471xx
-			packet_tx_nvm.temperature_humidity = wx_get_nvm_record_temperature();
-			packet_tx_nvm.wind = wx_get_nvm_record_wind();
-			packet_tx_nvm.timestamp = main_get_nvm_timestamp();
+			if (config_mode->nvm_logger != 0) {
+				packet_tx_nvm.temperature_humidity = wx_get_nvm_record_temperature();
+				packet_tx_nvm.wind = wx_get_nvm_record_wind();
+				packet_tx_nvm.timestamp = main_get_nvm_timestamp();
 
-			// write to NVM if it is enabled
-			nvm_measurement_store(&packet_tx_nvm);
-#endif
+				// write to NVM if it is enabled
+				nvm_measurement_store(&packet_tx_nvm);
+			}
 
 			// this function is required if more than one RF frame will be send from this function at once
 			// it waits for transmission completion and add some delay to let digipeaters do theris job

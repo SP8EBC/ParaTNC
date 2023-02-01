@@ -162,79 +162,79 @@ const config_data_rtu_t * main_config_data_rtu = 0;
 const config_data_gsm_t * main_config_data_gsm = 0;
 #endif
 
-// global variable incremented by the SysTick handler to measure time in miliseconds
+//! global variable incremented by the SysTick handler to measure time in miliseconds
 uint32_t master_time = 0;
 
-// current timestamp from RTC in NVM format
+//! current timestamp from RTC in NVM format
 uint32_t main_nvm_timestamp = 0;
 
-// this global variable stores numbers of ticks of idling CPU
+//! this global variable stores numbers of ticks of idling CPU
 uint32_t main_idle_cpu_ticks = 0;
 
-// current cpu idle ticks
+//! current cpu idle ticks
 uint32_t main_current_cpu_idle_ticks = 0;
 
-// approx cpu load in percents
+//! approx cpu load in percents
 int8_t main_cpu_load = 0;
 
-// global variable used as a timer to trigger meteo sensors mesurements
+//! global variable used as a timer to trigger meteo sensors mesurements
 int32_t main_wx_sensors_pool_timer = 65500;
 
-// global variable used as a timer to trigger packet sending
+//! global variable used as a timer to trigger packet sending
 int32_t main_one_minute_pool_timer = 45000;
 
-// one second pool interval
+//! one second pool interval
 int32_t main_one_second_pool_timer = 1000;
 
-// two second pool interval
+//! two second pool interval
 int32_t main_two_second_pool_timer = 2000;
 
-// ten second pool interval
+//! ten second pool interval
 int32_t main_ten_second_pool_timer = 10000;
 
-// serial context for UART used to KISS
+//! serial context for UART used to KISS
 srl_context_t main_kiss_srl_ctx;
 
-// serial context for UART used for comm with wx sensors
+//! serial context for UART used for comm with wx sensors
 srl_context_t main_wx_srl_ctx;
 
 #if defined(STM32L471xx)
-// serial context for communication with GSM module
+//! serial context for communication with GSM module
 srl_context_t main_gsm_srl_ctx;
 #endif
 
-// operation mode of USART1 (RS232 on RJ45 socket)
+//! operation mode of USART1 (RS232 on RJ45 socket)
 main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
 
-// operation mode of USART2 (RS485)
+//! operation mode of USART2 (RS485)
 main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
 
-// a pointer to KISS context
+//! a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;
 
-// a pointer to wx comms context
+//! a pointer to wx comms context
 srl_context_t* main_wx_srl_ctx_ptr;
 
-// a pointer to gsm context
+//! a pointer to gsm context
 srl_context_t* main_gsm_srl_ctx_ptr;
 
-// target USART1 (kiss) baudrate
+//! target USART1 (kiss) baudrate
 uint32_t main_target_kiss_baudrate;
 
-// target USART2 (wx) baudrate
+//! target USART2 (wx) baudrate
 uint32_t main_target_wx_baudrate;
 
-// controls if the KISS modem is enabled
+//! controls if the KISS modem is enabled
 uint8_t main_kiss_enabled = 1;
 
-// controls if DAVIS serialprotocol client is enabled by the configuration
+//! controls if DAVIS serialprotocol client is enabled by the configuration
 uint8_t main_davis_serial_enabled = 0;
 
 uint8_t main_modbus_rtu_master_enabled = 0;
 
 uint8_t main_reset_config_to_default = 0;
 
-// global variables represending the AX25/APRS stack
+//! global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
 Afsk main_afsk;
 
@@ -253,15 +253,15 @@ uint8_t main_small_buffer[MAIN_SMALL_BUFFER_LN];
 char main_symbol_f = '/';
 char main_symbol_s = '#';
 
-// global variable used to store return value from various functions
+//! global variable used to store return value from various functions
 volatile uint8_t retval = 100;
 
 uint16_t buffer_len = 0;
 
-// return value from UMB related functions
+//! return value from UMB related functions
 umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 
-// result of CRC calculation
+//! result of CRC calculation
 uint32_t main_crc_result = 0;
 
 #if defined(STM32L471xx)
@@ -1012,7 +1012,9 @@ int main(int argc, char* argv[]){
 
 #ifdef STM32L471xx
 
-   nvm_measurement_init();
+   if (main_config_data_mode->nvm_logger != 0) {
+	   nvm_measurement_init();
+   }
 
    if (main_config_data_mode->gsm == 1) {
 	   it_handlers_inhibit_radiomodem_dcd_led = 1;
