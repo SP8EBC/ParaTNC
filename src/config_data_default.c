@@ -206,9 +206,15 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 #endif
 
 #ifdef ENG1
-		.engineering1 = ENG1
+		.engineering1 = ENG1,
 #else
-		.engineering1 = 0xFF
+		.engineering1 = 0,
+#endif
+
+#ifdef ENG2
+		.engineering2 = ENG2
+#else
+		.engineering2 = 0
 #endif
 };
 

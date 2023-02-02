@@ -141,7 +141,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	uint8_t wx_double_transmit;
 
 	/**
-	 *	bit0 - must be set to zero to enable this engineering
+	 *	bit0 - must be set to ZERO to enable this engineering
 	 *	bit1 - inhibit 'wx_pwr_switch_periodic_handle'
 	 *	bit2 - early_tx_assert
 	 *	bit3 -
@@ -156,7 +156,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 * Ugly and nasty workarounds of (mostly hardware) problems. Use only
 	 * where there is no hope left.
 	 *
-	 *	bit0 - must be set to zero to enable this engineering
+	 *	bit0 - must be set to ZERO to enable this engineering
 	 *  bit1 - reboot after 99 telemetry frames
 	 *  bit2 - power cycle vbat_r two minutes before weather frame
 	 */

@@ -39,7 +39,7 @@ uint16_t io_vbat_meas_average(uint16_t sample);
 void io_vbat_meas_disable(void);
 void io_vbat_meas_enable(void);
 
-void io_pool_vbat_r(uint8_t minutes_to_wx);
+void io_pool_vbat_r(int16_t minutes_to_wx);
 #endif
 
 #define VBAT_MEAS_A_COEFF 1200

@@ -843,5 +843,11 @@ int configuration_get_power_cycle_vbat_r(void) {
 
 	int out = 0;
 
+	if ((main_config_data_basic->engineering2 & ENGINEERING2) == 0) {
+		if ((main_config_data_basic->engineering2 & ENGINEERING2_POWER_CYCLE_R) != 0) {
+			out = 1;
+		}
+	}
+
 	return out;
 }

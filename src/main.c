@@ -1463,6 +1463,10 @@ int main(int argc, char* argv[]){
 				wx_pwr_switch_periodic_handle();
 			}
 
+			if (configuration_get_power_cycle_vbat_r() == 1) {
+				io_pool_vbat_r(packet_tx_get_minutes_to_next_wx());
+			}
+
 			wx_check_force_i2c_reset();
 
 #ifdef STM32L471xx

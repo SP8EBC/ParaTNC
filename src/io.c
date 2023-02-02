@@ -491,7 +491,7 @@ void io_vbat_meas_enable(void) {
 #endif
 }
 
-void io_pool_vbat_r(uint8_t minutes_to_wx) {
+void io_pool_vbat_r(int16_t minutes_to_wx) {
 
 	// check how many minutes reamins to weather packet
 	if (minutes_to_wx == 2) {
