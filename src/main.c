@@ -272,6 +272,7 @@ gsm_sim800_state_t main_gsm_state;
 uint32_t rte_main_rx_total = 0;
 uint32_t rte_main_tx_total = 0;
 
+volatile int i = 0;
 #endif
 
 #if defined(PARAMETEO)
@@ -793,6 +794,36 @@ int main(int argc, char* argv[]){
   // reload watchdog counter
   IWDG_ReloadCounter();
 #endif
+
+#if defined(STM32L471xx)
+  // enable watchdog
+  LL_IWDG_Enable(IWDG);
+
+  // unlock write access to configuratio registers
+  LL_IWDG_EnableWriteAccess(IWDG);
+
+  // set prescaler - watchdog timeout on about 16 seconds
+  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_128);
+
+  // wait for watchdog registers to update
+  while (LL_IWDG_IsActiveFlag_PVU(IWDG) != 0) {
+	  i++;
+
+	  if (i > 0x9FF) {
+		  break;
+	  }
+  }
+
+  // reload watchdog which also close access to configiguration registers
+  LL_IWDG_ReloadCounter(IWDG);
+
+  i = 0;
+
+  // do not disable watchdog when MCU halts on breakpoints
+  DBGMCU->APB1FZR1 &= (0xFFFFFFFF ^ DBGMCU_APB1FZR1_DBG_IWDG_STOP);
+
+#endif
+
 #endif
 
   // initialize i2c controller
@@ -1579,7 +1610,7 @@ void main_reload_internal_wdg(void){
 
 #endif
 #ifdef STM32L471xx
-
+	  LL_IWDG_ReloadCounter(IWDG);
 #endif
 #endif
 }
