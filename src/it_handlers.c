@@ -39,6 +39,7 @@
 
 #include "rte_main.h"
 
+#include "configuration_handler.h"
 #include "station_config.h"
 
 
@@ -125,6 +126,12 @@ void SysTick_Handler(void) {
 
 	// systick interrupt is generated every 10ms
 	master_time += SYSTICK_TICKS_PERIOD;
+
+	if (master_time > SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 86400) {
+		if (configuration_get_reboot_after_24_hours() == 1) {
+			NVIC_SystemReset();
+		}
+	}
 
 	if ((it_handlers_cpu_load_pool++) > SYSTICK_TICKS_PER_SECONDS) {
 		main_service_cpu_load_ticks();

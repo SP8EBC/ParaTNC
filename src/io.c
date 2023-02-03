@@ -499,10 +499,10 @@ void io_pool_vbat_r(int16_t minutes_to_wx) {
 
 		switch(io_vbat_r_state) {
 		case POOL_VBAT_R_TURNED_ON:
+			io_vbat_r_state = POOL_VBAT_R_TURNED_OFF;
+
 			// turn off VBAT_R
 			io___cntrl_vbat_r_disable();
-
-			io_vbat_r_state = POOL_VBAT_R_TURNED_OFF;
 
 			break;
 		case POOL_VBAT_R_TURNED_OFF:
@@ -511,10 +511,10 @@ void io_pool_vbat_r(int16_t minutes_to_wx) {
 
 			break;
 		case POOL_VBAT_R_WAIT:
+			io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
+
 			// turn back on
 			io___cntrl_vbat_r_enable();
-
-			io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
 
 			break;
 		case POOL_VBAT_R_DONT_SWITCH:

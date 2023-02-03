@@ -1463,7 +1463,7 @@ int main(int argc, char* argv[]){
 				wx_pwr_switch_periodic_handle();
 			}
 
-			if (configuration_get_power_cycle_vbat_r() == 1) {
+			if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
 				io_pool_vbat_r(packet_tx_get_minutes_to_next_wx());
 			}
 

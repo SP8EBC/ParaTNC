@@ -851,3 +851,15 @@ int configuration_get_power_cycle_vbat_r(void) {
 
 	return out;
 }
+
+int configuration_get_reboot_after_24_hours(void) {
+	int out = 0;
+
+	if ((main_config_data_basic->engineering2 & ENGINEERING2) == 0) {
+		if ((main_config_data_basic->engineering2 & ENGINEERING2_REBOOT_AFTER_24) != 0) {
+			out = 1;
+		}
+	}
+
+	return out;
+}

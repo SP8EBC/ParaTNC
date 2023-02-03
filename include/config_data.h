@@ -101,6 +101,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	#define ENGINEERING1_EARLY_TX_ASSERT	(1 << 2)
 
 	#define ENGINEERING2					(1)
+	#define ENGINEERING2_REBOOT_AFTER_24	(1 << 1)
 	#define ENGINEERING2_POWER_CYCLE_R		(1 << 2)
 
 	char callsign[7];
@@ -153,7 +154,8 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	uint8_t engineering1;
 
 	/**
-	 * Ugly and nasty workarounds of (mostly hardware) problems. Use only
+	 * Ugly and nasty workarounds of (mostly hardware) problems, which should
+	 * be fixed, not inhibited by stupid workaround. Use only
 	 * where there is no hope left.
 	 *
 	 *	bit0 - must be set to ZERO to enable this engineering
