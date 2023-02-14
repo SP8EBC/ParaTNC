@@ -7,14 +7,14 @@
 #include "drivers/serial.h"
 #include "config_data.h"
 
-#define SW_VER "EA19"
-#define SW_DATE "03022023"
+#define SW_VER "EA20"
+#define SW_DATE "18022023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
-#define INTERNAL_WATCHDOG
+//#define INTERNAL_WATCHDOG
 #define EXTERNAL_WATCHDOG
 
 #define PWR_SWITCH_BOTH
