@@ -56,9 +56,8 @@ int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const confi
 				// set the flag that external temperature is available
 				out |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;
 
-				if (measurement_result == BME280_OK) {
-					rte_wx_humidity_valid = rte_wx_humidity;
-				}
+				rte_wx_humidity_valid = rte_wx_humidity;
+
 			}
 
 			break;

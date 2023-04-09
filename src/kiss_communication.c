@@ -7,7 +7,7 @@
 
 #include <kiss_communication.h>
 #include "kiss_callback.h"
-
+#include "kiss_communication_service_ids.h"
 
 #include "main.h"
 #include "config_data_externs.h"

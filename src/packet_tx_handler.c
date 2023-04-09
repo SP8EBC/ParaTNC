@@ -236,6 +236,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
 
+#ifdef STM32L471xx
 			if (config_mode->nvm_logger != 0) {
 				packet_tx_nvm.temperature_humidity = wx_get_nvm_record_temperature();
 				packet_tx_nvm.wind = wx_get_nvm_record_wind();
@@ -244,6 +245,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				// write to NVM if it is enabled
 				nvm_measurement_store(&packet_tx_nvm);
 			}
+#endif
 
 			// this function is required if more than one RF frame will be send from this function at once
 			// it waits for transmission completion and add some delay to let digipeaters do theris job

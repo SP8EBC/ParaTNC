@@ -42,8 +42,7 @@ void io_vbat_meas_enable(void);
 void io_pool_vbat_r(int16_t minutes_to_wx);
 #endif
 
-#define VBAT_MEAS_A_COEFF 1200
-#define VBAT_MEAS_B_COEFF 40
+
 
 /**
  * Keep this uncommented to configure ADC which monitor Vbatt to

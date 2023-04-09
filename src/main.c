@@ -52,6 +52,7 @@
 #include "float_to_string.h"
 #include "pwr_save.h"
 #include <wx_pwr_switch.h>
+#include "io_default_vbat_scaling.h"
 
 #include "it_handlers.h"
 
@@ -557,7 +558,7 @@ int main(int argc, char* argv[]){
   pwr_save_init(main_config_data_mode->powersave);
 
   // initialize B+ measurement
-  io_vbat_meas_init(VBAT_MEAS_A_COEFF, VBAT_MEAS_B_COEFF);
+  io_vbat_meas_init(configuration_get_vbat_a_coeff(), configuration_get_vbat_b_coeff());
 #endif
 
   // initalizing separated Open Collector output
@@ -1494,9 +1495,11 @@ int main(int argc, char* argv[]){
 				wx_pwr_switch_periodic_handle();
 			}
 
+#ifdef PARAMETEO
 			if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
 				io_pool_vbat_r(packet_tx_get_minutes_to_next_wx());
 			}
+#endif
 
 			wx_check_force_i2c_reset();
 

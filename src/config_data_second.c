@@ -6,6 +6,7 @@
  */
 
 #include "config_data.h"
+#include "io_default_vbat_scaling.h"
 
 #include "station_config.h"
 
@@ -199,10 +200,13 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
 #endif
 
 #ifdef ENG1
-		.engineering1 = ENG1
+		.engineering1 = ENG1,
 #else
-		.engineering1 = 0xFF
+		.engineering1 = 0xFF,
 #endif
+
+		.battery_scalling_a = VBAT_MEAS_A_COEFF,
+		.battery_scalling_b = VBAT_MEAS_B_COEFF
 };
 
 /**

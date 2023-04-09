@@ -164,6 +164,10 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 */
 	uint8_t engineering2;
 
+	uint16_t battery_scalling_a;
+
+	uint16_t battery_scalling_b;
+
 } config_data_basic_t;
 
 typedef enum config_data_wx_sources_enum_t {

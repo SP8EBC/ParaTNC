@@ -11,6 +11,8 @@
 #include "config_data.h"
 #include "config_data_externs.h"
 
+#include "io_default_vbat_scaling.h"
+
 #include "main.h"
 
 #ifdef STM32F10X_MD_VL
@@ -41,13 +43,13 @@
 #define CONFIG_SECTION_DEFAULT_START	0x0801E000
 
 #define CONFIG_MODE_PGM_CNTR	0x0
-#define CONFIG_MODE_OFSET		0x20			//	Current size: 0x10, free: 0x10
-#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0x9D, free: 0x43
-#define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x4,  free: 0x1C
-#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x12, free: 0xE
-#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54, free: 0x4C
-#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0xF8,
-#define CONFIG__END__OFFSET		0x300
+#define CONFIG_MODE_OFSET		0x20			//	Current size: 0x14, free: 0x0C
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0xA4, free: 0x3C
+#define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x8,  free: 0x18
+#define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10, free: 0x10
+#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x10, free: 0x90
+#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0x114,
+#define CONFIG__END__OFFSET		0x7E0
 
 #include <string.h>
 
@@ -859,6 +861,39 @@ int configuration_get_reboot_after_24_hours(void) {
 		if ((main_config_data_basic->engineering2 & ENGINEERING2_REBOOT_AFTER_24) != 0) {
 			out = 1;
 		}
+	}
+
+	return out;
+}
+
+uint16_t configuration_get_vbat_a_coeff(void) {
+
+	uint16_t out = 0;
+
+	// get coefficient stored into flash memory
+	out = main_config_data_basic->battery_scalling_a;
+
+	// check if it is set to non default value
+	if (out == 0x00 || out == 0xFF) {
+		// revert back to hardcoded value
+		out = VBAT_MEAS_A_COEFF;
+	}
+
+	return out;
+}
+
+
+uint16_t configuration_get_vbat_b_coeff(void) {
+
+	uint16_t out = 0;
+
+	// get coefficient stored into flash memory
+	out = main_config_data_basic->battery_scalling_b;
+
+	// check if it is set to non default value
+	if (out == 0x00 || out == 0xFF) {
+		// revert back to hardcoded value
+		out = VBAT_MEAS_B_COEFF;
 	}
 
 	return out;

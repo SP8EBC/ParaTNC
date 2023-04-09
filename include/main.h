@@ -8,7 +8,7 @@
 #include "config_data.h"
 
 #define SW_VER "EA20"
-#define SW_DATE "18022023"
+#define SW_DATE "09042023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100

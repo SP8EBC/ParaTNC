@@ -10,6 +10,7 @@
 // reprogram it from the default set stored somewhere within .code section
 
 #include "config_data.h"
+#include "io_default_vbat_scaling.h"
 
 #include "station_config.h"
 
@@ -212,10 +213,13 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 #endif
 
 #ifdef ENG2
-		.engineering2 = ENG2
+		.engineering2 = ENG2,
 #else
-		.engineering2 = 0
+		.engineering2 = 0,
 #endif
+
+		.battery_scalling_a = VBAT_MEAS_A_COEFF,
+		.battery_scalling_b = VBAT_MEAS_B_COEFF
 };
 
 /**

@@ -43,4 +43,8 @@ int configuration_get_early_tx_assert(void);
 int configuration_get_power_cycle_vbat_r(void);
 int configuration_get_reboot_after_24_hours(void);
 
+uint16_t configuration_get_vbat_a_coeff(void);
+uint16_t configuration_get_vbat_b_coeff(void);
+
+
 #endif /* CONFIGURATION_HANDLER_H_ */
