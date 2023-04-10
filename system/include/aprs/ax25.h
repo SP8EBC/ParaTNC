@@ -1,16 +1,33 @@
 #ifndef AX25_H_
 #define AX25_H_
 
-//#ifndef CCC
-//#include "stm32f10x_conf.h"
-//#endif
+#include <ax25_config.h>
 #include <stdbool.h>
+
+#include "main_master_time.h"
 
 #include "cfifo.h"
 #include "afsk.h"
 
 #include "macros.h"
-#include "config.h"
+
+/**
+ * Macro to wait for channel to be free
+ */
+#define WAIT_FOR_CHANNEL_FREE()									\
+		ax25_ch_wait_start = main_get_master_time();			\
+		while (main_ax25.dcd == 1) {							\
+																\
+			if (main_get_master_time() - ax25_ch_wait_start > 	\
+				CONFIG_AX25_MAX_WAIT_FOR_CH_FREE	)			\
+				{												\
+					if (main_ax25.timeout_hook != 0) {			\
+						main_ax25.timeout_hook();				\
+					}											\
+					break;										\
+				}												\
+																\
+		}														\
 
 /**
  * Maximum size of a AX25 frame.
@@ -22,7 +39,6 @@
  * give this result (don't ask why).
  */
 #define AX25_CRC_CORRECT 0xF0B8
-
 
 #define AX25_CTRL_UI      0x03
 #define AX25_PID_NOLAYER3 0xF0
@@ -39,6 +55,10 @@ struct AX25Msg; // fwd declaration
  */
 typedef void (*ax25_callback_t)(struct AX25Msg *ax25_rxed_frame);
 
+/**
+ * Type for channel free wait timeout callback
+ */
+typedef void (*ax25_ch_free_timeout_callback_t)(void);
 
 typedef struct AX25Ctx
 {
@@ -51,6 +71,7 @@ typedef struct AX25Ctx
 	uint16_t crc_out; ///< CRC of current sent frame
 
 	ax25_callback_t hook; ///< Hook function to be called when a message is received
+	ax25_ch_free_timeout_callback_t timeout_hook;	///< callback hook to be called
 
 	bool raw;
 	bool sync;   ///< True if we have received a HDLC flag.
@@ -111,6 +132,8 @@ typedef struct AX25Msg
 extern AX25Msg ax25_rxed_frame;
 extern char ax25_new_msg_rx_flag;
 
+extern uint32_t ax25_ch_wait_start;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -133,7 +156,7 @@ void ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len);
 /*********************************************************************************************************************/
 
 /*********************************************************************************************************************/
-void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook);
+void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook, ax25_ch_free_timeout_callback_t free_timeout);
 /*********************************************************************************************************************/
 #ifdef __cplusplus
 }

@@ -8,7 +8,7 @@
 #ifndef KISSCOMMUNICATION_H_
 #define KISSCOMMUNICATION_H_
 
-#include "aprs/config.h"
+#include "etc/ax25_config.h"
 #include "aprs/ax25.h"
 #include "aprs/afsk.h"
 

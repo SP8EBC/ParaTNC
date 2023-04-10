@@ -5,6 +5,7 @@
  *      Author: mateusz
  */
 
+#include <ax25_config.h>
 #include <string.h>
 
 #include "aprs/digi.h"
@@ -13,7 +14,6 @@
 #include "delay.h"
 
 #include "station_config.h"
-#include "config.h"
 
 // global variables to store a frame content to be digipeated
 uint8_t digi_msg[CONFIG_AX25_FRAME_BUF_LEN];
@@ -231,7 +231,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 					// as it is.
 					delay_fixed(config_mode->digi_delay_100msec * 100);
 
-					while(main_ax25.dcd == true);
+					WAIT_FOR_CHANNEL_FREE();
 					ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);
 					after_tx_lock = 1;
 					afsk_txStart(&main_afsk);
@@ -299,7 +299,7 @@ uint8_t digi_pool_viscous(void) {
 			if (digi_viscous_counter_sec >= digi_viscous_delay_sec) {
 
 				// wait when radio channel will became avaliable
-				while(main_ax25.dcd == true);
+				WAIT_FOR_CHANNEL_FREE();
 
 				// put message vaiting in viscous dealy into AX25 buffer in correct, encoded form
 				ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);

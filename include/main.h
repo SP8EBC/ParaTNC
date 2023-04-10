@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "main_master_time.h"
+
 #include "station_config_target_hw.h"
 
 #include "aprs/ax25.h"
@@ -47,8 +49,6 @@ typedef enum main_usart_mode_t {
 	USART_MODE_UMB_MASTER,
 	USART_MODE_UNINIT
 }main_usart_mode_t;
-
-extern uint32_t master_time;
 
 extern const config_data_mode_t * main_config_data_mode;
 extern const config_data_basic_t * main_config_data_basic;
@@ -128,10 +128,6 @@ inline void main_set_monitor(int8_t bit) {
 
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 #endif
-}
-
-inline uint32_t main_get_master_time(void) {
-	return master_time;
 }
 
 inline void main_wait_for_tx_complete(void) {

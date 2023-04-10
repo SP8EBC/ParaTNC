@@ -6,11 +6,11 @@
 //#include "stm32f10x_conf.h"
 //#endif
 
+#include <ax25_config.h>
 #include <stdbool.h>
 
 #include "cfifo.h"
 #include "macros.h"
-#include "config.h"
 
 
 

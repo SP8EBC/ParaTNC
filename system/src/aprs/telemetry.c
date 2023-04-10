@@ -172,7 +172,8 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-	while (main_ax25.dcd == 1);
+	//while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 
 	afsk_txStart(&main_afsk);
 
@@ -276,7 +277,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	delay_fixed(1500);
 
-	while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 
 #ifdef STM32L471xx
 	if (config_basic->ssid == 0)
@@ -307,7 +308,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	delay_fixed(1500);
 
-	while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 
 #ifdef STM32L471xx
 	if (config_basic->ssid == 0)
@@ -527,7 +528,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	after_tx_lock = 1;
 
 	// check if RF channel is free from other transmissions and wait for the clearance if it is needed
-	while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 
 	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
@@ -542,7 +543,7 @@ void telemetry_send_status(void) {
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
 #endif
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 	afsk_txStart(&main_afsk);
 
 }
@@ -555,7 +556,7 @@ void telemetry_send_status_raw_values_modbus(void) {
 	rtu_get_raw_values_string(main_own_aprs_msg, OWN_APRS_MSG_LN, &status_ln);
 
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, status_ln);
-	while (main_ax25.dcd == 1);
+	WAIT_FOR_CHANNEL_FREE();
 	afsk_txStart(&main_afsk);
 	main_wait_for_tx_complete();
 #endif

@@ -16,6 +16,8 @@
 AX25Msg ax25_rxed_frame;
 char ax25_new_msg_rx_flag;
 
+uint32_t ax25_ch_wait_start = 0;
+
 
 /*********************************************************************************************************************/
 static bool fifo_isempty(const FIFOBuffer *fb) {
@@ -382,7 +384,7 @@ void ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len) {
 }
 
 /*********************************************************************************************************************/
-void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook) {
+void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook, ax25_ch_free_timeout_callback_t free_timeout) {
 /*********************************************************************************************************************/
 
 	memset(ctx, 0, sizeof(*ctx));
@@ -391,6 +393,7 @@ void ax25_init(AX25Ctx *ctx, Afsk *afsk, bool raw, ax25_callback_t hook) {
 	ctx->raw = raw;
 	ctx->hook = hook;
 	ctx->crc_in = ctx->crc_out = CRC_CCITT_INIT_VAL;
+	ctx->timeout_hook = free_timeout;
 
 
 }

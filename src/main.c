@@ -847,7 +847,7 @@ int main(int argc, char* argv[]){
 
   // initialize AX25 & APRS stuff
   AFSK_Init(&main_afsk);
-  ax25_init(&main_ax25, &main_afsk, 0, 0x00);
+  ax25_init(&main_ax25, &main_afsk, 0, 0x00, 0x00);
   DA_Init();
 
   // configure external watchdog
@@ -952,7 +952,7 @@ int main(int argc, char* argv[]){
   ADCStartConfig();
   DACStartConfig();
   AFSK_Init(&main_afsk);
-  ax25_init(&main_ax25, &main_afsk, 0, message_callback);
+  ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
 
 	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros

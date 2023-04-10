@@ -57,7 +57,7 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-	while(main_ax25.dcd == true);
+	WAIT_FOR_CHANNEL_FREE();
  	afsk_txStart(&main_afsk);
 }
 

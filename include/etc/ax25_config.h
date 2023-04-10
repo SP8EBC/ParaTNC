@@ -6,6 +6,11 @@
 
 #define CONFIG_AX25_FRAME_BUF_LEN 512
 
+/**
+ * Maximum timeout in milliseconds waiting for channnel
+ * to become free (ax25.dcd to reset back to false)
+ */
+#define CONFIG_AX25_MAX_WAIT_FOR_CH_FREE 3000
 
 /**
  * AFSK RX timeout in ms, set to -1 to disable.
