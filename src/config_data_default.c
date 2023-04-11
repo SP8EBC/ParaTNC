@@ -129,7 +129,7 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #if (defined _GSM_KEEP_MODEM_ALWAYS_ON)
-		.powersave_keep_gsm_always_enabled = 1
+		.powersave_keep_gsm_always_enabled = 1,
 #else
 		.powersave_keep_gsm_always_enabled = 0,
 #endif
