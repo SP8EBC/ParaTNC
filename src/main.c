@@ -164,7 +164,7 @@ const config_data_gsm_t * main_config_data_gsm = 0;
 #endif
 
 //! global variable incremented by the SysTick handler to measure time in miliseconds
-uint32_t master_time = 0;
+volatile uint32_t master_time = 0;
 
 //! current timestamp from RTC in NVM format
 uint32_t main_nvm_timestamp = 0;

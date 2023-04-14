@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-extern uint32_t master_time;
+extern volatile uint32_t master_time;
 
 inline uint32_t main_get_master_time(void) {
 	return master_time;
