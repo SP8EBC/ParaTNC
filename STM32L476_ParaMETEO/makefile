@@ -57,6 +57,17 @@ endif
 
 -include ../makefile.defs
 
+OPTIONAL_TOOL_DEPS := \
+$(wildcard ../makefile.defs) \
+$(wildcard ../makefile.init) \
+$(wildcard ../makefile.targets) \
+
+
+BUILD_ARTIFACT_NAME := ParaTNC
+BUILD_ARTIFACT_EXTENSION := elf
+BUILD_ARTIFACT_PREFIX :=
+BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
+
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
 ParaTNC.hex \
@@ -69,29 +80,32 @@ ParaTNC.siz \
 
 
 # All Target
-all: ParaTNC.elf secondary-outputs
+all: main-build
+
+# Main-build Target
+main-build: ParaTNC.elf secondary-outputs
 
 # Tool invocations
-ParaTNC.elf: $(OBJS) $(USER_OBJS)
+ParaTNC.elf: $(OBJS) $(USER_OBJS) makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-ParaTNC.hex: ParaTNC.elf
+ParaTNC.hex: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Flash Image'
 	arm-none-eabi-objcopy -O ihex "ParaTNC.elf"  "ParaTNC.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-ParaTNC.lst: ParaTNC.elf
+ParaTNC.lst: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Listing'
 	arm-none-eabi-objdump --source --all-headers --demangle --line-numbers --wide "ParaTNC.elf" > "ParaTNC.lst"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-ParaTNC.siz: ParaTNC.elf
+ParaTNC.siz: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Print Size'
 	arm-none-eabi-size --format=berkeley "ParaTNC.elf"
 	@echo 'Finished building: $@'
@@ -104,6 +118,6 @@ clean:
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
-.PHONY: all clean dependents
+.PHONY: all clean dependents main-build
 
 -include ../makefile.targets

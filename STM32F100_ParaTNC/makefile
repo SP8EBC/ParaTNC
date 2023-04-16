@@ -57,6 +57,17 @@ endif
 
 -include ../makefile.defs
 
+OPTIONAL_TOOL_DEPS := \
+$(wildcard ../makefile.defs) \
+$(wildcard ../makefile.init) \
+$(wildcard ../makefile.targets) \
+
+
+BUILD_ARTIFACT_NAME := ParaTNC
+BUILD_ARTIFACT_EXTENSION := elf
+BUILD_ARTIFACT_PREFIX :=
+BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
+
 # Add inputs and outputs from these tool invocations to the build variables 
 SECONDARY_FLASH += \
 ParaTNC.hex \
@@ -66,23 +77,26 @@ ParaTNC.siz \
 
 
 # All Target
-all: ParaTNC.elf secondary-outputs
+all: main-build
+
+# Main-build Target
+main-build: ParaTNC.elf secondary-outputs
 
 # Tool invocations
-ParaTNC.elf: $(OBJS) $(USER_OBJS)
+ParaTNC.elf: $(OBJS) $(USER_OBJS) makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants  -g3 -T mem.ld -T libs.ld -T sections.ld -nostartfiles -Xlinker --gc-sections -L"../ldscripts/stm32f100" -Wl,-Map,"ParaTNC.map" --specs=nano.specs -u _printf_float -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -T mem.ld -T libs.ld -T sections.ld -nostartfiles -Xlinker --gc-sections -L"../ldscripts/stm32f100" -Wl,-Map,"ParaTNC.map" --specs=nano.specs -u _printf_float -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-ParaTNC.hex: ParaTNC.elf
+ParaTNC.hex: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Flash Image'
 	arm-none-eabi-objcopy -O ihex "ParaTNC.elf"  "ParaTNC.hex"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-ParaTNC.siz: ParaTNC.elf
+ParaTNC.siz: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Print Size'
 	arm-none-eabi-size --format=berkeley "ParaTNC.elf"
 	@echo 'Finished building: $@'
@@ -95,6 +109,6 @@ clean:
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
 
-.PHONY: all clean dependents
+.PHONY: all clean dependents main-build
 
 -include ../makefile.targets
