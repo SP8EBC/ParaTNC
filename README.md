@@ -1,4 +1,4 @@
-# ParaTNC and ParaMETEO firmware version EA19, April 2023
+# ParaTNC and ParaMETEO firmware version EA20, April 2023
 
 // Please look into 'doc' directory for more documentation and user manuals
 // WARNING: This readme could be sligtly outdated due to my lack of time :)
@@ -130,7 +130,7 @@ trasmit channels values each 10 minutes and full channel descriptions each 70 mi
 #### TOOLCHAIN
 To build the ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler, gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS,  20.04LTS and 22.04 using toolchain in version 2018-q2. Please take note that You have to use 64-bit version of the operation system as the 32-bit variant of the toolchain is not avaliable. 
 
-This firmware is developed using Eclipse IDE for Embedded C/C++ Developers in Version: 2023-03 (4.27.0)
+***This firmware is developed using Eclipse IDE for Embedded C/C++ Developers in Version: 2023-03 (4.27.0)***
 
 Exact GCC version is 7.3.1 and it present itself with a string like this below
 gcc version 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907] (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 
