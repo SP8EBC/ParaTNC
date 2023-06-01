@@ -128,6 +128,7 @@ void wx_pwr_switch_periodic_handle(void) {
 
 #if (defined STM32L471xx)
 			io___cntrl_vbat_s_disable();
+			io___cntrl_vbat_m_disable();
 #endif
 			// setting the last_good timers to current value to prevent reset loop
 			wx_last_good_temperature_time = master_time;

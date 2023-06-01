@@ -127,6 +127,15 @@ inline void io___cntrl_vbat_r_disable(void) {
 
 }
 
+inline void io___cntrl_vbat_m_enable(void) {
+	GPIOB->BSRR |= GPIO_BSRR_BS0;
+
+}
+inline void io___cntrl_vbat_m_disable(void) {
+	GPIOB->BSRR |= GPIO_BSRR_BR0;
+
+}
+
 inline void io___cntrl_gprs_pwrkey_press() {
 	GPIOA->BSRR |= GPIO_BSRR_BS7;
 

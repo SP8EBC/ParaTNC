@@ -241,10 +241,20 @@ void io_pwr_init(void) {
 			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
 
+			// PB0 - UC_CNTRL_VM
+			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+			GPIO_InitTypeDef.Pin = LL_GPIO_PIN_0;
+			GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+			GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+			GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+			LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
+
 			io___cntrl_vbat_r_disable();
 			io___cntrl_vbat_g_disable();
 			io___cntrl_vbat_c_disable();
 			io___cntrl_vbat_s_disable();
+			io___cntrl_vbat_m_disable();
 #endif
 }
 

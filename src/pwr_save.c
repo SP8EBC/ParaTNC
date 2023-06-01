@@ -301,6 +301,8 @@ int pwr_save_switch_mode_to_c0(void) {
 	// turn ON +5V_S
 	io___cntrl_vbat_s_enable();
 
+	io___cntrl_vbat_m_enable();
+
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
@@ -335,6 +337,8 @@ int pwr_save_switch_mode_to_c1(void) {
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
+
+	io___cntrl_vbat_m_enable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -372,6 +376,8 @@ void pwr_save_switch_mode_to_c2(void) {
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
 
+	io___cntrl_vbat_m_disable();
+
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
 
@@ -403,6 +409,8 @@ void pwr_save_switch_mode_to_c3(void) {
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
+
+	io___cntrl_vbat_m_disable();
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -437,6 +445,8 @@ int pwr_save_switch_mode_to_m4(void) {
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
 
+	io___cntrl_vbat_m_enable();
+
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
 
@@ -468,6 +478,8 @@ int pwr_save_switch_mode_to_m4a(void) {
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
+
+	io___cntrl_vbat_m_enable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
@@ -501,6 +513,8 @@ void pwr_save_switch_mode_to_i5(void) {
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
+
+	io___cntrl_vbat_m_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
@@ -549,6 +563,8 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
+
+	io___cntrl_vbat_m_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
@@ -612,6 +628,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
+
+	io___cntrl_vbat_m_disable();
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
