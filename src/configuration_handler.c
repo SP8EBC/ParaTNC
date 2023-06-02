@@ -438,7 +438,7 @@ uint32_t configuration_handler_restore_default_first(void) {
 				case 4:
 					source = (void *) &config_data_rtu_default;
 					target = (void *) config_data_rtu_first_ptr;
-					size = sizeof(config_data_umb_t);
+					size = sizeof(config_data_rtu_t);
 					break;
 #ifdef PARAMETEO
 				case 5:
@@ -549,7 +549,7 @@ uint32_t configuration_handler_restore_default_second(void) {
 				case 4:
 					source = (void *) &config_data_rtu_default;
 					target = (void *) config_data_rtu_second_ptr;
-					size = sizeof(config_data_umb_t);
+					size = sizeof(config_data_rtu_t);
 					break;
 #ifdef PARAMETEO
 				case 5:

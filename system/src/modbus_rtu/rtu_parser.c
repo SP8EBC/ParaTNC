@@ -43,60 +43,56 @@ int32_t rtu_parser_03_04_registers(uint8_t* input, uint16_t input_ln, rtu_regist
 		input++;
 	}
 
-	// 7 bytes is the shortest meaningful Modbus RTU frame
-	// with a value of single register
-	if (input_ln < MODBUS_RTU_MIN_03_04_RESP_LN) {
-		retval = MODBUS_RET_TOO_SHORT;
+	// fetch slave address
+	data = *input;
+
+	// TODO: store slave address
+	slave_address_from_frame = data;
+
+	// fetch function code
+	data = *(input + 1);
+
+	// if the exception flag is set
+	if ((data & 0x80) > 0) {
+		// get error code
+		data = *(input + 2);
+
+		// parse the exception value
+		*exception = rtu_exception_from_frame_data(data);
+
+		// and set the return value
+		retval = MODBUS_RET_GOT_EXCEPTION;
 	}
-	else {
-		// fetch slave address
-		data = *input;
 
-		// TODO: store slave address
-		slave_address_from_frame = data;
+	// check if the function code is correct or not
+	else if (data == 0x03 || data == 0x04) {
 
-		// fetch function code
-		data = *(input + 1);
+		// check if this is an answer from the slave we expect
+		if (slave_address_from_frame == output->slave_address) {
+			// fetch the function result lenght in bytes
+			data = *(input + 2);
 
-		// if the exception flag is set
-		if ((data & 0x80) > 0) {
-			// parse the exception value
-			*exception = rtu_exception_from_frame_data(data);
+			// store amount of registers in this response
+			output->number_of_registers = data / 2;
 
-			// and set the return value
-			retval = MODBUS_RET_GOT_EXCEPTION;
-		}
+			// get all registers values
+			for (int i = 0; i < output->number_of_registers && i < MODBUS_RTU_MAX_REGISTERS_AT_ONCE; i++) {
+				output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
 
-		// check if the function code is correct or not
-		else if (data == 0x03 || data == 0x04) {
-
-			// check if this is an answer from the slave we expect
-			if (slave_address_from_frame == output->slave_address) {
-				// fetch the function result lenght in bytes
-				data = *(input + 2);
-
-				// store amount of registers in this response
-				output->number_of_registers = data / 2;
-
-				// get all registers values
-				for (int i = 0; i < output->number_of_registers && i < MODBUS_RTU_MAX_REGISTERS_AT_ONCE; i++) {
-					output->registers_values[i] = *(input + j) << 8 | *(input + j + 1);
-
-					// moving to next 16bit word with next register
-					j += 2;
-				}
-				retval = MODBUS_RET_OK;
+				// moving to next 16bit word with next register
+				j += 2;
 			}
-			else {
-				retval = MODBUS_RET_UNEXP_SLAVE_ADR;
-			}
-
+			retval = MODBUS_RET_OK;
 		}
 		else {
-			// if not exit with an error as this isn't
-			// correct parser for this modbus function
-			retval = MODBUS_RET_WRONG_FUNCTION;
+			retval = MODBUS_RET_UNEXP_SLAVE_ADR;
 		}
+
+	}
+	else {
+		// if not exit with an error as this isn't
+		// correct parser for this modbus function
+		retval = MODBUS_RET_WRONG_FUNCTION;
 	}
 
 	return retval;
