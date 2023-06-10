@@ -9,10 +9,16 @@
 #include "aprs/beacon.h"
 #include "main.h"
 #include "rte_main.h"
+#include "pwr_save_configuration.h"
 
 #include "station_config.h"
 
 #include <stdio.h>
+#include <string.h>
+
+#ifdef INHIBIT_CUTOFF
+const char * idiot = "You idiot!! You have INHIBIT_CUTOFF define uncomented!\0\0";
+#endif
 
 void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 	main_wait_for_tx_complete();
@@ -36,9 +42,18 @@ void beacon_send_on_startup(void) {
  	afsk_txStart(&main_afsk);
 }
 
+#ifdef INHIBIT_CUTOFF
+void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
+	main_wait_for_tx_complete();
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, idiot, strlen(idiot));
+	after_tx_lock = 1;
+ 	afsk_txStart(&main_afsk);
+}
+#else
 void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
 	main_wait_for_tx_complete();
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, content_ptr, content_ln);
 	after_tx_lock = 1;
  	afsk_txStart(&main_afsk);
 }
+#endif

@@ -45,5 +45,12 @@ void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state
 
 			return;
 		}
+
+		if (	gsm_sim800_engineering_is_enabled == 0 &&
+				gsm_sim800_gprs_ready == 1 &&
+				aprsis_connected == 0) {
+			aprsis_connect_and_login_default(1);
+		}
 	}
+
 }

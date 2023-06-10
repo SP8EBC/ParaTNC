@@ -135,7 +135,7 @@ sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t addre
 		srl_wait_for_tx_completion(srl_context);
 
 		// due to GPRS delays connecting may last some time, so increase maximum timeout
-		srl_switch_timeout(srl_context, 1, 2000);
+		srl_switch_timeout(srl_context, 1, 4000);
 
 		// trigger reception
 		srl_receive_data_with_callback(srl_context, gsm_sim800_connecting_terminating_callback);
@@ -410,5 +410,12 @@ uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint
 	}
 
 	return out;
+}
+
+void gsm_sim800_tcpip_reset(void) {
+	gsm_sim800_tcpip_connection_died = 0;
+	gsm_sim800_tcpip_receiving = 0;
+	gsm_sim800_tcpip_transmitting = 0;
+	gsm_sim800_previous = ' ';
 }
 

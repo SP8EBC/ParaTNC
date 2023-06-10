@@ -23,7 +23,19 @@ typedef enum aprsis_return {
 
 extern uint8_t aprsis_connected;
 
-void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port);
+/**
+ * Initialize APRS-IS client
+ * @param context
+ * @param gsm_modem_state
+ * @param callsign
+ * @param ssid
+ * @param passcode
+ * @param default_server
+ * @param default_port
+ * @param reset_on_timeout	Set to one to reset GSM module in case of APRS-IS
+ * 							instead of only reconnecting
+ */
+void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port, uint8_t reset_on_timeout);
 aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon);
 aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon);
 void aprsis_disconnect(void);

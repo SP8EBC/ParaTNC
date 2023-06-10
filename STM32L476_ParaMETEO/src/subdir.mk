@@ -10,6 +10,7 @@ C_SRCS += \
 ../src/_write.c \
 ../src/api.c \
 ../src/aprsis.c \
+../src/button_parameteo.c \
 ../src/config_data_default.c \
 ../src/config_data_first.c \
 ../src/config_data_second.c \
@@ -43,6 +44,7 @@ OBJS += \
 ./src/_write.o \
 ./src/api.o \
 ./src/aprsis.o \
+./src/button_parameteo.o \
 ./src/config_data_default.o \
 ./src/config_data_first.o \
 ./src/config_data_second.o \
@@ -76,6 +78,7 @@ C_DEPS += \
 ./src/_write.d \
 ./src/api.d \
 ./src/aprsis.d \
+./src/button_parameteo.d \
 ./src/config_data_default.d \
 ./src/config_data_first.d \
 ./src/config_data_second.d \

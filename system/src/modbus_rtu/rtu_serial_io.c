@@ -89,9 +89,9 @@ uint16_t rtu_serial_previous_crc = 0xFFFF;
  */
 uint8_t rtu_waiting_for_slave_addr = 0x1;
 
-volatile rtu_pool_queue_t* rtu_used_queue;
+rtu_pool_queue_t* rtu_used_queue;
 
-volatile srl_context_t* rtu_used_serial_context;
+srl_context_t* rtu_used_serial_context;
 
 volatile uint8_t rtu_current_03_slave_address;
 

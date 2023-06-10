@@ -284,6 +284,27 @@ void io_ext_watchdog_service(void) {
 #endif
 }
 
+void io_buttons_init(void){
+#ifdef PARAMETEO
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_3;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_UP;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_0;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_UP;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+#endif
+}
+
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
 #ifdef PARAMETEO

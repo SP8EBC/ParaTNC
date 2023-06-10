@@ -32,6 +32,8 @@ void io_pwr_init(void);
 void io_ext_watchdog_config(void);
 void io_ext_watchdog_service(void);
 
+void io_buttons_init(void);
+
 #ifdef PARAMETEO
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff);
 uint16_t io_vbat_meas_get(void);

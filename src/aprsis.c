@@ -66,9 +66,11 @@ const char * aprsis_sucessfull_login = "# logresp\0";
  */
 uint32_t aprsis_last_keepalive_ts = 0;
 
+uint32_t aprsis_reset_on_timeout = 0;
+
 #define APRSIS_TIMEOUT_MS	123000//123000
 
-void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port) {
+void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port, uint8_t reset_on_timeout) {
 	aprsis_serial_port = context;
 
 	aprsis_gsm_modem_state = gsm_modem_state;
@@ -93,6 +95,8 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 	aprsis_default_server_address = default_server;
 
 	aprsis_default_server_address_ln = strlen(aprsis_default_server_address);
+
+	aprsis_reset_on_timeout = reset_on_timeout;
 
 }
 
@@ -234,7 +238,14 @@ void aprsis_check_alive(void) {
 		// reset the flag
 		aprsis_logged = 0;
 
-		gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
+		aprsis_connected = 0;
+
+		if (aprsis_reset_on_timeout == 0) {
+			gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
+		}
+		else {
+			gsm_sim800_reset(aprsis_gsm_modem_state);
+		}
 	}
 }
 

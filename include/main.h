@@ -8,9 +8,10 @@
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
 #include "config_data.h"
+#include "gsm/sim800_state_t.h"
 
-#define SW_VER "EA21"
-#define SW_DATE "01062023"
+#define SW_VER "EA22"
+#define SW_DATE "10062023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
@@ -92,6 +93,8 @@ extern int8_t main_cpu_load;
 extern char after_tx_lock;
 
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
+
+extern gsm_sim800_state_t main_gsm_state;
 
 //void main_set_monitor(int8_t bit);
 

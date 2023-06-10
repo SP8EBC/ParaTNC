@@ -311,8 +311,6 @@ int main(int argc, char* argv[]){
 
   int32_t ln = 0;
 
-  uint8_t button_inhibit = 0;
-
   it_handlers_inhibit_radiomodem_dcd_led = 1;
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
@@ -567,6 +565,9 @@ int main(int argc, char* argv[]){
   // initializing GPIO used for swithing on and off voltages on pcb
   io_pwr_init();
 
+  // initializing GPIO used for buttons
+  io_buttons_init();
+
   // initialize sensor power control and switch off supply voltage
   wx_pwr_switch_init();
 
@@ -746,16 +747,6 @@ int main(int argc, char* argv[]){
 	  case USART_MODE_UNDEF:
 		  break;
   }
-
-//  if (main_config_data_mode->wx_davis == 1) {
-//	  ;
-//  }
-//  else if (main_config_data_mode->wx_modbus == 1) {
-//	  ;
-//  }
-//  else {
-//	  ;
-//  }
 
 #if defined(STM32F10X_MD_VL)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
@@ -1006,8 +997,6 @@ int main(int argc, char* argv[]){
    led_control_led1_upper(true);
    led_control_led2_bottom(false);
 
-   io___cntrl_gprs_pwrkey_press();
-
    delay_fixed(1000);
 
    led_control_led1_upper(false);
@@ -1022,8 +1011,6 @@ int main(int argc, char* argv[]){
 
    led_control_led1_upper(false);
    led_control_led2_bottom(false);
-
-   io___cntrl_gprs_pwrkey_release();
 
 #endif
 
@@ -1062,7 +1049,14 @@ int main(int argc, char* argv[]){
 	   }
 
 	   if (main_config_data_gsm->api_enable == 0 && main_config_data_gsm->aprsis_enable == 1) {
-		   aprsis_init(&main_gsm_srl_ctx, &main_gsm_state, (const char *)main_config_data_basic->callsign, main_config_data_basic->ssid, main_config_data_gsm->aprsis_passcode, (const char *)main_config_data_gsm->aprsis_server_address, main_config_data_gsm->aprsis_server_port);
+		   aprsis_init(&main_gsm_srl_ctx,
+				   	   &main_gsm_state,
+					   (const char *)main_config_data_basic->callsign,
+					   main_config_data_basic->ssid,
+					   main_config_data_gsm->aprsis_passcode,
+					   (const char *)main_config_data_gsm->aprsis_server_address,
+					   main_config_data_gsm->aprsis_server_port,
+					   configuration_get_power_cycle_gsmradio_on_no_communications());
 	   }
    }
 
@@ -1329,6 +1323,8 @@ int main(int argc, char* argv[]){
 		else if (main_modbus_rtu_master_enabled == 1) {
 			rtu_serial_pool();
 		}
+
+		button_check_all(main_config_data_basic);
 
 		main_set_monitor(2);
 

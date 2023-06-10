@@ -44,7 +44,7 @@
 
 #define CONFIG_MODE_PGM_CNTR	0x0
 #define CONFIG_MODE_OFSET		0x20			//	Current size: 0x14, free: 0x0C
-#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0xA4, free: 0x3C
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0xA6, free: 0x3A
 #define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x8,  free: 0x18
 #define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10, free: 0x10
 #define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x10, free: 0x90
@@ -834,6 +834,18 @@ int configuration_get_early_tx_assert(void) {
 
 	if ((main_config_data_basic->engineering1 & ENGINEERING1) == 0) {
 		if ((main_config_data_basic->engineering1 & ENGINEERING1_EARLY_TX_ASSERT) != 0) {
+			out = 1;
+		}
+	}
+
+	return out;
+}
+
+int configuration_get_power_cycle_gsmradio_on_no_communications(void) {
+	int out = 0;
+
+	if ((main_config_data_basic->engineering1 & ENGINEERING1) == 0) {
+		if ((main_config_data_basic->engineering1 & ENGINEERING1_PWRCYCLE_GSM_ON_NOCOMM) != 0) {
 			out = 1;
 		}
 	}

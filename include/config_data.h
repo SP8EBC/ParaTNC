@@ -35,6 +35,16 @@ typedef enum config_data_powersave_mode_t {
 
 }config_data_powersave_mode_t;
 
+typedef enum config_data_button_function_t {
+
+	BUTTON_SEND_WX = 1,
+	BUTTON_SEND_WX_INTERNET = 2,
+	BUTTON_SEND_BEACON = 3,
+	BUTTON_FORCE_UART_KISS = 4,
+	BUTTON_FORCE_UART_LOG = 5,
+	BUTTON_RESET_GSM_GPRS = 6
+}config_data_button_function_t;
+
 typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 #define WX_ENABLED 					(1)
@@ -96,9 +106,10 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
-	#define ENGINEERING1					(1)
-	#define ENGINEERING1_INH_WX_PWR_HNDL	(1 << 1)
-	#define ENGINEERING1_EARLY_TX_ASSERT	(1 << 2)
+	#define ENGINEERING1						(1)
+	#define ENGINEERING1_INH_WX_PWR_HNDL		(1 << 1)
+	#define ENGINEERING1_EARLY_TX_ASSERT		(1 << 2)
+	#define ENGINEERING1_PWRCYCLE_GSM_ON_NOCOMM	(1 << 2)
 
 	#define ENGINEERING2					(1)
 	#define ENGINEERING2_REBOOT_AFTER_24	(1 << 1)
@@ -167,6 +178,10 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	uint16_t battery_scalling_a;
 
 	uint16_t battery_scalling_b;
+
+	config_data_button_function_t button_one;
+
+	config_data_button_function_t button_two;
 
 } config_data_basic_t;
 

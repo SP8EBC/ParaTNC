@@ -11,14 +11,21 @@
 #include "gsm/sim800c_inline.h"
 #include "gsm/sim800c_tcpip.h"
 #include "gsm/sim800_return_t.h"
+#include "gsm/sim800_async_message_t.h"
+#include "gsm/sim800_simcard_status_t.h"
+#include "gsm/sim800_network_status_t.h"
 
 #include "main.h"
+#include "io.h"
 
 #include <string.h>
 #include <stdlib.h>
 
 #define SIM800_DEFAULT_TIMEOUT 250	// in miliseconds
 
+/**
+ * Const strings with AT commands sent to GSM module
+ */
 static const char * AUTOBAUD_STRING 			= "AT\r\0";
 static const char * GET_SIGNAL_LEVEL 			= "AT+CSQ\r\0";
 static const char * GET_NETWORK_REGISTRATION 	= "AT+CREG?\r\0";
@@ -26,61 +33,59 @@ static const char * GET_PIN_STATUS 				= "AT+CPIN?\r\0";
 static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
 extern const char * START_CONFIG_APN;
 
-static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
-//static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
-
+/**
+ * Const string with a responses to AT commands
+ */
 static const char * OK = "OK\r\n\0";
+static const char * AT_ERROR = "ERROR\0\0";
 static const char * SIGNAL_LEVEL = "+CSQ:\0";
 static const char * NETWORK_REGISTRATION = "+CREG:\0";
 static const char * CPIN = "+CPIN:\0";
 //static const char * CPIN_READY = "READY";
 //static const char * CPIN_SIMPIN = "SIMPIN";
 static const char * REGISTERED_NETWORK = "+COPS:\0";
-static const char * INCOMING_CALL = "RING\0";
-#define INCOMING_CALL_LN 4
-static const char * NOCARRIER = "NO CARRIER\0";
-#define NOCARRIER_LN 10
-static const char * UVP_PDOWN = "UNDER-VOLTAGE POWER DOWN\0";
-#define UVP_PDOWN_LN 24
-static const char * UVP_WARNING = "UNDER-VOLTAGE WARNNING\0";
-#define UVP_WARNING_LN 22
-static const char * OVP_PDWON = "OVER-VOLTAGE POWER DOWN\0";
-#define IVP_PDWON_LN 23
-static const char * OVP_WARNING = "OVER-VOLTAGE WARNNING\0";
-#define OVP_WARNING_LN 21
-static const char * CALL_RDY = "Call Ready\0";
-#define CALL_RDY_LN 10
-static const char * SMS_RDY = "SMS Ready\0";
-#define SMS_RDY_LN 9
+
+static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
+//static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
 
 uint32_t gsm_time_of_last_command_send_to_module = 0;
 
-// let's the library know if gsm module echoes every AT command send through serial port
+//! let's the library know if gsm module echoes every AT command send through serial port
 static uint8_t gsm_at_comm_echo = 1;
 
-// how many newlines
+//! how many newlines
 volatile static int8_t gsm_terminating_newline_counter = 1;
 
-// used to receive echo and response separately
+//! used to receive echo and response separately
 static uint8_t gsm_receive_newline_counter = 0;
 
-// first character of non-echo response from the module
+//! first character of non-echo response from the module
 static uint16_t gsm_response_start_idx = 0;
 
-// a pointer to the last command string which sent in SIM800_INITIALIZING state
+//! a pointer to the last command string which sent in SIM800_INITIALIZING state
 const char * gsm_at_command_sent_last = 0;
 
-// set to one to lock 'gsm_sim800_pool' in SIM800_INITIALIZING state until the response is received
+//! set to one to lock 'gsm_sim800_pool' in SIM800_INITIALIZING state until the response is received
 static uint8_t gsm_waiting_for_command_response = 0;
 
 uint8_t gsm_sim800_registration_status = 4;	// unknown
 
-// string with sim status
+//! string with sim status
 #define SIM_STATUS_LENGHT	10
-char gsm_sim800_sim_status[SIM_STATUS_LENGHT];
+char gsm_sim800_simcard_status_string[SIM_STATUS_LENGHT];
 
+//! flag if SIM card is present, working and ulocked
+sim800_simcard_status_t gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
+
+//! String with a name of currently registered network
 #define REGISTERED_NETWORK_LN	16
 char gsm_sim800_registered_network[REGISTERED_NETWORK_LN];
+
+//! Current status of module registration in GSM network
+sim800_network_status_t gsm_sim800_network_status = NETWORK_STATUS_UNKNOWN;
+
+//! A delay in seconds between requesting for SIM card status and a request for network status
+int8_t gsm_sim800_registration_delay_seconds = 8;
 
 int8_t gsm_sim800_signal_level_dbm = 0;
 
@@ -90,8 +95,15 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
+/**
+ * Replace all non printable TABs, NEWLINEs etc with a space. Stops on null terminator
+ * or a size of an input string
+ * @param str	pointer to a string to be modified
+ * @param size	its size
+ */
 inline static void gsm_sim800_replace_non_printable_with_space(char * str, int8_t size) {
-	for (int i = 0; *(str + i) != 0 && i < size; i++) {
+	for (int i = 0; i < size; i++) {
+		// currently processed character
 		char current = *(str + i);
 
 		if (current != 0x00) {
@@ -99,14 +111,22 @@ inline static void gsm_sim800_replace_non_printable_with_space(char * str, int8_
 				*(str + i) = ' ';
 			}
 		}
+		else {
+			// stop processing on null terminator
+			break;
+		}
 	}
 }
 
 inline static void gsm_sim800_replace_space_with_null(char * str, int8_t size) {
+
+	// it goes from the end of a buffer towards its begining
 	for (int i = size - 1; i > 0; i--) {
 		char current = *(str + i);
 
 		if (current == '\"') {
+			// also replace this with null terminator
+			*(str + i) = 0x00;
 			break;
 		}
 
@@ -114,36 +134,38 @@ inline static void gsm_sim800_replace_space_with_null(char * str, int8_t size) {
 			*(str + i) = 0x00;
 		}
 	}
-
-//	for (int i = 0; *(str + i) != 0 && i < size; i++) {
-//		char current = *(str + i);
-//
-//		if (current == 0x20) {
-//			*(str + i) = 0x00;
-//		}
-//	}
 }
 
 inline static void gsm_sim800_power_off(void) {
-
+	io___cntrl_vbat_g_disable();
 }
 
 inline static void gsm_sim800_power_on(void) {
-
+	io___cntrl_vbat_g_enable();
 }
 
 inline static void gsm_sim800_press_pwr_button(void) {
-
+	io___cntrl_gprs_pwrkey_press();
 }
 
 inline static void gsm_sim800_depress_pwr_button(void) {
-
+	io___cntrl_gprs_pwrkey_release();
 }
 
-void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
+/**
+ * Detect async messages which are not a response to AT commands, but a status
+ * sent by GSM module on it's own when some event is detected. If async message
+ * is dected it rewind an offset over this async, to the begin of real response
+ * @param ptr	pointer to buffer with data to look through
+ * @param size	size of this buffer
+ * @param offset
+ * @return	Type of async message detected or unknown if nothing has been found
+ */
+sim800_async_message_t gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset) {
 	// offset is a pointer to variable where this function will store a position of first response character
 	// after the async message
 
+	sim800_async_message_t out = SIM800_ASYNC_UNKNOWN;
 
 	int comparision_result = 123;
 
@@ -155,6 +177,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 
 		if (comparision_result == 0) {
 			start_i = INCOMING_CALL_LN;
+			out = SIM800_ASYNC_RING;
 		}
 	}
 	else if (*ptr == 'N') {
@@ -162,6 +185,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 
 		if (comparision_result == 0) {
 			start_i = NOCARRIER_LN;
+			out = SIM800_ASYNC_NOCARRIER;
 		}
 	}
 	else if (*ptr == 'S') {
@@ -169,6 +193,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 
 		if (comparision_result == 0) {
 			start_i = SMS_RDY_LN;
+			out = SIM800_ASYNC_SMS_READY;
 		}
 	}
 	else if (*ptr == 'C') {
@@ -176,6 +201,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 
 		if (comparision_result == 0) {
 			start_i = CALL_RDY_LN;
+			out = SIM800_ASYNC_CALL_READY;
 		}
 	}
 	else if (*ptr == 'O') {
@@ -186,6 +212,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 		}
 		else {
 			start_i = OVP_WARNING_LN;
+			out = SIM800_ASYNC_OVERVOLTAGE_WARNING;
 		}
 	}
 	else if (*ptr == 'U') {
@@ -196,6 +223,7 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 		}
 		else {
 			start_i = UVP_WARNING_LN;
+			out = SIM800_ASYNC_UNDERVOLTAGE_WARNING;
 		}
 	}
 
@@ -212,8 +240,17 @@ void gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t 
 		}
 	}
 
+	return out;
+
 }
 
+/**
+ * Function checks how many lines has been returned in a response from GSM modem
+ * which miht be a signal that async message was somewhere received.
+ * @param ptr
+ * @param size
+ * @return
+ */
 uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size) {
 
 	// this bitmask stores positions of first four lines of text in input buffer
@@ -369,23 +406,30 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
-			// ask for network registration status
-			srl_send_data(srl_context, (const uint8_t*) GET_REGISTERED_NETWORK, SRL_MODE_ZERO, strlen(GET_REGISTERED_NETWORK), SRL_INTERNAL);
 
-			// wait for command completion
-			srl_wait_for_tx_completion(srl_context);
+			// wait for some time to be sure that GSM module is registered into network
+			if (gsm_sim800_registration_delay_seconds > 0) {
+				gsm_sim800_registration_delay_seconds--;
+			}
+			else {
+				// ask for network registration status
+				srl_send_data(srl_context, (const uint8_t*) GET_REGISTERED_NETWORK, SRL_MODE_ZERO, strlen(GET_REGISTERED_NETWORK), SRL_INTERNAL);
 
-			gsm_at_command_sent_last = GET_REGISTERED_NETWORK;
+				// wait for command completion
+				srl_wait_for_tx_completion(srl_context);
 
-			gsm_waiting_for_command_response = 1;
+				gsm_at_command_sent_last = GET_REGISTERED_NETWORK;
 
-			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+				gsm_waiting_for_command_response = 1;
 
-			// start timeout calculation
-			srl_context->srl_rx_timeout_calc_started = 1;
+				srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
-			// record when the command has been sent
-			gsm_time_of_last_command_send_to_module = main_get_master_time();
+				// start timeout calculation
+				srl_context->srl_rx_timeout_calc_started = 1;
+
+				// record when the command has been sent
+				gsm_time_of_last_command_send_to_module = main_get_master_time();
+			}
 		}
 		else if (gsm_at_command_sent_last == GET_REGISTERED_NETWORK) {
 			// ask for signal level
@@ -407,7 +451,13 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			gsm_time_of_last_command_send_to_module = main_get_master_time();
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {
-			*state = SIM800_ALIVE;
+			if (gsm_sim800_simcard_status == SIMCARD_READY &&
+					(gsm_sim800_network_status == NETWORK_REGISTERED || gsm_sim800_network_status == NETWORK_REGISTERED_ROAMING)) {
+				*state = SIM800_ALIVE;
+			}
+			else {
+				gsm_sim800_reset(state);
+			}
 
 			gsm_at_command_sent_last = 0;
 		}
@@ -594,7 +644,7 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 }
 
 /**
- * Callback to be called just after the reception is done
+ * Callback used to terminate UART serial transaction
  */
 uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
 
@@ -725,11 +775,22 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			comparision_result = strncmp(CPIN, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
 
 			if (comparision_result == 0) {
-				strncpy(gsm_sim800_sim_status, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
+				strncpy(gsm_sim800_simcard_status_string, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
 
-				gsm_sim800_replace_non_printable_with_space(gsm_sim800_sim_status, SIM_STATUS_LENGHT);
+				gsm_sim800_replace_non_printable_with_space(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
 
-				gsm_sim800_replace_space_with_null(gsm_sim800_sim_status, SIM_STATUS_LENGHT);
+				gsm_sim800_replace_space_with_null(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
+
+				gsm_sim800_simcard_status = SIMCARD_READY;
+			}
+			else {
+				// check ERROR conditions which may be caused by faulty or no
+				// SIM card inserted
+				comparision_result = strncmp(AT_ERROR, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
+
+				if (comparision_result == 0) {
+					gsm_sim800_simcard_status = SIMCARD_ERROR;
+				}
 			}
 
 		}
@@ -737,11 +798,22 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			comparision_result = strncmp(REGISTERED_NETWORK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
 
 			if (comparision_result == 0) {
-				strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
+				// check if GSM module is even registered into the network, if not it will
+				// return: SAT+COPS?\r\r\n+COPS: 0\r\n\r\nOK\r\n
+				if (*(const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7) == '0' &&
+					*(const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 9) != '0') {
+					gsm_sim800_network_status = NETWORK_NOT_REGISTERED;
+				}
+				else {
+					gsm_sim800_network_status = NETWORK_REGISTERED;
 
-				gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+					strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
 
-				gsm_sim800_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+					gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+
+					gsm_sim800_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+				}
+
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_SIGNAL_LEVEL) {
@@ -812,4 +884,35 @@ void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 		gsm_sim800_tcpip_tx_done_callback(srl_context, state);
 	}
 
+}
+
+/**
+ * Power cycle GSM modem
+ * @param state
+ */
+void gsm_sim800_reset(gsm_sim800_state_t * state) {
+	// turn power off
+	gsm_sim800_power_off();
+
+	*state = SIM800_UNKNOWN;
+
+	gsm_sim800_network_status = NETWORK_STATUS_UNKNOWN;
+
+	gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
+
+	gsm_receive_newline_counter = 0;
+
+	gsm_response_start_idx = 0;
+
+	gsm_at_command_sent_last = 0;
+
+	gsm_waiting_for_command_response = 0;
+
+	gsm_sim800_registration_status = 4;
+
+	gsm_sim800_registration_delay_seconds = 8;
+
+	sim800_gprs_reset();
+
+	gsm_sim800_tcpip_reset();
 }

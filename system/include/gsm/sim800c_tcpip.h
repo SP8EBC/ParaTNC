@@ -36,6 +36,8 @@ void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_s
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 
+void gsm_sim800_tcpip_reset(void);
+
 // uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter
 
 #endif /* INCLUDE_GSM_SIM800C_TCPIP_H_ */
