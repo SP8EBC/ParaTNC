@@ -16,8 +16,13 @@
 
 uint8_t sim800_poolers_five = 3;
 
-void gsm_sim800_poolers_one_minute(srl_context_t * srl_context, gsm_sim800_state_t * state){
+void gsm_sim800_poolers_ten_seconds(srl_context_t * srl_context, gsm_sim800_state_t * state){
 
+	if (	gsm_sim800_engineering_is_enabled == 0 &&
+			gsm_sim800_gprs_ready == 1 &&
+			aprsis_connected == 0) {
+		aprsis_connect_and_login_default(1);
+	}
 
 //		gsm_sim800_tcpip_connect(TEST_IP, strlen(TEST_IP), TEST_PORT, strlen(TEST_PORT), srl_context, state);
 //		//gsm_sim800_engineering_enable(srl_context, state);
@@ -44,12 +49,6 @@ void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state
 			gsm_sim800_engineering_disable(srl_context, state);
 
 			return;
-		}
-
-		if (	gsm_sim800_engineering_is_enabled == 0 &&
-				gsm_sim800_gprs_ready == 1 &&
-				aprsis_connected == 0) {
-			aprsis_connect_and_login_default(1);
 		}
 	}
 

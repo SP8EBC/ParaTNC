@@ -18,6 +18,8 @@
 #include "main.h"
 #include "io.h"
 
+#include "text.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -94,47 +96,6 @@ float gsm_sim800_bcch_frequency = 0;
 char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
-
-/**
- * Replace all non printable TABs, NEWLINEs etc with a space. Stops on null terminator
- * or a size of an input string
- * @param str	pointer to a string to be modified
- * @param size	its size
- */
-inline static void gsm_sim800_replace_non_printable_with_space(char * str, int8_t size) {
-	for (int i = 0; i < size; i++) {
-		// currently processed character
-		char current = *(str + i);
-
-		if (current != 0x00) {
-			if (current < 0x21 || current > 0x7A) {
-				*(str + i) = ' ';
-			}
-		}
-		else {
-			// stop processing on null terminator
-			break;
-		}
-	}
-}
-
-inline static void gsm_sim800_replace_space_with_null(char * str, int8_t size) {
-
-	// it goes from the end of a buffer towards its begining
-	for (int i = size - 1; i > 0; i--) {
-		char current = *(str + i);
-
-		if (current == '\"') {
-			// also replace this with null terminator
-			*(str + i) = 0x00;
-			break;
-		}
-
-		if (current == 0x20) {
-			*(str + i) = 0x00;
-		}
-	}
-}
 
 inline static void gsm_sim800_power_off(void) {
 	io___cntrl_vbat_g_disable();
@@ -777,9 +738,9 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				strncpy(gsm_sim800_simcard_status_string, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7), 10);
 
-				gsm_sim800_replace_non_printable_with_space(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
+				text_replace_non_printable_with_space(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
 
-				gsm_sim800_replace_space_with_null(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
+				text_replace_space_with_null(gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
 
 				gsm_sim800_simcard_status = SIMCARD_READY;
 			}
@@ -809,9 +770,9 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 					strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
 
-					gsm_sim800_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+					text_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
 
-					gsm_sim800_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+					text_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
 				}
 
 			}

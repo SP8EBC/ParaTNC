@@ -7,6 +7,9 @@
 
 #include "aprsis.h"
 #include "main.h"
+#include "text.h"
+
+#include "gsm/sim800c.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -120,11 +123,14 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 		int8_t retval = 0xFF;
 
-		uint8_t offset = 0;
+		int offset = 0;
 
 		memset(port_str, 0x00, 0x6);
 
 		snprintf(port_str, 6, "%d", port);
+
+		// result of a disconnecting from APRS-IS server
+		sim800_return_t disconnection_result = SIM800_UNSET;
 
 		// connecting has blocking I/O
 		retval = gsm_sim800_tcpip_connect(address, address_ln, port_str, 0x6, aprsis_serial_port, aprsis_gsm_modem_state);
@@ -137,8 +143,12 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 			if (retval == 0) {
 				receive_buff = srl_get_rx_buffer(aprsis_serial_port);
 
+				// check if receive buffer starts from printable character and needs fast forward or not
+				// maybe APRS-IS put a newline before hello message
+				offset = text_fast_forward_to_first_printable((char*)receive_buff, srl_get_num_bytes_rxed(aprsis_serial_port));
+
 				// if hello message has been received
-				if (*receive_buff == '#' && *(receive_buff + 1) == ' ') {
+				if (offset >= 0 && (*(receive_buff + offset) == '#' && *(receive_buff + offset + 1) == ' ')) {
 					// send long string to server
 					gsm_sim800_tcpip_write((uint8_t *)aprsis_login_string, strlen(aprsis_login_string), aprsis_serial_port, aprsis_gsm_modem_state);
 
@@ -150,12 +160,8 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 						aprsis_connected = 1;
 
-						// fast forward to beginning of response
-						for (offset = 0; offset < 8; offset++) {
-							if (*(receive_buff + offset) == '#') {
-								break;
-							}
-						}
+						// fast forward to the beginning of a response
+						offset = text_fast_forward_to_first_printable((char*)receive_buff, srl_get_num_bytes_rxed(aprsis_serial_port));
 
 						// check if authorization has been successfull
 						retval = strncmp(aprsis_sucessfull_login, (const char * )(receive_buff + offset), (size_t)9);
@@ -180,17 +186,22 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 						}
 						else {
 							// if authoruzation wasn't successfull drop a connection
-							gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
+							disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 						}
 					}
 				}
 				else {
-					gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
+					disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 				}
 			}
 			else {
-				gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
+				disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
 			}
+		}
+
+		// if a connection has been ordered to close, but there were severe errors during that
+		if (disconnection_result == SIM800_TCP_CLOSE_UNCERTAIN || disconnection_result == SIM800_RECEIVING_TIMEOUT) {
+			gsm_sim800_reset(aprsis_gsm_modem_state);
 		}
 	}
 

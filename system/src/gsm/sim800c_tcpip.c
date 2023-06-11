@@ -5,6 +5,7 @@
 #include "main.h"
 #include "delay.h"
 #include "io.h"
+#include "text.h"
 
 #include <string.h>
 
@@ -15,12 +16,13 @@ const static char * QUOTATION_MARK 			= "\"\0";
 const static char * NEWLINE 				= "\r\0";
 
 const static char * CLOSE_TCP				= "AT+CIPCLOSE\r\0";
-
-//static const char * ESCAPE					= "+++\0";
+#define CLOSED_TCP_LN	8
+const static char * CLOSED_TCP				= "CLOSE OK\0";
+#define CLOSED_ERROR_LN	5
+const static char * CLOSED_ERROR			= "ERROR\0";
 
 #define CONNECT_LN	13
 static const char * CONNECT					= "OK\r\n\r\nCONNECT\0";
-//static const char * OK 						= "OK\0";
 #define DISCONNECTED_LN		6
 static const char * DISCONNECTED 			= "CLOSED\0";
 
@@ -182,7 +184,7 @@ sim800_return_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_
 	}
 
 	// check if library is in state when reception could be done
-	if (state == SIM800_TCP_CONNECTED || gsm_sim800_tcpip_receiving == 0) {
+	if (*state == SIM800_TCP_CONNECTED || gsm_sim800_tcpip_receiving == 0) {
 
 		gsm_sim800_tcpip_async_receive_cbk = rx_done_callback;
 
@@ -242,7 +244,6 @@ sim800_return_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size,
 	}
 
 	return out;
-//	return waiting_result;
 }
 
 sim800_return_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state) {
@@ -285,51 +286,33 @@ sim800_return_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_co
 	return out;
 }
 
-void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t force) {
+/**
+ * Closes established TCP connection
+ * @param srl_context	pointer to serial context used to communication with gprs module
+ * @param state
+ * @param force			force changing internal connection state even if there
+ * 						were problems with a response to diconnection AT command.
+ * @return	SIM800_OK connection was closed successfully
+ *			SIM800_TCP_CLOSE_ALREADY connection has been closed in the meantime by remote server
+ *			SIM800_TCP_CLOSE_UNCERTAIN no valid response was received from gprs module on disconnect request
+ *			SIM800_WRONG_STATE_TO_CLOSE no connection has been
+ */
+sim800_return_t gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t force) {
+
+	/**
+	 * Name : srl_rx_buf_pointer
+	Details:0x20000828 <srl_usart3_rx_buffer> "AT+CIPCLOSE\r\r\nERROR\r\n"
+	 *
+	 *Name : srl_rx_buf_pointer
+	Details:0x20000828 <srl_usart3_rx_buffer> "AT+CIPCLOSE\r\r\nCLOSE OK"
+	 *
+	 */
+
+	sim800_return_t out = SIM800_UNSET;
 
 	uint8_t receive_result = 0;
 
-	if (*state == SIM800_TCP_CONNECTED || force == 1) {
-
-//		do {
-//			// set default timeout of 1200msec
-//			srl_switch_timeout(srl_context, SRL_TIMEOUT_ENABLE, 2222);
-//
-//			// send escape sequence to exit connection mode
-//			srl_send_data(srl_context, (const uint8_t*) ESCAPE, SRL_MODE_ZERO, strlen(ESCAPE), SRL_INTERNAL);
-//
-//			// wait for transmission to finish
-//			srl_wait_for_tx_completion(srl_context);
-//
-//			// wait for OK to be received
-//			srl_receive_data(srl_context, 4, SRL_NO_START_CHR, SRL_NO_STOP_CHR, SRL_ECHO_DISABLE, 0x7F, 0);
-//
-//			// start timeout calculation
-//			srl_switch_timeout_for_waiting(srl_context, SRL_TIMEOUT_ENABLE);
-//
-//			// wait for it to finish
-//			srl_wait_for_rx_completion_or_timeout(srl_context, & receive_result);
-//
-//			// check if we escaped from data mode
-//			if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), NEWLINE, 1) == 0) {
-//				break;
-//			}
-//			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), OK, 2) == 0) {
-//				break;
-//			}
-//			else if (strncmp((const char *) (srl_context->srl_rx_buf_pointer), ESCAPE, 3) == 0) {
-//				// if module has already returned to command mode it will echo all input
-//				break;
-//			}
-//			else {
-//				if (receive_result == SRL_OK) {
-//					delay_fixed(200);
-//
-//				}
-//			}
-//
-//
-//		} while(escape_counter++ < 3);
+	if (*state == SIM800_TCP_CONNECTED) {
 
 		io___cntrl_gprs_dtr_low();
 
@@ -356,11 +339,54 @@ void gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * st
 		// wait for it to finish
 		srl_wait_for_rx_completion_or_timeout(srl_context, & receive_result);
 
-		if (receive_result == SRL_OK) {
+		// if force is set to one ignore a result and just set the state
+		// to alive, assuming that connection was closed
+		if (force == 1) {
 			*state = SIM800_ALIVE;
+
+			out = SIM800_OK;
+		}
+		else {
+			if (receive_result == SRL_OK) {
+
+				// go back to the last character in case that they are some newlines after response
+				const int offset = text_rewind_front_end_till_first_printable((char*)srl_get_rx_buffer(srl_context), srl_get_num_bytes_rxed(srl_context));
+
+				int result = strncmp((char*)srl_get_rx_buffer(srl_context) + offset - CLOSED_TCP_LN, CLOSED_TCP, CLOSED_TCP_LN);
+
+				// connection was closed successfully
+				if (result == 0) {
+					out = SIM800_OK;
+				}
+				else {
+					// if not check if it is maybe already closed and gprs module returned ERROR
+					result = strncmp((char*)srl_get_rx_buffer(srl_context) + offset - CLOSED_ERROR_LN, CLOSED_ERROR, CLOSED_ERROR_LN);
+
+					if (result == 0) {
+						out = SIM800_TCP_CLOSE_ALREADY;
+					}
+					else {
+						// something weird happened
+						out = SIM800_TCP_CLOSE_UNCERTAIN;
+					}
+				}
+
+				*state = SIM800_ALIVE;
+			}
+			else {
+				// something weird happened
+				out = SIM800_RECEIVING_TIMEOUT;
+			}
 		}
 
+
+
 	}
+	else {
+		out = SIM800_WRONG_STATE_TO_CLOSE;
+	}
+
+	return out;
 }
 
 void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state) {

@@ -1411,8 +1411,6 @@ int main(int argc, char* argv[]){
 					NVIC_SystemReset();
 				}
 
-				gsm_sim800_poolers_one_minute(main_gsm_srl_ctx_ptr, &main_gsm_state);
-
 				//aprsis_connect_and_login_default(1);
 
 //				if (gsm_sim800_gprs_ready == 1) {
@@ -1547,6 +1545,8 @@ int main(int argc, char* argv[]){
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
+				gsm_sim800_poolers_ten_seconds(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
 				packet_tx_tcp_handler();
 			}
 			#endif

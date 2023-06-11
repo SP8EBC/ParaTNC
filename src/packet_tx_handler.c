@@ -271,6 +271,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				// and trigger API wx packet transmission
 				packet_tx_trigger_tcp |= API_TRIGGER_METEO;
 			}
+			else if (main_config_data_gsm->aprsis_enable == 1 && main_config_data_gsm->api_enable == 0) {
+				packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
+			}
 			else {
 				packet_tx_trigger_tcp = 0;
 			}
