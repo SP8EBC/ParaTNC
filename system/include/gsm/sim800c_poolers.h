@@ -15,4 +15,6 @@
 void gsm_sim800_poolers_ten_seconds(srl_context_t * srl_context, gsm_sim800_state_t * state);
 void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state_t * state, const config_data_gsm_t * config);
 
+void gsm_sim800_poolers_request_engineering(void);
+
 #endif /* INCLUDE_GSM_SIM800C_POOLERS_H_ */

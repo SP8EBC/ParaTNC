@@ -219,7 +219,9 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 #endif
 
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
-		.battery_scalling_b = VBAT_MEAS_B_COEFF
+		.battery_scalling_b = VBAT_MEAS_B_COEFF,
+
+		.button_one
 };
 
 /**

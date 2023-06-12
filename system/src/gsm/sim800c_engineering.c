@@ -30,6 +30,8 @@ static const char * CENG0 = "+CENG: 0,\0";
 #define LAC_OFFSET		42
 #define LAC_LN			4
 
+uint8_t gsm_sim800_engineering_is_requested = 0;
+
 uint8_t gsm_sim800_engineering_is_enabled = 0;
 
 // set to one if correct response has been received for engineering data request. This is reset back to zero
@@ -60,6 +62,16 @@ static uint16_t gsm_sim800_rewind_to_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_
 }
 
 static void gsm_sim800_engineering_parse_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_t ceng_0_payload_start) {
+
+	/**
+	 * 	Details:0x20000828 <srl_usart3_rx_buffer>
+	 * 	"AT+CENG?\r\r\n
+	 * 	+CENG: 4,0\r\n\r\n
+	 * 	+CENG: 0,\"0037,44,00,260,01,43,67f4,05,05,539d,255,-69,145,145,x,x,x,x,x,x,x\"\r\n
+	 * 	+CENG: 1,\"0009,25,61,260,01,539d,80,56\"\r\n
+	 * 	+CENG: 2,\"0008,25,15,260,01,539d,78,54\"\r\n+CENG: 3,\"0038"...
+	 *
+	 */
 
 	// temporary buffer for strings
 	char string_buffer[5];
@@ -174,8 +186,6 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 			gsm_sim800_engineering_parse_ceng_0(srl_context->srl_rx_buf_pointer, ceng_start);
 
 			gsm_sim800_engineering_successed = 1;
-
-			//gsm_sim800_engineering_disable(srl_context, state);
 		}
 		else {
 			gsm_sim800_engineering_successed = 0;
