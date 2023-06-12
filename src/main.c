@@ -210,6 +210,12 @@ main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
 //! operation mode of USART2 (RS485)
 main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
 
+//!
+configuration_button_function_t main_button_one_left;
+
+//!
+configuration_button_function_t main_button_two_right;
+
 //! a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;
 
@@ -587,6 +593,12 @@ int main(int argc, char* argv[]){
 
   // initializing UART gpio pins
   io_uart_init();
+
+  // set function for left button
+  main_button_one_left = configuration_get_left_button();
+
+  // set function for right button
+  main_button_two_right = configuration_get_right_button();
 
 #if defined(STM32F10X_MD_VL)
   // enabling the clock for both USARTs
@@ -1324,7 +1336,7 @@ int main(int argc, char* argv[]){
 			rtu_serial_pool();
 		}
 
-		button_check_all(main_config_data_basic);
+		button_check_all(main_button_one_left, main_button_two_right);
 
 		main_set_monitor(2);
 

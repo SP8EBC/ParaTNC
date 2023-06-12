@@ -11,7 +11,7 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#include "config_data.h"
+#include "configuration_handler.h"
 
 /**
  * Should be called from main for loop or in quite short interval, like
@@ -19,7 +19,7 @@
  * connected push buttons and then, depending on configuration, takes
  * an appropriate action.
  */
-void button_check_all(config_data_basic_t * config);
+void button_check_all(configuration_button_function_t left, configuration_button_function_t right);
 
 /**
  * Resets debouncing inhibiter which enables button key presses back

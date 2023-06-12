@@ -910,3 +910,34 @@ uint16_t configuration_get_vbat_b_coeff(void) {
 
 	return out;
 }
+
+configuration_button_function_t configuration_get_left_button(void) {
+	configuration_button_function_t out = BUTTON_DISABLED;
+
+	switch (main_config_data_basic->button_one_left) {
+		case 1:	out = BUTTON_SEND_WX; 			break;
+		case 2:	out = BUTTON_SEND_WX_INTERNET; 	break;
+		case 3:	out = BUTTON_SEND_BEACON;		break;
+		case 4:	out = BUTTON_FORCE_UART_KISS;	break;
+		case 5: out = BUTTON_FORCE_UART_LOG;	break;
+		case 6: out = BUTTON_RESET_GSM_GPRS;	break;
+	}
+
+	return out;
+}
+
+
+configuration_button_function_t configuration_get_right_button(void) {
+	configuration_button_function_t out = BUTTON_DISABLED;
+
+	switch (main_config_data_basic->button_two_right) {
+		case 1:	out = BUTTON_SEND_WX; 			break;
+		case 2:	out = BUTTON_SEND_WX_INTERNET; 	break;
+		case 3:	out = BUTTON_SEND_BEACON;		break;
+		case 4:	out = BUTTON_FORCE_UART_KISS;	break;
+		case 5: out = BUTTON_FORCE_UART_LOG;	break;
+		case 6: out = BUTTON_RESET_GSM_GPRS;	break;
+	}
+
+	return out;
+}

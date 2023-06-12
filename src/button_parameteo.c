@@ -20,7 +20,7 @@ uint8_t button_left_previous_state = 1;
 uint8_t button_right_previous_state = 1;
 
 
-void button_check_all(config_data_basic_t * config) {
+void button_check_all(configuration_button_function_t left, configuration_button_function_t right) {
 
 	/**
 	 * Naming convention: There are two buttons on the PCB. Lets call it
@@ -35,28 +35,38 @@ void button_check_all(config_data_basic_t * config) {
 	 * when a button is not pressed. the button shorts this to ground.
 	 */
 
-	// check if a configuration has been passed
-	if (config != 0) {
-		// current state of right button
-		const uint32_t state_right = LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_3);
+	// current state of right button
+	const uint32_t state_right = LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_3);
 
-		// current state of left button
-		const uint32_t state_left = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0);
+	// current state of left button
+	const uint32_t state_left = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0);
 
-		// check falling edge on right button
-		if (state_right == 0 && button_right_previous_state == 1) {
-			button_right_previous_state = 0;
+	// check falling edge on right button
+	if (state_left == 0 && button_left_previous_state == 1) {
+		button_left_previous_state = 0;
 
-			switch (config->button_two) {
-			case BUTTON_RESET_GSM_GPRS:
-				gsm_sim800_reset(&main_gsm_state);
-				break;
-			default:
-				break;
-			}
+		switch (left) {
+		case BUTTON_RESET_GSM_GPRS:
+			gsm_sim800_reset(&main_gsm_state);
+			break;
+		default:
+			break;
 		}
-
 	}
+
+	// check falling edge on right button
+	if (state_right == 0 && button_right_previous_state == 1) {
+		button_right_previous_state = 0;
+
+		switch (right) {
+		case BUTTON_RESET_GSM_GPRS:
+			gsm_sim800_reset(&main_gsm_state);
+			break;
+		default:
+			break;
+		}
+	}
+
 }
 
 void button_debounce(void) {

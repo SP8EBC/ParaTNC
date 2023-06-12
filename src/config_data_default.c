@@ -221,7 +221,17 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
 		.battery_scalling_b = VBAT_MEAS_B_COEFF,
 
-		.button_one
+#ifdef _BUTTON_ONE_LEFT
+		.button_one_left = _BUTTON_ONE_RIGHT,
+#else
+		.button_one_left = 0,
+#endif
+
+#ifdef _BUTTON_TWO_RIGHT
+		.button_two_right = _BUTTON_TWO_RIGHT
+#else
+		.button_two_right = 0
+#endif
 };
 
 /**

@@ -23,6 +23,17 @@ typedef enum configuration_erase_startup_t {
 	ERASE_STARTUP_ERROR		= 0xAD
 }configuration_erase_startup_t;
 
+typedef enum configuration_button_function_t {
+
+	BUTTON_DISABLED = 0,
+	BUTTON_SEND_WX = 1,
+	BUTTON_SEND_WX_INTERNET = 2,
+	BUTTON_SEND_BEACON = 3,
+	BUTTON_FORCE_UART_KISS = 4,
+	BUTTON_FORCE_UART_LOG = 5,
+	BUTTON_RESET_GSM_GPRS = 6
+}configuration_button_function_t;
+
 uint32_t configuration_handler_check_crc(void);
 uint32_t configuration_handler_restore_default_first(void);
 uint32_t configuration_handler_restore_default_second(void);
@@ -46,6 +57,9 @@ int configuration_get_power_cycle_gsmradio_on_no_communications(void);
 
 uint16_t configuration_get_vbat_a_coeff(void);
 uint16_t configuration_get_vbat_b_coeff(void);
+
+configuration_button_function_t configuration_get_left_button(void);
+configuration_button_function_t configuration_get_right_button(void);
 
 
 #endif /* CONFIGURATION_HANDLER_H_ */
