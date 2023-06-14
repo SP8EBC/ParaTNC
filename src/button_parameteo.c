@@ -10,6 +10,9 @@
 #include "main.h"
 #include "./gsm/sim800c.h"
 
+#include "aprsis.h"
+#include "beacon.h"
+
 #include <stm32l4xx_ll_gpio.h>
 
 /**
@@ -46,6 +49,12 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		button_left_previous_state = 0;
 
 		switch (left) {
+		case BUTTON_SEND_BEACON:
+			beacon_send_own(0,0);
+			break;
+		case BUTTON_RECONNECT_APRSIS:
+			aprsis_disconnect();
+			break;
 		case BUTTON_RESET_GSM_GPRS:
 			gsm_sim800_reset(&main_gsm_state);
 			break;
@@ -59,6 +68,12 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		button_right_previous_state = 0;
 
 		switch (right) {
+		case BUTTON_SEND_BEACON:
+			beacon_send_own(0,0);
+			break;
+		case BUTTON_RECONNECT_APRSIS:
+			aprsis_disconnect();
+			break;
 		case BUTTON_RESET_GSM_GPRS:
 			gsm_sim800_reset(&main_gsm_state);
 			break;

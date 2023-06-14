@@ -1115,40 +1115,6 @@ int main(int argc, char* argv[]){
 
 	  main_set_monitor(0);
 
-#if defined(STM32F10X_MD_VL)
-	    // read the state of a button input
-	  	if (GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)) {
-
-	  		// if modem is not busy on transmitting something and the button is not
-	  		// inhibited
-	  		if (main_afsk.sending == false && button_inhibit == 0) {
-
-	  			// wait for radio channel to be released
-	  			while(main_ax25.dcd == true);
-
-	  			if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
-
-	  				beacon_send_own(0, 0);
-	  			}
-	  			else {
-
-					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
-
-					SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity, main_kiss_srl_ctx.srl_tx_buf_pointer, TX_BUFFER_1_LN, &ln);
-
-					if (main_kiss_enabled == 1) {
-						srl_start_tx(main_kiss_srl_ctx_ptr, ln);
-					}
-	  			}
-	  		}
-
-	  		button_inhibit = 1;
-	  	}
-	  	else {
-	  		button_inhibit = 0;
-	  	}
-#endif
-
 #if defined(PARAMETEO)
 	  	if (main_woken_up == 1) {
 

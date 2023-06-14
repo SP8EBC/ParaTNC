@@ -921,6 +921,7 @@ configuration_button_function_t configuration_get_left_button(void) {
 		case 4:	out = BUTTON_FORCE_UART_KISS;	break;
 		case 5: out = BUTTON_FORCE_UART_LOG;	break;
 		case 6: out = BUTTON_RESET_GSM_GPRS;	break;
+		case 7: out = BUTTON_RECONNECT_APRSIS; break;
 	}
 
 	return out;
@@ -937,6 +938,7 @@ configuration_button_function_t configuration_get_right_button(void) {
 		case 4:	out = BUTTON_FORCE_UART_KISS;	break;
 		case 5: out = BUTTON_FORCE_UART_LOG;	break;
 		case 6: out = BUTTON_RESET_GSM_GPRS;	break;
+		case 7: out = BUTTON_RECONNECT_APRSIS; break;
 	}
 
 	return out;

@@ -222,7 +222,7 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 		.battery_scalling_b = VBAT_MEAS_B_COEFF,
 
 #ifdef _BUTTON_ONE_LEFT
-		.button_one_left = _BUTTON_ONE_RIGHT,
+		.button_one_left = _BUTTON_ONE_LEFT,
 #else
 		.button_one_left = 0,
 #endif

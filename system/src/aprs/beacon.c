@@ -22,12 +22,17 @@ const char * idiot = "You idiot!! You have INHIBIT_CUTOFF define uncomented!\0\0
 
 void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 	main_wait_for_tx_complete();
+#ifdef INHIBIT_CUTOFF
+	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, idiot);
+
+#else
 	if (voltage == 0 && rtc_ok == 0) {
 		  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 	}
 	else {
 		  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s [vbat: %d][rtc_ok: %d]", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment, (int)voltage , (int)rtc_ok);
 	}
+#endif
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;

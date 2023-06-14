@@ -189,5 +189,7 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 }
 
 void sim800_gprs_reset(void){
+	gsm_sim800_gprs_ready = 0;
 
+	memset (gsm_sim800_ip_address, 0x00, 18);
 }

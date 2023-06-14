@@ -24,9 +24,14 @@ gsm_sim800_state_t * aprsis_gsm_modem_state;
 char aprsis_callsign_with_ssid[10];
 
 /**
+ * Size of transmit buffer
+ */
+#define APRSIS_TX_BUFFER_LN	512
+
+/**
  * Buffer for sending packet to aprs-is
  */
-char aprsis_packet_tx_buffer[512];
+char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
 
 /**
  *
@@ -73,6 +78,8 @@ uint32_t aprsis_reset_on_timeout = 0;
 
 #define APRSIS_TIMEOUT_MS	123000//123000
 
+#define MAXIMUM_CALL_SSID_LN	9
+
 void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port, uint8_t reset_on_timeout) {
 	aprsis_serial_port = context;
 
@@ -103,6 +110,14 @@ void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, 
 
 }
 
+/**
+ * Connect and login to APRS-IS server
+ * @param address	ip or dns address to aprs-is server
+ * @param address_ln	lenht of a buffer with an address
+ * @param port	TCP port to use (typically 14580)
+ * @param auto_send_beacon
+ * @return
+ */
 aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon) {
 	// this function has blocking io
 	uint8_t out = APRSIS_WRONG_STATE;
@@ -209,6 +224,11 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 }
 
+/**
+ * Connect and login to APRS-IS using default credentials using during initialization
+ * @param auto_send_beacon
+ * @return
+ */
 aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon) {
 
 	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port, auto_send_beacon);
@@ -238,6 +258,9 @@ void aprsis_receive_callback(srl_context_t* srl_context) {
 	}
 }
 
+/**
+ * Pooler function which check periodically if APRS-IS connection is alive.
+ */
 void aprsis_check_alive(void) {
 
 	uint32_t timestamp = 0;
@@ -252,6 +275,9 @@ void aprsis_check_alive(void) {
 		aprsis_connected = 0;
 
 		if (aprsis_reset_on_timeout == 0) {
+			// close connection with force flag as it is uncertain if a remote server
+			// finished connection explicitly, or the connection is stuck for
+			// some other reason
 			gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
 		}
 		else {
@@ -302,6 +328,11 @@ void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t windd
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
+/**
+ * Sends beacon packet to APRS-IS
+ * @param async zero for blocking io, which lock this function during transmission.
+ * 				non zero for non blocking io, function will return immediately and sending will be done in background
+ */
 void aprsis_send_beacon(uint8_t async) {
 
 	if (aprsis_logged == 0) {
@@ -317,4 +348,64 @@ void aprsis_send_beacon(uint8_t async) {
 	  else {
 		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
+}
+
+void aprsis_igate_to_aprsis(struct AX25Msg *msg) {
+
+	// iterator to move across tx buffer
+	uint8_t tx_buffer_it = 0;
+
+	// string lenght returned by snprintf
+	int snprintf_size = 0;
+
+	// exif if APRSIS is not logged
+	if (aprsis_logged == 0 || msg == 0) {
+		return;
+	}
+
+	// prepare buffer for message
+	memset(aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
+
+	// lenght of a source call
+	const size_t source_call_ln = strlen(msg->src.call);
+
+	// lenght of destination call
+	const size_t dest_call_ln = strlen(msg->dst.call);
+
+	// put callsign
+	strncat(aprsis_packet_tx_buffer, msg->src.call, 6);
+
+	// put source call
+	if ((msg->src.ssid & 0xF) == 0) {
+		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_LN, "%.6s-%d>", msg->src.call, msg->src.ssid & 0xF);
+	}
+	else {
+		// callsign without SSID
+		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_LN, "%.6s>", msg->src.call);
+	}
+
+	// move iterator forward
+	tx_buffer_it = (uint8_t) snprintf_size & 0xFFU;
+
+	// put destination call - for sake of simplicity ignore SSID
+	snprintf_size = snprintf(aprsis_packet_tx_buffer + tx_buffer_it, MAXIMUM_CALL_SSID_LN, "%.6s,", msg->dst.call);
+
+	// move iterator
+	tx_buffer_it += (uint8_t) snprintf_size & 0xFFU;
+
+	// put original path
+	for (int i = 0; i < msg->rpt_cnt; i++) {
+		if ((msg->rpt_lst[i].ssid & 0x0F) == 0) {
+			if ((msg->rpt_lst[i].ssid & 0x40) == 0x40)
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s*,", cIn->tDigi[i].call);
+			else
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s,", cIn->tDigi[i].call);
+		}
+		else {
+			if ((msg->rpt_lst[i].ssid & 0x40) == 0x40)
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d*," cIn->tDigi[i].call, (msg->rpt_lst[i].ssid & 0x0F));
+			else
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d", cIn->tDigi[i].call, (msg->rpt_lst[i].ssid & 0x0F));
+		}
+	}
 }

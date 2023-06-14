@@ -44,5 +44,6 @@ void aprsis_check_alive(void);
 
 void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie, uint8_t humidity);
 void aprsis_send_beacon(uint8_t async);
+void aprsis_igate_to_aprsis(struct AX25Msg *msg);
 
 #endif /* APRSIS_H_ */
