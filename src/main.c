@@ -253,6 +253,7 @@ char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
 char main_string_latitude[9];
 char main_string_longitude[9];
+char main_callsign_with_ssid[10];
 
 #define MAIN_SMALL_BUFFER_LN	20
 uint8_t main_small_buffer[MAIN_SMALL_BUFFER_LN];
@@ -520,6 +521,14 @@ int main(int argc, char* argv[]){
   // converting longitude into string
   memset(main_string_longitude, 0x00, sizeof(main_string_longitude));
   float_to_string(main_config_data_basic->longitude, main_string_longitude, sizeof(main_string_longitude), 2, 5);
+
+  // make a string with callsign and ssid
+  if (main_config_data_basic->ssid != 0) {
+	sprintf(main_callsign_with_ssid, "%s-%d", main_config_data_basic->callsign, main_config_data_basic->ssid);
+  }
+  else {
+	sprintf(main_callsign_with_ssid, "%s", main_config_data_basic->callsign);
+  }
 
   switch(main_config_data_basic->symbol) {
   case 0:		// _SYMBOL_DIGI
@@ -1068,7 +1077,8 @@ int main(int argc, char* argv[]){
 					   main_config_data_gsm->aprsis_passcode,
 					   (const char *)main_config_data_gsm->aprsis_server_address,
 					   main_config_data_gsm->aprsis_server_port,
-					   configuration_get_power_cycle_gsmradio_on_no_communications());
+					   configuration_get_power_cycle_gsmradio_on_no_communications(),
+					   main_callsign_with_ssid);
 	   }
    }
 

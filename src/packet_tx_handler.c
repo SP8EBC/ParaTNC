@@ -110,8 +110,6 @@ inline void packet_tx_multi_per_call_handler(void) {
 void packet_tx_tcp_handler(void) {
 #ifdef STM32L471xx
 
-	uint8_t result = 0;
-
 	aprsis_return_t aprsis_result = APRSIS_UNKNOWN;
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
@@ -121,12 +119,32 @@ void packet_tx_tcp_handler(void) {
 
 			if (aprsis_result == APRSIS_OK) {
 				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-				aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+				aprsis_send_wx_frame(
+						rte_wx_average_windspeed,
+						rte_wx_max_windspeed,
+						rte_wx_average_winddirection,
+						rte_wx_temperature_average_external_valid,
+						rte_wx_pressure_valid,
+						rte_wx_humidity_valid,
+						main_callsign_with_ssid,
+						main_string_latitude,
+						main_string_longitude,
+						main_config_data_basic);
 			}
 		}
 		else {
 			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-			aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+			aprsis_send_wx_frame(
+					rte_wx_average_windspeed,
+					rte_wx_max_windspeed,
+					rte_wx_average_winddirection,
+					rte_wx_temperature_average_external_valid,
+					rte_wx_pressure_valid,
+					rte_wx_humidity_valid,
+					main_callsign_with_ssid,
+					main_string_latitude,
+					main_string_longitude,
+					main_config_data_basic);
 		}
 		// TODO: fixme
 

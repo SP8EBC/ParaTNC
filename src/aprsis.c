@@ -19,11 +19,6 @@ srl_context_t * aprsis_serial_port;
 gsm_sim800_state_t * aprsis_gsm_modem_state;
 
 /**
- * Buffer to store string representation of callsign with SSID
- */
-char aprsis_callsign_with_ssid[10];
-
-/**
  * Size of transmit buffer
  */
 #define APRSIS_TX_BUFFER_LN	512
@@ -53,6 +48,8 @@ char aprsis_login_string[64];
  */
 const char * aprsis_default_server_address;
 
+const char * aprsis_callsign_with_ssid;
+
 uint16_t aprsis_default_server_address_ln = 0;
 
 uint16_t aprsis_default_server_port;
@@ -78,25 +75,32 @@ uint32_t aprsis_reset_on_timeout = 0;
 
 #define APRSIS_TIMEOUT_MS	123000//123000
 
-#define MAXIMUM_CALL_SSID_LN	9
+/**
+ * Lenght of 6 letter callsign + two digit SSID + end character like '>' or ","
+ */
+#define MAXIMUM_CALL_SSID_DASH_LN	10
 
-void aprsis_init(srl_context_t * context, gsm_sim800_state_t * gsm_modem_state, char * callsign, uint8_t ssid, uint32_t passcode, char * default_server, uint16_t default_port, uint8_t reset_on_timeout) {
+void aprsis_init(
+		srl_context_t * context,
+		gsm_sim800_state_t * gsm_modem_state,
+		const char * callsign,
+		uint8_t ssid,
+		uint32_t passcode,
+		const char * default_server,
+		const uint16_t default_port,
+		uint8_t reset_on_timeout,
+		const char * callsign_with_ssid) {
 	aprsis_serial_port = context;
 
 	aprsis_gsm_modem_state = gsm_modem_state;
 
 	aprsis_passcode = (int32_t)passcode;
 
-	if (ssid != 0) {
-		sprintf(aprsis_callsign_with_ssid, "%s-%d", callsign, ssid);
-	}
-	else {
-		sprintf(aprsis_callsign_with_ssid, "%s", callsign);
-	}
+	aprsis_callsign_with_ssid = callsign_with_ssid;
 
 	memset(aprsis_login_string, 0x00, 0x40);
 
-	sprintf(aprsis_login_string, "user %s pass %ld vers ParaMETEO %s \r\n", aprsis_callsign_with_ssid, aprsis_passcode, SW_VER);
+	sprintf(aprsis_login_string, "user %s pass %ld vers ParaMETEO %s \r\n", callsign_with_ssid, aprsis_passcode, SW_VER);
 
 	aprsis_logged = 0;
 
@@ -187,7 +191,7 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							aprsis_last_keepalive_ts = master_time;
 
 							if (auto_send_beacon != 0) {
-								aprsis_send_beacon(0);
+								aprsis_send_beacon(0, aprsis_callsign_with_ssid, main_string_latitude, main_symbol_f, main_string_longitude, main_symbol_s, main_config_data_basic);
 							}
 
 							// set timeout for aprs-is server
@@ -286,7 +290,30 @@ void aprsis_check_alive(void) {
 	}
 }
 
-void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie, uint8_t humidity) {
+/**
+ *
+ * @param windspeed
+ * @param windgusts
+ * @param winddirection
+ * @param temperatura
+ * @param cisnienie
+ * @param humidity
+ * @param callsign_with_ssid
+ * @param string_latitude
+ * @param string_longitude
+ * @param config_data_basic
+ */
+void aprsis_send_wx_frame(
+		uint16_t windspeed,
+		uint16_t windgusts,
+		uint16_t winddirection,
+		float temperatura,
+		float cisnienie,
+		uint8_t humidity,
+		const char * callsign_with_ssid,
+		const char * string_latitude,
+		const char * string_longitude,
+		const config_data_basic_t * config_data_basic) {
 
 	if (aprsis_logged == 0) {
 		return;
@@ -322,7 +349,23 @@ void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t windd
 
  	memset(aprsis_packet_tx_buffer, 0x00, sizeof(aprsis_packet_tx_buffer));
  	// 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
- 	aprsis_packet_tx_message_size = sprintf(aprsis_packet_tx_buffer, "%s>AKLPRZ,qAR,%s:!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d\r\n", aprsis_callsign_with_ssid, aprsis_callsign_with_ssid, main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+ 	aprsis_packet_tx_message_size = sprintf(
+ 			aprsis_packet_tx_buffer,
+			"%s>AKLPRZ,qAR,%s:!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d\r\n",
+			callsign_with_ssid,
+			callsign_with_ssid,
+			string_latitude,
+			config_data_basic->n_or_s,
+			'/',
+			string_longitude,
+			config_data_basic->e_or_w,
+			'_',
+			/* kierunek */direction,
+			/* predkosc*/(int)wind_speed_mph,
+			/* porywy */(short)(wind_gusts_mph),
+			/*temperatura */(short)(temperatura*1.8+32),
+			pressure,
+			humidity);
  	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
@@ -333,13 +376,32 @@ void aprsis_send_wx_frame(uint16_t windspeed, uint16_t windgusts, uint16_t windd
  * @param async zero for blocking io, which lock this function during transmission.
  * 				non zero for non blocking io, function will return immediately and sending will be done in background
  */
-void aprsis_send_beacon(uint8_t async) {
+void aprsis_send_beacon(
+		uint8_t async,
+		const char * callsign_with_ssid,
+		const char * string_latitude,
+		char symbol_f,
+		const char * string_longitude,
+		char symbol_s,
+		const config_data_basic_t * config_data_basic
+		) {
 
 	if (aprsis_logged == 0) {
 		return;
 	}
 
-	aprsis_packet_tx_message_size = sprintf(aprsis_packet_tx_buffer, "%s>AKLPRZ,qAR,%s:=%s%c%c%s%c%c %s\r\n", aprsis_callsign_with_ssid, aprsis_callsign_with_ssid, main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
+	aprsis_packet_tx_message_size = sprintf(
+			aprsis_packet_tx_buffer,
+			"%s>AKLPRZ,qAR,%s:=%s%c%c%s%c%c %s\r\n",
+			callsign_with_ssid,
+			callsign_with_ssid,
+			string_latitude,
+			config_data_basic->n_or_s,
+			symbol_f,
+			string_longitude,
+			config_data_basic->e_or_w,
+			symbol_s,
+			config_data_basic->comment);
 	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
 	  if (async > 0) {
@@ -350,10 +412,12 @@ void aprsis_send_beacon(uint8_t async) {
 	  }
 }
 
-void aprsis_igate_to_aprsis(struct AX25Msg *msg) {
+void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 
 	// iterator to move across tx buffer
-	uint8_t tx_buffer_it = 0;
+	uint16_t tx_buffer_it = 0;
+
+	uint16_t payload_ln = 0;
 
 	// string lenght returned by snprintf
 	int snprintf_size = 0;
@@ -366,29 +430,23 @@ void aprsis_igate_to_aprsis(struct AX25Msg *msg) {
 	// prepare buffer for message
 	memset(aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
 
-	// lenght of a source call
-	const size_t source_call_ln = strlen(msg->src.call);
-
-	// lenght of destination call
-	const size_t dest_call_ln = strlen(msg->dst.call);
-
 	// put callsign
 	strncat(aprsis_packet_tx_buffer, msg->src.call, 6);
 
 	// put source call
-	if ((msg->src.ssid & 0xF) == 0) {
-		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_LN, "%.6s-%d>", msg->src.call, msg->src.ssid & 0xF);
+	if ((msg->src.ssid & 0xF) != 0) {
+		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_DASH_LN, "%.6s-%d>", msg->src.call, msg->src.ssid & 0xF);
 	}
 	else {
 		// callsign without SSID
-		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_LN, "%.6s>", msg->src.call);
+		snprintf_size = snprintf(aprsis_packet_tx_buffer, MAXIMUM_CALL_SSID_DASH_LN, "%.6s>", msg->src.call);
 	}
 
 	// move iterator forward
 	tx_buffer_it = (uint8_t) snprintf_size & 0xFFU;
 
 	// put destination call - for sake of simplicity ignore SSID
-	snprintf_size = snprintf(aprsis_packet_tx_buffer + tx_buffer_it, MAXIMUM_CALL_SSID_LN, "%.6s,", msg->dst.call);
+	snprintf_size = snprintf(aprsis_packet_tx_buffer + tx_buffer_it, MAXIMUM_CALL_SSID_DASH_LN, "%.6s,", msg->dst.call);
 
 	// move iterator
 	tx_buffer_it += (uint8_t) snprintf_size & 0xFFU;
@@ -397,15 +455,39 @@ void aprsis_igate_to_aprsis(struct AX25Msg *msg) {
 	for (int i = 0; i < msg->rpt_cnt; i++) {
 		if ((msg->rpt_lst[i].ssid & 0x0F) == 0) {
 			if ((msg->rpt_lst[i].ssid & 0x40) == 0x40)
-				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s*,", cIn->tDigi[i].call);
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s*,", msg->rpt_lst[i].call);
 			else
-				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s,", cIn->tDigi[i].call);
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s,", msg->rpt_lst[i].call);
 		}
 		else {
 			if ((msg->rpt_lst[i].ssid & 0x40) == 0x40)
-				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d*," cIn->tDigi[i].call, (msg->rpt_lst[i].ssid & 0x0F));
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d*,", msg->rpt_lst[i].call, (msg->rpt_lst[i].ssid & 0x0F));
 			else
-				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d", cIn->tDigi[i].call, (msg->rpt_lst[i].ssid & 0x0F));
+				snprintf_size = sprintf(aprsis_packet_tx_buffer + tx_buffer_it, "%.6s-%d,", msg->rpt_lst[i].call, (msg->rpt_lst[i].ssid & 0x0F));
 		}
+
+		// move iterator
+		tx_buffer_it += (uint8_t) snprintf_size & 0xFFU;
 	}
+
+	snprintf_size = snprintf(aprsis_packet_tx_buffer + tx_buffer_it, MAXIMUM_CALL_SSID_DASH_LN + 5, "qAR,%s:", callsign_with_ssid);
+
+	// move iterator
+	tx_buffer_it += (uint8_t) snprintf_size & 0xFFU;
+
+	// cut the data field if it is too long to fit in transmission buffer
+	if (msg->len + tx_buffer_it >= APRSIS_TX_BUFFER_LN) {
+		payload_ln = APRSIS_TX_BUFFER_LN - tx_buffer_it - 1;	// keep one byte for null terminator
+	}
+	else {
+		payload_ln = msg->len;
+	}
+
+	memcpy(aprsis_packet_tx_buffer + tx_buffer_it, msg->info, payload_ln);
+
+
+}
+
+char * aprsis_get_tx_buffer(void) {
+	return aprsis_packet_tx_buffer;
 }

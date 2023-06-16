@@ -11,7 +11,7 @@
 #include "gsm/sim800_state_t.h"
 
 #define SW_VER "EA22"
-#define SW_DATE "10062023"
+#define SW_DATE "15062023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
@@ -76,6 +76,7 @@ extern char main_own_aprs_msg[OWN_APRS_MSG_LN];
 
 extern char main_string_latitude[9];
 extern char main_string_longitude[9];
+extern char main_callsign_with_ssid[10];
 
 extern char main_symbol_f;
 extern char main_symbol_s;
