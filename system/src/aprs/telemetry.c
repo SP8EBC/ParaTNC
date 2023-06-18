@@ -27,6 +27,8 @@ const char * telemetry_vbatt_low 			= "VBATT_LOW";
 const char * telemetry_vbatt_cutoff 		= "VBATT_CUTOFF";
 const char * telemetry_vbatt_unknown		= "VBATT_UNKNOWN";
 
+#include "gsm/sim800c_gprs.h"
+#include "gsm/sim800c.h"
 #endif
 
 void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic) {
@@ -617,3 +619,26 @@ void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uin
 	main_wait_for_tx_complete();
 }
 
+void telemetry_send_status_gsm(void){
+	main_wait_for_tx_complete();
+
+	// clear buffer
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+
+	// append general status information about network connection
+	gsm_sim800_create_status(main_own_aprs_msg, OWN_APRS_MSG_LN);
+
+	// measure a lenght of existing status string
+	const size_t size_so_far = strlen(main_own_aprs_msg);
+
+	// append an ip address
+	sim800_gprs_create_status(main_own_aprs_msg + size_so_far, OWN_APRS_MSG_LN - size_so_far);
+
+	// full lenght of status string
+	main_own_aprs_msg_len =  strlen(main_own_aprs_msg);
+
+	// send message on radio
+ 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	afsk_txStart(&main_afsk);
+
+}

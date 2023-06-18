@@ -4,6 +4,8 @@
 
 #include "drivers/serial.h"
 
+#include "float_to_string.h"
+
 #include <stdint.h>
 #include <string.h>
 
@@ -192,4 +194,16 @@ void sim800_gprs_reset(void){
 	gsm_sim800_gprs_ready = 0;
 
 	memset (gsm_sim800_ip_address, 0x00, 18);
+}
+
+/**
+ * Create a text status message
+ * @param buffer
+ * @param ln
+ */
+void sim800_gprs_create_status(char * buffer, int ln) {
+	// check if output buffer has been provided
+	if (buffer != 0) {
+		snprintf(buffer, ln, "[IP: %s]", gsm_sim800_ip_address);
+	}
 }

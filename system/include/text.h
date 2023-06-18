@@ -35,6 +35,13 @@ inline static void text_replace_non_printable_with_space(char * str, uint16_t si
 	}
 }
 
+/**
+ * Goes from the end of the buffer and replace all spaces with null terminator.
+ * Stops on " (double quotation mark) which is also replaced with null, or
+ * at the begining of an string
+ * @param str
+ * @param size
+ */
 inline static void text_replace_space_with_null(char * str, uint16_t size) {
 
 	// it goes from the end of a buffer towards its begining

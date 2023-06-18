@@ -19,6 +19,7 @@
 #include "io.h"
 
 #include "text.h"
+#include "float_to_string.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -768,10 +769,13 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				else {
 					gsm_sim800_network_status = NETWORK_REGISTERED;
 
-					strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), 16);
+					// copy network name from serial buffer into separate module, keep a room for null terminator
+					strncpy(gsm_sim800_registered_network, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 12), REGISTERED_NETWORK_LN - 1);
 
+					// replace all non printable characters with space
 					text_replace_non_printable_with_space(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
 
+					// trim network name with excessive spaces
 					text_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
 				}
 
@@ -783,6 +787,7 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			if (comparision_result == 0) {
 				comparision_result = atoi((const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 6));
 
+				// recalculate signal level from numeric value into decibels
 				if (comparision_result > 1 && comparision_result < 32) {
 					gsm_sim800_signal_level_dbm = (int8_t)(-110 + 2 * (comparision_result - 2));
 				}
@@ -876,4 +881,26 @@ void gsm_sim800_reset(gsm_sim800_state_t * state) {
 	sim800_gprs_reset();
 
 	gsm_sim800_tcpip_reset();
+}
+
+void gsm_sim800_create_status(char * buffer, int ln) {
+	// buffer to assemble GSM control channel frequency xxx.xxMHz
+	char freq[9];
+
+	// clear the buffer
+	memset(freq, 0x0, 0x9);
+
+	float_to_string(gsm_sim800_bcch_frequency, freq, 9, 2, 3);
+
+	if (buffer != 0) {
+		snprintf(
+				buffer,
+				ln,
+				">[GSM status][network: %s][signal: %ddBm][freq: %s][cellid: %s][lac: %s]",
+				gsm_sim800_registered_network,
+				gsm_sim800_signal_level_dbm,
+				freq,
+				gsm_sim800_cellid,
+				gsm_sim800_lac);
+	}
 }

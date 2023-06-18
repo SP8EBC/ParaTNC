@@ -97,6 +97,7 @@ void telemetry_send_status_raw_values_modbus(void);
 void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
 void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time);
 
+void telemetry_send_status_gsm(void);
 #ifdef __cplusplus
 }
 #endif

@@ -23,6 +23,8 @@
 #include "api/api.h"
 #include "pwr_save.h"
 #include "nvm.h"
+
+#include "gsm/sim800c_gprs.h"
 #endif
 
 #include "main.h"
@@ -62,6 +64,9 @@ uint8_t packet_tx_trigger_tcp = 0;
 #define RECONNECT_APRSIS		(1 << 7)
 
 nvm_measurement_t packet_tx_nvm;
+
+//!< Flag set to one after the gsm status message is sent over radio.
+uint8_t packet_tx_gsm_status_sent = 0;
 #endif
 
 void packet_tx_send_wx_frame(void) {
@@ -305,6 +310,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			packet_tx_meteo_counter = 0;
 		}
 
+		// if modus RTU client is enabled with debugging
 		if ((main_config_data_mode->wx_modbus & WX_MODBUS_DEBUG) == WX_MODBUS_DEBUG) {
 			// send the status packet with raw values of all requested modbus-RTU registers
 			if (packet_tx_meteo_counter == (packet_tx_meteo_interval - 1) &&
@@ -340,6 +346,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			// wait if serial port is currently used
 			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
+			// create wx data packet into specified buffer
 			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln, &ln);
 
 			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
@@ -351,9 +358,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
 		packet_tx_multi_per_call_handler();
-
-		// GET TEMPERATURE FOR TELEMETRY - HAS SIDE EFFECTS
-		//wx_get_temperature_measurement(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu, &rte_wx_temperature_internal_valid);
 
 		// ASSEMBLY QUALITY FACTORS
 
@@ -539,6 +543,29 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		packet_tx_telemetry_descr_counter = 0;
 	}
+
+#ifdef STM32L471xx
+	// if gsm modem is enabled
+	if (main_config_data_mode->gsm != 0) {
+		// if gprs is connected
+		if (gsm_sim800_gprs_ready == 1) {
+			// if no gsm status packet has been sent so far
+			if (packet_tx_gsm_status_sent == 0) {
+
+				// send a status
+				telemetry_send_status_gsm();
+
+				// network parameters are not queries while APRS-IS connection is pending
+				// so no sense to send status more than once after the initialization
+				packet_tx_gsm_status_sent = 1;
+			}
+		}
+		else {
+			packet_tx_gsm_status_sent = 0;
+		}
+	}
+#endif
+
 
 }
 

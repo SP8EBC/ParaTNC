@@ -11,7 +11,7 @@
 #include "gsm/sim800_state_t.h"
 
 #define SW_VER "EA22"
-#define SW_DATE "15062023"
+#define SW_DATE "17062023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
@@ -134,10 +134,17 @@ inline void main_set_monitor(int8_t bit) {
 #endif
 }
 
+/**
+ * Block I/O function which waits for all transmission to end
+ */
 inline void main_wait_for_tx_complete(void) {
 	while(main_afsk.sending == 1);
 }
 
+/**
+ * Reset pooling timers values after waking up from deep sleep, to be sure
+ * than
+ */
 inline void main_reset_pooling_timers(void) {
 	main_wx_sensors_pool_timer = 35000;
 

@@ -1178,6 +1178,12 @@ int main(int argc, char* argv[]){
 			rx10m++;
 #ifdef STM32L471xx
 			rte_main_rx_total++;
+
+			// if aprsis is logged
+			if (aprsis_connected == 1) {
+				aprsis_igate_to_aprsis(&ax25_rxed_frame, &main_callsign_with_ssid);
+			}
+
 #endif
 		}
 

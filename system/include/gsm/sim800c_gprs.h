@@ -29,4 +29,6 @@ void sim800_gprs_create_apn_config_str(char * buffer, uint16_t buffer_ln);
 void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state_t * state, uint16_t gsm_response_start_idx);
 void sim800_gprs_reset(void);
 
+void sim800_gprs_create_status(char * buffer, int ln);
+
 #endif /* INCLUDE_GSM_SIM800C_GPRS_H_ */
