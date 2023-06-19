@@ -27,6 +27,8 @@ void gsm_sim800_poolers_ten_seconds(srl_context_t * srl_context, gsm_sim800_stat
 		aprsis_connect_and_login_default(1);
 	}
 
+	gsm_sim800_decrease_counter();
+
 }
 
 void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state_t * state, const config_data_gsm_t * config) {

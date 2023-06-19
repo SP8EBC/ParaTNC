@@ -53,6 +53,18 @@ static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
 
 uint32_t gsm_time_of_last_command_send_to_module = 0;
 
+//! Counter used to inhibit too frequent module resets, if it has no no sense
+static int16_t gsm_reset_counter = 0;
+
+//!< how much reset counter is incremented each reset
+#define GSM_RESET_COUNTER_INCREMENT	50u
+
+//!< how much reset counter is decremented in 10 seconds pooler
+#define GSM_RESET_COUNTER_DECREMENT	2u
+
+//! A limit above which next reset attempts will be inhibited until counter will be decreased
+#define GSM_RESET_COUNTER_LIMIT	151u
+
 //! let's the library know if gsm module echoes every AT command send through serial port
 static uint8_t gsm_at_comm_echo = 1;
 
@@ -90,6 +102,7 @@ sim800_network_status_t gsm_sim800_network_status = NETWORK_STATUS_UNKNOWN;
 //! A delay in seconds between requesting for SIM card status and a request for network status
 int8_t gsm_sim800_registration_delay_seconds = 8;
 
+//! Signal level in dBm obtained from engineering AT command
 int8_t gsm_sim800_signal_level_dbm = 0;
 
 float gsm_sim800_bcch_frequency = 0;
@@ -280,7 +293,17 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 		// turn power off
 		gsm_sim800_power_off();
 
-		*state = SIM800_POWERED_OFF;
+		if (gsm_reset_counter > GSM_RESET_COUNTER_LIMIT) {
+			*state = SIM800_INHIBITED_RESET_COUNTER;
+		}
+		else {
+			*state = SIM800_POWERED_OFF;
+		}
+	}
+	else if (*state == SIM800_INHIBITED_RESET_COUNTER) {
+		if (gsm_reset_counter < GSM_RESET_COUNTER_LIMIT) {
+			*state = SIM800_POWERED_OFF;
+		}
 	}
 	else if (*state == SIM800_POWERED_OFF) {
 		gsm_sim800_power_on();
@@ -881,6 +904,8 @@ void gsm_sim800_reset(gsm_sim800_state_t * state) {
 	sim800_gprs_reset();
 
 	gsm_sim800_tcpip_reset();
+
+	gsm_reset_counter += GSM_RESET_COUNTER_INCREMENT;
 }
 
 void gsm_sim800_create_status(char * buffer, int ln) {
@@ -896,11 +921,20 @@ void gsm_sim800_create_status(char * buffer, int ln) {
 		snprintf(
 				buffer,
 				ln,
-				">[GSM status][network: %s][signal: %ddBm][freq: %s][cellid: %s][lac: %s]",
+				">[GSM status][network: %s][signal: %ddBm][freq: %sMHz][cellid: %s][lac: %s]",
 				gsm_sim800_registered_network,
 				gsm_sim800_signal_level_dbm,
 				freq,
 				gsm_sim800_cellid,
 				gsm_sim800_lac);
+	}
+}
+
+void gsm_sim800_decrease_counter(void) {
+	if (gsm_reset_counter > 0) {
+		gsm_reset_counter -= GSM_RESET_COUNTER_DECREMENT;
+	}
+	else if (gsm_reset_counter < 0) {
+		gsm_reset_counter = 0;
 	}
 }

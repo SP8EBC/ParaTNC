@@ -204,6 +204,6 @@ void sim800_gprs_reset(void){
 void sim800_gprs_create_status(char * buffer, int ln) {
 	// check if output buffer has been provided
 	if (buffer != 0) {
-		snprintf(buffer, ln, "[IP: %s]", gsm_sim800_ip_address);
+		snprintf(buffer, ln, "[IP addr: %s]", gsm_sim800_ip_address);
 	}
 }

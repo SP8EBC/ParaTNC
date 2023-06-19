@@ -36,4 +36,6 @@ uint16_t gsm_sim800_get_response_start_idx(void);
 
 void gsm_sim800_create_status(char * buffer, int ln);
 
+void gsm_sim800_decrease_counter(void);
+
 #endif /* INCLUDE_GSM_SIM800C_H_ */
