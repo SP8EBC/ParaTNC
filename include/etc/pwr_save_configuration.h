@@ -35,6 +35,6 @@
 /**
  * Do not uncomment this on production devices
  */
-#define INHIBIT_CUTOFF
+//#define INHIBIT_CUTOFF
 
 #endif /* INCLUDE_PWR_SAVE_CONFIGURATION_H_ */

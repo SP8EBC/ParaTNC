@@ -505,6 +505,12 @@ int main(int argc, char* argv[]){
 	  configuration_handler_load_configuration(REGION_DEFAULT);
   }
 
+  // set function for left button
+  main_button_one_left = configuration_get_left_button();
+
+  // set function for right button
+  main_button_two_right = configuration_get_right_button();
+
   // set packets intervals
   packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
 
@@ -567,6 +573,11 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
+  if (main_button_one_left != BUTTON_DISABLED || main_button_two_right != BUTTON_DISABLED) {
+	  // initializing GPIO used for buttons
+	  io_buttons_init();
+  }
+
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
 
@@ -579,9 +590,6 @@ int main(int argc, char* argv[]){
 
   // initializing GPIO used for swithing on and off voltages on pcb
   io_pwr_init();
-
-  // initializing GPIO used for buttons
-  io_buttons_init();
 
   // initialize sensor power control and switch off supply voltage
   wx_pwr_switch_init();
@@ -602,12 +610,6 @@ int main(int argc, char* argv[]){
 
   // initializing UART gpio pins
   io_uart_init();
-
-  // set function for left button
-  main_button_one_left = configuration_get_left_button();
-
-  // set function for right button
-  main_button_two_right = configuration_get_right_button();
 
 #if defined(STM32F10X_MD_VL)
   // enabling the clock for both USARTs
