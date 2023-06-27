@@ -8,8 +8,8 @@
 #ifndef INCLUDE_MODBUS_RTU_RTU_GETTERS_H_
 #define INCLUDE_MODBUS_RTU_RTU_GETTERS_H_
 
+#include <configuration_nvm/config_data.h>
 #include <stdint.h>
-#include "config_data.h"
 
 int32_t rtu_get_temperature(int16_t* out, const config_data_rtu_t * const config);
 int32_t rtu_get_pressure(float* out, const config_data_rtu_t * const config);

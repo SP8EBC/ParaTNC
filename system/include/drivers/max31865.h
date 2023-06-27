@@ -8,7 +8,7 @@
 #ifndef INCLUDE_DRIVERS_MAX31865_H_
 #define INCLUDE_DRIVERS_MAX31865_H_
 
-#include "config_data.h"
+#include <configuration_nvm/config_data.h>
 #include "drivers/spi.h"
 
 #include <stdint.h>

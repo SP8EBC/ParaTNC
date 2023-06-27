@@ -14,22 +14,32 @@
 #include <stm32l4xx.h>
 #include "./drivers/l4/flash_stm32l4x.h"
 
+//!< Size of single flash memory page
 #define NVM_PAGE_SIZE				2048
+
+//!< How flash program operation are aligned, how many bytes must be programmed at once
 #define NVM_WRITE_BYTE_ALIGN		8
 
 #endif
 
-#define NVM_MEASUREMENT_OFFSET			0
+//#define NVM_MEASUREMENT_OFFSET			0
+
+//!< Size of NVM data logger in pages
 #define NVM_MEASUREMENT_PAGES_USED		96
+
+//!< Size of NVM data logger in bytes
 #define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * NVM_MEASUREMENT_PAGES_USED)
 
+//!< A macro to calculate start address of last page for NVM data logger
 #define START_OF_LAST_NVM_PAGE			(nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
 
+//!< Base address of NVM data logger for device with 1MB of Flash
+#define LOGGER_BASE_ADDRESS_1MB_DEVICE	0x08080000	// Page 256 from 511
+
+#define LOGGER_BASE_ADDRESS_512K_DEVICE	0x08040000	// Page 256 from 383 (warning! there are no pages within 128-255)
 uint32_t nvm_base_address = 0;
 
-/**
- * Start address of flash page used currently for NVM
- */
+//!< Start address of flash page used currently for NVM
 uint32_t nvm_current_page_address = 0;
 
 /**
@@ -66,11 +76,11 @@ void nvm_measurement_init(void) {
 	// check current flash size
 	if (FLASH_SIZE == 1024 KB) {
 		// 1024KB
-		nvm_base_address = 0x08080000;
+		nvm_base_address = LOGGER_BASE_ADDRESS_1MB_DEVICE;
 	}
 	else if (FLASH_SIZE == 512 KB) {
 		// 512KB
-		nvm_base_address = 0x08040000;
+		nvm_base_address = LOGGER_BASE_ADDRESS_512K_DEVICE;
 	}
 	else {
 		// unknown device ??

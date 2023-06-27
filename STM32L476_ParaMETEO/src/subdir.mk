@@ -11,16 +11,10 @@ C_SRCS += \
 ../src/api.c \
 ../src/aprsis.c \
 ../src/button_parameteo.c \
-../src/config_data_default.c \
-../src/config_data_first.c \
-../src/config_data_second.c \
-../src/configuration_handler.c \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/io.c \
 ../src/it_handlers.c \
-../src/kiss_callback.c \
-../src/kiss_communication.c \
 ../src/main.c \
 ../src/nvm.c \
 ../src/packet_tx_handler.c \
@@ -44,16 +38,10 @@ OBJS += \
 ./src/api.o \
 ./src/aprsis.o \
 ./src/button_parameteo.o \
-./src/config_data_default.o \
-./src/config_data_first.o \
-./src/config_data_second.o \
-./src/configuration_handler.o \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/io.o \
 ./src/it_handlers.o \
-./src/kiss_callback.o \
-./src/kiss_communication.o \
 ./src/main.o \
 ./src/nvm.o \
 ./src/packet_tx_handler.o \
@@ -77,16 +65,10 @@ C_DEPS += \
 ./src/api.d \
 ./src/aprsis.d \
 ./src/button_parameteo.d \
-./src/config_data_default.d \
-./src/config_data_first.d \
-./src/config_data_second.d \
-./src/configuration_handler.d \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/io.d \
 ./src/it_handlers.d \
-./src/kiss_callback.d \
-./src/kiss_communication.d \
 ./src/main.d \
 ./src/nvm.d \
 ./src/packet_tx_handler.d \
@@ -107,7 +89,7 @@ C_DEPS += \
 src/%.o: ../src/%.c src/subdir.mk
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross ARM C Compiler'
-	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -DDEBUG -DUSE_FULL_LL_DRIVER -DSTM32L471xx -DPARAMETEO -USTM32F10X_MD_VL -UPARATNC_HWREV_A -UPARATNC_HWREV_B -UPARATNC_HWREV_C -I"../include" -I"../include/etc" -I"../system/include/tiny-aes" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis/stm32l4xx" -I"../system/include/cmsis/stm32l4xx/device" -I"../system/include/stm32l4-hal-driver" -I"../system/include/stm32l4-hal-driver/Legacy" -std=gnu11 -Wunused-function -Wall -Wa,-adhlns="$@.lst" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -DDEBUG -DUSE_FULL_LL_DRIVER -DSTM32L471xx -DPARAMETEO -USTM32F10X_MD_VL -UPARATNC_HWREV_A -UPARATNC_HWREV_B -UPARATNC_HWREV_C -I"../include" -I"../include/configuration_nvm" -I"../include/etc" -I"../system/include/tiny-aes" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis/stm32l4xx" -I"../system/include/cmsis/stm32l4xx/device" -I"../system/include/stm32l4-hal-driver" -I"../system/include/stm32l4-hal-driver/Legacy" -std=gnu11 -Wunused-function -Wall -Wa,-adhlns="$@.lst" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

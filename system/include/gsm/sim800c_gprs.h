@@ -9,9 +9,9 @@
 #define INCLUDE_GSM_SIM800C_GPRS_H_
 
 
+#include <configuration_nvm/config_data.h>
 #include "drivers/serial.h"
 #include "gsm/sim800_state_t.h"
-#include "config_data.h"
 
 extern const char * START_CONFIG_APN;
 extern const char * SHUTDOWN_GPRS;

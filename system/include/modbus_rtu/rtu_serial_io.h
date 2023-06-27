@@ -8,13 +8,13 @@
 #ifndef INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_
 #define INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_
 
+#include <configuration_nvm/config_data.h>
 #include <stdint.h>
 
 #include "./drivers/serial.h"
 
 #include "./modbus_rtu/rtu_pool_queue_t.h"
 
-#include "config_data.h"
 
 extern uint16_t rtu_serial_previous_crc;
 

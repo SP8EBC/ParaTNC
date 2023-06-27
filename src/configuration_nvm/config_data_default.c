@@ -1,21 +1,19 @@
 /*
- * config_data.c
+ * config_data_default.c
  *
- *  Created on: Jan 12, 2021
+ *  Created on: Apr 27, 2021
  *      Author: mateusz
  */
 
-/**
- * This is NOT an editable configuration file where ParaTNC settings are made! Do not touch this!
- * Please look at 'station_config.h' instead to set all parameters.
- */
+// this file contains default configuration used if both first and second config_data section doesn't contains valid
+// configuration data (CRC32 calculated from both sections is wrong). In such case the software erases both sections and
+// reprogram it from the default set stored somewhere within .code section
 
-#include "config_data.h"
+#include <configuration_nvm/config_data.h>
 #include "io_default_vbat_scaling.h"
 
 #include "station_config.h"
 
-#ifndef STM32L471xx
 
 #ifndef _RTU_SLAVE_LENGHT_1
 	#define _RTU_SLAVE_LENGHT_1 0x1
@@ -41,14 +39,11 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
-const uint16_t __attribute__((section(".config_section_first"))) config_data_pgm_cntr_first = 0x1;
-
-const uint32_t __attribute__((section(".config_section_first.crc"))) config_data_crc_val_first = 0xDEADBEEF;
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_first.mode"))) config_data_mode_first = {
+const config_data_mode_t __attribute__((section(".config_section_default.mode"))) config_data_mode_default = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -79,6 +74,11 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 		.wx_umb = 0,
 #endif
 
+		.wx_pt_sensor = 0x71,		// TODO:
+
+#ifdef _DUST_SDS011_SERIAL
+		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
+#endif
 
 #ifdef _VICTRON
 		.victron = 1,
@@ -93,10 +93,6 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 #endif
 
 		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,
-
-#ifdef _DUST_SDS011_SERIAL
-		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
-#endif
 
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,
@@ -133,16 +129,22 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 #endif
 
 #if (defined _GSM_KEEP_MODEM_ALWAYS_ON)
-		.powersave_keep_gsm_always_enabled = 1
+		.powersave_keep_gsm_always_enabled = 1,
 #else
-		.powersave_keep_gsm_always_enabled = 0
+		.powersave_keep_gsm_always_enabled = 0,
+#endif
+
+#if (defined _NVM_LOGGER)
+		.nvm_logger = 1
+#else
+		.nvm_logger = 0
 #endif
 };
 
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_first.basic"))) config_data_basic_first = {
+const config_data_basic_t __attribute__((section(".config_section_default.basic"))) config_data_basic_default = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -192,7 +194,6 @@ const config_data_basic_t __attribute__((section(".config_section_first.basic"))
 
 		.beacon_transmit_period = _BCN_INTERVAL,
 
-
 #ifdef _BCN_ON_STARTUP
 		.beacon_at_bootup = 1,
 #else
@@ -208,18 +209,36 @@ const config_data_basic_t __attribute__((section(".config_section_first.basic"))
 #ifdef ENG1
 		.engineering1 = ENG1,
 #else
-		.engineering1 = 0xFF,
+		.engineering1 = 0,
+#endif
+
+#ifdef ENG2
+		.engineering2 = ENG2,
+#else
+		.engineering2 = 0,
 #endif
 
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
-		.battery_scalling_b = VBAT_MEAS_B_COEFF
+		.battery_scalling_b = VBAT_MEAS_B_COEFF,
+
+#ifdef _BUTTON_ONE_LEFT
+		.button_one_left = _BUTTON_ONE_LEFT,
+#else
+		.button_one_left = 0,
+#endif
+
+#ifdef _BUTTON_TWO_RIGHT
+		.button_two_right = _BUTTON_TWO_RIGHT
+#else
+		.button_two_right = 0
+#endif
 };
 
 /**
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_first.sources"))) config_data_wx_sources_first = {
+const config_data_wx_sources_t __attribute__((section(".config_section_default.sources"))) config_data_wx_sources_default = {
 
 		.temperature_telemetry = WX_SOURCE_INTERNAL,
 
@@ -235,7 +254,9 @@ const config_data_wx_sources_t __attribute__((section(".config_section_first.sou
 #ifdef _TEMPERATURE_DAVIS
 		.temperature = WX_SOURCE_DAVIS_SERIAL,
 #endif
-
+#ifdef _TEMPERATURE_INTERNAL_PT100
+		.temperature = WX_SOURCE_INTERNAL_PT100,
+#endif
 
 
 #ifdef _PRESSURE_INTERNAL
@@ -287,7 +308,7 @@ const config_data_wx_sources_t __attribute__((section(".config_section_first.sou
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_first.umb"))) config_data_umb_first = {
+const config_data_umb_t __attribute__((section(".config_section_default.umb"))) config_data_umb_default = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -319,7 +340,7 @@ const config_data_umb_t __attribute__((section(".config_section_first.umb"))) co
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) config_data_rtu_first = {
+const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) config_data_rtu_default = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
@@ -484,45 +505,44 @@ const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) co
 		.slave_6_unsigned_signed = 0
 };
 
-//#ifdef PARAMETEO
-//
-//const config_data_gsm_t __attribute__((section(".config_section_first.gsm"))) config_data_gsm_first = {
-//		.pin = "\0\0\0\0\0",
-//
-//		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
-//		//.apn = "plus\0",				// PlusGSM  - karta
-//		//.apn = "virgin-internet\0",			// Virgin Mobile
-//
-//		.username = _GSM_APN_USER,
-//
-//		.password = _GSM_APN_PASS,
-//
-//#ifdef _GSM_API_ENABLE
-//		.api_enable = 1,
-//#else
-//		.api_enable = 0,
-//#endif
-//
-//		// 78.88.56.14
-//		//.api_base_url = "http://78.88.56.14:8080/",
-//		.api_base_url = _GSM_API_BASE_URL,		// 22910
-//		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
-//
-//		.api_station_name = _GSM_API_STATION_NAME,
-//
-//#ifdef _GSM_APRSIS_ENABLE
-//		.aprsis_enable = 1,
-//#else
-//		.aprsis_enable = 0,
-//#endif
-//
-//		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
-//
-//		.aprsis_server_port = _GSM_APRSIS_PORT,
-//
-//		.aprsis_server_address = _GSM_APRSIS_ADDRES
-//
-//};
-//#endif
+#ifdef PARAMETEO
 
+const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) config_data_gsm_default = {
+		.pin = "\0\0\0\0\0",
+
+		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
+		//.apn = "plus\0",				// PlusGSM  - karta
+		//.apn = "virgin-internet\0",			// Virgin Mobile
+
+		.username = _GSM_APN_USER,
+
+		.password = _GSM_APN_PASS,
+
+#ifdef _GSM_API_ENABLE
+		.api_enable = 1,
+#else
+		.api_enable = 0,
 #endif
+
+		// 78.88.56.14
+		//.api_base_url = "http://78.88.56.14:8080/",
+		.api_base_url = _GSM_API_BASE_URL,		// 22910
+		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
+
+		.api_station_name = _GSM_API_STATION_NAME,
+
+#ifdef _GSM_APRSIS_ENABLE
+		.aprsis_enable = 1,
+#else
+		.aprsis_enable = 0,
+#endif
+
+		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
+
+		.aprsis_server_port = _GSM_APRSIS_PORT,
+
+		.aprsis_server_address = _GSM_APRSIS_ADDRES
+};
+#endif
+
+

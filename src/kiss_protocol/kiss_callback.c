@@ -5,9 +5,9 @@
  *      Author: mateusz
  */
 
-#include "kiss_communication.h"
-#include "kiss_communication_service_ids.h"
-#include "configuration_handler.h"
+#include <configuration_nvm/configuration_handler.h>
+#include <kiss_communication/kiss_communication.h>
+#include <kiss_communication/kiss_communication_service_ids.h>
 #include "main.h"
 
 #include <string.h>
@@ -163,10 +163,12 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 
 	/**
 	 * The structure of input frame goes like that:
-	 * FEND, LN, KISS_PROGRAM_STARTUP_CFG, OFFSET, data, data, (...), FEND
+	 * FEND, KISS_PROGRAM_STARTUP_CFG, data_PAYLOAD_LN, OFFSET_LSB, OFFSET_MSB, data, data, (...), FEND
 	 *
-	 * LN is a lenght of complete frame, so data size is LN - 5 (two FENDs, LN itself, OFFSET and KISS_PROGRAM_STARTUP_CFG)
-	 * OFFSET is an offset calculated from the begining of configuration block. Host PC doesn't know anything about TNC memory layout
+	 * KISS_PROGRAM_STARTUP_CFG is a frame type, in this case 0x34, but might be also 0x00 for regular
+	 * frame data to be sent over the air. data_PAYLOAD_LN is a lenght of data in this frame, the
+	 * assumption is  that whole config data segment size will be an even multiply of a size
+	 * of single frame.
 	 */
 
 	// result to be returned to the host PC
@@ -191,4 +193,11 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	response_buffer[5] = FEND;
 
 	return PROGRAM_STARTUP_LN;
+}
+
+int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+	int32_t out = 0;
+
+	return out;
 }

@@ -39,8 +39,8 @@
 #include "packet_tx_handler.h"
 
 #include "station_config.h"
-#include "config_data_externs.h"
-#include "configuration_handler.h"
+#include <configuration_nvm/config_data_externs.h>
+#include <configuration_nvm/configuration_handler.h>
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"
@@ -90,7 +90,8 @@
 
 #include "drivers/dallas.h"
 
-#include <kiss_communication.h>
+#include <kiss_communication/kiss_communication.h>
+#include <etc/kiss_configuation.h>
 
 #define SOH 0x01
 
@@ -255,8 +256,7 @@ char main_string_latitude[9];
 char main_string_longitude[9];
 char main_callsign_with_ssid[10];
 
-#define MAIN_SMALL_BUFFER_LN	20
-uint8_t main_small_buffer[MAIN_SMALL_BUFFER_LN];
+uint8_t main_small_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
 
 char main_symbol_f = '/';
 char main_symbol_s = '#';
@@ -1264,7 +1264,7 @@ int main(int argc, char* argv[]){
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
 				// parse i ncoming data and then transmit on radio freq
-				ln = kiss_parse_received(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk, main_small_buffer, MAIN_SMALL_BUFFER_LN);
+				ln = kiss_parse_received(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk, main_small_buffer, KISS_CONFIG_DIAGNOSTIC_BUFFER_LN);
 				if (ln == 0) {
 					kiss10m++;	// increase kiss messages counter
 				}

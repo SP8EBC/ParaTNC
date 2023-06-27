@@ -8,8 +8,7 @@
 #include <afsk.h>
 #include <cfifo.h>
 #include <crc.h>
-#include <kiss_communication.h>
-
+#include <kiss_communication/kiss_communication.h>
 #include "station_config.h"
 
 

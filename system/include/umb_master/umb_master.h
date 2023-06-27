@@ -8,13 +8,13 @@
 #ifndef INCLUDE_UMB_MASTER_UMB_MASTER_H_
 #define INCLUDE_UMB_MASTER_UMB_MASTER_H_
 
+#include <configuration_nvm/config_data.h>
 #include <umb_master/umb_frame_t.h>
 #include <umb_master/umb_retval_t.h>
 #include <umb_master/umb_context_t.h>
 #include <umb_master/umb_call_reason.h>
 #include <umb_master/umb_qf_t.h>
 
-#include "config_data.h"
 
 void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config_data_umb_t * const config_umb);
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);

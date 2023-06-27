@@ -10,7 +10,7 @@
 #include "config_data.h"
 #include "gsm/sim800_state_t.h"
 
-#define SW_VER "EA22"
+#define SW_VER "EA23"
 #define SW_DATE "17062023"
 #define SW_KISS_PROTO	"A"
 

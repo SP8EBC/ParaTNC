@@ -1,11 +1,16 @@
 /*
- * config_data_second.c
+ * config_data.c
  *
- *  Created on: Apr 26, 2021
+ *  Created on: Jan 12, 2021
  *      Author: mateusz
  */
 
-#include "config_data.h"
+/**
+ * This is NOT an editable configuration file where ParaTNC settings are made! Do not touch this!
+ * Please look at 'station_config.h' instead to set all parameters.
+ */
+
+#include <configuration_nvm/config_data.h>
 #include "io_default_vbat_scaling.h"
 
 #include "station_config.h"
@@ -36,14 +41,14 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
-const uint16_t __attribute__((section(".config_section_second"))) config_data_pgm_cntr_second = 0x2;
+const uint16_t __attribute__((section(".config_section_first"))) config_data_pgm_cntr_first = 0x1;
 
-const uint32_t __attribute__((section(".config_section_second.crc"))) config_data_crc_val_second = 0xDEADBEEF;
+const uint32_t __attribute__((section(".config_section_first.crc"))) config_data_crc_val_first = 0xDEADBEEF;
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_second.mode"))) config_data_mode_second = {
+const config_data_mode_t __attribute__((section(".config_section_first.mode"))) config_data_mode_first = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -74,9 +79,6 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 		.wx_umb = 0,
 #endif
 
-#ifdef _DUST_SDS011_SERIAL
-		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
-#endif
 
 #ifdef _VICTRON
 		.victron = 1,
@@ -91,6 +93,10 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 #endif
 
 		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,
+
+#ifdef _DUST_SDS011_SERIAL
+		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,
+#endif
 
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,
@@ -136,7 +142,7 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_second.basic"))) config_data_basic_second = {
+const config_data_basic_t __attribute__((section(".config_section_first.basic"))) config_data_basic_first = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -213,7 +219,7 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_second.sources"))) config_data_wx_sources_second = {
+const config_data_wx_sources_t __attribute__((section(".config_section_first.sources"))) config_data_wx_sources_first = {
 
 		.temperature_telemetry = WX_SOURCE_INTERNAL,
 
@@ -281,7 +287,7 @@ const config_data_wx_sources_t __attribute__((section(".config_section_second.so
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_second.umb"))) config_data_umb_second = {
+const config_data_umb_t __attribute__((section(".config_section_first.umb"))) config_data_umb_first = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -313,7 +319,7 @@ const config_data_umb_t __attribute__((section(".config_section_second.umb"))) c
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) config_data_rtu_second = {
+const config_data_rtu_t __attribute__((section(".config_section_first.rtu"))) config_data_rtu_first = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
@@ -478,9 +484,9 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 		.slave_6_unsigned_signed = 0
 };
 
-#ifdef PARAMETEO
-
-//const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) config_data_gsm_second = {
+//#ifdef PARAMETEO
+//
+//const config_data_gsm_t __attribute__((section(".config_section_first.gsm"))) config_data_gsm_first = {
 //		.pin = "\0\0\0\0\0",
 //
 //		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
@@ -515,9 +521,8 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 //		.aprsis_server_port = _GSM_APRSIS_PORT,
 //
 //		.aprsis_server_address = _GSM_APRSIS_ADDRES
+//
 //};
+//#endif
 
 #endif
-
-#endif
-

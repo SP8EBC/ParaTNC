@@ -5,11 +5,10 @@
  *      Author: mateusz
  */
 
+#include <configuration_nvm/config_data.h>
+#include <configuration_nvm/config_data_externs.h>
+#include <configuration_nvm/configuration_handler.h>
 #include "station_config_target_hw.h"
-
-#include "configuration_handler.h"
-#include "config_data.h"
-#include "config_data_externs.h"
 
 #include "io_default_vbat_scaling.h"
 

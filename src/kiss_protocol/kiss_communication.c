@@ -5,25 +5,23 @@
  *      Author: mateusz
  */
 
-#include <kiss_communication.h>
-#include "kiss_callback.h"
-#include "kiss_communication_service_ids.h"
-
+#include <configuration_nvm/config_data_externs.h>
+#include <configuration_nvm/configuration_handler.h>
 #include "main.h"
-#include "config_data_externs.h"
-#include "configuration_handler.h"
-
 #include "station_config.h"
 
 
 #include <crc.h>
+#include <kiss_communication/kiss_callback.h>
+#include <kiss_communication/kiss_communication.h>
+#include <kiss_communication/kiss_communication_service_ids.h>
 #include <string.h>
 #include <stdlib.h>
 
 extern unsigned short tx10m;
 
 /**
- * ID of asynchronous message which is currently transmitteed asynchronously do host PC.
+ * ID of asynchronous message which is currently transmitteed asynchronously to host PC.
  * If it is set to 0xFF then no async message is transmitted
  */
 uint8_t kiss_current_async_message = 0xFF;
@@ -126,6 +124,7 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 	}
 	else {
 
+		// copy data to "big" buffer used to exchange packet from/to RF
 		uint8_t *FrameBuff = (uint8_t *)main_own_aprs_msg;
 
 		uint8_t frame_type = *(input_frame_from_host+1);
