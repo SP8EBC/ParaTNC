@@ -22,7 +22,20 @@
 #include "./kiss_communication/kiss_xmacro_helpers.h"
 #include "rte_wx.h"
 
-#define DIDS_NUMERIC(ENTRY)		\
-		ENTRY(0x1234, &rte_wx_temperature_average_dallas, &rte_wx_temperature_average_pt, &rte_wx_temperature_average_internal)
+//!< Dummy variable used only as end of definition marker in tables
+extern char did_dummy_data;
+
+//!< Definition of all DIDs with theirs source data for PARAMETEO platform
+#if defined(PARAMETEO)
+	#define DIDS_NUMERIC(ENTRY)		\
+		ENTRY(0x1234, &rte_wx_temperature_average_dallas, &rte_wx_temperature_average_pt, &rte_wx_temperature_average_internal)	\
+		ENTRY(0xFFFF, &did_dummy_data, &did_dummy_data, &did_dummy_data)
+#endif
+
+//!< Definition of all DIDs with theirs source data for PARATNC platform
+#if defined (PARATNC)
+	#define DIDS_NUMERIC(ENTRY)		\
+		ENTRY(0xFFFF, &did_dummy_data, &did_dummy_data, &did_dummy_data)
+#endif
 
 #endif /* KISS_DID_CONFIGURATION_H_ */

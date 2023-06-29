@@ -135,13 +135,11 @@
  *
  * To obtain such compatibility a lot of #defines and different makefiles has to be used.
  * Some parts of the code are 'included' per target CPU basis, as are independent from
- * target platform either directly (like handling serial port or GPIO configuration), or
- * as a result of an assumption that all target plaforms with STML476 will have GSM modem.
+ * target platform directly. Including system headers (CMSIS, std peripheral driver),
+ * configuring low level hardware like interrupt controler, clock etc.
  *
- * Some platforms had or may have in the future few hadware revisions. ParaTNC had
- * revisions A, B and C. Currently A and B are abandoned an assumption is that all ParaTNC
- * builds applies to C. A choose of hardware revision is done in file 'station_config_target_hw.h'
- * which is currently empty
+ * Some parts of code and header files are related to certain platform
+ *
  */
 
 // ----- main() ---------------------------------------------------------------
@@ -160,7 +158,7 @@ const config_data_basic_t * main_config_data_basic = 0;
 const config_data_wx_sources_t * main_config_data_wx_sources = 0;
 const config_data_umb_t * main_config_data_umb = 0;
 const config_data_rtu_t * main_config_data_rtu = 0;
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 const config_data_gsm_t * main_config_data_gsm = 0;
 #endif
 
@@ -200,7 +198,7 @@ srl_context_t main_kiss_srl_ctx;
 //! serial context for UART used for comm with wx sensors
 srl_context_t main_wx_srl_ctx;
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 //! serial context for communication with GSM module
 srl_context_t main_gsm_srl_ctx;
 #endif
@@ -272,7 +270,7 @@ umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 //! result of CRC calculation
 uint32_t main_crc_result = 0;
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
@@ -409,7 +407,7 @@ int main(int argc, char* argv[]){
 
 	  configuration_set_register(0);
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 	  nvm_erase_all();
 
 //	  nvm_test_prefill();
@@ -619,7 +617,7 @@ int main(int argc, char* argv[]){
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 #endif
 
@@ -771,11 +769,11 @@ int main(int argc, char* argv[]){
 		  break;
   }
 
-#if defined(STM32F10X_MD_VL)
+#if defined(PARATNC)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
 #endif
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
   main_wx_srl_ctx_ptr->early_tx_assert = configuration_get_early_tx_assert();		// TODO: was 1
@@ -844,7 +842,7 @@ int main(int argc, char* argv[]){
   // initialize i2c controller
   i2cConfigure();
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
   // initialize SPI
   spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
@@ -871,11 +869,11 @@ int main(int argc, char* argv[]){
   digi_init(main_config_data_mode);
 
   if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-#if defined(STM32F10X_MD_VL)
+#if defined(PARATNC)
 	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
 #endif
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 	  // initialize dallas one-wire driver for termometer
 	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 #endif
@@ -1052,7 +1050,7 @@ int main(int argc, char* argv[]){
 
    io_ext_watchdog_service();
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 
    if (main_config_data_mode->nvm_logger != 0) {
 	   nvm_measurement_init();
@@ -1178,7 +1176,7 @@ int main(int argc, char* argv[]){
 
 			ax25_new_msg_rx_flag = 0;
 			rx10m++;
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 			rte_main_rx_total++;
 
 			// if aprsis is logged
@@ -1189,7 +1187,7 @@ int main(int argc, char* argv[]){
 #endif
 		}
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 		// if GSM communication is enabled
 		if (main_config_data_mode->gsm == 1) {
 
@@ -1431,7 +1429,7 @@ int main(int argc, char* argv[]){
 
 			digi_pool_viscous();
 
-			#ifdef STM32L471xx
+			#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1) {
 
 				if (gsm_sim800_gprs_ready == 1) {
@@ -1493,7 +1491,7 @@ int main(int argc, char* argv[]){
 
 			wx_check_force_i2c_reset();
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 			max31865_pool();
 #endif
 			#ifdef INTERNAL_WATCHDOG
@@ -1539,7 +1537,7 @@ int main(int argc, char* argv[]){
 
 			main_set_monitor(9);
 
-			#ifdef STM32L471xx
+			#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1) {
 				gsm_sim800_poolers_ten_seconds(main_gsm_srl_ctx_ptr, &main_gsm_state);
 

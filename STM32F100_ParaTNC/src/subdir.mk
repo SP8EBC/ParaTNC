@@ -8,17 +8,11 @@ C_SRCS += \
 ../src/PathConfig.c \
 ../src/TimerConfig.c \
 ../src/_write.c \
-../src/config_data_default.c \
-../src/config_data_first.c \
-../src/config_data_second.c \
-../src/configuration_handler.c \
+../src/button_paratnc.c \
 ../src/delay.c \
 ../src/dummy.c \
-../src/float_to_string.c \
 ../src/io.c \
 ../src/it_handlers.c \
-../src/kiss_callback.c \
-../src/kiss_communication.c \
 ../src/main.c \
 ../src/packet_tx_handler.c \
 ../src/rte_main.c \
@@ -37,17 +31,11 @@ OBJS += \
 ./src/PathConfig.o \
 ./src/TimerConfig.o \
 ./src/_write.o \
-./src/config_data_default.o \
-./src/config_data_first.o \
-./src/config_data_second.o \
-./src/configuration_handler.o \
+./src/button_paratnc.o \
 ./src/delay.o \
 ./src/dummy.o \
-./src/float_to_string.o \
 ./src/io.o \
 ./src/it_handlers.o \
-./src/kiss_callback.o \
-./src/kiss_communication.o \
 ./src/main.o \
 ./src/packet_tx_handler.o \
 ./src/rte_main.o \
@@ -66,17 +54,11 @@ C_DEPS += \
 ./src/PathConfig.d \
 ./src/TimerConfig.d \
 ./src/_write.d \
-./src/config_data_default.d \
-./src/config_data_first.d \
-./src/config_data_second.d \
-./src/configuration_handler.d \
+./src/button_paratnc.d \
 ./src/delay.d \
 ./src/dummy.d \
-./src/float_to_string.d \
 ./src/io.d \
 ./src/it_handlers.d \
-./src/kiss_callback.d \
-./src/kiss_communication.d \
 ./src/main.d \
 ./src/packet_tx_handler.d \
 ./src/rte_main.d \
@@ -95,7 +77,7 @@ C_DEPS += \
 src/%.o: ../src/%.c src/subdir.mk
 	@echo 'Building file: $<'
 	@echo 'Invoking: Cross ARM C Compiler'
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -DDEBUG -DTRACE -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -I"../include" -I"../include/etc" -I"../system/include/tiny-aes" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -Wunused-function -Wall -Wa,-adhlns="$@.lst" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -DDEBUG -DPARATNC -DTRACE -DSTM32F10X_MD_VL -DUSE_STDPERIPH_DRIVER -DHSE_VALUE=8000000 -UPARAMETEO -I"../include" -I"../include/configuration_nvm" -I"../include/etc" -I"../system/include/tiny-aes" -I"../system/include/aprs" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f1-stdperiph" -std=gnu11 -Wunused-function -Wall -Wa,-adhlns="$@.lst" -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

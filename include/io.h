@@ -90,7 +90,7 @@ inline uint8_t io_get_12v_sw___cntrl_vbat_g(void) {
 	}
 }
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 inline void io___cntrl_vbat_g_enable(void) {
 	GPIOA->BSRR |= GPIO_BSRR_BS6;
 }

@@ -22,7 +22,7 @@ uint8_t led_blinking_led2;
 uint8_t led_blinking_led1;
 
 void led_init(void) {
-#ifdef STM32F10X_MD_VL
+#ifdef PARATNC
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -40,7 +40,7 @@ void led_init(void) {
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 #endif
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 	/**
 	 * 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;

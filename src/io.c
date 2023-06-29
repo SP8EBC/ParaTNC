@@ -182,7 +182,7 @@ void io_oc_output_hiz(void) {
 
 
 void io_pwr_init(void) {
-#if defined(STM32F10X_MD_VL)
+#if defined(PARATNC)
 
 			// RELAY_CNTRL
 			GPIO_InitTypeDef GPIO_InitStructure;
@@ -204,7 +204,7 @@ void io_pwr_init(void) {
 
 #endif
 
-#if defined(STM32L471xx)
+#if defined(PARAMETEO)
 			// PC13 - UC_CNTRL_VS
 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -260,7 +260,7 @@ void io_pwr_init(void) {
 
 
 void io_ext_watchdog_config(void) {
-#ifdef STM32F10X_MD_VL
+#ifdef PARATNC
 	  // initialize Watchdog output
 	  Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
 #endif
@@ -268,7 +268,7 @@ void io_ext_watchdog_config(void) {
 }
 
 void io_ext_watchdog_service(void) {
-#ifdef STM32F10X_MD_VL
+#ifdef PARATNC
 	if ((GPIOA->ODR & GPIO_ODR_ODR12) == 0) {
 		// set high
 		GPIOA->BSRR |= GPIO_BSRR_BS12;
@@ -277,10 +277,6 @@ void io_ext_watchdog_service(void) {
 		// set low
 		GPIOA->BSRR |= GPIO_BSRR_BR12;
 	}
-#endif
-
-#ifdef STM32L471xx
-
 #endif
 }
 

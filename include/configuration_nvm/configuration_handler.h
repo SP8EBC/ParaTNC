@@ -62,5 +62,7 @@ uint16_t configuration_get_vbat_b_coeff(void);
 configuration_button_function_t configuration_get_left_button(void);
 configuration_button_function_t configuration_get_right_button(void);
 
+int configuration_get_is_security_access_required(uint8_t medium, uint8_t routine_type);
+
 
 #endif /* CONFIGURATION_HANDLER_H_ */

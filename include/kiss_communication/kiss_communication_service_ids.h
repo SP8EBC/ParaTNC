@@ -23,6 +23,9 @@
 #define KISS_READ_MEM_ADDR			(uint8_t) 0x23
 #define KISS_READ_MEM_ADDR_RESP		(uint8_t) 0x63
 
+#define KISS_SECURITY_ACCESS		(uint8_t) 0x27
+#define kISS_SECURITY_ACCESS_RESP	(uint8_t) 0x67
+
 #define KISS_PROGRAM_STARTUP_CFG		(uint8_t) 0x34
 #define KISS_PROGRAM_STARTUP_CFG_RESP	(uint8_t) 0x74
 
@@ -40,6 +43,8 @@
 
 //#define KISS_CONTROL_VOLTAGE			(uint8_t) 0x27
 //#define KISS_CONTROL_VOLTAGE_RESP		(uint8_t) 0x77
+
+#define KISS_NEGATIVE_RESPONSE_SERVICE	(uint8_t) 0x7F
 
 #define KISS_RETURN_IDLE		1
 

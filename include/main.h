@@ -11,7 +11,7 @@
 #include "gsm/sim800_state_t.h"
 
 #define SW_VER "EA23"
-#define SW_DATE "17062023"
+#define SW_DATE "28062023"
 #define SW_KISS_PROTO	"A"
 
 #define SYSTICK_TICKS_PER_SECONDS 100

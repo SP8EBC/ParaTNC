@@ -191,6 +191,27 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
 	uint8_t button_two_right;
 
+	#define CONFIGURATION_SEC_ROUTINE_READ_OFFSET	1U
+	#define CONFIGURATION_SEC_ROUTINE_ELSE_OFFSET	3U
+	#define CONFIGURATION_SEC_MEDIUM_APRSIS	1U
+	#define CONFIGURATION_SEC_MEDIUM_RADIO	2U
+	#define CONFIGURATION_SEC_MEDIUM_KISS	4U
+	/**
+	 * Configuration of how UDS diagnostics are secured access different
+	 * mediums. GET_VERSION_AND_ID and SECURITY_ACCESS are never locked
+	 *
+	 * 	READ_DID and READ_MEMORY
+	 * bit 1 - APRSIS
+	 * bit 2 - RF network communication
+	 * bit 3 - KISS serial port communication
+	 *
+	 *  everything else
+	 * bit 4 - APRSIS
+	 * bit 5 - RF network communication
+	 * bit 6 - KISS serial port communication
+	 */
+	uint8_t uds_diagnostics_security_access;
+
 } config_data_basic_t;
 
 typedef enum config_data_wx_sources_enum_t {

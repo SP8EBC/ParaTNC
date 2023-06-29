@@ -942,3 +942,14 @@ configuration_button_function_t configuration_get_right_button(void) {
 
 	return out;
 }
+
+/**
+ * This function check if security access must be unlocked to execute given
+ * UDS service
+ * @param medium
+ * @param routine_type
+ * @return
+ */
+int configuration_get_is_security_access_required(uint8_t medium, uint8_t routine_type) {
+
+}
