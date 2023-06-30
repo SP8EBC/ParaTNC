@@ -5,8 +5,6 @@
  *      Author: mateusz
  */
 
-#include <configuration_nvm/config_data_externs.h>
-#include <configuration_nvm/configuration_handler.h>
 #include "main.h"
 #include "station_config.h"
 
@@ -17,6 +15,8 @@
 #include <kiss_communication/kiss_communication_service_ids.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stored_configuration_nvm/config_data_externs.h>
+#include <stored_configuration_nvm/configuration_handler.h>
 
 extern unsigned short tx10m;
 
@@ -25,6 +25,17 @@ extern unsigned short tx10m;
  * If it is set to 0xFF then no async message is transmitted
  */
 uint8_t kiss_current_async_message = 0xFF;
+
+#define KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN	6
+
+//!< Neagitve response to a request with unknown service id
+uint8_t kiss_nrc_response_unknown_service[KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN] = {
+		FEND,
+		NONSTANDARD,
+		KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN,
+		KISS_COMMUNICATION_NRC_SERVICE,
+		NRC_SERVICE_NOT_SUPPORTED,
+		FEND};
 
 
 uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
@@ -183,6 +194,7 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 
 
 			default: {
+				// unknown service
 				output = -3;
 			}
 		}

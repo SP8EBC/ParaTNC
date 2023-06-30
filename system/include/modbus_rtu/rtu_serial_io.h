@@ -8,8 +8,8 @@
 #ifndef INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_
 #define INCLUDE_MODBUS_RTU_RTU_SERIAL_IO_H_
 
-#include <configuration_nvm/config_data.h>
 #include <stdint.h>
+#include <stored_configuration_nvm/config_data.h>
 
 #include "./drivers/serial.h"
 

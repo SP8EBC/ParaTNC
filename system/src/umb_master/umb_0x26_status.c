@@ -5,7 +5,7 @@
  *      Author: mateusz
  */
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "../umb_master/umb_master.h"
 #include "../umb_master/umb_0x26_status.h"
 #include "main.h"

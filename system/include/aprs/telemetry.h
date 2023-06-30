@@ -8,7 +8,7 @@
 #ifndef INCLUDE_APRS_TELEMETRY_H_
 #define INCLUDE_APRS_TELEMETRY_H_
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "./drivers/dallas.h"
 #include "./drivers/ms5611.h"
 #include "./umb_master/umb_qf_t.h"

@@ -8,7 +8,7 @@
 #ifndef INCLUDE_APRS_DIGI_H_
 #define INCLUDE_APRS_DIGI_H_
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "aprs/ax25.h"
 
 #define DIGI_PACKET_DIGIPEATED 1

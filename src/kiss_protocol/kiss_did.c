@@ -26,7 +26,7 @@ typedef struct kiss_did_numeric_definition_t {
 }kiss_did_numeric_definition_t;
 
 //!< Definition of all DIDs with numeric data
-const kiss_did_numeric_definition_t kiss_did_def[] = {
+const static kiss_did_numeric_definition_t kiss_did_def[] = {
 		DIDS_NUMERIC(DID_NUMERIC_DEFINITION_EXPANDER)
 };
 
@@ -42,5 +42,23 @@ const kiss_did_numeric_definition_t kiss_did_def[] = {
  */
 void kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t buffer_ln) {
 
+	// iterator to go through DID definition
+	int i = 0;
+
+	// data of a did found in configuration
+	kiss_did_numeric_definition_t found = {.identifier = 0xFFFFu};
+
 	// iterate through DID definition and check if this id exist there
+	do {
+		// check if current position is the DID we're looking for
+		if (kiss_did_def[i].identifier == identifier) {
+			// if yes copy this data and exit the loop
+			found = kiss_did_def[i];
+		}
+		else {
+			// if no, go to the next DID definition
+			i++;
+		}
+	} while (kiss_did_def[i].identifier != 0xFFFFU);
+
 }

@@ -40,7 +40,7 @@
 
 #include "rte_main.h"
 
-#include <configuration_nvm/configuration_handler.h>
+#include <stored_configuration_nvm/configuration_handler.h>
 #include "station_config.h"
 
 

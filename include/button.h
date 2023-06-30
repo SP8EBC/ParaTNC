@@ -11,7 +11,7 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#include "configuration_handler.h"
+#include <stored_configuration_nvm/configuration_handler.h>
 
 /**
  * Should be called from main for loop or in quite short interval, like

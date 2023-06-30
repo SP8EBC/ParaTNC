@@ -9,6 +9,8 @@
 #define CONFIGURATION_HANDLER_H_
 
 #include <stdint.h>
+#include "kiss_communication_nrc_t.h"
+
 
 typedef enum configuration_handler_region_t {
 	REGION_DEFAULT,
@@ -39,8 +41,8 @@ uint32_t configuration_handler_check_crc(void);
 uint32_t configuration_handler_restore_default_first(void);
 uint32_t configuration_handler_restore_default_second(void);
 void configuration_handler_load_configuration(configuration_handler_region_t region);
-configuration_erase_startup_t configuration_handler_erase_startup(void);
-configuration_erase_startup_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset);
+kiss_communication_nrc_t configuration_handler_erase_startup(void);
+kiss_communication_nrc_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset);
 
 uint32_t configuration_get_register(void);
 void configuration_set_register(uint32_t value);

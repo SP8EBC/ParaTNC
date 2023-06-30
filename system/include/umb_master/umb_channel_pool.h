@@ -8,7 +8,7 @@
 #ifndef INCLUDE_UMB_MASTER_UMB_CHANNEL_POOL_H_
 #define INCLUDE_UMB_MASTER_UMB_CHANNEL_POOL_H_
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "umb_context_t.h"
 #include "umb_frame_t.h"
 

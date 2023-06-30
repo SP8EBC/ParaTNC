@@ -8,7 +8,7 @@
 #ifndef WX_HANDLER_HUMIDITY_H_
 #define WX_HANDLER_HUMIDITY_H_
 
-#include "config_data.h"
+#include <stored_configuration_nvm/config_data.h>
 
 int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu);
 int32_t wx_get_humidity_bme280(int8_t * const humidity);

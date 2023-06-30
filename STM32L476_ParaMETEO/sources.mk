@@ -28,8 +28,8 @@ CPP_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src \
-src/configuration_nvm \
 src/kiss_protocol \
+src/stored_configuration_nvm \
 system/src/aprs \
 system/src/cmsis/stm32l4xx \
 system/src \

@@ -1,13 +1,13 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <stored_configuration_nvm/config_data.h>
 #include "main_master_time.h"
 
 #include "station_config_target_hw.h"
 
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
-#include "config_data.h"
 #include "gsm/sim800_state_t.h"
 
 #define SW_VER "EA23"

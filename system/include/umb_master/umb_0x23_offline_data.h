@@ -8,7 +8,7 @@
 #ifndef INCLUDE_UMB_MASTER_UMB_0X23_OFFLINE_DATA_H_
 #define INCLUDE_UMB_MASTER_UMB_0X23_OFFLINE_DATA_H_
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "./umb_master/umb_retval_t.h"
 #include "./umb_master/umb_frame_t.h"
 #include "./umb_master/umb_context_t.h"

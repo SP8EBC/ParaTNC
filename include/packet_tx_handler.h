@@ -8,7 +8,7 @@
 #ifndef PACKET_TX_HANDLER_H_
 #define PACKET_TX_HANDLER_H_
 
-#include "config_data.h"
+#include <stored_configuration_nvm/config_data.h>
 
 typedef struct packet_tx_counter_values_t {
 

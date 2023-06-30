@@ -8,10 +8,10 @@
 #ifndef APRSIS_H_
 #define APRSIS_H_
 
+#include <stored_configuration_nvm/config_data.h>
 #include "drivers/serial.h"
 #include "gsm/sim800c_tcpip.h"
 #include "ax25.h"
-#include "config_data.h"
 
 
 typedef enum aprsis_return {

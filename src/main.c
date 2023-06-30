@@ -39,8 +39,8 @@
 #include "packet_tx_handler.h"
 
 #include "station_config.h"
-#include <configuration_nvm/config_data_externs.h>
-#include <configuration_nvm/configuration_handler.h>
+#include <stored_configuration_nvm/config_data_externs.h>
+#include <stored_configuration_nvm/configuration_handler.h>
 
 #include "diag/Trace.h"
 #include "antilib_adc.h"

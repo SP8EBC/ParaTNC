@@ -5,10 +5,9 @@
  *      Author: mateusz
  */
 
-#include <configuration_nvm/config_data.h>
-#include <configuration_nvm/config_data_externs.h>
-#include <configuration_nvm/configuration_handler.h>
-#include "station_config_target_hw.h"
+#include <stored_configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data_externs.h>
+#include <stored_configuration_nvm/configuration_handler.h>
 
 #include "io_default_vbat_scaling.h"
 
@@ -642,7 +641,7 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 
 }
 
-configuration_erase_startup_t configuration_handler_erase_startup(void) {
+kiss_communication_nrc_t configuration_handler_erase_startup(void) {
 	// flash operation result
 	FLASH_Status flash_status = 0;
 
@@ -655,7 +654,7 @@ configuration_erase_startup_t configuration_handler_erase_startup(void) {
 		page_address = (uint32_t)config_section_first_start;
 	}
 	else {
-		return ERASE_STARTUP_IDLE;
+		return NRC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 	}
 
 
@@ -671,14 +670,14 @@ configuration_erase_startup_t configuration_handler_erase_startup(void) {
 	FLASH_Lock();
 
 	if (flash_status == FLASH_COMPLETE) {
-		return ERASE_STARTUP_DONE;
+		return NRC_POSITIVE;
 	}
 	else {
-		return ERASE_STARTUP_ERROR;
+		return NRC_GENERAL_PROGRAMMING_FAIL;
 	}
 }
 
-configuration_erase_startup_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset) {
+kiss_communication_nrc_t configuration_handler_program_startup(uint8_t * data, uint8_t dataln, uint16_t offset) {
 
 	int comparision_result;
 
@@ -698,11 +697,11 @@ configuration_erase_startup_t configuration_handler_program_startup(uint8_t * da
 		target = (void *)config_section_first_start + offset;
 	}
 	else {
-		return ERASE_STARTUP_IDLE;
+		return NRC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 	}
 
 	if ((dataln % 8) != 0) {
-		return ERASE_STARTUP_IDLE;
+		return NRC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 
 	}
 
@@ -715,16 +714,16 @@ configuration_erase_startup_t configuration_handler_program_startup(uint8_t * da
 		comparision_result = memcmp((const void * )target, (const void * )source, dataln);
 
 		if (comparision_result == 0) {
-			return ERASE_STARTUP_DONE;
+			return NRC_POSITIVE;
 		}
 		else {
-			return ERASE_STARTUP_ERROR;
+			return NRC_GENERAL_PROGRAMMING_FAIL;
 		}
 
-		return ERASE_STARTUP_DONE;
+		return NRC_POSITIVE;
 	}
 	else {
-		return ERASE_STARTUP_ERROR;
+		return NRC_GENERAL_PROGRAMMING_FAIL;
 	}
 
 }

@@ -9,7 +9,7 @@
 #define INCLUDE_GSM_SIM800C_GPRS_H_
 
 
-#include <configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data.h>
 #include "drivers/serial.h"
 #include "gsm/sim800_state_t.h"
 

@@ -10,6 +10,7 @@
 #ifndef KISS_COMMUNICATION_KISS_COMMUNICATION_NRC_T_H_
 #define KISS_COMMUNICATION_KISS_COMMUNICATION_NRC_T_H_
 
+#define KISS_COMMUNICATION_NRC_SERVICE		0x74U
 
 typedef enum kiss_communication_nrc_t {
 	NRC_POSITIVE = 0x00,
@@ -123,6 +124,19 @@ typedef enum kiss_communication_nrc_t {
 	 * more times than the server's security strategy will allow.
 	 */
 	NRC_EXCEED_NUMBER_OF_ATTEMPTS = 0x36,
+
+	/**
+	 * This response code indicates that an attempt to upload/download to
+	 * a server's memory cannot be accomplished due to some fault conditions.
+	 */
+	NRC_UPLOAD_DOWNLOAD_NOT_ACCEPTED = 0x70,
+
+	/**
+	 * This response code indicates that the server detected an error when
+	 * erasing or programming a memory location in the permanent memory
+	 * device (e.g. Flash Memory).
+	 */
+	NRC_GENERAL_PROGRAMMING_FAIL = 0x72,
 
 	/**
 	 * This response code indicates that the request message was received

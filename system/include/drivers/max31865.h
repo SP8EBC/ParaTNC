@@ -8,10 +8,10 @@
 #ifndef INCLUDE_DRIVERS_MAX31865_H_
 #define INCLUDE_DRIVERS_MAX31865_H_
 
-#include <configuration_nvm/config_data.h>
 #include "drivers/spi.h"
 
 #include <stdint.h>
+#include <stored_configuration_nvm/config_data.h>
 
 #define MAX_3WIRE	3
 #define MAX_4WIRE	1

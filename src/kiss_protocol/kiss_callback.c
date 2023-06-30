@@ -1,17 +1,21 @@
 /*
  * kiss_callback.c
  *
+ * This file contains callback to all async sudo-UDS services requests. Each
+ * callback takes pointer for buffer and response. It returns a size of a
+ * response.
+ *
  *  Created on: Aug 17, 2022
  *      Author: mateusz
  */
 
-#include <configuration_nvm/configuration_handler.h>
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/kiss_communication_service_ids.h>
 #include "main.h"
 
 #include <string.h>
 #include <stdio.h>
+#include <stored_configuration_nvm/configuration_handler.h>
 
 #define KISS_MAX_CONFIG_PAYLOAD_SIZE	0x80
 #define KISS_LAST_ASYNC_MSG				0xFF
@@ -139,14 +143,14 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 
 #define ERASE_STARTUP_LN	6
 
-	configuration_erase_startup_t result = configuration_handler_erase_startup();
+	kiss_communication_nrc_t result = configuration_handler_erase_startup();
 
 	// construct a response
 	response_buffer[0] = FEND;
 	response_buffer[1] = NONSTANDARD;
 	response_buffer[2] = ERASE_STARTUP_LN;				// message lenght
 	response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
-	response_buffer[4] = result;
+	response_buffer[4] = (uint8_t)result;
 	response_buffer[5] = FEND;
 
 	return ERASE_STARTUP_LN;
@@ -154,15 +158,15 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 
 /**
  * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
- * what it receices and program. It is up to host PC to provide senseful configuration with properly calculated checksum as this isn't
- * recalculated ruing programming.
+ * what it receives and program. It is up to host PC to provide senseful configuration with properly calculated checksum as this isn't
+ * recalculated during programming.
  */
 int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 #define PROGRAM_STARTUP_LN	6
 
 	/**
-	 * The structure of input frame goes like that:
+	 * The structure of an input frame goes like that:
 	 * FEND, KISS_PROGRAM_STARTUP_CFG, data_PAYLOAD_LN, OFFSET_LSB, OFFSET_MSB, data, data, (...), FEND
 	 *
 	 * KISS_PROGRAM_STARTUP_CFG is a frame type, in this case 0x34, but might be also 0x00 for regular
@@ -172,7 +176,7 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	 */
 
 	// result to be returned to the host PC
-	configuration_erase_startup_t result;
+	kiss_communication_nrc_t result;
 
 	// offset within input frame where config start begining
 	uint8_t * data_ptr = input_frame_from_host + 5;
@@ -189,7 +193,7 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	response_buffer[1] = NONSTANDARD;
 	response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
 	response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
-	response_buffer[4] = result;
+	response_buffer[4] = (uint8_t)result;
 	response_buffer[5] = FEND;
 
 	return PROGRAM_STARTUP_LN;

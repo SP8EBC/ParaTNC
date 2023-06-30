@@ -8,7 +8,7 @@
 #ifndef CONFIG_DATA_EXTERNS_H_
 #define CONFIG_DATA_EXTERNS_H_
 
-#include "config_data.h"
+#include <stored_configuration_nvm/config_data.h>
 
 extern const int __config_section_first_crc;
 extern const int __config_section_second_crc;

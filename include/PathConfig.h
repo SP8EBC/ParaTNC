@@ -8,8 +8,8 @@
 #ifndef PATH_H_
 #define PATH_H_
 
+#include <stored_configuration_nvm/config_data.h>
 #include "aprs/ax25.h"
-#include "config_data.h"
 
   /* C++ detection */
   #ifdef __cplusplus

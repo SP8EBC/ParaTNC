@@ -8,6 +8,7 @@
 #ifndef PWR_SAVE_H_
 #define PWR_SAVE_H_
 
+#include <stored_configuration_nvm/config_data.h>
 #include "station_config_target_hw.h"
 
 /**
@@ -102,7 +103,6 @@
  *
  */
 
-#include "config_data.h"
 
 #define CURRENTLY_CUTOFF 		0x1
 #define CURRENTLY_VBATT_LOW		0x8
