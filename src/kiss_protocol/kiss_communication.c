@@ -26,18 +26,6 @@ extern unsigned short tx10m;
  */
 uint8_t kiss_current_async_message = 0xFF;
 
-#define KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN	6
-
-//!< Neagitve response to a request with unknown service id
-uint8_t kiss_nrc_response_unknown_service[KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN] = {
-		FEND,
-		NONSTANDARD,
-		KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN,
-		KISS_COMMUNICATION_NRC_SERVICE,
-		NRC_SERVICE_NOT_SUPPORTED,
-		FEND};
-
-
 uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 
 	int16_t pooling_result = 0;

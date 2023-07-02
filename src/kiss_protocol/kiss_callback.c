@@ -11,6 +11,8 @@
 
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/kiss_communication_service_ids.h>
+#include <kiss_communication/kiss_did.h>
+#include <kiss_communication/kiss_nrc_response.h>
 #include "main.h"
 
 #include <string.h>
@@ -145,15 +147,24 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 
 	kiss_communication_nrc_t result = configuration_handler_erase_startup();
 
-	// construct a response
 	response_buffer[0] = FEND;
 	response_buffer[1] = NONSTANDARD;
 	response_buffer[2] = ERASE_STARTUP_LN;				// message lenght
-	response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
+
+	if (result == NRC_POSITIVE) {
+		// construct a response
+		response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
+	}
+	else {
+		response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
+
+	}
+
 	response_buffer[4] = (uint8_t)result;
 	response_buffer[5] = FEND;
 
 	return ERASE_STARTUP_LN;
+
 }
 
 /**
@@ -192,7 +203,16 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	response_buffer[0] = FEND;
 	response_buffer[1] = NONSTANDARD;
 	response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
-	response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
+
+	if (result == NRC_POSITIVE) {
+		// construct a response
+		response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
+	}
+	else {
+		response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
+
+	}
+
 	response_buffer[4] = (uint8_t)result;
 	response_buffer[5] = FEND;
 
@@ -202,6 +222,31 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 	int32_t out = 0;
+
+	// result to be returned to the host PC
+	kiss_communication_nrc_t result;
+
+	// identifier
+	uint16_t did = *(input_frame_from_host + 2) | (*(input_frame_from_host + 3) << 8);
+
+	// construct DID response to an output buffer
+	const uint8_t response_size = kiss_did_response(did, response_buffer + 4, buffer_size - 4);
+
+	// check if DID has been found and everyting is OK with it.
+	if (response_size > 0) {
+		// if response is correct fill the buffer with the rest of stuff
+		response_buffer[0] = FEND;
+		response_buffer[1] = NONSTANDARD;
+		response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
+		response_buffer[3] = KISS_READ_DID_RESP;
+
+		response_buffer[response_size + 4] = FEND;
+
+		out = response_size + 5;
+	}
+	else {
+		out = kiss_nrc_response_fill_request_out_of_range(response_buffer);
+	}
 
 	return out;
 }

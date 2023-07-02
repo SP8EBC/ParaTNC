@@ -24,8 +24,8 @@ RM := rm -rf
 -include system/src/cmsis/subdir.mk
 -include system/src/aprs/subdir.mk
 -include system/src/subdir.mk
+-include src/stored_configuration_nvm/subdir.mk
 -include src/kiss_protocol/subdir.mk
--include src/configuration_nvm/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
 -include objects.mk

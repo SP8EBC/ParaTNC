@@ -9,7 +9,7 @@
 #define CONFIGURATION_HANDLER_H_
 
 #include <stdint.h>
-#include "kiss_communication_nrc_t.h"
+#include "kiss_communication/kiss_communication_nrc_t.h"
 
 
 typedef enum configuration_handler_region_t {
