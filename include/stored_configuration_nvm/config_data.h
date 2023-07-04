@@ -459,4 +459,45 @@ typedef struct __attribute__((aligned (4))) config_data_gsm_t {
 
 } config_data_gsm_t;
 
+/**
+ * This structure holds compatibility numbers, which are used to check if
+ * configuration data stored in the NVM is compatible with running software.
+ * It is useful after firmware upgrade, which doesn't alter the configuration
+ * data. Each config block has a separate entry here (like basic, mode, RTU).
+ * During startup, if CRC verification is passed the software reads uint32_t
+ * word for each config block, and compare with internally hardcoded value
+ * If value in NVM is bigger than what application has, the app AND that
+ * with a bitmask (also hardcoded) to check if it can safely ignore that.
+ *
+ * If it cannot ignore, the configuration is too new and supposedly
+ * not compatible. The application should then either restore default values,
+ * or switch to different interpretation of that data - at least do something. 
+ *
+ * If the value from NVM is less than value from application (but not equal!!!)
+ * it is additionally ORed with another hardcoded bitmask. If a result of
+ * this OR is bigger than application
+ *
+ *
+ */
+typedef struct __attribute__((aligned (4))) config_data_compatibility_version_t {
+
+	uint64_t mode_block_compatiblity_number;		// 8 bytes
+
+	uint64_t basic_block_compatiblity_number;		// 8 bytes
+
+	uint64_t sources_block_compatiblity_number;		// 8 bytes
+
+	uint64_t umb_block_compatiblity_number;			// 8 bytes
+
+	uint64_t rtu_block_compatiblity_number;			// 8 bytes
+
+	uint64_t gsm_block_compatiblity_number;			// 8 bytes
+
+	uint64_t seventh_block_compatibility_number;
+
+	uint64_t eight_block_compatibility_number;
+
+
+}config_data_compatibility_version_t;
+
 #endif /* CONFIG_DATA_H_ */

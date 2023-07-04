@@ -42,11 +42,12 @@
 
 #define CONFIG_MODE_PGM_CNTR	0x0
 #define CONFIG_MODE_OFSET		0x20			//	Current size: 0x14, free: 0x0C
-#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0xA6, free: 0x3A
+#define CONFIG_BASIC_OFFSET		0x40			//	Current size: 0xA8, free: 0x38
 #define CONFIG_SOURCES_OFFSET	0x120			//	Current size: 0x8,  free: 0x18
 #define CONFIG_UMB_OFFSET		0x140			//	Current size: 0x10, free: 0x10
-#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x10, free: 0x90
-#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0x114,
+#define CONFIG_RTU_OFFSET		0x160			//	Current size: 0x54, free: 0x4C
+#define CONFIG_GSM_OFFSET		0x200			//	Current size: 0x114,free:
+#define CONFIG_COMPAT_OFFSET	0x790			//  Current size: 0x40, free: 0x28
 #define CONFIG__END__OFFSET		0x7E0
 
 #include <string.h>

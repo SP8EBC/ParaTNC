@@ -546,3 +546,13 @@ const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) 
 #endif
 
 
+const config_data_compatibility_version_t __attribute__((section(".config_section_default.compat"))) config_data_compatibility_default = {
+		.mode_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.basic_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.sources_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.umb_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.rtu_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.gsm_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+		.seventh_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL,
+		.eight_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL
+};

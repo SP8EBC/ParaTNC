@@ -266,6 +266,9 @@ SECTIONS
 		. = start + 0x160;
 		KEEP(*(.config_section_first.rtu));
 		
+		. = start + 0x790;
+		KEEP(*(.config_section_first.compat));
+		
 		. = 0x7F8;
 		KEEP(*(.config_section_first.crc));
 
@@ -295,6 +298,9 @@ SECTIONS
 		
 		. = start + 0x160;
 		KEEP(*(.config_section_second.rtu));
+		
+		. = start + 0x790;
+		KEEP(*(.config_section_second.compat));
 		
 		. = 0x7F8;
 		KEEP(*(.config_section_second.crc));
