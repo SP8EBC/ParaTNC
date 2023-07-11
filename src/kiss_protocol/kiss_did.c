@@ -40,7 +40,8 @@ const static kiss_did_numeric_definition_t kiss_did_def[] = {
 };
 
 //!< Mapping between a result of sizeof operator and a value of sizebyte
-const static uint8_t kiss_did_sizeof_to_sizebyte_mapping[4] = {
+const static uint8_t kiss_did_sizeof_to_sizebyte_mapping[5] = {
+		0,// nothing
 		1,	// int8_t
 		2,	// int16_t
 		0,	// nothing

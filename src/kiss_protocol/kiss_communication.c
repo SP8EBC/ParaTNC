@@ -180,6 +180,11 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 				break;
 			}
 
+			case KISS_READ_DID: {
+				output = kiss_callback_read_did(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				break;
+			}
+
 
 			default: {
 				// unknown service

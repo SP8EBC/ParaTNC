@@ -237,7 +237,7 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 		// if response is correct fill the buffer with the rest of stuff
 		response_buffer[0] = FEND;
 		response_buffer[1] = NONSTANDARD;
-		response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
+		response_buffer[2] = response_size + 5;				// message lenght
 		response_buffer[3] = KISS_READ_DID_RESP;
 
 		response_buffer[response_size + 4] = FEND;
