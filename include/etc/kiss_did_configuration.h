@@ -21,14 +21,42 @@
 
 #include "./kiss_communication/kiss_xmacro_helpers.h"
 #include "rte_wx.h"
+#include "main_master_time.h"
+#include "main.h"
+#include "rte_main.h"
+#include "gsm/sim800c.h"
 
 //!< Dummy variable used only as end of definition marker in tables
 extern char did_dummy_data;
 
 //!< Definition of all DIDs with theirs source data for PARAMETEO platform
 #if defined(PARAMETEO)
+	#define DIDS_STRING(ENTRY)		\
+		ENTRY(0x1500U, gsm_sim800_registered_network)		\
+		ENTRY(0x1501U, gsm_sim800_simcard_status_string)		\
+		ENTRY(0x1502U, gsm_sim800_cellid)		\
+		ENTRY(0x1503U, gsm_sim800_lac)		\
+
+	#define DIDS_FLOAT(ENTRY)	\
+		ENTRY(0x2000U, &rte_wx_temperature_average_external_valid, 0x0, 0x0)	\
+		ENTRY(0x2001U, &rte_wx_temperature_internal_valid, 0x0, 0x0)	\
+		ENTRY(0x2002U, &rte_wx_pressure_history[0], &rte_wx_pressure_history[1], &rte_wx_pressure_history[2])	\
+		ENTRY(0x1505U, &gsm_sim800_signal_level_dbm, 0x0, 0x0)	\
+
 	#define DIDS_NUMERIC(ENTRY)		\
-		ENTRY(0x1234U, &rte_wx_temperature_average_dallas, &rte_wx_temperature_average_pt, &rte_wx_temperature_average_internal)	\
+		ENTRY(0x1000U, &master_time, 0x0, 0x0)	\
+		ENTRY(0x1001U, &rx10m, 0x0, 0x0)	\
+		ENTRY(0x1002U, &tx10m, 0x0, 0x0)	\
+		ENTRY(0x1003U, &digi10m, 0x0, 0x0)	\
+		ENTRY(0x1004U, &digidrop10m, 0x0, 0x0)	\
+		ENTRY(0x1100U, &rte_main_battery_voltage, &rte_main_average_battery_voltage, 0x0)	\
+		ENTRY(0x2003U, &rte_wx_temperature_average_dallas, &rte_wx_temperature_average_pt, &rte_wx_temperature_average_internal)	\
+		ENTRY(0x2004U, &rte_wx_average_winddirection, &rte_wx_average_windspeed, &rte_wx_max_windspeed)	\
+		ENTRY(0x2005U, &rte_wx_windspeed[0], &rte_wx_windspeed[1], &rte_wx_windspeed[2])	\
+		ENTRY(0x2006U, &rte_wx_winddirection[0], &rte_wx_winddirection[1], &rte_wx_winddirection[2])	\
+		ENTRY(0x2007U, &rte_wx_humidity, 0x0, 0x0)	\
+		ENTRY(0x2008U, &rte_wx_humidity, 0x0, 0x0)	\
+		ENTRY(0x1504U, &gsm_sim800_signal_level_dbm, 0x0, 0x0)	\
 		ENTRY(0xFFFFU, &did_dummy_data, &did_dummy_data, &did_dummy_data)
 #endif
 

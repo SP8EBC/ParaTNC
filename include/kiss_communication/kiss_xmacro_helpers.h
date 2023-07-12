@@ -38,4 +38,15 @@
 			.third_data_size = 0 \
 		},
 
+#define DID_NUMERIC_STRING_DEFINITION_EXPANDER(id, string_pointer )	\
+		{	\
+			.identifier = id, \
+			.first_data = (void*)string_pointer, \
+			.first_data_size = 0, \
+			.second_data = (void*)0xDEADBEEFu, \
+			.second_data_size = 0,	\
+			.third_data = (void*)0xDEADBEEFu, \
+			.third_data_size = 0 \
+		},
+
 #endif /* KISS_XMACRO_HELPERS_H_ */

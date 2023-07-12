@@ -11,6 +11,8 @@
 #include <etc/kiss_did_configuration.h>
 #include <etc/kiss_configuation.h>
 
+#include <string.h>
+
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
 #define SRAM1_SIZE_MAX	(0x00002000UL) /*!< maximum SRAM1 size (up to 96 KBytes) */
@@ -36,6 +38,8 @@ typedef struct kiss_did_numeric_definition_t {
 
 //!< Definition of all DIDs with numeric data
 const static kiss_did_numeric_definition_t kiss_did_def[] = {
+		DIDS_STRING(DID_NUMERIC_STRING_DEFINITION_EXPANDER)
+		DIDS_FLOAT(DID_NUMERIC_FLOAT_DEFINITION_EXPANDER)
 		DIDS_NUMERIC(DID_NUMERIC_DEFINITION_EXPANDER)
 };
 
@@ -67,6 +71,25 @@ static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition
 				if (definition->third_data != 0x00) {
 					out++;
 				}
+			}
+		}
+	}
+
+	return out;
+}
+
+/**
+ * Check if this DID return string data
+ * @param definition
+ * @return
+ */
+static int kiss_did_validate_is_string(kiss_did_numeric_definition_t * definition) {
+	int out = 0;
+
+	if (definition != 0) {
+		if (kiss_did_how_much_data(definition) == 3) {
+			if (definition->second_data == (void*)0xDEADBEEFu && definition->third_data == (void*)0xDEADBEEFu) {
+				out = 1;
 			}
 		}
 	}
@@ -209,6 +232,9 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 	// check is valid
 	const int is_valid = kiss_did_validate(&found, &number_of_data_source);
 
+	// check if this is string did
+	const int is_string = kiss_did_validate_is_string(&found);
+
 	// if something has been found and it is valid
 	if (found.identifier != 0xFFFFu && is_valid == 1) {
 
@@ -260,6 +286,20 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 
 		// also include size_byte in this calculation
 		out++;
+
+	}
+	else if (found.identifier != 0xFFFFu && is_string == 1) {
+		// if this is a string DID
+		const char * str = (char *)found.first_data;
+
+		const size_t str_len = strlen(str);
+
+		if (str_len > buffer_ln) {
+			memcpy(output_buffer, found.first_data, buffer_ln);
+		}
+		else {
+			memcpy(output_buffer, found.first_data, str_len);
+		}
 
 	}
 
