@@ -62,17 +62,32 @@ static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition
 	int out = 0;
 
 	if (definition != 0) {
-		if (definition->first_data != 0x00) {
+		if (definition->first_data != &DID_EMPTY) {
 			out++;
 
-			if (definition->second_data != 0x00) {
+			if (definition->second_data != &DID_EMPTY) {
 				out++;
 
-				if (definition->third_data != 0x00) {
+				if (definition->third_data != &DID_EMPTY) {
 					out++;
 				}
 			}
 		}
+	}
+
+	return out;
+}
+
+/**
+ * Checks if this DID
+ * @param definition
+ * @return
+ */
+static int kiss_did_validate_is_float(kiss_did_numeric_definition_t * definition) {
+	int out = 0;
+
+	if (definition != 0) {
+
 	}
 
 	return out;
@@ -191,8 +206,10 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 /**
  * Creates a response for DID request into specified buffer. Please take into account
  * that this function cannot use full size of this buffer. The exact content of the
- * response is: FEND, NONSTANDARD, KISS_READ_DID_RESP, DID LSB, DID MSB, data, FEND.
- * So in practice payload data may use only buffer_ln - 6 bytes of data.
+ * response is: FEND, NONSTANDARD, RESPONSE_LN, KISS_READ_DID_RESP, DID LSB, DID MSB,
+ * data, FEND.
+ * So in practice payload data may use only buffer_ln - 7 bytes of data. By default
+ * an output buffer used to return a response has 20 bytes in size
  *
  * @param identifier
  * @param output_buffer pointer to buffer where response will be generated into
@@ -205,6 +222,26 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 
 	// iterator to go through DID definition
 	int i = 0;
+
+	/**
+	 * Explanation how size_byte works. DID can return three kinds of data:
+	 * a string, integer data (one, two or three) with different width,
+	 * float (also one, two or three). size_byte is used to distinguish
+	 * between these three formats. It works like that
+	 *
+	 * 0y - If most significant nibble is set to zero, size_byte will
+	 * 		signalize string DID as ASCII characters from basic ASIC
+	 * 		table are from range 0 to 127
+	 * 10 - If most significant nibble is set to zero AND less significant
+	 * 		nibble is set to zero this DID returns integer data. In such
+	 * 		case three groups of two bits controls a size of data according
+	 * 		to 'kiss_did_sizeof_to_sizebyte_mapping'. If a group of two bits
+	 * 		is set to 0 it means that DID consist less than 3 variables
+	 * 11 - This means that a DID return float data. One did cannot mix
+	 * 		integer and floating point data and float has always 32 bit wide.
+	 * 		The rest of size_bute doesn't specify any size. Less significant
+	 * 		part consist number how many variables are returned.
+	 */
 
 	// first byte of a DID response which defines size of each field
 	uint8_t size_byte = 0u;
@@ -247,10 +284,10 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		size_byte |= kiss_did_sizeof_to_sizebyte_mapping[found.first_data_size];
 
 		// append a size of second data source
-		size_byte |= (kiss_did_sizeof_to_sizebyte_mapping[found.first_data_size] << 2);
+		size_byte |= (kiss_did_sizeof_to_sizebyte_mapping[found.second_data_size] << 2);
 
 		// append a size of third data source
-		size_byte |= (kiss_did_sizeof_to_sizebyte_mapping[found.first_data_size] << 4);
+		size_byte |= (kiss_did_sizeof_to_sizebyte_mapping[found.third_data_size] << 4);
 
 		output_buffer[0] = size_byte;
 

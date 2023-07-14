@@ -230,7 +230,7 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 	uint16_t did = *(input_frame_from_host + 2) | (*(input_frame_from_host + 3) << 8);
 
 	// construct DID response to an output buffer
-	const uint8_t response_size = kiss_did_response(did, response_buffer + 4, buffer_size - 4);
+	const uint8_t response_size = kiss_did_response(did, response_buffer + 4, buffer_size - 5);
 
 	// check if DID has been found and everyting is OK with it.
 	if (response_size > 0) {
