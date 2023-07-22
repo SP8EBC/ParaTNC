@@ -9,6 +9,8 @@
 #include "main.h"
 #include "text.h"
 
+#include "etc/aprsis_config.h"
+
 #include "gsm/sim800c.h"
 
 #include <stdio.h>
@@ -16,6 +18,9 @@
 
 srl_context_t * aprsis_serial_port;
 
+/**
+ * Pointer to used gsm_modem_state
+ */
 gsm_sim800_state_t * aprsis_gsm_modem_state;
 
 /**
@@ -44,14 +49,24 @@ int32_t aprsis_passcode;
 char aprsis_login_string[64];
 
 /**
- * Default APRS-IS address to be used by
+ * Default APRS-IS address to be used by 'aprsis_connect_and_login_default' function
  */
 const char * aprsis_default_server_address;
 
+/**
+ * String with a callsign and a ssid in aprsis format. Used sent auto beacon
+ * when connection to APRS-IS server is established
+ */
 const char * aprsis_callsign_with_ssid;
 
+/**
+ * Lenght of APRS-IS server address string
+ */
 uint16_t aprsis_default_server_address_ln = 0;
 
+/**
+ * TCP port used to connect to default APRS-IS server.
+ */
 uint16_t aprsis_default_server_port;
 
 /**
@@ -67,10 +82,29 @@ uint8_t aprsis_connected = 0;
 const char * aprsis_sucessfull_login = "# logresp\0";
 
 /**
+ * Counter of unsuccessful connects to APRS-IS, to trigger GSM modem reset.
+ * Please note that it works differently that 'aprsis_reset_on_timeout' and
+ * has nothing to do with a timeouts of already established connection. This
+ * counter will trigger GSM modem reset even if no APRS-IS connection has
+ * been established at all. It protects against a situation when GSM modem
+ * is not able to register in cellular network, SIM card is not working for
+ * some reason etc. Of course there is no guarantee that a reset in such
+ * case will help, but there is nothing better to do.
+ */
+uint8_t aprsis_unsucessfull_conn_counter = 0;
+
+/**
  * A timestamp when server has send anything
  */
 uint32_t aprsis_last_keepalive_ts = 0;
 
+/**
+ * Set to one if the GSM modem shall be immediately reset when APRS-IS communication
+ * time out. Please note that this is different that 'aprsis_unsucessfull_conn_counter'
+ * and reseting GSM mode after many unsuccessfull connection attempts! This
+ * comes in when the connection has been established at least one time. It won't
+ * help if there is some problem with establishing connection at all.
+ */
 uint32_t aprsis_reset_on_timeout = 0;
 
 #define APRSIS_TIMEOUT_MS	123000//123000
@@ -205,23 +239,40 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 						}
 						else {
 							// if authoruzation wasn't successfull drop a connection
-							disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
+							disconnection_result = aprsis_disconnect();
+
+							// increase failure counter
+							aprsis_unsucessfull_conn_counter++;
 						}
 					}
 				}
 				else {
-					disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
+					disconnection_result = aprsis_disconnect();
+
+					// increase failure counter
+					aprsis_unsucessfull_conn_counter++;
 				}
 			}
 			else {
-				disconnection_result = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 1);
+				disconnection_result = aprsis_disconnect();
+
+				// increase failure counter
+				aprsis_unsucessfull_conn_counter++;
 			}
 		}
 
 		// if a connection has been ordered to close, but there were severe errors during that
-		if (disconnection_result == SIM800_TCP_CLOSE_UNCERTAIN || disconnection_result == SIM800_RECEIVING_TIMEOUT) {
+		if (disconnection_result == SIM800_TCP_CLOSE_UNCERTAIN ||
+			disconnection_result == SIM800_RECEIVING_TIMEOUT ||
+			aprsis_unsucessfull_conn_counter > APRSIS_FAILED_CONN_ATTEMPTS_TO_RESET_GSM) {
+
+			// reset unsuccesfull connection counter back to zero
+			aprsis_unsucessfull_conn_counter = 0;
+
+			// and reset GSM modem
 			gsm_sim800_reset(aprsis_gsm_modem_state);
 		}
+
 	}
 
 	return out;
@@ -238,12 +289,17 @@ aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon) {
 	return aprsis_connect_and_login(aprsis_default_server_address, aprsis_default_server_address_ln, aprsis_default_server_port, auto_send_beacon);
 }
 
-void aprsis_disconnect(void) {
-	gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
+sim800_return_t aprsis_disconnect(void) {
+
+	sim800_return_t out;
+
+	out = gsm_sim800_tcpip_close(aprsis_serial_port, aprsis_gsm_modem_state, 0);
 
 	aprsis_logged = 0;
 
 	aprsis_connected = 0;
+
+	return out;
 }
 
 void aprsis_receive_callback(srl_context_t* srl_context) {
@@ -278,6 +334,7 @@ void aprsis_check_alive(void) {
 
 		aprsis_connected = 0;
 
+		// check if it is intendend to reset GSM modem in case of timeout
 		if (aprsis_reset_on_timeout == 0) {
 			// close connection with force flag as it is uncertain if a remote server
 			// finished connection explicitly, or the connection is stuck for
@@ -490,4 +547,8 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 
 char * aprsis_get_tx_buffer(void) {
 	return aprsis_packet_tx_buffer;
+}
+
+uint8_t aprsis_get_aprsis_logged(void) {
+	return aprsis_logged;
 }

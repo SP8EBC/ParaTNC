@@ -71,6 +71,15 @@ static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition
 				if (definition->third_data != &DID_EMPTY) {
 					out++;
 				}
+				else {
+					// zero data size as DID_EMPTY is only a dummy placeholder
+					definition->third_data_size = 0;
+				}
+			}
+			else {
+				// zero data size as DID_EMPTY is only a dummy placeholder
+				definition->third_data_size = 0;
+				definition->second_data_size = 0;
 			}
 		}
 	}
@@ -79,7 +88,7 @@ static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition
 }
 
 /**
- * Checks if this DID
+ * Checks if this DID defines data with float
  * @param definition
  * @return
  */
@@ -87,7 +96,11 @@ static int kiss_did_validate_is_float(kiss_did_numeric_definition_t * definition
 	int out = 0;
 
 	if (definition != 0) {
-
+		if (kiss_did_how_much_data(definition) >= 1) {
+			if (definition->first_data_size == 0 && definition->second_data_size == 0 && definition->third_data_size == 0) {
+				out = 1;
+			}
+		}
 	}
 
 	return out;
@@ -229,11 +242,11 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 	 * float (also one, two or three). size_byte is used to distinguish
 	 * between these three formats. It works like that
 	 *
-	 * 0y - If most significant nibble is set to zero, size_byte will
+	 * 0y - If most significant bit is set to zero, size_byte will
 	 * 		signalize string DID as ASCII characters from basic ASIC
 	 * 		table are from range 0 to 127
-	 * 10 - If most significant nibble is set to zero AND less significant
-	 * 		nibble is set to zero this DID returns integer data. In such
+	 * 10 - If most significant bit is set to zero AND next significant
+	 * 		bit is set to zero this DID returns integer data. In such
 	 * 		case three groups of two bits controls a size of data according
 	 * 		to 'kiss_did_sizeof_to_sizebyte_mapping'. If a group of two bits
 	 * 		is set to 0 it means that DID consist less than 3 variables
@@ -272,8 +285,15 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 	// check if this is string did
 	const int is_string = kiss_did_validate_is_string(&found);
 
+	// check if this is float number did
+	const int is_float = kiss_did_validate_is_float(&found);
+
 	// if something has been found and it is valid
-	if (found.identifier != 0xFFFFu && is_valid == 1) {
+	if (found.identifier != 0xFFFFu && is_valid == 1 && is_float == 0) {
+
+		// put DID itself at the begining of a response
+		output_buffer[0] = (identifier & 0xFF);
+		output_buffer[1] = (identifier & 0xFF00) >> 8;
 
 		// set the sign bit in size_byte to distinguish that from ASCII did.
 		// ASCII characters are from range 0 - 127 so they never have that
@@ -289,9 +309,10 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// append a size of third data source
 		size_byte |= (kiss_did_sizeof_to_sizebyte_mapping[found.third_data_size] << 4);
 
-		output_buffer[0] = size_byte;
+		output_buffer[2] = size_byte;
 
-		output_buffer++;
+		// move after DID value and size_byte
+		output_buffer += 3;
 
 		//append first data source
 		memcpy(output_buffer, found.first_data, found.first_data_size);
@@ -324,15 +345,74 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// also include size_byte in this calculation
 		out++;
 
+		// include DID value itself
+		out += 2;
+
+	}
+	else if (found.identifier != 0xFFFFu && is_valid == 1 && is_float == 1) {
+
+		// put DID itself at the begining of a response
+		output_buffer[0] = (identifier & 0xFF);
+		output_buffer[1] = (identifier & 0xFF00) >> 8;
+
+		// set two most significant bits to one to signalize that it is
+		size_byte |= 0xC0u;
+
+		size_byte |= number_of_data_source;
+
+		output_buffer[2] = size_byte;
+
+		// move after DID value and size_byte
+		output_buffer += 3;
+
+		//append first data source
+		memcpy(output_buffer, found.first_data, sizeof(float));
+
+		//move forward a poiner to response buffer
+		output_buffer += sizeof(float);
+
+		out += found.first_data_size;
+
+		if (number_of_data_source > 1) {
+			//append second data source
+			memcpy(output_buffer, found.second_data, sizeof(float));
+
+			//move forward a poiner to response buffer
+			output_buffer += sizeof(float);
+
+			out += sizeof(float);
+		}
+
+		if (number_of_data_source > 2) {
+			//append third data source
+			memcpy(output_buffer, found.third_data, sizeof(float));
+
+			//move forward a poitner to response buffer
+			output_buffer += sizeof(float);
+
+			out += sizeof(float);
+		}
+
+		// also include size_byte in this calculation
+		out++;
+
+		// include DID value itself
+		out += 2;
+
 	}
 	else if (found.identifier != 0xFFFFu && is_string == 1) {
+
+		// put DID itself at the begining of a response
+		output_buffer[0] = (identifier & 0xFF);
+		output_buffer[1] = (identifier & 0xFF00) >> 8;
+
 		// if this is a string DID
 		const char * str = (char *)found.first_data;
 
 		const size_t str_len = strlen(str);
 
-		if (str_len > buffer_ln) {
-			memcpy(output_buffer, found.first_data, buffer_ln);
+		if (str_len - 2 > buffer_ln) {
+			memcpy(output_buffer + 2, found.first_data, buffer_ln);
 		}
 		else {
 			memcpy(output_buffer, found.first_data, str_len);

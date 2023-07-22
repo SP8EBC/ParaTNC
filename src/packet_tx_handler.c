@@ -9,6 +9,7 @@
 #include "station_config_target_hw.h"
 
 #include "./aprs/beacon.h"
+#include "./aprs/status.h"
 #include "./aprs/wx.h"
 #include "./aprs/telemetry.h"
 

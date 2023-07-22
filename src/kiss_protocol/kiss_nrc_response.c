@@ -9,6 +9,7 @@
 #include <kiss_communication/kiss_nrc_response.h>
 #include "kiss_communication/kiss_communication_nrc_t.h"
 #include "kiss_communication/kiss_communication.h"
+#include "kiss_communication/kiss_communication_service_ids.h"
 #include "kiss_configuation.h"
 
 #include <string.h>
@@ -21,7 +22,7 @@ static const uint8_t kiss_nrc_response_unknown_service[KISS_NRC_RESPONSE_UNKNOWN
 		FEND,
 		NONSTANDARD,
 		KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN,
-		KISS_COMMUNICATION_NRC_SERVICE,
+		KISS_NEGATIVE_RESPONSE_SERVICE,
 		NRC_SERVICE_NOT_SUPPORTED,
 		FEND};
 
@@ -29,7 +30,7 @@ static const uint8_t kiss_nrc_response_out_of_range[KISS_NRC_RESPONSE_OUT_OF_RAN
 		FEND,
 		NONSTANDARD,
 		KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN,
-		KISS_COMMUNICATION_NRC_SERVICE,
+		KISS_NEGATIVE_RESPONSE_SERVICE,
 		NRC_REQUEST_OUT_OF_RANGE,
 		FEND
 };

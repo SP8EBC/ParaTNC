@@ -29,5 +29,7 @@ uint16_t rte_main_wakeup_count = 0;
 uint16_t rte_main_going_sleep_count = 0;
 
 uint32_t rte_main_last_sleep_master_time = 0;
+
+uint8_t rte_main_reset_gsm_modem = 0;
 #endif
 

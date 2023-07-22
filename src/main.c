@@ -1181,7 +1181,7 @@ int main(int argc, char* argv[]){
 
 			// if aprsis is logged
 			if (aprsis_connected == 1) {
-				aprsis_igate_to_aprsis(&ax25_rxed_frame, &main_callsign_with_ssid);
+				aprsis_igate_to_aprsis(&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
 			}
 
 #endif
@@ -1432,7 +1432,22 @@ int main(int argc, char* argv[]){
 			#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1) {
 
-				if (gsm_sim800_gprs_ready == 1) {
+				// check if GSM modem must be power-cycled / restarted like after
+				// waking up from deep sleep or chaning power saving mode
+				if (rte_main_reset_gsm_modem == 1) {
+					// rest the flag
+					rte_main_reset_gsm_modem = 0;
+
+					// reset gsm modem
+					gsm_sim800_reset(&main_gsm_state);
+
+					// please remember that a reset might not be performed if
+					// the GSM modem is inhibited completely, due to current
+					// power saving mode and few another things. In that case
+					// the flag will be cleared but modem NOT restarted
+				}
+
+				if (aprsis_get_aprsis_logged() == 1) {
 					led_control_led1_upper(true);
 				}
 				else {

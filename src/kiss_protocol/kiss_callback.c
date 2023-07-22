@@ -221,6 +221,12 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 
 int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
+	/**
+	 * Response frame structure
+	 *
+	 * FEND, KISS_READ_DID_RESP, DID_lsb, DID_msb, size_byte, DATA (...), FEND
+	 */
+
 	int32_t out = 0;
 
 	// result to be returned to the host PC

@@ -18,8 +18,9 @@
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "main.h"
-#include "telemetry.h"
+#include "status.h"
 #include "afsk_pr.h"
+#include "gsm/sim800c.h"
 
 #include "rte_main.h"
 
@@ -312,6 +313,9 @@ int pwr_save_switch_mode_to_c0(void) {
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
 
+	// deinhibit GSM modem
+	gsm_sim800_inhibit(0);
+
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
@@ -348,6 +352,9 @@ int pwr_save_switch_mode_to_c1(void) {
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
+
+	// inhibit GSM modem
+	gsm_sim800_inhibit(1);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -387,6 +394,9 @@ void pwr_save_switch_mode_to_c2(void) {
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
 
+	// inhibit GSM modem
+	gsm_sim800_inhibit(1);
+
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
@@ -420,6 +430,9 @@ void pwr_save_switch_mode_to_c3(void) {
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
+
+	// deinhibit GSM modem
+	gsm_sim800_inhibit(0);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -456,6 +469,9 @@ int pwr_save_switch_mode_to_m4(void) {
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
 
+	// inhibit GSM modem
+	gsm_sim800_inhibit(1);
+
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
@@ -489,6 +505,9 @@ int pwr_save_switch_mode_to_m4a(void) {
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable();
+
+	// deinhibit GSM modem
+	gsm_sim800_inhibit(0);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -524,6 +543,9 @@ void pwr_save_switch_mode_to_i5(void) {
 
 	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_disable();
+
+	// inhibit GSM modem
+	gsm_sim800_inhibit(1);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -574,6 +596,9 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_disable();
+
+	// de inhibit GSM modem
+	gsm_sim800_inhibit(0);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -639,6 +664,9 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// turn OFF +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_disable();
+
+	// inhibit GSM modem
+	gsm_sim800_inhibit(1);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -915,7 +943,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 					}
 					else {		// WX + GSM (only)
 						if (timers->wx_transmit_period >= 5) {
-							// if stations is configured to send wx packet less often than every 5 minutes
+							// if stations is configured to send wx packet less frequent than every 5 minutes
 
 							if (minutes_to_wx > 1) {
 								main_set_monitor(16);
@@ -924,7 +952,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
 							else {
-								if (pwr_save_seconds_to_wx <= 30) {
+								if (pwr_save_seconds_to_wx <= 50) {
 									// if there is 30 seconds or less to next wx packet
 									reinit_sensors = pwr_save_switch_mode_to_c0();
 								}
@@ -1004,6 +1032,9 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors
 		wx_force_i2c_sensor_reset = 1;
+
+		// reset GSM modem, internally this also check if GSM modem is inhibited or not
+		rte_main_reset_gsm_modem = 1;
 
 		// reinitialize everything realted to anemometer
 		analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
