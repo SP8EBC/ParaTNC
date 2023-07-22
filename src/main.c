@@ -576,6 +576,9 @@ int main(int argc, char* argv[]){
 	  io_buttons_init();
   }
 
+  // get initial powersave mode
+  rte_main_curret_powersave_mode = main_config_data_mode->powersave;
+
   // initialize all powersaving functions
   pwr_save_init(main_config_data_mode->powersave);
 
@@ -1130,8 +1133,8 @@ int main(int argc, char* argv[]){
 
 	  		// restart ADCs
 	  		io_vbat_meas_enable();
-	  		ADCStartConfig();
-	  		DACStartConfig();
+//	  		ADCStartConfig();
+//	  		DACStartConfig();
 
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
@@ -1145,6 +1148,13 @@ int main(int argc, char* argv[]){
 	  	    // switching power state in the middle of APRS packet reception
 			ax25_new_msg_rx_flag = 0;
 			main_ax25.dcd = false;
+
+			DA_Init();
+			  ADCStartConfig();
+			  DACStartConfig();
+			  AFSK_Init(&main_afsk);
+			  ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
+			  TimerConfig();
 
 	  		main_woken_up = 0;
 
@@ -1314,7 +1324,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 		// if modbus rtu master is enabled
-		else if (main_modbus_rtu_master_enabled == 1) {
+		else if (main_modbus_rtu_master_enabled == 1 && io_get_cntrl_vbat_m() == 1) {
 			rtu_serial_pool();
 		}
 
@@ -1568,7 +1578,15 @@ int main(int argc, char* argv[]){
 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			}
 
-			wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+			#ifdef STM32L471xx
+				if (io_get_cntrl_vbat_s() == 1) {
+			#else
+				if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
+			#endif
+					// pool anemometer only when power is applied
+					wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+				}
+
 
 			if (main_davis_serial_enabled == 1) {
 

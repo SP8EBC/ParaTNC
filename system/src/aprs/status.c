@@ -131,3 +131,18 @@ void status_send_gsm(void){
 	afsk_txStart(&main_afsk);
 
 }
+
+void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
+	main_wait_for_tx_complete();
+
+	// clear buffer
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+
+	// create message buffer
+	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[APRS-IS timeout][aprsis_unsucessfull_conn_counter: %d]", (int)unsuccessfull_conn_cntr);
+
+	// send message on radio
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	afsk_txStart(&main_afsk);
+}
+

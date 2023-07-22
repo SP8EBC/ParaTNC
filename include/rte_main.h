@@ -3,6 +3,7 @@
 #define RTE_MAIN_H_
 
 #include <stdint.h>
+#include "stored_configuration_nvm/config_data.h"
 
 extern uint8_t rte_main_reboot_req;
 
@@ -24,5 +25,7 @@ extern uint16_t rte_main_going_sleep_count;
 extern uint32_t rte_main_last_sleep_master_time;
 
 extern uint8_t rte_main_reset_gsm_modem;
+
+extern config_data_powersave_mode_t rte_main_curret_powersave_mode;
 
 #endif

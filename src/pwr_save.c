@@ -21,6 +21,7 @@
 #include "status.h"
 #include "afsk_pr.h"
 #include "gsm/sim800c.h"
+#include "aprsis.h"
 
 #include "rte_main.h"
 
@@ -339,6 +340,9 @@ int pwr_save_switch_mode_to_c1(void) {
 		return 0;
 	}
 
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
 
@@ -379,6 +383,9 @@ void pwr_save_switch_mode_to_c2(void) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
 		return;
 	}
+
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
@@ -455,6 +462,9 @@ int pwr_save_switch_mode_to_m4(void) {
 		return 0;
 	}
 
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
 
@@ -529,6 +539,9 @@ void pwr_save_switch_mode_to_i5(void) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
 		return;
 	}
+
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
@@ -644,6 +657,9 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	main_set_monitor(26);
 
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
+
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
 
@@ -697,7 +713,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	main_set_monitor(25);
 }
 
-void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt) {
+config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt) {
 	// this function should be called from 10 seconds pooler
 
 	int reinit_sensors = 0;
@@ -764,7 +780,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 		// go sleep immediately and periodically check if battery has been charged above restore level
 		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
 
-		return;
+		return psave_mode;
 	}
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0) {
@@ -1046,6 +1062,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 //		analog_anemometer_timer_irq();
 	}
 
+	return psave_mode;
 }
 
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {

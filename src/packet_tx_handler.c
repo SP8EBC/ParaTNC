@@ -546,23 +546,26 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	}
 
 #ifdef STM32L471xx
-	// if gsm modem is enabled
-	if (main_config_data_mode->gsm != 0) {
-		// if gprs is connected
-		if (gsm_sim800_gprs_ready == 1) {
-			// if no gsm status packet has been sent so far
-			if (packet_tx_gsm_status_sent == 0) {
+	// if powersave mode allow to sent extensive status messages
+	if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
+		// if gsm modem is enabled
+		if (main_config_data_mode->gsm != 0) {
+			// if gprs is connected
+			if (gsm_sim800_gprs_ready == 1) {
+				// if no gsm status packet has been sent so far
+				if (packet_tx_gsm_status_sent == 0) {
 
-				// send a status
-				status_send_gsm();
+					// send a status
+					status_send_gsm();
 
-				// network parameters are not queries while APRS-IS connection is pending
-				// so no sense to send status more than once after the initialization
-				packet_tx_gsm_status_sent = 1;
+					// network parameters are not queries while APRS-IS connection is pending
+					// so no sense to send status more than once after the initialization
+					packet_tx_gsm_status_sent = 1;
+				}
 			}
-		}
-		else {
-			packet_tx_gsm_status_sent = 0;
+			else {
+				packet_tx_gsm_status_sent = 0;
+			}
 		}
 	}
 #endif
@@ -617,3 +620,6 @@ int16_t packet_tx_get_minutes_to_next_wx(void) {
 	}
 }
 
+void packet_tx_force_gsm_status(void) {
+	packet_tx_gsm_status_sent = 0;
+}

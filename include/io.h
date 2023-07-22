@@ -174,6 +174,17 @@ inline uint8_t io_get_cntrl_vbat_s(void) {
 
 	return out;
 }
+
+inline uint8_t io_get_cntrl_vbat_m(void) {
+	uint8_t out = 0;
+
+	if ((GPIOB->ODR & GPIO_BSRR_BS0) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 #else
 inline uint8_t io_get_cntrl_vbat_s(void) {
 	return 0;

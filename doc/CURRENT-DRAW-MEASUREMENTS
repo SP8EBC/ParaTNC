@@ -1,0 +1,11 @@
+Yaesu FTH-2010 as a radio with 1W output power. All measured on B+ 12V line
+
+
+deep sleep: 1mA
+GSM off, sensors off, radio off: 10mA
+GSM off, sensors off, radio on receiving: 65mA
+GSM off, sensors on, radio on receiving: 80mA
+GSM on (idle GPRS/TCP not connected), sensor on, radio on receiving: 94mA
+GSM on (idle GPRS/TCP connected 99mA), sensor on, radio on receiving: 99mA
+GSM on (comm with network), sensors on, radio on recieving: 125mA
+GSM off, sensors on, radio on txing: 650mA

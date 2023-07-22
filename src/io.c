@@ -35,9 +35,13 @@ typedef enum io_pool_vbat_r_state_t {
 #if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
+//!< coefficient used to convert value read by ADC into battery volage
 int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 
+//!< lenght of an average buffer
 #define VBATT_HISTORY_LN	16
+
+//!< circular buffer used to calculate average battery voltage
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
 
 static uint8_t io_vbatt_history_it = 0;

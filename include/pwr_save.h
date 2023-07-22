@@ -23,8 +23,8 @@
  * |   C1  |Running|   ON    	|           ON           |   OFF   |   ON    |
  * |   C2  |Running|   OFF   	|           ON           |   OFF   |   ON    |
  * |   C3  |Running|   OFF   	|           ON           |   ON    |   ON    |
- * |   M4  |Running|   ON    	|           OFF          |   OFF   |   OFF   |
- * |   M4a |Running|   ON    	|           OFF          |   ON	   |   OFF   |
+ * |   M4  |Running|   ON    	|           OFF          |   OFF   |   ON    |
+ * |   M4a |Running|   ON    	|           OFF          |   ON	   |   ON    |
  * |   I5  |Running|   OFF   	|           OFF          |   OFF   |   OFF   |
  * |   L6  | Stop2 |   OFF   	|           OFF          |   ON    |   OFF   |
  * |   L7  | Stop2 |   OFF   	|           OFF          |   OFF   |   OFF   |
@@ -123,7 +123,7 @@ int pwr_save_switch_mode_to_m4a(void);
 void pwr_save_switch_mode_to_i5(void);
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time);
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time);
-void pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt);		// this should be called from 10 seconds pooler
+config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt);		// this should be called from 10 seconds pooler
 
 #endif
 
