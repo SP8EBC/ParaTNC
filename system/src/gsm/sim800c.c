@@ -111,6 +111,9 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
+//! Inhibit GSM modem completely while controller is in apropriate power saving state
+int8_t gsm_sim800_keep_shutdown = 0;
+
 inline static void gsm_sim800_power_off(void) {
 	io___cntrl_vbat_g_disable();
 }
@@ -288,6 +291,10 @@ void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 }
 
 void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+
+	if (gsm_sim800_keep_shutdown == 1) {
+		*state = SIM800_INHIBITED;
+	}
 
 	if (*state == SIM800_UNKNOWN) {
 		// turn power off
@@ -876,10 +883,19 @@ void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 }
 
 /**
- * Power cycle GSM modem
+ * Power cycle GSM modem and reinitialize everything related to initial state.
  * @param state
  */
 void gsm_sim800_reset(gsm_sim800_state_t * state) {
+
+	// do nothing if gsm modem must be kept in shutdown
+	if (gsm_sim800_keep_shutdown == 1) {
+
+		*state = SIM800_INHIBITED;
+
+		return;
+	}
+
 	// turn power off
 	gsm_sim800_power_off();
 
@@ -937,4 +953,8 @@ void gsm_sim800_decrease_counter(void) {
 	else if (gsm_reset_counter < 0) {
 		gsm_reset_counter = 0;
 	}
+}
+
+void gsm_sim800_inhibit(uint8_t _inhibit) {
+	gsm_sim800_keep_shutdown = _inhibit;
 }

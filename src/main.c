@@ -1100,7 +1100,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
-	   telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+	   status_send_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
 #endif
    }
 

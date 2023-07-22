@@ -23,4 +23,6 @@ extern uint16_t rte_main_going_sleep_count;
 
 extern uint32_t rte_main_last_sleep_master_time;
 
+extern uint8_t rte_main_reset_gsm_modem;
+
 #endif

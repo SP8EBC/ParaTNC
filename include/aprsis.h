@@ -48,7 +48,7 @@ void aprsis_init(
 		const char * callsign_with_ssid);
 aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon);
 aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon);
-void aprsis_disconnect(void);
+sim800_return_t aprsis_disconnect(void);
 void aprsis_receive_callback(srl_context_t* srl_context);
 void aprsis_check_alive(void);
 
@@ -72,5 +72,6 @@ void aprsis_send_beacon(uint8_t async,
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
 
 char * aprsis_get_tx_buffer(void);
+uint8_t aprsis_get_aprsis_logged(void);
 
 #endif /* APRSIS_H_ */

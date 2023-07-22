@@ -751,7 +751,7 @@ void pwr_save_pooling_handler(const config_data_mode_t * config, const config_da
 
 	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
-		telemetry_send_status_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
+		status_send_powersave_cutoff(vbatt, pwr_save_previously_cutoff, pwr_save_currently_cutoff);
 	}
 
 

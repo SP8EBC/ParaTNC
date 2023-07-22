@@ -321,7 +321,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 				packet_tx_multi_per_call_handler();
 
-				telemetry_send_status_raw_values_modbus();
+				status_send_raw_values_modbus();
 			}
 		}
 
@@ -497,7 +497,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 
 #ifdef PARAMETEO
-		telemetry_send_status_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+		status_send_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
 #endif
 
 		packet_tx_multi_per_call_handler();
@@ -520,7 +520,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			//telemetry_send_status();
 		}
 
-		telemetry_send_status();
+		status_send();
 
 
 		if (config_mode->wx_umb == 1) {
@@ -554,7 +554,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			if (packet_tx_gsm_status_sent == 0) {
 
 				// send a status
-				telemetry_send_status_gsm();
+				status_send_gsm();
 
 				// network parameters are not queries while APRS-IS connection is pending
 				// so no sense to send status more than once after the initialization

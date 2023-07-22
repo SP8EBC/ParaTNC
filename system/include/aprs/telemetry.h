@@ -89,14 +89,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							const config_data_mode_t * const config_mode);
 #endif
 void telemetry_send_chns_description(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode);
-void telemetry_send_status(void);
 
-void telemetry_send_status_raw_values_modbus(void);
-
-void telemetry_send_status_powersave_cutoff(uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
-void telemetry_send_status_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time);
-
-void telemetry_send_status_gsm(void);
 #ifdef __cplusplus
 }
 #endif
