@@ -13,50 +13,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define ADC1_DR_Address	((uint32_t)0x4001244C)
-
-
 Afsk *adc_afsk;
-
-volatile uint16_t ADCValue[16];
 
 uint16_t max_value;
 uint32_t samplecount;
 
-
-
-
 /*********************************************************************************************************************/
-void AD_Init(Afsk *af) {
+void AD_Restart(void) {
 /*********************************************************************************************************************/
 
-//	GPIO_InitTypeDef GPIO_InitStructure;
-//	NVIC_InitTypeDef NVIC_InitStructure;
-//
-//	//Dolacz zegar do GPIOA, ADC1
-//	RCC->APB2ENR |= RCC_APB2Periph_GPIOA | RCC_APB2Periph_ADC1;
-//	RCC_ADCCLKConfig(RCC_PCLK2_Div6);
-//
-//	//Dolacz zegar do DMA1
-//	RCC->AHBENR |= RCC_AHBPeriph_DMA1;
-//
-//	//Konfiguracja portu
-//	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 ;
-//	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-//	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-//	GPIO_Init(GPIOA, &GPIO_InitStructure);
-//
-//	AD_Reset();
-//
-//	adc_afsk = af;
-//
-//	//Przerwania DMA1 Kanal1
-//	NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//	NVIC_Init(&NVIC_InitStructure);
+	// check if conversion is done or not
+	if ((ADC1->ISR & ADC_ISR_EOC) == 0) {
+		// stop adc conversion
+		ADC1->CR |= ADC_CR_ADSTP;
 
+		// wait for conversion to shutdown
+	    while((ADC1->ISR & ADC_CR_ADSTART) == ADC_CR_ADSTART);
+
+	    // start ADC back again
+		ADC1->CR |= ADC_CR_ADSTART;
+	}
 }
 
 

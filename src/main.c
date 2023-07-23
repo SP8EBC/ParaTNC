@@ -209,10 +209,10 @@ main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
 //! operation mode of USART2 (RS485)
 main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
 
-//!
+//! function configuration for left button on ParaMETEO
 configuration_button_function_t main_button_one_left;
 
-//!
+//! function configuration for right button on ParaMETEO
 configuration_button_function_t main_button_two_right;
 
 //! a pointer to KISS context
@@ -282,7 +282,11 @@ volatile int i = 0;
 #endif
 
 #if defined(PARAMETEO)
+//!< Trigger some reinitnialization after waking up from deep sleep
 uint8_t main_woken_up = 0;
+
+//!< Triggers additional check if ADC has properly reinitialized and conversion is working
+uint8_t main_check_adc = 0;
 #endif
 
 char after_tx_lock;
@@ -1149,14 +1153,16 @@ int main(int argc, char* argv[]){
 			ax25_new_msg_rx_flag = 0;
 			main_ax25.dcd = false;
 
-			DA_Init();
+			//DA_Init();
 			  ADCStartConfig();
 			  DACStartConfig();
 			  AFSK_Init(&main_afsk);
 			  ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
-			  TimerConfig();
+			  //TimerConfig();
 
 	  		main_woken_up = 0;
+
+	  		main_check_adc = 1;
 
 	  		main_set_monitor(1);
 	  	}
@@ -1214,9 +1220,6 @@ int main(int argc, char* argv[]){
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
-//			gsm_sim800_engineering_enable(main_gsm_srl_ctx_ptr, &main_gsm_state);
-//			gsm_sim800_engineering_request_data(main_gsm_srl_ctx_ptr, &main_gsm_state);
-			//gsm_sim800_engineering_disable(main_gsm_srl_ctx_ptr, &main_gsm_state);
 		}
 #endif
 
@@ -1542,6 +1545,12 @@ int main(int argc, char* argv[]){
 			}
 
 			#ifdef PARAMETEO
+			if (main_check_adc == 1) {
+				AD_Restart();
+
+				main_check_adc = 0;
+			}
+
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending && main_woken_up == 0) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
