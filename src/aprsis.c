@@ -321,6 +321,7 @@ void aprsis_receive_callback(srl_context_t* srl_context) {
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 		}
 		else {
+			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
 		}
 	}
