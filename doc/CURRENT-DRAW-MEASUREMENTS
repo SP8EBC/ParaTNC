@@ -1,4 +1,8 @@
-Yaesu FTH-2010 as a radio with 1W output power. All measured on B+ 12V line
+Yaesu FTH-2010 as a radio with 1W output power. All measured on B+ 12V line.
+Current draw of GSM module depends on signal level. TX power of MS in GSM network is regulated
+in closed loop by base station, so this measurement might not cover all cases. 
+GSM uses GMSK modulation and that 125mA is only an average. Momentary peak 
+when TX is keyed up might be way bigger (module itself can take up to 2A at 4V)
 
 
 deep sleep: 1mA
