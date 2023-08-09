@@ -25,6 +25,7 @@
 #include "main.h"
 #include "rte_main.h"
 #include "gsm/sim800c.h"
+#include "software_version.h"
 
 //!< Dummy variable used only as end of definition marker in tables
 extern char did_dummy_data;
@@ -62,8 +63,17 @@ extern char did_dummy_data;
 
 //!< Definition of all DIDs with theirs source data for PARATNC platform
 #if defined (PARATNC)
+	#define DIDS_STRING(ENTRY)		\
+		ENTRY(0xFD01U, software_version_str)		\
+
+	#define DIDS_FLOAT(ENTRY)	\
+		ENTRY(0x2000U, rte_wx_temperature_average_external_valid, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2001U, rte_wx_temperature_internal_valid, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2002U, rte_wx_pressure_history[0], rte_wx_pressure_history[1], rte_wx_pressure_history[2])	\
+
 	#define DIDS_NUMERIC(ENTRY)		\
-		ENTRY(0xFFFFU, &did_dummy_data, &did_dummy_data, &did_dummy_data)
+		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)	\
+
 #endif
 
 #endif /* KISS_DID_CONFIGURATION_H_ */

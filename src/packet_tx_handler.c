@@ -621,5 +621,7 @@ int16_t packet_tx_get_minutes_to_next_wx(void) {
 }
 
 void packet_tx_force_gsm_status(void) {
+#ifdef STM32L471xx
 	packet_tx_gsm_status_sent = 0;
+#endif
 }

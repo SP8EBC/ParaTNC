@@ -10,9 +10,7 @@
 #include "drivers/serial.h"
 #include "gsm/sim800_state_t.h"
 
-#define SW_VER "EA24"
-#define SW_DATE "22072023"
-#define SW_KISS_PROTO	"B"
+#include "software_version.h"
 
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10

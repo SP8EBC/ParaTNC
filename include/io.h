@@ -190,6 +190,10 @@ inline uint8_t io_get_cntrl_vbat_s(void) {
 	return 0;
 }
 
+inline uint8_t io_get_cntrl_vbat_m(void) {
+	return 1;
+}
+
 #endif
 
 #endif /* IO_H_ */

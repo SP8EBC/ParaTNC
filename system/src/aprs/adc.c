@@ -21,7 +21,7 @@ uint32_t samplecount;
 /*********************************************************************************************************************/
 void AD_Restart(void) {
 /*********************************************************************************************************************/
-
+#ifdef STM32L471xx
 	// check if conversion is done or not
 	if ((ADC1->ISR & ADC_ISR_EOC) == 0) {
 		// stop adc conversion
@@ -33,6 +33,7 @@ void AD_Restart(void) {
 	    // start ADC back again
 		ADC1->CR |= ADC_CR_ADSTART;
 	}
+#endif
 }
 
 

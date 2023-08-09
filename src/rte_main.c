@@ -18,7 +18,6 @@ uint8_t rte_main_trigger_modbus_status = 0;
 
 uint8_t rte_main_trigger_wx_packet = 0;
 
-
 #ifdef PARAMETEO
 uint16_t rte_main_battery_voltage;
 
