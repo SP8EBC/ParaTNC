@@ -48,6 +48,11 @@ int8_t pwr_save_seconds_to_wx = 0;
 int16_t pwr_save_sleep_time_in_seconds = -1;
 
 /**
+ * Number of 30 seconds cycles of SLEEP2 in L6 and L7 powersave mode
+ */
+int8_t pwr_save_number_of_sleep_cycles = -1;
+
+/**
  * Variable stores cutoff state and to save RAM it also keeps a low battery voltage flag
  */
 int8_t pwr_save_currently_cutoff = 0;
@@ -110,9 +115,9 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 	// definition of bitmask
 	#define IWDG_STBY_STOP (0x3 << 17)
 
-	// check if IWDG_STDBY and IWDG_STOP is not set in ''User and read protection option bytes''
+	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
 	// at 0x1FFF7800
-	if ((option_byte_content & IWDG_STBY_STOP) == IWDG_STBY_STOP) {
+	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
 
 		// unlock write/erase operations on flash memory
 		FLASH->KEYR = 0x45670123;
@@ -126,7 +131,8 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 		FLASH->OPTKEYR = 0x4C5D6E7F;
 
 		// set the flash option register (in RAM!!)
-		FLASH->OPTR &= (0xFFFFFFFF ^ (FLASH_OPTR_IWDG_STDBY | FLASH_OPTR_IWDG_STOP));
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
 
 		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
 		FLASH->CR |= FLASH_CR_OPTSTRT;
@@ -172,6 +178,9 @@ void pwr_save_enter_stop2(void) {
 	// set 31st monitor bit
 	main_set_monitor(31);
 
+	// reload internal watchdog
+	main_reload_internal_wdg();
+
 	// clear main battery voltage to be sure that it'd be updated???
 	rte_main_battery_voltage = 0;
 
@@ -201,6 +210,8 @@ void pwr_save_enter_stop2(void) {
 
 	counter++;
 
+	rte_main_going_sleep_count = counter;
+
 	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
 
 	pwr_save_lock_rtc_backup_regs();
@@ -215,6 +226,31 @@ void pwr_save_enter_stop2(void) {
 	asm("sev");
 	asm("wfi");
 
+}
+
+void pwr_save_check_stop2_cycles(void) {
+
+	while(1) {
+		// decrement stop2 cycles for current L7 or L6 powersave mode
+		pwr_save_number_of_sleep_cycles--;
+
+		// if there is time left to exit from depp sleep
+		if (pwr_save_number_of_sleep_cycles > 0) {
+			main_set_monitor(15);
+
+			// go back to sleep
+			// configure how long micro should sleep
+			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
+
+			pwr_save_enter_stop2();
+		}
+		else {
+			main_set_monitor(14);
+
+			// we are done sleeping so exit from this loop
+			break;
+		}
+	}
 }
 
 /**
@@ -237,6 +273,9 @@ void pwr_save_exit_from_stop2(void) {
 	counter = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000) >> 16);
 
 	counter++;
+
+	// store current wakeup counter in RTE
+	rte_main_wakeup_count = counter;
 
 	// check counter overflow conditions
 	if (counter > 0xFFFF) {
@@ -577,6 +616,11 @@ void pwr_save_switch_mode_to_i5(void) {
 // this will keep external VHF radio working in HW-RevB
 void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
+	if (sleep_time > 3000u) {
+		// this is an error situation
+		sleep_time = 3000u;
+	}
+
 	if (system_is_rtc_ok() == 0) {
 		pwr_save_switch_mode_to_i5();
 
@@ -586,6 +630,9 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
 		return;
 	}
+
+	// calculate amount of STOP2 cycles
+	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
 	main_set_monitor(28);
 
@@ -627,7 +674,7 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
 
-	system_clock_configure_auto_wakeup_l4(sleep_time);
+	system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
 
 	// save how long the micro will sleep - required for handling wakeup event
 	pwr_save_sleep_time_in_seconds = sleep_time;
@@ -644,6 +691,12 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 }
 
 void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+
+	if (sleep_time > 3000u) {
+		// this is an error situation
+		sleep_time = 3000u;
+	}
+
 	///////////
 	if (system_is_rtc_ok() == 0) {
 		pwr_save_switch_mode_to_i5();
@@ -654,6 +707,9 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
 		return;
 	}
+
+	// calculate amount of STOP2 cycles
+	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
 	main_set_monitor(26);
 
@@ -699,7 +755,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_lock_rtc_backup_regs();
 
 	// configure how long micro should sleep
-	system_clock_configure_auto_wakeup_l4(sleep_time);
+	system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
 
 	// save how long the micro will sleep - required for handling wakeup event
 	pwr_save_sleep_time_in_seconds = sleep_time;
@@ -962,7 +1018,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 							// if stations is configured to send wx packet less frequent than every 5 minutes
 
 							if (minutes_to_wx > 1) {
-								main_set_monitor(16);
+								main_set_monitor(17);
 
 								// if there is more than one minute to wx packet
 								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
@@ -987,7 +1043,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 							// if station is configured to sent wx packet in every 5 minutes or more often
 
 							if (minutes_to_wx > 1) {
-								main_set_monitor(15);
+								main_set_monitor(17);
 
 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
@@ -1009,7 +1065,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
-							main_set_monitor(14);
+							main_set_monitor(17);
 
 							// if there is more than one minute to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
@@ -1041,6 +1097,24 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 			break;
 		}
+	}
+
+	main_set_monitor(16);
+
+	// check if we are just after waking up from STOP2 mode
+	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
+
+		// if yes set curent state
+		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_RTC_IT;
+
+		// check if this is an intermediate wakeup from STOP2
+		pwr_save_check_stop2_cycles();
+
+		system_clock_configure_l4();
+
+		pwr_save_exit_from_stop2();
+
+		rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
 	}
 
 	main_set_monitor(13);

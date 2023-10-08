@@ -19,8 +19,13 @@ uint8_t rte_main_trigger_modbus_status = 0;
 uint8_t rte_main_trigger_wx_packet = 0;
 
 #ifdef PARAMETEO
+//!< Trigger some reinitialization after waking up from deep sleep
+uint8_t rte_main_woken_up = 0;
+
+//!< Current battery voltage as 10mV increments
 uint16_t rte_main_battery_voltage;
 
+//!< Average battery voltage as 10mV increments, lenght configured by VBATT_HISTORY_LN
 uint16_t rte_main_average_battery_voltage = 0;
 
 uint16_t rte_main_wakeup_count = 0;
@@ -29,6 +34,7 @@ uint16_t rte_main_going_sleep_count = 0;
 
 uint32_t rte_main_last_sleep_master_time = 0;
 
+//!< Set to one after waking up from L7 / L6 powersave mode and
 uint8_t rte_main_reset_gsm_modem = 0;
 
 config_data_powersave_mode_t rte_main_curret_powersave_mode;

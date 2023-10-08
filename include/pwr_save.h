@@ -113,6 +113,7 @@ extern int8_t pwr_save_currently_cutoff;
 
 void pwr_save_init(config_data_powersave_mode_t mode);
 void pwr_save_enter_stop2(void);
+void pwr_save_check_stop2_cycles(void);
 void pwr_save_exit_from_stop2(void);
 int pwr_save_switch_mode_to_c0(void);
 int pwr_save_switch_mode_to_c1(void);

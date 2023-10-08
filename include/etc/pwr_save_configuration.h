@@ -37,4 +37,9 @@
  */
 //#define INHIBIT_CUTOFF
 
+/**
+ * Intermediate STOP2 cycle lenght within L7 or L6 mode.
+ */
+#define PWR_SAVE_STOP2_CYCLE_LENGHT_SEC			30u
+
 #endif /* INCLUDE_PWR_SAVE_CONFIGURATION_H_ */

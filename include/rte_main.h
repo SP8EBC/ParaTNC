@@ -5,6 +5,18 @@
 #include <stdint.h>
 #include "stored_configuration_nvm/config_data.h"
 
+//!< Set immediately after waking up in RTC interrupt handler
+#define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT		1u
+
+//!< Set after exiting from RTC interrupt, but before reinitializing clocks
+#define RTE_MAIN_WOKEN_UP_AFTER_RTC_IT		2u
+
+//!< Set after everything was reinitialized from
+#define RTE_MAIN_WOKEN_UP_EXITED			4u
+
+//!< Trigger some reinitialization after waking up from deep sleep
+extern uint8_t rte_main_woken_up;
+
 extern uint8_t rte_main_reboot_req;
 
 extern uint8_t rte_main_boot_cycles, rte_main_hard_faults;

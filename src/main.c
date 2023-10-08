@@ -282,9 +282,6 @@ volatile int i = 0;
 #endif
 
 #if defined(PARAMETEO)
-//!< Trigger some reinitnialization after waking up from deep sleep
-uint8_t main_woken_up = 0;
-
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 #endif
@@ -794,7 +791,6 @@ int main(int argc, char* argv[]){
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
-#ifdef INTERNAL_WATCHDOG
 #if defined(STM32F10X_MD_VL)
   // enable write access to watchdog registers
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
@@ -822,8 +818,8 @@ int main(int argc, char* argv[]){
   // unlock write access to configuratio registers
   LL_IWDG_EnableWriteAccess(IWDG);
 
-  // set prescaler - watchdog timeout on about 16 seconds
-  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_128);
+  // set prescaler - watchdog timeout on about 32 seconds
+  LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_256);
 
   // wait for watchdog registers to update
   while (LL_IWDG_IsActiveFlag_PVU(IWDG) != 0) {
@@ -841,8 +837,6 @@ int main(int argc, char* argv[]){
 
   // do not disable watchdog when MCU halts on breakpoints
   DBGMCU->APB1FZR1 &= (0xFFFFFFFF ^ DBGMCU_APB1FZR1_DBG_IWDG_STOP);
-
-#endif
 
 #endif
 
@@ -1050,10 +1044,8 @@ int main(int argc, char* argv[]){
 	umb_0x26_status_request(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
   }
 
-#ifdef INTERNAL_WATCHDOG
    // reload watchdog counter
 	main_reload_internal_wdg();
-#endif
 
    io_ext_watchdog_service();
 
@@ -1133,7 +1125,7 @@ int main(int argc, char* argv[]){
 	  main_set_monitor(0);
 
 #if defined(PARAMETEO)
-	  	if (main_woken_up == 1) {
+	  	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED) {
 
 	  		// restart ADCs
 	  		io_vbat_meas_enable();
@@ -1160,7 +1152,7 @@ int main(int argc, char* argv[]){
 			  ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
 			  //TimerConfig();
 
-	  		main_woken_up = 0;
+			  rte_main_woken_up = 0;
 
 	  		main_check_adc = 1;
 
@@ -1522,9 +1514,7 @@ int main(int argc, char* argv[]){
 #ifdef PARAMETEO
 			max31865_pool();
 #endif
-			#ifdef INTERNAL_WATCHDOG
 			main_reload_internal_wdg();
-			#endif
 
 			main_two_second_pool_timer = 2000;
 		}
@@ -1552,7 +1542,7 @@ int main(int argc, char* argv[]){
 			}
 
 			// inhibit any power save switching when modem transmits data
-			if (!main_afsk.sending && main_woken_up == 0) {
+			if (!main_afsk.sending && rte_main_woken_up == 0) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
 			}
 
@@ -1637,7 +1627,6 @@ void main_service_cpu_load_ticks(void) {
 }
 
 void main_reload_internal_wdg(void){
-#ifdef INTERNAL_WATCHDOG
 #ifdef STM32F10X_MD_VL
 
 	  // reload watchdog counter
@@ -1646,7 +1635,6 @@ void main_reload_internal_wdg(void){
 #endif
 #ifdef STM32L471xx
 	  LL_IWDG_ReloadCounter(IWDG);
-#endif
 #endif
 }
 
