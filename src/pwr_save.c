@@ -101,79 +101,10 @@ static void pwr_save_clear_powersave_idication_bits() {
 }
 
 /**
- * This function initializes everything related to power saving features
- * including programming Flash memory option bytes
- */
-void pwr_save_init(config_data_powersave_mode_t mode) {
-
-	// make a pointer to option byte
-	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
-
-	// content of option byte read from the flash memory
-	uint32_t option_byte_content = *option_byte;
-
-	// definition of bitmask
-	#define IWDG_STBY_STOP (0x3 << 17)
-
-	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
-	// at 0x1FFF7800
-	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
-
-		// unlock write/erase operations on flash memory
-		FLASH->KEYR = 0x45670123;
-		FLASH->KEYR = 0xCDEF89AB;
-
-		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// unlock operations on option bytes
-		FLASH->OPTKEYR = 0x08192A3B;
-		FLASH->OPTKEYR = 0x4C5D6E7F;
-
-		// set the flash option register (in RAM!!)
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
-
-		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
-		FLASH->CR |= FLASH_CR_OPTSTRT;
-
-		// wait for option bytes to be updated
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// lock flash memory
-		FLASH-> CR |= FLASH_CR_LOCK;
-
-		// forcre reloading option bytes
-		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
-
-	}
-
-	pwr_save_unclock_rtc_backup_regs();
-
-	// reset a status register
-	REGISTER = 0;
-
-	// switch power switch handler inhibition if it is needed
-	switch (mode) {
-		case PWSAVE_NONE:
-			break;
-		case PWSAVE_NORMAL:
-		case PWSAVE_AGGRESV:
-			REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
-			break;
-	}
-
-	pwr_save_lock_rtc_backup_regs();
-
-}
-
-/**
  * Entering STOP2 power save mode. In this mode all clocks except LSI and LSE are disabled. StaticRAM content
  * is preserved, optionally GPIO and few other peripherals can be kept power up depending on configuration
  */
-void pwr_save_enter_stop2(void) {
-
-	uint16_t counter = 0;
+static void pwr_save_enter_stop2(void) {
 
 	// set 31st monitor bit
 	main_set_monitor(31);
@@ -205,15 +136,6 @@ void pwr_save_enter_stop2(void) {
 	// save a timestamp when micro has been switched to STOP2 mode
 	REGISTER_LAST_SLEEP = RTC->TR;
 
-	// increment the STOP2 sleep counters
-	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
-
-	counter++;
-
-	rte_main_going_sleep_count = counter;
-
-	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
-
 	pwr_save_lock_rtc_backup_regs();
 
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
@@ -228,7 +150,12 @@ void pwr_save_enter_stop2(void) {
 
 }
 
-void pwr_save_check_stop2_cycles(void) {
+/**
+ * Used after each of 30 seconds long STOP2 sleep, to check
+ * how many sleeps the micro must be put in, to complete
+ * L6/L7 powersave mode
+ */
+static void pwr_save_check_stop2_cycles(void) {
 
 	while(1) {
 		// decrement stop2 cycles for current L7 or L6 powersave mode
@@ -254,9 +181,10 @@ void pwr_save_check_stop2_cycles(void) {
 }
 
 /**
- * This function has to be called within RTC wakepup interrupt.
+ * This function has to be called after last 30 second long cycle of STOP2 sleep,
+ * to bounce all frames transmission counters.
  */
-void pwr_save_exit_from_stop2(void) {
+static void pwr_save_exit_after_last_stop2_cycle(void) {
 
 	uint32_t counter = 0;
 
@@ -331,6 +259,29 @@ void pwr_save_exit_from_stop2(void) {
 	}
 
 	main_set_monitor(29);
+}
+
+/**
+ * This function is called in two places within a pooler, just after the micro
+ * wakes up from STOP2 deep slepp and returns from RTC interrupt handler
+ */
+static void pwr_save_after_stop2_rtc_wakeup_it(void) {
+	// check if we are just after waking up from STOP2 mode
+	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
+
+		// if yes set curent state
+		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_RTC_IT;
+
+		// check if this is an intermediate wakeup from STOP2
+		pwr_save_check_stop2_cycles();
+
+		system_clock_configure_l4();
+
+		pwr_save_exit_after_last_stop2_cycle();
+
+		rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
+	}
+
 }
 
 int pwr_save_switch_mode_to_c0(void) {
@@ -417,7 +368,7 @@ int pwr_save_switch_mode_to_c1(void) {
 // this mode is not avaliable in HW Revision B as internal radio
 // is powered from +5V_S and external one is switched on with the same
 // line which controls +4V_G
-void pwr_save_switch_mode_to_c2(void) {
+static void pwr_save_switch_mode_to_c2(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
 		return;
@@ -457,7 +408,7 @@ void pwr_save_switch_mode_to_c2(void) {
 
 }
 
-void pwr_save_switch_mode_to_c3(void) {
+static void pwr_save_switch_mode_to_c3(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
 		return;
@@ -495,7 +446,7 @@ void pwr_save_switch_mode_to_c3(void) {
 }
 
 // in HW-RevB this will keep internal VHF radio module working!
-int pwr_save_switch_mode_to_m4(void) {
+static int pwr_save_switch_mode_to_m4(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
 		return 0;
@@ -536,7 +487,7 @@ int pwr_save_switch_mode_to_m4(void) {
 	return 1;
 }
 
-int pwr_save_switch_mode_to_m4a(void) {
+static int pwr_save_switch_mode_to_m4a(void) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
 		return 0;
 	}
@@ -573,7 +524,7 @@ int pwr_save_switch_mode_to_m4a(void) {
 	return 1;
 }
 
-void pwr_save_switch_mode_to_i5(void) {
+static void pwr_save_switch_mode_to_i5(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
 		return;
@@ -614,7 +565,9 @@ void pwr_save_switch_mode_to_i5(void) {
 }
 
 // this will keep external VHF radio working in HW-RevB
-void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
+static void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
+
+	uint16_t counter = 0;
 
 	if (sleep_time > 3000u) {
 		// this is an error situation
@@ -671,6 +624,15 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	REGISTER_LAST_SLTIM = sleep_time;
 
+	// increment the STOP2 sleep counters
+	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+
+	counter++;
+
+	rte_main_going_sleep_count = counter;
+
+	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
 
@@ -690,7 +652,9 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 }
 
-void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+static void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+
+	uint16_t counter = 0;
 
 	if (sleep_time > 3000u) {
 		// this is an error situation
@@ -751,6 +715,15 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	REGISTER_LAST_SLTIM = sleep_time;
 
+	// increment the STOP2 sleep counters
+	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+
+	counter++;
+
+	rte_main_going_sleep_count = counter;
+
+	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
 
@@ -767,6 +740,73 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_enter_stop2();
 
 	main_set_monitor(25);
+}
+
+/**
+ * This function initializes everything related to power saving features
+ * including programming Flash memory option bytes
+ */
+void pwr_save_init(config_data_powersave_mode_t mode) {
+
+	// make a pointer to option byte
+	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
+
+	// content of option byte read from the flash memory
+	uint32_t option_byte_content = *option_byte;
+
+	// definition of bitmask
+	#define IWDG_STBY_STOP (0x3 << 17)
+
+	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
+	// at 0x1FFF7800
+	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
+
+		// unlock write/erase operations on flash memory
+		FLASH->KEYR = 0x45670123;
+		FLASH->KEYR = 0xCDEF89AB;
+
+		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// unlock operations on option bytes
+		FLASH->OPTKEYR = 0x08192A3B;
+		FLASH->OPTKEYR = 0x4C5D6E7F;
+
+		// set the flash option register (in RAM!!)
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
+
+		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
+		FLASH->CR |= FLASH_CR_OPTSTRT;
+
+		// wait for option bytes to be updated
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// lock flash memory
+		FLASH-> CR |= FLASH_CR_LOCK;
+
+		// forcre reloading option bytes
+		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
+
+	}
+
+	pwr_save_unclock_rtc_backup_regs();
+
+	// reset a status register
+	REGISTER = 0;
+
+	// switch power switch handler inhibition if it is needed
+	switch (mode) {
+		case PWSAVE_NONE:
+			break;
+		case PWSAVE_NORMAL:
+		case PWSAVE_AGGRESV:
+			REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
+			break;
+	}
+
+	pwr_save_lock_rtc_backup_regs();
+
 }
 
 config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t * config, const config_data_basic_t * timers, int16_t minutes_to_wx, uint16_t vbatt) {
@@ -835,6 +875,9 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 		// go sleep immediately and periodically check if battery has been charged above restore level
 		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
+
+		// RTC interrupt is between this call and previous one (switching to l7)
+		pwr_save_after_stop2_rtc_wakeup_it();
 
 		return psave_mode;
 	}
@@ -1101,21 +1144,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 	main_set_monitor(16);
 
-	// check if we are just after waking up from STOP2 mode
-	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
-
-		// if yes set curent state
-		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_RTC_IT;
-
-		// check if this is an intermediate wakeup from STOP2
-		pwr_save_check_stop2_cycles();
-
-		system_clock_configure_l4();
-
-		pwr_save_exit_from_stop2();
-
-		rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
-	}
+	pwr_save_after_stop2_rtc_wakeup_it();
 
 	main_set_monitor(13);
 
