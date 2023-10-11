@@ -224,11 +224,11 @@ int32_t rtu_serial_pool(void) {
 			rte_rtu_number_of_serial_io_errors++;
 
 			// stupid workaround. If there is a lot of I/O errors reset the controller
-
-			if (rte_rtu_number_of_serial_io_errors >= 0xF0)
-			{
-				rte_main_reboot_req = 1;
-			}
+			// no more stupid workarounds here
+//			if (rte_rtu_number_of_serial_io_errors >= 0xF0)
+//			{
+//				rte_main_reboot_req = 1;
+//			}
 
 			// latch the current value of last successfull communication
 			rtu_time_of_last_succ_comm_at_previous_error_status = rtu_time_of_last_successfull_comm;

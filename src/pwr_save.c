@@ -368,7 +368,7 @@ int pwr_save_switch_mode_to_c1(void) {
 // this mode is not avaliable in HW Revision B as internal radio
 // is powered from +5V_S and external one is switched on with the same
 // line which controls +4V_G
-static void pwr_save_switch_mode_to_c2(void) {
+void pwr_save_switch_mode_to_c2(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
 		return;
@@ -408,7 +408,7 @@ static void pwr_save_switch_mode_to_c2(void) {
 
 }
 
-static void pwr_save_switch_mode_to_c3(void) {
+void pwr_save_switch_mode_to_c3(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
 		return;
@@ -446,7 +446,7 @@ static void pwr_save_switch_mode_to_c3(void) {
 }
 
 // in HW-RevB this will keep internal VHF radio module working!
-static int pwr_save_switch_mode_to_m4(void) {
+int pwr_save_switch_mode_to_m4(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
 		return 0;
@@ -487,7 +487,7 @@ static int pwr_save_switch_mode_to_m4(void) {
 	return 1;
 }
 
-static int pwr_save_switch_mode_to_m4a(void) {
+int pwr_save_switch_mode_to_m4a(void) {
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
 		return 0;
 	}
@@ -524,7 +524,7 @@ static int pwr_save_switch_mode_to_m4a(void) {
 	return 1;
 }
 
-static void pwr_save_switch_mode_to_i5(void) {
+void pwr_save_switch_mode_to_i5(void) {
 
 	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
 		return;
@@ -565,7 +565,7 @@ static void pwr_save_switch_mode_to_i5(void) {
 }
 
 // this will keep external VHF radio working in HW-RevB
-static void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
+void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	uint16_t counter = 0;
 
@@ -652,7 +652,7 @@ static void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 }
 
-static void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
+void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	uint16_t counter = 0;
 
