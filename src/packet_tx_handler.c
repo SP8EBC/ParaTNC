@@ -57,8 +57,12 @@ uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL
 
 uint8_t packet_tx_more_than_one = 0;
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 uint8_t packet_tx_trigger_tcp = 0;
+
+uint8_t packet_tx_meteo_gsm_interval = 2;
+uint8_t packet_tx_meteo_gsm_counter = 0;
+
 #define API_TRIGGER_STATUS 		(1 << 1)
 #define API_TRIGGER_METEO		(1 << 2)
 #define APRSIS_TRIGGER_METEO	(1 << 3)
@@ -120,10 +124,27 @@ void packet_tx_tcp_handler(void) {
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		// TODO: fixme
-		if (aprsis_connected == 0) {
-			aprsis_result = aprsis_connect_and_login_default(0);
+		if (gsm_sim800_tcpip_tx_busy() == 0) {
 
-			if (aprsis_result == APRSIS_OK) {
+			if (aprsis_connected == 0) {
+				aprsis_result = aprsis_connect_and_login_default(0);
+
+				if (aprsis_result == APRSIS_OK) {
+					// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
+					aprsis_send_wx_frame(
+							rte_wx_average_windspeed,
+							rte_wx_max_windspeed,
+							rte_wx_average_winddirection,
+							rte_wx_temperature_average_external_valid,
+							rte_wx_pressure_valid,
+							rte_wx_humidity_valid,
+							main_callsign_with_ssid,
+							main_string_latitude,
+							main_string_longitude,
+							main_config_data_basic);
+				}
+			}
+			else {
 				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
 				aprsis_send_wx_frame(
 						rte_wx_average_windspeed,
@@ -137,26 +158,10 @@ void packet_tx_tcp_handler(void) {
 						main_string_longitude,
 						main_config_data_basic);
 			}
+			// TODO: fixme
+			// clear the bit
+			packet_tx_trigger_tcp ^= APRSIS_TRIGGER_METEO;
 		}
-		else {
-			// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-			aprsis_send_wx_frame(
-					rte_wx_average_windspeed,
-					rte_wx_max_windspeed,
-					rte_wx_average_winddirection,
-					rte_wx_temperature_average_external_valid,
-					rte_wx_pressure_valid,
-					rte_wx_humidity_valid,
-					main_callsign_with_ssid,
-					main_string_latitude,
-					main_string_longitude,
-					main_config_data_basic);
-		}
-		// TODO: fixme
-
-
-		// clear the bit
-		packet_tx_trigger_tcp ^= APRSIS_TRIGGER_METEO;
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
 
@@ -231,6 +236,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// increase these counters only when WX is enabled
 		packet_tx_meteo_counter++;
 		packet_tx_meteo_kiss_counter++;
+		packet_tx_meteo_gsm_counter++;
 	}
 
 	// check if there is a time to send own beacon
@@ -290,19 +296,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			// service external watchdog while sending weather frame
 			io_ext_watchdog_service();
 
-#ifdef STM32L471xx
-			if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
-				// and trigger API wx packet transmission
-				packet_tx_trigger_tcp |= API_TRIGGER_METEO;
-			}
-			else if (main_config_data_gsm->aprsis_enable == 1 && main_config_data_gsm->api_enable == 0) {
-				packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
-			}
-			else {
-				packet_tx_trigger_tcp = 0;
-			}
-#endif
-
 			// check if user want's to send two wx packets one after another
 			if (main_config_data_basic->wx_double_transmit == 1) {
 				rte_main_trigger_wx_packet = 1;
@@ -338,6 +331,23 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state, master_time, rte_pv_messages_count, rte_pv_corrupted_messages_count);
 
+		}
+#endif
+
+#ifdef PARAMETEO
+		if (packet_tx_meteo_gsm_counter >= packet_tx_meteo_gsm_interval) {
+			if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
+				// and trigger API wx packet transmission
+				packet_tx_trigger_tcp |= API_TRIGGER_METEO;
+			}
+			else if (main_config_data_gsm->aprsis_enable == 1 && main_config_data_gsm->api_enable == 0) {
+				packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
+			}
+			else {
+				packet_tx_trigger_tcp = 0;
+			}
+
+			packet_tx_meteo_gsm_counter = 0;
 		}
 #endif
 
@@ -497,6 +507,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 
 #ifdef PARAMETEO
+		rte_main_trigger_gsm_status_packet = 1;
 		status_send_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
 #endif
 

@@ -1188,7 +1188,7 @@ int main(int argc, char* argv[]){
 			rte_main_rx_total++;
 
 			// if aprsis is logged
-			if (aprsis_connected == 1) {
+			if (aprsis_connected == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
 				aprsis_igate_to_aprsis(&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
 			}
 
@@ -1210,6 +1210,18 @@ int main(int argc, char* argv[]){
 
 			if (main_gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
+			if (rte_main_trigger_gsm_status_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_status_packet = 0;
+
+				aprsis_send_server_conn_status((const char *)&main_callsign_with_ssid);
+			}
+
+			if (rte_main_trigger_gsm_loginstring_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_loginstring_packet = 0;
+
+				aprsis_send_loginstring((const char *)&main_callsign_with_ssid);
 			}
 
 		}
@@ -1409,15 +1421,6 @@ int main(int argc, char* argv[]){
 				if (http_client_connection_errors > HTTP_CLIENT_MAX_CONNECTION_ERRORS) {
 					NVIC_SystemReset();
 				}
-
-				//aprsis_connect_and_login_default(1);
-
-//				if (gsm_sim800_gprs_ready == 1) {
-//
-//					//api_send_json_status();
-//					api_send_json_measuremenets();
-//	//				retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, 0);
-//				}
 
 			}
 			#endif

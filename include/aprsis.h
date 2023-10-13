@@ -70,6 +70,8 @@ void aprsis_send_beacon(uint8_t async,
 		char symbol_s,
 		const config_data_basic_t * config_data_basic);
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
+void aprsis_send_server_conn_status(const char * callsign_with_ssid);
+void aprsis_send_loginstring(const char * callsign_with_ssid);
 
 char * aprsis_get_tx_buffer(void);
 uint8_t aprsis_get_aprsis_logged(void);

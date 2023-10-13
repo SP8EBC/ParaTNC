@@ -14,6 +14,10 @@
 //!< Set after everything was reinitialized from
 #define RTE_MAIN_WOKEN_UP_EXITED			4u
 
+extern uint8_t rte_main_trigger_gsm_status_packet;
+
+extern uint8_t rte_main_trigger_gsm_loginstring_packet;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 

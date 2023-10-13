@@ -110,6 +110,32 @@ uint32_t aprsis_last_keepalive_ts = 0;
  */
 uint32_t aprsis_reset_on_timeout = 0;
 
+/**
+ * Number of RF packets igated to APRS-IS system
+ */
+uint16_t aprsis_igated_counter = 0;
+
+/**
+ * Counter of all packets originated from the station transmitted to APRS-IS server.
+ * This doesn't include igated packets!
+ */
+uint16_t aprsis_tx_counter = 0;
+
+/**
+ * Amount of keepalive packet received from the server. It is reset to zero
+ * every connect event
+ */
+uint16_t aprsis_keepalive_received_counter = 0;
+
+/**
+ * Amount of packets which are not keepalive
+ */
+uint16_t aprsis_another_received_counter = 0;
+
+#define APRSIS_LOGIN_STRING_RECEIVED_LN	64
+
+char aprsis_login_string_reveived[APRSIS_LOGIN_STRING_RECEIVED_LN];
+
 #define APRSIS_TIMEOUT_MS	123000//123000
 
 /**
@@ -181,7 +207,17 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 		int offset = 0;
 
+		aprsis_tx_counter = 0;
+
+		aprsis_keepalive_received_counter = 0;
+
+		aprsis_another_received_counter = 0;
+
+		aprsis_igated_counter = 0;
+
 		memset(port_str, 0x00, 0x6);
+
+		memset(aprsis_login_string_reveived, 0x00, APRSIS_LOGIN_STRING_RECEIVED_LN);
 
 		snprintf(port_str, 6, "%d", port);
 
@@ -208,6 +244,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 					// send long string to server
 					gsm_sim800_tcpip_write((uint8_t *)aprsis_login_string, strlen(aprsis_login_string), aprsis_serial_port, aprsis_gsm_modem_state);
 
+					// store received login string (with an information about which server is connected now)
+					strncpy(aprsis_login_string_reveived, receive_buff + offset, APRSIS_LOGIN_STRING_RECEIVED_LN);
+
 					// wait for server response
 					retval = gsm_sim800_tcpip_receive(0, 0, aprsis_serial_port, aprsis_gsm_modem_state, 0, 2000);
 
@@ -230,6 +269,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							if (auto_send_beacon != 0) {
 								aprsis_send_beacon(0, aprsis_callsign_with_ssid, main_string_latitude, main_symbol_f, main_string_longitude, main_symbol_s, main_config_data_basic);
 							}
+
+							// trigger GSM status packet
+							rte_main_trigger_gsm_loginstring_packet = 1;
 
 							// set timeout for aprs-is server
 							srl_switch_timeout(aprsis_serial_port, 1, APRSIS_TIMEOUT_MS);
@@ -318,9 +360,13 @@ void aprsis_receive_callback(srl_context_t* srl_context) {
 		if (*(srl_get_rx_buffer(srl_context)) == '#') {
 			aprsis_last_keepalive_ts = main_get_master_time();
 
+			aprsis_keepalive_received_counter++;
+
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 		}
 		else {
+			aprsis_another_received_counter++;
+
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
 		}
@@ -390,6 +436,8 @@ void aprsis_send_wx_frame(
 		return;
 	}
 
+	aprsis_tx_counter++;
+
 	float max_wind_speed = 0.0f, temp = 0.0f;
 	uint8_t wind_speed_mph = 0, wind_gusts_mph = 0;
 	uint32_t pressure = 0;
@@ -420,8 +468,9 @@ void aprsis_send_wx_frame(
 
  	memset(aprsis_packet_tx_buffer, 0x00, sizeof(aprsis_packet_tx_buffer));
  	// 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
- 	aprsis_packet_tx_message_size = sprintf(
+ 	aprsis_packet_tx_message_size = snprintf(
  			aprsis_packet_tx_buffer,
+			APRSIS_TX_BUFFER_LN,
 			"%s>AKLPRZ,qAR,%s:!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d\r\n",
 			callsign_with_ssid,
 			callsign_with_ssid,
@@ -461,8 +510,11 @@ void aprsis_send_beacon(
 		return;
 	}
 
-	aprsis_packet_tx_message_size = sprintf(
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
 			aprsis_packet_tx_buffer,
+			APRSIS_TX_BUFFER_LN,
 			"%s>AKLPRZ,qAR,%s:=%s%c%c%s%c%c %s\r\n",
 			callsign_with_ssid,
 			callsign_with_ssid,
@@ -497,6 +549,8 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 	if (aprsis_logged == 0 || msg == 0) {
 		return;
 	}
+
+	aprsis_igated_counter++;
 
 	// prepare buffer for message
 	memset(aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
@@ -568,6 +622,46 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 
 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
+
+}
+
+void aprsis_send_server_conn_status(const char * callsign_with_ssid) {
+
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
+									aprsis_packet_tx_buffer,
+									APRSIS_TX_BUFFER_LN - 1,
+									"%s>AKLPRZ,qAR,%s:>[aprsis][igated: %d][transmited: %d][keepalive: %d][another: %d]\r\n",
+									callsign_with_ssid,
+									callsign_with_ssid,
+									aprsis_igated_counter,
+									aprsis_tx_counter,
+									aprsis_keepalive_received_counter,
+									aprsis_another_received_counter);
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+}
+
+void aprsis_send_loginstring(const char * callsign_with_ssid) {
+
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(aprsis_packet_tx_buffer,  APRSIS_TX_BUFFER_LN - 1, "%s>AKLPRZ,qAR,%s:>[aprsis][]%s\r\n", callsign_with_ssid, callsign_with_ssid, aprsis_login_string_reveived);
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
 }
 

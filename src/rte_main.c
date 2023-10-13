@@ -19,6 +19,11 @@ uint8_t rte_main_trigger_modbus_status = 0;
 uint8_t rte_main_trigger_wx_packet = 0;
 
 #ifdef PARAMETEO
+uint8_t rte_main_trigger_gsm_status_packet = 0;
+
+//!< Trigger sending status packet with received APRS is login string
+uint8_t rte_main_trigger_gsm_loginstring_packet = 0;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 uint8_t rte_main_woken_up = 0;
 

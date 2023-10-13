@@ -44,6 +44,9 @@ uint8_t gsm_sim800_tcpip_connection_died = 0;
  */
 uint8_t gsm_sim800_tcpip_receiving = 0;
 
+/**
+ * If modem is busy with transmitting something
+ */
 uint8_t gsm_sim800_tcpip_transmitting = 0;
 
 /**
@@ -409,6 +412,10 @@ void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_s
 
 void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	gsm_sim800_tcpip_transmitting = 0;
+}
+
+uint8_t gsm_sim800_tcpip_tx_busy(void) {
+	return gsm_sim800_tcpip_transmitting;
 }
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter) {
