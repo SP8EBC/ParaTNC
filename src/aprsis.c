@@ -84,6 +84,8 @@ uint8_t aprsis_connected = 0;
 
 const char * aprsis_sucessfull_login = "# logresp\0";
 
+static uint8_t aprsis_successfull_conn_counter = 0;
+
 /**
  * Counter of unsuccessful connects to APRS-IS, to trigger GSM modem reset.
  * Please note that it works differently that 'aprsis_reset_on_timeout' and
@@ -94,12 +96,7 @@ const char * aprsis_sucessfull_login = "# logresp\0";
  * some reason etc. Of course there is no guarantee that a reset in such
  * case will help, but there is nothing better to do.
  */
-uint8_t aprsis_unsucessfull_conn_counter = 0;
-
-/**
- * A timestamp when server has send anything
- */
-uint32_t aprsis_last_keepalive_ts = 0;
+static uint8_t aprsis_unsucessfull_conn_counter = 0;
 
 /**
  * Set to one if the GSM modem shall be immediately reset when APRS-IS communication
@@ -108,29 +105,44 @@ uint32_t aprsis_last_keepalive_ts = 0;
  * comes in when the connection has been established at least one time. It won't
  * help if there is some problem with establishing connection at all.
  */
-uint32_t aprsis_reset_on_timeout = 0;
+static uint32_t aprsis_reset_on_timeout = 0;
 
 /**
  * Number of RF packets igated to APRS-IS system
  */
-uint16_t aprsis_igated_counter = 0;
+static uint16_t aprsis_igated_counter = 0;
 
 /**
  * Counter of all packets originated from the station transmitted to APRS-IS server.
  * This doesn't include igated packets!
  */
-uint16_t aprsis_tx_counter = 0;
+static uint16_t aprsis_tx_counter = 0;
 
 /**
  * Amount of keepalive packet received from the server. It is reset to zero
  * every connect event
  */
-uint16_t aprsis_keepalive_received_counter = 0;
+static uint16_t aprsis_keepalive_received_counter = 0;
 
 /**
  * Amount of packets which are not keepalive
  */
-uint16_t aprsis_another_received_counter = 0;
+static uint16_t aprsis_another_received_counter = 0;
+
+/**
+ * A timestamp when server has send anything
+ */
+static uint32_t aprsis_last_keepalive_ts = 0;
+
+/**
+ * A timestamp when any packet has been sent to
+ */
+static uint32_t aprsis_last_packet_transmit_ts = 0;
+
+/**
+ * Only for debugging purposes
+ */
+static uint8_t aprsis_debug_simulate_timeout = 0;
 
 #define APRSIS_LOGIN_STRING_RECEIVED_LN	64
 
@@ -255,6 +267,8 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 						aprsis_connected = 1;
 
+						aprsis_successfull_conn_counter++;
+
 						// fast forward to the beginning of a response
 						offset = text_fast_forward_to_first_printable((char*)receive_buff, srl_get_num_bytes_rxed(aprsis_serial_port));
 
@@ -345,8 +359,6 @@ sim800_return_t aprsis_disconnect(void) {
 		aprsis_logged = 0;
 
 		aprsis_connected = 0;
-
-		gsm_sim800_poolers_request_engineering();
 	}
 
 	return out;
@@ -378,23 +390,43 @@ void aprsis_receive_callback(srl_context_t* srl_context) {
  */
 void aprsis_check_alive(void) {
 
-	uint32_t timestamp = 0;
+	const uint32_t timestamp = master_time;
 
-	timestamp = master_time;
+	uint8_t dead = 0;
+
+	if (aprsis_debug_simulate_timeout == 1) {
+		dead = 1;
+	}
+
+	if (aprsis_successfull_conn_counter > 0) {
+		if (timestamp > (aprsis_last_keepalive_ts + APRSIS_TIMEOUT_MS)) {
+			dead =  1;
+		}
+
+		if (timestamp > (aprsis_last_packet_transmit_ts + APRSIS_TIMEOUT_MS * 3 )) {
+			dead = 1;
+		}
+	}
 
 	// check if connection is alive
-	if (aprsis_logged == 1 && (timestamp > (aprsis_last_keepalive_ts + APRSIS_TIMEOUT_MS))) {
+	if (dead == 1){
 		// reset the flag
 		aprsis_logged = 0;
 
 		aprsis_connected = 0;
+
+		aprsis_debug_simulate_timeout = 0;
+
+		aprsis_last_keepalive_ts = master_time;
+
+		aprsis_last_packet_transmit_ts = master_time;
 
 		if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
 			// send a status message that APRS-IS connectios is gone
 			status_send_aprsis_timeout(aprsis_unsucessfull_conn_counter);
 		}
 
-		// check if it is intendend to reset GSM modem in case of timeout
+		// check if it is intended to reset GSM modem in case of timeout
 		if (aprsis_reset_on_timeout == 0) {
 			// close connection with force flag as it is uncertain if a remote server
 			// finished connection explicitly, or the connection is stuck for
@@ -488,6 +520,8 @@ void aprsis_send_wx_frame(
 			humidity);
  	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
+ 	aprsis_last_packet_transmit_ts = main_get_master_time();
+
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
@@ -533,6 +567,8 @@ void aprsis_send_beacon(
 	  else {
 		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
+
+	  aprsis_last_packet_transmit_ts = main_get_master_time();
 }
 
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
@@ -646,6 +682,8 @@ void aprsis_send_server_conn_status(const char * callsign_with_ssid) {
 									aprsis_keepalive_received_counter,
 									aprsis_another_received_counter);
 
+ 	aprsis_last_packet_transmit_ts = main_get_master_time();
+
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
@@ -671,4 +709,8 @@ char * aprsis_get_tx_buffer(void) {
 
 uint8_t aprsis_get_aprsis_logged(void) {
 	return aprsis_logged;
+}
+
+void aprsis_debug_set_simulate_timeout(void) {
+	aprsis_debug_simulate_timeout = 1;
 }

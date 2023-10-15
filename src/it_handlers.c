@@ -158,8 +158,6 @@ void SysTick_Handler(void) {
 
 	delay_decrement_counter();
 
-	button_debounce();
-
 	if (it_handlers_inhibit_radiomodem_dcd_led == 0) {
 		led_control_led1_upper(main_ax25.dcd);
 	}

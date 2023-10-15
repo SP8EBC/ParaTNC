@@ -76,4 +76,6 @@ void aprsis_send_loginstring(const char * callsign_with_ssid);
 char * aprsis_get_tx_buffer(void);
 uint8_t aprsis_get_aprsis_logged(void);
 
+void aprsis_debug_set_simulate_timeout(void);
+
 #endif /* APRSIS_H_ */

@@ -791,6 +791,7 @@ int main(int argc, char* argv[]){
   // configuring an APRS path used to transmit own packets (telemetry, wx, beacons)
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
+#ifdef INTERNAL_WATCHDOG
 #if defined(STM32F10X_MD_VL)
   // enable write access to watchdog registers
   IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
@@ -838,6 +839,7 @@ int main(int argc, char* argv[]){
   // do not disable watchdog when MCU halts on breakpoints
   DBGMCU->APB1FZR1 &= (0xFFFFFFFF ^ DBGMCU_APB1FZR1_DBG_IWDG_STOP);
 
+#endif
 #endif
 
   // initialize i2c controller
@@ -1436,6 +1438,8 @@ int main(int argc, char* argv[]){
 			main_set_monitor(6);
 
 			digi_pool_viscous();
+
+			button_debounce();
 
 			#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1) {

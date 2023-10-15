@@ -30,14 +30,23 @@ static const char * CENG0 = "+CENG: 0,\0";
 #define LAC_OFFSET		42
 #define LAC_LN			4
 
-uint8_t gsm_sim800_engineering_is_requested = 0;
-
+/**
+ * Set to one if correct response to engineering enable AT command
+ * has been received
+ */
 uint8_t gsm_sim800_engineering_is_enabled = 0;
 
-// set to one if correct response has been received for engineering data request. This is reset back to zero
-// after disabling CENG or after 'gsm_sim800_engineering_request_data' is called
+/**
+ * set to one if correct response has been received for engineering data request
+ * and new engineering data have been read. This is reset back to zero
+ * after disabling CENG or after 'gsm_sim800_engineering_request_data' is called
+ */
 uint8_t gsm_sim800_engineering_successed = 0;
 
+/**
+ * Set to one in case of any failure during engineering AT commands communication
+ */
+uint8_t gsm_sim800_engineering_fail = 0;
 
 static uint16_t gsm_sim800_rewind_to_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_t buffer_ln, uint16_t gsm_response_start_idx) {
 
@@ -172,7 +181,9 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 
 		}
 		else {
-			gsm_sim800_engineering_is_enabled = 0;
+			//gsm_sim800_engineering_is_enabled = 0;
+
+			gsm_sim800_engineering_fail = 1;
 
 		}
 	}
@@ -189,12 +200,13 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 		}
 		else {
 			gsm_sim800_engineering_successed = 0;
+
+			gsm_sim800_engineering_fail = 1;
 		}
 
 	}
 	else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
 		gsm_sim800_engineering_is_enabled = 0;
-
 	}
 
 }

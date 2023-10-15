@@ -58,6 +58,9 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		case BUTTON_RESET_GSM_GPRS:
 			gsm_sim800_reset(&main_gsm_state);
 			break;
+		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT:
+			aprsis_debug_set_simulate_timeout();
+			break;
 		default:
 			break;
 		}
@@ -76,6 +79,9 @@ void button_check_all(configuration_button_function_t left, configuration_button
 			break;
 		case BUTTON_RESET_GSM_GPRS:
 			gsm_sim800_reset(&main_gsm_state);
+			break;
+		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT:
+			aprsis_debug_set_simulate_timeout();
 			break;
 		default:
 			break;

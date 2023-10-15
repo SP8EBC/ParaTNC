@@ -23,7 +23,7 @@ void gsm_sim800_poolers_ten_seconds(srl_context_t * srl_context, gsm_sim800_stat
 
 	// if no engineering is currently processed, gprs is ready and APRS-IS connection
 	// is not alive now.
-	if (	gsm_sim800_engineering_is_enabled == 0 &&
+	if (	sim800_poolers_request_engineering == 0 &&
 			gsm_sim800_gprs_ready == 1 &&
 			aprsis_connected == 0) {
 		aprsis_connect_and_login_default(1);
@@ -46,6 +46,15 @@ void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state
 		else {
 			// if GPRS is ready an there is a request to obtain engineering information
 			if (sim800_poolers_request_engineering == 1 && aprsis_connected == 0) {
+
+				// check if engineering has failed or not
+				if (gsm_sim800_engineering_fail == 1) {
+					sim800_poolers_request_engineering = 0;
+
+					gsm_sim800_engineering_fail = 0;
+
+					return;
+				}
 
 				// initial state when engineering is not enabled and not finished
 				if (gsm_sim800_engineering_is_enabled == 0 && gsm_sim800_engineering_successed == 0) {

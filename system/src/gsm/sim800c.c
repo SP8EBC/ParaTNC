@@ -300,17 +300,17 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 		// turn power off
 		gsm_sim800_power_off();
 
-		if (gsm_reset_counter > GSM_RESET_COUNTER_LIMIT) {
+//		if (gsm_reset_counter > GSM_RESET_COUNTER_LIMIT) {	TODO
 			*state = SIM800_INHIBITED_RESET_COUNTER;
-		}
-		else {
-			*state = SIM800_POWERED_OFF;
-		}
+//		}
+//		else {
+//			*state = SIM800_POWERED_OFF;
+//		}
 	}
 	else if (*state == SIM800_INHIBITED_RESET_COUNTER) {
-		if (gsm_reset_counter < GSM_RESET_COUNTER_LIMIT) {
+//		if (gsm_reset_counter < GSM_RESET_COUNTER_LIMIT) {	TODO
 			*state = SIM800_POWERED_OFF;
-		}
+//		}
 	}
 	else if (*state == SIM800_POWERED_OFF) {
 		gsm_sim800_power_on();
@@ -921,7 +921,9 @@ void gsm_sim800_reset(gsm_sim800_state_t * state) {
 
 	gsm_sim800_tcpip_reset();
 
-	gsm_reset_counter += GSM_RESET_COUNTER_INCREMENT;
+	if (gsm_reset_counter < GSM_RESET_COUNTER_INCREMENT * 3) {
+		gsm_reset_counter += GSM_RESET_COUNTER_INCREMENT;
+	}
 }
 
 void gsm_sim800_create_status(char * buffer, int ln) {

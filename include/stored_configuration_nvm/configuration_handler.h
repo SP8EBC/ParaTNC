@@ -35,6 +35,7 @@ typedef enum configuration_button_function_t {
 	BUTTON_FORCE_UART_LOG = 5,
 	BUTTON_RESET_GSM_GPRS = 6,
 	BUTTON_RECONNECT_APRSIS = 7,
+	BUTTON_SIMULATE_APRSIS_TIMEOUT = 8
 }configuration_button_function_t;
 
 uint32_t configuration_handler_check_crc(void);
