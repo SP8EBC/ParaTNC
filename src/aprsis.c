@@ -135,9 +135,22 @@ static uint16_t aprsis_another_received_counter = 0;
 static uint32_t aprsis_last_keepalive_ts = 0;
 
 /**
+ * This is the second timestamp of last keepalive message
+ * from APRS-IS server. It is used by 'aprsis_check_connection_attempt_alive'
+ * and not incremented anywhere except receive callback. Where a timeout
+ * calculated using this value is too long the controller is restarted.
+ */
+static uint32_t aprsis_last_keepalive_long_ts = 0;
+
+/**
  * A timestamp when any packet has been sent to
  */
 static uint32_t aprsis_last_packet_transmit_ts = 0;
+
+/**
+ *
+ */
+static uint32_t aprsis_last_packet_transmit_long_ts = 0;
 
 /**
  * Only for debugging purposes
@@ -280,6 +293,8 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							// set current timestamp as last
 							aprsis_last_keepalive_ts = master_time;
 
+							aprsis_last_keepalive_long_ts = aprsis_last_keepalive_ts;
+
 							if (auto_send_beacon != 0) {
 								aprsis_send_beacon(0, aprsis_callsign_with_ssid, main_string_latitude, main_symbol_f, main_string_longitude, main_symbol_s, main_config_data_basic);
 							}
@@ -372,6 +387,8 @@ void aprsis_receive_callback(srl_context_t* srl_context) {
 		if (*(srl_get_rx_buffer(srl_context)) == '#') {
 			aprsis_last_keepalive_ts = main_get_master_time();
 
+			aprsis_last_keepalive_long_ts = main_get_master_time();
+
 			aprsis_keepalive_received_counter++;
 
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
@@ -437,6 +454,30 @@ void aprsis_check_alive(void) {
 			gsm_sim800_reset(aprsis_gsm_modem_state);
 		}
 	}
+}
+
+/**
+ * This is another alive check which is fully independent from
+ * if the connection has been even already established and how many times
+ * it waas. The intention here is to reset the whole controller if
+ * for some reason APRS-++IS connection cannot be established for very long time
+ * @return
+ */
+int aprsis_check_connection_attempt_alive(void) {
+
+	int out = 0;
+
+	const uint32_t timestamp = main_get_master_time();
+
+	if (timestamp > (aprsis_last_keepalive_long_ts + APRSIS_TIMEOUT_MS * 6)) {
+		out =  1;
+	}
+
+	if (timestamp > (aprsis_last_packet_transmit_long_ts + APRSIS_TIMEOUT_MS * 6 )) {
+		out = 1;
+	}
+
+	return out;
 }
 
 /**
@@ -521,6 +562,8 @@ void aprsis_send_wx_frame(
  	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
  	aprsis_last_packet_transmit_ts = main_get_master_time();
+
+ 	aprsis_last_packet_transmit_long_ts = main_get_master_time();
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }

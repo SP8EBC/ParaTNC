@@ -1168,6 +1168,16 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 	return psave_mode;
 }
 
+int pwr_save_is_currently_cutoff(void) {
+	int out = 0;
+
+	if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
 
 	if ((REGISTER & INHIBIT_PWR_SWITCH_PERIODIC_H) != 0){

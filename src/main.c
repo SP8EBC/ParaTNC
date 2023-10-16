@@ -1425,6 +1425,17 @@ int main(int argc, char* argv[]){
 				}
 
 			}
+
+			if (main_config_data_gsm->aprsis_enable != 0) {
+
+				if (pwr_save_is_currently_cutoff() == 0) {
+					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive();
+
+					if (i_am_ok_with_aprsis != 0) {
+						NVIC_SystemReset();
+					}
+				}
+			}
 			#endif
 
 			main_one_minute_pool_timer = 60000;
