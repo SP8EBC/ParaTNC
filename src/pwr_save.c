@@ -18,6 +18,7 @@
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "main.h"
+#include "backup_registers.h"
 #include "status.h"
 #include "afsk_pr.h"
 #include "gsm/sim800c.h"
@@ -27,7 +28,6 @@
 
 #include "drivers/analog_anemometer.h"
 
-#define INHIBIT_PWR_SWITCH_PERIODIC_H 1
 #define IN_STOP2_MODE (1 << 1)
 #define IN_C0_STATE (1 << 2)
 #define IN_C1_STATE (1 << 3)
@@ -37,8 +37,6 @@
 #define IN_I5_STATE (1 << 7)
 #define IN_L6_STATE (1 << 8)
 #define IN_L7_STATE (1 << 9)
-
-#define ALL_STATES_BITMASK (0xFF << 2)
 
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE	678u
 
@@ -94,7 +92,8 @@ static void pwr_save_clear_powersave_idication_bits() {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -107,7 +106,7 @@ static void pwr_save_clear_powersave_idication_bits() {
 static void pwr_save_enter_stop2(void) {
 
 	// set 31st monitor bit
-	main_set_monitor(31);
+	backup_reg_set_monitor(31);
 
 	// reload internal watchdog
 	main_reload_internal_wdg();
@@ -134,7 +133,8 @@ static void pwr_save_enter_stop2(void) {
 	RTC->BKP0R |= IN_STOP2_MODE;
 
 	// save a timestamp when micro has been switched to STOP2 mode
-	REGISTER_LAST_SLEEP = RTC->TR;
+	//REGISTER_LAST_SLEEP = RTC->TR;
+	backup_reg_set_last_sleep_timestamp();
 
 	pwr_save_lock_rtc_backup_regs();
 
@@ -163,7 +163,7 @@ static void pwr_save_check_stop2_cycles(void) {
 
 		// if there is time left to exit from depp sleep
 		if (pwr_save_number_of_sleep_cycles > 0) {
-			main_set_monitor(15);
+			backup_reg_set_monitor(15);
 
 			// go back to sleep
 			// configure how long micro should sleep
@@ -172,7 +172,7 @@ static void pwr_save_check_stop2_cycles(void) {
 			pwr_save_enter_stop2();
 		}
 		else {
-			main_set_monitor(14);
+			backup_reg_set_monitor(14);
 
 			// we are done sleeping so exit from this loop
 			break;
@@ -189,16 +189,18 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 	uint32_t counter = 0;
 
 	// set 30th minitor bit
-	main_set_monitor(30);
+	backup_reg_set_monitor(30);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
 	// save a timestamp of this wakeup event
-	REGISTER_LAST_WKUP = RTC->TR;
+	//REGISTER_LAST_WKUP = RTC->TR;
+	backup_reg_set_last_wakeup_timestamp();
 
 	// increase wakeup counter
-	counter = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000) >> 16);
+	//counter = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000) >> 16);
+	counter = backup_reg_get_wakeup_counter();
 
 	counter++;
 
@@ -210,7 +212,8 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 		counter = 0;
 	}
 
-	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0x0000FFFF) | (counter << 16);
+	//REGISTER_COUNTERS = (REGISTER_COUNTERS & 0x0000FFFF) | (counter << 16);
+	backup_reg_set_wakeup_counter(counter);
 
 	pwr_save_lock_rtc_backup_regs();
 
@@ -218,7 +221,7 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 	packet_tx_counter_values_t timers;
 
 	// check power saving mode set before switching uC to SLEEP2
-	uint16_t powersave_mode = (uint16_t)(REGISTER & ALL_STATES_BITMASK);
+	uint16_t powersave_mode = backup_reg_get_powersave_state();//(uint16_t)(REGISTER & ALL_STATES_BITMASK);
 
 	// check if sleep time is valid
 	if (pwr_save_sleep_time_in_seconds <= 0) {
@@ -258,7 +261,7 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 		break;
 	}
 
-	main_set_monitor(29);
+	backup_reg_set_monitor(29);
 }
 
 /**
@@ -286,9 +289,10 @@ static void pwr_save_after_stop2_rtc_wakeup_it(void) {
 
 int pwr_save_switch_mode_to_c0(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_C0_STATE) {
+	if (backup_reg_is_in_powersave_state(IN_C0_STATE) != 0) {
 		return 0;
 	}
+	//backup_reg_is_in_powersave_state
 
 	// turn ON +5V_S
 	io___cntrl_vbat_s_enable();
@@ -311,10 +315,12 @@ int pwr_save_switch_mode_to_c0(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= 0xFFFFFFFF ^ ALL_STATES_BITMASK;
+	//REGISTER &= 0xFFFFFFFF ^ ALL_STATES_BITMASK;
+	backup_reg_reset_all_powersave_states();
 
 	// set for C0 mode
-	REGISTER |= IN_C0_STATE;
+	//REGISTER |= IN_C0_STATE;
+	backup_reg_set_powersave_state(IN_C0_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -326,7 +332,10 @@ int pwr_save_switch_mode_to_c0(void) {
 // in HW-RevB this will disable external VHF radio!!
 int pwr_save_switch_mode_to_c1(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_C1_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_C1_STATE) {
+//		return 0;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_C0_STATE) != 0) {
 		return 0;
 	}
 
@@ -354,10 +363,12 @@ int pwr_save_switch_mode_to_c1(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C0 mode
-	REGISTER |= IN_C1_STATE;
+	//REGISTER |= IN_C1_STATE;
+	backup_reg_set_powersave_state(IN_C1_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -370,7 +381,10 @@ int pwr_save_switch_mode_to_c1(void) {
 // line which controls +4V_G
 void pwr_save_switch_mode_to_c2(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_C2_STATE) {
+//		return;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_C0_STATE) != 0) {
 		return;
 	}
 
@@ -398,10 +412,12 @@ void pwr_save_switch_mode_to_c2(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C2 mode
-	REGISTER |= IN_C2_STATE;
+	//REGISTER |= IN_C2_STATE;
+	backup_reg_set_powersave_state(IN_C2_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -410,7 +426,10 @@ void pwr_save_switch_mode_to_c2(void) {
 
 void pwr_save_switch_mode_to_c3(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_C3_STATE) {
+//		return;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_C3_STATE) != 0) {
 		return;
 	}
 
@@ -435,10 +454,12 @@ void pwr_save_switch_mode_to_c3(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_C3_STATE;
+	//REGISTER |= IN_C3_STATE;
+	backup_reg_set_powersave_state(IN_C3_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -448,7 +469,10 @@ void pwr_save_switch_mode_to_c3(void) {
 // in HW-RevB this will keep internal VHF radio module working!
 int pwr_save_switch_mode_to_m4(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+//		return 0;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_M4_STATE) != 0) {
 		return 0;
 	}
 
@@ -476,10 +500,12 @@ int pwr_save_switch_mode_to_m4(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_M4_STATE;
+	//REGISTER |= IN_M4_STATE;
+	backup_reg_set_powersave_state(IN_M4_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -488,7 +514,10 @@ int pwr_save_switch_mode_to_m4(void) {
 }
 
 int pwr_save_switch_mode_to_m4a(void) {
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_M4_STATE) {
+//		return 0;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_M4_STATE) != 0) {
 		return 0;
 	}
 
@@ -513,10 +542,12 @@ int pwr_save_switch_mode_to_m4a(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_M4_STATE;
+	//REGISTER |= IN_M4_STATE;
+	backup_reg_set_powersave_state(IN_M4_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -526,7 +557,10 @@ int pwr_save_switch_mode_to_m4a(void) {
 
 void pwr_save_switch_mode_to_i5(void) {
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_I5_STATE) {
+//		return;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_I5_STATE) != 0) {
 		return;
 	}
 
@@ -554,10 +588,12 @@ void pwr_save_switch_mode_to_i5(void) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_I5_STATE;
+	//REGISTER |= IN_I5_STATE;
+	backup_reg_set_powersave_state(IN_I5_STATE);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -580,14 +616,17 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 		return;
 	}
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_L6_STATE) {
+//		return;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_L6_STATE) != 0) {
 		return;
 	}
 
 	// calculate amount of STOP2 cycles
 	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
-	main_set_monitor(28);
+	backup_reg_set_monitor(28);
 
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
@@ -617,21 +656,25 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_L6_STATE;
+	//REGISTER |= IN_L6_STATE;
+	backup_reg_set_powersave_state(IN_L6_STATE);
 
-	REGISTER_LAST_SLTIM = sleep_time;
+	//REGISTER_LAST_SLTIM = sleep_time;
+	backup_reg_set_last_sleep_timestamp();
 
 	// increment the STOP2 sleep counters
-	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+	counter = backup_reg_get_sleep_counter();//(uint16_t)(REGISTER_COUNTERS & 0xFFFF);
 
 	counter++;
 
 	rte_main_going_sleep_count = counter;
 
-	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+	//REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+	backup_reg_set_sleep_counter(counter);
 
 	// lock access to backup
 	pwr_save_lock_rtc_backup_regs();
@@ -647,7 +690,7 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	pwr_save_enter_stop2();
 
-	main_set_monitor(27);
+	backup_reg_set_monitor(27);
 
 
 }
@@ -668,14 +711,17 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 		return;
 	}
 
-	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+//	if ((REGISTER & ALL_STATES_BITMASK) == IN_L7_STATE) {
+//		return;
+//	}
+	if (backup_reg_is_in_powersave_state(IN_L7_STATE) != 0) {
 		return;
 	}
 
 	// calculate amount of STOP2 cycles
 	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
-	main_set_monitor(26);
+	backup_reg_set_monitor(26);
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
@@ -705,27 +751,42 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	gsm_sim800_inhibit(1);
 
 	// unlock access to backup registers
-	pwr_save_unclock_rtc_backup_regs();
+	//pwr_save_unclock_rtc_backup_regs();
 
 	// clear all previous powersave indication bits
-	REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	//REGISTER &= (0xFFFFFFFF ^ ALL_STATES_BITMASK);
+	backup_reg_reset_all_powersave_states();
 
 	// set for C3 mode
-	REGISTER |= IN_L7_STATE;
+	//REGISTER |= IN_L7_STATE;
+	backup_reg_set_powersave_state(IN_L7_STATE);
 
-	REGISTER_LAST_SLTIM = sleep_time;
+//	REGISTER_LAST_SLTIM = sleep_time;
+//
+//	// increment the STOP2 sleep counters
+//	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+//
+//	counter++;
+//
+//	rte_main_going_sleep_count = counter;
+//
+//	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+
+	//REGISTER_LAST_SLTIM = sleep_time;
+	backup_reg_set_last_sleep_timestamp();
 
 	// increment the STOP2 sleep counters
-	counter = (uint16_t)(REGISTER_COUNTERS & 0xFFFF);
+	counter = backup_reg_get_sleep_counter();//(uint16_t)(REGISTER_COUNTERS & 0xFFFF);
 
 	counter++;
 
 	rte_main_going_sleep_count = counter;
 
-	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+	//REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000) | counter;
+	backup_reg_set_sleep_counter(counter);
 
 	// lock access to backup
-	pwr_save_lock_rtc_backup_regs();
+	//pwr_save_lock_rtc_backup_regs();
 
 	// configure how long micro should sleep
 	system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
@@ -739,7 +800,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	pwr_save_enter_stop2();
 
-	main_set_monitor(25);
+	backup_reg_set_monitor(25);
 }
 
 /**
@@ -790,10 +851,12 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 
 	}
 
-	pwr_save_unclock_rtc_backup_regs();
+	//pwr_save_unclock_rtc_backup_regs();
 
 	// reset a status register
-	REGISTER = 0;
+	//REGISTER = 0;
+	backup_reg_reset_all_powersave_states();
+	backup_reg_reset_inhibit_periodic_pwr_switch();
 
 	// switch power switch handler inhibition if it is needed
 	switch (mode) {
@@ -801,11 +864,12 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 			break;
 		case PWSAVE_NORMAL:
 		case PWSAVE_AGGRESV:
-			REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
+			//REGISTER |= INHIBIT_PWR_SWITCH_PERIODIC_H;
+			backup_reg_inhibit_periodic_pwr_switch();
 			break;
 	}
 
-	pwr_save_lock_rtc_backup_regs();
+	//pwr_save_lock_rtc_backup_regs();
 
 }
 
@@ -819,7 +883,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 	// by default use powersave mode from controller configuration
 	config_data_powersave_mode_t psave_mode = config->powersave;
 
-	main_set_monitor(24);
+	backup_reg_set_monitor(24);
 
 	// save previous state
 	pwr_save_previously_cutoff = pwr_save_currently_cutoff;
@@ -838,11 +902,11 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 	if (vbatt > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
 
-		main_set_monitor(23);
+		backup_reg_set_monitor(23);
 	}
 	else {
 		if (vbatt <= PWR_SAVE_CUTOFF_VOLTAGE_DEF) {
-			main_set_monitor(22);
+			backup_reg_set_monitor(22);
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
@@ -850,7 +914,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 		// check if battery voltage is below low voltage level
 		if (vbatt <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {
-			main_set_monitor(21);
+			backup_reg_set_monitor(21);
 
 			// if battery voltage is low swtich to aggressive powersave mode
 			pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
@@ -859,7 +923,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 	}
 
-	main_set_monitor(20);
+	backup_reg_set_monitor(20);
 
 	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
@@ -868,7 +932,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
-		main_set_monitor(19);
+		backup_reg_set_monitor(19);
 
 		// clear all previous powersave indication bits as we want to go sleep being already in L7 state
 		pwr_save_clear_powersave_idication_bits();
@@ -883,7 +947,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 	}
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0) {
-		main_set_monitor(18);
+		backup_reg_set_monitor(18);
 
 		psave_mode = PWSAVE_AGGRESV;
 	}
@@ -1017,7 +1081,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 					}
 					else {		// WX
 						if (minutes_to_wx > 2) {
-							main_set_monitor(17);
+							backup_reg_set_monitor(17);
 
 							// if there is more than two minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
@@ -1061,7 +1125,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 							// if stations is configured to send wx packet less frequent than every 5 minutes
 
 							if (minutes_to_wx > 1) {
-								main_set_monitor(17);
+								backup_reg_set_monitor(17);
 
 								// if there is more than one minute to wx packet
 								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
@@ -1086,7 +1150,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 							// if station is configured to sent wx packet in every 5 minutes or more often
 
 							if (minutes_to_wx > 1) {
-								main_set_monitor(17);
+								backup_reg_set_monitor(17);
 
 								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
 							}
@@ -1108,7 +1172,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 					}
 					else {		// WX
 						if (minutes_to_wx > 1) {
-							main_set_monitor(17);
+							backup_reg_set_monitor(17);
 
 							// if there is more than one minute to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
@@ -1142,11 +1206,11 @@ config_data_powersave_mode_t pwr_save_pooling_handler(const config_data_mode_t *
 		}
 	}
 
-	main_set_monitor(16);
+	backup_reg_set_monitor(16);
 
 	pwr_save_after_stop2_rtc_wakeup_it();
 
-	main_set_monitor(13);
+	backup_reg_set_monitor(13);
 
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors
@@ -1180,7 +1244,7 @@ int pwr_save_is_currently_cutoff(void) {
 
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void) {
 
-	if ((REGISTER & INHIBIT_PWR_SWITCH_PERIODIC_H) != 0){
+	if (backup_reg_is_periodic_pwr_switch_inhibited() != 0){
 		return 1;
 	}
 	else if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {

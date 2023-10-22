@@ -10,6 +10,7 @@ C_SRCS += \
 ../src/_write.c \
 ../src/api.c \
 ../src/aprsis.c \
+../src/backup_registers.c \
 ../src/button_parameteo.c \
 ../src/delay.c \
 ../src/dummy.c \
@@ -38,6 +39,7 @@ OBJS += \
 ./src/_write.o \
 ./src/api.o \
 ./src/aprsis.o \
+./src/backup_registers.o \
 ./src/button_parameteo.o \
 ./src/delay.o \
 ./src/dummy.o \
@@ -66,6 +68,7 @@ C_DEPS += \
 ./src/_write.d \
 ./src/api.d \
 ./src/aprsis.d \
+./src/backup_registers.d \
 ./src/button_parameteo.d \
 ./src/delay.d \
 ./src/dummy.d \

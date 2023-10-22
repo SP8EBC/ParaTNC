@@ -729,69 +729,7 @@ kiss_communication_nrc_t configuration_handler_program_startup(uint8_t * data, u
 
 }
 
-uint32_t configuration_get_register(void) {
 
-	uint32_t out = 0;
-
-#ifdef STM32F10X_MD_VL
-	out = BKP->DR3;
-#endif
-
-#ifdef STM32L471xx
-	out = RTC->BKP3R;
-
-#endif
-
-	return out;
-}
-
-void configuration_set_register(uint32_t value) {
-#ifdef STM32F10X_MD_VL
-	BKP->DR3 = value;
-#endif
-
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	RTC->BKP3R = value;
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-
-#endif
-}
-
-void configuration_set_bits_register(uint32_t value) {
-#ifdef STM32F10X_MD_VL
-	BKP->DR3 |= value;
-#endif
-
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	RTC->BKP3R |= value;
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-
-#endif
-}
-
-void configuration_clear_bits_register(uint32_t value) {
-#ifdef STM32F10X_MD_VL
-	BKP->DR3 &= (0xFFFF ^ value);
-#endif
-
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	RTC->BKP3R &= (0xFFFFFFFF ^ value);
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-
-#endif
-}
 
 configuration_handler_region_t configuration_get_current(uint32_t * size) {
 	if (size != 0x00) {

@@ -37,6 +37,7 @@
 #include "diag/Trace.h"
 #include "io.h"
 #include "button.h"
+#include "backup_registers.h"
 
 #include "rte_main.h"
 
@@ -99,7 +100,7 @@ void RTC_WKUP_IRQHandler(void) {
 
 	rte_main_woken_up = RTE_MAIN_WOKEN_UP_RTC_INTERRUPT;
 
-	main_set_monitor(13);
+	backup_reg_set_monitor(13);
 
 	main_reload_internal_wdg();
 

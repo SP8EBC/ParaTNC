@@ -22,22 +22,6 @@
 
 #define OWN_APRS_MSG_LN 	256
 
-// backup registers (ParaMETEO)
-// 0 -> powersave status
-// 1 -> last sleep rtc time
-// 2 -> last wakeup rtc time
-// 3 -> controller configuration status
-// 4 -> wakeup events MSB, sleep events LSB
-
-#ifdef STM32L471xx
-#define REGISTER 			RTC->BKP0R
-#define REGISTER_LAST_SLEEP	RTC->BKP1R
-#define REGISTER_LAST_WKUP	RTC->BKP2R
-#define REGISTER_COUNTERS	RTC->BKP4R
-#define REGISTER_MONITOR	RTC->BKP5R
-#define REGISTER_LAST_SLTIM	RTC->BKP6R
-#endif
-
 typedef enum main_usart_mode_t {
 	USART_MODE_UNDEF,
 	USART_MODE_KISS,
@@ -109,28 +93,6 @@ uint32_t main_get_nvm_timestamp(void);
 extern uint32_t rte_main_rx_total;
 extern uint32_t rte_main_tx_total;
 #endif
-
-/**
- * Inline used to trace an execution flow across main for(;;) loop and some
- * powersaving functions. In case of software fault it's value may help to trace
- * at witch point the crash has occured
- */
-inline void main_set_monitor(int8_t bit) {
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	if (bit >= 0) {
-		REGISTER_MONITOR |= (1 << bit);
-
-	}
-	else {
-		REGISTER_MONITOR = 0;
-	}
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-#endif
-}
 
 /**
  * Block I/O function which waits for all transmission to end

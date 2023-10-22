@@ -1,5 +1,6 @@
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
+#include "backup_registers.h"
 
 #include "rte_wx.h"
 #include "rte_pv.h"
@@ -89,6 +90,10 @@ void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config
 	// if user selected aggressive powersave mode the meteo counter must be set back to zero
 	// to prevent quirks with waking from sleep mode
 	packet_tx_meteo_counter = 0;
+
+}
+
+void packet_tx_restore_from_backupregs(void) {
 
 }
 
@@ -508,7 +513,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 #ifdef PARAMETEO
 		rte_main_trigger_gsm_status_packet = 1;
-		status_send_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+		status_send_powersave_registers();
 #endif
 
 		packet_tx_multi_per_call_handler();
@@ -521,14 +526,12 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				rte_main_reboot_req = 1;
 			}
 
-			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
 		else {
 			telemetry_send_chns_description(config_basic, config_mode);
 
 			packet_tx_multi_per_call_handler();
 
-			//telemetry_send_status();
 		}
 
 		status_send();

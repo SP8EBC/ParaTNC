@@ -48,6 +48,7 @@
 #include "TimerConfig.h"
 #include "PathConfig.h"
 #include "LedConfig.h"
+#include "backup_registers.h"
 #include "io.h"
 #include "float_to_string.h"
 #include "pwr_save.h"
@@ -108,7 +109,7 @@
 // 3 -> controller configuration status
 // 4 ->
 // 5 ->
-// 6 ->
+// 6 -> weather and telemetry timers & counters
 
 // backup registers (ParaMETEO)
 // 0 -> powersave status
@@ -117,6 +118,7 @@
 // 3 -> controller configuration status
 // 4 -> wakeup events MSB, sleep events LSB
 // 5 -> monitor
+// 6 -> weather and telemetry timers & counters
 
 
 #define CONFIG_FIRST_RESTORED 			(1)
@@ -406,7 +408,7 @@ int main(int argc, char* argv[]){
   if (main_reset_config_to_default == 1) {
 	  main_crc_result = 0;
 
-	  configuration_set_register(0);
+	  backup_reg_set_configuration(0);
 
 #if defined(PARAMETEO)
 	  nvm_erase_all();
@@ -416,32 +418,32 @@ int main(int argc, char* argv[]){
   }
 
   // if first section has wrong CRC and it hasn't been restored before
-  if ((main_crc_result & 0x01) == 0 && (configuration_get_register() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+  if ((main_crc_result & 0x01) == 0 && (backup_reg_get_configuration() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
 	  // restore default configuration
 	  if (configuration_handler_restore_default_first() == 0) {
 
 		  // if configuration has been restored successfully
-		  configuration_set_bits_register(CONFIG_FIRST_RESTORED);
+		  backup_reg_set_bits_configuration(CONFIG_FIRST_RESTORED);
 
 		  // set also CRC flag because if restoring is successfull the region has good CRC
-		  configuration_set_bits_register(CONFIG_FIRST_CRC_OK);
+		  backup_reg_set_bits_configuration(CONFIG_FIRST_CRC_OK);
 
 	  }
 	  else {
 		  // if not store the flag in the backup register to block
 		  // reinitializing once again in the consecutive restart
-		  configuration_set_bits_register(CONFIG_FIRST_FAIL_RESTORING);
+		  backup_reg_set_bits_configuration(CONFIG_FIRST_FAIL_RESTORING);
 
-		  configuration_clear_bits_register(CONFIG_FIRST_CRC_OK);
+		  backup_reg_clear_bits_configuration(CONFIG_FIRST_CRC_OK);
 	  }
 
 
   }
   else {
 	  // if the combined confition is not met check failed restoring flag
-	  if ((configuration_get_register() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
+	  if ((backup_reg_get_configuration() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
 		  // a CRC checksum is ok, so first configuration section can be used further
-		  configuration_set_bits_register(CONFIG_FIRST_CRC_OK);
+		  backup_reg_set_bits_configuration(CONFIG_FIRST_CRC_OK);
 	  }
 	  else {
 		  ;
@@ -449,31 +451,31 @@ int main(int argc, char* argv[]){
   }
 
   // if second section has wrong CRC and it hasn't been restored before
-  if ((main_crc_result & 0x02) == 0 && (configuration_get_register() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+  if ((main_crc_result & 0x02) == 0 && (backup_reg_get_configuration() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
 	  // restore default configuration
 	  if (configuration_handler_restore_default_second() == 0) {
 
 		  // if configuration has been restored successfully
-		  configuration_set_bits_register(CONFIG_SECOND_RESTORED);
+		  backup_reg_set_bits_configuration(CONFIG_SECOND_RESTORED);
 
 		  // set also CRC flag as if restoring is successfull the region has good CRC
-		  configuration_set_bits_register(CONFIG_SECOND_CRC_OK);
+		  backup_reg_set_bits_configuration(CONFIG_SECOND_CRC_OK);
 
 	  }
 	  else {
 		  // if not store the flag in the backup register
-		  configuration_set_bits_register(CONFIG_SECOND_FAIL_RESTORING);
+		  backup_reg_set_bits_configuration(CONFIG_SECOND_FAIL_RESTORING);
 
-		  configuration_clear_bits_register(CONFIG_SECOND_CRC_OK);
+		  backup_reg_clear_bits_configuration(CONFIG_SECOND_CRC_OK);
 	  }
 
 
   }
   else {
 	  // check failed restoring flag
-	  if ((configuration_get_register() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
+	  if ((backup_reg_get_configuration() & CONFIG_SECOND_FAIL_RESTORING) == 0) {
 		  // second configuration section has good CRC and can be used further
-		  configuration_set_bits_register(CONFIG_SECOND_CRC_OK);
+		  backup_reg_set_bits_configuration(CONFIG_SECOND_CRC_OK);
 	  }
 	  else {
 		  ;
@@ -481,7 +483,7 @@ int main(int argc, char* argv[]){
   }
 
   // at this point both sections have either verified CRC or restored values to default
-  if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) != 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) != 0) {
+  if ((backup_reg_get_configuration() & CONFIG_FIRST_CRC_OK) != 0 && (backup_reg_get_configuration() & CONFIG_SECOND_CRC_OK) != 0) {
 	  // if both sections are OK check programming counters
 	  if (config_data_pgm_cntr_first > config_data_pgm_cntr_second) {
 		  // if first section has bigger programing counter use it
@@ -492,11 +494,11 @@ int main(int argc, char* argv[]){
 
 	  }
   }
-  else if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) != 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) == 0) {
+  else if ((backup_reg_get_configuration() & CONFIG_FIRST_CRC_OK) != 0 && (backup_reg_get_configuration() & CONFIG_SECOND_CRC_OK) == 0) {
 	  // if only first region is OK use it
 	  configuration_handler_load_configuration(REGION_FIRST);
   }
-  else if ((configuration_get_register() & CONFIG_FIRST_CRC_OK) == 0 && (configuration_get_register() & CONFIG_SECOND_CRC_OK) != 0) {
+  else if ((backup_reg_get_configuration() & CONFIG_FIRST_CRC_OK) == 0 && (backup_reg_get_configuration() & CONFIG_SECOND_CRC_OK) != 0) {
 	  // if only first region is OK use it
 	  configuration_handler_load_configuration(REGION_FIRST);
   }
@@ -1101,7 +1103,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
-	   status_send_powersave_registers(REGISTER_LAST_SLEEP, REGISTER_LAST_WKUP, REGISTER_COUNTERS, REGISTER_MONITOR, REGISTER_LAST_SLTIM);
+	   status_send_powersave_registers();
 #endif
    }
 
@@ -1112,7 +1114,7 @@ int main(int argc, char* argv[]){
   // Infinite loop
   while (1)
     {
-	  main_set_monitor(-1);
+	  backup_reg_set_monitor(-1);
 
 	  // incrementing current cpu ticks
 	  main_current_cpu_idle_ticks++;
@@ -1124,7 +1126,7 @@ int main(int argc, char* argv[]){
 	    	;
 	    }
 
-	  main_set_monitor(0);
+	  backup_reg_set_monitor(0);
 
 #if defined(PARAMETEO)
 	  	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED) {
@@ -1158,11 +1160,11 @@ int main(int argc, char* argv[]){
 
 	  		main_check_adc = 1;
 
-	  		main_set_monitor(1);
+	  		backup_reg_set_monitor(1);
 	  	}
 #endif
 
-  		main_set_monitor(11);
+  		backup_reg_set_monitor(11);
 
 	  	// if new packet has been received from radio channel
 		if(ax25_new_msg_rx_flag == 1) {
@@ -1339,7 +1341,7 @@ int main(int argc, char* argv[]){
 
 		button_check_all(main_button_one_left, main_button_two_right);
 
-		main_set_monitor(2);
+		backup_reg_set_monitor(2);
 
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
@@ -1397,7 +1399,7 @@ int main(int argc, char* argv[]){
 
 			}
 
-			main_set_monitor(3);
+			backup_reg_set_monitor(3);
 
 			main_wx_sensors_pool_timer = 65500;
 		}
@@ -1407,7 +1409,7 @@ int main(int argc, char* argv[]){
 		 */
 		if (main_one_minute_pool_timer < 10) {
 
-			main_set_monitor(4);
+			backup_reg_set_monitor(4);
 
 			main_nvm_timestamp = main_get_nvm_timestamp();
 
@@ -1415,7 +1417,7 @@ int main(int argc, char* argv[]){
 			packet_tx_handler(main_config_data_basic, main_config_data_mode);
 			#endif
 
-			main_set_monitor(5);
+			backup_reg_set_monitor(5);
 
 			#ifdef STM32L471xx
 			if (main_config_data_mode->gsm == 1) {
@@ -1446,7 +1448,7 @@ int main(int argc, char* argv[]){
 		 */
 		if (main_one_second_pool_timer < 10) {
 
-			main_set_monitor(6);
+			backup_reg_set_monitor(6);
 
 			digi_pool_viscous();
 
@@ -1499,7 +1501,7 @@ int main(int argc, char* argv[]){
 				analog_anemometer_direction_handler();
 			}
 
-			main_set_monitor(7);
+			backup_reg_set_monitor(7);
 
 			main_one_second_pool_timer = 1000;
 		}
@@ -1542,7 +1544,7 @@ int main(int argc, char* argv[]){
 		 */
 		if (main_ten_second_pool_timer < 10) {
 
-			main_set_monitor(8);
+			backup_reg_set_monitor(8);
 
 			// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 			if (rte_main_trigger_wx_packet == 1) {
@@ -1577,7 +1579,7 @@ int main(int argc, char* argv[]){
 			}
 			#endif
 
-			main_set_monitor(9);
+			backup_reg_set_monitor(9);
 
 			#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1) {
@@ -1619,7 +1621,7 @@ int main(int argc, char* argv[]){
 			main_ten_second_pool_timer = 10000;
 		}
 
-		  main_set_monitor(10);
+		  backup_reg_set_monitor(10);
 
 
     }

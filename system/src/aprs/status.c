@@ -8,6 +8,7 @@
 #include "status.h"
 
 #include "main.h"
+#include "backup_registers.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -97,11 +98,25 @@ void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cuto
 #endif
 }
 
-void status_send_powersave_registers(uint32_t register_last_sleep, uint32_t register_last_wakeup, uint32_t register_counters, uint32_t monitor, uint32_t last_sleep_time) {
+void status_send_powersave_registers(void) {
+
+   const uint32_t last_sleep = backup_reg_get_last_sleep_timestamp();
+   const uint32_t last_wakeup = backup_reg_get_last_wakeup_timestamp();
+   const uint32_t sleep_counter = backup_reg_get_sleep_counter();
+   const uint32_t wakeup_counter = backup_reg_get_wakeup_counter();
+   const uint32_t last_monitor = backup_reg_get_monitor();
+
 	main_wait_for_tx_complete();
 
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave registers][last_sleep_ts: 0x%lX][last_wakeup_ts: 0x%lX][sleep_wakeup_cntrs: 0x%lX][monitor: 0x%lX][last_sleep_time: 0x%lX]",register_last_sleep, register_last_wakeup, register_counters, monitor, last_sleep_time);
+	main_own_aprs_msg_len = sprintf(
+									main_own_aprs_msg,
+									">[powersave registers][last_sleep_ts: 0x%lX][last_wakeup_ts: 0x%lX][sleep_cntr: 0x%lX][wakeup_cntr: 0x%lX][monitor: 0x%lX]",
+									last_sleep,
+									last_wakeup,
+									sleep_counter,
+									wakeup_counter,
+									last_monitor);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
