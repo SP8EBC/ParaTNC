@@ -42,7 +42,7 @@ uint8_t packet_tx_error_status_interval = 2;
 uint8_t packet_tx_error_status_counter = 0;
 
 uint8_t packet_tx_meteo_interval = 0;
-uint8_t packet_tx_meteo_counter = 2;
+uint8_t packet_tx_meteo_counter = 0;
 
 uint8_t packet_tx_meteo_kiss_interval = 2;
 uint8_t packet_tx_meteo_kiss_counter = 0;
@@ -82,14 +82,20 @@ void packet_tx_send_wx_frame(void) {
 
 }
 
-void packet_tx_configure(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
+void packet_tx_init(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
 	packet_tx_meteo_interval = meteo_interval;
 
 	packet_tx_beacon_interval = beacon_interval;
 
-	// if user selected aggressive powersave mode the meteo counter must be set back to zero
-	// to prevent quirks with waking from sleep mode
-	packet_tx_meteo_counter = 0;
+	backup_reg_get_packet_counters(&packet_tx_beacon_counter, &packet_tx_meteo_counter, &packet_tx_meteo_gsm_counter);
+
+	if (powersave == PWSAVE_AGGRESV) {
+		// if user selected aggressive powersave mode the meteo counter must be set back to zero
+		// to prevent quirks with waking from sleep mode
+		packet_tx_meteo_counter = 0;
+	}
+
+
 
 }
 
@@ -558,6 +564,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		packet_tx_telemetry_descr_counter = 0;
 	}
+
+	// store counters in backup registers
+	backup_reg_set_packet_counters(packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_meteo_gsm_counter);
 
 #ifdef STM32L471xx
 	// if powersave mode allow to sent extensive status messages

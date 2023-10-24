@@ -45,6 +45,8 @@ typedef enum wind_qf {
 	WIND_QF_DEGRADATED = 3
 }wind_qf_t;
 
+void telemetry_init(void);
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -62,7 +64,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic);
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count);
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 void telemetry_send_values(		uint8_t rx_pkts,
 								uint8_t tx_pkts,
 								uint8_t digi_pkts,

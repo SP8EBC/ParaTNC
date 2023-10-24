@@ -16,23 +16,6 @@
 #include <stm32f10x.h>
 #endif
 
-// backup registers (ParaTNC)
-// 0 ->
-// 2 -> boot and hard fault count
-// 3 -> controller configuration status
-// 4 ->
-// 5 ->
-// 6 -> weather and telemetry timers & counters
-
-// backup registers (ParaMETEO)
-// 0 -> powersave status - not handled here
-// 1 -> last sleep rtc time
-// 2 -> last wakeup rtc time
-// 3 -> controller configuration status
-// 4 -> wakeup events MSB, sleep events LSB
-// 5 -> monitor
-// 7 -> weather and telemetry timers & counters
-
 #define REGISTER_MONITOR	RTC->BKP5R
 
 /**
@@ -90,9 +73,13 @@ uint32_t backup_reg_is_periodic_pwr_switch_inhibited(void);
 uint32_t backup_reg_get_last_sleep_duration(void);
 void backup_reg_set_last_sleep_duration(uint32_t);
 
-uint8_t backup_reg_get_telemetry(void);
-void backup_reg_set_telemetry(void);
+void backup_reg_reset_counters(void);
 
+uint8_t backup_reg_get_telemetry(void);
+void backup_reg_set_telemetry(uint8_t);
+
+void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_counter, uint8_t * meteo_gsm_counter);
+void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counter, uint8_t meteo_gsm_counter);
 
 
 

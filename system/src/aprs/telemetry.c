@@ -8,6 +8,7 @@
 #include "aprs/telemetry.h"
 #include "main.h"
 #include "delay.h"
+#include "backup_registers.h"
 
 #include "ve_direct_protocol/parser.h"
 
@@ -18,6 +19,10 @@
 #include <string.h>
 
 uint16_t telemetry_counter = 0;
+
+void telemetry_init(void) {
+	telemetry_counter = backup_reg_get_telemetry();
+}
 
 void telemetry_send_chns_description_pv(const config_data_basic_t * const config_basic) {
 
@@ -205,7 +210,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 	if (config_mode->digi_viscous == 0) {
 		// prepare a frame with channel names depending on SSID
 		if (config_basic->ssid == 0)
@@ -269,7 +274,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	WAIT_FOR_CHANNEL_FREE();
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 	if (config_basic->ssid == 0)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", config_basic->callsign);
 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
@@ -300,7 +305,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	WAIT_FOR_CHANNEL_FREE();
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 	if (config_basic->ssid == 0)
 		main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ":%-6s   :UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", config_basic->callsign);
 	else if (config_basic->ssid > 0 && config_basic->ssid < 10)
@@ -502,8 +507,12 @@ void telemetry_send_values(	uint8_t rx_pkts,
 #endif
 
 	// reset the frame counter if it overflowed
-	if (telemetry_counter > 999)
+	if (telemetry_counter > 255) {
 		telemetry_counter = 0;
+	}
+
+	// store telemetry conter in backup register
+	backup_reg_set_telemetry((uint8_t)(telemetry_counter & 0xFFu));
 
 	// put a null terminator at the end of frame (but it should be placed there anyway)
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;

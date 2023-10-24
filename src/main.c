@@ -408,6 +408,8 @@ int main(int argc, char* argv[]){
   if (main_reset_config_to_default == 1) {
 	  main_crc_result = 0;
 
+	  backup_reg_reset_counters();
+
 	  backup_reg_set_configuration(0);
 
 #if defined(PARAMETEO)
@@ -427,6 +429,9 @@ int main(int argc, char* argv[]){
 
 		  // set also CRC flag because if restoring is successfull the region has good CRC
 		  backup_reg_set_bits_configuration(CONFIG_FIRST_CRC_OK);
+
+		  // additionally resets packet counters stored in backup registers
+		  backup_reg_reset_counters();
 
 	  }
 	  else {
@@ -460,6 +465,9 @@ int main(int argc, char* argv[]){
 
 		  // set also CRC flag as if restoring is successfull the region has good CRC
 		  backup_reg_set_bits_configuration(CONFIG_SECOND_CRC_OK);
+
+		  // additionally resets packet counters stored in backup registers
+		  backup_reg_reset_counters();
 
 	  }
 	  else {
@@ -513,7 +521,10 @@ int main(int argc, char* argv[]){
   main_button_two_right = configuration_get_right_button();
 
   // set packets intervals
-  packet_tx_configure(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
+  packet_tx_init(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
+
+  // initialie telemetry frames counter
+  telemetry_init();
 
 #if defined(STM32F10X_MD_VL)
   // disabling access to BKP registers
