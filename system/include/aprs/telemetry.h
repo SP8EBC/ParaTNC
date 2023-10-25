@@ -45,6 +45,16 @@ typedef enum wind_qf {
 	WIND_QF_DEGRADATED = 3
 }wind_qf_t;
 
+extern char telemetry_qf;
+extern char telemetry_degr;
+extern char telemetry_nav;
+extern char telemetry_pressure_qf_navaliable;
+extern char telemetry_humidity_qf_navaliable;
+extern char telemetry_anemometer_degradated;
+extern char telemetry_anemometer_navble;
+extern char telemetry_vbatt_low;
+extern uint8_t telemetry_scaled_temperature;
+
 void telemetry_init(void);
 
 #ifdef __cplusplus
@@ -96,5 +106,6 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 }
 #endif
 
+uint16_t telemetry_get_counter(void);
 
 #endif /* INCLUDE_APRS_TELEMETRY_H_ */

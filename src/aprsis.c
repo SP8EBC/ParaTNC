@@ -37,6 +37,16 @@ gsm_sim800_state_t * aprsis_gsm_modem_state;
 char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
 
 /**
+ * Lenght of buffer
+ */
+#define APRSIS_TELEMETRY_BUFFER_LN	34
+
+/**
+ * Buffer used to sent telemetry frames to APRS-IS
+ */
+char aprsis_packet_telemetry_buffer[APRSIS_TELEMETRY_BUFFER_LN];
+
+/**
  *
  */
 uint16_t aprsis_packet_tx_message_size = 0;
@@ -612,6 +622,135 @@ void aprsis_send_beacon(
 	  }
 
 	  aprsis_last_packet_transmit_ts = main_get_master_time();
+}
+
+/**
+ * Prepare telemetry packets to be sent later to the APRS-IS. Just store a string
+ * with all values, which will be then embedded into packet to be sent to APRS-IS
+ * @param _telemetry_counter
+ * @param _rx_pkts
+ * @param _tx_pkts
+ * @param _digi_pkts
+ * @param _scaled_vbatt_voltage
+ * @param _viscous_drop_pkts
+ * @param _scaled_temperature
+ * @param _telemetry_qf
+ * @param _telemetry_degr
+ * @param _telemetry_nav
+ * @param _telemetry_pressure_qf_navaliable
+ * @param _telemetry_humidity_qf_navaliable
+ * @param _telemetry_anemometer_degradated
+ * @param _telemetry_anemometer_navble
+ * @param _telemetry_vbatt_low
+ * @param _config_mode
+ */
+void aprsis_prepare_telemetry(
+		uint16_t _telemetry_counter,
+		uint8_t _rx_pkts,
+		uint8_t _tx_pkts,
+		uint8_t _digi_pkts,
+		uint8_t _scaled_vbatt_voltage,
+		uint8_t _viscous_drop_pkts,
+		uint8_t _scaled_temperature,
+		char _telemetry_qf,
+		char _telemetry_degr,
+		char _telemetry_nav,
+		char _telemetry_pressure_qf_navaliable,
+		char _telemetry_humidity_qf_navaliable,
+		char _telemetry_anemometer_degradated,
+		char _telemetry_anemometer_navble,
+		char _telemetry_vbatt_low,
+		const config_data_mode_t * const _config_mode) {
+
+	// clear buffer before doin anything
+	memset(aprsis_packet_telemetry_buffer, 0x00, APRSIS_TELEMETRY_BUFFER_LN);
+
+	// string lenght returned by snprintf
+	int snprintf_size = 0;
+
+	if (_config_mode->digi_viscous == 0) {
+		snprintf_size = snprintf(
+				aprsis_packet_telemetry_buffer,
+				APRSIS_TELEMETRY_BUFFER_LN,
+				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
+				_telemetry_counter,
+				_rx_pkts,
+				_tx_pkts,
+				_digi_pkts,
+				_scaled_vbatt_voltage,
+				_scaled_temperature,
+				_telemetry_qf,
+				_telemetry_degr,
+				_telemetry_nav,
+				_telemetry_pressure_qf_navaliable,
+				_telemetry_humidity_qf_navaliable,
+				_telemetry_anemometer_degradated,
+				_telemetry_anemometer_navble,
+				_telemetry_vbatt_low);
+
+	}
+	else {
+		snprintf_size = snprintf(
+				aprsis_packet_telemetry_buffer,
+				APRSIS_TELEMETRY_BUFFER_LN,
+				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
+				_telemetry_counter,
+				_rx_pkts,
+				_viscous_drop_pkts,
+				_digi_pkts,
+				_scaled_vbatt_voltage,
+				_scaled_temperature,
+				_telemetry_qf,
+				_telemetry_degr,
+				_telemetry_nav,
+				_telemetry_pressure_qf_navaliable,
+				_telemetry_humidity_qf_navaliable,
+				_telemetry_anemometer_degradated,
+				_telemetry_anemometer_navble,
+				_telemetry_vbatt_low);
+	}
+
+	aprsis_packet_telemetry_buffer[snprintf_size] = 0;
+
+}
+
+/**
+ * Sends to APRS-IS prepared telemetry frame prepared in advance
+ */
+void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid) {
+
+	// exif if APRSIS is not logged
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+	// exit if message is empty
+	if (*aprsis_packet_telemetry_buffer == 0) {
+		return;
+	}
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
+			aprsis_packet_tx_buffer,
+			APRSIS_TX_BUFFER_LN,
+			"%s>AKLPRZ,qAR,%s:%s\r\n",
+			callsign_with_ssid,
+			callsign_with_ssid,
+			aprsis_packet_telemetry_buffer);
+	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
+
+	  if (async > 0) {
+		  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	  }
+	  else {
+		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	  }
+
+	  aprsis_last_packet_transmit_ts = main_get_master_time();
+
+	// clear buffer after it has been used
+	memset(aprsis_packet_telemetry_buffer, 0x00, APRSIS_TELEMETRY_BUFFER_LN);
 }
 
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {

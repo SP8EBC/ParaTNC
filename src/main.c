@@ -1192,6 +1192,7 @@ int main(int argc, char* argv[]){
 
 			main_ax25.dcd = false;
 
+			// check this frame against other frame in visvous buffer waiting to be transmitted
 			digi_check_with_viscous(&ax25_rxed_frame);
 
 			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
@@ -1227,16 +1228,25 @@ int main(int argc, char* argv[]){
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
+			// if GSM status message is triggered and GSM module is not busy transmitting something else
 			if (rte_main_trigger_gsm_status_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
 				rte_main_trigger_gsm_status_packet = 0;
 
 				aprsis_send_server_conn_status((const char *)&main_callsign_with_ssid);
 			}
 
+			// if loginstring packet (APRS status packet with loginstring received from a server)
+			// is triggered and GSM module is not busy
 			if (rte_main_trigger_gsm_loginstring_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
 				rte_main_trigger_gsm_loginstring_packet = 0;
 
 				aprsis_send_loginstring((const char *)&main_callsign_with_ssid);
+			}
+
+			if (rte_main_trigger_gsm_telemetry_values == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_telemetry_values = 0;
+
+				aprsis_send_telemetry(1u, (const char *)&main_callsign_with_ssid);
 			}
 
 		}

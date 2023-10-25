@@ -511,6 +511,26 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// service external watchdog while sending telemetry
 		io_ext_watchdog_service();
 
+#ifdef PARAMETEO
+		aprsis_prepare_telemetry(
+							telemetry_get_counter(),
+							rx10m,
+							tx10m,
+							digi10m,
+							rte_main_average_battery_voltage,
+							digidrop10m,
+							telemetry_scaled_temperature,
+							telemetry_qf,
+							telemetry_degr,
+							telemetry_nav,
+							telemetry_pressure_qf_navaliable,
+							telemetry_humidity_qf_navaliable,
+							telemetry_anemometer_degradated,
+							telemetry_anemometer_navble,
+							telemetry_vbatt_low,
+							config_mode);
+#endif
+
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
 
 	}

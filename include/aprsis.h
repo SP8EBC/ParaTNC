@@ -70,6 +70,25 @@ void aprsis_send_beacon(uint8_t async,
 		const char * string_longitude,
 		char symbol_s,
 		const config_data_basic_t * config_data_basic);
+void aprsis_prepare_telemetry(
+		uint16_t _telemetry_counter,
+		uint8_t _rx_pkts,
+		uint8_t _tx_pkts,
+		uint8_t _digi_pkts,
+		uint8_t _scaled_vbatt_voltage,
+		uint8_t _viscous_drop_pkts,
+		uint8_t _scaled_temperature,
+		char _telemetry_qf,
+		char _telemetry_degr,
+		char _telemetry_nav,
+		char _telemetry_pressure_qf_navaliable,
+		char _telemetry_humidity_qf_navaliable,
+		char _telemetry_anemometer_degradated,
+		char _telemetry_anemometer_navble,
+		char _telemetry_vbatt_low,
+		const config_data_mode_t * const _config_mode);
+void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid);
+
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
 void aprsis_send_server_conn_status(const char * callsign_with_ssid);
 void aprsis_send_loginstring(const char * callsign_with_ssid);

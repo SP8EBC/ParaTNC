@@ -24,6 +24,9 @@ uint8_t rte_main_trigger_gsm_status_packet = 0;
 //!< Trigger sending status packet with received APRS is login string
 uint8_t rte_main_trigger_gsm_loginstring_packet = 0;
 
+//!< Trigger packet with telemetry value AFTER it is prepared
+uint8_t rte_main_trigger_gsm_telemetry_values = 0;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 uint8_t rte_main_woken_up = 0;
 

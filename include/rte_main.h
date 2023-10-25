@@ -18,6 +18,8 @@ extern uint8_t rte_main_trigger_gsm_status_packet;
 
 extern uint8_t rte_main_trigger_gsm_loginstring_packet;
 
+extern uint8_t rte_main_trigger_gsm_telemetry_values;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 

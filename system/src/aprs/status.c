@@ -18,10 +18,10 @@
 #ifdef PARAMETEO
 #include "pwr_save.h"
 
-const char * telemetry_vbatt_normal 		= "VBATT_GOOD";
-const char * telemetry_vbatt_low 			= "VBATT_LOW";
-const char * telemetry_vbatt_cutoff 		= "VBATT_CUTOFF";
-const char * telemetry_vbatt_unknown		= "VBATT_UNKNOWN";
+const char * status_vbatt_normal 		= "VBATT_GOOD";
+const char * status_vbatt_low 			= "VBATT_LOW";
+const char * status_vbatt_cutoff 		= "VBATT_CUTOFF";
+const char * status_vbatt_unknown		= "VBATT_UNKNOWN";
 
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c.h"
@@ -62,29 +62,29 @@ void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cuto
 	// telemetry_vbatt_unknown
 
 	if ((previous_cutoff & CURRENTLY_CUTOFF) != 0) {
-		p = telemetry_vbatt_cutoff;
+		p = status_vbatt_cutoff;
 	}
 	else if ((previous_cutoff & CURRENTLY_VBATT_LOW) != 0) {
-		p = telemetry_vbatt_low;
+		p = status_vbatt_low;
 	}
 	else if (((previous_cutoff & CURRENTLY_CUTOFF) == 0) && (previous_cutoff & CURRENTLY_VBATT_LOW) == 0){
-		p = telemetry_vbatt_normal;
+		p = status_vbatt_normal;
 	}
 	else {
-		p = telemetry_vbatt_unknown;
+		p = status_vbatt_unknown;
 	}
 
 	if ((current_cutoff & CURRENTLY_CUTOFF) != 0) {
-		c = telemetry_vbatt_cutoff;
+		c = status_vbatt_cutoff;
 	}
 	else if ((current_cutoff & CURRENTLY_VBATT_LOW) != 0) {
-		c = telemetry_vbatt_low;
+		c = status_vbatt_low;
 	}
 	else if (((current_cutoff & CURRENTLY_CUTOFF) == 0) && (current_cutoff & CURRENTLY_VBATT_LOW) == 0){
-		c = telemetry_vbatt_normal;
+		c = status_vbatt_normal;
 	}
 	else {
-		c = telemetry_vbatt_unknown;
+		c = status_vbatt_unknown;
 	}
 
 	main_wait_for_tx_complete();

@@ -18,7 +18,23 @@
 #include <stdio.h>
 #include <string.h>
 
-uint16_t telemetry_counter = 0;
+static uint16_t telemetry_counter = 0;
+
+// variables with characters to be inserted to APRS telemetry frame
+char telemetry_qf = '0';
+char telemetry_degr = '0';
+char telemetry_nav = '0';
+char telemetry_pressure_qf_navaliable = '0';
+char telemetry_humidity_qf_navaliable = '0';
+char telemetry_anemometer_degradated = '0';
+char telemetry_anemometer_navble = '0';
+char telemetry_vbatt_low = '0';
+
+// temperature scaled to 0x00-0xFF range for fifth telemetry channel.
+// if _METEO mode is enabled this channel sends the temperaure measure by
+// internal MS5611 or BME280. If _METEO is not enabled this channel
+// could send Dallas DS18B20 masurements if this is enabled in station_config.h
+uint8_t telemetry_scaled_temperature = 0;
 
 void telemetry_init(void) {
 	telemetry_counter = backup_reg_get_telemetry();
@@ -99,12 +115,12 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								wind_qf_t anemometer_qf)
 {
 	// local variables with characters to be inserted to APRS telemetry frame
-	char qf = '0', degr = '0', nav = '0';
-
-	char pressure_qf_navaliable = '0';
-	char humidity_qf_navaliable = '0';
-	char anemometer_degradated = '0';
-	char anemometer_navble = '0';
+//	char qf = '0', degr = '0', nav = '0';
+//
+//	char pressure_qf_navaliable = '0';
+//	char humidity_qf_navaliable = '0';
+//	char anemometer_degradated = '0';
+//	char anemometer_navble = '0';
 
 	uint8_t scaled_battery_current = 0;
 	uint8_t scaled_battery_voltage = 0;
@@ -124,18 +140,18 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 
 	switch (dallas_qf) {
 	case DALLAS_QF_FULL:
-		qf = '1', degr = '0', nav = '0';
+		telemetry_qf = '1', telemetry_degr = '0', telemetry_nav = '0';
 		break;
 	case DALLAS_QF_DEGRADATED:
-		qf = '0', degr = '1', nav = '0';
+		telemetry_qf = '0', telemetry_degr = '1', telemetry_nav = '0';
 		break;
 
 	case DALLAS_QF_NOT_AVALIABLE:
-		qf = '0', degr = '0', nav = '1';
+		telemetry_qf = '0', telemetry_degr = '0', telemetry_nav = '1';
 		break;
 
 	default:
-		qf = '0', degr = '0', nav = '0';
+		telemetry_qf = '0', telemetry_degr = '0', telemetry_nav = '0';
 		break;
 	}
 
@@ -143,23 +159,38 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	switch (press_qf) {
 	case PRESSURE_QF_NOT_AVALIABLE:
 	case PRESSURE_QF_UNKNOWN:
-		 pressure_qf_navaliable = '1';
+		telemetry_pressure_qf_navaliable = '1';
 		 break;
 	default:
-		pressure_qf_navaliable = '0';
+		telemetry_pressure_qf_navaliable = '0';
 		break;
 	}
 
 	switch (humid_qf) {
 	case HUMIDITY_QF_UNKNOWN:
 	case HUMIDITY_QF_NOT_AVALIABLE:
-		humidity_qf_navaliable = '1';
+		telemetry_humidity_qf_navaliable = '1';
 		break;
 	default:
-		humidity_qf_navaliable = '0';
+		telemetry_humidity_qf_navaliable = '0';
 	}
 
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, digi_pkts, scaled_battery_current, scaled_battery_voltage, scaled_pvcell_volage, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+	main_own_aprs_msg_len = sprintf(
+				main_own_aprs_msg,
+				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0",
+				telemetry_counter++,
+				rx_pkts,
+				digi_pkts,
+				scaled_battery_current,
+				scaled_battery_voltage,
+				scaled_pvcell_volage,
+				telemetry_qf,
+				telemetry_degr,
+				telemetry_nav,
+				telemetry_pressure_qf_navaliable,
+				telemetry_humidity_qf_navaliable,
+				telemetry_anemometer_degradated,
+				telemetry_anemometer_navble);
 
 
 	if (telemetry_counter > 999)
@@ -384,61 +415,47 @@ void telemetry_send_values(	uint8_t rx_pkts,
 								const config_data_mode_t * const config_mode) {
 #endif
 
-	// local variables with characters to be inserted to APRS telemetry frame
-	char qf = '0', degr = '0', nav = '0';
-	char pressure_qf_navaliable = '0';
-	char humidity_qf_navaliable = '0';
-	char anemometer_degradated = '0';
-	char anemometer_navble = '0';
-	char vbatt_low = '0';
-
-	// temperature scaled to 0x00-0xFF range for fifth telemetry channel.
-	// if _METEO mode is enabled this channel sends the temperaure measure by
-	// internal MS5611 or BME280. If _METEO is not enabled this channel
-	// could send Dallas DS18B20 masurements if this is enabled in station_config.h
-	uint8_t scaled_temperature = 0;
-
 	// get the quality factor for wind measurements
 	if (anemometer_qf == WIND_QF_DEGRADATED) {
-		anemometer_degradated = '1';
-		anemometer_navble = '0';
+		telemetry_anemometer_degradated = '1';
+		telemetry_anemometer_navble = '0';
 	}
 	else if (anemometer_qf == WIND_QF_NOT_AVALIABLE) {
-		anemometer_degradated = '0';
-		anemometer_navble = '1';
+		telemetry_anemometer_degradated = '0';
+		telemetry_anemometer_navble = '1';
 	}
 	else if (anemometer_qf == WIND_QF_UNKNOWN) {
-		anemometer_degradated = '1';
-		anemometer_navble = '1';
+		telemetry_anemometer_degradated = '1';
+		telemetry_anemometer_navble = '1';
 	}
 
 	// scale the physical temperature and limit upper and lower boundary if
 	// it is required
 	if (temperature < -50.0f) {
-		scaled_temperature = (uint8_t)0;
+		telemetry_scaled_temperature = (uint8_t)0;
 	}
 	else if (temperature > 70.0f) {
-		scaled_temperature = (uint8_t)255;
+		telemetry_scaled_temperature = (uint8_t)255;
 	}
 	else {
-		scaled_temperature = (uint8_t)((temperature + 50.0f) * 2.0f);
+		telemetry_scaled_temperature = (uint8_t)((temperature + 50.0f) * 2.0f);
 	}
 
 	// set the quality factor for dallas DS18B20
 	switch (dallas_qf) {
 	case DALLAS_QF_FULL:
-		qf = '1', degr = '0', nav = '0';
+		telemetry_qf = '1', telemetry_degr = '0', telemetry_nav = '0';
 		break;
 	case DALLAS_QF_DEGRADATED:
-		qf = '0', degr = '1', nav = '0';
+		telemetry_qf = '0', telemetry_degr = '1', telemetry_nav = '0';
 		break;
 
 	case DALLAS_QF_NOT_AVALIABLE:
-		qf = '0', degr = '0', nav = '1';
+		telemetry_qf = '0', telemetry_degr = '0', telemetry_nav = '1';
 		break;
 
 	default:
-		qf = '0', degr = '0', nav = '0';
+		telemetry_qf = '0', telemetry_degr = '0', telemetry_nav = '0';
 		break;
 	}
 
@@ -446,26 +463,26 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	switch (press_qf) {
 	case PRESSURE_QF_NOT_AVALIABLE:
 	case PRESSURE_QF_UNKNOWN:
-		 pressure_qf_navaliable = '1';
+		telemetry_pressure_qf_navaliable = '1';
 		 break;
 	default:
-		pressure_qf_navaliable = '0';
+		telemetry_pressure_qf_navaliable = '0';
 		break;
 	}
 
 	switch (humid_qf) {
 	case HUMIDITY_QF_UNKNOWN:
 	case HUMIDITY_QF_NOT_AVALIABLE:
-		humidity_qf_navaliable = '1';
+		telemetry_humidity_qf_navaliable = '1';
 		break;
 	default:
-		humidity_qf_navaliable = '0';
+		telemetry_humidity_qf_navaliable = '0';
 	}
 
 #ifdef PARAMETEO
 	// telemetry won't be sent during cutoff anyway so this simplification is correct here
 	if (cutoff_and_vbat_low > 0) {
-		vbatt_low = '1';
+		telemetry_vbatt_low = '1';
 	}
 #endif
 
@@ -475,39 +492,31 @@ void telemetry_send_values(	uint8_t rx_pkts,
 #ifdef STM32L471xx
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
-		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
-		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
-		#endif
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 	else {
-		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
-		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble, vbatt_low);
-		#endif
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 #else
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
 		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#endif
 	}
 	else {
 		#ifdef _DALLAS_AS_TELEM
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, qf, degr, nav, pressure_qf_navaliable, humidity_qf_navaliable, anemometer_degradated, anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#endif
 	}
 #endif
 
 	// reset the frame counter if it overflowed
-	if (telemetry_counter > 255) {
+	if (telemetry_counter > 999) {
 		telemetry_counter = 0;
 	}
 
@@ -532,4 +541,8 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
 
+}
+
+uint16_t telemetry_get_counter(void) {
+	return telemetry_counter;
 }
