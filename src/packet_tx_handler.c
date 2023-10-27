@@ -264,15 +264,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 	// if WX is enabled
 	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
-	#ifdef STM32L471xx
-		// send wx packet to APRSIS one minute before radio transmission
-		if (packet_tx_meteo_counter == packet_tx_meteo_interval - 1 && packet_tx_meteo_interval != 0) {
-			// TODO: fixme
-			//packet_tx_trigger_tcp |= APRSIS_TRIGGER_METEO;
-
-			//aprsis_send_wx_frame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
-		}
-	#endif
 
 		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
@@ -369,7 +360,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
 
 			// create wx data packet into specified buffer
-			SendWXFrameToBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln, &ln);
+			SendWXFrameToKissBuffer(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln, &ln);
 
 			srl_start_tx(main_kiss_srl_ctx_ptr, ln);
 
@@ -538,7 +529,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 
 #ifdef PARAMETEO
-		rte_main_trigger_gsm_status_packet = 1;
+		rte_main_trigger_gsm_telemetry_descriptions = 1;
 		status_send_powersave_registers();
 #endif
 

@@ -672,7 +672,7 @@ void aprsis_prepare_telemetry(
 		snprintf_size = snprintf(
 				aprsis_packet_telemetry_buffer,
 				APRSIS_TELEMETRY_BUFFER_LN,
-				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
+				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c\r\n",
 				_telemetry_counter,
 				_rx_pkts,
 				_tx_pkts,
@@ -693,7 +693,7 @@ void aprsis_prepare_telemetry(
 		snprintf_size = snprintf(
 				aprsis_packet_telemetry_buffer,
 				APRSIS_TELEMETRY_BUFFER_LN,
-				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c",
+				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c\r\n",
 				_telemetry_counter,
 				_rx_pkts,
 				_viscous_drop_pkts,
@@ -751,6 +751,61 @@ void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid) {
 
 	// clear buffer after it has been used
 	memset(aprsis_packet_telemetry_buffer, 0x00, APRSIS_TELEMETRY_BUFFER_LN);
+}
+
+/**
+ * Sends
+ * @param async
+ * @param what kind of telemetry description packet should be sent now
+ * @param callsign_with_ssid
+ * @return what kind of telemetry description should be sent next
+ */
+telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
+								const telemetry_description_t what,
+								const config_data_basic_t * const config_basic,
+								const config_data_mode_t * const config_mode,
+								const char * callsign_with_ssid) {
+
+	telemetry_description_t next = TELEMETRY_NOTHING;
+
+	// check what we want to send and what
+	switch (what) {
+		case TELEMETRY_PV_PARM: 		next = TELEMETRY_PV_EQNS; break;
+		case TELEMETRY_PV_EQNS: 		next = TELEMETRY_PV_UNIT; break;
+		case TELEMETRY_PV_UNIT: 		next = TELEMETRY_NOTHING; break;
+		case TELEMETRY_NORMAL_PARAM: 	next = TELEMETRY_NORMAL_EQNS; break;
+		case TELEMETRY_NORMAL_EQNS: 	next = TELEMETRY_NORMAL_UNIT; break;
+		case TELEMETRY_NORMAL_UNIT: 	next = TELEMETRY_NOTHING; break;
+		case TELEMETRY_NOTHING:
+		default:						next = TELEMETRY_NOTHING; break;
+	}
+
+	// exif if APRSIS is not logged
+	if (aprsis_logged == 0) {
+		return next;
+	}
+
+	telemetry_create_description_string(config_basic, config_mode, what, main_own_aprs_msg, OWN_APRS_MSG_LN);
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
+			aprsis_packet_tx_buffer,
+			APRSIS_TX_BUFFER_LN,
+			"%s>AKLPRZ,qAR,%s:%s\r\n",
+			callsign_with_ssid,
+			callsign_with_ssid,
+			main_own_aprs_msg);
+	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
+
+	if (async > 0) {
+	  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	}
+	else {
+		gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	}
+
+	return next;
 }
 
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {

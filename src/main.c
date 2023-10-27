@@ -52,6 +52,7 @@
 #include "io.h"
 #include "float_to_string.h"
 #include "pwr_save.h"
+#include "button.h"
 #include <wx_pwr_switch.h>
 #include "io_default_vbat_scaling.h"
 
@@ -61,6 +62,7 @@
 #include "aprs/telemetry.h"
 #include "aprs/dac.h"
 #include "aprs/beacon.h"
+#include "aprs/status.h"
 
 #include "ve_direct_protocol/parser.h"
 
@@ -148,11 +150,11 @@
 
 // Sample pragmas to cope with warnings. Please note the related line at
 // the end of this function, used to pop the compiler diagnostics status.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wmissing-declarations"
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#pragma GCC diagnostic ignored "-Wempty-body"
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wunused-parameter"
+//#pragma GCC diagnostic ignored "-Wmissing-declarations"
+//#pragma GCC diagnostic ignored "-Wreturn-type"
+//#pragma GCC diagnostic ignored "-Wempty-body"
 
 // used configuration structures
 const config_data_mode_t * main_config_data_mode = 0;
@@ -286,6 +288,9 @@ volatile int i = 0;
 #if defined(PARAMETEO)
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
+
+//!< Used to store an information which telemetry descritpion frame should be sent next
+telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 #endif
 
 char after_tx_lock;
@@ -1144,8 +1149,6 @@ int main(int argc, char* argv[]){
 
 	  		// restart ADCs
 	  		io_vbat_meas_enable();
-//	  		ADCStartConfig();
-//	  		DACStartConfig();
 
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
@@ -1247,6 +1250,29 @@ int main(int argc, char* argv[]){
 				rte_main_trigger_gsm_telemetry_values = 0;
 
 				aprsis_send_telemetry(1u, (const char *)&main_callsign_with_ssid);
+			}
+
+			if (rte_main_trigger_gsm_telemetry_descriptions == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+
+				// check if this ought to be first telemetry description in sequence
+				if (main_telemetry_description == TELEMETRY_NOTHING) {
+					// if yes check if victron telemetry is enabled
+					if (main_config_data_mode->victron != 0) {
+						// set the first packet accordingly
+						main_telemetry_description = TELEMETRY_PV_PARM;
+					}
+					else {
+						main_telemetry_description = TELEMETRY_NORMAL_PARAM;
+					}
+				}
+
+				// assemble and sent a telemetry description packet
+				main_telemetry_description = aprsis_send_description_telemetry(1u, main_telemetry_description, main_config_data_basic, main_config_data_mode, (const char *)&main_callsign_with_ssid);
+
+				// if there is nothing to send
+				if (main_telemetry_description == TELEMETRY_NOTHING) {
+					rte_main_trigger_gsm_telemetry_descriptions = 0;
+				}
 			}
 
 		}

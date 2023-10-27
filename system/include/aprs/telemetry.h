@@ -45,6 +45,16 @@ typedef enum wind_qf {
 	WIND_QF_DEGRADATED = 3
 }wind_qf_t;
 
+typedef enum telemetry_descritpion_t {
+	TELEMETRY_PV_PARM,
+	TELEMETRY_PV_EQNS,
+	TELEMETRY_PV_UNIT,
+	TELEMETRY_NORMAL_PARAM,
+	TELEMETRY_NORMAL_EQNS,
+	TELEMETRY_NORMAL_UNIT,
+	TELEMETRY_NOTHING
+}telemetry_description_t;
+
 extern char telemetry_qf;
 extern char telemetry_degr;
 extern char telemetry_nav;
@@ -56,6 +66,8 @@ extern char telemetry_vbatt_low;
 extern uint8_t telemetry_scaled_temperature;
 
 void telemetry_init(void);
+
+int telemetry_create_description_string(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode, const telemetry_description_t what, char * out, uint16_t out_ln);
 
 #ifdef __cplusplus
 extern "C"

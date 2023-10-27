@@ -20,7 +20,7 @@
 
 #define PWR_SWITCH_BOTH
 
-#define OWN_APRS_MSG_LN 	256
+#define OWN_APRS_MSG_LN 	256u
 
 typedef enum main_usart_mode_t {
 	USART_MODE_UNDEF,

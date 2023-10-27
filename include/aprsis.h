@@ -12,6 +12,7 @@
 #include "drivers/serial.h"
 #include "gsm/sim800c_tcpip.h"
 #include "ax25.h"
+#include "telemetry.h"
 
 
 typedef enum aprsis_return {
@@ -88,6 +89,11 @@ void aprsis_prepare_telemetry(
 		char _telemetry_vbatt_low,
 		const config_data_mode_t * const _config_mode);
 void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid);
+telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
+														const telemetry_description_t what,
+														const config_data_basic_t * const config_basic,
+														const config_data_mode_t * const config_mode,
+														const char * callsign_with_ssid);
 
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
 void aprsis_send_server_conn_status(const char * callsign_with_ssid);

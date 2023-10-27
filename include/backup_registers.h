@@ -76,7 +76,7 @@ void backup_reg_set_last_sleep_duration(uint32_t);
 void backup_reg_reset_counters(void);
 
 uint8_t backup_reg_get_telemetry(void);
-void backup_reg_set_telemetry(uint8_t);
+void backup_reg_set_telemetry(uint16_t);
 
 void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_counter, uint8_t * meteo_gsm_counter);
 void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counter, uint8_t meteo_gsm_counter);

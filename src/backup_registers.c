@@ -479,8 +479,14 @@ uint8_t backup_reg_get_telemetry(void) {
 /**
  *
  */
-void backup_reg_set_telemetry(uint8_t in) {
+void backup_reg_set_telemetry(uint16_t in) {
 	backup_reg_unclock();
+
+	if (in > 255) {
+		in = 0;
+	}
+
+	const uint8_t narrowed_in = (uint8_t)(in & 0xFFu);
 
 #ifdef PARAMETEO
 
@@ -491,7 +497,7 @@ void backup_reg_set_telemetry(uint8_t in) {
 	reg_value &= (0xFFFFFFFFu ^ 0xFFu);
 
 	// store updated value
-	reg_value |= in;
+	reg_value |= narrowed_in;
 
 	// recalculate checksum
 	const uint8_t new_checksum = backup_reg_calculate_checksum(reg_value);
