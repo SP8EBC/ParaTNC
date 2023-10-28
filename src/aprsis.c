@@ -776,6 +776,9 @@ telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
 		case TELEMETRY_NORMAL_PARAM: 	next = TELEMETRY_NORMAL_EQNS; break;
 		case TELEMETRY_NORMAL_EQNS: 	next = TELEMETRY_NORMAL_UNIT; break;
 		case TELEMETRY_NORMAL_UNIT: 	next = TELEMETRY_NOTHING; break;
+		case TELEMETRY_VISCOUS_PARAM:	next = TELEMETRY_VISCOUS_EQNS; break;
+		case TELEMETRY_VISCOUS_EQNS:	next = TELEMETRY_VISCOUS_UNIT; break;
+		case TELEMETRY_VISCOUS_UNIT:	next = TELEMETRY_NOTHING; break;
 		case TELEMETRY_NOTHING:
 		default:						next = TELEMETRY_NOTHING; break;
 	}
@@ -785,7 +788,7 @@ telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
 		return next;
 	}
 
-	telemetry_create_description_string(config_basic, config_mode, what, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	telemetry_create_description_string(config_basic, what, main_own_aprs_msg, OWN_APRS_MSG_LN);
 
 	aprsis_tx_counter++;
 

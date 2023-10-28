@@ -52,6 +52,9 @@ typedef enum telemetry_descritpion_t {
 	TELEMETRY_NORMAL_PARAM,
 	TELEMETRY_NORMAL_EQNS,
 	TELEMETRY_NORMAL_UNIT,
+	TELEMETRY_VISCOUS_PARAM,
+	TELEMETRY_VISCOUS_EQNS,
+	TELEMETRY_VISCOUS_UNIT,
 	TELEMETRY_NOTHING
 }telemetry_description_t;
 
@@ -67,7 +70,7 @@ extern uint8_t telemetry_scaled_temperature;
 
 void telemetry_init(void);
 
-int telemetry_create_description_string(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode, const telemetry_description_t what, char * out, uint16_t out_ln);
+int telemetry_create_description_string(const config_data_basic_t * const config_basic, const telemetry_description_t what, char * out, uint16_t out_ln);
 
 #ifdef __cplusplus
 extern "C"

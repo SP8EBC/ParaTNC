@@ -229,9 +229,6 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 
 	int32_t out = 0;
 
-	// result to be returned to the host PC
-	kiss_communication_nrc_t result;
-
 	// identifier
 	uint16_t did = *(input_frame_from_host + 2) | (*(input_frame_from_host + 3) << 8);
 

@@ -7,6 +7,7 @@
 
 #include <ax25_config.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "aprs/digi.h"
 #include "main.h"

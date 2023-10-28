@@ -379,7 +379,6 @@ uint32_t configuration_handler_restore_default_first(void) {
 	uint32_t out = 0;
 
 	// loop iterators
-	int i = 0;
 	int8_t config_struct_it = 0;
 
 	// source pointer
@@ -490,7 +489,6 @@ uint32_t configuration_handler_restore_default_second(void) {
 	uint32_t out = 0;
 
 	// loop iterators
-	int i = 0;
 	int8_t config_struct_it = 0;
 
 	// source pointer
@@ -891,5 +889,5 @@ configuration_button_function_t configuration_get_right_button(void) {
  * @return
  */
 int configuration_get_is_security_access_required(uint8_t medium, uint8_t routine_type) {
-
+	return 0;
 }

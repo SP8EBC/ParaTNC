@@ -1261,6 +1261,9 @@ int main(int argc, char* argv[]){
 						// set the first packet accordingly
 						main_telemetry_description = TELEMETRY_PV_PARM;
 					}
+					else if (main_config_data_mode->digi_viscous != 0) {
+						main_telemetry_description = TELEMETRY_VISCOUS_PARAM;
+					}
 					else {
 						main_telemetry_description = TELEMETRY_NORMAL_PARAM;
 					}

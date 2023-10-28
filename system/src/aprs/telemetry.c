@@ -10,6 +10,7 @@
 #include "delay.h"
 #include "backup_registers.h"
 #include "variant.h"
+#include "rte_main.h"
 
 #include "ve_direct_protocol/parser.h"
 
@@ -41,8 +42,9 @@ void telemetry_init(void) {
 	telemetry_counter = backup_reg_get_telemetry();
 }
 
-int telemetry_create_description_string(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode, const telemetry_description_t what, char * out, uint16_t out_ln) {
+int telemetry_create_description_string(const config_data_basic_t * const config_basic, const telemetry_description_t what, char * out, uint16_t out_ln) {
 
+	// real size of a string put into a buffer pointed by 'out'
 	int out_size = 0;
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
@@ -58,15 +60,15 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 		return out_size;
 	}
 
-	if (variant_validate_is_within_ram((uint32_t)config_mode) == 0) {
-		is_viscous = 0;
-	}
-	else if (config_mode->digi_viscous == 0) {
-		is_viscous = 0;
-	}
-	else {
-		;
-	}
+//	if (variant_validate_is_within_ram((uint32_t)config_mode) == 0) {
+//		is_viscous = 0;
+//	}
+//	else if (config_mode->digi_viscous == 0) {
+//		is_viscous = 0;
+//	}
+//	else {
+//		;
+//	}
 
 	switch (what) {
 		case TELEMETRY_PV_PARM: {
@@ -82,6 +84,7 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 			break;
 		}
+
 		case TELEMETRY_PV_EQNS: {
 
 			if (config_basic->ssid == 0)
@@ -95,6 +98,7 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 			break;
 		}
+
 		case TELEMETRY_PV_UNIT: {
 
 			if (config_basic->ssid == 0)
@@ -123,32 +127,28 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 					return out_size;
 			}
 			else {
-				// prepare a frame with channel names depending on SSID
-				if (config_basic->ssid == 0)
-					out_size = snprintf(out, out_ln, ":%-6s   :PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
-				else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-					out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
-				else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-					out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
-				else
-					return out_size;
+
 			}
 
 			break;
 		}
+
+		case TELEMETRY_VISCOUS_EQNS :
 		case TELEMETRY_NORMAL_EQNS : {
 
 			if (config_basic->ssid == 0)
-				out_size = snprintf(out, out_ln, out_ln, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", config_basic->callsign);
+				out_size = snprintf(out, out_ln, ":%-6s   :EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", config_basic->callsign);
 			else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-				out_size = snprintf(out, out_ln, out_ln, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", message_prefix_buffer);
+				out_size = snprintf(out, out_ln, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", message_prefix_buffer);
 			else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-				out_size = snprintf(out, out_ln, out_ln, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", message_prefix_buffer);
+				out_size = snprintf(out, out_ln, ":%-9s:EQNS.0,1,0,0,1,0,0,1,0,0,0.02,10,0,0.5,-50", message_prefix_buffer);
 			else
 				return out_size;
 
 			break;
 		}
+
+		case TELEMETRY_VISCOUS_UNIT :
 		case TELEMETRY_NORMAL_UNIT : {
 
 			if (config_basic->ssid == 0)
@@ -157,6 +157,21 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 				out_size = snprintf(out, out_ln, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
 			else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
 				out_size = snprintf(out, out_ln, ":%-9s:UNIT.Pkt,Pkt,Pkt,V,DegC,Hi,Hi,Hi,Hi,Hi,Hi,Hi,Hi", message_prefix_buffer);
+			else
+				return out_size;
+
+			break;
+		}
+
+		case TELEMETRY_VISCOUS_PARAM : {
+
+			// prepare a frame with channel names depending on SSID
+			if (config_basic->ssid == 0)
+				out_size = snprintf(out, out_ln, ":%-6s   :PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
+			else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+				out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
+			else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+				out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Visc10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
 			else
 				return out_size;
 
@@ -182,7 +197,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	while (main_afsk.sending == 1);
 
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, 0x00, TELEMETRY_PV_PARM, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_PARM, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
@@ -191,7 +206,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	delay_fixed(1200);
 
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, 0x00, TELEMETRY_PV_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
@@ -199,7 +214,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	while (main_afsk.sending == 1);
 	delay_fixed(1200);
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, 0x00, TELEMETRY_PV_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
@@ -217,14 +232,6 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								humidity_qf_t humid_qf,
 								wind_qf_t anemometer_qf)
 {
-	// local variables with characters to be inserted to APRS telemetry frame
-//	char qf = '0', degr = '0', nav = '0';
-//
-//	char pressure_qf_navaliable = '0';
-//	char humidity_qf_navaliable = '0';
-//	char anemometer_degradated = '0';
-//	char anemometer_navble = '0';
-
 	uint8_t scaled_battery_current = 0;
 	uint8_t scaled_battery_voltage = 0;
 	uint8_t scaled_pvcell_volage = 0;
@@ -301,11 +308,12 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
-	//while (main_ax25.dcd == 1);
 	WAIT_FOR_CHANNEL_FREE();
 
 	afsk_txStart(&main_afsk);
-
+#ifdef PARAMETEO
+	rte_main_trigger_gsm_telemetry_values = 1;
+#endif
 }
 
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count) {
@@ -331,6 +339,22 @@ void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_rea
  */
 void telemetry_send_chns_description(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode) {
 
+	uint8_t is_viscous = 1;
+
+	if (variant_validate_is_within_ram(config_basic) == 0) {
+		return;
+	}
+
+	if (variant_validate_is_within_ram(config_mode) == 0) {
+		is_viscous = 0;
+	}
+	else if (config_mode->digi_viscous == 0) {
+		is_viscous = 0;
+	}
+	else {
+		;
+	}
+
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
 	char message_prefix_buffer[9];
 
@@ -344,9 +368,16 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, config_mode, TELEMETRY_NORMAL_PARAM, main_own_aprs_msg, OWN_APRS_MSG_LN);
-	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	after_tx_lock = 1;
+	if (is_viscous == 0) {
+		main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_NORMAL_PARAM, main_own_aprs_msg, OWN_APRS_MSG_LN);
+		ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+		after_tx_lock = 1;
+	}
+	else {
+		main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_VISCOUS_PARAM, main_own_aprs_msg, OWN_APRS_MSG_LN);
+		ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+		after_tx_lock = 1;
+	}
 
 	// key up the transmitter and
 	afsk_txStart(&main_afsk);
@@ -354,7 +385,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	delay_fixed(1500);
 	WAIT_FOR_CHANNEL_FREE();
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, config_mode, TELEMETRY_NORMAL_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_NORMAL_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 
@@ -363,7 +394,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	delay_fixed(1500);
 	WAIT_FOR_CHANNEL_FREE();
 
-	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, config_mode, TELEMETRY_NORMAL_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
+	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_NORMAL_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
 	afsk_txStart(&main_afsk);
@@ -541,6 +572,11 @@ void telemetry_send_values(	uint8_t rx_pkts,
 
 	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
+
+#ifdef PARAMETEO
+	// trigger packet to aprs-is server
+	rte_main_trigger_gsm_telemetry_values = 1;
+#endif
 
 }
 
