@@ -148,14 +148,6 @@
 
 // ----- main() ---------------------------------------------------------------
 
-// Sample pragmas to cope with warnings. Please note the related line at
-// the end of this function, used to pop the compiler diagnostics status.
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wunused-parameter"
-//#pragma GCC diagnostic ignored "-Wmissing-declarations"
-//#pragma GCC diagnostic ignored "-Wreturn-type"
-//#pragma GCC diagnostic ignored "-Wempty-body"
-
 // used configuration structures
 const config_data_mode_t * main_config_data_mode = 0;
 const config_data_basic_t * main_config_data_basic = 0;
@@ -411,7 +403,7 @@ int main(int argc, char* argv[]){
 
   // restore config to default if requested
   if (main_reset_config_to_default == 1) {
-	  main_crc_result = 0;
+  	  main_crc_result = 0;
 
 	  backup_reg_reset_counters();
 
@@ -800,6 +792,7 @@ int main(int argc, char* argv[]){
   main_wx_srl_ctx_ptr->te_port = GPIOA;
   main_wx_srl_ctx_ptr->early_tx_assert = configuration_get_early_tx_assert();		// TODO: was 1
 
+  // initialize UART used to communicate with GPRS modem
   srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 #endif
 
@@ -1067,14 +1060,17 @@ int main(int argc, char* argv[]){
    // reload watchdog counter
 	main_reload_internal_wdg();
 
+   // reload external watchdog in case it is installed
    io_ext_watchdog_service();
 
 #ifdef PARAMETEO
 
+   // initialize NVM logger if it is enabled
    if (main_config_data_mode->nvm_logger != 0) {
 	   nvm_measurement_init();
    }
 
+   // initialize everything related to GSM module
    if (main_config_data_mode->gsm == 1) {
 	   it_handlers_inhibit_radiomodem_dcd_led = 1;
 
@@ -1084,6 +1080,9 @@ int main(int argc, char* argv[]){
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
+	   // as for now it is not possible to have APRS-IS communciation and REST api at once,
+	   // due to some data races and another timing problems while disconnecting APRS-IS to make
+	   // room for HTTP request - hence that if below
 	   if (main_config_data_gsm->api_enable == 1 && main_config_data_gsm->aprsis_enable == 0) {
 		   api_init((const char *)main_config_data_gsm->api_base_url, (const char *)(main_config_data_gsm->api_station_name));
 	   }
@@ -1110,9 +1109,14 @@ int main(int argc, char* argv[]){
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 #if defined(PARAMETEO)
-	   beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
-		main_wait_for_tx_complete();
-	   delay_fixed(1500);
+	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
+	main_wait_for_tx_complete();
+
+	// this delay is put in case if beacon is configured to use
+	// any path like WIDE1-1 or WIDE2-1 or another. The delay
+	// will wait for some time to have this beacon digipeated
+	// by the APRS radio network
+	delay_fixed(1500);
 #else
 	   beacon_send_own(0, 0);
 
@@ -1130,17 +1134,18 @@ int main(int argc, char* argv[]){
   // Infinite loop
   while (1)
     {
-	  backup_reg_set_monitor(-1);
+	backup_reg_set_monitor(-1);
 
-	  // incrementing current cpu ticks
-	  main_current_cpu_idle_ticks++;
+	// incrementing current cpu ticks
+	main_current_cpu_idle_ticks++;
 
-	    if (rte_main_reboot_req == 1) {
-	    	NVIC_SystemReset();
-	    }
-	    else {
-	    	;
-	    }
+	// system reset may be requested from various places in the application
+	if (rte_main_reboot_req == 1) {
+		NVIC_SystemReset();
+	}
+	else {
+		;
+	}
 
 	  backup_reg_set_monitor(0);
 
@@ -1150,6 +1155,7 @@ int main(int argc, char* argv[]){
 	  		// restart ADCs
 	  		io_vbat_meas_enable();
 
+	  		// get current battery voltage and calculate current average
 		    rte_main_battery_voltage = io_vbat_meas_get();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
@@ -1164,15 +1170,18 @@ int main(int argc, char* argv[]){
 			main_ax25.dcd = false;
 
 			//DA_Init();
-			  ADCStartConfig();
-			  DACStartConfig();
-			  AFSK_Init(&main_afsk);
-			  ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
-			  //TimerConfig();
+			ADCStartConfig();
+			DACStartConfig();
+			AFSK_Init(&main_afsk);
+			ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
+			//TimerConfig();
 
-			  rte_main_woken_up = 0;
+			rte_main_woken_up = 0;
 
 	  		main_check_adc = 1;
+
+			// reinitialize UART used to communicate with GPRS modem
+			srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 
 	  		backup_reg_set_monitor(1);
 	  	}
@@ -1216,7 +1225,7 @@ int main(int argc, char* argv[]){
 
 #ifdef PARAMETEO
 		// if GSM communication is enabled
-		if (main_config_data_mode->gsm == 1) {
+		if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1) {
 
 			// if data has been received
 			if (main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || main_gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
@@ -1229,6 +1238,12 @@ int main(int argc, char* argv[]){
 
 			if (main_gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
+			if (rte_main_trigger_gsm_status_gsm == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_status_gsm = 0;
+
+				aprsis_send_gpsstatus((const char *)&main_callsign_with_ssid);
 			}
 
 			// if GSM status message is triggered and GSM module is not busy transmitting something else
@@ -1396,18 +1411,6 @@ int main(int argc, char* argv[]){
 		// get all meteo measuremenets each 65 seconds. some values may not be
 		// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 		if (main_wx_sensors_pool_timer < 10) {
-#ifdef PARAMETEO
-			// get current battery voltage. for non parameteo this will return 0
-		    rte_main_battery_voltage = io_vbat_meas_get();
-
-		    // get average battery voltage
-		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
-
-		    // meas average will return 0 if internal buffer isn't filled completely
-		    if (rte_main_average_battery_voltage == 0) {
-		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
-		    }
-#endif
 			if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
 
 				// notice: UMB-master and Modbus-RTU uses the same UART
@@ -1505,7 +1508,14 @@ int main(int argc, char* argv[]){
 			button_debounce();
 
 			#ifdef PARAMETEO
+			// this if cannot be guarded by checking if VBAT_G is enabled
+			// because VBAT_G itself is controlled by initialization
+			// pooler
 			if (main_config_data_mode->gsm == 1) {
+				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
+			if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1) {
 
 				// check if GSM modem must be power-cycled / restarted like after
 				// waking up from deep sleep or chaning power saving mode
@@ -1537,9 +1547,6 @@ int main(int argc, char* argv[]){
 					//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
 					//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
 				}
-
-
-				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 				gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
 
@@ -1604,16 +1611,28 @@ int main(int argc, char* argv[]){
 				rte_main_trigger_wx_packet = 0;
 			}
 
-			#ifdef PARAMETEO
+#ifdef PARAMETEO
+
 			if (main_check_adc == 1) {
 				AD_Restart();
 
 				main_check_adc = 0;
 			}
 
+			// get current battery voltage. for non parameteo this will return 0
+		    rte_main_battery_voltage = io_vbat_meas_get();
+
+		    // get average battery voltage
+		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
+
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending && rte_main_woken_up == 0) {
-				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage);
+				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage);
 			}
 
 			if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
@@ -1627,17 +1646,17 @@ int main(int argc, char* argv[]){
 			if (pwm_second_channel != 0) {
 				rte_wx_pm10 = pwm_second_channel;
 			}
-			#endif
+#endif
 
 			backup_reg_set_monitor(9);
 
-			#ifdef PARAMETEO
-			if (main_config_data_mode->gsm == 1) {
+#ifdef PARAMETEO
+			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g() == 1) {
 				gsm_sim800_poolers_ten_seconds(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 				packet_tx_tcp_handler();
 			}
-			#endif
+#endif
 
 			if (main_config_data_mode->wx_umb == 1) {
 				umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);

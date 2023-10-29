@@ -68,6 +68,23 @@ void led_init(void) {
 
 }
 
+void led_deinit(void) {
+#ifdef PARAMETEO
+	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ANALOG;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+
+	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
+	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+#endif
+}
+
 void led_service_blink(void) {
 
 	if (led_blinking_led1 > 0) {

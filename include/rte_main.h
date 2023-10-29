@@ -22,6 +22,8 @@ extern uint8_t rte_main_trigger_gsm_telemetry_values;
 
 extern uint8_t rte_main_trigger_gsm_telemetry_descriptions;
 
+extern uint8_t rte_main_trigger_gsm_status_gsm;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 

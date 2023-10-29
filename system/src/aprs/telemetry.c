@@ -521,7 +521,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
-#ifdef STM32L471xx
+#ifdef PARAMETEO
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
 			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);

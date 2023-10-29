@@ -30,6 +30,9 @@ uint8_t rte_main_trigger_gsm_telemetry_values = 0;
 //!< Trigger set of packets with telemetry description
 uint8_t rte_main_trigger_gsm_telemetry_descriptions = 0;
 
+//!<
+uint8_t rte_main_trigger_gsm_status_gsm = 0;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 uint8_t rte_main_woken_up = 0;
 

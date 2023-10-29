@@ -39,10 +39,12 @@ char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
 /**
  * Lenght of buffer
  */
-#define APRSIS_TELEMETRY_BUFFER_LN	34
+#define APRSIS_TELEMETRY_BUFFER_LN	96
 
 /**
- * Buffer used to sent telemetry frames to APRS-IS
+ * Buffer used to sent telemetry frames to APRS-IS. It is also
+ * used to construct frame with GPS connection status, which is sent
+ * only once after APRS-IS connection is established
  */
 char aprsis_packet_telemetry_buffer[APRSIS_TELEMETRY_BUFFER_LN];
 
@@ -299,6 +301,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 						retval = strncmp(aprsis_sucessfull_login, (const char * )(receive_buff + offset), (size_t)9);
 						if (retval == 0) {
 							aprsis_logged = 1;
+
+							// trigger GSM status APRS-IS packet, when connection is ready
+							rte_main_trigger_gsm_status_gsm = 1;
 
 							// set current timestamp as last
 							aprsis_last_keepalive_ts = master_time;
@@ -937,10 +942,39 @@ void aprsis_send_loginstring(const char * callsign_with_ssid) {
 
 	aprsis_tx_counter++;
 
-	aprsis_packet_tx_message_size = snprintf(aprsis_packet_tx_buffer,  APRSIS_TX_BUFFER_LN - 1, "%s>AKLPRZ,qAR,%s:>[aprsis][]%s\r\n", callsign_with_ssid, callsign_with_ssid, aprsis_login_string_reveived);
+	aprsis_packet_tx_message_size = snprintf(
+									aprsis_packet_tx_buffer,
+									APRSIS_TX_BUFFER_LN - 1,
+									"%s>AKLPRZ,qAR,%s:>[aprsis][]%s\r\n",
+									callsign_with_ssid,
+									callsign_with_ssid,
+									aprsis_login_string_reveived);
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
+}
+
+void aprsis_send_gpsstatus(const char * callsign_with_ssid) {
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
+
+	aprsis_tx_counter++;
+
+	// reuse a buffer for telemetry for this one occasion
+	gsm_sim800_create_status(aprsis_packet_telemetry_buffer, APRSIS_TELEMETRY_BUFFER_LN);
+
+	aprsis_packet_tx_message_size = snprintf(
+									aprsis_packet_tx_buffer,
+									APRSIS_TX_BUFFER_LN - 1,
+									"%s>AKLPRZ,qAR,%s:%s\r\n",
+									callsign_with_ssid,
+									callsign_with_ssid,
+									aprsis_packet_telemetry_buffer);
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 char * aprsis_get_tx_buffer(void) {

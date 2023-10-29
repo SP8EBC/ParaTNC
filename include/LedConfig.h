@@ -35,6 +35,7 @@ extern uint8_t led_blinking_led1;
 
 void led_config(void);
 void led_init(void);
+void led_deinit(void);
 void led_service_blink(void);
 
 #ifdef STM32F10X_MD_VL
@@ -89,6 +90,14 @@ inline void led_blink_led2_botoom(void) {
 #endif
 
 #ifdef STM32L471xx
+
+/**
+ * Switches on or off upper LED in ParaTNC or bottom led
+ * in ParaMETEO. In ParaMETEO leds are distinguished when
+ * holding the PCB on longer edge towards bottom, and
+ * weather sensors connectors upwards.
+ * @param _in
+ */
 inline void led_control_led1_upper(bool _in) {
 	if (_in == true) {
 		GPIOC->BSRR |= GPIO_BSRR_BS8;
@@ -98,6 +107,13 @@ inline void led_control_led1_upper(bool _in) {
 	}
 }
 
+/**
+ * Switches on or off bottom LED in ParaTNC or upper led
+ * in ParaMETEO. In ParaMETEO leds are distinguished when
+ * holding the PCB on longer edge towards bottom, and
+ * weather sensors connectors upwards.
+ * @param _in
+ */
 inline void led_control_led2_bottom(bool _in) {
 	if (_in == true) {
 		GPIOC->BSRR |= GPIO_BSRR_BS9;

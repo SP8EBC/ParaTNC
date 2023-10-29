@@ -155,6 +155,16 @@ inline void io___cntrl_gprs_dtr_high() {
 	GPIOB->BSRR |= GPIO_BSRR_BS8;
 }
 
+inline uint8_t io_get_cntrl_vbat_g(void) {
+	uint8_t out = 0;
+
+	if ((GPIOA->ODR & GPIO_ODR_ODR_6) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 inline uint8_t io_get_cntrl_vbat_c(void) {
 	uint8_t out = 0;
 
