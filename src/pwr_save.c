@@ -599,6 +599,15 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 
 	backup_reg_set_monitor(28);
 
+	// turn off leds to save power
+	it_handlers_inhibit_radiomodem_dcd_led = 1;
+	led_control_led1_upper(false);
+	led_control_led2_bottom(false);
+	led_deinit();
+
+	// disconnect APRS-IS connection if it is established
+	aprsis_disconnect();
+
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
 
@@ -651,12 +660,6 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// save how long the micro will sleep - required for handling wakeup event
 	pwr_save_sleep_time_in_seconds = sleep_time;
 
-	// turn off leds to save power
-	it_handlers_inhibit_radiomodem_dcd_led = 1;
-	led_control_led1_upper(false);
-	led_control_led2_bottom(false);
-	led_deinit();
-
 	pwr_save_enter_stop2();
 
 	backup_reg_set_monitor(27);
@@ -688,6 +691,12 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
 	backup_reg_set_monitor(26);
+
+	// turn off leds to save power
+	it_handlers_inhibit_radiomodem_dcd_led = 1;
+	led_control_led1_upper(false);
+	led_control_led2_bottom(false);
+	led_deinit();
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
@@ -739,12 +748,6 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// save how long the micro will sleep - required for handling wakeup event
 	pwr_save_sleep_time_in_seconds = sleep_time;
-
-	// turn off leds to save power
-	it_handlers_inhibit_radiomodem_dcd_led = 1;
-	led_control_led1_upper(false);
-	led_control_led2_bottom(false);
-	led_deinit();
 
 	pwr_save_enter_stop2();
 
@@ -825,7 +828,9 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 														uint16_t vbatt_current) {
 	// this function should be called from 10 seconds pooler
 
-	int reinit_sensors = 0;
+	int8_t reinit_sensors = 0;
+
+	int8_t reconnect_aprs = 0;
 
 	packet_tx_counter_values_t counters;
 
@@ -1033,6 +1038,9 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 							// if there is more than two minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
+
+							// GSM module is kept turned on, but the connection must be reastablished
+							reconnect_aprs = 1;
 						}
 						else {
 							// TODO: Workaround here for HW-RevB!!!
