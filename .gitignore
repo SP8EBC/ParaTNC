@@ -7,6 +7,7 @@ Debug/
 Release/
 *.hex
 *.elf
+/temp/
 
 /STM32F100/
 /STM32F100_ParaTNC/
