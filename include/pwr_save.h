@@ -94,8 +94,8 @@
  *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       C2 --- (1 minute before WX frame)---> C0 -> C2  ; no matter WX_INTERVAL         |
  *  |   WX + GSM            |   PWSAVE_NONE     |       C0                                                                              |
  *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (1 minute before WX frame)---> C0 -> M4                                  |
- *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L6 --- (1 minute before WX frame)---> C0 -> L6 ; if WX_INTERVAL < 5 minutes     |
- *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C0 -> L7       |
+ *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L6 --- (2 minute before WX frame)---> C0 -> L6 ; if WX_INTERVAL < 5 minutes     |
+ *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> M4 --- (30 sec before)---> C0 -> L7       |
  *  |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 -> M4                                  |
  *  |   WX                  |   PWSAVE_NORMAL   |       L7 --- (2 minute before WX frame)---> C1 -> L7                                  |
  *  |   WX                  |   PWSAVE_AGGRESV  |       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |

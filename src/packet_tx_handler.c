@@ -508,7 +508,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 							rx10m,
 							tx10m,
 							digi10m,
-							rte_main_average_battery_voltage,
+							telemetry_scaled_vbatt_voltage,
 							digidrop10m,
 							telemetry_scaled_temperature,
 							telemetry_qf,

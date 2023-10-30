@@ -67,6 +67,7 @@ extern char telemetry_anemometer_degradated;
 extern char telemetry_anemometer_navble;
 extern char telemetry_vbatt_low;
 extern uint8_t telemetry_scaled_temperature;
+extern uint8_t telemetry_scaled_vbatt_voltage;
 
 void telemetry_init(void);
 

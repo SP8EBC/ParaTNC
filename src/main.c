@@ -1258,7 +1258,7 @@ int main(int argc, char* argv[]){
 			if (rte_main_trigger_gsm_loginstring_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
 				rte_main_trigger_gsm_loginstring_packet = 0;
 
-				aprsis_send_loginstring((const char *)&main_callsign_with_ssid);
+				aprsis_send_loginstring((const char *)&main_callsign_with_ssid, system_is_rtc_ok());
 			}
 
 			if (rte_main_trigger_gsm_telemetry_values == 1 && gsm_sim800_tcpip_tx_busy() == 0) {

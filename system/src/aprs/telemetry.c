@@ -38,6 +38,8 @@ char telemetry_vbatt_low = '0';
 // could send Dallas DS18B20 masurements if this is enabled in station_config.h
 uint8_t telemetry_scaled_temperature = 0;
 
+uint8_t telemetry_scaled_vbatt_voltage = 0;
+
 void telemetry_init(void) {
 	telemetry_counter = backup_reg_get_telemetry();
 }
@@ -54,21 +56,9 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
 
-	int is_viscous = 1;
-
 	if (variant_validate_is_within_ram((uint32_t)out) == 0) {
 		return out_size;
 	}
-
-//	if (variant_validate_is_within_ram((uint32_t)config_mode) == 0) {
-//		is_viscous = 0;
-//	}
-//	else if (config_mode->digi_viscous == 0) {
-//		is_viscous = 0;
-//	}
-//	else {
-//		;
-//	}
 
 	switch (what) {
 		case TELEMETRY_PV_PARM: {
@@ -115,20 +105,15 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 		case TELEMETRY_NORMAL_PARAM : {
 
-			if (is_viscous == 0) {
-				// prepare a frame with channel names depending on SSID
-				if (config_basic->ssid == 0)
-					out_size = snprintf(out, out_ln, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
-				else if (config_basic->ssid > 0 && config_basic->ssid < 10)
-					out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
-				else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
-					out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
-				else
-					return out_size;
-			}
-			else {
-
-			}
+			// prepare a frame with channel names depending on SSID
+			if (config_basic->ssid == 0)
+				out_size = snprintf(out, out_ln, ":%-6s   :PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", config_basic->callsign);
+			else if (config_basic->ssid > 0 && config_basic->ssid < 10)
+				out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
+			else if (config_basic->ssid >= 10 && config_basic->ssid < 16)
+				out_size = snprintf(out, out_ln, ":%-9s:PARM.Rx10min,Tx10min,Digi10min,Vbatt,Tempre,DS_QF_FULL,DS_QF_DEGRAD,DS_QF_NAVBLE,QNH_QF_NAVBLE,HUM_QF_NAVBLE,WIND_QF_DEGR,WIND_QF_NAVB,VBATT_LOW", message_prefix_buffer);
+			else
+				return out_size;
 
 			break;
 		}
@@ -418,15 +403,13 @@ void telemetry_send_values(	uint8_t rx_pkts,
 							int8_t cutoff_and_vbat_low,
 							const config_data_mode_t * const config_mode) {
 
-	uint8_t scaled_vbatt_voltage = 0;
-
 	// this is B+ voltage, which is scaled * 100 what means that 1152 equals to 11.52V
 	if (vbatt_voltage < 1511 && vbatt_voltage > 1000) {
 		// mininum value will be 10.01V (0x0) and maximum 15.11V (0xFF), with the step of .02V
-		scaled_vbatt_voltage = (uint8_t)((vbatt_voltage - 1000u) / 2u);
+		telemetry_scaled_vbatt_voltage = (uint8_t)((vbatt_voltage - 1000u) / 2u);
 	}
 	else if (vbatt_voltage > 1510) {
-		scaled_vbatt_voltage = 0xFF;
+		telemetry_scaled_vbatt_voltage = 0xFF;
 	}
 	else {
 		;
@@ -524,10 +507,10 @@ void telemetry_send_values(	uint8_t rx_pkts,
 #ifdef PARAMETEO
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 	else {
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 #else
 	if (config_mode->digi_viscous == 0) {

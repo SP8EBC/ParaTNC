@@ -24,6 +24,7 @@
 #include "gsm/sim800c.h"
 #include "aprsis.h"
 #include "it_handlers.h"
+#include "main.h"
 
 #include "rte_main.h"
 
@@ -40,6 +41,13 @@
 #define IN_L7_STATE (1 << 9)
 
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE	678u
+
+/**
+ * How long a controller should be woken up in aggressive powersaving mode
+ * before it will send a frame to APRS-IS and go sleep once again. This should
+ * be long enought to connect to APRS server and go sleep once again
+ */
+#define WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES	2
 
 #if defined(STM32L471xx)
 
@@ -608,6 +616,8 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	srl_close(main_gsm_srl_ctx_ptr);
+
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
 
@@ -700,6 +710,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
+
+	srl_close(main_gsm_srl_ctx_ptr);
 
 	// disable ADC used for vbat measurement
 	io_vbat_meas_disable();
@@ -830,7 +842,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	int8_t reinit_sensors = 0;
 
-	int8_t reconnect_aprs = 0;
+	int8_t reinit_gprs = 0;
 
 	packet_tx_counter_values_t counters;
 
@@ -1033,14 +1045,14 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						}
 					}
 					else {		// WX
-						if (minutes_to_wx > 2) {
+						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
 							backup_reg_set_monitor(17);
 
 							// if there is more than two minutes to send wx packet
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 120);
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
 							// GSM module is kept turned on, but the connection must be reastablished
-							reconnect_aprs = 1;
+							reinit_gprs = 1;
 						}
 						else {
 							// TODO: Workaround here for HW-RevB!!!
@@ -1080,11 +1092,14 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						if (timers->wx_transmit_period >= 5) {
 							// if stations is configured to send wx packet less frequent than every 5 minutes
 
-							if (minutes_to_wx > 1) {
+							if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
 								backup_reg_set_monitor(17);
 
 								// if there is more than one minute to wx packet
-								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
+
+								reinit_gprs = 1;
+
 							}
 							else {
 								if (pwr_save_seconds_to_wx <= 50) {
@@ -1105,10 +1120,12 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						else {
 							// if station is configured to sent wx packet in every 5 minutes or more often
 
-							if (minutes_to_wx > 1) {
+							if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
 								backup_reg_set_monitor(17);
 
-								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - 60);				// TODO: !!!
+								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
+
+								reinit_gprs = 0;
 							}
 							else {
 								reinit_sensors = pwr_save_switch_mode_to_c0();
@@ -1127,11 +1144,13 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						}
 					}
 					else {		// WX
-						if (minutes_to_wx > 1) {
+						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
 							backup_reg_set_monitor(17);
 
 							// if there is more than one minute to send wx packet
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - 60);
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
+
+							reinit_gprs = 1;
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
@@ -1168,12 +1187,14 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	backup_reg_set_monitor(13);
 
+	if (reinit_gprs != 0) {
+		// reset GSM modem, internally this also check if GSM modem is inhibited or not
+		rte_main_reset_gsm_modem = 1;
+	}
+
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors
 		wx_force_i2c_sensor_reset = 1;
-
-		// reset GSM modem, internally this also check if GSM modem is inhibited or not
-		rte_main_reset_gsm_modem = 1;
 
 		// reinitialize everything realted to anemometer
 		analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);

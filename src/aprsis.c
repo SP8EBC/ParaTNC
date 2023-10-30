@@ -932,7 +932,7 @@ void aprsis_send_server_conn_status(const char * callsign_with_ssid) {
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
-void aprsis_send_loginstring(const char * callsign_with_ssid) {
+void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok) {
 
 	if (aprsis_logged == 0) {
 		return;
@@ -945,9 +945,10 @@ void aprsis_send_loginstring(const char * callsign_with_ssid) {
 	aprsis_packet_tx_message_size = snprintf(
 									aprsis_packet_tx_buffer,
 									APRSIS_TX_BUFFER_LN - 1,
-									"%s>AKLPRZ,qAR,%s:>[aprsis][]%s\r\n",
+									"%s>AKLPRZ,qAR,%s:>[rtc_ok: %d][aprsis]%s\r\n",
 									callsign_with_ssid,
 									callsign_with_ssid,
+									rtc_ok,
 									aprsis_login_string_reveived);
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
