@@ -730,22 +730,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 			}
 
 			break;
-		case SRL_TX_IDLE:
-			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);		//wyġṗczanie nadajnika portu szeregowego
-			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
-			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);	// wyġṗczanie przerwañ od portu szeregowego
-			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
-			ctx->srl_tx_state = SRL_TX_IDLE;
-
-			// reset tx buffer pointer to internal one
-			ctx->srl_tx_buf_pointer = ctx->srl_tx_internal_buf_pointer;
-			ctx->srl_tx_buf_ln = ctx->srl_tx_internal_buf_ln;
-
-			if (ctx->te_port != 0) {
-				LL_GPIO_ResetOutputPin(ctx->te_port, ctx->te_pin);
-			}
-			break;
-		default: break;
+			default: break;
 		}
 	}
 
