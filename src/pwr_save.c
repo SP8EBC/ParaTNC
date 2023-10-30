@@ -350,6 +350,9 @@ int pwr_save_switch_mode_to_c1(void) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	// close and deconfigure port used for communication with GPRS module
+	srl_close(main_gsm_srl_ctx_ptr);
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
 
@@ -393,6 +396,9 @@ void pwr_save_switch_mode_to_c2(void) {
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
+
+	// close and deconfigure port used for communication with GPRS module
+	srl_close(main_gsm_srl_ctx_ptr);
 
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
@@ -471,6 +477,9 @@ int pwr_save_switch_mode_to_m4(void) {
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
+
+	// close and deconfigure port used for communication with GPRS module
+	srl_close(main_gsm_srl_ctx_ptr);
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable();
@@ -551,6 +560,9 @@ void pwr_save_switch_mode_to_i5(void) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	// close and deconfigure port used for communication with GPRS module
+	srl_close(main_gsm_srl_ctx_ptr);
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable();
 
@@ -616,6 +628,9 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	NVIC_DisableIRQ( USART3_IRQn );
+
+	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
 
 	// disable ADC used for vbat measurement
@@ -711,6 +726,7 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
 
 	// disable ADC used for vbat measurement
@@ -813,8 +829,6 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
 
 	}
-
-	//pwr_save_unclock_rtc_backup_regs();
 
 	// reset a status register
 	backup_reg_reset_all_powersave_states();
@@ -1006,6 +1020,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						if (timers->wx_transmit_period >= 5) {
 							if (minutes_to_wx > 1) {
 								pwr_save_switch_mode_to_c2();
+
+								//reinit_gprs = 1;
 							}
 							else {
 								reinit_sensors = pwr_save_switch_mode_to_c0();
@@ -1024,6 +1040,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						if (minutes_to_wx > 1) {
 							if (config->powersave_keep_gsm_always_enabled == 0){
 								reinit_sensors = pwr_save_switch_mode_to_m4();
+
+								//reinit_gprs = 1;
 							}
 							else {
 								reinit_sensors = pwr_save_switch_mode_to_m4a();
@@ -1082,6 +1100,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					if (config->digi == 1) {		// DIGI + WX + GSM
 						if (minutes_to_wx > 1) {
 							pwr_save_switch_mode_to_c2();
+
+							//reinit_gprs = 1;
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c0();
@@ -1110,6 +1130,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 									// if there is 30 to 60 seconds to next wx packet
 									if (config->powersave_keep_gsm_always_enabled == 0){
 										reinit_sensors = pwr_save_switch_mode_to_m4();
+
+										//reinit_gprs = 1;
 									}
 									else {
 										reinit_sensors = pwr_save_switch_mode_to_m4a();

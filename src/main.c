@@ -610,8 +610,13 @@ int main(int argc, char* argv[]){
   wx_pwr_switch_periodic_handle();
 
 #if defined(PARAMETEO)
+  // clear all previous powersave indication bits
+  backup_reg_reset_all_powersave_states();
+
   // swtich power to M4. turn on sensors but keep GSM modem turned off
   pwr_save_switch_mode_to_c1();
+
+  rte_main_reset_gsm_modem = 0;
 
   delay_fixed(300);
 
@@ -1515,13 +1520,15 @@ int main(int argc, char* argv[]){
 				gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
-			if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1) {
+			if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1 && rte_main_woken_up == 0) {
 
 				// check if GSM modem must be power-cycled / restarted like after
 				// waking up from deep sleep or chaning power saving mode
 				if (rte_main_reset_gsm_modem == 1) {
 					// rest the flag
 					rte_main_reset_gsm_modem = 0;
+
+					srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
 
 					// reset gsm modem
 					gsm_sim800_reset(&main_gsm_state);
@@ -1651,7 +1658,7 @@ int main(int argc, char* argv[]){
 			backup_reg_set_monitor(9);
 
 #ifdef PARAMETEO
-			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g() == 1) {
+			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g() == 1 && rte_main_woken_up == 0) {
 				gsm_sim800_poolers_ten_seconds(main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 				packet_tx_tcp_handler();
