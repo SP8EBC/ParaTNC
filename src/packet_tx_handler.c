@@ -64,6 +64,9 @@ uint8_t packet_tx_trigger_tcp = 0;
 uint8_t packet_tx_meteo_gsm_interval = 2;
 uint8_t packet_tx_meteo_gsm_counter = 0;
 
+//!< Flag set to one after weather packet has been just send to APRS-IS via GPRS modem and the modem is probably transmitting now
+uint8_t packet_tx_meteo_gsm_has_been_sent = 0;
+
 #define API_TRIGGER_STATUS 		(1 << 1)
 #define API_TRIGGER_METEO		(1 << 2)
 #define APRSIS_TRIGGER_METEO	(1 << 3)
@@ -131,32 +134,14 @@ inline void packet_tx_multi_per_call_handler(void) {
 void packet_tx_tcp_handler(void) {
 #ifdef STM32L471xx
 
+	// TODO: fixme currently there is no way to have APRS-IS and rest api
+	// client working at the same time
+
 	aprsis_return_t aprsis_result = APRSIS_UNKNOWN;
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
-		// TODO: fixme
-		if (gsm_sim800_tcpip_tx_busy() == 0) {
+		if (gsm_sim800_tcpip_tx_busy() == 0 && aprsis_connected == 1) {
 
-			if (aprsis_connected == 0) {
-				aprsis_result = aprsis_connect_and_login_default(0);
-
-				if (aprsis_result == APRSIS_OK) {
-					// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
-					aprsis_send_wx_frame(
-							rte_wx_average_windspeed,
-							rte_wx_max_windspeed,
-							rte_wx_average_winddirection,
-							rte_wx_temperature_average_external_valid,
-							rte_wx_pressure_valid,
-							rte_wx_humidity_valid,
-							main_callsign_with_ssid,
-							main_string_latitude,
-							main_string_longitude,
-							main_config_data_basic);
-				}
-			}
-			else {
-				// send APRS-IS frame, if APRS-IS is not connected this function will return immediately
 				aprsis_send_wx_frame(
 						rte_wx_average_windspeed,
 						rte_wx_max_windspeed,
@@ -168,11 +153,16 @@ void packet_tx_tcp_handler(void) {
 						main_string_latitude,
 						main_string_longitude,
 						main_config_data_basic);
+
+				// clear the flag requesting weather packet transmission
+				packet_tx_trigger_tcp ^= APRSIS_TRIGGER_METEO;
+
+				// set this flag to one to inhibit power saving state machine
+				// for a while (10 seconds) when GPRS modem is communicating
+				// with the GSM radio network and sending the data independently
+				// from the controller
+				packet_tx_meteo_gsm_has_been_sent = 1;
 			}
-			// TODO: fixme
-			// clear the bit
-			packet_tx_trigger_tcp ^= APRSIS_TRIGGER_METEO;
-		}
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
 
@@ -221,6 +211,11 @@ void packet_tx_tcp_handler(void) {
 //		if (result == APRSIS_OK) {
 			packet_tx_trigger_tcp ^= RECONNECT_APRSIS;
 //		}
+	}
+	else {
+		// after 10 second from setting this flag the packet should be
+		// sent
+		packet_tx_meteo_gsm_has_been_sent = 0;
 	}
 #endif
 }
@@ -337,7 +332,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 #endif
 
 #ifdef PARAMETEO
-		if (packet_tx_meteo_gsm_counter >= packet_tx_meteo_gsm_interval) {
+		if (packet_tx_meteo_gsm_counter >= packet_tx_meteo_gsm_interval && gsm_sim800_gprs_ready == 1) {
 			if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
 				// and trigger API wx packet transmission
 				packet_tx_trigger_tcp |= API_TRIGGER_METEO;
@@ -612,6 +607,7 @@ void packet_tx_get_current_counters(packet_tx_counter_values_t * out) {
 	if (out != 0x00) {
 		out->beacon_counter = packet_tx_beacon_counter;
 		out->wx_counter = packet_tx_meteo_counter;
+		out->gsm_wx_counter = packet_tx_meteo_gsm_counter;
 		out->telemetry_counter = packet_tx_telemetry_counter;
 		out->telemetry_desc_counter = packet_tx_telemetry_descr_counter;
 		out->kiss_counter = packet_tx_meteo_kiss_counter;
@@ -635,16 +631,26 @@ void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
 
 		if (in->kiss_counter != 0)
 			packet_tx_meteo_kiss_counter = in->kiss_counter;
+
+		if (in->gsm_wx_counter != 0)
+			packet_tx_meteo_gsm_counter = in->gsm_wx_counter;
 	}
 	else {
 		packet_tx_beacon_counter = 0;
 		packet_tx_meteo_counter = 2;
+		packet_tx_meteo_gsm_counter = 0;
 		packet_tx_telemetry_counter = 0;
 		packet_tx_telemetry_descr_counter = 10;
 		packet_tx_meteo_kiss_counter = 0;
 	}
 }
 
+/**
+ * Returns how many minutes is left to next weather packet (on radio network!!).
+ * Used in power saving state machine and to periodically reset VHF radio
+ * if this feature is enabled in configuration
+ * @return
+ */
 int16_t packet_tx_get_minutes_to_next_wx(void) {
 	if (packet_tx_meteo_interval != 0) {
 		return packet_tx_meteo_interval - packet_tx_meteo_counter;
@@ -652,6 +658,30 @@ int16_t packet_tx_get_minutes_to_next_wx(void) {
 	else {
 		return -1;
 	}
+}
+
+/**
+ * This function checks if at the moment any weather packet is scheduled to be sent
+ * to APRS-IS server, or this packet has been just sent and GPRS module probably
+ * communicate with GSM network now. The result of this check is used to
+ * inhibit power saving state machine temporary, not to turn off or disable
+ * GSM modem while it is talking with GSM radio network.
+ * @return
+ */
+uint8_t packet_tx_is_gsm_meteo_pending(void) {
+	uint8_t out = 0;
+#ifdef STM32L471xx
+
+	if (gsm_sim800_gprs_ready == 1 && (packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
+		out = 1;
+	}
+
+	if (packet_tx_meteo_gsm_has_been_sent != 0) {
+		out = 1;
+	}
+#endif
+
+	return out;
 }
 
 void packet_tx_force_gsm_status(void) {

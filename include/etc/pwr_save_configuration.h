@@ -19,12 +19,12 @@
 /**
  * This is the restore voltage a battery must be charged to for ParaMETEO to restore it's normal operation
  */
-#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1230u		// 12.3V
+#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1200u		// 12.0V
 
 /**
  * This is voltage above which controller will switch to PWSAVE_AGGRESV
  */
-#define PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE 	1150u		// 11.5V
+#define PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE 	1130u		// 11.3V
 
 /**
  * How long in minutes the controller will sleep in L7 state between checking

@@ -79,7 +79,7 @@
  *
  *
  *  Transitions between states depends on configuration and value of config_data_powersave_mode_t.
- *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will swtich to modem M4a instead of M4
+ *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will switch to modem M4a instead of M4
  *
  *  ====================================================================================================================================|
  *  |   Mode                |   Powersave Mode  |                                                                                       |
@@ -93,14 +93,19 @@
  *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       C3 --- (1 minute before WX frame)---> C0 -> C3  ; if WX_INTERVAL < 5 minutes    |
  *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       C2 --- (1 minute before WX frame)---> C0 -> C2  ; no matter WX_INTERVAL         |
  *  |   WX + GSM            |   PWSAVE_NONE     |       C0                                                                              |
- *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (1 minute before WX frame)---> C0 -> M4                                  |
- *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L6 --- (2 minute before WX frame)---> C0 -> L6 ; if WX_INTERVAL < 5 minutes     |
- *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> M4 --- (30 sec before)---> C0 -> L7       |
+ *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute before WX frame)---> C0 -> M4                                  |
+ *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7									|
  *  |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 -> M4                                  |
  *  |   WX                  |   PWSAVE_NORMAL   |       L7 --- (2 minute before WX frame)---> C1 -> L7                                  |
  *  |   WX                  |   PWSAVE_AGGRESV  |       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |
  *  ====================================================================================================================================|
  *
+ * Note from October 31st. State machine has been changed sligtly for
+ * PWSAVE_NORMAL and PWSAVE_AGGRESIVE for WX + GSM configuration. It was
+ * simplified by turning GSM module off completely when it is not needed.
+ * It has more sense and it is less risky, as it eliminate a possible situation
+ * when GSM module will change it internal state while controller is sleeping
+ * (like GPRS will die for some reason, or a SIM card will stop working)
  */
 
 

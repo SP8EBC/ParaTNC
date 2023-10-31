@@ -246,6 +246,7 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 		// rewind all timers in packet tx handler as they were no updated when micro was sleeping
 		// sleep shall be always set as wx packet interval minus one minute
 		timers.wx_counter += (pwr_save_sleep_time_in_seconds / 60);
+		timers.gsm_wx_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.beacon_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.kiss_counter += (pwr_save_sleep_time_in_seconds / 60);
 		timers.telemetry_counter += (pwr_save_sleep_time_in_seconds / 60);
@@ -350,6 +351,8 @@ int pwr_save_switch_mode_to_c1(void) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	NVIC_DisableIRQ( USART3_IRQn );
+
 	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
 
@@ -396,6 +399,8 @@ void pwr_save_switch_mode_to_c2(void) {
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
+
+	NVIC_DisableIRQ( USART3_IRQn );
 
 	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
@@ -478,6 +483,8 @@ int pwr_save_switch_mode_to_m4(void) {
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
 
+	NVIC_DisableIRQ( USART3_IRQn );
+
 	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
 
@@ -559,6 +566,8 @@ void pwr_save_switch_mode_to_i5(void) {
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect();
+
+	NVIC_DisableIRQ( USART3_IRQn );
 
 	// close and deconfigure port used for communication with GPRS module
 	srl_close(main_gsm_srl_ctx_ptr);
@@ -1109,49 +1118,18 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 					}
 					else {		// WX + GSM (only)
-						if (timers->wx_transmit_period >= 5) {
-							// if stations is configured to send wx packet less frequent than every 5 minutes
+						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
+							backup_reg_set_monitor(17);
 
-							if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
-								backup_reg_set_monitor(17);
+							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to wx packet
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
 
-								// if there is more than one minute to wx packet
-								pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
+							reinit_gprs = 1;
 
-								reinit_gprs = 1;
-
-							}
-							else {
-								if (pwr_save_seconds_to_wx <= 50) {
-									// if there is 30 seconds or less to next wx packet
-									reinit_sensors = pwr_save_switch_mode_to_c0();
-								}
-								else {
-									// if there is 30 to 60 seconds to next wx packet
-									if (config->powersave_keep_gsm_always_enabled == 0){
-										reinit_sensors = pwr_save_switch_mode_to_m4();
-
-										//reinit_gprs = 1;
-									}
-									else {
-										reinit_sensors = pwr_save_switch_mode_to_m4a();
-									}
-								}
-							}
 						}
 						else {
-							// if station is configured to sent wx packet in every 5 minutes or more often
-
-							if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
-								backup_reg_set_monitor(17);
-
-								pwr_save_switch_mode_to_l6((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
-
-								reinit_gprs = 0;
-							}
-							else {
-								reinit_sensors = pwr_save_switch_mode_to_c0();
-							}
+							// if there is 30 seconds or less to next wx packet
+							reinit_sensors = pwr_save_switch_mode_to_c0();
 						}
 					}
 				}
@@ -1169,7 +1147,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
 							backup_reg_set_monitor(17);
 
-							// if there is more than one minute to send wx packet
+							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
 							reinit_gprs = 1;

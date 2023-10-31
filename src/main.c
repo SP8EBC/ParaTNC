@@ -1263,7 +1263,7 @@ int main(int argc, char* argv[]){
 			if (rte_main_trigger_gsm_loginstring_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
 				rte_main_trigger_gsm_loginstring_packet = 0;
 
-				aprsis_send_loginstring((const char *)&main_callsign_with_ssid, system_is_rtc_ok());
+				aprsis_send_loginstring((const char *)&main_callsign_with_ssid, system_is_rtc_ok(), rte_main_battery_voltage);
 			}
 
 			if (rte_main_trigger_gsm_telemetry_values == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
@@ -1638,7 +1638,7 @@ int main(int argc, char* argv[]){
 		    }
 
 			// inhibit any power save switching when modem transmits data
-			if (!main_afsk.sending && rte_main_woken_up == 0) {
+			if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
 				pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage);
 			}
 
