@@ -65,6 +65,7 @@ float_average_t rte_wx_dallas_average;
 ms5611_qf_t rte_wx_ms5611_qf = MS5611_QF_UNKNOWN;
 bme280_qf_t rte_wx_bme280_qf = BME280_QF_UKNOWN;
 analog_wind_qf_t rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+uint8_t rte_wx_humidity_available = 0;
 
 
 umb_frame_t rte_wx_umb;

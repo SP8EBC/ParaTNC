@@ -80,7 +80,7 @@ extern float_average_t rte_wx_dallas_average;
 extern ms5611_qf_t rte_wx_ms5611_qf;
 extern bme280_qf_t rte_wx_bme280_qf;
 extern analog_wind_qf_t rte_wx_wind_qf;
-
+extern uint8_t rte_wx_humidity_available;
 
 
 extern umb_frame_t rte_wx_umb;

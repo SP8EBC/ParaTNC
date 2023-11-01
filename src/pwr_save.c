@@ -894,7 +894,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		backup_reg_set_monitor(23);
 	}
 	else {
-		if (vbatt_current <= PWR_SAVE_CUTOFF_VOLTAGE_DEF && vbatt_average <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {
+		if (vbatt_current <= PWR_SAVE_CUTOFF_VOLTAGE_DEF && vbatt_average <= (PWR_SAVE_CUTOFF_VOLTAGE_DEF + PWR_SAVE_CUTOFF_AVG_VOLTAGE_MARGIN)) {
 			backup_reg_set_monitor(22);
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off

@@ -442,6 +442,23 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
 		}
 
+		// additional check for modbus RTU humidity sensor
+		if (config_mode->wx_modbus == 1) {
+			// for sake of simplicity there is another variable
+			// which holds common information if valid humidity
+			// is available or not. This is kinda-sorta duplication of
+			// quality factors for each sensor types, although it
+			// simplifies few things and omits handling separate
+			// Modbus-RTU configuration here
+			if (rte_wx_humidity_available == 0) {
+				humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
+			}
+			else if (rte_wx_humidity_available == 1) {
+				humidity_qf = HUMIDITY_QF_FULL;
+			}
+
+		}
+
 		// wind quality factor
 		if (rte_wx_wind_qf == AN_WIND_QF_UNKNOWN) {
 			;
