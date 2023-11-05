@@ -10,7 +10,7 @@
 
 #include "stdint.h"
 
-int variant_validate_is_within_ram(uint32_t address);
+int variant_validate_is_within_ram(void * address);
 
 
 

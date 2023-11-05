@@ -44,7 +44,7 @@
 		{	\
 			.identifier = id, \
 			.first_data = (void*)string_pointer, \
-			.first_data_size = 0, \
+			.first_data_size = sizeof(string_pointer), \
 			.second_data = (void*)0xDEADBEEFu, \
 			.second_data_size = 0,	\
 			.third_data = (void*)0xDEADBEEFu, \

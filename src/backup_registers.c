@@ -93,7 +93,7 @@ inline static uint8_t backup_reg_get_checksum(uint32_t reg) {
 
 inline static void backup_reg_set_checksum(volatile uint32_t * reg, const uint8_t checksum) {
 
-	if (variant_validate_is_within_ram((const uint32_t)reg) != 0) {
+	if (variant_validate_is_within_ram((void*)reg) != 0) {
 		// clear existing checksum
 		(*reg) &= (0xFFFFFFFF ^ 0xF0000000);
 

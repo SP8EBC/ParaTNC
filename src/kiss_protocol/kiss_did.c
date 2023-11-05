@@ -22,6 +22,10 @@
 #include <stm32l4xx.h>
 #endif
 
+#define KISS_DID_SIZE_MAPPING_INT8		1
+#define KISS_DID_SIZE_MAPPING_INT16		2
+#define KISS_DID_SIZE_MAPPING_INT32		3
+
 //!< Dummy variable used only as end of definition marker in tables
 char did_dummy_data;
 
@@ -46,10 +50,10 @@ const static kiss_did_numeric_definition_t kiss_did_def[] = {
 //!< Mapping between a result of sizeof operator and a value of sizebyte
 const static uint8_t kiss_did_sizeof_to_sizebyte_mapping[5] = {
 		0,// nothing
-		1,	// int8_t
-		2,	// int16_t
+		KISS_DID_SIZE_MAPPING_INT8,		// int8_t	-> 1
+		KISS_DID_SIZE_MAPPING_INT16,	// int16_t	-> 2
 		0,	// nothing
-		3	// int32_t
+		KISS_DID_SIZE_MAPPING_INT32		// int32_t	-> 3
 };
 
 /**
@@ -146,9 +150,9 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 		if (amount_of_data > 0) {
 
 			// check if DID data size an address is correct
-			if 	((definition->first_data_size == 0 ||
-				definition->first_data_size == 1 ||
-				definition->first_data_size == 4) &&
+			if 	((definition->first_data_size == sizeof(int8_t) ||
+				definition->first_data_size == sizeof(int16_t) ||
+				definition->first_data_size == sizeof(int32_t)) &&
 						(uint32_t)definition->first_data > SRAM_BASE &&
 						(uint32_t)definition->first_data < SRAM_BASE + SRAM1_SIZE_MAX) {
 
@@ -158,9 +162,9 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 				// if second did is also defined
 				if (amount_of_data > 1) {
 					// check if DID data size is correct
-					if 	((definition->second_data_size == 0 ||
-						definition->second_data_size == 1 ||
-						definition->second_data_size == 4) &&
+					if 	((definition->first_data_size == sizeof(int8_t) ||
+						definition->first_data_size == sizeof(int16_t) ||
+						definition->first_data_size == sizeof(int32_t)) &&
 							(uint32_t)definition->second_data > SRAM_BASE &&
 							(uint32_t)definition->second_data < SRAM_BASE + SRAM1_SIZE_MAX) {
 
@@ -171,9 +175,9 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 						if (amount_of_data > 2) {
 
 							// check third DID source data size
-							if 	((definition->third_data_size == 0 ||
-								definition->third_data_size == 1 ||
-								definition->third_data_size == 4)   &&
+							if 	((definition->first_data_size == sizeof(int8_t) ||
+								definition->first_data_size == sizeof(int16_t) ||
+								definition->first_data_size == sizeof(int32_t)) &&
 									(uint32_t)definition->third_data > SRAM_BASE &&
 									(uint32_t)definition->third_data < SRAM_BASE + SRAM1_SIZE_MAX) {
 
@@ -209,6 +213,13 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 
 	}
 
+	// special case for float DIDs
+	if (out == 0) {
+		if (kiss_did_validate_is_float(definition) != 0) {
+			out = 1;
+		}
+	}
+
 	if (amount != 0) {
 		*amount = amount_of_data;
 	}
@@ -231,7 +242,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
  */
 uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t buffer_ln) {
 
-	uint8_t out = 0;
+	uint8_t out = 0xFF;
 
 	// iterator to go through DID definition
 	int i = 0;
@@ -245,7 +256,7 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 	 * 0y - If most significant bit is set to zero, size_byte will
 	 * 		signalize string DID as ASCII characters from basic ASIC
 	 * 		table are from range 0 to 127
-	 * 10 - If most significant bit is set to zero AND next significant
+	 * 10 - If most significant bit is set to one AND next significant
 	 * 		bit is set to zero this DID returns integer data. In such
 	 * 		case three groups of two bits controls a size of data according
 	 * 		to 'kiss_did_sizeof_to_sizebyte_mapping'. If a group of two bits
@@ -407,17 +418,29 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		output_buffer[1] = (identifier & 0xFF00) >> 8;
 
 		// if this is a string DID
-		const char * str = (char *)found.first_data;
+		const void * str = (void *)found.first_data;
 
-		const size_t str_len = strlen(str);
+		const size_t str_len = found.first_data_size;
+
+		memset(output_buffer, 0x00, buffer_ln - 2);
 
 		if (str_len - 2 > buffer_ln) {
-			memcpy(output_buffer + 2, found.first_data, buffer_ln);
+			memcpy(output_buffer, str, buffer_ln - 2);
+
+			out = buffer_ln - 2;
 		}
 		else {
-			memcpy(output_buffer, found.first_data, str_len);
+			memcpy(output_buffer, str, str_len);
+
+			out = str_len;
 		}
 
+		// include DID number itself
+		out += 2;
+
+	}
+	else {
+		out = 0;
 	}
 
 	return out;

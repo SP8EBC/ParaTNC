@@ -7,8 +7,16 @@
 
 #include "variant.h"
 
-int variant_validate_is_within_ram(uint32_t address) {
-	if (address != 0x00) {
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#endif
+
+int variant_validate_is_within_ram(void * address) {
+
+	uint32_t addr_value = (uint32_t)address;
+
+	if (addr_value > SRAM_BASE &&
+		addr_value < SRAM_BASE + SRAM1_SIZE_MAX) {
 		return 1;
 	}
 	else {
