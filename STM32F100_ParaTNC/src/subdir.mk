@@ -8,6 +8,7 @@ C_SRCS += \
 ../src/PathConfig.c \
 ../src/TimerConfig.c \
 ../src/_write.c \
+../src/backup_registers.c \
 ../src/button_paratnc.c \
 ../src/delay.c \
 ../src/dummy.c \
@@ -21,6 +22,7 @@ C_SRCS += \
 ../src/rte_rtu.c \
 ../src/rte_wx.c \
 ../src/software_version.c \
+../src/variant_parameteo.c \
 ../src/wx_handler.c \
 ../src/wx_handler_humidity.c \
 ../src/wx_handler_pressure.c \
@@ -32,6 +34,7 @@ OBJS += \
 ./src/PathConfig.o \
 ./src/TimerConfig.o \
 ./src/_write.o \
+./src/backup_registers.o \
 ./src/button_paratnc.o \
 ./src/delay.o \
 ./src/dummy.o \
@@ -45,6 +48,7 @@ OBJS += \
 ./src/rte_rtu.o \
 ./src/rte_wx.o \
 ./src/software_version.o \
+./src/variant_parameteo.o \
 ./src/wx_handler.o \
 ./src/wx_handler_humidity.o \
 ./src/wx_handler_pressure.o \
@@ -56,6 +60,7 @@ C_DEPS += \
 ./src/PathConfig.d \
 ./src/TimerConfig.d \
 ./src/_write.d \
+./src/backup_registers.d \
 ./src/button_paratnc.d \
 ./src/delay.d \
 ./src/dummy.d \
@@ -69,6 +74,7 @@ C_DEPS += \
 ./src/rte_rtu.d \
 ./src/rte_wx.d \
 ./src/software_version.d \
+./src/variant_parameteo.d \
 ./src/wx_handler.d \
 ./src/wx_handler_humidity.d \
 ./src/wx_handler_pressure.d \

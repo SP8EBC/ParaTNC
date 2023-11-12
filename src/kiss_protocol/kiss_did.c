@@ -242,7 +242,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
  */
 uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t buffer_ln) {
 
-	uint8_t out = 0xFF;
+	uint8_t out = 0;
 
 	// iterator to go through DID definition
 	int i = 0;
@@ -325,12 +325,19 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// move after DID value and size_byte
 		output_buffer += 3;
 
+		// room for size byte
+		out++;
+
+		// and for DID value itself
+		out += 2;
+
 		//append first data source
 		memcpy(output_buffer, found.first_data, found.first_data_size);
 
 		//move forward a poiner to response buffer
 		output_buffer += found.first_data_size;
 
+		// room for first value returned by DID
 		out += found.first_data_size;
 
 		if (number_of_data_source > 1) {
@@ -353,12 +360,6 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 			out += found.third_data_size;
 		}
 
-		// also include size_byte in this calculation
-		out++;
-
-		// include DID value itself
-		out += 2;
-
 	}
 	else if (found.identifier != 0xFFFFu && is_valid == 1 && is_float == 1) {
 
@@ -375,6 +376,12 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 
 		// move after DID value and size_byte
 		output_buffer += 3;
+
+		// room for size byte stored in output buffer
+		out++;
+
+		// room for DID number in output buffer
+		out += 2;
 
 		//append first data source
 		memcpy(output_buffer, found.first_data, sizeof(float));
@@ -403,12 +410,6 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 
 			out += sizeof(float);
 		}
-
-		// also include size_byte in this calculation
-		out++;
-
-		// include DID value itself
-		out += 2;
 
 	}
 	else if (found.identifier != 0xFFFFu && is_string == 1) {

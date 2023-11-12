@@ -124,9 +124,9 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 	uint8_t config_payload_size = 0;
 
 #ifdef PARAMETEO
-	config_payload_size = snprintf((char *)response_buffer + 3, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
+	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
 #else
-	config_payload_size = snprintf((char *)response_buffer + 3, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
+	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
 #endif
 
 	// construct a response
@@ -228,6 +228,8 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 	 */
 
 	int32_t out = 0;
+
+	memset(response_buffer, 0x00, buffer_size);
 
 	// identifier
 	uint16_t did = *(input_frame_from_host + 2) | (*(input_frame_from_host + 3) << 8);
