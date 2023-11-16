@@ -1,0 +1,16 @@
+#!/bin/bash
+
+rm __stackanalysis/*
+#cp WCS.py __stackanalysis/WCS.py
+cp avstack.pl __stackanalysis/avstack.pl
+
+find . -maxdepth 5 -type f -name "*.su" -exec bash -c 'filename=$(basename -- {}); echo $filename; cp {} __stackanalysis/$filename' \;
+
+find . -maxdepth 5 -type f -name "*.dfinish" -exec bash -c 'filename=$(basename -- {}); echo $filename; cp {} __stackanalysis/$filename' \;
+
+find . -maxdepth 5 -type f -name "*.o" -exec bash -c 'filename=$(basename -- {}); echo $filename; cp {} __stackanalysis/$filename' \;
+
+cd ./__stackanalysis/
+rm startup_stm32l471xx.*
+perl avstack.pl *.o > ../stack_analysis.report
+#python3.10 WCS.py
