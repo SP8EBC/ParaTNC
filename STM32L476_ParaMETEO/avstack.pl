@@ -51,7 +51,7 @@ use strict;
 # Configuration: set these as appropriate for your architecture/project.
 
 my $objdump = "/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-objdump";
-my $call_cost = 12;
+my $call_cost = 32;
 
 # First, we need to read all object and corresponding .su files. We're
 # gathering a mapping of functions to callees and functions to frame

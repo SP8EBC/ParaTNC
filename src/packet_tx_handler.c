@@ -369,7 +369,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		// ASSEMBLY QUALITY FACTORS
 
-		// if there weren't any erros related to the communication with DS12B20 from previous function call
+		// if there weren't any errors related to the communication with DS12B20 from previous function call
 		if (rte_wx_error_dallas_qf == DALLAS_QF_UNKNOWN) {
 			dallas_qf = rte_wx_current_dallas_qf;	// it might be DEGRADATED so we need to copy a value directly
 
@@ -578,10 +578,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		}
 		else {
 			packet_tx_trigger_tcp = 0;
-		}
-
-		if (system_is_rtc_ok() == 0) {
-			rte_main_reboot_req = 1;
 		}
 		#endif
 

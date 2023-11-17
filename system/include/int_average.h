@@ -25,5 +25,6 @@ int32_t int_get_average(const int_average_t* average);
 int32_t int_get_min(const int_average_t* average);
 int32_t int_get_max(const int_average_t* average);
 int32_t int_get_last(const int_average_t* average);
+int32_t int_get_nonfull(const int_average_t* average);
 
 #endif /* INCLUDE_INT_AVERAGE_H_ */

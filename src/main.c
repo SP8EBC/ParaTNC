@@ -96,6 +96,8 @@
 #include <kiss_communication/kiss_communication.h>
 #include <etc/kiss_configuation.h>
 
+#include <etc/dallas_temperature_limits.h>
+
 #define SOH 0x01
 
 //#include "variant.h"
@@ -187,6 +189,9 @@ int32_t main_two_second_pool_timer = 2000;
 
 //! ten second pool interval
 int32_t main_ten_second_pool_timer = 10000;
+
+//! one hour interval incremented inside one minute
+int8_t main_one_hour_pool_timer = 60;
 
 //! serial context for UART used to KISS
 srl_context_t main_kiss_srl_ctx;
@@ -1444,19 +1449,6 @@ int main(int argc, char* argv[]){
 				wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 			}
 
-			// check if there is a request to send ModbusRTU error status message
-			if (rte_main_trigger_modbus_status == 1 && main_modbus_rtu_master_enabled == 1) {
-				rtu_serial_get_status_string(&rte_rtu_pool_queue, main_wx_srl_ctx_ptr, main_own_aprs_msg, OWN_APRS_MSG_LN, &main_own_aprs_msg_len);
-
-			 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-
-			 	afsk_txStart(&main_afsk);
-
-			 	rte_main_trigger_modbus_status = 0;
-
-
-			}
-
 			backup_reg_set_monitor(3);
 
 			main_wx_sensors_pool_timer = 65500;
@@ -1497,6 +1489,23 @@ int main(int argc, char* argv[]){
 				}
 			}
 			#endif
+
+			if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
+				rte_main_reboot_req = 1;
+			}
+
+			/**
+			 * ONE HOUR POOLING
+			 */
+			if (--main_one_hour_pool_timer < 0) {
+				main_one_hour_pool_timer = 60;
+
+				if (system_is_rtc_ok() == 0) {
+					rte_main_reboot_req = 1;
+				}
+			}
+
+
 
 			main_one_minute_pool_timer = 60000;
 		}

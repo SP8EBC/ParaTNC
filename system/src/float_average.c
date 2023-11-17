@@ -71,3 +71,13 @@ float dallas_get_max(const float_average_t* average) {
 	return out;
 }
 
+char float_get_nonfull(const float_average_t* average) {
+	for (int i = 0; i < FLOAT_AVERAGE_LN; i++) {
+		if (average->values[i] == FLOAT_INIT_VALUE) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+

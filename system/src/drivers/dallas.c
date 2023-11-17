@@ -18,6 +18,7 @@
 #endif
 
 #include "drivers/dallas.h"
+#include "etc/dallas_temperature_limits.h"
 #include <string.h>
 
 volatile int delay_5us = 0;
@@ -241,9 +242,7 @@ float __attribute__((optimize("O0"))) dallas_query(dallas_qf_t *qf) {
 		return -128.0f;
 	}
 
-	if (temperature < -50.0f || temperature > 120.0f)
-		*qf = DALLAS_QF_NOT_AVALIABLE;
-	else if (temperature < -25.0f || temperature > 38.75f)
+	if (temperature < DALLAS_TEMPERATURE_LIMITS_LOW || temperature > DALLAS_TEMPERATURE_LIMITS_HI)
 		*qf = DALLAS_QF_DEGRADATED;
 	else
 		*qf = DALLAS_QF_FULL;

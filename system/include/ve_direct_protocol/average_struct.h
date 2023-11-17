@@ -8,7 +8,7 @@
 #ifndef VE_DIRECT_PROTOCOL_AVERAGE_STRUCT_H_
 #define VE_DIRECT_PROTOCOL_AVERAGE_STRUCT_H_
 
-#define VE_DIRECT_AVERAGE_LEN	24
+#define VE_DIRECT_AVERAGE_LEN	12
 
 typedef __attribute__ ((aligned(1))) struct ve_direct_average_struct {
 

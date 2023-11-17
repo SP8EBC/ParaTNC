@@ -14,7 +14,6 @@ uint8_t rte_main_reboot_req = 0;
 uint8_t rte_main_boot_cycles = 0, rte_main_hard_faults = 0;
 
 uint8_t rte_main_trigger_status = 0;
-uint8_t rte_main_trigger_modbus_status = 0;
 
 uint8_t rte_main_trigger_wx_packet = 0;
 

@@ -19,7 +19,42 @@
 #include <modbus_rtu/rtu_getters.h>
 #include <modbus_rtu/rtu_return_values.h>
 
+#include <etc/dallas_temperature_limits.h>
+
 #define WX_MAX_TEMPERATURE_SLEW_RATE 4.0f
+
+inline static int8_t wx_handler_temperature_check_slew(const float last, const float_average_t* average) {
+
+	// 0 -> OK
+	int8_t result = 0;
+
+	float avg = 0.0f;
+
+	// continue only if average circular buffer is completely full
+	if (float_get_nonfull(average) == 0) {
+
+		// get current average
+		avg = float_get_average(average);
+
+		// get difference
+		avg = avg - last;
+
+		// resuse result variable to save stack space
+		result = (int8_t)avg;
+
+		if (result < DALLAS_TEMPERATURE_NEG_SLEW) {
+			result = 1;
+		}
+		else if (result > DALLAS_TEMPERATURE_POS_SLEW) {
+			result = 1;
+		}
+		else {
+			result = 0;
+		}
+	}
+
+	return result;
+}
 
 int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu, float * output) {
 
@@ -30,6 +65,8 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 	int16_t temp = 0;
 
 	float temperature = 0.0f;
+
+	float dallas_temperature = 0.0f;
 
 	// choose main temperature source from the configuration. main sensor is something which is used to send data though aprs
 	switch(config_sources->temperature) {
@@ -69,7 +106,14 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			// this function has blockin I/O which also adds a delay required by MS5611
 			// sensor to finish data acquisition after the pressure measurement
 			// is triggered.
-			wx_get_temperature_dallas();
+			dallas_temperature = dallas_query(&rte_wx_current_dallas_qf);
+
+			// check against excessive slew rate
+			const uint8_t dallas_slew_exceeded = wx_handler_temperature_check_slew(dallas_temperature, &rte_wx_dallas_average);
+
+			if (dallas_slew_exceeded > 0) {
+				rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+			}
 
 	#ifdef STM32L471xx
 			// measure temperature from PT100 sensor if it is selected as main temperature sensor
@@ -81,10 +125,31 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			}
 	#endif
 
-			if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf != DALLAS_QF_NOT_AVALIABLE) {
+			if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_FULL) {
+				// updating last good measurement time
+				wx_last_good_temperature_time = master_time;
+
+				// include current temperature into the average
+				float_average(dallas_temperature, &rte_wx_dallas_average);
+
 				temperature = float_get_average(&rte_wx_dallas_average);
 
+#if defined(STM32L471xx)
+				rte_wx_temperature_average_dallas = (int16_t)(temperature * 10.0f);
+#endif
+
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+			}
+			else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_DEGRADATED) {
+				// if there were a communication error set the error to unavaliable
+				rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+
+				// increase degraded quality factor counter
+				rte_wx_dallas_degraded_counter++;
+			}
+			else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
+				// if there were a communication error set the error to unavaliable
+				rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 			}
 
 			break;
@@ -135,58 +200,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 		*output = temperature;
 	}
 
-//#if defined(STM32L471xx)
-//	// get modbus temperature reading regardless if it has been chosen as main
-//	if (config_mode->wx_modbus == 1) {
-//		rtu_get_temperature(&rte_wx_temperature_average_modbus, config_rtu);
-//	}
-//
-//	// get temperature from dallas sensor if this isn't a sensor of choice
-//	if (config_sources->temperature != WX_SOURCE_INTERNAL) {
-//		wx_get_temperature_dallas();
-//	}
-//
-//	rte_wx_temperature_average_internal = (int16_t)(rte_wx_temperature_internal * 10.0f);
-//#endif
-
 	return parameter_result;
-}
-
-int32_t wx_get_temperature_dallas() {
-
-	int32_t output = 0;
-
-	float temperature = 0.0f;
-
-	// get the value from dallas one-wire sensor
-	temperature = dallas_query(&rte_wx_current_dallas_qf);
-
-	// checking if communication was successfull
-	if (temperature != -128.0f) {
-
-		// include current temperature into the average
-		float_average(temperature, &rte_wx_dallas_average);
-
-		// update the current temperature with current average
-//		rte_wx_temperature_average_external_valid = float_get_average(&rte_wx_dallas_average);
-
-		// updating last good measurement time
-		wx_last_good_temperature_time = master_time;
-
-#if defined(STM32L471xx)
-		rte_wx_temperature_average_dallas = (int16_t)(rte_wx_temperature_average_external_valid * 10.0f);
-#endif
-
-	}
-	else {
-		// if there were a communication error set the error to unavaliable
-		rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
-
-		// set the output value
-		output = -1;
-	}
-
-	return output;
 }
 
 int32_t wx_get_temperature_ms5611(float * const temperature) {

@@ -21,5 +21,6 @@ void float_average(float in, float_average_t* average);
 float float_get_average(const float_average_t* average);
 float float_get_min(const float_average_t* average);
 float float_get_max(const float_average_t* average);
+char float_get_nonfull(const float_average_t* average);
 
 #endif /* INCLUDE_FLOAT_AVERAGE_H_ */

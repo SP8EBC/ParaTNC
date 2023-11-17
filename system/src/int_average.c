@@ -97,3 +97,13 @@ int32_t int_get_last(const int_average_t* average) {
 
 	return out;
 }
+
+int32_t int_get_nonfull(const int_average_t* average) {
+	for (int i = 0; i < INT_AVERAGE_LN; i++) {
+		if (average->values[i] == INT_INIT_VALUE) {
+			return 1;
+		}
+	}
+
+	return 0;
+}

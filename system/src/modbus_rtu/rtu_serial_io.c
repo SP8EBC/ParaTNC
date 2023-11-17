@@ -73,13 +73,6 @@ uint8_t rtu_blocking_io = 0;
 uint32_t rtu_time_of_last_successfull_comm = 0;
 
 /**
- * This variable latches the value of 'rtu_time_of_last_successfull_comm' across
- * consecutive messages with an error status. If the value is the same as during
- * previous transmission the controller is restarted
- */
-uint32_t rtu_time_of_last_succ_comm_at_previous_error_status = 0;
-
-/**
  * CRC value after the last call to rtu_serial_callback
  */
 uint16_t rtu_serial_previous_crc = 0xFFFF;
@@ -217,8 +210,6 @@ int32_t rtu_serial_pool(void) {
 
 		// check how many serial I/O erros have been detected so far
 		if ((rte_rtu_number_of_serial_io_errors % RTU_NUMBER_OF_ERRORS_TO_TRIG_STATUS) == 0) {
-			// set the status trigger
-			rte_main_trigger_modbus_status = 1;
 
 			// increment the error counter artificially to protect sending status in the loop
 			rte_rtu_number_of_serial_io_errors++;
@@ -230,8 +221,6 @@ int32_t rtu_serial_pool(void) {
 //				rte_main_reboot_req = 1;
 //			}
 
-			// latch the current value of last successfull communication
-			rtu_time_of_last_succ_comm_at_previous_error_status = rtu_time_of_last_successfull_comm;
 		}
 	}
 
@@ -538,29 +527,6 @@ int32_t rtu_serial_start(void) {
 
 	rtu_pool_state = RTU_POOL_IDLE;
 
-	return retval;
-}
-
-int32_t rtu_serial_get_status_string(rtu_pool_queue_t* queue, srl_context_t* srl_ctx, char* out, uint16_t out_buffer_ln, uint8_t* generated_string_ln) {
-
-	int32_t retval = MODBUS_RET_UNINITIALIZED;
-	int string_ln = 0;
-
-	memset(out, 0x00, out_buffer_ln);
-//#ifdef _MODBUS_RTU
-
-	string_ln = snprintf(out, out_buffer_ln, ">[MT: %lX][LRET: %lX][LSCT: %lX][NSSC: %X][NSE: %X][RXB: %lX][RXI %X][TXB %lX]",
-												main_get_master_time(),
-												rte_rtu_last_modbus_rx_error_timestamp,
-												rtu_time_of_last_successfull_comm,
-												(int)rte_rtu_number_of_successfull_serial_comm,
-												(int)rte_rtu_number_of_serial_io_errors,
-												srl_ctx->total_rx_bytes,
-												srl_ctx->total_idle_counter,
-												srl_ctx->total_tx_bytes);
-
-	*generated_string_ln = (uint8_t) string_ln;
-//#endif
 	return retval;
 }
 

@@ -1,0 +1,23 @@
+/*
+ * dallas_temperature_limits.h
+ *
+ *  Created on: Nov 16, 2023
+ *      Author: mateusz
+ */
+
+#ifndef ETC_DALLAS_TEMPERATURE_LIMITS_H_
+#define ETC_DALLAS_TEMPERATURE_LIMITS_H_
+
+
+#define DALLAS_TEMPERATURE_LIMITS_LOW	-32.0f
+
+#define DALLAS_TEMPERATURE_LIMITS_HI	64.0f
+
+#define DALLAS_TEMPERATURE_NEG_SLEW		-16
+
+#define DALLAS_TEMPERATURE_POS_SLEW		16
+
+#define DALLAS_MAX_LIMIT_OF_DEGRADED	64U
+
+
+#endif /* ETC_DALLAS_TEMPERATURE_LIMITS_H_ */
