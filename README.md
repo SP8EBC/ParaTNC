@@ -218,6 +218,7 @@ This is done by invoking a command:
  'sudo echo "options usb-storage quirks=483:3744:i" >> /etc/modprobe.d/stlink_v1.conf'
 What will create a new file called 'stlink_v1.conf' in modprobe directory. After the system reboot changes should
 be applied and the programmer should be free to go. The kernel log should looks somehow like this below
+
 	[90639.895886] usb 2-1.1: new full-speed USB device number 13 using ehci-pci
 	[90639.990288] usb 2-1.1: New USB device found, idVendor=0483, idProduct=3744
 	[90639.990294] usb 2-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
@@ -229,11 +230,59 @@ be applied and the programmer should be free to go. The kernel log should looks 
 
 The next step is to install texane-stlink which supports the ST-Link/V1 programmer and can be used to read an write
 the flash memory. Installation is quite straight forward
-  'git clone git://github.com/texane/stlink.git'
-  'cd stlink.git'
-  'make'
-  'cd build/Relase'
-  'sudo cp st-* /usr/bin'
+
+	'git clone git://github.com/texane/stlink.git'
+	'cd stlink.git'
+	'make'
+	'cd build/Relase'
+	'sudo cp st-* /usr/bin'
 
 At the end the HEX file can be loaded into the microcontroler by typing a command
-  'sudo st-flash --format ihex write /dev/sr0 ParaTNC.hex' 
+
+	'sudo st-flash --format ihex write /dev/sr0 ParaTNC.hex' 
+
+ #### LOADING THE HEX FILE INTO ParaTNC or ParaMETEO TARGET USING STLINK/V2
+
+	mateusz@mateusz-ThinkCentre-M720q:~/Documents/___STM32/ParaTNC/STM32L476_ParaMETEO$ st-flash erase
+	st-flash 1.7.0-120-gbeffed4
+	/usr/local/stlink/chips: No such file or directory
+	2023-11-17T07:43:18 INFO common.c: L47x/L48x: 96 KiB SRAM, 1024 KiB flash in at least 2 KiB pages.
+	Mass erasing
+
+ and then programming itself
+
+	mateusz@mateusz-ThinkCentre-M720q:~/Documents/___STM32/ParaTNC/STM32L476_ParaMETEO$ st-flash --format ihex write ParaTNC.hex
+	st-flash 1.7.0-120-gbeffed4
+	/usr/local/stlink/chips: No such file or directory
+	2023-11-17T07:44:47 INFO common.c: L47x/L48x: 96 KiB SRAM, 1024 KiB flash in at least 2 KiB pages.
+	2023-11-17T07:44:47 INFO common.c: Attempting to write 111504 (0x1b390) bytes to stm32 address: 134217728 (0x8000000)
+
+	2023-11-17T07:44:48 INFO common.c: Finished erasing 55 pages of 2048 (0x800) bytes
+	2023-11-17T07:44:48 INFO common.c: Starting Flash write for F2/F4/F7/L4
+	2023-11-17T07:44:48 INFO flash_loader.c: Successfully loaded flash loader in sram
+	2023-11-17T07:44:48 INFO flash_loader.c: Clear DFSR
+	2023-11-17T07:44:48 INFO flash_loader.c: Clear CFSR
+	2023-11-17T07:44:48 INFO flash_loader.c: Clear HFSR
+	2023-11-17T07:44:51 INFO common.c: Starting verification of write complete
+	2023-11-17T07:44:52 INFO common.c: Flash written and verified! jolly good!
+
+ #### LOADING THE HEX FILE INTO ParaTNC or ParaMETEO TARGET USING ROM BOOTLOADER AND STM32FLASH software
+
+ Examples:
+        Get device information:
+                stm32flash /dev/ttyS0
+          or:
+                stm32flash /dev/i2c-0
+
+        Write with verify and then start execution:
+                stm32flash -w filename -v -g 0x0 /dev/ttyS0
+
+        Read flash to file:
+                stm32flash -r filename /dev/ttyS0
+
+        Read 100 bytes of flash from 0x1000 to stdout:
+                stm32flash -r - -S 0x1000:100 /dev/ttyS0
+
+        Start execution:
+                stm32flash -g 0x0 /dev/ttyS0
+
