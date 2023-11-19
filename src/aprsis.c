@@ -303,7 +303,7 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							aprsis_logged = 1;
 
 							// trigger GSM status APRS-IS packet, when connection is ready
-							rte_main_trigger_gsm_status_gsm = 1;
+							rte_main_trigger_gsm_status = 1;
 
 							// set current timestamp as last
 							aprsis_last_keepalive_ts = master_time;
@@ -906,7 +906,7 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 
 }
 
-void aprsis_send_server_conn_status(const char * callsign_with_ssid) {
+void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
 
 	if (aprsis_logged == 0) {
 		return;
@@ -956,7 +956,7 @@ void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, ui
 
 }
 
-void aprsis_send_gpsstatus(const char * callsign_with_ssid) {
+void aprsis_send_gsm_status(const char * callsign_with_ssid) {
 	if (aprsis_logged == 0) {
 		return;
 	}

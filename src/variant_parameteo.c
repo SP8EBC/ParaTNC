@@ -23,3 +23,16 @@ int variant_validate_is_within_ram(void * address) {
 		return 0;
 	}
 }
+
+int variant_validate_is_within_flash(void * address) {
+
+	uint32_t addr_value = (uint32_t)address;
+
+	if (addr_value > FLASH_BASE &&
+		addr_value < FLASH_BANK1_END) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}

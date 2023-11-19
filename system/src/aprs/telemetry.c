@@ -326,11 +326,13 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	uint8_t is_viscous = 1;
 
-	if (variant_validate_is_within_ram(config_basic) == 0) {
+	if (variant_validate_is_within_ram(config_basic) == 0 &&
+		variant_validate_is_within_flash(config_basic) == 0) {
 		return;
 	}
 
-	if (variant_validate_is_within_ram(config_mode) == 0) {
+	if (variant_validate_is_within_ram(config_basic) == 0 &&
+		variant_validate_is_within_flash(config_basic) == 0) {
 		is_viscous = 0;
 	}
 	else if (config_mode->digi_viscous == 0) {

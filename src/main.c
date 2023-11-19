@@ -1250,17 +1250,17 @@ int main(int argc, char* argv[]){
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
-			if (rte_main_trigger_gsm_status_gsm == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_status_gsm = 0;
+			if (rte_main_trigger_gsm_status == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_status = 0;
 
-				aprsis_send_gpsstatus((const char *)&main_callsign_with_ssid);
+				aprsis_send_gsm_status((const char *)&main_callsign_with_ssid);
 			}
 
 			// if GSM status message is triggered and GSM module is not busy transmitting something else
-			if (rte_main_trigger_gsm_status_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_status_packet = 0;
+			if (rte_main_trigger_gsm_aprsis_counters_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+				rte_main_trigger_gsm_aprsis_counters_packet = 0;
 
-				aprsis_send_server_conn_status((const char *)&main_callsign_with_ssid);
+				aprsis_send_server_comm_counters((const char *)&main_callsign_with_ssid);
 			}
 
 			// if loginstring packet (APRS status packet with loginstring received from a server)
@@ -1478,7 +1478,7 @@ int main(int argc, char* argv[]){
 
 			}
 
-			if (main_config_data_gsm->aprsis_enable != 0) {
+			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
 
 				if (pwr_save_is_currently_cutoff() == 0) {
 					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive();
@@ -1502,6 +1502,10 @@ int main(int argc, char* argv[]){
 
 				if (system_is_rtc_ok() == 0) {
 					rte_main_reboot_req = 1;
+				}
+
+				if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
+					rte_main_trigger_gsm_aprsis_counters_packet = 1;
 				}
 			}
 

@@ -11,7 +11,7 @@
 #include "stdint.h"
 
 int variant_validate_is_within_ram(void * address);
-
+int variant_validate_is_within_flash(void * address);
 
 
 #endif /* VARIANT_H_ */
