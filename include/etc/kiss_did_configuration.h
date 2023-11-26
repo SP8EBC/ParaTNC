@@ -37,12 +37,14 @@ extern char did_dummy_data;
 		ENTRY(0x1501U, gsm_sim800_simcard_status_string)		\
 		ENTRY(0x1502U, gsm_sim800_cellid)		\
 		ENTRY(0x1503U, gsm_sim800_lac)		\
+		ENTRY(0x5555U, main_test_string)		\
 
 	#define DIDS_FLOAT(ENTRY)	\
 		ENTRY(0x2000U, rte_wx_temperature_average_external_valid, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2001U, rte_wx_temperature_internal_valid, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2002U, rte_wx_pressure_history[0], rte_wx_pressure_history[1], rte_wx_pressure_history[2])	\
 		ENTRY(0x1505U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2222U, main_test_float, DID_EMPTY, DID_EMPTY)	\
 
 	#define DIDS_NUMERIC(ENTRY)		\
 		ENTRY(0x1000U, master_time, DID_EMPTY, DID_EMPTY)	\

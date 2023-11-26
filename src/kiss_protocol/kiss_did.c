@@ -389,7 +389,7 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		//move forward a poiner to response buffer
 		output_buffer += sizeof(float);
 
-		out += found.first_data_size;
+		out += sizeof(float);
 
 		if (number_of_data_source > 1) {
 			//append second data source
@@ -417,6 +417,9 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// put DID itself at the begining of a response
 		output_buffer[0] = (identifier & 0xFF);
 		output_buffer[1] = (identifier & 0xFF00) >> 8;
+
+		// move after DID value and size_byte
+		output_buffer += 2;
 
 		// if this is a string DID
 		const void * str = (void *)found.first_data;

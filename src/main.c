@@ -292,6 +292,10 @@ telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
 char after_tx_lock;
 
+const float main_test_float = 123.4f;
+
+const char main_test_string[11] = "1234556aaa\0";
+
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 static void message_callback(struct AX25Msg *msg) {

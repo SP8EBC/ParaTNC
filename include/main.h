@@ -15,7 +15,7 @@
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
-#define INTERNAL_WATCHDOG
+//#define INTERNAL_WATCHDOG
 #define EXTERNAL_WATCHDOG
 
 #define PWR_SWITCH_BOTH
@@ -72,6 +72,10 @@ extern  uint8_t main_kiss_enabled;
 extern uint8_t main_woken_up;
 
 extern int8_t main_cpu_load;
+
+extern const float main_test_float;
+
+extern const char  main_test_string[11];
 
 extern char after_tx_lock;
 
