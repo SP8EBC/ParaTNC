@@ -122,8 +122,8 @@
 // 3 -> controller configuration status
 // 4 -> wakeup events MSB, sleep events LSB
 // 5 -> monitor
-// 6 -> weather and telemetry timers & counters
-
+// 6 -> last sleep time
+// 7 -> weather and telemetry timers & counters
 
 #define CONFIG_FIRST_RESTORED 			(1)
 #define CONFIG_FIRST_FAIL_RESTORING	  	(1 << 1)
@@ -1485,16 +1485,31 @@ int main(int argc, char* argv[]){
 			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
 
 				if (pwr_save_is_currently_cutoff() == 0) {
+					// this checks when APRS-IS was alive last time and when any packet
+					// has been sent to the server.
 					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive();
 
 					if (i_am_ok_with_aprsis != 0) {
+
+						// increase counter stored in RTC backup register
+						backup_reg_increment_aprsis_check_reset();
+
+						// trigger a restart
 						NVIC_SystemReset();
 					}
 				}
 			}
 			#endif
 
+			if (rte_wx_check_weather_measurements() == 0) {
+				backup_reg_increment_weather_measurements_check_reset();
+
+				NVIC_SystemReset();
+			}
+
 			if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
+				backup_reg_increment_dallas_degraded_reset();
+
 				rte_main_reboot_req = 1;
 			}
 
@@ -1504,7 +1519,11 @@ int main(int argc, char* argv[]){
 			if (--main_one_hour_pool_timer < 0) {
 				main_one_hour_pool_timer = 60;
 
+				// check if RTC is working correctly
 				if (system_is_rtc_ok() == 0) {
+
+					backup_reg_increment_is_rtc_ok_check_reset();
+
 					rte_main_reboot_req = 1;
 				}
 

@@ -9,6 +9,11 @@
 #include <rte_wx.h>
 #include <wx_handler.h>
 #include "main.h"
+#include "misc_config.h"
+
+#ifndef RTE_WX_PROBLEMS_MAX_THRESHOLD
+#define RTE_WX_PROBLEMS_MAX_THRESHOLD 20
+#endif
 
 /**
  * A little word of explanataion:
@@ -21,7 +26,6 @@
  *
  */
 
-//float rte_wx_temperature_average_external = 0.0f;		//<! This name should be refactored
 float rte_wx_temperature_average_external_valid = 0.0f;	//<! This name should be refactored
 float rte_wx_temperature_internal = 0.0f, rte_wx_temperature_internal_valid = 0.0f;
 float rte_wx_pressure = 0.0f, rte_wx_pressure_valid = 0.0f;
@@ -81,8 +85,14 @@ uint8_t rte_wx_davis_station_avaliable = 0;
 uint8_t rte_wx_davis_loop_packet_avaliable = 0;
 davis_loop_t rte_wx_davis_loop_content;
 
+uint8_t rte_wx_problems_wind_buffers = 0;	//!< Problems detected with buffers content
+uint8_t rte_wx_problems_wind_values = 0;	//!< Problems with values calculated from buffers content
+
 void rte_wx_init(void) {
 	int i = 0;
+
+	rte_wx_problems_wind_buffers = 0;
+	rte_wx_problems_wind_values = 0;
 
 	for (; i < WIND_AVERAGE_LEN; i++) {
 		rte_wx_windspeed[i] = 0;
@@ -115,4 +125,71 @@ void rte_wx_reset_last_measuremenet_timers(uint16_t parameter_type) {
 	else {
 		;
 	}
+}
+
+/**
+ * This function checks if weather measurements looks to be valid and if they
+ * are changing over time. The function shall be called in one minute interval.
+ * @return
+ */
+int8_t rte_wx_check_weather_measurements(void) {
+	int8_t looks_good = 1;
+
+	uint8_t i = 0;	// loop iterator
+
+	// go through wind direction buffer and checks if it contains the same value
+	for (i = 0; i < WIND_AVERAGE_LEN - 1; i++) {
+		if (rte_wx_winddirection[i] != rte_wx_winddirection[i + 1]) {
+			break;
+		}
+	}
+
+	// check if an end of the buffer has been reached
+	if (i >= WIND_AVERAGE_LEN - 1) {
+		rte_wx_problems_wind_buffers++;
+	}
+
+	// go through wind speed buffer and checks if it contains the same value
+	for (i = 0; i < WIND_AVERAGE_LEN - 1; i++) {
+		if (rte_wx_windspeed[i] != rte_wx_windspeed[i + 1]) {
+			break;
+		}
+	}
+
+	// check if an end of the buffer has been reached
+	if (i >= WIND_AVERAGE_LEN - 1) {
+		rte_wx_problems_wind_buffers++;
+	}
+
+	// check if average wind speed is different from zero and the same than gusts
+	if (rte_wx_average_windspeed != 0 &&
+			(rte_wx_average_windspeed == rte_wx_max_windspeed))
+	{
+		// if so a wind sensor had been blocked by icing very rapidly
+		// before next DMA interrupt so rte_wx_windspeed is also
+		// not updated at all
+		rte_wx_problems_wind_values++;
+	}
+
+	// check if wind direction equals exactly north (zero degrees)
+	if (rte_wx_average_winddirection == 0) {
+		// open wind direction input (anemometer disconnected) gives
+		// a reading of about 6 do 8 degrees. If it is stuck on zero
+		// the U->f converted or its reference clock generator
+		// might not work at all
+		rte_wx_problems_wind_values++;
+	}
+	else {
+		rte_wx_problems_wind_values = 0;
+	}
+
+	if (rte_wx_problems_wind_values > RTE_WX_PROBLEMS_MAX_THRESHOLD) {
+		looks_good = 0;
+	}
+
+	if (rte_wx_problems_wind_buffers > RTE_WX_PROBLEMS_MAX_THRESHOLD * 3) {
+		looks_good = 0;
+	}
+
+	return looks_good;
 }

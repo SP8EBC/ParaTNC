@@ -81,6 +81,11 @@ void backup_reg_set_telemetry(uint16_t);
 void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_counter, uint8_t * meteo_gsm_counter);
 void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counter, uint8_t meteo_gsm_counter);
 
+void backup_reg_increment_aprsis_check_reset(void);
+void backup_reg_increment_weather_measurements_check_reset(void);
+void backup_reg_increment_dallas_degraded_reset(void);
+void backup_reg_increment_is_rtc_ok_check_reset(void);
+
 
 
 #endif /* BACKUP_REGISTERS_H_ */

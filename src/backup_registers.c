@@ -16,6 +16,7 @@
 #define REGISTER_COUNTERS			RTC->BKP4R
 #define REGISTER_LAST_SLTIM			RTC->BKP6R
 #define REGISTER_PACKET_COUNTERS	RTC->BKP7R
+#define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
 #endif
 
 #define BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H 	1u
@@ -39,6 +40,7 @@
 // 5 -> monitor
 // 6 -> last sleep time
 // 7 -> weather and telemetry timers & counters
+// 8 -> counters of resets caused by validation checks failures
 
 // 7th register map
 // xxxxyyAA - telemetry frames counter
@@ -46,6 +48,12 @@
 // xxxxAyyy - value of packet_tx_meteo_gsm_counter limited to 15
 // xxAAyyyy - value of packet_tx_beacon_counter
 // Axxxyyyy - checksum
+
+// 8th register map
+// xxxxyyAA - resets caused by 'aprsis_check_connection_attempt_alive()'
+// xxxxAAyy - resets caused by 'rte_wx_check_weather_measurements()'
+// xxAAyyyy - resets caused by value of 'rte_wx_dallas_degraded_counter'
+// AAxxyyyy - resets caused by 'system_is_rtc_ok()'
 
 static void backup_reg_unclock(void) {
 	// enable access to backup domain
@@ -421,7 +429,10 @@ uint32_t backup_reg_get_last_sleep_duration(void) {
 	return out;
 }
 
-
+/**
+ *
+ * @param in
+ */
 void backup_reg_set_last_sleep_duration(uint32_t in) {
 #ifdef PARAMETEO
 	backup_reg_unclock();
@@ -512,6 +523,12 @@ void backup_reg_set_telemetry(uint16_t in) {
 
 }
 
+/**
+ *
+ * @param beacon_counter
+ * @param meteo_counter
+ * @param meteo_gsm_counter
+ */
 void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_counter, uint8_t * meteo_gsm_counter) {
 #ifdef PARAMETEO
 	uint32_t reg_value = REGISTER_PACKET_COUNTERS;
@@ -539,6 +556,12 @@ void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_co
 #endif
 }
 
+/**
+ *
+ * @param beacon_counter
+ * @param meteo_counter
+ * @param meteo_gsm_counter
+ */
 void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counter, uint8_t meteo_gsm_counter) {
 #ifdef PARAMETEO
 	volatile uint32_t reg_value = REGISTER_PACKET_COUNTERS;
@@ -571,4 +594,96 @@ void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counte
 	backup_reg_lock();
 
 #endif
+}
+
+void backup_reg_increment_aprsis_check_reset(void) {
+	// REGISTER_RESET_CHECK_FAIL
+	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
+
+	// get existing value
+	uint8_t counter = (uint8_t)(reg_value & 0xFFU);
+
+	// increment it
+	counter++;
+
+	// clear existing value from register
+	reg_value &= 0xFFFFFF00U;
+
+	// add incremented counter value
+	reg_value |= counter;
+
+	backup_reg_unclock();
+
+	REGISTER_RESET_CHECK_FAIL = reg_value;
+
+	backup_reg_lock();
+}
+
+void backup_reg_increment_weather_measurements_check_reset(void) {
+	// REGISTER_RESET_CHECK_FAIL
+	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
+
+	// get existing value
+	uint8_t counter = (uint8_t)((reg_value & 0xFF00U) >> 8U);
+
+	// increment it
+	counter++;
+
+	// clear existing value from register
+	reg_value &= 0xFFFF00FFU;
+
+	// add incremented counter value
+	reg_value |= ((uint32_t)counter << 8U);
+
+	backup_reg_unclock();
+
+	REGISTER_RESET_CHECK_FAIL = reg_value;
+
+	backup_reg_lock();
+}
+
+void backup_reg_increment_dallas_degraded_reset(void) {
+	// REGISTER_RESET_CHECK_FAIL
+	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
+
+	// get existing value
+	uint8_t counter = (uint8_t)((reg_value & 0xFF0000U) >> 16U);
+
+	// increment it
+	counter++;
+
+	// clear existing value from register
+	reg_value &= 0xFF00FFFFU;
+
+	// add incremented counter value
+	reg_value |= ((uint32_t)counter << 16U);
+
+	backup_reg_unclock();
+
+	REGISTER_RESET_CHECK_FAIL = reg_value;
+
+	backup_reg_lock();
+}
+
+void backup_reg_increment_is_rtc_ok_check_reset(void) {
+	// REGISTER_RESET_CHECK_FAIL
+	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
+
+	// get existing value
+	uint8_t counter = (uint8_t)((reg_value & 0xFF000000U) >> 24U);
+
+	// increment it
+	counter++;
+
+	// clear existing value from register
+	reg_value &= 0x00FFFFFFU;
+
+	// add incremented counter value
+	reg_value |= ((uint32_t)counter << 24U);
+
+	backup_reg_unclock();
+
+	REGISTER_RESET_CHECK_FAIL = reg_value;
+
+	backup_reg_lock();
 }

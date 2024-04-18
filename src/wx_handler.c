@@ -180,7 +180,7 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 	short i = 0;
 	uint8_t average_ln;
 
-	int32_t modbus_retval;
+	int32_t modbus_retval = MODBUS_RET_UNINITIALIZED;
 	uint16_t scaled_windspeed = 0;
 
 //#ifdef STM32L471xx

@@ -104,6 +104,7 @@ extern "C"
 void rte_wx_init(void);
 void rte_wx_update_last_measuremenet_timers(uint16_t measurement_type);
 void rte_wx_reset_last_measuremenet_timers(uint16_t measurement_type);
+int8_t rte_wx_check_weather_measurements(void);
 
 
 #ifdef __cplusplus

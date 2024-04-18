@@ -56,6 +56,9 @@ const uint32_t * const config_section_first_start = 		(const uint32_t *)CONFIG_S
 const uint32_t * const config_section_second_start = 		(const uint32_t *)CONFIG_SECTION_SECOND_START;
 const uint32_t * const config_section_default_start = 		(const uint32_t *)CONFIG_SECTION_DEFAULT_START;
 
+uint8_t config_engineering_1 = 0xFFU;
+uint8_t config_engineering_2 = 0xFFU;
+
 #ifdef PARAMETEO
 #define STRUCT_COUNT 6
 #endif
@@ -637,6 +640,9 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 	}
 
 	configuration_handler_loaded = region;
+
+	config_engineering_1 = main_config_data_basic->engineering1;
+	config_engineering_2 = main_config_data_basic->engineering2;
 
 }
 
