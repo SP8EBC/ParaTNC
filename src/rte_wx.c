@@ -154,6 +154,12 @@ int8_t rte_wx_check_weather_measurements(void) {
 		if (rte_wx_windspeed[i] != rte_wx_windspeed[i + 1]) {
 			break;
 		}
+
+		// break the loop if the windspeed is zero anywhere, not to reset
+		// periodically if wind sensor is not connected.
+		if (rte_wx_windspeed[i] == 0) {
+			break;
+		}
 	}
 
 	// check if an end of the buffer has been reached
