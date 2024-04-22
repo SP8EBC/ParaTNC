@@ -25,10 +25,6 @@
  * $WIZ$ type = "int"
  * $WIZ$ min = 1
  */
-#include <stdint.h>
-
-//extern uint8_t kiss_txdelay;
-//#define CONFIG_AFSK_PREAMBLE_LEN (kiss_txdelay*10UL)
 #define CONFIG_AFSK_PREAMBLE_LEN 400UL			/// 300
 
 /**
@@ -36,8 +32,6 @@
  * $WIZ$ type = "int"
  * $WIZ$ min = 1
  */
-//extern uint8_t kiss_txtail;
-//#define CONFIG_AFSK_TRAILER_LEN (kiss_txtail*10UL)
 #define CONFIG_AFSK_TRAILER_LEN 50UL
 
 

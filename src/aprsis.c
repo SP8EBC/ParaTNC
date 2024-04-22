@@ -9,6 +9,7 @@
 #include "etc/aprsis_config.h"
 #include "text.h"
 #include "aprs/status.h"
+#include "aprs/message.h"
 
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_poolers.h"
@@ -18,6 +19,12 @@
 
 #include <stdio.h>
 #include <string.h>
+
+#ifdef UNIT_TEST
+#define STATIC
+#else
+#define STATIC static
+#endif
 
 srl_context_t * aprsis_serial_port;
 
@@ -179,6 +186,72 @@ char aprsis_login_string_reveived[APRSIS_LOGIN_STRING_RECEIVED_LN];
  * Lenght of 6 letter callsign + two digit SSID + end character like '>' or ","
  */
 #define MAXIMUM_CALL_SSID_DASH_LN	10
+
+/**
+ * Checks if data in a buffer contains APRS message
+ * @param message
+ * @param message_ln
+ * @return position at which content of message starts
+ */
+STATIC int aprsis_check_is_message(const uint8_t * const message, const uint16_t message_ln) {
+	// example message
+	//			Details:"SP8EBC>APX216,TCPIP*,qAC,NINTH::SR9WXZ   :tedt{0s}\r\n", '\0' <repeats 715 times>
+
+	// go through a buffer and look for double ':'
+
+	int message_start_position = 0;
+
+	for (int i = 0; i < message_ln; i++) {
+		const uint8_t * this_character = message + i;
+
+		const uint8_t * next_character = message + i + 1;
+
+		if (*this_character == 0x00) {
+			break;
+		}
+
+		if ((*this_character == ':') && (*next_character == ':')) {
+			message_start_position = i + 2;
+			break;
+		}
+	}
+
+	return message_start_position;
+}
+
+/**
+ *
+ * @param srl_context
+ */
+STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
+
+	const uint8_t * buffer = srl_get_rx_buffer(srl_context);
+
+	const uint16_t message_ln = srl_context->srl_rx_bytes_counter;
+
+	// if something was actually received
+	if (srl_context->srl_rx_state == SRL_RX_DONE) {
+		// check if this is keepalive message
+		if (*buffer == '#') {
+			aprsis_last_keepalive_ts = main_get_master_time();
+
+			aprsis_last_keepalive_long_ts = main_get_master_time();
+
+			aprsis_keepalive_received_counter++;
+
+			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
+		}
+		else if (aprsis_check_is_message(buffer, message_ln) == 1) {
+
+		}
+		else {
+			aprsis_another_received_counter++;
+
+			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
+
+		}
+	}
+}
 
 void aprsis_init(
 		srl_context_t * context,
@@ -392,29 +465,6 @@ sim800_return_t aprsis_disconnect(void) {
 	}
 
 	return out;
-}
-
-void aprsis_receive_callback(srl_context_t* srl_context) {
-
-	// if something was actually received
-	if (srl_context->srl_rx_state == SRL_RX_DONE) {
-		// check if this is keepalive message
-		if (*(srl_get_rx_buffer(srl_context)) == '#') {
-			aprsis_last_keepalive_ts = main_get_master_time();
-
-			aprsis_last_keepalive_long_ts = main_get_master_time();
-
-			aprsis_keepalive_received_counter++;
-
-			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
-		}
-		else {
-			aprsis_another_received_counter++;
-
-			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
-
-		}
-	}
 }
 
 /**

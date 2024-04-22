@@ -12,6 +12,7 @@ C_SRCS += \
 ../system/src/aprs/crc.c \
 ../system/src/aprs/dac.c \
 ../system/src/aprs/digi.c \
+../system/src/aprs/message.c \
 ../system/src/aprs/status.c \
 ../system/src/aprs/telemetry.c \
 ../system/src/aprs/wx.c 
@@ -25,6 +26,7 @@ OBJS += \
 ./system/src/aprs/crc.o \
 ./system/src/aprs/dac.o \
 ./system/src/aprs/digi.o \
+./system/src/aprs/message.o \
 ./system/src/aprs/status.o \
 ./system/src/aprs/telemetry.o \
 ./system/src/aprs/wx.o 
@@ -38,6 +40,7 @@ C_DEPS += \
 ./system/src/aprs/crc.d \
 ./system/src/aprs/dac.d \
 ./system/src/aprs/digi.d \
+./system/src/aprs/message.d \
 ./system/src/aprs/status.d \
 ./system/src/aprs/telemetry.d \
 ./system/src/aprs/wx.d 

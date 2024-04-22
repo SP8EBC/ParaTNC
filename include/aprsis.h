@@ -50,7 +50,7 @@ void aprsis_init(
 aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon);
 aprsis_return_t aprsis_connect_and_login_default(uint8_t auto_send_beacon);
 sim800_return_t aprsis_disconnect(void);
-void aprsis_receive_callback(srl_context_t* srl_context);
+//void aprsis_receive_callback(srl_context_t* srl_context);
 void aprsis_check_alive(void);
 int aprsis_check_connection_attempt_alive(void);
 
