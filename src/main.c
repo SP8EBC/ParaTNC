@@ -1246,12 +1246,25 @@ int main(int argc, char* argv[]){
 
 				// receive callback for communicatio with the modem
 				gsm_sim800_rx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
-
-				//srl_reset(main_gsm_srl_ctx_ptr);
 			}
 
 			if (main_gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
+			if (rte_main_trigger_message_ack == 1) {
+				if (rte_main_received_message_source == MESSAGE_SOURCE_APRSIS && gsm_sim800_tcpip_tx_busy() == 0) {
+
+					rte_main_trigger_message_ack = 0;
+
+					aprsis_send_ack_for_message(&rte_main_received_message);
+
+					rte_main_received_message_source == MESSAGE_SOURCE_UNINITIALIZED;
+				}
+				else if (rte_main_received_message_source == MESSAGE_SOURCE_RADIO) {
+
+				}
+
 			}
 
 			if (rte_main_trigger_gsm_status == 1 && gsm_sim800_tcpip_tx_busy() == 0) {

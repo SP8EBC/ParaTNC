@@ -6,8 +6,15 @@
  */
 
 #include "message.h"
+#include "variant.h"
 #include "string.h"
 #include "stdio.h"
+
+#ifdef UNIT_TEST
+#define STATIC
+#else
+#define STATIC static
+#endif
 
 #define MESSAGE_RECIPIENT_FIELD_SIZE    9
 
@@ -27,7 +34,76 @@
 
 #define MESSAGE_ACK_CURRENT_POS         (char*)(out_buffer + current_pos)
 
+/**
+ * Lookup table used to string-to-int conversion for HEX strings. Value of 0x30 should be
+ * subtracted from ASCII scancode and this value should be used to intex this table 
+*/
+static const int8_t message_atoi_lookup[] = {   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 
+                                                    -1, -1, -1, -1, -1, -1, -1,
+                                                10, 11, 12, 13, 14, 15,
+                                                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                -1, -1, -1, -1, -1, -1,
+                                                10, 11, 12, 13, 14, 15};
+
+/**
+ * Table used 
+*/
 static char message_atoi_buffer[MESSAGE_ATOI_BUFFER];
+
+/**
+ * Convert string with message number to integer, with automatic detection of decimal or hex base. It operates
+ * only on positive integers up to 32 bit wide.
+ * @param string
+ * @param string_ln
+ * @param output optional pointer to message structure when output will be also put
+ * @return unsigned integer with decoded number
+ */
+STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8_t string_ln, message_t * output) {
+
+    uint32_t sum = 0u;
+
+    int8_t conversion_table[6];
+
+    int8_t is_hex = 0;
+
+    if (variant_validate_is_within_ram(string) == 1 && string_ln <= 6) {
+        memset(conversion_table, 0x00, string_ln);
+
+        for (int8_t i = string_ln; i >= 0; i--) {
+            const uint8_t index = *(string + i - 1) - 0x30u;
+
+            conversion_table[string_ln - i] = message_atoi_lookup[index];
+
+            if (*(string + i) > '9') {
+                is_hex = 1;
+            }
+        }
+
+        if (is_hex == 1) {
+            sum =   (conversion_table[0]);
+            sum +=  (conversion_table[1] * 0x10);
+            sum +=  (conversion_table[2] * 0x100);
+            sum +=  (conversion_table[3] * 0x1000);
+            sum +=  (conversion_table[4] * 0x10000);
+            sum +=  (conversion_table[5] * 0x100000);
+        }
+        else {
+            sum =   (conversion_table[0]);
+            sum +=  (conversion_table[1] * 10);
+            sum +=  (conversion_table[2] * 100);
+            sum +=  (conversion_table[3] * 1000);
+            sum +=  (conversion_table[4] * 10000);
+            sum +=  (conversion_table[5] * 100000);          
+        }
+    }
+
+    if (variant_validate_is_within_ram(output) == 1) {
+        output->number = sum & 0xFFu;
+    }
+
+    return sum;
+}
 
 /**
  * Decode received data to look for an APRS message and put it into a structure
@@ -37,7 +113,7 @@ static char message_atoi_buffer[MESSAGE_ATOI_BUFFER];
  * @param output parsed APRS message content
  * @return zero if message has been found and decoded, non zero if parsing failed
  */
-uint8_t message_decode_from_aprsis(const uint8_t * const message, const uint16_t message_ln, uint16_t content_position, message_source_t src, message_t * output) {
+uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln, uint16_t content_position, message_source_t src, message_t * output) {
 
     // example message::  SP8EBC>APX216,TCPIP*,qAC,NINTH::SR9WXZ   :tedt{0s}\r\n
 
@@ -271,11 +347,11 @@ uint8_t message_decode_from_aprsis(const uint8_t * const message, const uint16_t
  * @param message
  * @return zero if this is a message to us, non zero otherwise
  */
-uint8_t message_is_for_me(config_data_basic_t * config_data, const message_t * const message)
+uint8_t message_is_for_me(const char * const callsign, const uint8_t ssid, const message_t * const message)
 {
-    const int callsign = strncmp(config_data->callsign, message->to.call, 6);
+    const int _callsign = strncmp(callsign, message->to.call, 6);
 
-    if (callsign == 0 && (config_data->ssid == message->to.ssid)) {
+    if (_callsign == 0 && (ssid == message->to.ssid)) {
         return 0;
     }
     else {
@@ -290,7 +366,7 @@ uint8_t message_is_for_me(config_data_basic_t * config_data, const message_t * c
  * @param message
  * @param src how this message has been received
  */
-void message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src)
+int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src)
 {
     int current_pos = 0;
 
@@ -352,10 +428,12 @@ void message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, 
         current_pos += 9;
 
         // then put 'ackXX' where X is message number
-        current_pos += snprintf(MESSAGE_ACK_CURRENT_POS, MESSAGE_ACK_REMAINING_BUF, ":ack%d", message->number);
+        current_pos += snprintf(MESSAGE_ACK_CURRENT_POS, MESSAGE_ACK_REMAINING_BUF, ":ack%d\r\n", message->number);
 
     }
     else {
 
     }
+
+    return current_pos;
 }

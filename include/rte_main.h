@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include "stored_configuration_nvm/config_data.h"
+#include "message.h"
 
 //!< Set immediately after waking up in RTC interrupt handler
 #define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT		1u
@@ -13,6 +14,12 @@
 
 //!< Set after everything was reinitialized from
 #define RTE_MAIN_WOKEN_UP_EXITED			4u
+
+extern message_t rte_main_received_message;
+extern message_source_t rte_main_received_message_source;
+
+//!< Trigger preparing and sending ACK
+extern uint8_t rte_main_trigger_message_ack;
 
 extern uint8_t rte_main_trigger_gsm_aprsis_counters_packet;
 

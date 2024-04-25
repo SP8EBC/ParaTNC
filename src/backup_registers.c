@@ -17,10 +17,12 @@
 #define REGISTER_LAST_SLTIM			RTC->BKP6R
 #define REGISTER_PACKET_COUNTERS	RTC->BKP7R
 #define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
+#define REGISTER_ASSERT				RTC->BKP9R
 #endif
 
 #define BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H 	1u
 #define BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK 		(0xFFu << 2)
+
 
 // backup registers (ParaTNC)
 // 0 ->
@@ -41,6 +43,7 @@
 // 6 -> last sleep time
 // 7 -> weather and telemetry timers & counters
 // 8 -> counters of resets caused by validation checks failures
+// 9 -> assert register
 
 // 7th register map
 // xxxxyyAA - telemetry frames counter
@@ -597,6 +600,7 @@ void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counte
 }
 
 void backup_reg_increment_aprsis_check_reset(void) {
+#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -617,9 +621,11 @@ void backup_reg_increment_aprsis_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
+#endif
 }
 
 void backup_reg_increment_weather_measurements_check_reset(void) {
+#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -640,9 +646,11 @@ void backup_reg_increment_weather_measurements_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
+#endif
 }
 
 void backup_reg_increment_dallas_degraded_reset(void) {
+#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -663,9 +671,11 @@ void backup_reg_increment_dallas_degraded_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
+#endif
 }
 
 void backup_reg_increment_is_rtc_ok_check_reset(void) {
+#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -686,4 +696,17 @@ void backup_reg_increment_is_rtc_ok_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
+#endif
+}
+
+void backup_assert(uint32_t assert) {
+#ifdef PARAMETEO
+	backup_reg_unclock();
+
+	REGISTER_ASSERT |= assert;
+
+	backup_reg_lock();
+
+	NVIC_SystemReset();
+#endif
 }

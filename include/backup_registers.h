@@ -44,6 +44,14 @@ inline uint32_t backup_reg_get_monitor(void) {
 	return REGISTER_MONITOR;
 }
 
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_WX				(1U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_BEACON			(1U << 1U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_TELEMETRY		(1U << 2U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_DESCR			(1U << 3U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_IGATE			(1U << 4U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_CNTRS			(1U << 5U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_LOGINSTRING	(1U << 6U)
+
 uint32_t backup_reg_get_configuration(void);
 void  backup_reg_set_configuration(uint32_t value);
 void backup_reg_set_bits_configuration(uint32_t value);
@@ -86,6 +94,7 @@ void backup_reg_increment_weather_measurements_check_reset(void);
 void backup_reg_increment_dallas_degraded_reset(void);
 void backup_reg_increment_is_rtc_ok_check_reset(void);
 
+void backup_assert(uint32_t assert);
 
 
 #endif /* BACKUP_REGISTERS_H_ */

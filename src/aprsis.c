@@ -8,6 +8,8 @@
 #include "aprsis.h"
 #include "etc/aprsis_config.h"
 #include "text.h"
+#include "backup_registers.h"
+
 #include "aprs/status.h"
 #include "aprs/message.h"
 
@@ -41,7 +43,7 @@ gsm_sim800_state_t * aprsis_gsm_modem_state;
 /**
  * Buffer for sending packet to aprs-is
  */
-char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
+static char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
 
 /**
  * Lenght of buffer
@@ -80,6 +82,16 @@ const char * aprsis_default_server_address;
  * when connection to APRS-IS server is established
  */
 const char * aprsis_callsign_with_ssid;
+
+/**
+ * Pointer to callsign from configuration
+ */
+const char * aprsis_callsign;
+
+/**
+ * ssid from configuration
+ */
+uint8_t aprsis_ssid;
 
 /**
  * Lenght of APRS-IS server address string
@@ -193,13 +205,13 @@ char aprsis_login_string_reveived[APRSIS_LOGIN_STRING_RECEIVED_LN];
  * @param message_ln
  * @return position at which content of message starts
  */
-STATIC int aprsis_check_is_message(const uint8_t * const message, const uint16_t message_ln) {
+STATIC uint16_t aprsis_check_is_message(const uint8_t * const message, const uint16_t message_ln) {
 	// example message
 	//			Details:"SP8EBC>APX216,TCPIP*,qAC,NINTH::SR9WXZ   :tedt{0s}\r\n", '\0' <repeats 715 times>
 
 	// go through a buffer and look for double ':'
 
-	int message_start_position = 0;
+	uint16_t message_start_position = 0;
 
 	for (int i = 0; i < message_ln; i++) {
 		const uint8_t * this_character = message + i;
@@ -233,18 +245,46 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 	if (srl_context->srl_rx_state == SRL_RX_DONE) {
 		// check if this is keepalive message
 		if (*buffer == '#') {
+			// set last timestamps
 			aprsis_last_keepalive_ts = main_get_master_time();
-
 			aprsis_last_keepalive_long_ts = main_get_master_time();
 
+			// increase received keepalive counter
 			aprsis_keepalive_received_counter++;
 
+			// restart receiving from serial port
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 		}
-		else if (aprsis_check_is_message(buffer, message_ln) == 1) {
-
-		}
 		else {
+			// check if this is an aprs message
+			const int message_position = aprsis_check_is_message(buffer, message_ln);
+
+			// if yes try to decode it
+			if (message_position != 0) {
+
+				// prevent overwriting message received from radio channel if it hasn't been serviced yet
+				if (rte_main_received_message_source == MESSAGE_SOURCE_UNINITIALIZED) {
+
+					// if decoding was successfull
+					if (message_decode(buffer, message_ln, message_position, MESSAGE_SOURCE_APRSIS, &rte_main_received_message) == 0) {
+
+						// check if it is for me
+						if (message_is_for_me(aprsis_callsign, aprsis_ssid, &rte_main_received_message) == 0) {
+							// set a source of this message
+							rte_main_received_message_source = MESSAGE_SOURCE_APRSIS;
+
+							// trigger preparing ACK
+							rte_main_trigger_message_ack = 1;
+						}
+
+
+					}
+				}
+			}
+			else {
+				;
+			}
+
 			aprsis_another_received_counter++;
 
 			gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
@@ -253,6 +293,18 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 	}
 }
 
+/**
+ *
+ * @param context
+ * @param gsm_modem_state
+ * @param callsign
+ * @param ssid
+ * @param passcode
+ * @param default_server
+ * @param default_port
+ * @param reset_on_timeout
+ * @param callsign_with_ssid
+ */
 void aprsis_init(
 		srl_context_t * context,
 		gsm_sim800_state_t * gsm_modem_state,
@@ -284,6 +336,10 @@ void aprsis_init(
 	aprsis_default_server_address_ln = strlen(aprsis_default_server_address);
 
 	aprsis_reset_on_timeout = reset_on_timeout;
+
+	aprsis_callsign = callsign;
+
+	aprsis_ssid = ssid;
 
 }
 
@@ -574,6 +630,11 @@ void aprsis_send_wx_frame(
 		return;
 	}
 
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_WX);
+	}
+
 	aprsis_tx_counter++;
 
 	float max_wind_speed = 0.0f, temp = 0.0f;
@@ -650,6 +711,11 @@ void aprsis_send_beacon(
 
 	if (aprsis_logged == 0) {
 		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_BEACON);
 	}
 
 	aprsis_tx_counter++;
@@ -771,6 +837,8 @@ void aprsis_prepare_telemetry(
 
 /**
  * Sends to APRS-IS prepared telemetry frame prepared in advance
+ * @param async
+ * @param callsign_with_ssid
  */
 void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid) {
 
@@ -782,6 +850,11 @@ void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid) {
 	// exit if message is empty
 	if (*aprsis_packet_telemetry_buffer == 0) {
 		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_TELEMETRY);
 	}
 
 	aprsis_tx_counter++;
@@ -843,6 +916,11 @@ telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
 		return next;
 	}
 
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_DESCR);
+	}
+
 	telemetry_create_description_string(config_basic, what, main_own_aprs_msg, OWN_APRS_MSG_LN);
 
 	aprsis_tx_counter++;
@@ -879,6 +957,11 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 	// exif if APRSIS is not logged
 	if (aprsis_logged == 0 || msg == 0) {
 		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_IGATE);
 	}
 
 	aprsis_igated_counter++;
@@ -962,6 +1045,11 @@ void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
 		return;
 	}
 
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_CNTRS);
+	}
+
 	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
 
 	aprsis_tx_counter++;
@@ -986,6 +1074,11 @@ void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, ui
 
 	if (aprsis_logged == 0) {
 		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_LOGINSTRING);
 	}
 
 	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
@@ -1029,9 +1122,24 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
+/**
+ *
+ * @param message
+ */
+void aprsis_send_ack_for_message(const message_t * const message) {
+	aprsis_packet_tx_message_size = message_create_ack_for((uint8_t*)aprsis_packet_tx_buffer, APRSIS_TX_BUFFER_LN - 1, message, MESSAGE_SOURCE_APRSIS);
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+
+ 	rte_main_received_message_source = MESSAGE_SOURCE_UNINITIALIZED;
+
+}
+
+#ifdef UNIT_TEST
 char * aprsis_get_tx_buffer(void) {
 	return aprsis_packet_tx_buffer;
 }
+#endif
 
 uint8_t aprsis_get_aprsis_logged(void) {
 	return aprsis_logged;

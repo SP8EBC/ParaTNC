@@ -25,7 +25,6 @@ int variant_validate_is_within_ram(void * address) {
 }
 
 int variant_validate_is_within_flash(void * address) {
-
 	uint32_t addr_value = (uint32_t)address;
 
 	if (addr_value > FLASH_BASE &&

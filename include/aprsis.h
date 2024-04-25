@@ -13,6 +13,7 @@
 #include "gsm/sim800c_tcpip.h"
 #include "ax25.h"
 #include "telemetry.h"
+#include "message.h"
 
 
 typedef enum aprsis_return {
@@ -99,8 +100,11 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
 void aprsis_send_server_comm_counters(const char * callsign_with_ssid);
 void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, uint16_t voltage);
 void aprsis_send_gsm_status(const char * callsign_with_ssid);
+void aprsis_send_ack_for_message(const message_t * const message);
 
+#ifdef UNIT_TEST
 char * aprsis_get_tx_buffer(void);
+#endif
 uint8_t aprsis_get_aprsis_logged(void);
 
 void aprsis_debug_set_simulate_timeout(void);

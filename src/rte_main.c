@@ -17,7 +17,13 @@ uint8_t rte_main_trigger_status = 0;
 
 uint8_t rte_main_trigger_wx_packet = 0;
 
+message_t rte_main_received_message;
+message_source_t rte_main_received_message_source;
+
 #ifdef PARAMETEO
+//!< Trigger preparing and sending ACK
+uint8_t rte_main_trigger_message_ack = 0;
+
 uint8_t rte_main_trigger_gsm_aprsis_counters_packet = 0;
 
 //!< Trigger sending status packet with received APRS is login string

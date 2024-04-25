@@ -22,9 +22,11 @@ typedef struct message_t {
 }message_t;
 
 typedef enum message_source_t {
-	MESSAGE_SOURCE_APRSIS,
-	MESSAGE_SOURCE_RADIO
-
+	MESSAGE_SOURCE_UNINITIALIZED = 0x0,
+	MESSAGE_SOURCE_APRSIS = 0x1,
+	MESSAGE_SOURCE_APRSIS_HEXCNTR = 0x2,
+	MESSAGE_SOURCE_RADIO = 0x11,
+	MESSAGE_SOURCE_RADIO_HEXCNTR = 0x12
 }message_source_t;
 
 /**
@@ -36,7 +38,7 @@ typedef enum message_source_t {
  * @param output parsed APRS message content
  * @return zero if message has been found and decoded, non zero if parsing failed
  */
-uint8_t message_decode_from_aprsis(const uint8_t * const message, const uint16_t message_ln, uint16_t content_position, message_source_t src, message_t * output);
+uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln, uint16_t content_position, message_source_t src, message_t * output);
 
 /**
  *
@@ -44,7 +46,7 @@ uint8_t message_decode_from_aprsis(const uint8_t * const message, const uint16_t
  * @param message
  * @return zero if this is a message to us, non zero otherwise
  */
-uint8_t message_is_for_me(config_data_basic_t * config_data, const message_t * const message);
+uint8_t message_is_for_me(const char * const callsign, const uint8_t ssid, const message_t * const message);
 
 /**
  *
@@ -53,6 +55,6 @@ uint8_t message_is_for_me(config_data_basic_t * config_data, const message_t * c
  * @param message
  * @param src how this message has been received
  */
-void message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src);
+int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src);
 
 #endif /* INCLUDE_APRS_MESSAGE_H_ */
