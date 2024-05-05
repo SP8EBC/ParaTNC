@@ -12,15 +12,13 @@
 #include "stdint.h"
 #include "./stored_configuration_nvm/config_data.h"
 
-#define MESSAGE_MAX_LENGHT	67
+#define MESSAGE_MAX_LENGHT				67
 
-typedef struct message_t {
-	AX25Call from;
-	AX25Call to;
-	uint8_t content[MESSAGE_MAX_LENGHT];
-	uint8_t number;
-}message_t;
+#define MESSAGE_NUMBER_STRING_BUFFER    5   ///!< include room of null terminator
 
+/**
+ * 
+*/
 typedef enum message_source_t {
 	MESSAGE_SOURCE_UNINITIALIZED = 0x0,
 	MESSAGE_SOURCE_APRSIS = 0x1,
@@ -28,6 +26,18 @@ typedef enum message_source_t {
 	MESSAGE_SOURCE_RADIO = 0x11,
 	MESSAGE_SOURCE_RADIO_HEXCNTR = 0x12
 }message_source_t;
+
+/**
+ * 
+*/
+typedef struct message_t {
+	AX25Call from;
+	AX25Call to;
+	uint8_t content[MESSAGE_MAX_LENGHT];
+	uint8_t number;
+	uint8_t number_str[MESSAGE_NUMBER_STRING_BUFFER];		//!< Message sequence number but stored as string not decoded to integer
+	message_source_t source;
+}message_t;
 
 /**
  * Decode received data to look for an APRS message and put it into a structure
@@ -53,8 +63,7 @@ uint8_t message_is_for_me(const char * const callsign, const uint8_t ssid, const
  * @param out_buffer
  * @param out_buffer_ln
  * @param message
- * @param src how this message has been received
  */
-int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src);
+int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message);
 
 #endif /* INCLUDE_APRS_MESSAGE_H_ */

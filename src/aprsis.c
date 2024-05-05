@@ -263,16 +263,13 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 			if (message_position != 0) {
 
 				// prevent overwriting message received from radio channel if it hasn't been serviced yet
-				if (rte_main_received_message_source == MESSAGE_SOURCE_UNINITIALIZED) {
+				if (rte_main_received_message.source == MESSAGE_SOURCE_UNINITIALIZED) {
 
 					// if decoding was successfull
 					if (message_decode(buffer, message_ln, message_position, MESSAGE_SOURCE_APRSIS, &rte_main_received_message) == 0) {
 
 						// check if it is for me
 						if (message_is_for_me(aprsis_callsign, aprsis_ssid, &rte_main_received_message) == 0) {
-							// set a source of this message
-							rte_main_received_message_source = MESSAGE_SOURCE_APRSIS;
-
 							// trigger preparing ACK
 							rte_main_trigger_message_ack = 1;
 						}
@@ -1127,11 +1124,9 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
  * @param message
  */
 void aprsis_send_ack_for_message(const message_t * const message) {
-	aprsis_packet_tx_message_size = message_create_ack_for((uint8_t*)aprsis_packet_tx_buffer, APRSIS_TX_BUFFER_LN - 1, message, MESSAGE_SOURCE_APRSIS);
+	aprsis_packet_tx_message_size = message_create_ack_for((uint8_t*)aprsis_packet_tx_buffer, APRSIS_TX_BUFFER_LN - 1, message);
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
-
- 	rte_main_received_message_source = MESSAGE_SOURCE_UNINITIALIZED;
 
 }
 

@@ -1253,15 +1253,15 @@ int main(int argc, char* argv[]){
 			}
 
 			if (rte_main_trigger_message_ack == 1) {
-				if (rte_main_received_message_source == MESSAGE_SOURCE_APRSIS && gsm_sim800_tcpip_tx_busy() == 0) {
+				if (rte_main_received_message.source == MESSAGE_SOURCE_APRSIS && gsm_sim800_tcpip_tx_busy() == 0) {
 
 					rte_main_trigger_message_ack = 0;
 
 					aprsis_send_ack_for_message(&rte_main_received_message);
 
-					rte_main_received_message_source == MESSAGE_SOURCE_UNINITIALIZED;
+					rte_main_received_message.source = MESSAGE_SOURCE_UNINITIALIZED;
 				}
-				else if (rte_main_received_message_source == MESSAGE_SOURCE_RADIO) {
+				else if (rte_main_received_message.source == MESSAGE_SOURCE_RADIO) {
 
 				}
 

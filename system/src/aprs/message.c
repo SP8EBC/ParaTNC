@@ -20,15 +20,17 @@
 
 #define MESSAGE_SSID_CHARS_LN           2
 
-#define MESSAGE_ATOI_BUFFER             5   ///!< include room of null terminator
-
 #define MESSAGE_SENDER_CALL_SSID_MAXLEN 9
 
 #define MESSAGE_CURRENT_CHAR            *(message + content_position + i)
 
 #define MESSAGE_CURRENT_SENDER_CHAR     *(message + i)
 
-#define MESSAGE_IS_DIGIT(c)             (c >= '0' && c <= '9')
+#define MESSAGE_IS_HEX_DIGIT(c)         ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+
+#define MESSAGE_IS_DIGIT(c)             ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+
+#define MESSAGE_IS_DIGIT_OR_LETTER(c)   ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))    
 
 #define MESSAGE_ACK_REMAINING_BUF       (out_buffer_ln - current_pos)
 
@@ -46,10 +48,6 @@ static const int8_t message_atoi_lookup[] = {   0,  1,  2,  3,  4,  5,  6,  7,  
                                                 -1, -1, -1, -1, -1, -1,
                                                 10, 11, 12, 13, 14, 15};
 
-/**
- * Table used 
-*/
-static char message_atoi_buffer[MESSAGE_ATOI_BUFFER];
 
 /**
  * Convert string with message number to integer, with automatic detection of decimal or hex base. It operates
@@ -61,22 +59,45 @@ static char message_atoi_buffer[MESSAGE_ATOI_BUFFER];
  */
 STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8_t string_ln, message_t * output) {
 
+    // sum to be returned
     uint32_t sum = 0u;
 
+    // temporary buffer
     int8_t conversion_table[6];
 
+    // set to non zero if any digit from A fo F was found in input string
     int8_t is_hex = 0;
 
+    // checck if input string is located in legoit RAM memory
     if (variant_validate_is_within_ram(string) == 1 && string_ln <= 6) {
-        memset(conversion_table, 0x00, string_ln);
 
-        for (int8_t i = string_ln; i >= 0; i--) {
-            const uint8_t index = *(string + i - 1) - 0x30u;
+        // clear intermediate convertion buffer
+        memset(conversion_table, 0x00, 6);
 
-            conversion_table[string_ln - i] = message_atoi_lookup[index];
+        // iterator over conversion_table array
+        int8_t conversion_it = string_ln;
 
-            if (*(string + i) > '9') {
-                is_hex = 1;
+        // iterate from the end of a string
+        for (int8_t string_it = string_ln; string_it >= 0; string_it--) {
+
+            // currently processed character
+        	const uint8_t current_char = *(string + string_it - 1);
+
+            // check if current character is hex or dec base digit
+			if (MESSAGE_IS_DIGIT(current_char)) {
+
+                // calculate index to lookup table basing on current character
+				const uint8_t index = current_char - 0x30u;
+
+                // check lookup table for converting character with a digit to a number
+                conversion_table[string_ln - conversion_it] = message_atoi_lookup[index];
+
+                // decrement an interator
+                conversion_it--;
+
+                if (MESSAGE_IS_HEX_DIGIT(current_char)) {
+                    is_hex = 1;
+                }
             }
         }
 
@@ -100,6 +121,15 @@ STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8
 
     if (variant_validate_is_within_ram(output) == 1) {
         output->number = sum & 0xFFu;
+
+        if (is_hex == 1) {
+            if (output->source == MESSAGE_SOURCE_APRSIS) {
+                output->source = MESSAGE_SOURCE_APRSIS_HEXCNTR;
+            }
+            else if (output->source == MESSAGE_SOURCE_RADIO) {
+                output->source = MESSAGE_SOURCE_RADIO_HEXCNTR;
+            }
+        }
     }
 
     return sum;
@@ -131,7 +161,7 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
         return result;
     }
 
-    memset(message_atoi_buffer, 0x00, MESSAGE_ATOI_BUFFER);
+    memset(output->number_str, 0x00, MESSAGE_NUMBER_STRING_BUFFER);
 
     // if start position of APRS message (position of recipient callsign) has not been provided 
     if ((src == MESSAGE_SOURCE_APRSIS) && (content_position == 0)) {
@@ -205,16 +235,16 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
                 // extract SSID
                 for (; i < MESSAGE_RECIPIENT_FIELD_SIZE; i++) {
                     // copy characters to aux buffer
-                    message_atoi_buffer[result++] = MESSAGE_CURRENT_SENDER_CHAR;
+                    output->number_str[result++] = MESSAGE_CURRENT_SENDER_CHAR;
 
                     // check if there isn't enough characters
-                    if (result == MESSAGE_ATOI_BUFFER) {
+                    if (result == MESSAGE_NUMBER_STRING_BUFFER) {
                         break;
                     }
                 }
 
                 // convert SSID to int
-                output->from.ssid = atoi(message_atoi_buffer);
+                output->from.ssid = atoi(output->number_str);
             }
 
             // clear the iterator, it will be used across this function
@@ -259,19 +289,19 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
             // extract SSID
             for (; i < MESSAGE_RECIPIENT_FIELD_SIZE; i++) {
                 // copy characters to aux buffer
-                message_atoi_buffer[result++] = MESSAGE_CURRENT_CHAR;
+                output->number_str[result++] = MESSAGE_CURRENT_CHAR;
 
                 // check if there isn't enough characters
-                if (result == MESSAGE_ATOI_BUFFER) {
+                if (result == MESSAGE_NUMBER_STRING_BUFFER) {
                     break;
                 }
             }
 
             // convert SSID to int
-            output->to.ssid = atoi(message_atoi_buffer);
+            output->to.ssid = atoi(output->number_str);
         }
         
-        if (result != MESSAGE_ATOI_BUFFER && /* if SSID extraction was OK and end of a buffer hasn't been reached */
+        if (result != MESSAGE_NUMBER_STRING_BUFFER && /* if SSID extraction was OK and end of a buffer hasn't been reached */
         		(
                     (i < MESSAGE_RECIPIENT_FIELD_SIZE) || /* if recipient and callsign has been read before ':' separating from message content */
                     ((i == MESSAGE_RECIPIENT_FIELD_SIZE) && (MESSAGE_CURRENT_CHAR == ':')) /* if a position of separating ':' was reached and ':' is there */
@@ -279,7 +309,7 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
             ) {
 
             // reinitialize buffer before next usage
-            memset(message_atoi_buffer, 0x00, MESSAGE_ATOI_BUFFER);
+            memset(output->number_str, 0x00, MESSAGE_NUMBER_STRING_BUFFER);
 
 			// check if the iterator is set now to position of ':' separating
 			// recipient an the message itself
@@ -310,21 +340,23 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
 
                 // now iterator is set (should be set) on a first digit of message counter
                 // copy everything until first non digit character is found
-                while (MESSAGE_IS_DIGIT(MESSAGE_CURRENT_CHAR)) {
-                    message_atoi_buffer[result++] = MESSAGE_CURRENT_CHAR;
+                while (MESSAGE_IS_DIGIT_OR_LETTER(MESSAGE_CURRENT_CHAR)) {
+                    output->number_str[result++] = MESSAGE_CURRENT_CHAR;
 
                     i++;
 
                     // check if there isn't enough characters
-                    if (result == MESSAGE_ATOI_BUFFER) {
+                    if (result == MESSAGE_NUMBER_STRING_BUFFER) {
                         break;
                     }
                 }
 
-                // convert message counter from string to int
-                output->number = atoi(message_atoi_buffer);
+                output->source = src;
 
-                if (result < MESSAGE_ATOI_BUFFER) {
+                // convert message counter from string to int
+                message_atoi_message_counter(output->number_str, result, output);
+
+                if (result < MESSAGE_NUMBER_STRING_BUFFER) {
                     // new we are done (??)
                     result = 0;
                 }
@@ -366,16 +398,18 @@ uint8_t message_is_for_me(const char * const callsign, const uint8_t ssid, const
  * @param message
  * @param src how this message has been received
  */
-int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message, const message_source_t src)
+int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, const message_t * const message)
 {
     int current_pos = 0;
 
     uint8_t call_position = 0;
 
+    const message_source_t src = message->source;
+
     // clear output buffer
     memset(out_buffer, 0x00, out_buffer_ln);
 
-    if (src == MESSAGE_SOURCE_APRSIS) {
+    if (src == MESSAGE_SOURCE_APRSIS || src == MESSAGE_SOURCE_APRSIS_HEXCNTR) {
         
         // put my callsign
         for (; call_position < 6; call_position++) {
@@ -428,7 +462,8 @@ int message_create_ack_for(uint8_t * out_buffer, const uint16_t out_buffer_ln, c
         current_pos += 9;
 
         // then put 'ackXX' where X is message number
-        current_pos += snprintf(MESSAGE_ACK_CURRENT_POS, MESSAGE_ACK_REMAINING_BUF, ":ack%d\r\n", message->number);
+        current_pos += snprintf(MESSAGE_ACK_CURRENT_POS, MESSAGE_ACK_REMAINING_BUF, ":ack%s\r\n", message->number_str);
+
 
     }
     else {
