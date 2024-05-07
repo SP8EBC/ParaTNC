@@ -25,7 +25,7 @@
 #include <stm32l4xx_ll_crc.h>
 #endif
 
-/**
+/**		EBxx
  * STM32L476RE, 512KB flash mem, last flash memory page
  * 0x0807F800 - 0x0807FFFF; 2 K; Page 383
  *
@@ -36,9 +36,20 @@
  *
  */
 
-#define CONFIG_SECTION_FIRST_START 		0x0801E800
-#define CONFIG_SECTION_SECOND_START		0x0801F000
-#define CONFIG_SECTION_DEFAULT_START	0x0801E000
+/**		ECxx
+ * STM32L476RE, 512KB flash mem, last flash memory page
+ * 0x0807F800 - 0x0807FFFF; 2 K; Page 383
+ *
+ *  __config_section_default_start =    0x08030000;
+    __config_section_first_start = 	    0x08030800;
+    __config_section_second_start =     0x08031000;
+    				__config_section_third_start =      0x0801F800;
+ *
+ */
+
+#define CONFIG_SECTION_FIRST_START 		0x08030800 	//0x0801E800
+#define CONFIG_SECTION_SECOND_START		0x08031000	//0x0801F000
+#define CONFIG_SECTION_DEFAULT_START	0x08030000	//0x0801E000
 
 #define CONFIG_MODE_PGM_CNTR	0x0
 #define CONFIG_MODE_OFSET		0x20			//	Current size: 0x14, free: 0x0C
