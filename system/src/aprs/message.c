@@ -68,7 +68,7 @@ STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8
     // set to non zero if any digit from A fo F was found in input string
     int8_t is_hex = 0;
 
-    // checck if input string is located in legoit RAM memory
+    // checck if input string is located in legit RAM memory
     if (variant_validate_is_within_ram(string) == 1 && string_ln <= 6) {
 
         // clear intermediate convertion buffer
@@ -322,9 +322,12 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
 
             result = 0;
 
+            output->content_ln = 0;
+
             // then copy message, which ends on a counter, something like '{1'
             while(MESSAGE_CURRENT_CHAR != ':' && i + content_position < message_ln) {
                 output->content[result++] = MESSAGE_CURRENT_CHAR;
+                output->content_ln++;
                 i++;
 
                 // break on message counter separator

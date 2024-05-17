@@ -34,6 +34,7 @@ typedef struct message_t {
 	AX25Call from;
 	AX25Call to;
 	uint8_t content[MESSAGE_MAX_LENGHT];
+	uint8_t content_ln;
 	uint8_t number;
 	uint8_t number_str[MESSAGE_NUMBER_STRING_BUFFER];		//!< Message sequence number but stored as string not decoded to integer
 	message_source_t source;

@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "ax25_t.h": "c",
+        "*.tcc": "c",
+        "variant.h": "c",
+        "sim800c_tcpip.h": "c",
+        "rte_main.h": "c",
+        "config_data.h": "c",
+        "random": "c",
+        "message.h": "c"
+    }
+}

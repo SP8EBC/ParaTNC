@@ -79,6 +79,8 @@ typedef enum kiss_communication_aprsmsg_transport_t {
     */
     APRSMSG_TRANSPORT_ERROR_UNSUPPORTED,
 
+    APRSMSG_TRANSPORT_NOT_KISS,
+
     APRSMSG_TRANSPORT_UNINITIALIZED
 
 } kiss_communication_aprsmsg_transport_t;

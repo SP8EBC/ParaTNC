@@ -22,6 +22,10 @@
 
 #define KISS_COMMUNICATION_APRSMSG_GET_CHAR(b)          kiss_communication_aprsmsg_tohexstr_lookup_table[b]
 
+#define KISS_COMMUNICATION_APRSMSG_IS_HEXSTRING(s)      ((*(s) == 'H') && (*(s + 1) == 'S'))
+
+#define KISS_COMMUNICATION_APRSMSG_IS_ENCR_HEXSTRING(s) (*(s) == 'P')
+
 static uint8_t kiss_communication_aprsmsg_lookup_table[] = 
                     {   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 
                         -1, -1, -1, -1, -1, -1, -1,
@@ -44,11 +48,19 @@ static uint8_t kiss_communication_aprsmsg_tohexstr_lookup_table[] =
  */
 kiss_communication_aprsmsg_transport_t kiss_communication_aprsmsg_check_type(uint8_t * message_payload, uint16_t message_payload_ln)
 {
-    kiss_communication_aprsmsg_transport_t out;
+    kiss_communication_aprsmsg_transport_t out = APRSMSG_TRANSPORT_UNINITIALIZED;
 
-    if (variant_validate_is_within_ram(message_payload) == 1 && message_payload_ln > 6) {
-
-    }
+    if (variant_validate_is_within_ram(message_payload) == 1 && message_payload_ln > 6 && message_payload_ln <= 67) {
+        if (KISS_COMMUNICATION_APRSMSG_IS_HEXSTRING(message_payload)) {
+            out = APRSMSG_TRANSPORT_HEXSTRING;
+        }
+        else if (KISS_COMMUNICATION_APRSMSG_IS_ENCR_HEXSTRING(message_payload)) {
+            out = APRSMSG_TRANSPORT_ERROR_UNSUPPORTED;
+        }
+        else {
+            out = APRSMSG_TRANSPORT_NOT_KISS;
+        }
+    }   
 
     return out;
 }
@@ -75,7 +87,7 @@ uint16_t kiss_communication_aprsmsg_decode_hexstring(uint8_t * message_payload, 
     uint8_t ln = 0;
 
     // checck if input string is located in legoit RAM memory
-    if (variant_validate_is_within_ram(message_payload) == 1 && message_payload_ln > 6) {
+    if (variant_validate_is_within_ram(message_payload) == 1 && message_payload_ln > 0) {
 
         // check second time of string begins with 'HS'
         if (KISS_COMMUNICATION_APRSMSG_DEC_CURRENT_CHAR == 'H' && KISS_COMMUNICATION_APRSMSG_DEC_NEXT_CHAR == 'S') {

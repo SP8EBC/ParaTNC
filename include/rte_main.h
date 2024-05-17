@@ -17,6 +17,8 @@
 
 extern message_t rte_main_received_message;
 
+extern message_t rte_main_message_for_transmitting;
+
 //!< Trigger preparing and sending ACK
 extern uint8_t rte_main_trigger_message_ack;
 

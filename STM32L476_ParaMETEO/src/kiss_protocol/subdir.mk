@@ -6,18 +6,21 @@
 C_SRCS += \
 ../src/kiss_protocol/kiss_callback.c \
 ../src/kiss_protocol/kiss_communication.c \
+../src/kiss_protocol/kiss_communication_aprsmsg.c \
 ../src/kiss_protocol/kiss_did.c \
 ../src/kiss_protocol/kiss_nrc_response.c 
 
 OBJS += \
 ./src/kiss_protocol/kiss_callback.o \
 ./src/kiss_protocol/kiss_communication.o \
+./src/kiss_protocol/kiss_communication_aprsmsg.o \
 ./src/kiss_protocol/kiss_did.o \
 ./src/kiss_protocol/kiss_nrc_response.o 
 
 C_DEPS += \
 ./src/kiss_protocol/kiss_callback.d \
 ./src/kiss_protocol/kiss_communication.d \
+./src/kiss_protocol/kiss_communication_aprsmsg.d \
 ./src/kiss_protocol/kiss_did.d \
 ./src/kiss_protocol/kiss_nrc_response.d 
 

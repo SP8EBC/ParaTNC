@@ -18,6 +18,8 @@
 #include <stored_configuration_nvm/config_data_externs.h>
 #include <stored_configuration_nvm/configuration_handler.h>
 
+#include "variant.h"
+
 extern unsigned short tx10m;
 
 /**
@@ -112,7 +114,7 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 
 	int32_t output = 0;
 
-	if (input_frame_from_host == 0x00 || ax25 == 0x00 || a == 0x00) {
+	if (variant_validate_is_within_ram(input_frame_from_host) == 0x00) {
 		output = -2;
 	}
 	else if (input_len >= OWN_APRS_MSG_LN) {
@@ -132,33 +134,35 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 		switch (frame_type) {
 
 			case KISS_DATA: {
-				memset(FrameBuff, 0x00, OWN_APRS_MSG_LN);
+				if (variant_validate_is_within_ram(ax25) && variant_validate_is_within_ram(a)) {
+					memset(FrameBuff, 0x00, OWN_APRS_MSG_LN);
 
-				// if this is data frame
-				for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
-					if (*(input_frame_from_host+i) == FESC) {
-						if(*(input_frame_from_host+i+1) == TFEND)
-							FrameBuff[j]=FEND;
-						else if(*(input_frame_from_host+i+1) == TFESC)
-							FrameBuff[j]=FESC;
-						else {
-							;
+					// if this is data frame
+					for (i=2, j=0; (i<input_len && *(input_frame_from_host+i) != FEND); i++, j++) {
+						if (*(input_frame_from_host+i) == FESC) {
+							if(*(input_frame_from_host+i+1) == TFEND)
+								FrameBuff[j]=FEND;
+							else if(*(input_frame_from_host+i+1) == TFESC)
+								FrameBuff[j]=FESC;
+							else {
+								;
+							}
+							i++;
 						}
-						i++;
+						else
+							FrameBuff[j] = *(input_frame_from_host+i);
 					}
-					else
-						FrameBuff[j] = *(input_frame_from_host+i);
+
+					tx10m++;
+
+					// keep this commented until reseting the DCD variable will be moved outside main for (;;) loop
+					//	while(ax25->dcd == true);
+					while(a->sending == true);
+
+
+					ax25_sendRaw(ax25,FrameBuff,j);
+					afsk_txStart(a);
 				}
-
-				tx10m++;
-
-				// keep this commented until reseting the DCD variable will be moved outside main for (;;) loop
-				//	while(ax25->dcd == true);
-				while(a->sending == true);
-
-
-				ax25_sendRaw(ax25,FrameBuff,j);
-				afsk_txStart(a);
 			} break;
 
 			case KISS_GET_RUNNING_CONFIG: {

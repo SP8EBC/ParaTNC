@@ -94,6 +94,7 @@
 #include "drivers/dallas.h"
 
 #include <kiss_communication/kiss_communication.h>
+#include <kiss_communication/kiss_communication_aprsmsg.h>
 #include <etc/kiss_configuation.h>
 
 #include <etc/dallas_temperature_limits.h>
@@ -194,27 +195,27 @@ int32_t main_ten_second_pool_timer = 10000;
 int8_t main_one_hour_pool_timer = 60;
 
 //! serial context for UART used to KISS
-srl_context_t main_kiss_srl_ctx;
+static srl_context_t main_kiss_srl_ctx;
 
 //! serial context for UART used for comm with wx sensors
-srl_context_t main_wx_srl_ctx;
+static srl_context_t main_wx_srl_ctx;
 
 #if defined(PARAMETEO)
 //! serial context for communication with GSM module
-srl_context_t main_gsm_srl_ctx;
+static srl_context_t main_gsm_srl_ctx;
 #endif
 
 //! operation mode of USART1 (RS232 on RJ45 socket)
-main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
+static main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
 
 //! operation mode of USART2 (RS485)
-main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
+static main_usart_mode_t main_usart2_wx_mode = USART_MODE_UNDEF;
 
 //! function configuration for left button on ParaMETEO
-configuration_button_function_t main_button_one_left;
+static configuration_button_function_t main_button_one_left;
 
 //! function configuration for right button on ParaMETEO
-configuration_button_function_t main_button_two_right;
+static configuration_button_function_t main_button_two_right;
 
 //! a pointer to KISS context
 srl_context_t* main_kiss_srl_ctx_ptr;
@@ -256,6 +257,21 @@ char main_string_longitude[9];
 char main_callsign_with_ssid[10];
 
 uint8_t main_small_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
+#if defined(PARAMETEO)
+
+//! Lenght of a buffer for KISS diagnostic request
+#define MAIN_KISS_FROM_MESSAGE_LEN		33
+
+//! KISS (diagnostic) request decoded from APRS message
+static uint8_t main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
+
+static uint8_t main_kiss_from_message_ln = 0;
+
+//! binary response to DID request from APRS message
+static uint8_t main_kiss_response_message[32];
+
+static uint8_t main_kiss_response_message_ln = 0;
+#endif
 
 char main_symbol_f = '/';
 char main_symbol_s = '#';
@@ -1252,14 +1268,54 @@ int main(int argc, char* argv[]){
 				gsm_sim800_tx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
 			}
 
+			// if message ACK has been scheduled
 			if (rte_main_trigger_message_ack == 1) {
-				if (rte_main_received_message.source == MESSAGE_SOURCE_APRSIS && gsm_sim800_tcpip_tx_busy() == 0) {
+				// if TCP/IP connection is not busy and received message comes from APRS-IS
+				if ((rte_main_received_message.source == MESSAGE_SOURCE_APRSIS || rte_main_received_message.source == MESSAGE_SOURCE_APRSIS_HEXCNTR)
+						&& gsm_sim800_tcpip_tx_busy() == 0) {
 
+					// clear ACK request
 					rte_main_trigger_message_ack = 0;
 
+					// create and send ACK for this message
 					aprsis_send_ack_for_message(&rte_main_received_message);
 
 					rte_main_received_message.source = MESSAGE_SOURCE_UNINITIALIZED;
+
+					// decode message, do it after ACK is scheduled to be sure about right sequence
+					const kiss_communication_aprsmsg_transport_t type = kiss_communication_aprsmsg_check_type(rte_main_received_message.content, MESSAGE_MAX_LENGHT);
+
+					// decode HEXSTRING
+					if (type == APRSMSG_TRANSPORT_HEXSTRING) {
+						main_kiss_from_message_ln = kiss_communication_aprsmsg_decode_hexstring(rte_main_received_message.content, rte_main_received_message.content_ln, main_kiss_from_message + 1, MAIN_KISS_FROM_MESSAGE_LEN - 1);
+					}
+					else {
+						// zero message lenght if message cannot be decoded for some reason
+						main_kiss_from_message_ln = 0;
+					}
+
+					// if KISS request has been parsed from APRS message
+					if (main_kiss_from_message_ln != 0) {
+						// put artificial FEND at the begining of a buffer to make it compatible with 'kiss_parse_received'
+						*(main_kiss_from_message) = FEND;
+
+						// parse KISS request
+						const uint8_t kiss_response_message_ln = kiss_parse_received(main_kiss_from_message, main_kiss_from_message_ln, NULL, NULL, main_kiss_response_message, MAIN_KISS_FROM_MESSAGE_LEN);
+
+						// if a response was generated
+						if (kiss_response_message_ln > 0) {
+							// check if a beginning and an end of generated response contains FEND.
+							if ((*(main_kiss_response_message) == FEND) && (*(main_kiss_response_message + kiss_response_message_ln - 1) == FEND)) {
+								// if yes encode the response w/o them
+								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message + 1, kiss_response_message_ln - 2, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
+							}
+							else {
+								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message, kiss_response_message_ln, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
+							}
+						}
+
+					}
+
 				}
 				else if (rte_main_received_message.source == MESSAGE_SOURCE_RADIO) {
 
