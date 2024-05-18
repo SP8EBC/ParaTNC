@@ -51,6 +51,7 @@ inline uint32_t backup_reg_get_monitor(void) {
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_IGATE			(1U << 4U)
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_CNTRS			(1U << 5U)
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_LOGINSTRING	(1U << 6U)
+#define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER			(1U << 7U)
 
 uint32_t backup_reg_get_configuration(void);
 void  backup_reg_set_configuration(uint32_t value);

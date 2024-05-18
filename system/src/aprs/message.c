@@ -22,6 +22,10 @@
 
 #define MESSAGE_SENDER_CALL_SSID_MAXLEN 9
 
+#define MESSAGE_COUNTER_MAXLEN          4
+
+#define MESSAGE_MINIMUM_SENSEFUL_LN     (MESSAGE_SENDER_CALL_SSID_MAXLEN + MESSAGE_RECIPIENT_FIELD_SIZE + MESSAGE_COUNTER_MAXLEN)
+
 #define MESSAGE_CURRENT_CHAR            *(message + content_position + i)
 
 #define MESSAGE_CURRENT_SENDER_CHAR     *(message + i)
@@ -35,6 +39,8 @@
 #define MESSAGE_ACK_REMAINING_BUF       (out_buffer_ln - current_pos)
 
 #define MESSAGE_ACK_CURRENT_POS         (char*)(out_buffer + current_pos)
+
+static uint8_t message_tx_msg_couter = 0;
 
 /**
  * Lookup table used to string-to-int conversion for HEX strings. Value of 0x30 should be
@@ -57,7 +63,8 @@ static const int8_t message_atoi_lookup[] = {   0,  1,  2,  3,  4,  5,  6,  7,  
  * @param output optional pointer to message structure when output will be also put
  * @return unsigned integer with decoded number
  */
-STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8_t string_ln, message_t * output) {
+STATIC uint32_t message_atoi_message_counter(const uint8_t const * string, uint8_t string_ln, message_t * output) 
+{
 
     // sum to be returned
     uint32_t sum = 0u;
@@ -374,6 +381,92 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
     }
 
     return result;
+}
+
+/**
+ *
+ * @param input
+ * @param output
+ * @param output_ln
+ * @param encode_for
+ * @return
+ */
+uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln, message_source_t encode_for) 
+{
+    uint16_t current_pos = 0;
+
+    uint8_t recipient_pos = 0;
+
+    if( variant_validate_is_within_ram(input) && 
+        variant_validate_is_within_ram(output) && 
+        output_ln > (MESSAGE_MINIMUM_SENSEFUL_LN + input->content_ln)) {
+        
+        // check the lenght of sender (from) callsign
+        const uint8_t from_call_ln = (input->from.call[5] != 0x00) ? 6 : strlen(input->from.call);
+
+        // check the lenght of recipient (to) callsign
+        const uint8_t to_call_ln = (input->to.call[5] != 0x00) ? 6 : strlen(input->from.call);
+
+        if (encode_for == MESSAGE_SOURCE_APRSIS) {
+            // put my callsign
+            memcpy(output, input->from.call, from_call_ln);
+            current_pos += from_call_ln;
+
+            // check if SSID is set
+            if (input->from.ssid > 0 && input->from.ssid < 16) {
+                current_pos += sprintf(output + current_pos, "-%d>AKLPRZ:", input->from.ssid);
+            }
+            else {
+                current_pos += sprintf(output + current_pos, ">AKLPRZ:");
+            }
+        }
+
+        *(output + current_pos) = ':';
+        current_pos++;
+
+        // put recipient callsign
+        memcpy(output + current_pos, input->to.call, to_call_ln);
+        recipient_pos = to_call_ln;
+
+        // and optional SSID
+        if (input->to.ssid > 0 && input->to.ssid < 16) {
+            recipient_pos += sprintf(output + current_pos + recipient_pos, "-%d", input->to.ssid);
+        }
+        else {
+            ;            
+        }
+
+        current_pos += recipient_pos;
+
+        // check how many characters were put and if padding needs to be applied
+        while (recipient_pos < MESSAGE_RECIPIENT_FIELD_SIZE) {
+            *(output + current_pos) = ' ';
+            current_pos++;
+            recipient_pos++;
+        }
+
+        if (current_pos + input->content_ln  < output_ln) {
+            // put message content itself
+            current_pos += sprintf(output + current_pos, ":%s", input->content);
+
+            // put message counter
+            if (current_pos + MESSAGE_COUNTER_MAXLEN < output_ln) {
+                current_pos += sprintf(output + current_pos, "{%x}", message_tx_msg_couter);
+                message_tx_msg_couter++;
+
+                *(output + current_pos) = 0x00;
+            }
+            else {
+                current_pos = 0;
+            }
+        }
+        else {
+            current_pos = 0;
+        }
+
+    }
+
+    return current_pos;
 }
 
 /**

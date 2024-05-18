@@ -1130,6 +1130,35 @@ void aprsis_send_ack_for_message(const message_t * const message) {
 
 }
 
+/**
+ *
+ * @param message pointer to string buffer with a message to send to APRS-IS
+ * @param ln lenght of a string (not size of a buffer!!)
+ */
+void aprsis_send_any_string_buffer(const char * const message, const uint16_t ln) {
+
+	if (aprsis_logged == 0 || ln == 0) {
+		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER);
+	}
+
+	// copy input message to intermediate message buffer
+	strcpy(aprsis_packet_tx_buffer, message);
+
+	*(aprsis_packet_tx_buffer + ln) = '\r';
+	*(aprsis_packet_tx_buffer + ln + 1) = '\n';
+	*(aprsis_packet_tx_buffer + ln + 2) = 0x00;
+	*(aprsis_packet_tx_buffer + ln + 3) = 0x00;
+
+	aprsis_packet_tx_message_size = ln + 2;
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+}
+
 #ifdef UNIT_TEST
 char * aprsis_get_tx_buffer(void) {
 	return aprsis_packet_tx_buffer;

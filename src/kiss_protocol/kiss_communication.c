@@ -115,13 +115,13 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 	int32_t output = 0;
 
 	if (variant_validate_is_within_ram(input_frame_from_host) == 0x00) {
-		output = -2;
+		output = KISS_COMM_RESULT_WRONG_POINTER;
 	}
 	else if (input_len >= OWN_APRS_MSG_LN) {
-		output = -1;
+		output = KISS_COMM_RESULT_INPUT_TOO_LONG;
 	}
 	else if (*(input_frame_from_host) != FEND) {
-		output = -1;
+		output = KISS_COMM_RESULT_MISSING_PREFIX;
 	}
 	else {
 
@@ -192,7 +192,7 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 
 			default: {
 				// unknown service
-				output = -3;
+				output = KISS_COMM_RESULT_UNKNOWN_DIAG_SERV;
 			}
 		}
 	}

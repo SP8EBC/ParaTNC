@@ -224,7 +224,7 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 	/**
 	 * Response frame structure
 	 *
-	 * FEND, KISS_READ_DID_RESP, DID_lsb, DID_msb, size_byte, DATA (...), FEND
+	 * FEND, NONSTANDARD, RESPONSE_SIZE, KISS_READ_DID_RESP, DID_lsb, DID_msb, size_byte, DATA (...), FEND
 	 */
 
 	int32_t out = 0;

@@ -102,6 +102,8 @@ void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, ui
 void aprsis_send_gsm_status(const char * callsign_with_ssid);
 void aprsis_send_ack_for_message(const message_t * const message);
 
+void aprsis_send_any_string_buffer(const char * const message, const uint16_t ln);
+
 #ifdef UNIT_TEST
 char * aprsis_get_tx_buffer(void);
 #endif

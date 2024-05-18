@@ -23,10 +23,12 @@ message_t rte_main_received_message;
 //!< message to be send via APRS-IS or RF radio network
 message_t rte_main_message_for_transmitting;
 
-#ifdef PARAMETEO
-//!< Trigger preparing and sending ACK
+//!< Trigger message ACK preparing and sending
 uint8_t rte_main_trigger_message_ack = 0;
 
+uint8_t rte_main_trigger_send_message = 0;
+
+#ifdef PARAMETEO
 uint8_t rte_main_trigger_gsm_aprsis_counters_packet = 0;
 
 //!< Trigger sending status packet with received APRS is login string

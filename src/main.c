@@ -277,7 +277,7 @@ char main_symbol_f = '/';
 char main_symbol_s = '#';
 
 //! global variable used to store return value from various functions
-volatile uint8_t retval = 100;
+volatile int retval = 100;
 
 uint16_t buffer_len = 0;
 
@@ -336,6 +336,20 @@ const char * post_content = "{\
   \"rte_main_last_sleep_master_time\": 9}";
 
 //#define SERIAL_TX_TEST_MODE
+
+static void main_set_ax25_my_callsign(AX25Call * call) {
+	if (variant_validate_is_within_ram(call)) {
+		strncpy(call->call, main_config_data_basic->callsign, 6);
+		call->ssid = main_config_data_basic->ssid;
+	}
+}
+
+static void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
+	if (variant_validate_is_within_ram(to)) {
+		strncpy(to->call, from->call, 6);
+		to->ssid = from->ssid;
+	}
+}
 
 int main(int argc, char* argv[]){
 
@@ -1299,19 +1313,31 @@ int main(int argc, char* argv[]){
 						// put artificial FEND at the begining of a buffer to make it compatible with 'kiss_parse_received'
 						*(main_kiss_from_message) = FEND;
 
+#define KISS_RESPONSE_MESSAGE_LN retval
+
 						// parse KISS request
-						const uint8_t kiss_response_message_ln = kiss_parse_received(main_kiss_from_message, main_kiss_from_message_ln, NULL, NULL, main_kiss_response_message, MAIN_KISS_FROM_MESSAGE_LEN);
+						KISS_RESPONSE_MESSAGE_LN = kiss_parse_received(main_kiss_from_message, main_kiss_from_message_ln, NULL, NULL, main_kiss_response_message, MAIN_KISS_FROM_MESSAGE_LEN);
 
 						// if a response was generated
-						if (kiss_response_message_ln > 0) {
+						if (retval > 0) {
 							// check if a beginning and an end of generated response contains FEND.
-							if ((*(main_kiss_response_message) == FEND) && (*(main_kiss_response_message + kiss_response_message_ln - 1) == FEND)) {
+							if ((*(main_kiss_response_message) == FEND) && (*(main_kiss_response_message + 1) == NONSTANDARD) && (*(main_kiss_response_message + KISS_RESPONSE_MESSAGE_LN - 1) == FEND)) {
 								// if yes encode the response w/o them
-								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message + 1, kiss_response_message_ln - 2, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
+								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message + 2, KISS_RESPONSE_MESSAGE_LN - 3, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
 							}
 							else {
-								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message, kiss_response_message_ln, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
+								// if response doesn't contain FEND at the begining and the end just
+								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message, KISS_RESPONSE_MESSAGE_LN, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
 							}
+
+							// put source and destination callsign
+							main_set_ax25_my_callsign(&rte_main_message_for_transmitting.from);
+							main_copy_ax25_call(&rte_main_message_for_transmitting.to, &rte_main_received_message.from);
+
+							rte_main_message_for_transmitting.source = MESSAGE_SOURCE_APRSIS;
+
+							// response is done, trigger sending it
+							rte_main_trigger_send_message = 1;
 						}
 
 					}
@@ -1323,59 +1349,65 @@ int main(int argc, char* argv[]){
 
 			}
 
-			if (rte_main_trigger_gsm_status == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_status = 0;
+			if (gsm_sim800_tcpip_tx_busy() == 0) {
+				if (rte_main_trigger_send_message == 1 && rte_main_message_for_transmitting.source == MESSAGE_SOURCE_APRSIS) {
+					rte_main_trigger_send_message = 0;
 
-				aprsis_send_gsm_status((const char *)&main_callsign_with_ssid);
-			}
+					retval = message_encode(&rte_main_message_for_transmitting, (uint8_t*)main_own_aprs_msg, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
 
-			// if GSM status message is triggered and GSM module is not busy transmitting something else
-			if (rte_main_trigger_gsm_aprsis_counters_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_aprsis_counters_packet = 0;
+					aprsis_send_any_string_buffer(main_own_aprs_msg, retval);
+				}
+				else if (rte_main_trigger_gsm_status == 1) {
+					rte_main_trigger_gsm_status = 0;
 
-				aprsis_send_server_comm_counters((const char *)&main_callsign_with_ssid);
-			}
+					aprsis_send_gsm_status((const char *)&main_callsign_with_ssid);
+				}
+				// if GSM status message is triggered and GSM module is not busy transmitting something else
+				else if (rte_main_trigger_gsm_aprsis_counters_packet == 1) {
+					rte_main_trigger_gsm_aprsis_counters_packet = 0;
 
-			// if loginstring packet (APRS status packet with loginstring received from a server)
-			// is triggered and GSM module is not busy
-			if (rte_main_trigger_gsm_loginstring_packet == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_loginstring_packet = 0;
+					aprsis_send_server_comm_counters((const char *)&main_callsign_with_ssid);
+				}
+				// if loginstring packet (APRS status packet with loginstring received from a server)
+				// is triggered and GSM module is not busy
+				else if (rte_main_trigger_gsm_loginstring_packet == 1) {
+					rte_main_trigger_gsm_loginstring_packet = 0;
 
-				aprsis_send_loginstring((const char *)&main_callsign_with_ssid, system_is_rtc_ok(), rte_main_battery_voltage);
-			}
+					aprsis_send_loginstring((const char *)&main_callsign_with_ssid, system_is_rtc_ok(), rte_main_battery_voltage);
+				}
+				// if telemetry packet is triggerend
+				else if (rte_main_trigger_gsm_telemetry_values == 1) {
+					rte_main_trigger_gsm_telemetry_values = 0;
 
-			if (rte_main_trigger_gsm_telemetry_values == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-				rte_main_trigger_gsm_telemetry_values = 0;
+					aprsis_send_telemetry(1u, (const char *)&main_callsign_with_ssid);
+				}
+				else if (rte_main_trigger_gsm_telemetry_descriptions == 1) {
 
-				aprsis_send_telemetry(1u, (const char *)&main_callsign_with_ssid);
-			}
-
-			if (rte_main_trigger_gsm_telemetry_descriptions == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-
-				// check if this ought to be first telemetry description in sequence
-				if (main_telemetry_description == TELEMETRY_NOTHING) {
-					// if yes check if victron telemetry is enabled
-					if (main_config_data_mode->victron != 0) {
-						// set the first packet accordingly
-						main_telemetry_description = TELEMETRY_PV_PARM;
+					// check if this ought to be first telemetry description in sequence
+					if (main_telemetry_description == TELEMETRY_NOTHING) {
+						// if yes check if victron telemetry is enabled
+						if (main_config_data_mode->victron != 0) {
+							// set the first packet accordingly
+							main_telemetry_description = TELEMETRY_PV_PARM;
+						}
+						else if (main_config_data_mode->digi_viscous != 0) {
+							main_telemetry_description = TELEMETRY_VISCOUS_PARAM;
+						}
+						else {
+							main_telemetry_description = TELEMETRY_NORMAL_PARAM;
+						}
 					}
-					else if (main_config_data_mode->digi_viscous != 0) {
-						main_telemetry_description = TELEMETRY_VISCOUS_PARAM;
-					}
-					else {
-						main_telemetry_description = TELEMETRY_NORMAL_PARAM;
+
+					// assemble and sent a telemetry description packet
+					main_telemetry_description = aprsis_send_description_telemetry(1u, main_telemetry_description, main_config_data_basic, main_config_data_mode, (const char *)&main_callsign_with_ssid);
+
+					// if there is nothing to send
+					if (main_telemetry_description == TELEMETRY_NOTHING) {
+						rte_main_trigger_gsm_telemetry_descriptions = 0;
 					}
 				}
 
-				// assemble and sent a telemetry description packet
-				main_telemetry_description = aprsis_send_description_telemetry(1u, main_telemetry_description, main_config_data_basic, main_config_data_mode, (const char *)&main_callsign_with_ssid);
-
-				// if there is nothing to send
-				if (main_telemetry_description == TELEMETRY_NOTHING) {
-					rte_main_trigger_gsm_telemetry_descriptions = 0;
-				}
 			}
-
 		}
 #endif
 

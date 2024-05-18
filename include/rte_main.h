@@ -22,6 +22,8 @@ extern message_t rte_main_message_for_transmitting;
 //!< Trigger preparing and sending ACK
 extern uint8_t rte_main_trigger_message_ack;
 
+extern uint8_t rte_main_trigger_send_message;
+
 extern uint8_t rte_main_trigger_gsm_aprsis_counters_packet;
 
 extern uint8_t rte_main_trigger_gsm_loginstring_packet;

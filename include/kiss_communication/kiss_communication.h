@@ -25,6 +25,10 @@
 
 	#define NONSTANDARD	(uint8_t)0x0F
 
+#define KISS_COMM_RESULT_MISSING_PREFIX		-1
+#define KISS_COMM_RESULT_WRONG_POINTER		-2
+#define KISS_COMM_RESULT_INPUT_TOO_LONG		-3
+#define KISS_COMM_RESULT_UNKNOWN_DIAG_SERV	-4
 
 
 extern uint8_t kiss_current_async_message;

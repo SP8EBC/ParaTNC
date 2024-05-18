@@ -53,6 +53,16 @@ uint8_t message_decode(const uint8_t * const message, const uint16_t message_ln,
 
 /**
  *
+ * @param input
+ * @param output
+ * @param output_ln
+ * @param encode_for
+ * @return
+ */
+uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln, message_source_t encode_for);
+
+/**
+ *
  * @param config_data
  * @param message
  * @return zero if this is a message to us, non zero otherwise
