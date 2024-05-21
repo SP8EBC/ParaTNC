@@ -28,6 +28,12 @@ extern unsigned short tx10m;
  */
 uint8_t kiss_current_async_message = 0xFF;
 
+/**
+ *
+ * @param output
+ * @param output_len
+ * @return
+ */
 uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 
 	int16_t pooling_result = 0;
@@ -62,6 +68,14 @@ uint8_t kiss_async_pooler(uint8_t* output, uint16_t output_len ) {
 	return out;
 }
 
+/**
+ *
+ * @param input_frame
+ * @param input_frame_len
+ * @param output
+ * @param output_len
+ * @return
+ */
 int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, uint8_t* output, uint16_t output_len) {
 	#define FEND	(uint8_t)0xC0
 	#define FESC	(uint8_t)0xDB
@@ -107,6 +121,16 @@ int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, u
  * Function responsible for parsing a KISS message send by a host PC to the controller. If the frame contains
  * some diagnostics request or configuration (NOT regular KISS data with frame to be transmitted), this function
  * might generate a response
+ */
+/**
+ *
+ * @param input_frame_from_host
+ * @param input_len
+ * @param ax25
+ * @param a
+ * @param response_buffer
+ * @param resp_buf_ln
+ * @return
  */
 int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a, uint8_t * response_buffer, uint16_t resp_buf_ln ) {
 	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
@@ -201,7 +225,12 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 	return output;
 }
 
-
+/**
+ *
+ * @param output
+ * @param output_len
+ * @param current_len
+ */
 void kiss_reset_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
 	memset(output, 0x00, sizeof(output_len));
 
@@ -255,6 +284,15 @@ uint8_t kiss_put_char(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t*
 	return 0;
 }
 
+/**
+ *
+ * @param c
+ * @param output
+ * @param output_len
+ * @param current_len
+ * @param crc
+ * @return
+ */
 uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
 	uint16_t new_crc = 0;
 	uint16_t curr_ln = *current_len;
@@ -279,6 +317,15 @@ uint8_t kiss_put_char_nocheck(uint8_t c, uint8_t* output, uint16_t output_len, u
 	return 0;
 }
 
+/**
+ *
+ * @param addr
+ * @param is_last
+ * @param output
+ * @param output_len
+ * @param current_len
+ * @param crc
+ */
 void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint16_t output_len, uint16_t* current_len, uint16_t* crc) {
 
 	uint16_t i;
@@ -305,6 +352,12 @@ void kiss_put_call(const AX25Call *addr, uint8_t is_last, uint8_t* output, uint1
 
 }
 
+/**
+ *
+ * @param output
+ * @param output_len
+ * @param current_len
+ */
 void kiss_finalize_buffer(uint8_t* output, uint16_t output_len, uint16_t* current_len) {
 
 	uint16_t ln = *current_len;

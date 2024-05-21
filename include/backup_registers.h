@@ -95,6 +95,8 @@ void backup_reg_increment_weather_measurements_check_reset(void);
 void backup_reg_increment_dallas_degraded_reset(void);
 void backup_reg_increment_is_rtc_ok_check_reset(void);
 
+uint32_t backup_reg_get_register_reset_check_fail(void);
+
 void backup_assert(uint32_t assert);
 
 

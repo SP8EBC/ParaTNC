@@ -1319,7 +1319,7 @@ int main(int argc, char* argv[]){
 						KISS_RESPONSE_MESSAGE_LN = kiss_parse_received(main_kiss_from_message, main_kiss_from_message_ln, NULL, NULL, main_kiss_response_message, MAIN_KISS_FROM_MESSAGE_LEN);
 
 						// if a response was generated
-						if (retval > 0) {
+						if (KISS_RESPONSE_MESSAGE_LN > 0) {
 							// check if a beginning and an end of generated response contains FEND.
 							if ((*(main_kiss_response_message) == FEND) && (*(main_kiss_response_message + 1) == NONSTANDARD) && (*(main_kiss_response_message + KISS_RESPONSE_MESSAGE_LN - 1) == FEND)) {
 								// if yes encode the response w/o them
@@ -1329,6 +1329,20 @@ int main(int argc, char* argv[]){
 								// if response doesn't contain FEND at the begining and the end just
 								rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message, KISS_RESPONSE_MESSAGE_LN, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
 							}
+
+							// put source and destination callsign
+							main_set_ax25_my_callsign(&rte_main_message_for_transmitting.from);
+							main_copy_ax25_call(&rte_main_message_for_transmitting.to, &rte_main_received_message.from);
+
+							rte_main_message_for_transmitting.source = MESSAGE_SOURCE_APRSIS;
+
+							// response is done, trigger sending it
+							rte_main_trigger_send_message = 1;
+						}
+						else if (KISS_RESPONSE_MESSAGE_LN == KISS_COMM_RESULT_UNKNOWN_DIAG_SERV) {
+							kiss_nrc_response_fill_unknown_service(main_kiss_response_message);
+
+							rte_main_message_for_transmitting.content_ln = kiss_communication_aprsmsg_encode_hexstring(main_kiss_response_message + 2, KISS_RESPONSE_MESSAGE_LN - 3, rte_main_message_for_transmitting.content, MESSAGE_MAX_LENGHT);
 
 							// put source and destination callsign
 							main_set_ax25_my_callsign(&rte_main_message_for_transmitting.from);

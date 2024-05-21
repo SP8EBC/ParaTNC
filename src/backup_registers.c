@@ -699,6 +699,13 @@ void backup_reg_increment_is_rtc_ok_check_reset(void) {
 #endif
 }
 
+uint32_t backup_reg_get_register_reset_check_fail(void)
+{
+#ifdef PARAMETEO
+	return REGISTER_RESET_CHECK_FAIL;
+#endif
+}
+
 void backup_assert(uint32_t assert) {
 #ifdef PARAMETEO
 	backup_reg_unclock();
