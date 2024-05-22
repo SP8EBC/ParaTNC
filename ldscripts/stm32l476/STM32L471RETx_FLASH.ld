@@ -153,8 +153,8 @@ SECTIONS
   {
     . = ALIGN(8);
     _sdata = .;        /* create a global symbol at data start */
-    *(.data)           /* .data sections */
-    *(.data*)          /* .data* sections */
+    EXCLUDE_FILE(*rte_wx.o *rte_main.o *rte_rtu.o) *(.data)           /* .data sections */
+    EXCLUDE_FILE(*rte_wx.o *rte_main.o *rte_rtu.o) *(.data*)          /* .data* sections */
 
     . = ALIGN(8);
     _edata = .;        /* define a global symbol at data end */
@@ -168,14 +168,51 @@ SECTIONS
     /* This is used by the startup in order to initialize the .bss secion */
     _sbss = .;         /* define a global symbol at bss start */
     __bss_start__ = _sbss;
-    *(.bss)
-    *(.bss*)
-    *(COMMON)
+    EXCLUDE_FILE(*rte_wx.o *rte_main.o *rte_rtu.o) *(.bss)
+    EXCLUDE_FILE(*rte_wx.o *rte_main.o *rte_rtu.o) *(.bss*)
+    EXCLUDE_FILE(*rte_wx.o *rte_main.o *rte_rtu.o) *(COMMON)
 
     . = ALIGN(4);
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
   } >RAM
+
+
+  .rte_bss : 
+  {
+    _s_rte_bss = .;         /* define a global symbol at bss start */
+    __bss_rte_start__ = _s_rte_bss;
+  	. = ALIGN(4);
+  	KEEP(*rte_wx.o (.bss))
+  	KEEP(*rte_wx.o (.bss*))
+  	KEEP(*rte_wx.o (COMMON))
+  	KEEP(*rte_main.o (.bss))
+  	KEEP(*rte_main.o (.bss*))
+  	KEEP(*rte_main.o (COMMON))
+  	KEEP(*rte_rtu.o (.bss))
+  	KEEP(*rte_rtu.o (.bss*))
+  	KEEP(*rte_rtu.o (COMMON))
+   	. = ALIGN(4);
+    _e_rte_bss = .;         /* define a global symbol at bss start */
+    __bss_rte_end__ = _e_rte_bss;
+  } >RAM2
+  
+	/* used by the startup to initialize data */
+  _si_rte_data = LOADADDR(.rte_data);
+  
+  .rte_data :
+  {
+  	_s_rte_data = .;        /* create a global symbol at data start */
+  	. = ALIGN(8);
+  	KEEP(*rte_wx.o (.data))
+  	KEEP(*rte_wx.o (.data*))
+  	KEEP(*rte_main.o (.data))
+  	KEEP(*rte_main.o (.data*))
+  	KEEP(*rte_rtu.o (.data))
+  	KEEP(*rte_rtu.o (.data*))
+   	. = ALIGN(8);  
+  	_e_rte_data = .;        /* create a global symbol at data start */
+  } >RAM2 AT> FLASH
 
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :

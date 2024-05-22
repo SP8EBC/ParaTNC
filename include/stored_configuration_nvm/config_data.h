@@ -199,19 +199,30 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	#define CONFIGURATION_SEC_MEDIUM_KISS	4U
 	/**
 	 * Configuration of how UDS diagnostics are secured access different
-	 * mediums. GET_VERSION_AND_ID and SECURITY_ACCESS are never locked
+	 * mediums. GET_VERSION_AND_ID and SECURITY_ACCESS are never locked.
+	 * If the service shall not(!!) be locked respective bit should be set to 0.
+	 * By default, when memory is fully erased everything is locked
 	 *
-	 * 	READ_DID and READ_MEMORY
-	 * bit 1 - APRSIS
-	 * bit 2 - RF network communication
-	 * bit 3 - KISS serial port communication
+	 * Serial Port
+	 *  0 -	Read DID
+	 *  1 - Read Memory (log and
+	 *  2 -
 	 *
-	 *  everything else
-	 * bit 4 - APRSIS
-	 * bit 5 - RF network communication
-	 * bit 6 - KISS serial port communication
+	 *
+	 *  13 -
+	 *
+	 * APRS Message (Radio network or APRS-IS server)
+	 *
+	 *  16 -
+	 *  17 -
+	 *
+	 *	29 -
+	 *
+	 * Common
+	 *	30 - Unlock all services by default when accessed via APRSMSG_TRANSPORT_ENCRYPTED_HEXSTRING
+	 *	31 -
 	 */
-	uint8_t uds_diagnostics_security_access;
+	uint32_t uds_diagnostics_security_access;
 
 } config_data_basic_t;
 

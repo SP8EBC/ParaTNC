@@ -65,7 +65,8 @@ Reset_Handler:
 /* Call the clock system initialization function.*/
     bl  SystemInit
 
-/* Copy the data segment initializers from flash to SRAM */
+/* Main BSS and DATA section initialization */
+// DATA
   movs	r1, #0
   b	LoopCopyDataInit
 
@@ -81,9 +82,10 @@ LoopCopyDataInit:
 	adds	r2, r0, r1
 	cmp	r2, r3
 	bcc	CopyDataInit
+
+// BSS
 	ldr	r2, =_sbss
 	b	LoopFillZerobss
-/* Zero fill the bss segment. */
 FillZerobss:
 	movs	r3, #0
 	str	r3, [r2], #4
@@ -92,6 +94,42 @@ LoopFillZerobss:
 	ldr	r3, = _ebss
 	cmp	r2, r3
 	bcc	FillZerobss
+/* !!! END !!! Main BSS and DATA section initialization */
+
+
+/* RAM2 rte BSS and DATA section initialization */
+
+// DATA
+  movs	r1, #0
+  b	LoopCopyDataInitRte
+
+CopyDataInitRte:
+	ldr	r3, =_si_rte_data
+	ldr	r3, [r3, r1]
+	str	r3, [r0, r1]
+	adds	r1, r1, #4
+
+LoopCopyDataInitRte:
+	ldr	r0, =_s_rte_data
+	ldr	r3, =_e_rte_data
+	adds	r2, r0, r1
+	cmp	r2, r3
+	bcc	CopyDataInitRte
+
+// BSS
+	ldr r2, =_s_rte_bss
+	b	LoopFillZerobssRte
+FillZerobssRte:
+	movs	r3, #0
+	str	r3, [r2], #4
+
+LoopFillZerobssRte:
+	ldr	r3, = _e_rte_bss
+	cmp	r2, r3
+	bcc	FillZerobssRte
+
+/* END!!! RAM2 rte BSS and DATA section initialization */
+
 
 /* Call static constructors */
     bl __libc_init_array
