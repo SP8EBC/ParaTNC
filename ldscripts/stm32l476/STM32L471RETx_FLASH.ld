@@ -61,9 +61,11 @@ _Min_Stack_Size = 0xC00; /* required amount of stack -> 3KB */
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K
-RAM2 (xrw)      : ORIGIN = 0x10000000, LENGTH = 32K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
+RAM (xrw)      			: ORIGIN = 0x20000000, LENGTH = 96K
+RAM2 (xrw)      		: ORIGIN = 0x10000000, LENGTH = 8K
+RAM2_NOINIT (xrw)      	: ORIGIN = 0x10002000, LENGTH = 24K
+FLASH_VTOR (rx)      	: ORIGIN = 0x08000000, LENGTH = 1K
+FLASH (rx)      		: ORIGIN = 0x0800C000, LENGTH = 192K
 }
 
 /* Define output sections */
@@ -74,6 +76,14 @@ SECTIONS
   {
     . = ALIGN(8);
     KEEP(*(.isr_vector)) /* Startup code */
+    . = ALIGN(8);
+  } >FLASH_VTOR
+  
+    /* The startup code goes first into FLASH */
+  .isr_vector_app :
+  {
+    . = ALIGN(8);
+    KEEP(*(.isr_vector_app)) /* Startup code */
     . = ALIGN(8);
   } >FLASH
 
@@ -196,6 +206,11 @@ SECTIONS
     _e_rte_bss = .;         /* define a global symbol at bss start */
     __bss_rte_end__ = _e_rte_bss;
   } >RAM2
+  
+  .noinit_ram2 :
+  {
+  	KEEP(*(.noinit_ram2));
+  }	>RAM2_NOINIT
   
 	/* used by the startup to initialize data */
   _si_rte_data = LOADADDR(.rte_data);

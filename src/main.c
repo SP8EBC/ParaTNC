@@ -353,6 +353,25 @@ static void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
 
 /**
  * Piece of code refactored from 'main' function responsible for pooling
+ * @param gsm_srl_ctx_ptr
+ * @param gsm_state
+ * @param trigger_message_ack
+ * @param received_message
+ * @param from_message
+ * @param from_message_ln
+ * @param response_message
+ * @param message_for_transmitting
+ * @param trigger_send_message
+ * @param trigger_gsm_status
+ * @param trigger_gsm_aprsis_counters_packet
+ * @param trigger_gsm_loginstring_packet
+ * @param trigger_gsm_telemetry_values
+ * @param trigger_gsm_telemetry_descriptions
+ * @param telemetry_description
+ * @param config_data_mode
+ * @param config_data_basic
+ * @param callsign_with_ssid
+ * @param own_aprs_msg
  */
 static void main_gsm_pool_handler(
 				srl_context_t				*const gsm_srl_ctx_ptr,				// 1

@@ -205,7 +205,7 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 *
 	 * Serial Port
 	 *  0 -	Read DID
-	 *  1 - Read Memory (log and
+	 *  1 - Read Memory (RAM2, RAM2_NOINIT
 	 *  2 -
 	 *
 	 *
@@ -218,9 +218,9 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 *
 	 *	29 -
 	 *
-	 * Common
-	 *	30 - Unlock all services by default when accessed via APRSMSG_TRANSPORT_ENCRYPTED_HEXSTRING
-	 *	31 -
+	 * Unlock all services by default when accessed via APRSMSG_TRANSPORT_ENCRYPTED_HEXSTRING
+	 *	30 - this should be zero to enable
+	 *	31 - this should be one to enable
 	 */
 	uint32_t uds_diagnostics_security_access;
 
