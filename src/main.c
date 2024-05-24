@@ -420,10 +420,10 @@ static void main_gsm_pool_handler(
 			received_message->source = MESSAGE_SOURCE_UNINITIALIZED;
 
 			// decode message, do it after ACK is scheduled to be sure about right sequence
-			const kiss_communication_aprsmsg_transport_t type = kiss_communication_aprsmsg_check_type(received_message->content, MESSAGE_MAX_LENGHT);
+			const kiss_communication_transport_t type = kiss_communication_aprsmsg_check_type(received_message->content, MESSAGE_MAX_LENGHT);
 
 			// decode HEXSTRING
-			if (type == APRSMSG_TRANSPORT_HEXSTRING) {
+			if (type == KISS_TRANSPORT_HEXSTRING) {
 				*from_message_ln = kiss_communication_aprsmsg_decode_hexstring(received_message->content, received_message->content_ln, from_message + 1, MAIN_KISS_FROM_MESSAGE_LEN - 1);
 			}
 			else {

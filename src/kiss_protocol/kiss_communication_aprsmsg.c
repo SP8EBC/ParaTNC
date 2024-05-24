@@ -46,19 +46,19 @@ static uint8_t kiss_communication_aprsmsg_tohexstr_lookup_table[] =
  * @param message_payload_ln
  * @return
  */
-kiss_communication_aprsmsg_transport_t kiss_communication_aprsmsg_check_type(uint8_t * message_payload, uint16_t message_payload_ln)
+kiss_communication_transport_t kiss_communication_aprsmsg_check_type(uint8_t * message_payload, uint16_t message_payload_ln)
 {
-    kiss_communication_aprsmsg_transport_t out = APRSMSG_TRANSPORT_UNINITIALIZED;
+    kiss_communication_transport_t out = KISS_TRANSPORT_UNINITIALIZED;
 
     if (variant_validate_is_within_ram(message_payload) == 1 && message_payload_ln > 6 && message_payload_ln <= 67) {
         if (KISS_COMMUNICATION_APRSMSG_IS_HEXSTRING(message_payload)) {
-            out = APRSMSG_TRANSPORT_HEXSTRING;
+            out = KISS_TRANSPORT_HEXSTRING;
         }
         else if (KISS_COMMUNICATION_APRSMSG_IS_ENCR_HEXSTRING(message_payload)) {
-            out = APRSMSG_TRANSPORT_ERROR_UNSUPPORTED;
+            out = KISS_TRANSPORT_ERROR_UNSUPPORTED;
         }
         else {
-            out = APRSMSG_TRANSPORT_NOT_KISS;
+            out = KISS_TRANSPORT_NOT_KISS;
         }
     }   
 

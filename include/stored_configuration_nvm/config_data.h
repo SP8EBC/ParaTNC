@@ -204,23 +204,38 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 * By default, when memory is fully erased everything is locked
 	 *
 	 * Serial Port
-	 *  0 -	Read DID
-	 *  1 - Read Memory (RAM2, RAM2_NOINIT
-	 *  2 -
+	 *  	0 -	Read DID
+	 *  	1 - Read Memory by address (RAM2, RAM2_NOINIT, everything > FLASH)
+	 *  	2 - Read Memory by address (without limit)
+	 *  	3 - Restart Reset
+	 *  	4 - Configuration reset
+	 *		5 - Write memory by address
+	 *		6 - Erase and program startup config
+	 *		7 - Get running config
+	 *		8 - Request file transfer and transfer data
 	 *
+	 *  	13 -
 	 *
-	 *  13 -
+	 * Validity bits
+	 * 		14
+	 * 		15
+	 * 	these bits are sum of ( (uds_diagnostics_security_access & 0x3FFF) +
+	 * 	(uds_diagnostics_security_access & 3FFF0000) >> 16) & 0x3. If this value
+	 * 	doesn't match a configuration from here is discarded completely and
+	 * 	default settings are applied:
+	 * 	1. Everything over serial port is unlocked
+	 * 	2. Read DID and one restart per day
 	 *
 	 * APRS Message (Radio network or APRS-IS server)
 	 *
-	 *  16 -
-	 *  17 -
+	 *  	16 -
+	 *  	17 -
 	 *
-	 *	29 -
+	 *		29 -
 	 *
 	 * Unlock all services by default when accessed via APRSMSG_TRANSPORT_ENCRYPTED_HEXSTRING
-	 *	30 - this should be zero to enable
-	 *	31 - this should be one to enable
+	 *		30 - this should be zero to enable
+	 *		31 - this should be one to enable
 	 */
 	uint32_t uds_diagnostics_security_access;
 
