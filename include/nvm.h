@@ -9,6 +9,7 @@
 #define NVM_H_
 
 #include <stdint.h>
+#include "event_log.h"
 
 #define NVM_RECORD_SIZE		8		// in bytes!!
 
@@ -50,8 +51,29 @@ typedef enum nvm_state_result_t {
 	NVM_PGM_ERROR
 }nvm_state_result_t;
 
+/**
+ *
+ */
 void nvm_measurement_init(void);
+
+/**
+ *
+ * @param data
+ * @return
+ */
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
+
+/**
+ *
+ * @param oldest
+ * @param newest
+ */
+void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* newest);
+
+
+/**
+ *
+ */
 void nvm_erase_all(void);
 
 void nvm_test_prefill(void);	///<! Only for test purposes!

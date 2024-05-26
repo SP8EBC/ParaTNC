@@ -6,6 +6,7 @@
  */
 
 #include "nvm.h"
+#include "memory_map.h"
 
 #define KB *1024
 
@@ -22,25 +23,28 @@
 
 #endif
 
-//#define NVM_MEASUREMENT_OFFSET			0
-
 //!< Size of NVM data logger in pages
-#define NVM_MEASUREMENT_PAGES_USED		96
+//#define NVM_MEASUREMENT_PAGES_USED		96
 
 //!< Size of NVM data logger in bytes
-#define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * NVM_MEASUREMENT_PAGES_USED)
+#define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * nvm_measurement_page_used)
 
 //!< A macro to calculate start address of last page for NVM data logger
-#define START_OF_LAST_NVM_PAGE			(nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
+#define START_OF_LAST_NVM_PAGE			(nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
 
 //!< Base address of NVM data logger for device with 1MB of Flash
-#define LOGGER_BASE_ADDRESS_1MB_DEVICE	0x08080000	// Page 256 from 511
+#define LOGGER_BASE_ADDRESS_1MB_DEVICE	MEMORY_MAP_MEASUREMENT_1M_START	// Page 256 from 352
 
-#define LOGGER_BASE_ADDRESS_512K_DEVICE	0x08040000	// Page 256 from 383 (warning! there are no pages within 128-255)
-uint32_t nvm_base_address = 0;
+#define LOGGER_BASE_ADDRESS_512K_DEVICE	MEMORY_MAP_MEASUREMENT_512K_START	// Page 130 from 178
+
+
+uint32_t nvm_measurement_base_address = 0;
 
 //!< Start address of flash page used currently for NVM
-uint32_t nvm_current_page_address = 0;
+uint32_t nvm_measurement_current_page_address = 0;
+
+//!< How many
+uint8_t nvm_measurement_page_used = 0;
 
 /**
  * Pointer to
@@ -65,6 +69,9 @@ nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
 		}													\
 	}														\
 
+/**
+ *
+ */
 void nvm_measurement_init(void) {
 
 	uint8_t data = 0;
@@ -76,11 +83,13 @@ void nvm_measurement_init(void) {
 	// check current flash size
 	if (FLASH_SIZE == 1024 KB) {
 		// 1024KB
-		nvm_base_address = LOGGER_BASE_ADDRESS_1MB_DEVICE;
+		nvm_measurement_base_address = LOGGER_BASE_ADDRESS_1MB_DEVICE;
+		nvm_measurement_page_used = MEMORY_MAP_MEASUREMENT_1M_PAGES;
 	}
 	else if (FLASH_SIZE == 512 KB) {
 		// 512KB
-		nvm_base_address = LOGGER_BASE_ADDRESS_512K_DEVICE;
+		nvm_measurement_base_address = LOGGER_BASE_ADDRESS_512K_DEVICE;
+		nvm_measurement_page_used = MEMORY_MAP_MEASUREMENT_512K_PAGES;
 	}
 	else {
 		// unknown device ??
@@ -90,7 +99,7 @@ void nvm_measurement_init(void) {
 	}
 
 	// find the first non-erased page
-	for (uint32_t i = nvm_base_address; i < (nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ); i += NVM_PAGE_SIZE) {
+	for (uint32_t i = nvm_measurement_base_address; i < (nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ); i += NVM_PAGE_SIZE) {
 		// get the content of first byte
 		data = *((uint8_t*) i);
 
@@ -161,6 +170,11 @@ void nvm_measurement_init(void) {
 #endif
 }
 
+/**
+ *
+ * @param data
+ * @return
+ */
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 
 	nvm_state_result_t out = NVM_OK;
@@ -178,7 +192,7 @@ nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 	if (nvm_general_state == NVM_NO_SPACE_LEFT) {
 		// erase first page of NVM flash area
 
-		nvm_data_ptr = (uint8_t*)nvm_base_address;
+		nvm_data_ptr = (uint8_t*)nvm_measurement_base_address;
 
 		flash_status = FLASH_ErasePage(nvm_data_ptr);
 
@@ -234,7 +248,7 @@ nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 			nvm_data_ptr += NVM_WRITE_BYTE_ALIGN;
 
 			// and check if an end has
-			if ((uint32_t)nvm_data_ptr < nvm_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ) {
+			if ((uint32_t)nvm_data_ptr < nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ) {
 				;
 			}
 			else {
@@ -254,6 +268,9 @@ nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
 	return out;
 }
 
+/**
+ *
+ */
 void nvm_erase_all(void) {
 #if defined(STM32L471xx)
 
@@ -274,7 +291,7 @@ void nvm_erase_all(void) {
 		return;
 	}
 
-	for (int i = 0; i < NVM_MEASUREMENT_PAGES_USED; i++) {
+	for (int i = 0; i < nvm_measurement_page_used; i++) {
 		FLASH_ErasePage(base_address + (i * NVM_PAGE_SIZE));
 	}
 
@@ -282,6 +299,9 @@ void nvm_erase_all(void) {
 #endif
 }
 
+/**
+ *
+ */
 void nvm_test_prefill(void) {
 #if defined(STM32L471xx)
 
@@ -333,7 +353,7 @@ void nvm_test_prefill(void) {
 		return;
 	}
 
-	for (int i = 11; i < NVM_MEASUREMENT_PAGES_USED; i++) {
+	for (int i = 11; i < nvm_measurement_page_used; i++) {
 		// flash programming must be 64 bit (8 bytes) aligned
 		for (int j = 0; j < NVM_PAGE_SIZE / 8; j++) {
 			*(base_address++) = 0x12345678;
@@ -349,4 +369,57 @@ void nvm_test_prefill(void) {
 	FLASH_Lock();
 
 #endif
+}
+
+/**
+ *
+ * @param oldest
+ * @param newest
+ */
+void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* newest) {
+
+	event_log_t* out = NULL;
+
+	// size of single log entry
+	const uint8_t log_entry_size = sizeof(event_log_t);
+
+	// how any events could be stored in NVM flash memory
+	const uint16_t log_entries = (MEMORY_MAP_EVENT_LOG_END - MEMORY_MAP_EVENT_LOG_START) / log_entry_size;
+
+	// lowest date found within events in NVM
+	uint32_t lowest_date = 0xFFFFFFFFu;
+
+	uint32_t lowest_time = 0xFFFFFFFFu;
+
+	// sanity check if everything is set correctly
+	if ((MEMORY_MAP_EVENT_LOG_END - MEMORY_MAP_EVENT_LOG_START) % log_entry_size != 0 ) {
+		return;
+	}
+
+	// iterate through all event log flash area
+	for (int i = 0; i < log_entries; i++) {
+
+		// set pointer to currently checked event
+		const event_log_t* const ptr = (MEMORY_MAP_EVENT_LOG_START + (log_entry_size) * i);
+
+		// skip erased memory
+		if (ptr->event_id == 0xFFU && ptr->event_master_time == 0xFFFFFFFFU) {
+			continue;
+		}
+
+		// look for timesync event created at bootup
+		if (ptr->event_id == EVENT_TIMESYNC && ptr->wparam) {
+
+			// check if this timestamp is before the oldest found before
+			if (lowest_date > ptr->lparam && lowest_time > ptr->lparam2) {
+
+				// set this as the oldest
+				lowest_date = ptr->lparam;
+				lowest_time = ptr->lparam2;
+			}
+
+
+		}
+	}
+
 }

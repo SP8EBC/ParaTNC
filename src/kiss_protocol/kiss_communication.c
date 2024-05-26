@@ -12,7 +12,7 @@
 #include <crc.h>
 #include <kiss_communication/kiss_callback.h>
 #include <kiss_communication/kiss_communication.h>
-#include <kiss_communication/kiss_communication_service_ids.h>
+#include <kiss_communication/types/kiss_communication_service_ids.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stored_configuration_nvm/config_data_externs.h>

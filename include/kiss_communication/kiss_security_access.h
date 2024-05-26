@@ -9,7 +9,7 @@
 #define KISS_COMMUNICATION_KISS_SECURITY_ACCESS_H_
 
 #include <stored_configuration_nvm/config_data.h>
-#include "kiss_communication_transport_t.h"
+#include "kiss_communication/types/kiss_communication_transport_t.h"
 
 /**
  * Initializes security acees subsystem with current configuration

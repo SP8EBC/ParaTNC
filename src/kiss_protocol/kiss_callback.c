@@ -10,7 +10,7 @@
  */
 
 #include <kiss_communication/kiss_communication.h>
-#include <kiss_communication/kiss_communication_service_ids.h>
+#include <kiss_communication/types/kiss_communication_service_ids.h>
 #include <kiss_communication/kiss_did.h>
 #include <kiss_communication/kiss_nrc_response.h>
 #include "main.h"

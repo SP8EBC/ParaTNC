@@ -660,6 +660,8 @@ int main(int argc, char* argv[]){
 #endif
   }
 
+  nvm_event_log_find_first_oldest();
+
   // if first section has wrong CRC and it hasn't been restored before
   if ((main_crc_result & 0x01) == 0 && (backup_reg_get_configuration() & CONFIG_FIRST_FAIL_RESTORING) == 0) {
 	  // restore default configuration

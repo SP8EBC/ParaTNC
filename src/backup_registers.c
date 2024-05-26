@@ -18,6 +18,7 @@
 #define REGISTER_PACKET_COUNTERS	RTC->BKP7R
 #define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
 #define REGISTER_ASSERT				RTC->BKP9R
+#define REGISTER_LAST_RESTART		RTC->BKP10R
 #endif
 
 //#if defined(STM32F10X_MD_VL)
@@ -51,6 +52,7 @@
 // 7 -> weather and telemetry timers & counters
 // 8 -> counters of resets caused by validation checks failures
 // 9 -> assert register
+// 10-> last restart RTC date
 
 // 7th register map
 // xxxxyyAA - telemetry frames counter
@@ -737,4 +739,17 @@ void backup_assert(uint32_t assert) {
 
 	NVIC_SystemReset();
 #endif
+}
+
+uint32_t backup_reg_get_last_restart_date(void) {
+	return REGISTER_LAST_RESTART;
+}
+
+void backup_reg_set_last_restart_date(void) {
+	backup_reg_unclock();
+
+	REGISTER_LAST_RESTART = RTC->DR;
+
+	backup_reg_lock();
+
 }

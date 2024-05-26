@@ -616,6 +616,14 @@ int system_is_rtc_ok(void) {
 	return result;
 }
 
+uint32_t system_get_rtc_date(void) {
+	return RTC->DR;
+}
+
+uint32_t system_get_rtx_time(void) {
+	return RTC->TR;
+}
+
 
 /**
   * @}

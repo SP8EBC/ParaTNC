@@ -9,7 +9,7 @@
 #define KISS_COMMUNICATION_KISS_COMMUNICATION_APRSMSG_H_
 
 #include <stdint.h>
-#include "kiss_communication_transport_t.h"
+#include "kiss_communication/types/kiss_communication_transport_t.h"
 
 /**
  *

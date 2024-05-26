@@ -14,6 +14,7 @@ C_SRCS += \
 ../src/button_parameteo.c \
 ../src/delay.c \
 ../src/dummy.c \
+../src/event_log.c \
 ../src/io.c \
 ../src/it_handlers.c \
 ../src/main.c \
@@ -44,6 +45,7 @@ OBJS += \
 ./src/button_parameteo.o \
 ./src/delay.o \
 ./src/dummy.o \
+./src/event_log.o \
 ./src/io.o \
 ./src/it_handlers.o \
 ./src/main.o \
@@ -74,6 +76,7 @@ C_DEPS += \
 ./src/button_parameteo.d \
 ./src/delay.d \
 ./src/dummy.d \
+./src/event_log.d \
 ./src/io.d \
 ./src/it_handlers.d \
 ./src/main.d \

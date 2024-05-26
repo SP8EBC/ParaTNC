@@ -62,6 +62,8 @@ typedef enum kiss_communication_aprsmsg_transport_t {
     */
     KISS_TRANSPORT_ENCRYPTED_HEXSTRING,
 
+	KISS_TRANSPORT_SERIAL_PORT,
+
 
 	/**
 	 * Just an echo request

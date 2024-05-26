@@ -103,5 +103,7 @@ uint32_t backup_reg_get_register_reset_check_fail(void);
 
 void backup_assert(uint32_t assert);
 
+uint32_t backup_reg_get_last_restart_date(void);
+void backup_reg_set_last_restart_date(void);
 
 #endif /* BACKUP_REGISTERS_H_ */

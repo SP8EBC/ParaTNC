@@ -19,7 +19,7 @@
 #ifndef KISS_DID_CONFIGURATION_H_
 #define KISS_DID_CONFIGURATION_H_
 
-#include "./kiss_communication/kiss_xmacro_helpers.h"
+#include "kiss_communication/types/kiss_xmacro_helpers.h"
 #include "rte_main.h"
 #include "rte_wx.h"
 #include "main_master_time.h"

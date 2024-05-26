@@ -14,4 +14,7 @@ int system_clock_configure_rtc_l4(void);
 void system_clock_configure_auto_wakeup_l4(uint16_t seconds);
 int system_is_rtc_ok(void);
 
+uint32_t system_get_rtc_date(void);
+uint32_t system_get_rtx_time(void);
+
 #endif /* INCLUDE_CMSIS_STM32L4XX_SYSTEM_STM32L4XX_H_ */

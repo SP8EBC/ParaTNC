@@ -48,5 +48,8 @@
 
 #define KISS_RETURN_IDLE		1
 
+#define KISS_RESET_HARD		(uint8_t) 0x01
+#define KISS_RESET_SOFT		(uint8_t) 0x03
+#define KISS_RESET_CONFIG	(uint8_t) 0xAA
 
 #endif /* KISS_COMMUNICATION_SERVICE_IDS_H_ */
