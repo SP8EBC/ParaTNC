@@ -115,8 +115,10 @@ void DA_Start() {
 
 #endif
 
+#ifdef STM32F10X_MD_VLs
 #if (!defined(_METEO))
 	GPIO_SetBits(GPIOC, GPIO_Pin_9);
+#endif
 #endif
 }
 
@@ -144,7 +146,9 @@ void DA_Stop() {
 
 #endif
 
+#ifdef STM32F10X_MD_VL
 #if (!defined(_METEO))
 	GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+#endif
 #endif
 }

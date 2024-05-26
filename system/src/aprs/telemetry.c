@@ -41,7 +41,9 @@ uint8_t telemetry_scaled_temperature = 0;
 uint8_t telemetry_scaled_vbatt_voltage = 0;
 
 void telemetry_init(void) {
+#ifdef PARAMETEO
 	telemetry_counter = backup_reg_get_telemetry();
+#endif
 }
 
 int telemetry_create_description_string(const config_data_basic_t * const config_basic, const telemetry_description_t what, char * out, uint16_t out_ln) {
@@ -520,14 +522,14 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		#ifdef _DALLAS_AS_TELEM
 			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, kiss_pkts, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#endif
 	}
 	else {
 		#ifdef _DALLAS_AS_TELEM
 			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#else
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
+			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, viscous_drop_pkts, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble);
 		#endif
 	}
 #endif
@@ -537,8 +539,10 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		telemetry_counter = 0;
 	}
 
+#ifdef PARAMETEO
 	// store telemetry conter in backup register
 	backup_reg_set_telemetry((uint8_t)(telemetry_counter & 0xFFu));
+#endif
 
 	// put a null terminator at the end of frame (but it should be placed there anyway)
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;

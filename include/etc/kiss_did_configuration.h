@@ -20,11 +20,12 @@
 #define KISS_DID_CONFIGURATION_H_
 
 #include "./kiss_communication/kiss_xmacro_helpers.h"
+#include "rte_main.h"
 #include "rte_wx.h"
 #include "main_master_time.h"
 #include "main.h"
-#include "rte_main.h"
 #include "gsm/sim800c.h"
+#include "packet_tx_handler.h"
 #include "software_version.h"
 
 //!< Dummy variable used only as end of definition marker in tables
@@ -59,6 +60,8 @@ extern char did_dummy_data;
 		ENTRY(0x2006U, rte_wx_winddirection[0], rte_wx_winddirection[1], rte_wx_winddirection[2])	\
 		ENTRY(0x2007U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2008U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2200U, packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_telemetry_counter)	\
+		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)
 #endif
@@ -74,6 +77,18 @@ extern char did_dummy_data;
 		ENTRY(0x2002U, rte_wx_pressure_history[0], rte_wx_pressure_history[1], rte_wx_pressure_history[2])	\
 
 	#define DIDS_NUMERIC(ENTRY)		\
+		ENTRY(0x1000U, master_time, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x1001U, rx10m, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x1002U, tx10m, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x1003U, digi10m, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x1004U, digidrop10m, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2004U, rte_wx_average_winddirection, rte_wx_average_windspeed, rte_wx_max_windspeed)	\
+		ENTRY(0x2005U, rte_wx_windspeed[0], rte_wx_windspeed[1], rte_wx_windspeed[2])	\
+		ENTRY(0x2006U, rte_wx_winddirection[0], rte_wx_winddirection[1], rte_wx_winddirection[2])	\
+		ENTRY(0x2007U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2008U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2200U, packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_telemetry_counter)	\
+		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
 		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)	\
 
 #endif

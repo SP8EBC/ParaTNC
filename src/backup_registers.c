@@ -20,6 +20,13 @@
 #define REGISTER_ASSERT				RTC->BKP9R
 #endif
 
+//#if defined(STM32F10X_MD_VL)
+//#define REGISTER_COUNTERS			BKP->DR4
+//#define REGISTER_PACKET_COUNTERS	BKP->DR
+//#define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
+//#define REGISTER_ASSERT				RTC->BKP9R
+//#endif
+
 #define BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H 	1u
 #define BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK 		(0xFFu << 2)
 
@@ -59,12 +66,24 @@
 // AAxxyyyy - resets caused by 'system_is_rtc_ok()'
 
 static void backup_reg_unclock(void) {
+#ifdef PARAMETEO
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
+#endif
+
+#ifdef PARATNC
+	PWR->CR |= PWR_CR_DBP;
+#endif
 }
 
 static void backup_reg_lock(void) {
+#ifdef PARAMETEO
 	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+#endif
+
+#ifdef PARATNC
+	PWR->CR &= (0xFFFFFFFFu ^ PWR_CR_DBP);
+#endif
 }
 
 /**
@@ -703,6 +722,8 @@ uint32_t backup_reg_get_register_reset_check_fail(void)
 {
 #ifdef PARAMETEO
 	return REGISTER_RESET_CHECK_FAIL;
+#else
+	return 0;
 #endif
 }
 

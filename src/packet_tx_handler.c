@@ -90,7 +90,9 @@ void packet_tx_init(uint8_t meteo_interval, uint8_t beacon_interval, config_data
 
 	packet_tx_beacon_interval = beacon_interval;
 
+#ifdef PARAMETEO
 	backup_reg_get_packet_counters(&packet_tx_beacon_counter, &packet_tx_meteo_counter, &packet_tx_meteo_gsm_counter);
+#endif
 
 	if (powersave == PWSAVE_AGGRESV) {
 		// if user selected aggressive powersave mode the meteo counter must be set back to zero
@@ -242,7 +244,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// increase these counters only when WX is enabled
 		packet_tx_meteo_counter++;
 		packet_tx_meteo_kiss_counter++;
+#ifdef PARAMETEO
 		packet_tx_meteo_gsm_counter++;
+#endif
 	}
 
 	// check if there is a time to send own beacon
@@ -584,8 +588,13 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		packet_tx_telemetry_descr_counter = 0;
 	}
 
+#ifdef PARAMETEO
 	// store counters in backup registers
 	backup_reg_set_packet_counters(packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_meteo_gsm_counter);
+#else
+	// store counters in backup registers
+	backup_reg_set_packet_counters(packet_tx_beacon_counter, packet_tx_meteo_counter, 0);
+#endif
 
 #ifdef STM32L471xx
 	// if powersave mode allow to sent extensive status messages
@@ -620,7 +629,9 @@ void packet_tx_get_current_counters(packet_tx_counter_values_t * out) {
 	if (out != 0x00) {
 		out->beacon_counter = packet_tx_beacon_counter;
 		out->wx_counter = packet_tx_meteo_counter;
+#ifdef PARAMETEO
 		out->gsm_wx_counter = packet_tx_meteo_gsm_counter;
+#endif
 		out->telemetry_counter = packet_tx_telemetry_counter;
 		out->telemetry_desc_counter = packet_tx_telemetry_descr_counter;
 		out->kiss_counter = packet_tx_meteo_kiss_counter;
@@ -645,13 +656,17 @@ void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
 		if (in->kiss_counter != 0)
 			packet_tx_meteo_kiss_counter = in->kiss_counter;
 
+#ifdef PARAMETEO
 		if (in->gsm_wx_counter != 0)
 			packet_tx_meteo_gsm_counter = in->gsm_wx_counter;
+#endif
 	}
 	else {
 		packet_tx_beacon_counter = 0;
 		packet_tx_meteo_counter = 2;
+#ifdef PARAMETEO
 		packet_tx_meteo_gsm_counter = 0;
+#endif
 		packet_tx_telemetry_counter = 0;
 		packet_tx_telemetry_descr_counter = 10;
 		packet_tx_meteo_kiss_counter = 0;

@@ -13,6 +13,7 @@
 
 int variant_validate_is_within_ram(void * address) {
 
+#ifdef STM32L471xx
 	uint32_t addr_value = (uint32_t)address;
 
 	if (addr_value > SRAM_BASE &&
@@ -22,9 +23,13 @@ int variant_validate_is_within_ram(void * address) {
 	else {
 		return 0;
 	}
+#else
+	return 1;
+#endif
 }
 
 int variant_validate_is_within_flash(void * address) {
+#ifdef STM32L471xx
 	uint32_t addr_value = (uint32_t)address;
 
 	if (addr_value > FLASH_BASE &&
@@ -34,4 +39,7 @@ int variant_validate_is_within_flash(void * address) {
 	else {
 		return 0;
 	}
+#else
+	return 1;
+#endif
 }

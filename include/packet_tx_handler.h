@@ -10,6 +10,27 @@
 
 #include <stored_configuration_nvm/config_data.h>
 
+extern uint8_t packet_tx_beacon_interval;
+extern uint8_t packet_tx_beacon_counter;
+
+extern uint8_t packet_tx_error_status_interval;
+extern uint8_t packet_tx_error_status_counter;
+
+extern uint8_t packet_tx_meteo_interval;
+extern uint8_t packet_tx_meteo_counter;
+
+extern uint8_t packet_tx_meteo_kiss_interval;
+extern uint8_t packet_tx_meteo_kiss_counter;
+
+extern uint8_t packet_tx_telemetry_interval;
+extern uint8_t packet_tx_telemetry_counter;
+
+extern uint8_t packet_tx_telemetry_descr_interval;	// 155
+extern uint8_t packet_tx_telemetry_descr_counter;
+
+extern uint8_t packet_tx_modbus_raw_values;
+extern uint8_t packet_tx_modbus_status;
+
 typedef struct packet_tx_counter_values_t {
 
 	uint8_t beacon_counter;

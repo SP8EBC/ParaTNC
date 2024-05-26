@@ -351,6 +351,7 @@ static void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
 	}
 }
 
+#if defined(STM32L471xx)
 /**
  * Piece of code refactored from 'main' function responsible for pooling
  * @param gsm_srl_ctx_ptr
@@ -547,6 +548,7 @@ static void main_gsm_pool_handler(
 
 	}
 }
+#endif
 
 /**
  * Just a main function
@@ -1690,16 +1692,18 @@ int main(int argc, char* argv[]){
 			}
 			#endif
 
-			if (rte_wx_check_weather_measurements() == 0) {
-				backup_reg_increment_weather_measurements_check_reset();
+			if (main_config_data_mode->wx != 0) {
+				if (rte_wx_check_weather_measurements() == 0) {
+					backup_reg_increment_weather_measurements_check_reset();
 
-				NVIC_SystemReset();
-			}
+					NVIC_SystemReset();
+				}
 
-			if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
-				backup_reg_increment_dallas_degraded_reset();
+				if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
+					backup_reg_increment_dallas_degraded_reset();
 
-				rte_main_reboot_req = 1;
+					rte_main_reboot_req = 1;
+				}
 			}
 
 			/**
@@ -1708,6 +1712,7 @@ int main(int argc, char* argv[]){
 			if (--main_one_hour_pool_timer < 0) {
 				main_one_hour_pool_timer = 60;
 
+#if defined(STM32L471xx)
 				// check if RTC is working correctly
 				if (system_is_rtc_ok() == 0) {
 
@@ -1719,6 +1724,7 @@ int main(int argc, char* argv[]){
 				if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
 					rte_main_trigger_gsm_aprsis_counters_packet = 1;
 				}
+#endif
 			}
 
 
@@ -1808,8 +1814,12 @@ int main(int argc, char* argv[]){
 		 */
 		if (main_two_second_pool_timer < 10) {
 
-			if (configuration_get_inhibit_wx_pwr_handle() == 0) {
-				wx_pwr_switch_periodic_handle();
+			if (main_config_data_mode->wx != 0) {
+				if (configuration_get_inhibit_wx_pwr_handle() == 0) {
+					wx_pwr_switch_periodic_handle();
+				}
+
+				wx_check_force_i2c_reset();
 			}
 
 #ifdef PARAMETEO
@@ -1817,8 +1827,6 @@ int main(int argc, char* argv[]){
 				io_pool_vbat_r(packet_tx_get_minutes_to_next_wx());
 			}
 #endif
-
-			wx_check_force_i2c_reset();
 
 #ifdef PARAMETEO
 			max31865_pool();
@@ -1898,15 +1906,17 @@ int main(int argc, char* argv[]){
 				rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 			}
 
-			#ifdef STM32L471xx
-				if (io_get_cntrl_vbat_s() == 1) {
-			#else
-				if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
-			#endif
-					// pool anemometer only when power is applied
-					wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
-				}
+			if (main_config_data_mode->wx != 0) {
 
+				#ifdef STM32L471xx
+					if (io_get_cntrl_vbat_s() == 1) {
+				#else
+					if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
+				#endif
+						// pool anemometer only when power is applied
+						wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+					}
+			}
 
 			if (main_davis_serial_enabled == 1) {
 

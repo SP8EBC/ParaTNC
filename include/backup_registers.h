@@ -41,7 +41,11 @@ inline void backup_reg_set_monitor(int8_t bit) {
 }
 
 inline uint32_t backup_reg_get_monitor(void) {
+#ifdef STM32L471xx
 	return REGISTER_MONITOR;
+#else
+	return 0;
+#endif
 }
 
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_WX				(1U)
