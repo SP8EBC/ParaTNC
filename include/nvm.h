@@ -68,7 +68,7 @@ nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
  * @param oldest
  * @param newest
  */
-void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* newest);
+void nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest);
 
 
 /**

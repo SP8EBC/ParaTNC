@@ -76,10 +76,10 @@ void nvm_measurement_init(void) {
 
 	uint8_t data = 0;
 
+#if defined(STM32L471xx)
 	// flash operation result
 	FLASH_Status flash_status = 0;
 
-#if defined(STM32L471xx)
 	// check current flash size
 	if (FLASH_SIZE == 1024 KB) {
 		// 1024KB
@@ -376,9 +376,10 @@ void nvm_test_prefill(void) {
  * @param oldest
  * @param newest
  */
-void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* newest) {
+void nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest) {
 
-	event_log_t* out = NULL;
+	// pointer to last, non null and non TIMESYNC entry
+	event_log_t* last = NULL;
 
 	// size of single log entry
 	const uint8_t log_entry_size = sizeof(event_log_t);
@@ -390,6 +391,10 @@ void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* ne
 	uint32_t lowest_date = 0xFFFFFFFFu;
 
 	uint32_t lowest_time = 0xFFFFFFFFu;
+
+	uint32_t highest_date = 0x00000000u;
+
+	uint32_t highest_time = 0x00000000u;
 
 	// sanity check if everything is set correctly
 	if ((MEMORY_MAP_EVENT_LOG_END - MEMORY_MAP_EVENT_LOG_START) % log_entry_size != 0 ) {
@@ -408,7 +413,7 @@ void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* ne
 		}
 
 		// look for timesync event created at bootup
-		if (ptr->event_id == EVENT_TIMESYNC && ptr->wparam) {
+		if (ptr->event_id == EVENT_TIMESYNC && ptr->wparam == 0x77) {
 
 			// check if this timestamp is before the oldest found before
 			if (lowest_date > ptr->lparam && lowest_time > ptr->lparam2) {
@@ -416,10 +421,22 @@ void nvm_event_log_find_first_oldest_newest(event_log_t* oldest, event_log_t* ne
 				// set this as the oldest
 				lowest_date = ptr->lparam;
 				lowest_time = ptr->lparam2;
+
+				// timestamp are always created after the first one after power up, so that
+				// with oldest RTC date and time will be the oldest in general
+				*oldest = ptr;
+
+				if (last != NULL) {
+					*newest = last;
+				}
 			}
-
-
 		}
+		else {
+			// store a pointer to last non-null and non-timesync event
+			last = ptr;
+		}
+
+		*newest = last;
 	}
 
 }
