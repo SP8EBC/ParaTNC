@@ -376,10 +376,15 @@ void nvm_test_prefill(void) {
  * @param oldest
  * @param newest
  */
-void nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest) {
+nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest) {
+
+	nvm_event_result_t res = NVM_EVENT_OK;
 
 	// pointer to last, non null and non TIMESYNC entry
-	event_log_t* last = NULL;
+	event_log_t* last_non_ts = NULL;
+
+	// pointer to the oldest non TIMESYNC event log entry
+	event_log_t* oldest_non_ts = NULL;
 
 	// size of single log entry
 	const uint8_t log_entry_size = sizeof(event_log_t);
@@ -398,45 +403,92 @@ void nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** 
 
 	// sanity check if everything is set correctly
 	if ((MEMORY_MAP_EVENT_LOG_END - MEMORY_MAP_EVENT_LOG_START) % log_entry_size != 0 ) {
-		return;
+		return NVM_EVENT_AREA_ERROR;
 	}
+
+	last_non_ts = 		(event_log_t *)MEMORY_MAP_EVENT_LOG_START;
 
 	// iterate through all event log flash area
 	for (int i = 0; i < log_entries; i++) {
 
 		// set pointer to currently checked event
-		const event_log_t* const ptr = (MEMORY_MAP_EVENT_LOG_START + (log_entry_size) * i);
+		const event_log_t* const current = (MEMORY_MAP_EVENT_LOG_START + (log_entry_size) * i);
 
 		// skip erased memory
-		if (ptr->event_id == 0xFFU && ptr->event_master_time == 0xFFFFFFFFU) {
+		if (current->event_id == 0xFFU && current->event_master_time == 0xFFFFFFFFU) {
 			continue;
 		}
 
 		// look for timesync event created at bootup
-		if (ptr->event_id == EVENT_TIMESYNC && ptr->wparam == 0x77) {
+		if (current->event_id == EVENT_TIMESYNC && current->wparam == 0x77) {
 
 			// check if this timestamp is before the oldest found before
-			if (lowest_date > ptr->lparam && lowest_time > ptr->lparam2) {
+			if (lowest_date > current->lparam && lowest_time > current->lparam2) {
 
 				// set this as the oldest
-				lowest_date = ptr->lparam;
-				lowest_time = ptr->lparam2;
+				lowest_date = current->lparam;
+				lowest_time = current->lparam2;
 
 				// timestamp are always created after the first one after power up, so that
 				// with oldest RTC date and time will be the oldest in general
-				*oldest = ptr;
-
-				if (last != NULL) {
-					*newest = last;
-				}
+				*oldest = current;
 			}
 		}
 		else {
-			// store a pointer to last non-null and non-timesync event
-			last = ptr;
-		}
+			if (current->event_master_time > last_non_ts->event_master_time) {
+				// store a pointer to last non-null and non-timesync event
+				last_non_ts = current;
 
-		*newest = last;
+				// updated output pointer with newest 
+				*newest = last_non_ts;
+			}
+			else {
+				// this loop goes forward in memory. if consecutive non timesync event
+				// has decreasing master_time value it means, that nvm events area 
+				// has overruned at least one time 
+				res = NVM_EVENT_OVERRUN;
+
+				if (oldest_non_ts == NULL) {
+					oldest_non_ts = current;
+				}
+			}
+		}
 	}
 
+	// check if any non-timesync event has been found at all
+	if (last_non_ts == NULL) {
+		// no, NVM log contains only single timesync event
+		res = NVM_EVENT_SINGLE_TS;
+	}
+
+	// check if any timesync event has been found
+	if (lowest_date == 0xFFFFFFFFu && lowest_time == 0xFFFFFFFF) {
+		if (last_non_ts == (event_log_t *)MEMORY_MAP_EVENT_LOG_START) {
+			res = NVM_EVENT_EMPTY;	// nvm event area is empty
+		}
+		else {
+			*oldest = oldest_non_ts;
+			res = NVM_EVENT_OVERRUN_NO_TS;
+		}
+	}
+
+	return res;
+
+}
+
+/**
+ * @param event
+ * @param oldest
+ * @param newest
+ */
+nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t** oldest, event_log_t** newest) {
+	nvm_event_result_t out = NVM_EVENT_OK;
+
+	// check if we reach boundary between two flash memory pages
+	// and the newest entry is just before the oldest pne
+	if (*newest + 1 == *newest) {
+		// erase next flash memory page to make a room for next events 
+	}
+
+	return out;
 }
