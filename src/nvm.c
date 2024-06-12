@@ -7,6 +7,7 @@
 
 #include "nvm.h"
 #include "memory_map.h"
+#include "backup_registers.h"
 
 #define KB *1024
 
@@ -20,6 +21,18 @@
 
 //!< How flash program operation are aligned, how many bytes must be programmed at once
 #define NVM_WRITE_BYTE_ALIGN		8
+
+#else
+
+// currently defined here for unit tests 
+typedef enum
+{
+  FLASH_BUSY = 1,
+  FLASH_ERROR_PG,
+  FLASH_ERROR_WRP,
+  FLASH_COMPLETE,
+  FLASH_TIMEOUT
+}FLASH_Status;
 
 #endif
 
@@ -397,10 +410,6 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 
 	uint32_t lowest_time = 0xFFFFFFFFu;
 
-	uint32_t highest_date = 0x00000000u;
-
-	uint32_t highest_time = 0x00000000u;
-
 	// sanity check if everything is set correctly
 	if ((MEMORY_MAP_EVENT_LOG_END - MEMORY_MAP_EVENT_LOG_START) % log_entry_size != 0 ) {
 		return NVM_EVENT_AREA_ERROR;
@@ -484,10 +493,40 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t** oldest, event_log_t** newest) {
 	nvm_event_result_t out = NVM_EVENT_OK;
 
+	// flash operation result
+	FLASH_Status flash_status = 0;
+
 	// check if we reach boundary between two flash memory pages
 	// and the newest entry is just before the oldest pne
-	if (*newest + 1 == *newest) {
+	if (*newest + 1 == *oldest) {
 		// erase next flash memory page to make a room for next events 
+		flash_status = FLASH_ErasePage(*oldest);
+
+		// check operation result 
+		if (flash_status != FLASH_COMPLETE) {
+			nvm_general_state = NVM_PGM_ERROR;
+		}
+
+		// rescan for oldest and newest event one more time
+		nvm_event_log_find_first_oldest_newest(oldest, newest);
+
+		// oldest - newest should be located NVM_PAGE_SIZE bytes apart
+		if (oldest - newest != NVM_PAGE_SIZE) {
+			backup_assert(BACKUP_REG_ASSERT_ERASE_WHILE_STORING_EVENT);
+		}
+	}  
+	else if (*newest + sizeof(event_log_t) >= MEMORY_MAP_EVENT_LOG_END) {
+		// we have reached an end of the event area in flash
+
+		// erase first memory page
+		flash_status = FLASH_ErasePage(MEMORY_MAP_EVENT_LOG_START);
+
+		// set pointers accordingly
+		event_log_t* new_newest = (event_log_t*)MEMORY_MAP_EVENT_LOG_START;
+		event_log_t* new_oldest = (event_log_t*)(MEMORY_MAP_EVENT_LOG_END - sizeof(event_log_t));
+
+		*newest = new_newest;
+		*oldest = new_oldest;
 	}
 
 	return out;
