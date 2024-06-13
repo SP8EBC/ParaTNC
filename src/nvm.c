@@ -423,8 +423,12 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 		// set pointer to currently checked event
 		const event_log_t* const current = (MEMORY_MAP_EVENT_LOG_START + (log_entry_size) * i);
 
+		const event_log_severity_t severity = (current->severity_and_source & 0xF0) >> 4;
+		const event_log_source_t source = (current->severity_and_source & 0xF);
+
 		// skip erased memory
 		if (current->event_id == 0xFFU && current->event_master_time == 0xFFFFFFFFU) {
+			oldest_non_ts = NULL;
 			continue;
 		}
 
@@ -510,9 +514,13 @@ nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t*
 		// rescan for oldest and newest event one more time
 		nvm_event_log_find_first_oldest_newest(oldest, newest);
 
+		const uint8_t old_new_events_spacing = *oldest - *newest;
+
 		// oldest - newest should be located NVM_PAGE_SIZE bytes apart
-		if (oldest - newest != NVM_PAGE_SIZE) {
-			backup_assert(BACKUP_REG_ASSERT_ERASE_WHILE_STORING_EVENT);
+		// please note, that pointers points to the begining of each
+		// entry, hence this minus one
+		if ((old_new_events_spacing - 1) * sizeof(event_log_t) != NVM_PAGE_SIZE) {
+			backup_assert(BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
 		}
 	}  
 	else if (*newest + sizeof(event_log_t) >= MEMORY_MAP_EVENT_LOG_END) {
