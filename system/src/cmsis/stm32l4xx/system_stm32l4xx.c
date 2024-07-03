@@ -29,27 +29,27 @@
   *   This file configures the system clock as follows:
   *=============================================================================
   *-----------------------------------------------------------------------------
-  *        System Clock source                    | MSI
+  *        System Clock source                    | PLL
   *-----------------------------------------------------------------------------
-  *        SYSCLK(Hz)                             | 4000000
+  *        SYSCLK(Hz)                             | 48000000
   *-----------------------------------------------------------------------------
-  *        HCLK(Hz)                               | 4000000
+  *        HCLK(Hz)                               | 48000000
   *-----------------------------------------------------------------------------
   *        AHB Prescaler                          | 1
   *-----------------------------------------------------------------------------
-  *        APB1 Prescaler                         | 1
+  *        APB1 Prescaler                         | 2
   *-----------------------------------------------------------------------------
-  *        APB2 Prescaler                         | 1
+  *        APB2 Prescaler                         | 2
   *-----------------------------------------------------------------------------
   *        PLL_M                                  | 1
   *-----------------------------------------------------------------------------
-  *        PLL_N                                  | 8
+  *        PLL_N                                  | 12
   *-----------------------------------------------------------------------------
   *        PLL_P                                  | 7
   *-----------------------------------------------------------------------------
   *        PLL_Q                                  | 2
   *-----------------------------------------------------------------------------
-  *        PLL_R                                  | 2
+  *        PLL_R                                  | 0
   *-----------------------------------------------------------------------------
   *        PLLSAI1_P                              | NA
   *-----------------------------------------------------------------------------
@@ -355,13 +355,49 @@ void system_clock_update_l4(void)
   */
 int system_clock_configure_l4(void)
 {
+	/**
+	 * 	Bits 26:25 PLLR[1:0]: Main PLL division factor for PLLCLK (system clock)
+	 *	Set and cleared by software to control the frequency of the main PLL output clock PLLCLK.
+	 *	This output can be selected as system clock. These bits can be written only if PLL is
+	 *	disabled.
+	 *	PLLCLK output clock frequency = VCO frequency / PLLR with PLLR = 2, 4, 6, or 8
+	 *	00: PLLR = 2
+	 *	01: PLLR = 4
+	 *	10: PLLR = 6
+	 *	11: PLLR = 8
+	 *	Caution:
+	 *	The software has to set these bits correctly not to exceed 80 MHz on
+	 *	this domain.
+	 *
+	 *
+	 */
+
+	/**
+	 * 	Bits 7:4 HPRE[3:0]: AHB prescaler
+		Set and cleared by software to control the division factor of the AHB clock.
+		Caution:
+		Depending on the device voltage range, the software has to set
+		correctly these bits to ensure that the system frequency does not
+		exceed the maximum allowed frequency (for more details please refer to
+		Section 5.1.8: Dynamic voltage scaling management). After a write
+		operation to these bits and before decreasing the voltage range, this
+		register must be read to be sure that the new value has been taken into
+		account.
+		0xxx: SYSCLK not divided
+		1000: SYSCLK divided by 2
+	 *
+	 *
+	 *
+	 *
+	 */
+
   /** Configure LSE Drive Capability
   */
   //HAL_PWR_EnableBkUpAccess();
   //__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
   // set the flash latency
-  FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+  FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -370,6 +406,12 @@ int system_clock_configure_l4(void)
   // select MSI as system clock cource
   // RCC_CFGR_SW_MSI
   RCC->CFGR &= (0xFFFFFFFF ^ RCC_CFGR_SW_Msk);
+
+  // set APB1 prescaler - HCLK divided by 2
+  RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+
+  // set APB2 prescaler - HCLK divided by 2
+  RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
 
   // turn on high speed external quartz oscilator
   RCC->CR |= RCC_CR_HSEON;
@@ -386,8 +428,8 @@ int system_clock_configure_l4(void)
   // set the clock source for PLL
   RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 
-  // R division factor for PLL to /4 (DIV4)
-  RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;
+  // R division factor for PLL to /2 (DIV2)
+  //RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;	//(default reset value of 00: PLLR = 2)
 
   // Q divistion factor for PLL to /2 (DIV2)
   RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLQ_Msk));
@@ -395,7 +437,7 @@ int system_clock_configure_l4(void)
   // P division factor for PLL to /7 (DIV7)
   RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLP_Msk));
 
-  // M multiplication factor to 1
+  // M division factor to 1
   RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLM_Msk));
 
   // N multiplication factor to 12
@@ -424,6 +466,7 @@ int system_clock_configure_l4(void)
   // configure clock sources for some peripherals
   RCC->CCIPR |= (RCC_CCIPR_ADCSEL | RCC_CCIPR_CLK48SEL_1);		// system clock selected for ADC
 
+  // main core frequency should be now set to 48MHz
   return 0;
 }
 
