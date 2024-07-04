@@ -10,6 +10,7 @@
 #include "station_config_target_hw.h"
 
 #include "io.h"
+#include "backup_registers.h"
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
@@ -45,6 +46,11 @@ int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
 
 static uint8_t io_vbatt_history_it = 0;
+
+//!< State machine of battery voltage measurement
+static io_vbat_state_t io_vbatt_state = IO_VBAT_UNINITIALIZED;
+
+#define MAXIMUM_VBAT_GET_ASYNC_ITERATIONS	32
 
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
 
@@ -331,68 +337,127 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 }
 
 /**
- * This function will measure current B+ voltage using ADC and return
- * either average (if 0) or current / momentary value (non zero)
+ *
+ * @param result
+ * @return
  */
-uint16_t io_vbat_meas_get() {
+io_vbat_state_t io_vbat_meas_get(uint16_t * result) {
 
-	uint16_t out = 0;
+	io_vbat_state_t out = io_vbatt_state;
 
 #ifdef PARAMETEO
 
-	float temp = 0.0f;
+	float temp = 0.0f, temp2 = 0.0f;
+
+	if (out == IO_VBAT_UNINITIALIZED) {
+		return out;
+	}
 
 #ifdef VBAT_MEAS_CONTINOUS
 
     // get conversion result
 	out = ADC2->DR;
 
+	io_vbatt_state = IO_VBAT_RESULT_AVAILABLE;
+
 #else
 
-	// if ADC is not enabled
-	if ((ADC2->CR & ADC_CR_ADEN) == 0) {
-		// start ADC
-		ADC2->CR |= ADC_CR_ADEN;
+	if (io_vbatt_state == IO_VBAT_ADC_DISABLE) {
 
-		// wait for startup
-	    while((ADC2->ISR & ADC_ISR_ADRDY) == 0);
+		// if ADC is not enabled
+		if ((ADC2->CR & ADC_CR_ADEN) == 0) {
+			// start ADC
+			ADC2->CR |= ADC_CR_ADEN;
+
+		}
+
+		io_vbatt_state = IO_VBAT_ADC_STARTING;
+
 	}
+	else if (io_vbatt_state == IO_VBAT_ADC_STARTING) {
 
-	// start conversion
-	ADC2->CR |= ADC_CR_ADSTART;
+		if ((ADC2->ISR & ADC_ISR_ADRDY) == ADC_ISR_ADRDY) {
+			// start conversion
+			ADC2->CR |= ADC_CR_ADSTART;
 
-	// wait for conversion to finish
-    while((ADC2->ISR & ADC_ISR_EOC) == 0) {
-    	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
-    		break;
-    	}
-    }
-
-    // get conversion result
-	out = ADC2->DR;
-
-    // if end of sequence flag is not cleared
-	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
-		ADC2->ISR |= ADC_ISR_EOS;
+			io_vbatt_state = IO_VBAT_ADC_MEASURING;
+		}
 	}
+	else if (io_vbatt_state == IO_VBAT_ADC_MEASURING) {
 
-	// disable the ADC
-	ADC2->CR |= ADC_CR_ADDIS;
+		if ((ADC2->ISR & ADC_ISR_EOC) == ADC_ISR_EOC) {
+			if ((ADC2->ISR & ADC_ISR_EOS) == ADC_ISR_EOS) {
 
-	// wait for disable to complete
-	while((ADC2->CR & ADC_CR_ADDIS) != 0);
+				ADC2->ISR |= ADC_ISR_EOS;
+				ADC2->ISR |= ADC_ISR_EOC;
 
+				temp = ADC2->DR;
+
+				// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
+				temp2 = (float)temp * 0.00081f;		// real voltage on ADC input
+
+				*result = (uint16_t) (temp2 * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
+
+				io_vbatt_state = IO_VBAT_RESULT_AVAILABLE;
+			}
+		}
+	}
+	else if (io_vbatt_state == IO_VBAT_RESULT_AVAILABLE) {
+		// disable the ADC
+		ADC2->CR |= ADC_CR_ADDIS;
+
+		io_vbatt_state = IO_VBAT_ADC_DISABLE;
+	}
 #endif
 
-	// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
-	temp = (float)out * 0.00081f;		// real voltage on ADC input
 
-	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
 
 #endif
+	out = io_vbatt_state;
+
 	return out;
 }
 
+/**
+ *
+ * @return
+ */
+uint16_t io_vbat_meas_get_synchro(void) {
+
+	uint16_t out = 0;
+
+	uint8_t iterations = 0;
+
+	if (io_vbatt_state != IO_VBAT_UNINITIALIZED) {
+
+
+		if (io_vbatt_state != IO_VBAT_ADC_DISABLE) {
+			io_vbat_meas_disable();
+			io_vbat_meas_enable();
+		}
+
+		for (; iterations < MAXIMUM_VBAT_GET_ASYNC_ITERATIONS; iterations++) {
+			const io_vbat_state_t res = io_vbat_meas_get(&out);
+
+			if (res == IO_VBAT_ADC_DISABLE) {
+				break;
+			}
+		}
+
+		if (iterations >= MAXIMUM_VBAT_GET_ASYNC_ITERATIONS) {
+			backup_assert(BACKUP_REG_ASSERT_GET_VBAT_SYNCHRONOUS_TOO_LONG);
+		}
+	}
+
+	return out;
+}
+
+
+/**
+ *
+ * @param sample
+ * @return
+ */
 uint16_t io_vbat_meas_average(uint16_t sample) {
 
 	uint16_t out = 0;
@@ -435,7 +500,7 @@ uint16_t io_vbat_meas_average(uint16_t sample) {
 
 #ifdef PARAMETEO
 /**
- * This funstion has to be called before switching to IDLE state to turn off the ADC
+ * This function has to be called before switching to IDLE state to turn off the ADC
  */
 void io_vbat_meas_disable(void) {
 	if ((ADC2->CR & ADC_CR_ADEN) != 0) {
@@ -453,6 +518,7 @@ void io_vbat_meas_disable(void) {
 
 	ADC2->CR |= ADC_CR_DEEPPWD;
 
+	io_vbatt_state = IO_VBAT_UNINITIALIZED;
 }
 
 void io_vbat_meas_enable(void) {
@@ -520,6 +586,8 @@ void io_vbat_meas_enable(void) {
 	// ignore overrun and overwrite data register content with new conversion result
 	ADC2->CFGR |= ADC_CFGR_OVRMOD;
 #endif
+
+	io_vbatt_state = IO_VBAT_ADC_DISABLE;
 }
 
 void io_pool_vbat_r(int16_t minutes_to_wx) {

@@ -271,6 +271,8 @@ static uint8_t main_kiss_from_message_ln = 0;
 static uint8_t main_kiss_response_message[32];
 
 static uint8_t main_kiss_response_message_ln = 0;
+
+static io_vbat_state_t main_battery_measurement_res;
 #endif
 
 char main_symbol_f = '/';
@@ -1270,34 +1272,39 @@ int main(int argc, char* argv[]){
   led_control_led2_bottom(false);
 
 #if defined(PARAMETEO)
-   rte_main_battery_voltage = io_vbat_meas_get();
-   rte_main_average_battery_voltage = rte_main_battery_voltage;
 
    if (main_config_data_mode->gsm == 1) {
 	   pwr_save_switch_mode_to_c0();
    }
 
+   //rte_main_battery_voltage = io_vbat_meas_get_synchro();
+
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
+   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(true);
    led_control_led2_bottom(false);
 
    delay_fixed(1000);
+   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(false);
    led_control_led2_bottom(true);
 
    delay_fixed(1000);
+   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(true);
    led_control_led2_bottom(true);
 
    delay_fixed(1000);
+   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(false);
    led_control_led2_bottom(false);
 
+   rte_main_average_battery_voltage = rte_main_battery_voltage;
 #endif
 
   // configuting system timers
@@ -1407,7 +1414,7 @@ int main(int argc, char* argv[]){
 	  		io_vbat_meas_enable();
 
 	  		// get current battery voltage and calculate current average
-		    rte_main_battery_voltage = io_vbat_meas_get();
+		    rte_main_battery_voltage = io_vbat_meas_get_synchro();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
 		    // meas average will return 0 if internal buffer isn't filled completely
@@ -1831,6 +1838,19 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PARAMETEO
+			// get current battery voltage. for non parameteo this will return 0
+			main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
+
+			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
+				// get average battery voltage
+				rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+			}
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
+
 			max31865_pool();
 #endif
 			main_reload_internal_wdg();
@@ -1860,17 +1880,6 @@ int main(int argc, char* argv[]){
 
 				main_check_adc = 0;
 			}
-
-			// get current battery voltage. for non parameteo this will return 0
-		    rte_main_battery_voltage = io_vbat_meas_get();
-
-		    // get average battery voltage
-		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
-
-		    // meas average will return 0 if internal buffer isn't filled completely
-		    if (rte_main_average_battery_voltage == 0) {
-		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
-		    }
 
 			// inhibit any power save switching when modem transmits data
 			if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {

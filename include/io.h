@@ -21,6 +21,20 @@
 #include <stm32l4xx.h>
 #endif
 
+#ifdef PARAMETEO
+/**
+ * Structure defines state machine of non-continous battery voltage
+ * measurement
+ */
+typedef enum io_vbat_state_t {
+	IO_VBAT_UNINITIALIZED,			///!< ADC not initialized
+	IO_VBAT_ADC_DISABLE,			///!< ADC initialized and disabled
+	IO_VBAT_ADC_STARTING,
+	IO_VBAT_ADC_MEASURING,			///!< ADC enabled, measuring in progress
+	IO_VBAT_RESULT_AVAILABLE		///!< ADC conversion done
+} io_vbat_state_t;
+#endif
+
 void io_uart_init(void);
 
 void io_oc_init(void);
@@ -36,7 +50,8 @@ void io_buttons_init(void);
 
 #ifdef PARAMETEO
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff);
-uint16_t io_vbat_meas_get(void);
+io_vbat_state_t io_vbat_meas_get(uint16_t * result);
+uint16_t io_vbat_meas_get_synchro(void);
 uint16_t io_vbat_meas_average(uint16_t sample);
 void io_vbat_meas_disable(void);
 void io_vbat_meas_enable(void);
