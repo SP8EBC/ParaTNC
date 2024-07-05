@@ -636,6 +636,26 @@ int main(int argc, char* argv[]){
 
   // set systick interrupt priority
   HAL_NVIC_SetPriority(SysTick_IRQn, 5, 0U);
+
+#if defined(HI_SPEED)
+ //
+ // #define ADC_CCR_CKMODE_1               (0x2UL << ADC_CCR_CKMODE_Pos)           /*!< 0x00020000 */
+ //
+ //	Bits 17:16 CKMODE[1:0]: ADC clock mode
+ // 	These bits are set and cleared by software to define the ADC clock scheme (which is
+ // 	common to both master and slave ADCs):
+ // 	00: CK_ADCx (x=123) (Asynchronous clock mode), generated at product level (refer to
+ // 		Section 6: Reset and clock control (RCC))
+ // 	01: HCLK/1 (Synchronous clock mode). This configuration must be enabled only if the AHB
+ // 		clock prescaler is set to 1 (HPRE[3:0] = 0xxx in RCC_CFGR register) and if the system clock
+ // 		has a 50% duty cycle.
+ // 	10: HCLK/2 (Synchronous clock mode)
+ // 	11: HCLK/4 (Synchronous clock mode)
+ //
+
+ ADC123_COMMON->CCR |= ADC_CCR_CKMODE_1;
+#endif
+
 #endif
 
   rte_main_reboot_req = 0;

@@ -7,6 +7,11 @@
         "rte_main.h": "c",
         "config_data.h": "c",
         "random": "c",
-        "message.h": "c"
+        "message.h": "c",
+        "chrono": "c",
+        "nvm.h": "c",
+        "assert.h": "c",
+        "backup_registers.h": "c",
+        "memory_map.h": "c"
     }
 }

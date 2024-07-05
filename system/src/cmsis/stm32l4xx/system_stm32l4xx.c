@@ -396,8 +396,13 @@ int system_clock_configure_l4(void)
   //HAL_PWR_EnableBkUpAccess();
   //__HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
 
+#ifdef HI_SPEED
   // set the flash latency
   FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
+#else
+  // set the flash latency
+  FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+#endif
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -407,11 +412,13 @@ int system_clock_configure_l4(void)
   // RCC_CFGR_SW_MSI
   RCC->CFGR &= (0xFFFFFFFF ^ RCC_CFGR_SW_Msk);
 
+#ifdef HI_SPEED
   // set APB1 prescaler - HCLK divided by 2
   RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
 
   // set APB2 prescaler - HCLK divided by 2
   RCC->CFGR |= RCC_CFGR_PPRE2_DIV2;
+#endif
 
   // turn on high speed external quartz oscilator
   RCC->CR |= RCC_CR_HSEON;
@@ -428,8 +435,10 @@ int system_clock_configure_l4(void)
   // set the clock source for PLL
   RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSE;
 
+#ifndef HI_SPEED
   // R division factor for PLL to /2 (DIV2)
-  //RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;	//(default reset value of 00: PLLR = 2)
+  RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;	//(default reset value of 00: PLLR = 2)
+#endif
 
   // Q divistion factor for PLL to /2 (DIV2)
   RCC->PLLCFGR &= (0xFFFFFFFF ^ (RCC_PLLCFGR_PLLQ_Msk));
