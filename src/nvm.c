@@ -6,6 +6,7 @@
  */
 
 #include "nvm.h"
+#include "nvm_configuration.h"
 #include "memory_map.h"
 #include "backup_registers.h"
 
@@ -66,21 +67,6 @@ uint8_t * nvm_data_ptr = 0;
 
 nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
 
-#define WAIT_FOR_PGM_COMPLETION			\
-	while (1) {\
-		flash_status = FLASH_GetBank1Status();				\
-															\
-		if (flash_status == FLASH_BUSY) {					\
-			;												\
-		}													\
-		else if (flash_status == FLASH_ERROR_PG) {			\
-			nvm_general_state = NVM_PGM_ERROR;				\
-			break;											\
-		}													\
-		else {												\
-			break;											\
-		}													\
-	}														\
 
 /**
  *
@@ -517,11 +503,15 @@ nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t*
 		const uint8_t old_new_events_spacing = *oldest - *newest;
 
 		// oldest - newest should be located NVM_PAGE_SIZE bytes apart
-		// please note, that pointers points to the begining of each
+		// please note, that pointers points to the beginning of each
 		// entry, hence this minus one
 		if ((old_new_events_spacing - 1) * sizeof(event_log_t) != NVM_PAGE_SIZE) {
 			backup_assert(BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
 		}
+
+		// move pointer to newest, to point to a place where
+		// newly inserted event will be located
+		*newest = *(newest) + 1;
 	}  
 	else if (*newest + sizeof(event_log_t) >= MEMORY_MAP_EVENT_LOG_END) {
 		// we have reached an end of the event area in flash
@@ -536,6 +526,29 @@ nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t*
 		*newest = new_newest;
 		*oldest = new_oldest;
 	}
+
+	// programming 32 bits at once
+	uint32_t * ptr_event_to_insert = (uint32_t*)event;
+	uint32_t * ptr_place_for_new_event = (uint32_t*)*newest;
+
+	NVM_CONFIG_ENABLE_PGM
+
+	*((uint32_t*)(ptr_place_for_new_event)) = *ptr_event_to_insert;
+	WAIT_FOR_PGM_COMPLETION
+
+	*((uint32_t*)(ptr_place_for_new_event)+ 1) = *(ptr_event_to_insert + 1);
+	WAIT_FOR_PGM_COMPLETION
+
+	*((uint32_t*)(ptr_place_for_new_event)+ 2) = *(ptr_event_to_insert + 2);
+	WAIT_FOR_PGM_COMPLETION
+
+	*((uint32_t*)(ptr_place_for_new_event)+ 3) = *(ptr_event_to_insert + 3);
+	WAIT_FOR_PGM_COMPLETION
+
+	NVM_CONFIG_DISABLE_PGM
+
+	// rescan for oldest and newest event one more time
+	nvm_event_log_find_first_oldest_newest(oldest, newest);
 
 	return out;
 }
