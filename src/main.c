@@ -270,8 +270,6 @@ static uint8_t main_kiss_from_message_ln = 0;
 //! binary response to DID request from APRS message
 static uint8_t main_kiss_response_message[32];
 
-static uint8_t main_kiss_response_message_ln = 0;
-
 static io_vbat_state_t main_battery_measurement_res;
 #endif
 
@@ -654,6 +652,7 @@ int main(int argc, char* argv[]){
  //
 
  ADC123_COMMON->CCR |= ADC_CCR_CKMODE_1;
+ ADC123_COMMON->CCR |= ADC_CCR_CKMODE_0;
 #endif
 
 #endif
@@ -1293,6 +1292,8 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
 
+  io_vbat_meas_fill(&rte_main_battery_voltage, &rte_main_average_battery_voltage);
+
    if (main_config_data_mode->gsm == 1) {
 	   pwr_save_switch_mode_to_c0();
    }
@@ -1301,30 +1302,25 @@ int main(int argc, char* argv[]){
 
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
-   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(true);
    led_control_led2_bottom(false);
 
    delay_fixed(1000);
-   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(false);
    led_control_led2_bottom(true);
 
    delay_fixed(1000);
-   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(true);
    led_control_led2_bottom(true);
 
    delay_fixed(1000);
-   io_vbat_meas_get(&rte_main_battery_voltage);
 
    led_control_led1_upper(false);
    led_control_led2_bottom(false);
 
-   rte_main_average_battery_voltage = rte_main_battery_voltage;
 #endif
 
   // configuting system timers
@@ -1434,7 +1430,7 @@ int main(int argc, char* argv[]){
 	  		io_vbat_meas_enable();
 
 	  		// get current battery voltage and calculate current average
-		    rte_main_battery_voltage = io_vbat_meas_get_synchro();
+		    rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
 		    rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
 		    // meas average will return 0 if internal buffer isn't filled completely

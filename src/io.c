@@ -8,6 +8,7 @@
 
 #include <wx_pwr_switch.h>
 #include "station_config_target_hw.h"
+#include "variant.h"
 
 #include "io.h"
 #include "backup_registers.h"
@@ -34,6 +35,7 @@ typedef enum io_pool_vbat_r_state_t {
 #include "station_config.h"
 
 #if defined(PARAMETEO)
+//!< Used across this file to configure I/O pins
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 //!< coefficient used to convert value read by ADC into battery volage
@@ -45,13 +47,16 @@ int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 //!< circular buffer used to calculate average battery voltage
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
 
+//!< iterator across a buffer with battery measurements
 static uint8_t io_vbatt_history_it = 0;
 
 //!< State machine of battery voltage measurement
 static io_vbat_state_t io_vbatt_state = IO_VBAT_UNINITIALIZED;
 
+//!< maximum number of state machine iterations which will not trigger an assert
 #define MAXIMUM_VBAT_GET_ASYNC_ITERATIONS	32
 
+//!< minimum voltage as an increment of 10mV, which will me treated as senseful
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
 
 //! An instance of VBAT_R pooler internal state
@@ -59,7 +64,9 @@ io_pool_vbat_r_state_t io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
 
 #endif
 
-
+/**
+ * Initializes I/O pins used by all UARTs
+ */
 void io_uart_init(void) {
 
 #if defined(STM32F10X_MD_VL)
@@ -154,6 +161,9 @@ void io_uart_init(void) {
 #endif
 }
 
+/**
+ * Initializes open collector output
+ */
 void io_oc_init(void) {
 #ifdef STM32F10X_MD_VL
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -176,6 +186,9 @@ void io_oc_init(void) {
 #endif
 }
 
+/**
+ * SEts open collector output to active (low) states
+ */
 void io_oc_output_low(void) {
 #ifdef STM32F10X_MD_VL
 
@@ -183,6 +196,9 @@ void io_oc_output_low(void) {
 #endif
 }
 
+/**
+ * Sets open collector output to inactive (high-impedance) state
+ */
 void io_oc_output_hiz(void) {
 #ifdef STM32F10X_MD_VL
 
@@ -311,6 +327,11 @@ void io_buttons_init(void){
 #endif
 }
 
+/**
+ * Initializes battery voltage measurement and powers up the ADC
+ * @param a_coeff
+ * @param b_coeff
+ */
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
 #ifdef PARAMETEO
@@ -337,9 +358,36 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 }
 
 /**
- *
- * @param result
- * @return
+ * Gets VBATT_HISTORY_LN battery voltage measurements and put them into an average
+ * FIFO.
+ * @param last
+ * @param average
+ */
+void io_vbat_meas_fill(uint16_t * last, uint16_t * average) {
+
+	uint16_t tempo_result = 0;
+
+	uint16_t average_resut = 0;
+
+	for (int i = 0; i < VBATT_HISTORY_LN; i++) {
+		tempo_result = io_vbat_meas_get_synchro();
+
+		average_resut = io_vbat_meas_average(tempo_result);
+	}
+
+	if (variant_validate_is_within_ram(last)) {
+		*last = tempo_result;
+	}
+
+	if (variant_validate_is_within_ram(average)) {
+		*average = average_resut;
+	}
+}
+
+/**
+ * Battery voltage measurement state machine pooler
+ * @param result voltage measurements result
+ * @return state after executing state machine
  */
 io_vbat_state_t io_vbat_meas_get(uint16_t * result) {
 
@@ -419,7 +467,7 @@ io_vbat_state_t io_vbat_meas_get(uint16_t * result) {
 }
 
 /**
- *
+ * Calls state machine pooler until a measurement is obtained from ADC
  * @return
  */
 uint16_t io_vbat_meas_get_synchro(void) {
@@ -452,11 +500,74 @@ uint16_t io_vbat_meas_get_synchro(void) {
 	return out;
 }
 
+/**
+ * Gets battery voltage synchronously in old way
+ * @return
+ */
+uint16_t io_vbat_meas_get_synchro_old() {
+
+	uint16_t out = 0;
+
+#ifdef PARAMETEO
+
+	float temp = 0.0f;
+
+#ifdef VBAT_MEAS_CONTINOUS
+
+    // get conversion result
+	out = ADC2->DR;
+
+#else
+
+	// if ADC is not enabled
+	if ((ADC2->CR & ADC_CR_ADEN) == 0) {
+		// start ADC
+		ADC2->CR |= ADC_CR_ADEN;
+
+		// wait for startup
+	    while((ADC2->ISR & ADC_ISR_ADRDY) == 0);
+	}
+
+	// start conversion
+	ADC2->CR |= ADC_CR_ADSTART;
+
+	// wait for conversion to finish
+    while((ADC2->ISR & ADC_ISR_EOC) == 0) {
+    	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
+    		break;
+    	}
+    }
+
+    // get conversion result
+	out = ADC2->DR;
+
+    // if end of sequence flag is not cleared
+	if ((ADC2->ISR & ADC_ISR_EOS) != 0) {
+		ADC2->ISR |= ADC_ISR_EOS;
+	}
+
+	// disable the ADC
+	ADC2->CR |= ADC_CR_ADDIS;
+
+	// wait for disable to complete
+	while((ADC2->CR & ADC_CR_ADDIS) != 0);
+
+#endif
+
+	// adc has a resulution of 12bit, so with VDDA of 3.3V it gives about .00081V per division
+	temp = (float)out * 0.00081f;		// real voltage on ADC input
+
+	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
+
+#endif
+	return out;
+}
 
 /**
- *
+ * Puts new sample into average FIFO and return averaged result if FIFO
+ * is fully populated
  * @param sample
- * @return
+ * @return zero if FIFO id not fully populated, or average value
  */
 uint16_t io_vbat_meas_average(uint16_t sample) {
 

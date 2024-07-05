@@ -35,10 +35,24 @@ typedef enum io_vbat_state_t {
 } io_vbat_state_t;
 #endif
 
+/**
+ * Initializes I/O pins used by all UARTs
+ */
 void io_uart_init(void);
 
+/**
+ * Initializes open collector output
+ */
 void io_oc_init(void);
+
+/**
+ * SEts open collector output to active (low) states
+ */
 void io_oc_output_low(void);
+
+/**
+ * Sets open collector output to inactive (high-impedance) state
+ */
 void io_oc_output_hiz(void);
 
 void io_pwr_init(void);
@@ -49,9 +63,43 @@ void io_ext_watchdog_service(void);
 void io_buttons_init(void);
 
 #ifdef PARAMETEO
+/**
+ * Initializes battery voltage measurement and powers up the ADC
+ * @param a_coeff
+ * @param b_coeff
+ */
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff);
+
+/**
+ *
+ */
+void io_vbat_meas_fill(uint16_t * last, uint16_t * average);
+
+/**
+ * Battery voltage measurement state machine pooler
+ * @param result voltage measurements result
+ * @return state after executing state machine
+ */
 io_vbat_state_t io_vbat_meas_get(uint16_t * result);
+
+/**
+ * Calls state machine pooler until a measurement is obtained from ADC
+ * @return
+ */
 uint16_t io_vbat_meas_get_synchro(void);
+
+/**
+ * Gets battery voltage synchronously in old way
+ * @return
+ */
+uint16_t io_vbat_meas_get_synchro_old(void);
+
+/**
+ * Puts new sample into average FIFO and return averaged result if FIFO
+ * is fully populated
+ * @param sample
+ * @return zero if FIFO id not fully populated, or average value
+ */
 uint16_t io_vbat_meas_average(uint16_t sample);
 void io_vbat_meas_disable(void);
 void io_vbat_meas_enable(void);
