@@ -51,6 +51,13 @@
 
 #if defined(STM32L471xx)
 
+#ifdef PWR_SAVE_PRESLEEP_CALLBACK
+/**
+ * Currently only for testing pursposes
+ */
+extern char main_callsign_with_ssid[10];
+#endif
+
 int8_t pwr_save_seconds_to_wx = 0;
 int16_t pwr_save_sleep_time_in_seconds = -1;
 
@@ -86,6 +93,13 @@ const uint16_t pwr_save_startup_restore_voltage =	PWR_SAVE_STARTUP_RESTORE_VOLTA
  * mode to PWSAVE_AGGRESV
  */
 const uint16_t pwr_save_aggressive_powersave_voltage = PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE;
+
+#ifdef PWR_SAVE_PRESLEEP_CALLBACK
+#include "aprsis.h"
+static void pwr_save_presleep(uint16_t current, uint16_t average) {
+	aprsis_send_status_send_battery_voltages(main_callsign_with_ssid, current, average);
+}
+#endif
 
 static void pwr_save_unclock_rtc_backup_regs(void) {
 	// enable access to backup domain
@@ -899,6 +913,10 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
+
+#ifdef PWR_SAVE_PRESLEEP_CALLBACK
+			PWR_SAVE_PRESLEEP_CALLBACK(vbatt_current, vbatt_average);
+#endif
 		}
 		// check if battery voltage is below low voltage level
 		else if (vbatt_average <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {

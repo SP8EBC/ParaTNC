@@ -52,4 +52,10 @@
  */
 #define PWR_SAVE_STOP2_CYCLE_LENGHT_SEC			30u
 
+/**
+ * Optional callback used when a voltage is so low, that a controller will go to sleep.
+ * Comment this #define if You do not want to use this feature
+ */
+#define PWR_SAVE_PRESLEEP_CALLBACK(current, average)	pwr_save_presleep(current, average)
+
 #endif /* INCLUDE_PWR_SAVE_CONFIGURATION_H_ */
