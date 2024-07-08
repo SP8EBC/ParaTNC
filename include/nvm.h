@@ -8,8 +8,8 @@
 #ifndef NVM_H_
 #define NVM_H_
 
+#include "nvm_internals.h"
 #include <stdint.h>
-#include "event_log.h"
 
 #define NVM_RECORD_SIZE		8		// in bytes!!
 
@@ -43,22 +43,7 @@ typedef struct __attribute__((packed)) nvm_measurement_t {
 
 }nvm_measurement_t;
 
-typedef enum nvm_state_result_t {
-	NVM_UNINITIALIZED,
-	NVM_OK,
-	NVM_NO_SPACE_LEFT,
-	NVM_INIT_ERROR,
-	NVM_PGM_ERROR
-}nvm_state_result_t;
 
-typedef enum nvm_event_result_t {
-	NVM_EVENT_OK,
-	NVM_EVENT_OVERRUN_NO_TS,
-	NVM_EVENT_OVERRUN,
-	NVM_EVENT_SINGLE_TS,
-	NVM_EVENT_EMPTY,
-	NVM_EVENT_AREA_ERROR
-}nvm_event_result_t;
 
 /**
  *
@@ -71,20 +56,6 @@ void nvm_measurement_init(void);
  * @return
  */
 nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
-
-/**
- *
- * @param oldest
- * @param newest
- */
-nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest);
-
-/**
- * @param event
- * @param oldest
- * @param newest
- */
-nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t** oldest, event_log_t** newest);
 
 /**
  *
