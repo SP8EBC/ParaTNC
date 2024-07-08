@@ -66,7 +66,7 @@ typedef struct __attribute__((aligned(1))) event_log_t {
 }event_log_t;
 
 /**
- * Initialies eveything log related
+ * Initializes everything log related
  */
 void event_log_init(uint8_t flash_enabled_severity, uint8_t ram_enabled_severity);
 

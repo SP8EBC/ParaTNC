@@ -12,6 +12,10 @@
         "nvm.h": "c",
         "assert.h": "c",
         "backup_registers.h": "c",
-        "memory_map.h": "c"
+        "memory_map.h": "c",
+        "event_log.h": "c",
+        "nvm_configuration.h": "c",
+        "flash_stm32l4x.h": "c",
+        "stm32f10x_flash.h": "c"
     }
 }

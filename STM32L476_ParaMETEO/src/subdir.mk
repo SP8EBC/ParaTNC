@@ -19,6 +19,7 @@ C_SRCS += \
 ../src/it_handlers.c \
 ../src/main.c \
 ../src/nvm.c \
+../src/nvm_event.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
 ../src/rte_main.c \
@@ -50,6 +51,7 @@ OBJS += \
 ./src/it_handlers.o \
 ./src/main.o \
 ./src/nvm.o \
+./src/nvm_event.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
 ./src/rte_main.o \
@@ -81,6 +83,7 @@ C_DEPS += \
 ./src/it_handlers.d \
 ./src/main.d \
 ./src/nvm.d \
+./src/nvm_event.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
 ./src/rte_main.d \
