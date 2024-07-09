@@ -35,11 +35,6 @@ typedef enum nvm_event_result_t {
 #endif
 
 
-
-#if (!defined STM32F10X_MD_VL) && (!defined STM32L471xx)
-
-#endif
-
 #if (defined UNIT_TEST)
 // currently defined here for unit tests
 typedef enum
