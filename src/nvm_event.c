@@ -201,72 +201,10 @@ nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t*
 	const event_log_t* oldest_init_ptr 			= *oldest;
 	const event_log_t* next_newest_init_ptr 	= *newest + 1;
 
-	// check if we reach boundary between two flash memory pages
-	// and the newest entry is just before the oldest pne
-	if (next_newest_init_ptr == oldest_init_ptr) {
-		// erase next flash memory page to make a room for next events 
-		flash_status = FLASH_ErasePage(*oldest);
+	NVM_EVENT_PUSH_POINTERS_ARITM(MEMORY_MAP_EVENT_LOG_START, MEMORY_MAP_EVENT_LOG_END, FLASH_ErasePage, 1);
+	NVM_EVENT_PUSH_FLASH_OPER(event, MEMORY_MAP_EVENT_LOG_END,  FLASH_ErasePage, 1);
+	NVM_EVENT_PUSH_POINTERS_ARITM_SEC(MEMORY_MAP_EVENT_LOG_START, MEMORY_MAP_EVENT_LOG_END);
 
-		// check operation result 
-		if (flash_status != FLASH_COMPLETE) {
-			nvm_general_state = NVM_PGM_ERROR;
-		}
-
-		// rescan for oldest and newest event one more time
-		nvm_event_log_find_first_oldest_newest(oldest, newest, (void*)MEMORY_MAP_EVENT_LOG_START, (void*)MEMORY_MAP_EVENT_LOG_END);
-
-		const uint8_t old_new_events_spacing = *oldest - *newest;
-
-		// oldest - newest should be located NVM_PAGE_SIZE bytes apart
-		// please note, that pointers points to the beginning of each
-		// entry, hence this minus one
-		if ((old_new_events_spacing - 1) * sizeof(event_log_t) != NVM_PAGE_SIZE) {
-			backup_assert(BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
-		}
-
-		// move pointer to newest, to point to a place where
-		// newly inserted event will be located
-		*newest = *(newest) + 1;
-	}  
-	else if ((void*)next_newest_init_ptr >= (void*)MEMORY_MAP_EVENT_LOG_END) {
-		// we have reached an end of the event area in flash
-
-		// erase first memory page
-		flash_status = FLASH_ErasePage(MEMORY_MAP_EVENT_LOG_START);
-
-		// set pointers accordingly
-		event_log_t* new_newest = (event_log_t*)MEMORY_MAP_EVENT_LOG_START;
-		event_log_t* new_oldest = (event_log_t*)(MEMORY_MAP_EVENT_LOG_END - sizeof(event_log_t));
-
-		*newest = new_newest;
-		*oldest = new_oldest;
-	}
-	else {
-		*newest = *(newest) + 1;
-	}
-
-	// programming 32 bits at once
-	uint32_t * ptr_event_to_insert = (uint32_t*)event;
-	uint32_t * ptr_place_for_new_event = (uint32_t*)*newest;
-
-	NVM_CONFIG_ENABLE_PGM
-
-	*((uint32_t*)(ptr_place_for_new_event)) = *ptr_event_to_insert;
-	WAIT_FOR_PGM_COMPLETION
-
-	*((uint32_t*)(ptr_place_for_new_event)+ 1) = *(ptr_event_to_insert + 1);
-	WAIT_FOR_PGM_COMPLETION
-
-	*((uint32_t*)(ptr_place_for_new_event)+ 2) = *(ptr_event_to_insert + 2);
-	WAIT_FOR_PGM_COMPLETION
-
-	*((uint32_t*)(ptr_place_for_new_event)+ 3) = *(ptr_event_to_insert + 3);
-	WAIT_FOR_PGM_COMPLETION
-
-	NVM_CONFIG_DISABLE_PGM
-
-	// rescan for oldest and newest event one more time
-	nvm_event_log_find_first_oldest_newest(oldest, newest, (void*)MEMORY_MAP_EVENT_LOG_START, (void*)MEMORY_MAP_EVENT_LOG_END);
 
 	return out;
 }
