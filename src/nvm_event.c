@@ -3,6 +3,17 @@
 #include "memory_map.h"
 #include "backup_registers.h"
 
+/**
+ * 
+*/
+#define NVM_EVENT_CREATE_POINTERS_FOR_TARGET(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, pointer_based_access) \
+		event_log_t** nvm_event_oldest##_name;							\
+		event_log_t** nvm_event_newest##_name;							\		
+																		\
+
+/**
+ *
+ */
 #define NVM_EVENT_PUSH_POINTERS_ARITM(_area_start_addr, _area_end_addr, _erase_fn, _severity)	\
 if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
 	/* check if we reach boundary between two flash memory pages */								\
@@ -50,36 +61,60 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
 	}																							\
 }																								\
 
+/**
+ *
+ */
+#define NVM_EVENT_PUSH_POINTERS_FLASH_OPER(_event_to_insert, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity)	\
+if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{																		\
+	/* programming 32 bits at once */																											\
+	uint32_t * ptr_event_to_insert = (uint32_t*)_event_to_insert;																				\
+	uint32_t * ptr_place_for_new_event = (uint32_t*)*newest;																					\
+																																				\
+	_enable_pgm_fn																																\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)) = *ptr_event_to_insert;																				\
+	_wait_for_pgm_fn																															\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 1) = *(ptr_event_to_insert + 1);																	\
+	_wait_for_pgm_fn																															\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 2) = *(ptr_event_to_insert + 2);																	\
+	_wait_for_pgm_fn																															\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 3) = *(ptr_event_to_insert + 3);																	\
+	_wait_for_pgm_fn																															\
+																																				\
+	_disable_pgm_fn																																\
+																																				\
+}																																				\
 
-#define NVM_EVENT_PUSH_FLASH_OPER(_event_to_insert, _area_end_addr, _erase_fn, _severity)		\
-	/* programming 32 bits at once */															\
-	uint32_t * ptr_event_to_insert = (uint32_t*)_event_to_insert;											\
-	uint32_t * ptr_place_for_new_event = (uint32_t*)*newest;									\
-																								\
-	NVM_CONFIG_ENABLE_PGM																		\
-																								\
-	*((uint32_t*)(ptr_place_for_new_event)) = *ptr_event_to_insert;								\
-	WAIT_FOR_PGM_COMPLETION																		\
-																								\
-	*((uint32_t*)(ptr_place_for_new_event)+ 1) = *(ptr_event_to_insert + 1);					\
-	WAIT_FOR_PGM_COMPLETION																		\
-																								\
-	*((uint32_t*)(ptr_place_for_new_event)+ 2) = *(ptr_event_to_insert + 2);					\
-	WAIT_FOR_PGM_COMPLETION																		\
-																								\
-	*((uint32_t*)(ptr_place_for_new_event)+ 3) = *(ptr_event_to_insert + 3);					\
-	WAIT_FOR_PGM_COMPLETION																		\
-																								\
-	NVM_CONFIG_DISABLE_PGM																		\
-																								\
-
-
+/**
+ *
+ */
 #define NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_area_start_addr, _area_end_addr)														\
 	/* rescan for oldest and newest event one more time */																		\
-	nvm_event_log_find_first_oldest_newest(oldest, newest, (void*)_area_start_addr, (void*)_area_end_addr);	\
+	nvm_event_log_find_first_oldest_newest(oldest, newest, (void*)_area_start_addr, (void*)_area_end_addr);						\
 																																\
 
+/**
+ *
+ */
+#define NVM_EVENT_EXPAND_POINTER_BASE_ACCESS_true(_area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity)		\
+	NVM_EVENT_PUSH_POINTERS_ARITM(_area_start_addr, _area_end_addr, _erase_fn, _severity);																			\
+	NVM_EVENT_PUSH_POINTERS_FLASH_OPER(event, _area_end_addr,  _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity);							\
+	NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_area_start_addr, _area_end_addr);																							\
+
+/**
+ *
+ */
+#define NVM_EVENT_EXPAND_POINTER_BASE_ACCESS(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, pointer_based_access)	\
+	NVM_EVENT_EXPAND_POINTER_BASE_ACCESS_##pointer_based_access(_area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity);				\
+
+
 static nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
+
+
+NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
 
 /**
  *
@@ -201,9 +236,7 @@ nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event, event_log_t*
 	const event_log_t* oldest_init_ptr 			= *oldest;
 	const event_log_t* next_newest_init_ptr 	= *newest + 1;
 
-	NVM_EVENT_PUSH_POINTERS_ARITM(MEMORY_MAP_EVENT_LOG_START, MEMORY_MAP_EVENT_LOG_END, FLASH_ErasePage, 1);
-	NVM_EVENT_PUSH_FLASH_OPER(event, MEMORY_MAP_EVENT_LOG_END,  FLASH_ErasePage, 1);
-	NVM_EVENT_PUSH_POINTERS_ARITM_SEC(MEMORY_MAP_EVENT_LOG_START, MEMORY_MAP_EVENT_LOG_END);
+	NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_EXPAND_POINTER_BASE_ACCESS);
 
 
 	return out;
