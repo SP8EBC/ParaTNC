@@ -1,11 +1,22 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "PARAMETEO",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
             "defines": ["PARAMETEO", "STM32L471xx"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
+            "name": "UNIT_TESTS",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": ["UNIT_TEST"],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "gnu++17",

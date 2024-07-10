@@ -8,8 +8,8 @@
 #ifndef NVM_H_
 #define NVM_H_
 
-#include "nvm_internals.h"
 #include <stdint.h>
+#include "nvm_t.h"
 
 #define NVM_RECORD_SIZE		8		// in bytes!!
 
