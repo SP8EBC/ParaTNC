@@ -5,8 +5,8 @@
  *      Author: mateusz
  */
 
-#include "nvm.h"
-#include "nvm_internals.h"
+#include "./nvm/nvm.h"
+#include "./nvm/nvm_internals.h"
 #include "nvm_configuration.h"
 #include "memory_map.h"
 #include "backup_registers.h"
@@ -14,7 +14,7 @@
 #define KB *1024
 
 #ifdef STM32L471xx
-#include <stm32l4xx_hal_cortex.h>
+//#include <stm32l4xx_hal_cortex.h>
 #include <stm32l4xx.h>
 #include "./drivers/l4/flash_stm32l4x.h"
 

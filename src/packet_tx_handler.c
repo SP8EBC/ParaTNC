@@ -24,7 +24,7 @@
 #include "aprsis.h"
 #include "api/api.h"
 #include "pwr_save.h"
-#include "nvm.h"
+#include "./nvm/nvm.h"
 
 #include "gsm/sim800c_gprs.h"
 #endif

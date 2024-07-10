@@ -9,6 +9,7 @@
 #define INCLUDE_DRIVERS_L4_FLASH_STM32L4X_H_
 
 #include "station_config_target_hw.h"
+#include <stdint.h>
 
 typedef enum
 {
@@ -31,6 +32,6 @@ typedef enum
 #endif
 
 FLASH_Status FLASH_GetBank1Status(void);
-
+FLASH_Status FLASH_ErasePage(uint32_t Page_Address);
 
 #endif /* INCLUDE_DRIVERS_L4_FLASH_STM32L4X_H_ */

@@ -21,7 +21,7 @@
 #include "gsm/sim800c_gprs.h"
 #include "http_client/http_client.h"
 
-#include "nvm.h"
+#include "./nvm/nvm.h"
 
 #include "aprsis.h"
 #include "api/api.h"
