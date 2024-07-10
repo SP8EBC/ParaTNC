@@ -6,6 +6,7 @@
  */
 
 #include "nvm.h"
+#include "nvm_internals.h"
 #include "nvm_configuration.h"
 #include "memory_map.h"
 #include "backup_registers.h"
