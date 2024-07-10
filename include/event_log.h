@@ -14,7 +14,8 @@
 
 #define EVENT_LOG_GET_SOURCE(x)				(x & 0x0F)
 
-#define EVENT_LOG_TIMESYNC_BOOTUP_WPARAM	(0x01U)
+#define EVENT_LOG_TIMESYNC_BOOTUP_WPARAM	(0x77U)
+
 
 /**
  * TYpe used to distinguish between event of different severity

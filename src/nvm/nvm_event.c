@@ -1,8 +1,8 @@
-#include "nvm_event.h"
+#include "./nvm/nvm_event.h"
+#include "./nvm/nvm_internals.h"
 #include "nvm_configuration.h"
 #include "memory_map.h"
 #include "backup_registers.h"
-#include "nvm_internals.h"
 
 
 
@@ -77,10 +77,10 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 	nvm_event_result_t res = NVM_EVENT_OK;
 
 	// pointer to last, non null and non TIMESYNC entry
-	event_log_t* last_non_ts = NULL;
+	event_log_t* last_non_ts = 0x0;
 
 	// pointer to the oldest non TIMESYNC event log entry
-	event_log_t* oldest_non_ts = NULL;
+	event_log_t* oldest_non_ts = 0x0;
 
 	// size of single log entry
 	const uint8_t log_entry_size = sizeof(event_log_t);
@@ -106,17 +106,17 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 		// set pointer to currently checked event
 		const event_log_t* const current = (area_start + (log_entry_size) * i);
 
-		event_log_severity_t severity = (current->severity_and_source & 0xF0) >> 4;
-		event_log_source_t source = (current->severity_and_source & 0xF);
+		//event_log_severity_t severity = (current->severity_and_source & 0xF0) >> 4;
+		//event_log_source_t source = (current->severity_and_source & 0xF);
 
 		// skip erased memory
 		if (current->event_id == 0xFFU && current->event_master_time == 0xFFFFFFFFU) {
-			oldest_non_ts = NULL;
+			oldest_non_ts = 0x00;
 			continue;
 		}
 
 		// look for timesync event created at bootup
-		if (current->event_id == EVENT_TIMESYNC && current->wparam == 0x77) {
+		if (current->event_id == EVENT_TIMESYNC && current->wparam == EVENT_LOG_TIMESYNC_BOOTUP_WPARAM) {
 
 			// check if this timestamp is before the oldest found before
 			if (lowest_date > current->lparam && lowest_time > current->lparam2) {
@@ -144,7 +144,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 				// has overruned at least one time 
 				res = NVM_EVENT_OVERRUN;
 
-				if (oldest_non_ts == NULL) {
+				if (oldest_non_ts == 0x0) {
 					oldest_non_ts = (event_log_t*)current;
 				}
 			}
@@ -152,7 +152,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
 	}
 
 	// check if any non-timesync event has been found at all
-	if (last_non_ts == NULL) {
+	if (last_non_ts == 0x0) {
 		// no, NVM log contains only single timesync event
 		res = NVM_EVENT_SINGLE_TS;
 	}
