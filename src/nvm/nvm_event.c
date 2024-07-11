@@ -4,13 +4,90 @@
 #include "memory_map.h"
 #include "backup_registers.h"
 
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+typedef enum nvm_event_next_t {
+	NVM_EVENT_NEXT_ERASED,		///!< There is no next element, the next one is just erased memory 
+	NVM_EVENT_NEXT_END,			///!< There is no next element, because the current one is the last 
+	NVM_EVENT_NEXT_OLDER,		///!< Next event is older that the current one
+	NVM_EVENT_NEXT_NEWER,		///!< Next event is newer (later timestamp)
+	NVM_EVENT_NEXT_TIMESTAMP,	///!< Next element is a timestamp event
+	NVM_EVENT_NEXT_UNKNOWN
+}nvm_event_next_t;
 
 
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+/**
+ * Variable stores a result of last flash operation
+*/
 static nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
 
-
+/**
+ * Definition of all pointers, two of them per event logging target area, used
+ * to find oldest and newest event
+*/
 NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
 
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ *
+ * @param current
+ * @param area_start
+ * @param area_end
+ * @return
+ */
+static nvm_event_next_t nvm_event_log_check_next(const event_log_t* current,
+												const void * area_start, 
+												const void * area_end) {
+	nvm_event_next_t out = NVM_EVENT_NEXT_UNKNOWN;
+
+	const event_log_t* next = (current + 1);
+
+	if (current != 0x00 && area_start != 0x00 && area_start != 0x00) {
+
+		if (current == area_end) {
+			out = NVM_EVENT_NEXT_END;
+		}
+		else if ((next->event_master_time == 0xFFFFFFFFu) && 
+				 (next->lparam2 == 0xFFFFFFFFu) &&
+				 (next->lparam == 0xFFFFFFFFu)) {
+			out = NVM_EVENT_NEXT_ERASED;
+		}
+		else if (next->event_id == EVENT_TIMESYNC) {
+			out = NVM_EVENT_NEXT_TIMESTAMP;
+		}
+		else {
+			const uint32_t next_master_time = next->event_master_time;
+
+			if (next_master_time > current->event_master_time) {
+				out = NVM_EVENT_NEXT_NEWER;
+			}
+			else [
+				out = NVM_EVENT_NEXT_OLDER;
+			]
+		}
+	}
+
+
+	return out;
+}
+
+
+/**
+ *
+ * @param oldest
+ * @param newest
+ * @param area_start
+ * @param area_end
+ * @param erase_fn
+ */
 static void nvm_event_log_perform_pointer_arithmetics(
 								event_log_t** oldest, 
 								event_log_t** newest, 
@@ -66,6 +143,11 @@ static void nvm_event_log_perform_pointer_arithmetics(
 		*newest = *(newest) + 1;
 	}									
 }
+
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  *

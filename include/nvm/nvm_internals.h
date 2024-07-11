@@ -1,6 +1,11 @@
 #ifndef E365347D_02F3_4DCB_A254_BF10A5E57B60
 #define E365347D_02F3_4DCB_A254_BF10A5E57B60
 
+
+/// ==================================================================================================
+///	X-MACROS
+/// ==================================================================================================
+
 /**
  * Macro used for creating work pointers to all event logger targets,
  * which is configured as directly mapped into i/o area
@@ -23,8 +28,9 @@
  * @param _area_end_addr the highest address of an area for this target
  * @param _erase_fn a function (a pointer to) which performs flash memory erasure.
  * 					It should implement an interface FLASH_Status(*erase_fn)(uint32_t), where a parameter is
- * 					an address of flash memory page to be erased. If the targer is configured to store in RAM
- * 					memory, or anything else which does not require explicit erase, the function might be simply nop
+ * 					an address of flash memory page of size @link{NVM_PAGE_SIZE} to be erased. 
+ * 					If the target is configured to store in RAM memory, or anything else which 
+ * 					does not require explicit erase, the function might be simply nop
  * @param _severity level of an event
  *
  */
@@ -115,6 +121,17 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 #define NVM_EVENT_PERFORM_INIT(_name, _area_start_addr, _area_end_addr, pointer_based_access)	\
 		NVM_EVENT_PERFORM_INIT_##pointer_based_access(_name, _area_start_addr, _area_end_addr)	\
 
+/// ==================================================================================================
+///	GLOBAL MACROS
+/// ==================================================================================================
+#define NVM_EVENT_GET_SEVERITY(x)	(x->severity_and_source & 0xF0) >> 4
+
+#define NVM_EVENT_GET_SOURCE(x)		(x->severity_and_source & 0xF)
+
+/// ==================================================================================================
+///	GLOBAL DEFINITIONS
+/// ==================================================================================================
+
 #ifdef STM32L471xx
 
 //!< Size of single flash memory page
@@ -139,6 +156,10 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 //!< How flash program operation are aligned, how many bytes must be programmed at once
 #define NVM_WRITE_BYTE_ALIGN		8
 
+
+/// ==================================================================================================
+///	GLOBAL TYPES
+/// ==================================================================================================
 
 // currently defined here for unit tests
 typedef enum

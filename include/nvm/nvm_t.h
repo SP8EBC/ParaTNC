@@ -1,12 +1,19 @@
 #ifndef D693DD34_021C_482B_A532_AB5B31D18C64
 #define D693DD34_021C_482B_A532_AB5B31D18C64
 
+typedef struct nvm_event_fifo_t {
+	uint32_t fifo_entry_counter;
+	uint32_t 
+
+}
+
 typedef enum nvm_state_result_t {
 	NVM_UNINITIALIZED,
 	NVM_OK,
 	NVM_NO_SPACE_LEFT,
 	NVM_INIT_ERROR,
-	NVM_PGM_ERROR
+	NVM_PGM_ERROR,
+	NVM_GENERAL_ERROR
 }nvm_state_result_t;
 
 typedef enum nvm_event_result_t {

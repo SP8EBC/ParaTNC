@@ -10,12 +10,25 @@
 
 #include "stdint.h"
 
+
+/// ==================================================================================================
+///	GLOBAL MACROS
+/// ==================================================================================================
+
 #define EVENT_LOG_GET_SEVERITY(x)			((x & 0xF0) >> 4)
 
 #define EVENT_LOG_GET_SOURCE(x)				(x & 0x0F)
 
+/// ==================================================================================================
+///	GLOBAL DEFINITIONS
+/// ==================================================================================================
+
 #define EVENT_LOG_TIMESYNC_BOOTUP_WPARAM	(0x77U)
 
+
+/// ==================================================================================================
+///	GLOBAL TYPEDEFS
+/// ==================================================================================================
 
 /**
  * TYpe used to distinguish between event of different severity
@@ -58,13 +71,22 @@ typedef enum event_log_source_t {
  * non volatile storage
  */
 typedef struct __attribute__((aligned(1))) event_log_t {
+	uint32_t event_counter_id;		//!< counter used to check which event is the oldest and newest one
 	uint32_t event_master_time;		//!< value of maser time at the moment an event is generated
 	uint8_t severity_and_source;	//!< high nibble -> severity level, low nibble -> source
 	uint8_t event_id;				//!< event id, unique across different sources & severity level
+	uint8_t param;					//!< Optional single-byte data, specific per event
+	uint8_t param2;					//!< Optional single-byte data, specific per event
 	uint16_t wparam;				//!< Optional 2-byte data, specific per event
+	uint16_t wparam2;				//!< Optional 2-byte data, specific per event
 	uint32_t lparam;				//!< Optional 4-byte data, specific per event
-	uint32_t lparam2;
+	uint32_t lparam2;				//!< Optional 4-byte data, specific per event
 }event_log_t;
+
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Initializes everything log related
