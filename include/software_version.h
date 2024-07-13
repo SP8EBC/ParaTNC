@@ -9,7 +9,7 @@
 #define SOFTWARE_VERSION_H_
 
 #define SW_VER "FAXX"
-#define SW_DATE "03072024"
+#define SW_DATE "05072024"
 #define SW_KISS_PROTO	"B"
 
 extern const char software_version_str[5];

@@ -12,6 +12,7 @@
 		NVM_EVENT_TARGET_AREA_COUNT									\
 	}nvm_event_target_ereas_t;																\
 
+
 /**
  * Macro used for creating work pointers to all event logger targets,
  * which is configured as directly mapped into i/o area
@@ -22,6 +23,7 @@
 		event_log_t* nvm_event_oldest##_name;							\
 		event_log_t* nvm_event_newest##_name;							\
 		uint32_t nvm_event_counter_id_for_last_##_name					\
+
 
 /**
  *	Macro performing pre-insertion pointer arithmetics for all directly i/o
@@ -43,6 +45,7 @@
 #define NVM_EVENT_PUSH_POINTERS_ARITM(_name, _area_start_addr, _area_end_addr, _erase_fn, _severity, _page_size)	\
 if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
 		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, _area_start_addr, _area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size);	\
+
 }																								\
 
 /**
@@ -63,6 +66,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	if (event->event_counter_id == 0) {																											\
 		event->event_counter_id = nvm_event_counter_id_for_last_##_name;																		\
 	}																																			\
+
 	/* programming 32 bits at once */																											\
 	uint32_t * ptr_event_to_insert = (uint32_t*)_event_to_insert;																				\
 	uint32_t * ptr_place_for_new_event = (uint32_t*)nvm_event_newest##_name;																	\
@@ -101,6 +105,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	NVM_EVENT_PUSH_POINTERS_ARITM(_name, _area_start_addr, _area_end_addr, _erase_fn, _severity, _page_size);																			\
 	NVM_EVENT_PUSH_POINTERS_FLASH_OPER(_name, event, _area_end_addr,  _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity);							\
 	NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_name, _area_start_addr, _area_end_addr, _page_size);																							\
+
 
 /**
  * 	Main macro used in @link{nvm_event_log_push_new_event} to expand all event i/o operations for all target configured
@@ -187,7 +192,5 @@ typedef enum
   FLASH_TIMEOUT   /**< FLASH_TIMEOUT */
 }FLASH_Status;
 #endif
-
-
 
 #endif /* E365347D_02F3_4DCB_A254_BF10A5E57B60 */

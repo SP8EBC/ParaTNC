@@ -97,6 +97,7 @@ telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
 														const char * callsign_with_ssid);
 
 void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid);
+void aprsis_send_status_send_battery_voltages(const char * callsign_with_ssid, uint16_t current, uint16_t average);
 void aprsis_send_server_comm_counters(const char * callsign_with_ssid);
 void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, uint16_t voltage);
 void aprsis_send_gsm_status(const char * callsign_with_ssid);

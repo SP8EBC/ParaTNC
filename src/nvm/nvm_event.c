@@ -85,11 +85,13 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 	const event_log_t *oldest_init_ptr = *oldest;
 	const event_log_t *next_newest_init_ptr = *newest + 1;
 
+
 	/* check if we reach boundary between two flash memory pages */
 	/* and the newest entry is just before the oldest pne  */
 	if (next_newest_init_ptr == oldest_init_ptr) {
 		/* erase next flash memory page to make a room for next events   */
 		const FLASH_Status flash_status = erase_fn ((intptr_t)*oldest);
+
 
 		/* check operation result */
 		if (flash_status != FLASH_COMPLETE) {
@@ -100,6 +102,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 		nvm_event_log_find_first_oldest_newest (oldest, newest, (void *)area_start,
 												(void *)area_end, page_size);
 
+
 		const uint8_t old_new_events_spacing = *oldest - *newest;
 
 		/* oldest - newest should be located NVM_PAGE_SIZE bytes apart  */
@@ -107,6 +110,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 		/* entry, hence this minus one  */
 		if ((old_new_events_spacing - 1) * sizeof (event_log_t) != NVM_PAGE_SIZE) {
 			backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
+
 		}
 
 		/* move pointer to newest, to point to a place where  */
@@ -122,6 +126,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 		/* set pointers accordingly  */
 		event_log_t *new_newest = (event_log_t *)area_start;
 		event_log_t *new_oldest = (event_log_t *)(area_end - sizeof (event_log_t));
+
 
 		*newest = new_newest;
 		*oldest = new_oldest;
@@ -160,6 +165,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 
 	// size of single log entry
 	const uint8_t log_entry_size = sizeof (event_log_t);
+
 
 	// how any events could be stored in NVM flash memory
 	const uint16_t log_entries = (area_end - area_start) / log_entry_size;
@@ -243,6 +249,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 	}
 
 	return res;
+
 }
 
 /**

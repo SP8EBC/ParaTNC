@@ -18,6 +18,7 @@ void nvm_event_log_init(void);
  */
 nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest, void * area_start, void * area_end, int16_t page_size);
 
+
 /**
  * @param event
  * @param oldest

@@ -1,7 +1,6 @@
 #ifndef D693DD34_021C_482B_A532_AB5B31D18C64
 #define D693DD34_021C_482B_A532_AB5B31D18C64
 
-
 typedef enum nvm_state_result_t {
 	NVM_UNINITIALIZED,
 	NVM_OK,

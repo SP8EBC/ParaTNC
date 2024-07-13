@@ -1036,6 +1036,33 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 
 }
 
+void aprsis_send_status_send_battery_voltages(const char * callsign_with_ssid, uint16_t current, uint16_t average)
+{
+	if (aprsis_logged == 0) {
+		return;
+	}
+
+//	if (gsm_sim800_tcpip_tx_busy() == 1) {
+//		// will die here
+//		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_CNTRS);
+//	}
+
+	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
+									aprsis_packet_tx_buffer,
+									APRSIS_TX_BUFFER_LN - 1,
+									"%s>AKLPRZ,qAR,%s:>[vbatt][current: %d][: %d][average: %d]\r\n",
+									callsign_with_ssid,
+									callsign_with_ssid,
+									current,
+									average);
+
+ 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+}
+
 void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
 
 	if (aprsis_logged == 0) {

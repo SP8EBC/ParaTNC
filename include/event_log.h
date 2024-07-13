@@ -31,6 +31,7 @@
 ///	GLOBAL TYPEDEFS
 /// ==================================================================================================
 
+
 /**
  * TYpe used to distinguish between event of different severity
  */
