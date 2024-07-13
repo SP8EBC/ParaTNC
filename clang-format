@@ -1,0 +1,23 @@
+﻿---
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+AlignOperands: 'true'
+AllowShortBlocksOnASingleLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'true'
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortIfStatementsOnASingleLine: 'false'
+AllowShortLoopsOnASingleLine: 'false'
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: 'false'
+AlwaysBreakTemplateDeclarations: MultiLine
+BreakBeforeBraces: Stroustrup
+ColumnLimit: '100'
+IndentWidth: '4'
+Language: Cpp
+SpaceBeforeParens: Always
+Standard: Cpp11
+TabWidth: '4'
+UseTab: Always
+
+...

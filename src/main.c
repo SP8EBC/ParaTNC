@@ -22,6 +22,8 @@
 #include "http_client/http_client.h"
 
 #include "./nvm/nvm.h"
+#include "./nvm/nvm_event.h"
+#include "./event_log.h"
 
 #include "aprsis.h"
 #include "api/api.h"
@@ -658,6 +660,9 @@ int main(int argc, char* argv[]){
 #endif
 
   rte_main_reboot_req = 0;
+
+  // initialize nvm logger
+  nvm_event_log_init();
 
   // initializing variables & arrays in rte_wx
   rte_wx_init();
