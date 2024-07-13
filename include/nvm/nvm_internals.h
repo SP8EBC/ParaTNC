@@ -91,7 +91,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_name, _area_start_addr, _area_end_addr, _page_size)														\
 	/* rescan for oldest and newest event one more time */																		\
-	nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size);						\
+	nvm_general_state = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size);						\
 																																\
 
 /**
@@ -123,14 +123,17 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 /**
  *
  */
-#define NVM_EVENT_PERFORM_INIT_true(_name, _area_start_addr, _area_end_addr)			\
-		NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_name, _area_start_addr, _area_end_addr)		\
+#define NVM_EVENT_PERFORM_INIT_true(_name, _area_start_addr, _area_end_addr, _page_size)					\
+		const nvm_state_result_t res##_name = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size);						\
+		if (res##_name == NVM_GENERAL_ERROR)	{																	\
+			nvm_general_state = res##_name;																		\
+		}																									\
 
 /**
  *
  */
-#define NVM_EVENT_PERFORM_INIT(_name, _area_start_addr, _area_end_addr, pointer_based_access)	\
-		NVM_EVENT_PERFORM_INIT_##pointer_based_access(_name, _area_start_addr, _area_end_addr)	\
+#define NVM_EVENT_PERFORM_INIT(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access)	\
+		NVM_EVENT_PERFORM_INIT_##pointer_based_access(_name, _area_start_addr, _area_end_addr, _page_size)	\
 
 /// ==================================================================================================
 ///	GLOBAL MACROS
@@ -166,12 +169,14 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 
 //!< How flash program operation are aligned, how many bytes must be programmed at once
 #define NVM_WRITE_BYTE_ALIGN		8
+#endif
 
 
 /// ==================================================================================================
 ///	GLOBAL TYPES
 /// ==================================================================================================
 
+#if (defined UNIT_TEST)
 // currently defined here for unit tests
 typedef enum
 {
@@ -182,5 +187,7 @@ typedef enum
   FLASH_TIMEOUT   /**< FLASH_TIMEOUT */
 }FLASH_Status;
 #endif
+
+
 
 #endif /* E365347D_02F3_4DCB_A254_BF10A5E57B60 */

@@ -8,14 +8,18 @@
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
 
+/**
+ *
+ */
 typedef enum nvm_event_next_t {
 	NVM_EVENT_NEXT_ERASED,	  ///!< There is no next element, the next one is just erased memory
 	NVM_EVENT_NEXT_END,		  ///!< There is no next element, because the current one is the last
 	NVM_EVENT_NEXT_OLDER,	  ///!< Next event is older that the current one
 	NVM_EVENT_NEXT_NEWER,	  ///!< Next event is newer (later timestamp)
 	NVM_EVENT_NEXT_TIMESTAMP, ///!< Next element is a timestamp event
-	NVM_EVENT_NEXT_UNKNOWN
+	NVM_EVENT_NEXT_UNKNOWN/**< NVM_EVENT_NEXT_UNKNOWN */
 } nvm_event_next_t;
+
 
 /// ==================================================================================================
 ///	LOCAL VARIABLES
@@ -36,6 +40,23 @@ NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
+
+static void nvm_event_erase_all(void *area_start, void *area_end, int16_t page_size) {
+#if defined(STM32L471xx)
+
+	const uint32_t area_size = (uint32_t) area_end - (uint32_t) area_start;
+
+	const int16_t pages = area_size / page_size;
+
+	FLASH_Unlock();
+
+	for (int i = 0; i < pages; i++) {
+		FLASH_ErasePage((uint32_t)area_start + (i * page_size));
+	}
+
+	FLASH_Lock();
+#endif
+}
 
 /**
  *
@@ -68,7 +89,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 	/* and the newest entry is just before the oldest pne  */
 	if (next_newest_init_ptr == oldest_init_ptr) {
 		/* erase next flash memory page to make a room for next events   */
-		const FLASH_Status flash_status = erase_fn (*oldest);
+		const FLASH_Status flash_status = erase_fn ((intptr_t)*oldest);
 
 		/* check operation result */
 		if (flash_status != FLASH_COMPLETE) {
@@ -96,7 +117,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 		/* we have reached an end of the event area in flash  */
 
 		/* erase first memory page  */
-		(void)erase_fn (area_start);
+		(void)erase_fn ((intptr_t)area_start);
 
 		/* set pointers accordingly  */
 		event_log_t *new_newest = (event_log_t *)area_start;
@@ -113,6 +134,18 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
+
+/**
+ *
+ */
+void nvm_event_log_init(void)
+{
+	NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_PERFORM_INIT);
+
+	if (nvm_general_state == NVM_GENERAL_ERROR) {
+		nvm_event_erase_all((void*)MEMORY_MAP_EVENT_LOG_START, (void*)MEMORY_MAP_EVENT_LOG_END, NVM_PAGE_SIZE);
+	}
+}
 
 /**
  *
@@ -163,7 +196,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 			if (current->event_counter_id < previous_counter_id) {
 
 				// address of next event element
-				const intptr_t address_of_current = (intptr_t)((void *)current);
+				//const intptr_t address_of_current = (intptr_t)((void *)current);
 #ifndef NVM_EVENT_PAGE_SIZE_CHECK_WITH_ADDRESS_PTR
 				// check if this is a boundary of two flash areas
 				if (page_size == 0 || (i % page_size_in_events) == 0) {
@@ -192,14 +225,14 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 				lowest_counter_id = current->event_counter_id;
 
 				// the smallest counter id is, the older this event is
-				*oldest = current;
+				*oldest = (event_log_t*)current;
 			}
 
 			if (current->event_counter_id > highest_counter_id) {
 				highest_counter_id = current->event_counter_id;
 
 				// the higher counter id is, the newer this event is
-				*newest = current;
+				*newest = (event_log_t*)current;
 			}
 		}
 	}

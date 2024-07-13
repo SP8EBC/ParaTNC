@@ -6,7 +6,7 @@
  */
 
 #include "event_log.h"
-#include "nvm_event.h"
+#include "./nvm/nvm_event.h"
 #include "main_master_time.h"
 
 /// ==================================================================================================
@@ -56,6 +56,10 @@ void event_log_sync (event_log_severity_t severity,
 					 uint32_t lparam2)
 {
 	event_log_t new_event = {0u};
+
+	// left this to zero, to be automatically set to appropriate value by
+	// pushing function
+	new_event.event_counter_id = 0;
 
 	new_event.event_id = event_id;
 	new_event.event_master_time = main_get_master_time();
