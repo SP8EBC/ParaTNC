@@ -1,84 +1,41 @@
 #include "./nvm/nvm_event.h"
 #include "./nvm/nvm_internals.h"
-#include "nvm_configuration.h"
-#include "memory_map.h"
 #include "backup_registers.h"
+#include "memory_map.h"
+#include "nvm_configuration.h"
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
 
 typedef enum nvm_event_next_t {
-	NVM_EVENT_NEXT_ERASED,		///!< There is no next element, the next one is just erased memory 
-	NVM_EVENT_NEXT_END,			///!< There is no next element, because the current one is the last 
-	NVM_EVENT_NEXT_OLDER,		///!< Next event is older that the current one
-	NVM_EVENT_NEXT_NEWER,		///!< Next event is newer (later timestamp)
-	NVM_EVENT_NEXT_TIMESTAMP,	///!< Next element is a timestamp event
+	NVM_EVENT_NEXT_ERASED,	  ///!< There is no next element, the next one is just erased memory
+	NVM_EVENT_NEXT_END,		  ///!< There is no next element, because the current one is the last
+	NVM_EVENT_NEXT_OLDER,	  ///!< Next event is older that the current one
+	NVM_EVENT_NEXT_NEWER,	  ///!< Next event is newer (later timestamp)
+	NVM_EVENT_NEXT_TIMESTAMP, ///!< Next element is a timestamp event
 	NVM_EVENT_NEXT_UNKNOWN
-}nvm_event_next_t;
-
+} nvm_event_next_t;
 
 /// ==================================================================================================
 ///	LOCAL VARIABLES
 /// ==================================================================================================
 /**
  * Variable stores a result of last flash operation
-*/
+ */
 static nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
+
+NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_ENUM_FOR_TARGETS);
 
 /**
  * Definition of all pointers, two of them per event logging target area, used
  * to find oldest and newest event
-*/
-NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
+ */
+NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
 
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
-
-/**
- *
- * @param current
- * @param area_start
- * @param area_end
- * @return
- */
-static nvm_event_next_t nvm_event_log_check_next(const event_log_t* current,
-												const void * area_start, 
-												const void * area_end) {
-	nvm_event_next_t out = NVM_EVENT_NEXT_UNKNOWN;
-
-	const event_log_t* next = (current + 1);
-
-	if (current != 0x00 && area_start != 0x00 && area_start != 0x00) {
-
-		if (current == area_end) {
-			out = NVM_EVENT_NEXT_END;
-		}
-		else if ((next->event_master_time == 0xFFFFFFFFu) && 
-				 (next->lparam2 == 0xFFFFFFFFu) &&
-				 (next->lparam == 0xFFFFFFFFu)) {
-			out = NVM_EVENT_NEXT_ERASED;
-		}
-		else if (next->event_id == EVENT_TIMESYNC) {
-			out = NVM_EVENT_NEXT_TIMESTAMP;
-		}
-		else {
-			const uint32_t next_master_time = next->event_master_time;
-
-			if (next_master_time > current->event_master_time) {
-				out = NVM_EVENT_NEXT_NEWER;
-			}
-			else [
-				out = NVM_EVENT_NEXT_OLDER;
-			]
-		}
-	}
-
-
-	return out;
-}
-
 
 /**
  *
@@ -88,16 +45,24 @@ static nvm_event_next_t nvm_event_log_check_next(const event_log_t* current,
  * @param area_end
  * @param erase_fn
  */
-static void nvm_event_log_perform_pointer_arithmetics(
-								event_log_t** oldest, 
-								event_log_t** newest, 
-								void * area_start, 
-								void * area_end,
-								FLASH_Status(*erase_fn)(uint32_t)) {
+static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
+													   event_log_t **newest,
+													   void *area_start,
+													   void *area_end,
+													   uint32_t *next_event_counter_id,
+													   FLASH_Status (*erase_fn) (uint32_t),
+													   int16_t page_size)
+{
+
+	*next_event_counter_id = (*newest)->event_counter_id + 1;
+
+	if (*next_event_counter_id == 0xFFFFFFFFU) {
+		*next_event_counter_id = 0x1U;
+	}
 
 	// pointers
-	const event_log_t* oldest_init_ptr 			= *oldest;
-	const event_log_t* next_newest_init_ptr 	= *newest + 1;
+	const event_log_t *oldest_init_ptr = *oldest;
+	const event_log_t *next_newest_init_ptr = *newest + 1;
 
 	/* check if we reach boundary between two flash memory pages */
 	/* and the newest entry is just before the oldest pne  */
@@ -111,39 +76,39 @@ static void nvm_event_log_perform_pointer_arithmetics(
 		}
 
 		/* rescan for oldest and newest event one more time  */
-		nvm_event_log_find_first_oldest_newest(oldest, newest, (void*)area_start, (void*)area_end);
+		nvm_event_log_find_first_oldest_newest (oldest, newest, (void *)area_start,
+												(void *)area_end, page_size);
 
 		const uint8_t old_new_events_spacing = *oldest - *newest;
 
 		/* oldest - newest should be located NVM_PAGE_SIZE bytes apart  */
 		/* please note, that pointers points to the beginning of each  */
 		/* entry, hence this minus one  */
-		if ((old_new_events_spacing - 1) * sizeof(event_log_t) != NVM_PAGE_SIZE) {
-			backup_assert(BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
+		if ((old_new_events_spacing - 1) * sizeof (event_log_t) != NVM_PAGE_SIZE) {
+			backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
 		}
 
 		/* move pointer to newest, to point to a place where  */
 		/* newly inserted event will be located  */
 		*newest = *(newest) + 1;
 	}
-	else if ((void*)next_newest_init_ptr >= (void*)area_end) {
+	else if ((void *)next_newest_init_ptr >= (void *)area_end) {
 		/* we have reached an end of the event area in flash  */
 
 		/* erase first memory page  */
 		(void)erase_fn (area_start);
 
 		/* set pointers accordingly  */
-		event_log_t* new_newest = (event_log_t*)area_start;
-		event_log_t* new_oldest = (event_log_t*)(area_end - sizeof(event_log_t));
+		event_log_t *new_newest = (event_log_t *)area_start;
+		event_log_t *new_oldest = (event_log_t *)(area_end - sizeof (event_log_t));
 
 		*newest = new_newest;
 		*oldest = new_oldest;
 	}
 	else {
 		*newest = *(newest) + 1;
-	}									
+	}
 }
-
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
@@ -154,104 +119,97 @@ static void nvm_event_log_perform_pointer_arithmetics(
  * @param oldest
  * @param newest
  */
-nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, event_log_t** newest, void * area_start, void * area_end) {
+nvm_event_result_t nvm_event_log_find_first_oldest_newest (
+	event_log_t **oldest, event_log_t **newest, void *area_start, void *area_end, int16_t page_size)
+{
 
 	nvm_event_result_t res = NVM_EVENT_OK;
 
-	// pointer to last, non null and non TIMESYNC entry
-	event_log_t* last_non_ts = 0x0;
-
-	// pointer to the oldest non TIMESYNC event log entry
-	event_log_t* oldest_non_ts = 0x0;
-
 	// size of single log entry
-	const uint8_t log_entry_size = sizeof(event_log_t);
+	const uint8_t log_entry_size = sizeof (event_log_t);
 
 	// how any events could be stored in NVM flash memory
 	const uint16_t log_entries = (area_end - area_start) / log_entry_size;
 
-	// lowest date found within events in NVM
-	uint32_t lowest_date = 0xFFFFFFFFu;
+#ifndef NVM_EVENT_PAGE_SIZE_CHECK_WITH_ADDRESS_PTR
+	const int8_t page_size_in_events = page_size / log_entry_size;
+#endif
 
-	uint32_t lowest_time = 0xFFFFFFFFu;
+	// lowest date found within events in NVM
+	uint32_t lowest_counter_id = 0xFFFFFFFFu;
+
+	// highest counter id found within events in NVM
+	uint32_t highest_counter_id = 0x0u;
+
+	// as name suggest this is a counter value of last
+	// event found
+	uint32_t previous_counter_id = 0u;
 
 	// sanity check if everything is set correctly
-	if ((area_end - area_start) % log_entry_size != 0 ) {
+	if ((area_end - area_start) % log_entry_size != 0) {
 		return NVM_EVENT_AREA_ERROR;
 	}
 
-	last_non_ts = 		(event_log_t *)area_start;
-
 	// iterate through all event log flash area
 	for (int i = 0; i < log_entries; i++) {
+		// temp pointer to currently processed event
+		const event_log_t *const current = ((const event_log_t *)area_start) + i;
 
-		// set pointer to currently checked event
-		const event_log_t* const current = (area_start + (log_entry_size) * i);
+		// do not go through erased flash memory on uninitialized RAM. The first valid counter
+		// value is 1 and the last valid is 0xFFFFFFFE
+		if (current->event_counter_id != 0x0u && current->event_counter_id != 0xFFFFFFFFu) {
 
-		//event_log_severity_t severity = (current->severity_and_source & 0xF0) >> 4;
-		//event_log_source_t source = (current->severity_and_source & 0xF);
+			// check if this event counter id value is lower than a previous one
+			if (current->event_counter_id < previous_counter_id) {
 
-		// skip erased memory
-		if (current->event_id == 0xFFU && current->event_master_time == 0xFFFFFFFFU) {
-			oldest_non_ts = 0x00;
-			continue;
-		}
-
-		// look for timesync event created at bootup
-		if (current->event_id == EVENT_TIMESYNC && current->wparam == EVENT_LOG_TIMESYNC_BOOTUP_WPARAM) {
-
-			// check if this timestamp is before the oldest found before
-			if (lowest_date > current->lparam && lowest_time > current->lparam2) {
-
-				// set this as the oldest
-				lowest_date = current->lparam;
-				lowest_time = current->lparam2;
-
-				// timestamp are always created after the first one after power up, so that
-				// with oldest RTC date and time will be the oldest in general
-				*oldest = (event_log_t*)current;
-			}
-		}
-		else {
-			if (current->event_master_time > last_non_ts->event_master_time) {
-				// store a pointer to last non-null and non-timesync event
-				last_non_ts = (event_log_t*)current;
-
-				// updated output pointer with newest 
-				*newest = last_non_ts;
-			}
-			else {
-				// this loop goes forward in memory. if consecutive non timesync event
-				// has decreasing master_time value it means, that nvm events area 
-				// has overruned at least one time 
-				res = NVM_EVENT_OVERRUN;
-
-				if (oldest_non_ts == 0x0) {
-					oldest_non_ts = (event_log_t*)current;
+				// address of next event element
+				const intptr_t address_of_current = (intptr_t)((void *)current);
+#ifndef NVM_EVENT_PAGE_SIZE_CHECK_WITH_ADDRESS_PTR
+				// check if this is a boundary of two flash areas
+				if (page_size == 0 || (i % page_size_in_events) == 0) {
+#else
+				// check if this is a boundary of two flash areas
+				if (page_size == 0 || (address_of_current % page_size) == 0) {
+#endif
+					// we are fine. event counter for consecutive events
+					// can be decreasing on an edge of memory pages.
+					// this check is also enabled if page_size is set to
+					// zero, what is a case for RAM, freely accessible
+					// for read and write in single byte granularity.
+					// no explicit erasure is required
+					res = NVM_EVENT_OVERRUN;
+				}
+				else {
+					// NVM event area is screwed very badly and cannot be recovered at all
+					// it must be formatted and reinitialized from scratch
+					return NVM_EVENT_AREA_ERROR;
 				}
 			}
+
+			previous_counter_id = current->event_counter_id;
+
+			if (current->event_counter_id < lowest_counter_id) {
+				lowest_counter_id = current->event_counter_id;
+
+				// the smallest counter id is, the older this event is
+				*oldest = current;
+			}
+
+			if (current->event_counter_id > highest_counter_id) {
+				highest_counter_id = current->event_counter_id;
+
+				// the higher counter id is, the newer this event is
+				*newest = current;
+			}
 		}
 	}
 
-	// check if any non-timesync event has been found at all
-	if (last_non_ts == 0x0) {
-		// no, NVM log contains only single timesync event
-		res = NVM_EVENT_SINGLE_TS;
-	}
-
-	// check if any timesync event has been found
-	if (lowest_date == 0xFFFFFFFFu && lowest_time == 0xFFFFFFFF) {
-		if (last_non_ts == (event_log_t *)area_start) {
-			res = NVM_EVENT_EMPTY;	// nvm event area is empty
-		}
-		else {
-			*oldest = oldest_non_ts;
-			res = NVM_EVENT_OVERRUN_NO_TS;
-		}
+	// if these values have not been updated, the memory is in erased state
+	if ((lowest_counter_id == 0xFFFFFFFFu) && (highest_counter_id == 0x0u)) {
+		res = NVM_EVENT_EMPTY;
 	}
 
 	return res;
-
 }
 
 /**
@@ -259,12 +217,11 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest(event_log_t** oldest, 
  * @param oldest
  * @param newest
  */
-nvm_event_result_t nvm_event_log_push_new_event(event_log_t* event) {
+nvm_event_result_t nvm_event_log_push_new_event (event_log_t *event)
+{
 	nvm_event_result_t out = NVM_EVENT_OK;
 
-
-	NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_EXPAND_POINTER_BASE_ACCESS);
-
+	NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_EXPAND_POINTER_BASE_ACCESS);
 
 	return out;
 }

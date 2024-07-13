@@ -18,6 +18,8 @@
         "flash_stm32l4x.h": "c",
         "stm32f10x_flash.h": "c",
         "nvm_event.h": "c",
-        "nvm_internals.h": "c"
+        "nvm_internals.h": "c",
+        "main.h": "c",
+        "main_master_time.h": "c"
     }
 }
