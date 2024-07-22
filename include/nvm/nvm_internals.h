@@ -22,8 +22,8 @@
 #define NVM_EVENT_CREATE_POINTERS_FOR_TARGET(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access) \
 		event_log_t* nvm_event_oldest##_name;							\
 		event_log_t* nvm_event_newest##_name;							\
-		uint32_t nvm_event_counter_id_for_last_##_name					\
-
+		uint32_t nvm_event_counter_id_for_last_##_name;					\
+		uint16_t nvm_event_fill_rate_##_name;							\
 
 /**
  *	Macro performing pre-insertion pointer arithmetics for all directly i/o
@@ -44,8 +44,8 @@
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM(_name, _area_start_addr, _area_end_addr, _erase_fn, _severity, _page_size)	\
 if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
-		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, _area_start_addr, _area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size);	\
-
+		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, _area_start_addr, _area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size, &nvm_event_fill_rate_##_name);	\
+																								\
 }																								\
 
 /**
@@ -66,7 +66,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	if (event->event_counter_id == 0) {																											\
 		event->event_counter_id = nvm_event_counter_id_for_last_##_name;																		\
 	}																																			\
-
+																																				\
 	/* programming 32 bits at once */																											\
 	uint32_t * ptr_event_to_insert = (uint32_t*)_event_to_insert;																				\
 	uint32_t * ptr_place_for_new_event = (uint32_t*)nvm_event_newest##_name;																	\
@@ -85,6 +85,12 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	*((uint32_t*)(ptr_place_for_new_event)+ 3) = *(ptr_event_to_insert + 3);																	\
 	_wait_for_pgm_fn																															\
 																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 4) = *(ptr_event_to_insert + 4);																	\
+	_wait_for_pgm_fn																															\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 5) = *(ptr_event_to_insert + 5);																	\
+	_wait_for_pgm_fn																															\
+																																				\
 	_disable_pgm_fn																																\
 																																				\
 }																																				\
@@ -95,9 +101,13 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_name, _area_start_addr, _area_end_addr, _page_size)														\
 	/* rescan for oldest and newest event one more time */																		\
-	nvm_general_state = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size);						\
-																																\
-
+	const nvm_event_result_t res = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size, &nvm_event_fill_rate_##_name);						\
+	if (res == NVM_EVENT_AREA_ERROR)	{																						\
+		nvm_general_state = NVM_GENERAL_ERROR;																					\
+	}																															\
+	else if (res == NVM_EVENT_EMPTY)	{																						\
+		nvm_general_state = NVM_OK_AND_EMPTY;																					\
+	}																															\
 /**
  *
  */
@@ -129,9 +139,12 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
  *
  */
 #define NVM_EVENT_PERFORM_INIT_true(_name, _area_start_addr, _area_end_addr, _page_size)					\
-		const nvm_state_result_t res##_name = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size);						\
-		if (res##_name == NVM_GENERAL_ERROR)	{																	\
-			nvm_general_state = res##_name;																		\
+		const nvm_event_result_t res##_name = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size, &nvm_event_fill_rate_##_name);						\
+		if (res##_name == NVM_EVENT_AREA_ERROR)	{															\
+			nvm_general_state = NVM_GENERAL_ERROR;															\
+		}																									\
+		else if (res##_name == NVM_EVENT_EMPTY)	{															\
+			nvm_general_state = NVM_OK_AND_EMPTY;															\
 		}																									\
 
 /**

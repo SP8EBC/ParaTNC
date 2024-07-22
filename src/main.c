@@ -13,6 +13,7 @@
 #include <stm32l4xx_ll_iwdg.h>
 #include <stm32l4xx_ll_rcc.h>
 #include <stm32l4xx_ll_gpio.h>
+#include <stm32l4xx_hal_rtc.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 
 #include "gsm/sim800c.h"
@@ -23,7 +24,10 @@
 
 #include "./nvm/nvm.h"
 #include "./nvm/nvm_event.h"
+
 #include "./event_log.h"
+#include "./events_definitions/events_bootup.h"
+#include "./events_definitions/events_timesync.h"
 
 #include "aprsis.h"
 #include "api/api.h"
@@ -196,6 +200,9 @@ int32_t main_ten_second_pool_timer = 10000;
 //! one hour interval incremented inside one minute
 int8_t main_one_hour_pool_timer = 60;
 
+//! six hour interval incremented inside one hour
+int8_t main_six_hour_pool_timer = 4;
+
 //! serial context for UART used to KISS
 static srl_context_t main_kiss_srl_ctx;
 
@@ -301,6 +308,10 @@ volatile int i = 0;
 #endif
 
 #if defined(PARAMETEO)
+//!< Value of backup_reg_get_powersave_state() at the powerup. Will be != 0 only when this is a restart
+//! or powerup if RTC coin cell battery is put into a holder.
+static uint16_t main_powersave_state_at_bootup = 0;
+
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 
@@ -661,8 +672,25 @@ int main(int argc, char* argv[]){
 
   rte_main_reboot_req = 0;
 
+  // get powersave status after power up
+  main_powersave_state_at_bootup = backup_reg_get_powersave_state();
+
+  // shift it two times towards less significant bit. first two bits are something else
+  main_powersave_state_at_bootup = main_powersave_state_at_bootup >> 2;
+
   // initialize nvm logger
   nvm_event_log_init();
+
+  event_log_sync(
+		  	  EVENT_TIMESYNC,
+			  EVENT_SRC_MAIN,
+			  EVENTS_TIMESYNC_BOOTUP,
+			  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+			  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+			  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+			  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+			  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+			  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
 
   // initializing variables & arrays in rte_wx
   rte_wx_init();
@@ -680,7 +708,6 @@ int main(int argc, char* argv[]){
 	  backup_reg_set_configuration(0);
 
 #if defined(PARAMETEO)
-	  nvm_erase_all();
 
 //	  nvm_test_prefill();
 #endif
@@ -1169,11 +1196,6 @@ int main(int argc, char* argv[]){
 	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 #endif
 
-//	  if (main_config_data_mode->wx_umb == 1) {
-//		  // client initialization
-//		  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
-//	  }
-
 	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
 		  analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
 	  }
@@ -1328,7 +1350,7 @@ int main(int argc, char* argv[]){
 
 #endif
 
-  // configuting system timers
+  // configuring system timers
   TimerConfig();
 
   // initialize UMB transaction
@@ -1405,6 +1427,17 @@ int main(int argc, char* argv[]){
 	   status_send_powersave_registers();
 #endif
    }
+
+   event_log_sync(
+		   EVENT_BOOTUP,
+		   EVENT_SRC_MAIN,
+		   EVENTS_BOOTUP_COMPLETE,
+		   (uint8_t)system_is_rtc_ok(),
+		   (uint8_t)main_powersave_state_at_bootup,
+		   rte_main_battery_voltage,
+		   rte_main_average_battery_voltage,
+		   backup_reg_get_monitor(),
+		   backup_reg_get_sleep_counter());
 
 	main_nvm_timestamp = main_get_nvm_timestamp();
 
@@ -1757,6 +1790,25 @@ int main(int argc, char* argv[]){
 #endif
 			}
 
+			/**
+			 * SIX HOUR POOLING
+			 */
+			if (--main_six_hour_pool_timer < 0) {
+				main_six_hour_pool_timer = 6;
+
+			  event_log_sync(
+						  EVENT_TIMESYNC,
+						  EVENT_SRC_MAIN,
+						  EVENTS_TIMESYNC_PERIODIC,
+						  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+						  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+						  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+						  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+						  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+						  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
+
+			}
+
 
 
 			main_one_minute_pool_timer = 60000;
@@ -1999,6 +2051,31 @@ void main_reload_internal_wdg(void){
 #ifdef STM32L471xx
 	  LL_IWDG_ReloadCounter(IWDG);
 #endif
+}
+
+uint16_t main_get_rtc_datetime(uint16_t param) {
+
+	RTC_DateTypeDef date;
+	RTC_TimeTypeDef time;
+
+	uint16_t out = 0;
+
+	RTC_HandleTypeDef rtc;
+	rtc.Instance = RTC;
+
+	HAL_RTC_GetTime(&rtc, &time, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&rtc, &date, RTC_FORMAT_BIN);
+
+	switch (param) {
+		case MAIN_GET_RTC_YEAR:		out = date.Year; break;
+		case MAIN_GET_RTC_MONTH:	out = date.Month; break;
+		case MAIN_GET_RTC_DAY:		out = date.WeekDay; break;
+		case MAIN_GET_RTC_HOUR:		out = time.Hours; break;
+		case MAIN_GET_RTC_MIN:		out = time.Minutes; break;
+		case MAIN_GET_RTC_SEC:		out = time.Seconds; break;
+	}
+
+	return out;
 }
 
 uint32_t main_get_nvm_timestamp(void) {

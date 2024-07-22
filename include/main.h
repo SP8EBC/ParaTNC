@@ -22,6 +22,13 @@
 
 #define OWN_APRS_MSG_LN 	256u
 
+#define MAIN_GET_RTC_YEAR	1u
+#define MAIN_GET_RTC_MONTH	2u
+#define MAIN_GET_RTC_DAY	3u
+#define MAIN_GET_RTC_HOUR	4u
+#define MAIN_GET_RTC_MIN	5u
+#define MAIN_GET_RTC_SEC	6u
+
 typedef enum main_usart_mode_t {
 	USART_MODE_UNDEF,
 	USART_MODE_KISS,
@@ -83,13 +90,13 @@ extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 extern gsm_sim800_state_t main_gsm_state;
 
-//void main_set_monitor(int8_t bit);
-
 uint16_t main_get_adc_sample(void);
 
 void main_service_cpu_load_ticks(void);
 
 void main_reload_internal_wdg(void);
+
+uint16_t main_get_rtc_datetime(uint16_t param);
 
 uint32_t main_get_nvm_timestamp(void);
 

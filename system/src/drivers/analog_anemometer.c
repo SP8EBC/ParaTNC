@@ -252,7 +252,7 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
 
 	// set parameters for TIM4 used for windspeed
-	TIM_InitTypeDef.Prescaler = 23999;
+	TIM_InitTypeDef.Prescaler = 47999;
 	TIM_InitTypeDef.Autoreload = 60000;
 	TIM_InitTypeDef.CounterMode = LL_TIM_COUNTERMODE_UP;
 	TIM_InitTypeDef.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;

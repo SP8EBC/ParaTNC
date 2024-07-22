@@ -69,7 +69,7 @@ void nvm_measurement_init(void);
  * @param data
  * @return
  */
-nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data);
+nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data);
 
 /**
  *

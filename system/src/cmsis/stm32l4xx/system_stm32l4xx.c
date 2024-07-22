@@ -115,7 +115,7 @@
   * @{
   */
 
-#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0x44444
+#define SYSTEM_CLOCK_RTC_CLOCK_TIMEOUT 0x199999
 
 
 #if !defined  (HSE_VALUE)
@@ -182,6 +182,8 @@
   uint32_t SystemCoreClock = 4000000U;
 
   uint32_t SystemRtcHasFailed = 0;
+
+  volatile uint32_t timeout_counter = 0;
 
   const uint8_t  AHBPrescTable[16] = {0U, 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
   const uint8_t  APBPrescTable[8] =  {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U};
@@ -509,10 +511,10 @@ void system_clock_start_rtc_l4(void) {
 	}
 
 	// set date
-	RTC->DR = 0x0023E723;
+	RTC->DR = 0x0024E714;
 
 	// set time
-	RTC->TR = 0x00090711;
+	RTC->TR = 0x00163544;
 
 	// exit RTC set mode
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
@@ -530,8 +532,6 @@ void system_clock_start_rtc_l4(void) {
 int system_clock_configure_rtc_l4(void) {
 
 	int retval = 0;
-
-	volatile uint32_t timeout_counter = 0;
 
 	// check if LSE is working now
 	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;

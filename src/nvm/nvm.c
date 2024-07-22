@@ -50,7 +50,7 @@ uint8_t nvm_measurement_page_used = 0;
  */
 uint8_t * nvm_data_ptr = 0;
 
-static nvm_state_result_t nvm_general_state = NVM_UNINITIALIZED;
+static nvm_state_after_last_oper_t nvm_general_state = NVM_UNINITIALIZED;
 
 
 /**
@@ -159,9 +159,9 @@ void nvm_measurement_init(void) {
  * @param data
  * @return
  */
-nvm_state_result_t nvm_measurement_store(nvm_measurement_t * data) {
+nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 
-	nvm_state_result_t out = NVM_OK;
+	nvm_state_after_last_oper_t out = NVM_OK;
 
 #if defined(STM32L471xx)
 

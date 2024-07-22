@@ -26,6 +26,9 @@
 #include "it_handlers.h"
 #include "main.h"
 
+#include "event_log.h"
+#include "events_definitions/events_warning.h"
+
 #include "rte_main.h"
 
 #include "drivers/analog_anemometer.h"
@@ -95,9 +98,17 @@ const uint16_t pwr_save_startup_restore_voltage =	PWR_SAVE_STARTUP_RESTORE_VOLTA
 const uint16_t pwr_save_aggressive_powersave_voltage = PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE;
 
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
-#include "aprsis.h"
 static void pwr_save_presleep(uint16_t current, uint16_t average) {
-	aprsis_send_status_send_battery_voltages(main_callsign_with_ssid, current, average);
+	   event_log_sync(
+			   EVENT_WARNING,
+			   EVENT_SRC_PWR_SAVE,
+			   EVENTS_WARNING_BATT_LOW_GOING_SLEEP,
+			   (uint8_t)system_is_rtc_ok(),
+			   0,
+			   current,
+			   average,
+			   0,
+			   0);
 }
 #endif
 

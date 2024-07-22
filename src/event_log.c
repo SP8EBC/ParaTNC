@@ -33,7 +33,7 @@ void event_log_init (void)
 	event_log_fifo_current_depth = 0;
 }
 
-void event_log (event_log_severity_t severity,
+int8_t event_log (event_log_severity_t severity,
 				event_log_source_t source,
 				uint8_t event_id,
 				uint8_t param,
@@ -43,9 +43,10 @@ void event_log (event_log_severity_t severity,
 				uint32_t lparam,
 				uint32_t lparam2)
 {
+	return 0;
 }
 
-void event_log_sync (event_log_severity_t severity,
+int8_t event_log_sync (event_log_severity_t severity,
 					 event_log_source_t source,
  					 uint8_t event_id,
 					 uint8_t param,
@@ -72,5 +73,12 @@ void event_log_sync (event_log_severity_t severity,
 	new_event.lparam = lparam;
 	new_event.lparam2 = lparam2;
 
-	nvm_event_log_push_new_event(&new_event);
+	const nvm_event_result_t res = nvm_event_log_push_new_event(&new_event);
+
+	if (res == NVM_EVENT_OK) {
+		return 0;
+	}
+	else {
+		return -1;
+	}
 }

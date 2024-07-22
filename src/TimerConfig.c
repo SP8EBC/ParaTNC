@@ -29,8 +29,11 @@ void TimerConfig(void) {
 	///////////////////////////////////////////
 	/// konfiguracja TIM2 -- dallas delay 	///
 	///////////////////////////////////////////
-	//NVIC_SetPriority(TIM2_IRQn, 1);
+#ifdef HI_SPEED
+	TIM2->PSC = 1;
+#else
 	TIM2->PSC = 0;
+#endif
 	TIM2->ARR = 119;
 	TIM2->CR1 |= TIM_CR1_DIR;
 	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
@@ -51,11 +54,14 @@ void TimerConfig(void) {
 		TIM4->DIER |= 1;
 		NVIC_EnableIRQ( TIM4_IRQn );
 #else
-		// 	//////////////////////////////
-		// 	////   konfiguracja TIM4 -- dac  ///
-		// 	//////////////////////////////
-			//NVIC_SetPriority(TIM4_IRQn, 2);
+ 	//////////////////////////////
+ 	////   konfiguracja TIM4 -- dac  ///
+ 	//////////////////////////////
+#ifdef HI_SPEED
+			TIM5->PSC = 1;
+#else
 			TIM5->PSC = 0;
+#endif
 			TIM5->ARR = 2499;
 			TIM5->CR1 |= TIM_CR1_DIR;
 			TIM5->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
@@ -67,7 +73,11 @@ void TimerConfig(void) {
 		/// konfiguracja TIM7 --adc 	///
 		///////////////////////////////////////////
 		//NVIC_SetPriority(TIM7_IRQn, 3);
+#ifdef HI_SPEED
+		TIM7->PSC = 1;
+#else
 		TIM7->PSC = 0;
+#endif
 		TIM7->ARR = 624;			/// 2499
 		TIM7->CR1 |= TIM_CR1_DIR;
 		TIM7->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);

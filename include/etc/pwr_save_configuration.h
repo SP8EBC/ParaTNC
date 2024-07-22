@@ -45,7 +45,7 @@
 /**
  * Do not uncomment this on production devices
  */
-//#define INHIBIT_CUTOFF
+#define INHIBIT_CUTOFF
 
 /**
  * Intermediate STOP2 cycle lenght within L7 or L6 mode.

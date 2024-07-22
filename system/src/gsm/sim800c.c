@@ -26,6 +26,24 @@
 
 #define SIM800_DEFAULT_TIMEOUT 250	// in miliseconds
 
+//!< Not registered, MT is not currently searching a new operator to register to
+#define SIM800_REGISTRATION_STATUS_NOT_REGISTERED_NOT_SEARCHING		(0u)
+
+//!< Registered, home network
+#define SIM800_REGISTRATION_STATUS_HOME_NETWORK						(1u)
+
+//!< Not registered, but MT is currently searching a new operator to register to
+#define SIM800_REGISTRATION_STATUS_NOT_REGISTERED_SEARCHING			(2u)
+
+//!< Registration denied
+#define SIM800_REGISTRATION_STATUS_DENIED							(3u)
+
+//!< Unknown
+#define SIM800_REGISTRATION_STATUS_UNKNOWN							(4u)
+
+//!< Registered, home network
+#define SIM800_REGISTRATION_STATUS_ROAMING							(5u)
+
 /**
  * Const strings with AT commands sent to GSM module
  */
@@ -83,7 +101,7 @@ const char * gsm_at_command_sent_last = 0;
 //! set to one to lock 'gsm_sim800_pool' in SIM800_INITIALIZING state until the response is received
 static uint8_t gsm_waiting_for_command_response = 0;
 
-uint8_t gsm_sim800_registration_status = 4;	// unknown
+uint8_t gsm_sim800_registration_status = SIM800_REGISTRATION_STATUS_UNKNOWN;	// unknown
 
 //! string with sim status
 #define SIM_STATUS_LENGHT	10
