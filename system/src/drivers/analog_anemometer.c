@@ -251,6 +251,13 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 
 	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);
 
+#ifdef HI_SPEED
+	// set parameters for TIM4 used for windspeed
+	TIM_InitTypeDef.Prescaler = 47999;
+#else
+	// set parameters for TIM4 used for windspeed
+	TIM_InitTypeDef.Prescaler = 23999;
+#endif
 	// set parameters for TIM4 used for windspeed
 	TIM_InitTypeDef.Prescaler = 47999;
 	TIM_InitTypeDef.Autoreload = 60000;
