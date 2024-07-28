@@ -26,8 +26,7 @@
 #include "./nvm/nvm_event.h"
 
 #include "./event_log.h"
-#include "./events_definitions/events_bootup.h"
-#include "./events_definitions/events_timesync.h"
+#include "./events_definitions/events_main.h"
 
 #include "aprsis.h"
 #include "api/api.h"
@@ -684,7 +683,7 @@ int main(int argc, char* argv[]){
   event_log_sync(
 		  	  EVENT_TIMESYNC,
 			  EVENT_SRC_MAIN,
-			  EVENTS_TIMESYNC_BOOTUP,
+			  EVENTS_MAIN_TIMESYNC_BOOTUP,
 			  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
 			  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
 			  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
@@ -1431,7 +1430,7 @@ int main(int argc, char* argv[]){
    event_log_sync(
 		   EVENT_BOOTUP,
 		   EVENT_SRC_MAIN,
-		   EVENTS_BOOTUP_COMPLETE,
+		   EVENTS_MAIN_BOOTUP_COMPLETE,
 		   (uint8_t)system_is_rtc_ok(),
 		   (uint8_t)main_powersave_state_at_bootup,
 		   rte_main_battery_voltage,
@@ -1799,7 +1798,7 @@ int main(int argc, char* argv[]){
 			  event_log_sync(
 						  EVENT_TIMESYNC,
 						  EVENT_SRC_MAIN,
-						  EVENTS_TIMESYNC_PERIODIC,
+						  EVENTS_MAIN_TIMESYNC_PERIODIC,
 						  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
 						  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
 						  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),

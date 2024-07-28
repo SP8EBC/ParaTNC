@@ -27,7 +27,7 @@
 #include "main.h"
 
 #include "event_log.h"
-#include "events_definitions/events_warning.h"
+#include "events_definitions/events_pwr_save.h"
 
 #include "rte_main.h"
 
@@ -102,7 +102,7 @@ static void pwr_save_presleep(uint16_t current, uint16_t average) {
 	   event_log_sync(
 			   EVENT_WARNING,
 			   EVENT_SRC_PWR_SAVE,
-			   EVENTS_WARNING_BATT_LOW_GOING_SLEEP,
+			   EVENTS_PWR_SAVE_BATT_LOW_GOING_SLEEP,
 			   (uint8_t)system_is_rtc_ok(),
 			   0,
 			   current,

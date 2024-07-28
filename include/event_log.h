@@ -86,6 +86,14 @@ typedef struct __attribute__ ((aligned (1))) event_log_t {
 	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
 } event_log_t;
 
+/**
+ * This is a structure which holds single event log in exposed and non-packed form, with separate
+ * fields for severity, source etc
+ */
+// typedef struct event_log_exposed_t {
+
+// }event_log_exposed_t;
+
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
