@@ -20,4 +20,14 @@ typedef enum nvm_event_result_t {
 	NVM_EVENT_ERROR
 }nvm_event_result_t;
 
+typedef struct nvm_event_result_stats_t {
+	uint16_t total;
+	uint16_t bootups;
+	uint16_t asserts;
+	uint16_t errors;
+	uint16_t warnings;
+	uint16_t info_cyclic;
+	uint16_t info;
+}nvm_event_result_stats_t;
+
 #endif /* D693DD34_021C_482B_A532_AB5B31D18C64 */

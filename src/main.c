@@ -279,6 +279,9 @@ static uint8_t main_kiss_from_message_ln = 0;
 static uint8_t main_kiss_response_message[32];
 
 static io_vbat_state_t main_battery_measurement_res;
+
+#define MAIN_EXPOSED_EVENTS_SIZ		64
+static event_log_exposed_t main_exposed_events[MAIN_EXPOSED_EVENTS_SIZ];
 #endif
 
 char main_symbol_f = '/';
@@ -679,6 +682,8 @@ int main(int argc, char* argv[]){
 
   // initialize nvm logger
   nvm_event_log_init();
+
+  const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_EXPOSED_EVENTS_SIZ, EVENT_WARNING);
 
   event_log_sync(
 		  	  EVENT_TIMESYNC,
@@ -1427,7 +1432,7 @@ int main(int argc, char* argv[]){
 #endif
    }
 
-   event_log_sync(
+  volatile const int8_t event_bootup_result = event_log_sync(
 		   EVENT_BOOTUP,
 		   EVENT_SRC_MAIN,
 		   EVENTS_MAIN_BOOTUP_COMPLETE,

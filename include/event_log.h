@@ -87,12 +87,23 @@ typedef struct __attribute__ ((aligned (1))) event_log_t {
 } event_log_t;
 
 /**
- * This is a structure which holds single event log in exposed and non-packed form, with separate
- * fields for severity, source etc
+ * This is a structure, which holds single event log in exposed and non-packed form, with separate
+ * fields for severity, source etc. Used to extract and then send events in APRS message, include to
+ * HTTP rest service query, etc. 
  */
-// typedef struct event_log_exposed_t {
-
-// }event_log_exposed_t;
+typedef struct event_log_exposed_t {
+	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
+	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
+	event_log_severity_t severity;
+	event_log_source_t source;
+	uint8_t event_id;			 //!< event id, unique across different sources & severity level
+	uint8_t param;				 //!< Optional single-byte data, specific per event
+	uint8_t param2;				 //!< Optional single-byte data, specific per event
+	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
+	uint16_t wparam2;			 //!< Optional 2-byte data, specific per event
+	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
+	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
+}event_log_exposed_t;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

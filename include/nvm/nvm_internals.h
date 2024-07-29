@@ -136,7 +136,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	NVM_EVENT_EXPAND_POINTER_BASE_ACCESS_##pointer_based_access(_name, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size);				\
 
 /**
- *
+ * X-macro expands to initialization of all pointer based access areas
  */
 #define NVM_EVENT_PERFORM_INIT_true(_name, _area_start_addr, _area_end_addr, _page_size)					\
 		const nvm_event_result_t res##_name = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size, &nvm_event_fill_rate_##_name);						\
@@ -148,10 +148,34 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 		}																									\
 
 /**
- *
+ * X-macro expands to an initialization of event target areas. 
  */
 #define NVM_EVENT_PERFORM_INIT(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access)	\
 		NVM_EVENT_PERFORM_INIT_##pointer_based_access(_name, _area_start_addr, _area_end_addr, _page_size)	\
+
+/**
+ * X-macro used to set two pointers to a non-volatile events storage area, which will be used as
+ * a data source for events extraction & decoding to exposed form 
+ */
+#define NVM_EVENT_FIND_LOWEST_SEVERITY(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access)	\
+	NVM_EVENT_FIND_LOWEST_SEVERITY_##pointer_based_access(_name, _area_start_addr, _area_end_addr, _severity)		\
+
+/**
+ * 
+ */
+#define NVM_EVENT_FIND_LOWEST_SEVERITY_true(_name, _area_start_addr, _area_end_addr, _severity)		\
+	if (current_lowest_severity > _severity) {														\
+		current_lowest_severity = _severity;														\
+		newest = nvm_event_newest##_name;															\
+		area_start = _area_start_addr;																\ 
+		}																							\
+																									\	
+/**
+ * Only pointer based areas may be used for lookup. Non pointer based, like external QSPI flash
+ * requires too specific read/write implementation at this moment.In some cases, like serial port
+ * there is nothing to extract from.
+ */
+#define NVM_EVENT_FIND_LOWEST_SEVERITY_false(_name, _area_start_addr, _area_end_addr, _severity)			\
 
 /// ==================================================================================================
 ///	GLOBAL MACROS

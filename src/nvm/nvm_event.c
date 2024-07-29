@@ -4,6 +4,8 @@
 #include "memory_map.h"
 #include "nvm_configuration.h"
 
+#include <string.h>		// for memset
+
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -301,6 +303,89 @@ nvm_event_result_t nvm_event_log_push_new_event (event_log_t *event)
 	}
 	else if (nvm_general_state == NVM_GENERAL_ERROR) {
 		out = NVM_EVENT_ERROR;
+	}
+
+	return out;
+}
+
+/**
+ * THis function walks through non volatile events storage area and returns no more than max_num_events
+ * latest events, with severity level equal or greater than min_severity_lvl
+ * @param output_arr
+ * @param max_num_events
+ * @return
+ */
+nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_t * output_arr, uint16_t max_num_events, event_log_severity_t min_severity_lvl)
+{
+	nvm_event_result_stats_t out = {0u};
+
+	uint8_t current_lowest_severity = 0xFFu;
+	
+	event_log_t* newest = 0;
+	event_log_t* area_start = 0;
+
+	uint16_t output_arr_iterator = 0;
+
+	NVM_EVENT_LOGGING_TARGETS(NVM_EVENT_FIND_LOWEST_SEVERITY);
+
+	// check if any area has been found. this check may fail
+	// only because of areas misconfiguration
+	if (newest != 0 && area_start != 0) 
+	{
+		// make a room for exported events
+		memset(output_arr, 0x00, sizeof(event_log_exposed_t) * max_num_events);
+
+		// loop through selected area
+		while (newest >= area_start) {
+
+			// get severity level of currently processed event
+			const event_log_severity_t severity = (event_log_severity_t)EVENT_LOG_GET_SEVERITY(newest->severity_and_source);
+
+			// check if this event has appropriate severity level
+			if (severity >= min_severity_lvl)
+			{
+				// if yes save it in output array
+				output_arr[output_arr_iterator].event_counter_id = newest->event_counter_id;
+				output_arr[output_arr_iterator].event_id = newest->event_id;
+				output_arr[output_arr_iterator].event_master_time = newest->event_master_time;
+				output_arr[output_arr_iterator].severity = severity;
+				output_arr[output_arr_iterator].source = (event_log_source_t)newest->severity_and_source;
+				output_arr[output_arr_iterator].lparam = newest->lparam;
+				output_arr[output_arr_iterator].lparam2 = newest->lparam2;
+				output_arr[output_arr_iterator].wparam = newest->wparam;
+				output_arr[output_arr_iterator].wparam2 = newest->wparam2;
+				output_arr[output_arr_iterator].param = newest->param;
+				output_arr[output_arr_iterator].param2 = newest->param2;
+
+
+				// increment counters
+				out.total++;
+
+				switch (severity) {
+					case EVENT_ASSERT: out.asserts++; break;
+					case EVENT_BOOTUP: out.bootups++; break;
+					case EVENT_ERROR: out.errors++; break;
+					case EVENT_WARNING: out.warnings++; break;
+					case EVENT_INFO_CYCLIC: out.info_cyclic++; break;
+					case EVENT_INFO: out.info++; break;
+					default: break;
+				}
+
+				// increment the iterator
+				output_arr_iterator++;
+
+				// check if there is room left for more events to be stored in output array
+				if (output_arr_iterator >= max_num_events) 
+				{
+					break;		// exit the loop if there is no more room in output array
+				}
+				else
+				{
+					newest--;	// decrement pointer towards the begining of area
+				}
+			}
+
+		}
 	}
 
 	return out;
