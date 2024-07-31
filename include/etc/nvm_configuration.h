@@ -42,6 +42,9 @@
 	}														\
 
 #define NVM_CONFIG_ENABLE_PGM                               \
+	FLASH->SR |= FLASH_SR_PGAERR;							\
+	FLASH->SR |= FLASH_SR_SIZERR;							\
+	FLASH->SR |= FLASH_SR_PGSERR;							\
 	FLASH_Unlock();                                         \
 	FLASH->CR |= FLASH_CR_PG;                               \
 

@@ -178,7 +178,7 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 
 		nvm_data_ptr = (uint8_t*)nvm_measurement_base_address;
 
-		flash_status = FLASH_ErasePage(nvm_data_ptr);
+		flash_status = FLASH_ErasePage((uint32_t)nvm_data_ptr);
 
 		if (flash_status == FLASH_COMPLETE) {
 			nvm_general_state = NVM_OK;

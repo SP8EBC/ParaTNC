@@ -359,9 +359,10 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 
 
 				// increment counters
-				out.total++;
+				out.zz_total++;
 
 				switch (severity) {
+					case EVENT_TIMESYNC: out.timesyncs++; break;
 					case EVENT_ASSERT: out.asserts++; break;
 					case EVENT_BOOTUP: out.bootups++; break;
 					case EVENT_ERROR: out.errors++; break;

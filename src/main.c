@@ -579,6 +579,12 @@ int main(int argc, char* argv[]){
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
 
+  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
+  main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
+#if defined(PARAMETEO)
+  main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
+#endif
+
 #if defined(STM32F10X_MD_VL)
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
   RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
@@ -935,12 +941,6 @@ int main(int argc, char* argv[]){
   // enabling the clock for both USARTs
   RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-#endif
-
-  main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
-  main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
-#if defined(PARAMETEO)
-  main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 #endif
 
   main_target_kiss_baudrate = 9600u;

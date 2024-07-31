@@ -21,7 +21,8 @@ typedef enum nvm_event_result_t {
 }nvm_event_result_t;
 
 typedef struct nvm_event_result_stats_t {
-	uint16_t total;
+	uint16_t timesyncs;
+	uint16_t zz_total;
 	uint16_t bootups;
 	uint16_t asserts;
 	uint16_t errors;

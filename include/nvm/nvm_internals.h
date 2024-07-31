@@ -44,7 +44,7 @@
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM(_name, _area_start_addr, _area_end_addr, _erase_fn, _severity, _page_size)	\
 if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
-		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, _area_start_addr, _area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size, &nvm_event_fill_rate_##_name);	\
+		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size, &nvm_event_fill_rate_##_name);	\
 																								\
 }																								\
 
@@ -167,9 +167,8 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 	if (current_lowest_severity > _severity) {														\
 		current_lowest_severity = _severity;														\
 		newest = nvm_event_newest##_name;															\
-		area_start = _area_start_addr;																\ 
+		area_start = (event_log_t*)_area_start_addr;												\
 		}																							\
-																									\	
 /**
  * Only pointer based areas may be used for lookup. Non pointer based, like external QSPI flash
  * requires too specific read/write implementation at this moment.In some cases, like serial port
