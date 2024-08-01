@@ -96,7 +96,9 @@ typedef struct event_log_exposed_t {
 	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
 	event_log_severity_t severity;
 	event_log_source_t source;
+	const char * source_str_name;//!< string representation of source name
 	uint8_t event_id;			 //!< event id, unique across different sources & severity level
+	const char * event_str_name; //!< string representation of the event
 	uint8_t param;				 //!< Optional single-byte data, specific per event
 	uint8_t param2;				 //!< Optional single-byte data, specific per event
 	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
@@ -104,6 +106,11 @@ typedef struct event_log_exposed_t {
 	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
 	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
 }event_log_exposed_t;
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
@@ -115,7 +122,8 @@ typedef struct event_log_exposed_t {
 void event_log_init (void);
 
 /**
- * Stores new event in RAM2_NOINIT area. It might trigger asynchronous
+ * Stores new event asynchronously. Events are written into all volatile, RAM mapped areas
+ * immediately, but FLASH based areas are synchronized periodically.
  * @param severity
  * @param source
  * @param wparam
@@ -132,6 +140,19 @@ int8_t event_log (event_log_severity_t severity,
 				uint32_t lparam,
 				uint32_t lparam2);
 
+/**
+ * Stores an event synchronously to all targer areas
+ * @param severity
+ * @param source
+ * @param event_id
+ * @param param
+ * @param param2
+ * @param wparam
+ * @param wparam2
+ * @param lparam
+ * @param lparam2
+ * @return
+ */
 int8_t event_log_sync (event_log_severity_t severity,
 					 event_log_source_t source,
 					 uint8_t event_id,
@@ -141,5 +162,29 @@ int8_t event_log_sync (event_log_severity_t severity,
 					 uint16_t wparam2,
 					 uint32_t lparam,
 					 uint32_t lparam2);
+
+/**
+ * Returns a pointer to a string representing event source
+ * @param src
+ * @return
+ */
+const char * event_log_source_to_str(event_log_source_t src);
+
+/**
+ *
+ * @param source
+ * @param event_id
+ * @return
+ */
+const char * event_id_to_str(event_log_source_t source, uint8_t event_id);
+
+/**
+ * Generates string representation of given event log in exposed form
+ * @param exposed pointer to an event to be converted
+ * @param output char buffer to place a string into
+ * @param output_ln maximum length of output string
+ * @return length of assembled string
+ */
+uint16_t event_exposed_to_string(const event_log_exposed_t * exposed, char * output, uint16_t output_ln);
 
 #endif /* EVENT_LOG_H_ */

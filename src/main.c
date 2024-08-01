@@ -104,6 +104,8 @@
 
 #include <etc/dallas_temperature_limits.h>
 
+#include <etc/misc_config.h>
+
 #define SOH 0x01
 
 //#include "variant.h"
@@ -280,8 +282,7 @@ static uint8_t main_kiss_response_message[32];
 
 static io_vbat_state_t main_battery_measurement_res;
 
-#define MAIN_EXPOSED_EVENTS_SIZ		64
-static event_log_exposed_t main_exposed_events[MAIN_EXPOSED_EVENTS_SIZ];
+static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT];
 #endif
 
 char main_symbol_f = '/';
@@ -408,7 +409,10 @@ static void main_gsm_pool_handler(
 				const config_data_mode_t	*const config_data_mode,			// 16
 				const config_data_basic_t 	*const config_data_basic,			// 17
 				const char					*const callsign_with_ssid,			// 18
-				char						*const own_aprs_msg ) {				// 19
+				char						*const own_aprs_msg,				// 19
+				uint8_t						*trigger_gsm_event_log,		// 20
+				const event_log_exposed_t   *const exposed_events
+				) {
 
 	// if data has been received
 	if (gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
@@ -560,6 +564,26 @@ static void main_gsm_pool_handler(
 				*trigger_gsm_telemetry_descriptions = 0;
 			}
 		}
+		// trigger value contain how many entries shall be sent
+		else if (*trigger_gsm_event_log > 0) {
+
+			// create APRS status packet preamble
+			const uint16_t preamble_size = snprintf(
+					own_aprs_msg,
+					OWN_APRS_MSG_LN - 1,
+					"%s>AKLPRZ,qAR,%s:>",
+					callsign_with_ssid,
+					callsign_with_ssid);
+
+			// create APRS status content itself
+			const uint16_t str_size = event_exposed_to_string(&exposed_events[(*trigger_gsm_event_log) - 1], own_aprs_msg + preamble_size, OWN_APRS_MSG_LN - preamble_size);
+
+			(*trigger_gsm_event_log)--;
+
+			if (str_size > 0) {
+
+			}
+		}
 
 	}
 }
@@ -689,7 +713,7 @@ int main(int argc, char* argv[]){
   // initialize nvm logger
   nvm_event_log_init();
 
-  const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_EXPOSED_EVENTS_SIZ, EVENT_WARNING);
+  const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
 
   event_log_sync(
 		  	  EVENT_TIMESYNC,
@@ -1563,7 +1587,9 @@ int main(int argc, char* argv[]){
 									main_config_data_mode,			// 16
 									main_config_data_basic,			// 17
 									main_callsign_with_ssid,		// 18
-									main_own_aprs_msg);
+									main_own_aprs_msg,
+									&rte_main_trigger_gsm_event_log,
+									&main_exposed_events);
 
 		}
 #endif
@@ -1741,6 +1767,29 @@ int main(int argc, char* argv[]){
 			}
 
 			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
+
+				// send event log each 24 hours, but only once at the top of an hour
+				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 23) {
+					if (backup_reg_get_event_log_report_sent_aprsis() == 0) {
+						// set status bit in non-volatile backup register not to loop over and over again in case of a restart
+						backup_reg_set_event_log_report_sent_aprsis();
+
+						// extract events from NVM
+						const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+
+						// set a trigger to number of events, which shall be sent
+						// please note that we do not need to check here if APRS-IS
+						// is connected. The check is done within specific APRS-IS functions
+						//
+						// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
+						// because NVM can contain less events
+						rte_main_trigger_gsm_event_log = events_stat.zz_total;
+					}
+				}
+				else {
+					// reset flag if the time is not 23:xx
+					backup_reg_reset_event_log_report_sent_aprsis();
+				}
 
 				if (pwr_save_is_currently_cutoff() == 0) {
 					// this checks when APRS-IS was alive last time and when any packet

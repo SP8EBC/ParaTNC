@@ -12,6 +12,9 @@
 
 #define RTE_WX_PROBLEMS_MAX_THRESHOLD	10
 
-
+/**
+ * How many events should be sent in a report over APRS-IS and radio
+ */
+#define MAIN_HOW_MANY_EVENTS_SEND_REPORT	9
 
 #endif /* ETC_MISC_CONFIG_H_ */

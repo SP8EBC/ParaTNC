@@ -349,7 +349,7 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 				output_arr[output_arr_iterator].event_id = newest->event_id;
 				output_arr[output_arr_iterator].event_master_time = newest->event_master_time;
 				output_arr[output_arr_iterator].severity = severity;
-				output_arr[output_arr_iterator].source = (event_log_source_t)newest->severity_and_source;
+				output_arr[output_arr_iterator].source = (event_log_source_t)EVENT_LOG_GET_SOURCE(newest->severity_and_source);
 				output_arr[output_arr_iterator].lparam = newest->lparam;
 				output_arr[output_arr_iterator].lparam2 = newest->lparam2;
 				output_arr[output_arr_iterator].wparam = newest->wparam;
@@ -358,9 +358,10 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 				output_arr[output_arr_iterator].param2 = newest->param2;
 
 
-				// increment counters
+				// increment counter of all events processed
 				out.zz_total++;
 
+				// increment per severity counter
 				switch (severity) {
 					case EVENT_TIMESYNC: out.timesyncs++; break;
 					case EVENT_ASSERT: out.asserts++; break;
@@ -372,6 +373,10 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 					default: break;
 				}
 
+				output_arr[output_arr_iterator].source_str_name = event_log_source_to_str(output_arr[output_arr_iterator].source);
+
+				output_arr[output_arr_iterator].event_str_name = event_id_to_str(output_arr[output_arr_iterator].source, output_arr[output_arr_iterator].event_id);
+
 				// increment the iterator
 				output_arr_iterator++;
 
@@ -382,7 +387,7 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 				}
 				else
 				{
-					newest--;	// decrement pointer towards the begining of area
+					newest--;	// decrement pointer towards the beginning of area
 				}
 			}
 

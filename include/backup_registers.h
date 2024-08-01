@@ -109,4 +109,13 @@ void backup_assert(uint32_t assert);
 uint32_t backup_reg_get_last_restart_date(void);
 void backup_reg_set_last_restart_date(void);
 
+void backup_reg_set_event_log_report_sent_aprsis(void);
+void backup_reg_reset_event_log_report_sent_aprsis(void);
+uint8_t backup_reg_get_event_log_report_sent_aprsis(void);
+
+void backup_reg_set_event_log_report_sent_radio(void);
+void backup_reg_reset_event_log_report_sent_radio(void);
+uint8_t backup_reg_get_event_log_report_sent_radio(void);
+
+
 #endif /* BACKUP_REGISTERS_H_ */

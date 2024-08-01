@@ -19,6 +19,7 @@
 #define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
 #define REGISTER_ASSERT				RTC->BKP9R
 #define REGISTER_LAST_RESTART		RTC->BKP10R
+#define REGISTER_PERSISTENT_STATUS	RTC->BKP11R
 #endif
 
 //#if defined(STM32F10X_MD_VL)
@@ -53,6 +54,7 @@
 // 8 -> counters of resets caused by validation checks failures
 // 9 -> assert register
 // 10-> last restart RTC date
+// 11-> persistent program status
 
 // 7th register map
 // xxxxyyAA - telemetry frames counter
@@ -66,6 +68,12 @@
 // xxxxAAyy - resets caused by 'rte_wx_check_weather_measurements()'
 // xxAAyyyy - resets caused by value of 'rte_wx_dallas_degraded_counter'
 // AAxxyyyy - resets caused by 'system_is_rtc_ok()'
+
+// 11th register map
+// 		lsb
+//			0 - event log report has been sent over APRS-IS in this hour
+//			1 - event log report has been sent over radio in this hour
+//		msb
 
 static void backup_reg_unclock(void) {
 #ifdef PARAMETEO
@@ -752,4 +760,57 @@ void backup_reg_set_last_restart_date(void) {
 
 	backup_reg_lock();
 
+}
+
+void backup_reg_set_event_log_report_sent_aprsis(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS |= (1 << 0);
+
+	backup_reg_lock();
+
+}
+
+void backup_reg_reset_event_log_report_sent_aprsis(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ (1 << 0));
+
+	backup_reg_lock();
+}
+
+uint8_t backup_reg_get_event_log_report_sent_aprsis(void) {
+
+	if ((REGISTER_PERSISTENT_STATUS & (1 << 0)) != 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+
+void backup_reg_set_event_log_report_sent_radio(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS |= (1 << 1);
+
+	backup_reg_lock();
+}
+
+void backup_reg_reset_event_log_report_sent_radio(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ (1 << 1));
+
+	backup_reg_lock();
+}
+
+uint8_t backup_reg_get_event_log_report_sent_radio(void) {
+	if ((REGISTER_PERSISTENT_STATUS & (1 << 1)) != 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }

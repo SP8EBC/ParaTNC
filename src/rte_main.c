@@ -43,6 +43,9 @@ uint8_t rte_main_trigger_gsm_telemetry_descriptions = 0;
 //!<
 uint8_t rte_main_trigger_gsm_status = 0;
 
+//!<
+uint8_t rte_main_trigger_gsm_event_log = 0;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 uint8_t rte_main_woken_up = 0;
 

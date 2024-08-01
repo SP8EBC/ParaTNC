@@ -13,7 +13,7 @@
 
 #include "memory_map.h"
 
-int variant_validate_is_within_ram(void * address) {
+int variant_validate_is_within_ram(const void * address) {
 
 #ifdef STM32L471xx
 	uint32_t addr_value = (uint32_t)address;
@@ -34,7 +34,7 @@ int variant_validate_is_within_ram(void * address) {
 #endif
 }
 
-int variant_validate_is_within_sram2(void * address) {
+int variant_validate_is_within_sram2(const void * address) {
 	uint32_t addr_value = (uint32_t)address;
 
 	if (addr_value > SRAM2_BASE &&
@@ -46,7 +46,7 @@ int variant_validate_is_within_sram2(void * address) {
 	}
 }
 
-int variant_validate_is_within_flash(void * address) {
+int variant_validate_is_within_flash(const void * address) {
 #ifdef STM32L471xx
 	uint32_t addr_value = (uint32_t)address;
 
@@ -62,7 +62,7 @@ int variant_validate_is_within_flash(void * address) {
 #endif
 }
 
-int variant_validate_is_within_flash_logger_events(void * address) {
+int variant_validate_is_within_flash_logger_events(const void * address) {
 	uint32_t addr_value = (uint32_t)address;
 
 	if (addr_value > MEMORY_MAP_CONFIG_END &&

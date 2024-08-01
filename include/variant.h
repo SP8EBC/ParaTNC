@@ -10,9 +10,9 @@
 
 #include "stdint.h"
 
-int variant_validate_is_within_ram(void * address);
-int variant_validate_is_within_sram2(void * address);
-int variant_validate_is_within_flash(void * address);
-int variant_validate_is_within_flash_logger_events(void * address);
+int variant_validate_is_within_ram(const void * address);
+int variant_validate_is_within_sram2(const void * address);
+int variant_validate_is_within_flash(const void * address);
+int variant_validate_is_within_flash_logger_events(const void * address);
 
 #endif /* VARIANT_H_ */
