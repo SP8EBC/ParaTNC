@@ -36,6 +36,8 @@ extern uint8_t rte_main_trigger_gsm_status;
 
 extern uint8_t rte_main_trigger_gsm_event_log;
 
+extern uint8_t rte_main_trigger_radio_event_log;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 

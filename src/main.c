@@ -1761,6 +1761,29 @@ int main(int argc, char* argv[]){
 
 			}
 
+			// send event log each 24 hours, but only once at the top of an hour
+			if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 21) {
+				if (backup_reg_get_event_log_report_sent_radio() == 0) {
+					// set status bit in non-volatile backup register not to loop over and over again in case of a restart
+					backup_reg_set_event_log_report_sent_radio();
+
+					// extract events from NVM
+					const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+
+					// set a trigger to number of events, which shall be sent
+					// please note that we do not need to check here if APRS-IS
+					// is connected. The check is done within specific APRS-IS functions
+					//
+					// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
+					// because NVM can contain less events
+					rte_main_trigger_radio_event_log = events_stat.zz_total;
+				}
+			}
+			else {
+				// reset flag if the time is not 21:xx
+				backup_reg_reset_event_log_report_sent_radio();
+			}
+
 			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
 
 				// send event log each 24 hours, but only once at the top of an hour
@@ -1782,7 +1805,7 @@ int main(int argc, char* argv[]){
 					}
 				}
 				else {
-					// reset flag if the time is not 23:xx
+					// reset flag if the time is not 18:xx
 					backup_reg_reset_event_log_report_sent_aprsis();
 				}
 
@@ -1959,6 +1982,16 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PARAMETEO
+			if (rte_main_trigger_radio_event_log > 0) {
+
+				// set a pointer to even in exposed form which will be sent now
+				const event_log_exposed_t * current_exposed_event = &main_exposed_events[rte_main_trigger_radio_event_log - 1];
+
+				status_send_from_exposed_eveny_log(current_exposed_event);
+
+				rte_main_trigger_radio_event_log--;
+			}
+
 			// get current battery voltage. for non parameteo this will return 0
 			main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
 

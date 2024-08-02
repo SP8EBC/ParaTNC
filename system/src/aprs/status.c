@@ -161,3 +161,23 @@ void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
 	afsk_txStart(&main_afsk);
 }
 
+void status_send_from_exposed_eveny_log(const event_log_exposed_t * const event) {
+	main_wait_for_tx_complete();
+
+	// clear buffer
+	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+
+	// put '>' at the begining
+	*main_own_aprs_msg = '>';
+
+	// convert event to string representation, but shift output buffer by one, to make a room for '>'
+	const uint16_t str_size = event_exposed_to_string(event, main_own_aprs_msg + 1, OWN_APRS_MSG_LN - 1);
+
+	// set message lenght
+	main_own_aprs_msg_len = str_size + 1;
+
+	// send message on radio
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	afsk_txStart(&main_afsk);
+}
+
