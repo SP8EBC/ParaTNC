@@ -565,23 +565,18 @@ static void main_gsm_pool_handler(
 			}
 		}
 		// trigger value contain how many entries shall be sent
-		else if (*trigger_gsm_event_log > 0) {
+		else if (*trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged() == 1) {
 
-			// create APRS status packet preamble
-			const uint16_t preamble_size = snprintf(
-					own_aprs_msg,
-					OWN_APRS_MSG_LN - 1,
-					"%s>AKLPRZ,qAR,%s:>",
-					callsign_with_ssid,
-					callsign_with_ssid);
+			// set a pointer to even in exposed form which will be sent now
+			const event_log_exposed_t * current_exposed_event = &exposed_events[(*trigger_gsm_event_log) - 1];
 
 			// create APRS status content itself
-			const uint16_t str_size = event_exposed_to_string(&exposed_events[(*trigger_gsm_event_log) - 1], own_aprs_msg + preamble_size, OWN_APRS_MSG_LN - preamble_size);
+			const uint16_t str_size = event_exposed_to_string(current_exposed_event, own_aprs_msg, OWN_APRS_MSG_LN);
 
 			(*trigger_gsm_event_log)--;
 
 			if (str_size > 0) {
-
+				aprsis_send_any_status((const char *)callsign_with_ssid, own_aprs_msg ,str_size);
 			}
 		}
 
@@ -1589,7 +1584,7 @@ int main(int argc, char* argv[]){
 									main_callsign_with_ssid,		// 18
 									main_own_aprs_msg,
 									&rte_main_trigger_gsm_event_log,
-									&main_exposed_events);
+									main_exposed_events);
 
 		}
 #endif
@@ -1769,7 +1764,7 @@ int main(int argc, char* argv[]){
 			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
 
 				// send event log each 24 hours, but only once at the top of an hour
-				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 23) {
+				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 18) {
 					if (backup_reg_get_event_log_report_sent_aprsis() == 0) {
 						// set status bit in non-volatile backup register not to loop over and over again in case of a restart
 						backup_reg_set_event_log_report_sent_aprsis();

@@ -1042,11 +1042,6 @@ void aprsis_send_status_send_battery_voltages(const char * callsign_with_ssid, u
 		return;
 	}
 
-//	if (gsm_sim800_tcpip_tx_busy() == 1) {
-//		// will die here
-//		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_CNTRS);
-//	}
-
 	memset (aprsis_packet_tx_buffer, 0x00, APRSIS_TX_BUFFER_LN);
 
 	aprsis_tx_counter++;
@@ -1183,6 +1178,36 @@ void aprsis_send_any_string_buffer(const char * const message, const uint16_t ln
 	*(aprsis_packet_tx_buffer + ln + 3) = 0x00;
 
 	aprsis_packet_tx_message_size = ln + 2;
+
+ 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+}
+
+/**
+ * This generates APRS status message from any text content given
+ * @param callsign_with_ssid
+ * @param message
+ * @param ln
+ */
+void aprsis_send_any_status(const char * callsign_with_ssid, const char * const message, const uint16_t ln)
+{
+	if (aprsis_logged == 0 || ln == 0) {
+		return;
+	}
+
+	if (gsm_sim800_tcpip_tx_busy() == 1) {
+		// will die here
+		backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER);
+	}
+
+	aprsis_tx_counter++;
+
+	aprsis_packet_tx_message_size = snprintf(
+									aprsis_packet_tx_buffer,
+									APRSIS_TX_BUFFER_LN - 1,
+									"%s>AKLPRZ,qAR,%s:>%s\r\n",
+									callsign_with_ssid,
+									callsign_with_ssid,
+									message);
 
  	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
