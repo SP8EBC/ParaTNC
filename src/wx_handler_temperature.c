@@ -10,6 +10,7 @@
 #include <rte_wx.h>
 #include <wx_handler.h>
 #include <main.h>
+#include <delay.h>
 
 #include <drivers/dallas.h>
 #include <drivers/ms5611.h>
@@ -101,18 +102,25 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 
 			}
 
+			// check if dallas temperature sensor is not disabled (it is enabled by default)
+			if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
 
-			// measure an external temperature using Dallas one wire sensor.
-			// this function has blockin I/O which also adds a delay required by MS5611
-			// sensor to finish data acquisition after the pressure measurement
-			// is triggered.
-			dallas_temperature = dallas_query(&rte_wx_current_dallas_qf);
+				// measure an external temperature using Dallas one wire sensor.
+				// this function has blocking I/O which also adds a delay required by MS5611
+				// sensor to finish data acquisition after the pressure measurement
+				// is triggered.
+				dallas_temperature = dallas_query(&rte_wx_current_dallas_qf);
 
-			// check against excessive slew rate
-			const uint8_t dallas_slew_exceeded = wx_handler_temperature_check_slew(dallas_temperature, &rte_wx_dallas_average);
+				// check against excessive slew rate
+				const uint8_t dallas_slew_exceeded = wx_handler_temperature_check_slew(dallas_temperature, &rte_wx_dallas_average);
 
-			if (dallas_slew_exceeded > 0) {
-				rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+				if (dallas_slew_exceeded > 0) {
+					rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+				}
+			}
+			else {
+				// additional delay to finish measurement
+				delay_fixed(3);
 			}
 
 	#ifdef STM32L471xx
@@ -125,31 +133,33 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			}
 	#endif
 
-			if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_FULL) {
-				// updating last good measurement time
-				wx_last_good_temperature_time = master_time;
+			if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
+				if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_FULL) {
+					// updating last good measurement time
+					wx_last_good_temperature_time = master_time;
 
-				// include current temperature into the average
-				float_average(dallas_temperature, &rte_wx_dallas_average);
+					// include current temperature into the average
+					float_average(dallas_temperature, &rte_wx_dallas_average);
 
-				temperature = float_get_average(&rte_wx_dallas_average);
+					temperature = float_get_average(&rte_wx_dallas_average);
 
-#if defined(STM32L471xx)
-				rte_wx_temperature_average_dallas = (int16_t)(temperature * 10.0f);
-#endif
+	#if defined(STM32L471xx)
+					rte_wx_temperature_average_dallas = (int16_t)(temperature * 10.0f);
+	#endif
 
-				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
-			}
-			else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_DEGRADATED) {
-				// if there were a communication error set the error to unavaliable
-				rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+					parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
+				}
+				else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_DEGRADATED) {
+					// if there were a communication error set the error to unavaliable
+					rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 
-				// increase degraded quality factor counter
-				rte_wx_dallas_degraded_counter++;
-			}
-			else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
-				// if there were a communication error set the error to unavaliable
-				rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+					// increase degraded quality factor counter
+					rte_wx_dallas_degraded_counter++;
+				}
+				else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
+					// if there were a communication error set the error to unavaliable
+					rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
+				}
 			}
 
 			break;

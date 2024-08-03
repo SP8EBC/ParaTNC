@@ -51,7 +51,11 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #ifdef _METEO
+	#ifdef _METEO_DISABLE_DALLAS
+		.wx = (1 | WX_INTERNAL_DISABLE_DALLAS),
+	#else
 		.wx = 1,
+	#endif
 #else
 		.wx = 0,
 #endif

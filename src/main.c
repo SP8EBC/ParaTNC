@@ -1215,8 +1215,10 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
-	  // initialize dallas one-wire driver for termometer
-	  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
+	  if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
+		  // initialize dallas one-wire driver for termometer
+		  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
+	  }
 #endif
 
 	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
@@ -1303,8 +1305,14 @@ int main(int argc, char* argv[]){
   ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
 
 	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+	  for (int i = 0; i < 4; i++) {
+		  max31865_pool();
+		  delay_fixed(70);
+	  }
+
 	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
 	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+
 	}
 
 #ifndef PARAMETEO

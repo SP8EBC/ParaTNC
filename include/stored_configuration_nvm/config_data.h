@@ -40,6 +40,7 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 #define WX_ENABLED 					(1)
 #define WX_INTERNAL_AS_BACKUP 		(1 << 1)
 #define WX_INTERNAL_SPARKFUN_WIND	(1 << 2)
+#define WX_INTERNAL_DISABLE_DALLAS	(1 << 3)
 
 #define WX_MODBUS_DEBUG				(1 << 1)
 

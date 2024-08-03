@@ -776,6 +776,17 @@ const uint32_t * configuration_get_address(configuration_handler_region_t region
 
 }
 
+int configuration_get_disable_dallas(void) {
+
+	int out = 0;
+
+	if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 int configuration_get_inhibit_wx_pwr_handle(void) {
 
 	int out = 0;
