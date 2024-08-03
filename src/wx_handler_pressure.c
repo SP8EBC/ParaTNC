@@ -12,6 +12,9 @@
 #include "rte_wx.h"
 #include "main.h"
 
+#include <event_log.h>
+#include <events_definitions/events_wx_handler.h>
+
 #include <drivers/ms5611.h>
 #include <drivers/bme280.h>
 
@@ -81,6 +84,12 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
 
+		}
+		else {
+			// store an event
+		    event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
+		    		EVENTS_WX_HANDLER_WARN_PRESSURE_FAILED,
+					measurement_retval, 0, 0, 0, 0, 0);
 		}
 		break;
 	}

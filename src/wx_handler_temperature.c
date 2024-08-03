@@ -12,6 +12,9 @@
 #include <main.h>
 #include <delay.h>
 
+#include <event_log.h>
+#include <events_definitions/events_wx_handler.h>
+
 #include <drivers/dallas.h>
 #include <drivers/ms5611.h>
 #include <drivers/bme280.h>
@@ -51,6 +54,12 @@ inline static int8_t wx_handler_temperature_check_slew(const float last, const f
 		}
 		else {
 			result = 0;
+		}
+
+		if (result == 1) {
+			  event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
+						  EVENTS_WX_HANDLER_WARN_TEMPERATURE_EXCESIVE_SLEW,
+						  result, 0, 0, 0, (uint32_t)avg, (uint32_t)last);
 		}
 	}
 
@@ -101,6 +110,12 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 
 			}
+			else {
+				// store an event
+			    event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
+			    		EVENTS_WX_HANDLER_WARN_TEMPERATURE_INT_FAILED,
+						  0, 0, 0, 0, 0, (uint32_t)rte_wx_temperature_internal);
+			}
 
 			// check if dallas temperature sensor is not disabled (it is enabled by default)
 			if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
@@ -150,6 +165,11 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 					parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 				}
 				else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_DEGRADATED) {
+					// store an event
+				    event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
+				    		  EVENTS_WX_HANDLER_WARN_TEMPERATURE_DALLAS_DEGR,
+							  0, 0, 0, 0, 0, (uint32_t)dallas_temperature);
+
 					// if there were a communication error set the error to unavaliable
 					rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 
@@ -157,6 +177,12 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 					rte_wx_dallas_degraded_counter++;
 				}
 				else if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_NOT_AVALIABLE) {
+					// store an event
+				    event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
+				    		  EVENTS_WX_HANDLER_WARN_TEMPERATURE_DALLAS_NAV,
+							  0, 0, 0, 0, 0, (uint32_t)dallas_temperature);
+
+
 					// if there were a communication error set the error to unavaliable
 					rte_wx_error_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 				}
