@@ -37,17 +37,17 @@ static char local_buffer[LOCAL_BUFFER_LN];
  * This is set to one if gsm module detected that TCP connection has died
  * or the called party actively disconnected (CLOSED has been received from GSM module)
  */
-uint8_t gsm_sim800_tcpip_connection_died = 0;
+static uint8_t gsm_sim800_tcpip_connection_died = 0;
 
 /**
  * This is set to one if acync receive is actually in progress
  */
-uint8_t gsm_sim800_tcpip_receiving = 0;
+static uint8_t gsm_sim800_tcpip_receiving = 0;
 
 /**
  * If modem is busy with transmitting something
  */
-uint8_t gsm_sim800_tcpip_transmitting = 0;
+static uint8_t gsm_sim800_tcpip_transmitting = 0;
 
 /**
  * This is a timestamp when last data has been received

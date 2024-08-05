@@ -14,6 +14,7 @@
 #include "gsm/sim800_async_message_t.h"
 #include "gsm/sim800_simcard_status_t.h"
 #include "gsm/sim800_network_status_t.h"
+#include "gsm/sim800_registration_status_t.h"
 
 #include "main.h"
 #include "io.h"
@@ -23,6 +24,10 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
 
 #define SIM800_DEFAULT_TIMEOUT 250	// in miliseconds
 
@@ -44,6 +49,10 @@
 //!< Registered, home network
 #define SIM800_REGISTRATION_STATUS_ROAMING							(5u)
 
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
 /**
  * Const strings with AT commands sent to GSM module
  */
@@ -52,7 +61,9 @@ static const char * GET_SIGNAL_LEVEL 			= "AT+CSQ\r\0";
 static const char * GET_NETWORK_REGISTRATION 	= "AT+CREG?\r\0";
 static const char * GET_PIN_STATUS 				= "AT+CPIN?\r\0";
 static const char * GET_REGISTERED_NETWORK		= "AT+COPS?\r\0";
+static const char * GET_IMSI					= "AT+CIMI\r\0";
 extern const char * START_CONFIG_APN;
+
 
 /**
  * Const string with a responses to AT commands
@@ -67,9 +78,8 @@ static const char * CPIN = "+CPIN:\0";
 static const char * REGISTERED_NETWORK = "+COPS:\0";
 
 static const char * TRANSPARENT_MODE_ON	= "AT+CIPMODE=1\r\0";
-//static const char * TRANSPARENT_MODE_OFF	= "AT+CIPMODE=0\r\0";
 
-uint32_t gsm_time_of_last_command_send_to_module = 0;
+static uint32_t gsm_time_of_last_command_send_to_module = 0;
 
 //! Counter used to inhibit too frequent module resets, if it has no no sense
 static int16_t gsm_reset_counter = 0;
@@ -101,14 +111,24 @@ const char * gsm_at_command_sent_last = 0;
 //! set to one to lock 'gsm_sim800_pool' in SIM800_INITIALIZING state until the response is received
 static uint8_t gsm_waiting_for_command_response = 0;
 
-uint8_t gsm_sim800_registration_status = SIM800_REGISTRATION_STATUS_UNKNOWN;	// unknown
+static sim800_registration_status_t gsm_sim800_registration_status = SIM800_REGISTRATION_STATUS_UNKNOWN;	// unknown
+
+//! Inhibit GSM modem completely while controller is in apropriate power saving state
+static int8_t gsm_sim800_keep_shutdown = 0;
+
+//! flag if SIM card is present, working and ulocked
+static sim800_simcard_status_t gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+#define IMSI_LENGHT		16
+char gsm_sim800_imsi[IMSI_LENGHT];
 
 //! string with sim status
 #define SIM_STATUS_LENGHT	10
 char gsm_sim800_simcard_status_string[SIM_STATUS_LENGHT];
-
-//! flag if SIM card is present, working and ulocked
-sim800_simcard_status_t gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
 
 //! String with a name of currently registered network
 #define REGISTERED_NETWORK_LN	16
@@ -129,8 +149,9 @@ char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
 
-//! Inhibit GSM modem completely while controller is in apropriate power saving state
-int8_t gsm_sim800_keep_shutdown = 0;
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
 
 inline static void gsm_sim800_power_off(void) {
 	io___cntrl_vbat_g_disable();
@@ -147,6 +168,10 @@ inline static void gsm_sim800_press_pwr_button(void) {
 inline static void gsm_sim800_depress_pwr_button(void) {
 	io___cntrl_gprs_pwrkey_release();
 }
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Detect async messages which are not a response to AT commands, but a status
@@ -288,15 +313,6 @@ uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size) {
 	return output_bitmask;
 }
 
-uint8_t gsm_sim800_get_waiting_for_command_response(void) {
-	return gsm_waiting_for_command_response;
-}
-
-//gsm_response_start_idx
-uint16_t gsm_sim800_get_response_start_idx(void) {
-	return gsm_response_start_idx;
-}
-
 void gsm_sim800_init(gsm_sim800_state_t * state, uint8_t enable_echo) {
 
 	gsm_at_comm_echo = enable_echo;
@@ -374,15 +390,34 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 		// check what command has been sent
 		//switch ((uint32_t)gsm_at_command_sent_last) {
 		if (gsm_at_command_sent_last == 0) {
-			// no command has been send so far
-
 			// ask for network registration status
-			srl_send_data(srl_context, (const uint8_t*) GET_NETWORK_REGISTRATION, SRL_MODE_ZERO, strlen(GET_NETWORK_REGISTRATION), SRL_INTERNAL);
+			srl_send_data(srl_context, (const uint8_t*) GET_PIN_STATUS, SRL_MODE_ZERO, strlen(GET_PIN_STATUS), SRL_INTERNAL);
 
 			// wait for command completion
 			srl_wait_for_tx_completion(srl_context);
 
-			gsm_at_command_sent_last = GET_NETWORK_REGISTRATION;
+			gsm_at_command_sent_last = GET_PIN_STATUS;
+
+			gsm_waiting_for_command_response = 1;
+
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			// record when the command has been sent
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
+			// no command has been send so far
+
+			// ask for network registration status
+			srl_send_data(srl_context, (const uint8_t*) GET_IMSI, SRL_MODE_ZERO, strlen(GET_IMSI), SRL_INTERNAL);
+
+			// wait for command completion
+			srl_wait_for_tx_completion(srl_context);
+
+			gsm_at_command_sent_last = GET_IMSI;
 
 			gsm_waiting_for_command_response = 1;
 
@@ -395,14 +430,21 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 			gsm_time_of_last_command_send_to_module = main_get_master_time();
 
 		}
-		else if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
+		else if (gsm_at_command_sent_last == GET_IMSI) {
+			// wait for some time to be sure that GSM module is registered into network
+			if (gsm_sim800_registration_delay_seconds > 0) {
+				gsm_sim800_registration_delay_seconds--;
+			}
+			else {
+				// no command has been send so far
+
 				// ask for network registration status
-				srl_send_data(srl_context, (const uint8_t*) GET_PIN_STATUS, SRL_MODE_ZERO, strlen(GET_PIN_STATUS), SRL_INTERNAL);
+				srl_send_data(srl_context, (const uint8_t*) GET_NETWORK_REGISTRATION, SRL_MODE_ZERO, strlen(GET_NETWORK_REGISTRATION), SRL_INTERNAL);
 
 				// wait for command completion
 				srl_wait_for_tx_completion(srl_context);
 
-				gsm_at_command_sent_last = GET_PIN_STATUS;
+				gsm_at_command_sent_last = GET_NETWORK_REGISTRATION;
 
 				gsm_waiting_for_command_response = 1;
 
@@ -413,15 +455,11 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 				// record when the command has been sent
 				gsm_time_of_last_command_send_to_module = main_get_master_time();
+			}
 
 		}
-		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
+		else if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
 
-			// wait for some time to be sure that GSM module is registered into network
-			if (gsm_sim800_registration_delay_seconds > 0) {
-				gsm_sim800_registration_delay_seconds--;
-			}
-			else {
 				// ask for network registration status
 				srl_send_data(srl_context, (const uint8_t*) GET_REGISTERED_NETWORK, SRL_MODE_ZERO, strlen(GET_REGISTERED_NETWORK), SRL_INTERNAL);
 
@@ -439,7 +477,8 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 
 				// record when the command has been sent
 				gsm_time_of_last_command_send_to_module = main_get_master_time();
-			}
+			//}
+
 		}
 		else if (gsm_at_command_sent_last == GET_REGISTERED_NETWORK) {
 			// ask for signal level
@@ -781,6 +820,16 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				}
 			}
 		}
+		else if (gsm_at_command_sent_last == GET_IMSI) {
+			const char * response = (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx);
+
+			strncpy(gsm_sim800_imsi, response, IMSI_LENGHT);
+
+			text_replace_non_printable_with_space(gsm_sim800_imsi, IMSI_LENGHT);
+
+			text_replace_space_with_null(gsm_sim800_imsi, IMSI_LENGHT);
+
+		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
 			comparision_result = strncmp(CPIN, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
 
@@ -883,6 +932,11 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 	}
 }
 
+/**
+ * Event handling an event that
+ * @param srl_context
+ * @param state
+ */
 void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	if (*state == SIM800_ALIVE_SENDING_TO_MODEM) {
 		srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
@@ -931,7 +985,7 @@ void gsm_sim800_reset(gsm_sim800_state_t * state) {
 
 	gsm_waiting_for_command_response = 0;
 
-	gsm_sim800_registration_status = 4;
+	gsm_sim800_registration_status = SIM800_REGISTRATION_STATUS_UNKNOWN;
 
 	gsm_sim800_registration_delay_seconds = 8;
 
@@ -977,4 +1031,12 @@ void gsm_sim800_decrease_counter(void) {
 
 void gsm_sim800_inhibit(uint8_t _inhibit) {
 	gsm_sim800_keep_shutdown = _inhibit;
+}
+
+uint8_t gsm_sim800_get_waiting_for_command_response(void) {
+	return gsm_waiting_for_command_response;
+}
+
+uint16_t gsm_sim800_get_response_start_idx(void) {
+	return gsm_response_start_idx;
 }

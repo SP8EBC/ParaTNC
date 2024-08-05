@@ -29,6 +29,9 @@ uint8_t rte_main_trigger_message_ack = 0;
 uint8_t rte_main_trigger_send_message = 0;
 
 #ifdef PARAMETEO
+//!< Set to one if reboot is scheduled by diagnostics
+uint8_t rte_main_reboot_scheduled_diag = 0;
+
 uint8_t rte_main_trigger_gsm_aprsis_counters_packet = 0;
 
 //!< Trigger sending status packet with received APRS is login string

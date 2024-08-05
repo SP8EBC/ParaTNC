@@ -15,6 +15,8 @@
 //!< Set after everything was reinitialized from
 #define RTE_MAIN_WOKEN_UP_EXITED			4u
 
+#define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
+
 extern message_t rte_main_received_message;
 
 extern message_t rte_main_message_for_transmitting;
@@ -42,6 +44,8 @@ extern uint8_t rte_main_trigger_radio_event_log;
 extern uint8_t rte_main_woken_up;
 
 extern uint8_t rte_main_reboot_req;
+
+extern uint8_t rte_main_reboot_scheduled_diag;
 
 extern uint8_t rte_main_boot_cycles, rte_main_hard_faults;
 extern uint32_t rte_main_hardfault_lr, rte_main_hardfault_pc;

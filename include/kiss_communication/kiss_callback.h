@@ -15,4 +15,8 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 
 int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size);
 
+int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size);
+
+int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size);
+
 #endif

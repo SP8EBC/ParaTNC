@@ -12,15 +12,24 @@
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/types/kiss_communication_service_ids.h>
 #include <kiss_communication/kiss_did.h>
+#include <kiss_communication/kiss_read_memory.h>
 #include <kiss_communication/kiss_nrc_response.h>
 #include "main.h"
+#include "rte_main.h"
+
+#include <etc/kiss_configuation.h>
 
 #include <string.h>
 #include <stdio.h>
 #include <stored_configuration_nvm/configuration_handler.h>
+#include <variant.h>
+
+#include "backup_registers.h"
 
 #define KISS_MAX_CONFIG_PAYLOAD_SIZE	0x80
 #define KISS_LAST_ASYNC_MSG				0xFF
+
+#define KISS_RESET_SOFTRESET			0x03
 
 uint8_t kiss_async_message_counter = 0;
 
@@ -141,6 +150,14 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 
 }
 
+/**
+ * Synchronously erases current startup configuration
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
 int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 #define ERASE_STARTUP_LN	6
@@ -219,6 +236,14 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	return PROGRAM_STARTUP_LN;
 }
 
+/**
+ * Reads data by identifier
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
 int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 	/**
@@ -248,6 +273,112 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
 		response_buffer[response_size + 4] = FEND;
 
 		out = response_size + 5;
+	}
+	else {
+		out = kiss_nrc_response_fill_request_out_of_range(response_buffer);
+	}
+
+	return out;
+}
+
+/**
+ * Reads raw content of memory from given address
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
+int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+	/**
+	 * Response frame structure
+	 *
+	 * FEND, NONSTANDARD, RESPONSE_SIZE, KISS_READ_MEM_RESP, data, data, data, data (...), FEND
+	 */
+
+	int32_t out = 0;
+
+	memset(response_buffer, 0x00, buffer_size);
+
+	// size format
+	const uint8_t size_format = *(input_frame_from_host + 2);
+
+	// address
+	const uint32_t address = *(input_frame_from_host + 3) | (*(input_frame_from_host + 4) << 8) | (*(input_frame_from_host + 5) << 16) | (*(input_frame_from_host + 6) << 24);
+
+	// size
+	const uint8_t size = *(input_frame_from_host + 7);
+
+	// allow only one byte of size and four byte of address
+	if (size_format == 0x14) {
+
+		if (size > 0 && size < KISS_CONFIG_DIAGNOSTIC_BUFFER_LN - 4) {
+			if (variant_validate_is_within_read_mem_by_addr((const void*)address) == 1) {
+				// construct DID response to an output buffer
+				const uint8_t response_size = kiss_read_memory_response(address, size, response_buffer + 4, buffer_size - 5);
+
+				// check if DID has been found and everyting is OK with it.
+				if (response_size > 0) {
+					// if response is correct fill the buffer with the rest of stuff
+					response_buffer[0] = FEND;
+					response_buffer[1] = NONSTANDARD;
+					response_buffer[2] = response_size + 5;				// message lenght
+					response_buffer[3] = KISS_READ_MEM_ADDR_RESP;
+
+					response_buffer[response_size + 4] = FEND;
+
+					out = response_size + 5;
+				}
+				else {
+					out = kiss_nrc_response_fill_request_out_of_range(response_buffer);
+				}
+			}
+			else {
+				out = kiss_nrc_response_fill_security_access_denied(response_buffer);
+			}
+		}
+		else
+		{
+			out = kiss_nrc_response_fill_request_out_of_range(response_buffer);
+		}
+	}
+	else {
+		out = kiss_nrc_response_fill_incorrect_message_ln(response_buffer);
+	}
+
+	return out;
+}
+
+int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+
+	int32_t out = 0;
+
+	const uint8_t reset_type = *(input_frame_from_host + 2);
+
+	// as for now only soft reset is allowed
+	if (reset_type == KISS_RESET_SOFT) {
+
+		// get last bootup date
+		const uint32_t last_restart_date = backup_reg_get_last_restart_date();
+
+		// only one restart per day is allowed
+		if (RTC->DR != last_restart_date) {
+
+			// update last restart date
+			backup_reg_set_last_restart_date();
+
+			rte_main_reboot_scheduled_diag = 1;
+
+			// if response is correct fill the buffer with the rest of stuff
+			response_buffer[0] = FEND;
+			response_buffer[1] = NONSTANDARD;
+			response_buffer[2] = 5;				// message lenght
+			response_buffer[3] = KISS_RESTART_RESP;
+			response_buffer[4] = FEND;
+		}
+		else {
+			out = kiss_nrc_response_fill_conditions_not_correct(response_buffer);
+		}
 	}
 	else {
 		out = kiss_nrc_response_fill_request_out_of_range(response_buffer);

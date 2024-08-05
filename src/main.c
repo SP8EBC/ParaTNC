@@ -190,13 +190,16 @@ int32_t main_wx_sensors_pool_timer = 65500;
 int32_t main_one_minute_pool_timer = 45000;
 
 //! one second pool interval
-int32_t main_one_second_pool_timer = 1000;
+int16_t main_one_second_pool_timer = 1000;
 
 //! two second pool interval
-int32_t main_two_second_pool_timer = 2000;
+int16_t main_two_second_pool_timer = 2000;
+
+//! four second pool interval
+int16_t main_four_second_pool_timer = 4000;
 
 //! ten second pool interval
-int32_t main_ten_second_pool_timer = 10000;
+int16_t main_ten_second_pool_timer = 10000;
 
 //! one hour interval incremented inside one minute
 int8_t main_one_hour_pool_timer = 60;
@@ -1905,6 +1908,14 @@ int main(int argc, char* argv[]){
 			button_debounce();
 
 			#ifdef PARAMETEO
+			if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
+				if (gsm_sim800_tcpip_tx_busy() == 0) {
+					rte_main_reboot_scheduled_diag = 0;
+
+					NVIC_SystemReset();
+				}
+			}
+
 			// this if cannot be guarded by checking if VBAT_G is enabled
 			// because VBAT_G itself is controlled by initialization
 			// pooler
@@ -1990,16 +2001,6 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PARAMETEO
-			if (rte_main_trigger_radio_event_log > 0) {
-
-				// set a pointer to even in exposed form which will be sent now
-				const event_log_exposed_t * current_exposed_event = &main_exposed_events[rte_main_trigger_radio_event_log - 1];
-
-				status_send_from_exposed_eveny_log(current_exposed_event);
-
-				rte_main_trigger_radio_event_log--;
-			}
-
 			// get current battery voltage. for non parameteo this will return 0
 			main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
 
@@ -2018,6 +2019,25 @@ int main(int argc, char* argv[]){
 			main_reload_internal_wdg();
 
 			main_two_second_pool_timer = 2000;
+		}
+
+		/**
+		 * FOUR SECOND POOLING
+		 */
+		if (main_four_second_pool_timer < 10) {
+			main_four_second_pool_timer = 4000;
+
+#ifdef PARAMETEO
+			if (rte_main_trigger_radio_event_log > 0) {
+
+				// set a pointer to even in exposed form which will be sent now
+				const event_log_exposed_t * current_exposed_event = &main_exposed_events[rte_main_trigger_radio_event_log - 1];
+
+				status_send_from_exposed_eveny_log(current_exposed_event);
+
+				rte_main_trigger_radio_event_log--;
+			}
+#endif
 		}
 
 		/**

@@ -73,3 +73,23 @@ int variant_validate_is_within_flash_logger_events(const void * address) {
 		return 0;
 	}
 }
+
+int variant_validate_is_within_read_mem_by_addr(const void * address)
+{
+#ifdef STM32L471xx
+	uint32_t addr_value = (uint32_t)address;
+
+	if (addr_value > MEMORY_MAP_CONFIG_END &&
+		addr_value < MEMORY_MAP_EVENT_LOG_END) {
+		return 1;
+	}
+	else if (addr_value > SRAM2_BASE && addr_value < SRAM2_BASE + SRAM2_SIZE) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+#else
+	return 1;
+#endif
+}

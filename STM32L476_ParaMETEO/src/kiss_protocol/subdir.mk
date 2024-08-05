@@ -9,6 +9,7 @@ C_SRCS += \
 ../src/kiss_protocol/kiss_communication_aprsmsg.c \
 ../src/kiss_protocol/kiss_did.c \
 ../src/kiss_protocol/kiss_nrc_response.c \
+../src/kiss_protocol/kiss_read_memory.c \
 ../src/kiss_protocol/kiss_security_access.c 
 
 OBJS += \
@@ -17,6 +18,7 @@ OBJS += \
 ./src/kiss_protocol/kiss_communication_aprsmsg.o \
 ./src/kiss_protocol/kiss_did.o \
 ./src/kiss_protocol/kiss_nrc_response.o \
+./src/kiss_protocol/kiss_read_memory.o \
 ./src/kiss_protocol/kiss_security_access.o 
 
 C_DEPS += \
@@ -25,6 +27,7 @@ C_DEPS += \
 ./src/kiss_protocol/kiss_communication_aprsmsg.d \
 ./src/kiss_protocol/kiss_did.d \
 ./src/kiss_protocol/kiss_nrc_response.d \
+./src/kiss_protocol/kiss_read_memory.d \
 ./src/kiss_protocol/kiss_security_access.d 
 
 

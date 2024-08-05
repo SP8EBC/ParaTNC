@@ -51,9 +51,10 @@ extern const config_data_gsm_t * main_config_data_gsm;
 
 extern int32_t main_wx_sensors_pool_timer;
 extern int32_t main_one_minute_pool_timer;
-extern int32_t main_one_second_pool_timer;
-extern int32_t main_two_second_pool_timer;
-extern int32_t main_ten_second_pool_timer;
+extern int16_t main_one_second_pool_timer;
+extern int16_t main_two_second_pool_timer;
+extern int16_t main_four_second_pool_timer;
+extern int16_t main_ten_second_pool_timer;
 
 extern AX25Ctx main_ax25;
 extern Afsk main_afsk;
@@ -128,6 +129,8 @@ inline void main_reset_pooling_timers(void) {
 	// two second pool interval
 	main_two_second_pool_timer = 2000;
 
+	main_four_second_pool_timer = 4000;
+
 	// ten second pool interval
 	main_ten_second_pool_timer = 10000;
 }
@@ -149,6 +152,10 @@ inline void main_one_second_pool_decremenet_counter(void) {
 
 inline void main_two_second_pool_decrement_counter(void) {
 		main_two_second_pool_timer -= SYSTICK_TICKS_PERIOD;
+}
+
+inline void main_four_second_pool_decrement_counter(void) {
+		main_four_second_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
 
 inline void main_ten_second_pool_decremenet_counter(void) {

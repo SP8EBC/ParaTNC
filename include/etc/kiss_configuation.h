@@ -13,7 +13,7 @@
 
 //!< Size of a buffer used for diagnostic communication over KISS protocol
 //! Simply maximum size of a response to a request
-#define KISS_CONFIG_DIAGNOSTIC_BUFFER_LN	24
+#define KISS_CONFIG_DIAGNOSTIC_BUFFER_LN	28
 
 
 
