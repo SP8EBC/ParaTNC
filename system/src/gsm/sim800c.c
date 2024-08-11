@@ -10,11 +10,13 @@
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c_inline.h"
 #include "gsm/sim800c_tcpip.h"
+#include "gsm/sim800c_imsi.h"
 #include "gsm/sim800_return_t.h"
 #include "gsm/sim800_async_message_t.h"
 #include "gsm/sim800_simcard_status_t.h"
 #include "gsm/sim800_network_status_t.h"
 #include "gsm/sim800_registration_status_t.h"
+#include "gsm/sim800_mcc_t.h"
 
 #include "main.h"
 #include "io.h"
@@ -118,6 +120,10 @@ static int8_t gsm_sim800_keep_shutdown = 0;
 
 //! flag if SIM card is present, working and ulocked
 static sim800_simcard_status_t gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
+
+static sim800_mcc_t gsm_sim800_mcc_from_imsi;
+
+static uint8_t gsm_sim800_mnc_from_imsi;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -580,7 +586,7 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 		}
 		else if (gsm_at_command_sent_last == CONFIGURE_DTR) {
 			// create GPRS APN configuration string
-			sim800_gprs_create_apn_config_str((char * )srl_context->srl_tx_buf_pointer, srl_context->srl_tx_buf_ln);
+			sim800_gprs_create_apn_config_str((char * )srl_context->srl_tx_buf_pointer, srl_context->srl_tx_buf_ln, gsm_sim800_mcc_from_imsi, gsm_sim800_mnc_from_imsi);
 
 			// send created data to GSM module
 			//srl_send_data(srl_context, srl_context->srl_tx_buf_pointer, SRL_MODE_ZERO, strlen((const char *)srl_context->srl_tx_buf_pointer), SRL_EXTERNAL);
@@ -828,6 +834,8 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			text_replace_non_printable_with_space(gsm_sim800_imsi, IMSI_LENGHT);
 
 			text_replace_space_with_null(gsm_sim800_imsi, IMSI_LENGHT);
+
+			sim800c_imsi_decode(gsm_sim800_imsi, strlen(gsm_sim800_imsi), &gsm_sim800_mcc_from_imsi, &gsm_sim800_mnc_from_imsi);
 
 		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {

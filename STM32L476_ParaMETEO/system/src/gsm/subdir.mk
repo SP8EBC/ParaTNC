@@ -7,6 +7,7 @@ C_SRCS += \
 ../system/src/gsm/sim800c.c \
 ../system/src/gsm/sim800c_engineering.c \
 ../system/src/gsm/sim800c_gprs.c \
+../system/src/gsm/sim800c_imsi.c \
 ../system/src/gsm/sim800c_poolers.c \
 ../system/src/gsm/sim800c_tcpip.c 
 
@@ -14,6 +15,7 @@ OBJS += \
 ./system/src/gsm/sim800c.o \
 ./system/src/gsm/sim800c_engineering.o \
 ./system/src/gsm/sim800c_gprs.o \
+./system/src/gsm/sim800c_imsi.o \
 ./system/src/gsm/sim800c_poolers.o \
 ./system/src/gsm/sim800c_tcpip.o 
 
@@ -21,6 +23,7 @@ C_DEPS += \
 ./system/src/gsm/sim800c.d \
 ./system/src/gsm/sim800c_engineering.d \
 ./system/src/gsm/sim800c_gprs.d \
+./system/src/gsm/sim800c_imsi.d \
 ./system/src/gsm/sim800c_poolers.d \
 ./system/src/gsm/sim800c_tcpip.d 
 
