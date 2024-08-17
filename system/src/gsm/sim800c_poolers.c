@@ -11,6 +11,7 @@
 #include "gsm/sim800c_tcpip.h"
 
 #include "aprsis.h"
+#include "gsm_comm_state_handler.h"
 
 #include "packet_tx_handler.h"
 
@@ -19,18 +20,20 @@
 //!< Set to one externally to request engineering, get one time at startup by default
 uint8_t sim800_poolers_request_engineering = 1;
 
-void gsm_sim800_poolers_ten_seconds(srl_context_t * srl_context, gsm_sim800_state_t * state){
+void gsm_sim800_poolers_ten_seconds (srl_context_t *srl_context, gsm_sim800_state_t *state)
+{
 
 	// if no engineering is currently processed, gprs is ready and APRS-IS connection
 	// is not alive now.
-	if (	sim800_poolers_request_engineering == 0 &&
-			gsm_sim800_gprs_ready == 1 &&
-			aprsis_connected == 0) {
-		aprsis_connect_and_login_default(1);
-	}
+	if (sim800_poolers_request_engineering == 0 && 
+		gsm_sim800_gprs_ready == 1 &&
+		aprsis_connected == 0 && 
+		gsm_comm_state_get_current () == GSM_COMM_APRSIS) 
+		{
+			aprsis_connect_and_login_default (1);
+		}
 
-	gsm_sim800_decrease_counter();
-
+	gsm_sim800_decrease_counter ();
 }
 
 void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state_t * state, const config_data_gsm_t * config) {

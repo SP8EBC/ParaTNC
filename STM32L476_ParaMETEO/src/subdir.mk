@@ -15,9 +15,11 @@ C_SRCS += \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/event_log.c \
+../src/gsm_comm_state_handler.c \
 ../src/io.c \
 ../src/it_handlers.c \
 ../src/main.c \
+../src/ntp.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
 ../src/rte_main.c \
@@ -45,9 +47,11 @@ OBJS += \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/event_log.o \
+./src/gsm_comm_state_handler.o \
 ./src/io.o \
 ./src/it_handlers.o \
 ./src/main.o \
+./src/ntp.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
 ./src/rte_main.o \
@@ -75,9 +79,11 @@ C_DEPS += \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/event_log.d \
+./src/gsm_comm_state_handler.d \
 ./src/io.d \
 ./src/it_handlers.d \
 ./src/main.d \
+./src/ntp.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
 ./src/rte_main.d \

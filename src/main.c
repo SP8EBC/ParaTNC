@@ -33,6 +33,10 @@
 #include "drivers/l4/pwm_input_stm32l4x.h"
 #include "drivers/l4/spi_speed_stm32l4x.h"
 #include "drivers/max31865.h"
+
+
+#include "ntp.h"
+#include "gsm_comm_state_handler.h"
 #endif
 
 #include <delay.h>
@@ -1415,6 +1419,8 @@ int main(int argc, char* argv[]){
 
 	   http_client_init(&main_gsm_state, main_gsm_srl_ctx_ptr, 0);
 
+	   ntp_init(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
 	   // as for now it is not possible to have APRS-IS communciation and REST api at once,
 	   // due to some data races and another timing problems while disconnecting APRS-IS to make
 	   // room for HTTP request - hence that if below
@@ -1795,16 +1801,22 @@ int main(int argc, char* argv[]){
 				backup_reg_reset_event_log_report_sent_radio();
 			}
 
-			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
+			if ((main_config_data_gsm->aprsis_enable != 0) && 
+				(main_config_data_mode->gsm == 1) &&
+				gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
 
 				// send event log each 24 hours, but only once at the top of an hour
-				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 18) {
-					if (backup_reg_get_event_log_report_sent_aprsis() == 0) {
-						// set status bit in non-volatile backup register not to loop over and over again in case of a restart
-						backup_reg_set_event_log_report_sent_aprsis();
+				if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 18) {
+					if (backup_reg_get_event_log_report_sent_aprsis () == 0) {
+						// set status bit in non-volatile backup register not to loop over and over
+						// again in case of a restart
+						backup_reg_set_event_log_report_sent_aprsis ();
 
 						// extract events from NVM
-						const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+						const nvm_event_result_stats_t events_stat =
+							nvm_event_get_last_events_in_exposed (main_exposed_events,
+																  MAIN_HOW_MANY_EVENTS_SEND_REPORT,
+																  EVENT_WARNING);
 
 						// set a trigger to number of events, which shall be sent
 						// please note that we do not need to check here if APRS-IS
@@ -1817,25 +1829,25 @@ int main(int argc, char* argv[]){
 				}
 				else {
 					// reset flag if the time is not 18:xx
-					backup_reg_reset_event_log_report_sent_aprsis();
+					backup_reg_reset_event_log_report_sent_aprsis ();
 				}
 
-				if (pwr_save_is_currently_cutoff() == 0) {
+				if (pwr_save_is_currently_cutoff () == 0) {
 					// this checks when APRS-IS was alive last time and when any packet
 					// has been sent to the server.
-					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive();
+					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive ();
 
 					if (i_am_ok_with_aprsis != 0) {
 
 						// increase counter stored in RTC backup register
-						backup_reg_increment_aprsis_check_reset();
+						backup_reg_increment_aprsis_check_reset ();
 
 						// trigger a restart
-						NVIC_SystemReset();
+						NVIC_SystemReset ();
 					}
 				}
 			}
-			#endif
+#endif
 
 			if (main_config_data_mode->wx != 0) {
 				if (rte_wx_check_weather_measurements() == 0) {
@@ -1960,7 +1972,9 @@ int main(int argc, char* argv[]){
 
 				gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
 
-				aprsis_check_alive();
+				if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
+					aprsis_check_alive();
+				}
 			}
 			#endif
 
@@ -2015,6 +2029,10 @@ int main(int argc, char* argv[]){
 		    }
 
 			max31865_pool();
+
+			if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
+				ntp_get_sync();
+			}
 #endif
 			main_reload_internal_wdg();
 
@@ -2084,10 +2102,15 @@ int main(int argc, char* argv[]){
 			backup_reg_set_monitor(9);
 
 #ifdef PARAMETEO
-			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g() == 1 && rte_main_woken_up == 0) {
-				gsm_sim800_poolers_ten_seconds(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
+				rte_main_woken_up == 0) {
+				gsm_comm_state_handler (ntp_done, 0, main_gsm_state);
 
-				packet_tx_tcp_handler();
+				gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
+
+				if (gsm_comm_state_get_current == GSM_COMM_APRSIS) {
+					packet_tx_tcp_handler ();
+				}
 			}
 #endif
 

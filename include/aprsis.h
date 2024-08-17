@@ -21,6 +21,7 @@ typedef enum aprsis_return {
 	APRSIS_NOT_CONFIGURED		= 1,
 	APRSIS_WRONG_STATE			= 2,
 	APRSIS_ALREADY_CONNECTED	= 3,
+	APRSIS_WRONG_COMM_STATE		= 4,
 	APRSIS_UNKNOWN				= -1
 }aprsis_return_t;
 

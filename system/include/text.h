@@ -13,6 +13,74 @@
 #include <stdint.h>
 
 /**
+ * Converts first four character of a string to uint32_t which is returned
+ * Example:
+ * 			    char * test = "DUPA";
+ *
+ *    			uint32_t out = text_get_uint_from_string(test, 4);
+ *
+ *    			printf("out: 0x%X", out);
+ * 
+ * Output:
+ * 	ASM generation compiler returned: 0
+ *	Execution build compiler returned: 0
+ *	Program returned: 0
+ *	out: 0x44555041
+ * 
+ * @param str
+ * @param str_ln
+ * @return
+ */
+inline static uint32_t text_get_uint32_from_string(char *str, uint8_t str_ln) {
+
+	uint32_t out = 0u;
+
+	if (str_ln > 3)
+	{
+		out |= (*(str + 3));
+	}
+	if (str_ln > 2)
+	{
+		out |= (*(str + 2) << 8);
+	}
+	if (str_ln > 1)
+	{
+		out |= (*(str + 1) << 16);
+	}
+	if (str_ln > 0)
+	{
+		out |= (*(str + 0) << 24);
+	}
+	//out = (*(str + 3)) | (*(str + 2) << 8) | (*(str + 1) << 16) | (*(str + 0) << 24);
+
+	return out;
+}
+
+/**
+ * Converts first four character of a string to uint32_t which is returned.
+ * Example:     
+ * 			uint32_t out = text_get_uint_from_string(test, 4);
+ * @param str
+ * @param str_ln
+ * @return
+ */
+inline static uint16_t text_get_uint16_from_string(char *str, uint8_t str_ln) {
+
+	uint16_t out = 0u;
+
+	if (str_ln > 1)
+	{
+		out |= (*(str + 3));
+	}
+	if (str_ln > 0)
+	{
+		out |= (*(str + 2) << 8);
+	}
+
+	return out;
+}
+
+/**
  * Replace all non printable TABs, NEWLINEs etc with a space. Stops on null terminator
  * or a size of an input string
  * @param str	pointer to a string to be modified

@@ -19,6 +19,8 @@
 #include "main.h"
 #include "rte_main.h"
 
+#include "gsm_comm_state_handler.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -360,6 +362,10 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 		return APRSIS_NOT_CONFIGURED;
 	}
 
+	if (gsm_comm_state_get_current() != GSM_COMM_APRSIS) {
+		return APRSIS_WRONG_COMM_STATE;
+	}
+
 	if (*aprsis_gsm_modem_state == SIM800_ALIVE) {
 
 		char port_str[6];
@@ -388,7 +394,7 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 		sim800_return_t disconnection_result = SIM800_UNSET;
 
 		// connecting has blocking I/O
-		retval = gsm_sim800_tcpip_connect(address, address_ln, port_str, 0x6, aprsis_serial_port, aprsis_gsm_modem_state);
+		retval = gsm_sim800_tcpip_connect(address, address_ln, port_str, 0x6, aprsis_serial_port, aprsis_gsm_modem_state, 0);
 
 		// if connection was successful
 		if (retval == SIM800_OK) {

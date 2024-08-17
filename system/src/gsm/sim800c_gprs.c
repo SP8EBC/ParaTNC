@@ -136,7 +136,7 @@ void sim800_gprs_create_apn_config_str(char * buffer, uint16_t buffer_ln, const 
 		  event_log_sync(
 		  	  EVENT_ERROR,
 			  EVENT_SRC_GSM_GPRS,
-			  EVENTS_WX_HANDLER_ERR_APN_CONFIGURATION_MISSING,
+			  EVENTS_GSM_GPRS_ERR_APN_CONFIGURATION_MISSING,
 			  0, 0,
 			  0, 0,
 			  mcc,

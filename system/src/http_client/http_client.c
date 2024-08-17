@@ -248,7 +248,7 @@ uint8_t http_client_async_get(char * url, uint8_t url_ln, uint16_t response_ln_l
 		http_client_get_port_from_url(url, url_ln, http_client_port, PORT_LN);
 
 		// establish TCP connection to HTTP server
-		connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state);
+		connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state, 0);
 
 		// if connection has been established
 		if (connect_result == SIM800_OK) {
@@ -339,7 +339,7 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 	http_client_get_port_from_url(url, url_ln, http_client_port, PORT_LN);
 
 	// establish TCP connection to HTTP server
-	connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state);
+	connect_result = gsm_sim800_tcpip_connect(http_client_hostname, HOSTNAME_LN, http_client_port, PORT_LN, http_client_deticated_serial_context, http_client_deticated_sim800_state, 0);
 
 	// if connection has been established
 	if (connect_result == SIM800_OK) {

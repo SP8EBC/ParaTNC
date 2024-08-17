@@ -21,6 +21,9 @@
 #include "main.h"
 #include "io.h"
 
+#include <event_log.h>
+#include <events_definitions/events_gsm_gprs.h>
+
 #include "text.h"
 #include "float_to_string.h"
 
@@ -799,7 +802,15 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 	}
 
 	if (new_start_idx != 0 && new_start_idx != gsm_response_start_idx) {
+		 event_log_sync(
+				 EVENT_WARNING,
+				 EVENT_SRC_GSM_GPRS,
+				 EVENTS_GSM_GPRS_WARN_ASYNC_MSG_DETECTED,
+				 0, 0,
+				 0, 0,
+				 0, 0);
 
+	   gsm_response_start_idx += new_start_idx;
 	}
 
 	// if the library expects to receive a handshake from gsm module
