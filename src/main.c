@@ -2030,6 +2030,13 @@ int main(int argc, char* argv[]){
 
 			max31865_pool();
 
+#ifdef PARAMETEO
+			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
+				rte_main_woken_up == 0) {
+				gsm_comm_state_handler (ntp_done, 0, main_gsm_state);
+			}
+#endif
+
 			if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
 				ntp_get_sync();
 			}
@@ -2104,7 +2111,6 @@ int main(int argc, char* argv[]){
 #ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
 				rte_main_woken_up == 0) {
-				gsm_comm_state_handler (ntp_done, 0, main_gsm_state);
 
 				gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
 

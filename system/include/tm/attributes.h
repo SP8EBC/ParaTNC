@@ -1,15 +1,15 @@
 /**
- *  Defines for your entire project at one place
+ *  Attributes for different compilers
  * 
- *	@author 	Tilen Majerle
+ *	@author 	Tilen MAJERLE
  *	@email		tilen@majerle.eu
- *	@website	http://stm32f4-discovery.com
+ *	@website	http://stm32f4-discovery.net
  *	@version 	v1.0
  *	@ide		Keil uVision 5
  *	@license	GNU GPL v3
  *	
  * |----------------------------------------------------------------------
- * | Copyright (C) Tilen Majerle, 2014
+ * | Copyright (C) 2020 Tilen MAJERLE
  * | 
  * | This program is free software: you can redistribute it and/or modify
  * | it under the terms of the GNU General Public License as published by
@@ -24,10 +24,21 @@
  * | You should have received a copy of the GNU General Public License
  * | along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * |----------------------------------------------------------------------
+ *
+ * Different compilers uses different special keywords for functions/variables. etc.
+ * For this purpose that file has been made. On one place to all possible attributes used in my libs.
  */
-#ifndef TM_DEFINES_H
-#define TM_DEFINES_H
+#ifndef TM_ATTRIBUTES_H
+#define TM_ATTRIBUTES_H
 
-/* Put your global defines for all libraries here used in your project */
+/* Check for GNUC */
+#if defined (__GNUC__)
+	#ifndef __weak		
+		#define __weak   	__attribute__((weak))
+	#endif	/* Weak attribute */
+	#ifndef __packed	
+		#define __packed 	__attribute__((__packed__))
+	#endif	/* Packed attribute */
+#endif
 
 #endif
