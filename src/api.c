@@ -8,6 +8,7 @@
  *      19 maja, Krszystof Binek, miedy 12 a 13
  */
 
+#include <api/api.h>
 #include <api/api_content.h>
 #include "etc/api_configuration.h"
 
@@ -73,7 +74,8 @@ const char * api_station_name;
 typedef enum api_endpoint{
 
 	PARAMETEO_STATUS,
-	PARAMETEO_WX
+	PARAMETEO_WX,
+	PARAMETEO_EVENT
 } api_endpoint_t;
 
 #define	LN	api_buffer_idx
@@ -90,6 +92,9 @@ static void api_construct_url_status(api_endpoint_t endpoint) {
 			break;
 		case PARAMETEO_WX:
 			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/measurements/v1", api_base_url, api_station_name);
+			break;
+		case PARAMETEO_EVENT:
+			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/event/v1", api_base_url, api_station_name);
 			break;
 		}
 	}
@@ -165,6 +170,29 @@ void api_send_json_measuremenets(void) {
 
 	if (api_buffer_idx < API_BUFFER_LN) {
 		api_construct_url_status(PARAMETEO_WX);
+
+		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
+	}
+}
+
+void api_send_json_event(const event_log_exposed_t * event) {
+	BEGIN
+	PRINT_STRING(api_station_name, station_name);
+	PRINT_32INT(event->event_master_time, event_master_time);
+	PRINT_32INT(event->event_counter_id, event_counter_id);
+	PRINT_STRING(event->severity_str, severity);
+	PRINT_STRING(event->source_str_name, source);
+	PRINT_STRING(event->event_str_name, event);
+	PRINT_16INT(event->param, param);
+	PRINT_16INT(event->param2, param2);
+	PRINT_16INT(event->wparam, wparam);
+	PRINT_16INT(event->wparam2, wparam2);
+	PRINT_32INT(event->lparam, lparam);
+	PRINT_32INT(event->lparam2, lparam2);
+	END
+
+	if (api_buffer_idx < API_BUFFER_LN) {
+		api_construct_url_status(PARAMETEO_EVENT);
 
 		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
 	}

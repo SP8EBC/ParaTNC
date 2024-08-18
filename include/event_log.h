@@ -95,6 +95,7 @@ typedef struct event_log_exposed_t {
 	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
 	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
 	event_log_severity_t severity;
+	const char * severity_str;
 	event_log_source_t source;
 	const char * source_str_name;//!< string representation of source name
 	uint8_t event_id;			 //!< event id, unique across different sources & severity level
@@ -162,6 +163,8 @@ int8_t event_log_sync (event_log_severity_t severity,
 					 uint16_t wparam2,
 					 uint32_t lparam,
 					 uint32_t lparam2);
+
+const char * event_log_severity_to_str(event_log_severity_t severity);
 
 /**
  * Returns a pointer to a string representing event source

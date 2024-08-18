@@ -139,6 +139,11 @@ int8_t rte_wx_check_weather_measurements(void) {
 
 	// go through wind direction buffer and checks if it contains the same value
 	for (i = 0; i < WIND_AVERAGE_LEN - 1; i++) {
+
+		if (rte_wx_winddirection[i] > 0) {
+			break;
+		}
+
 		if (rte_wx_winddirection[i] != rte_wx_winddirection[i + 1]) {
 			break;
 		}

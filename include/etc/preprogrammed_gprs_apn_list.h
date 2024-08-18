@@ -9,10 +9,12 @@
 #define ETC_PREPROGRAMMED_GPRS_APN_LIST_H_
 
 #define MNC_POLSKA_PLUS_POLKOMTEL						1u
+#define MNC_POLSKA_PLAY									6u
 
 #define PREPROGRAMMED_GPRS_APN_LIST(ENTRY)							\
 	/* MCC (country code), 	MNC (network code), 		APN name, 	user, 		password */				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLUS_POLKOMTEL, 	"internet", "internet", "internet")				\
+	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLAY, 			"internet", "", 		"")						\
 
 
 

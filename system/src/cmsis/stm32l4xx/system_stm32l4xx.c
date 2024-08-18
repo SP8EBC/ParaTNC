@@ -514,7 +514,7 @@ void system_clock_start_rtc_l4(void) {
 	RTC->DR = 0x0024E714;
 
 	// set time
-	RTC->TR = 0x00212044;
+	RTC->TR = 0x00182044;
 
 	// exit RTC set mode
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
@@ -581,11 +581,11 @@ int system_clock_configure_rtc_l4(void) {
 				break;
 			}
 		}
-	}
 
-	if (SystemRtcHasFailed == 0) {
-		// starting and configuring the RTC itself
-		system_clock_start_rtc_l4();
+		if (SystemRtcHasFailed == 0) {
+			// starting and configuring the RTC itself
+			system_clock_start_rtc_l4();
+		}
 	}
 
 	// disable access do backup domain

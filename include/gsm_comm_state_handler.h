@@ -46,7 +46,7 @@ typedef enum gsm_comm_state_machine_t {
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-gsm_comm_state_machine_t gsm_comm_state_get_current (void);
+const gsm_comm_state_machine_t gsm_comm_state_get_current (void);
 
 void gsm_comm_state_handler (uint8_t ntp_done,
 							 uint8_t api_log_events_remaining,

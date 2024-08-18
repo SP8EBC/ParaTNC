@@ -154,7 +154,7 @@ void sim800_gprs_create_apn_config_str(char * buffer, uint16_t buffer_ln, const 
 	strcat(buffer, QUOTATION);
 
 	// if username & password was provided
-	if (user != 0 && pwd != 0 && strlen(user) > 0 && strlen(pwd) > 0) {
+	if (user != 0 && pwd != 0 && strlen(user) > 1 && strlen(pwd) > 1) {
 		// append comma and quotation mark
 		strcat(buffer, COMMA);
 		strcat(buffer, QUOTATION);

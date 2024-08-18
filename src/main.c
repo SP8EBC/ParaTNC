@@ -289,7 +289,8 @@ static uint8_t main_kiss_response_message[32];
 
 static io_vbat_state_t main_battery_measurement_res;
 
-static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT];
+//!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
+static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2];
 #endif
 
 char main_symbol_f = '/';
@@ -327,6 +328,8 @@ uint8_t main_check_adc = 0;
 
 //!< Used to store an information which telemetry descritpion frame should be sent next
 telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
+
+nvm_event_result_stats_t main_events_extracted_for_api_stat = {0u};
 #endif
 
 char after_tx_lock;
@@ -604,6 +607,8 @@ int main(int argc, char* argv[]){
   it_handlers_inhibit_radiomodem_dcd_led = 1;
 
   memset(main_own_aprs_msg, 0x00, OWN_APRS_MSG_LN);
+
+  memset(&main_events_extracted_for_api_stat, 0x00, sizeof(nvm_event_result_stats_t));
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
@@ -1424,9 +1429,9 @@ int main(int argc, char* argv[]){
 	   // as for now it is not possible to have APRS-IS communciation and REST api at once,
 	   // due to some data races and another timing problems while disconnecting APRS-IS to make
 	   // room for HTTP request - hence that if below
-	   if (main_config_data_gsm->api_enable == 1 && main_config_data_gsm->aprsis_enable == 0) {
+	   //if (main_config_data_gsm->api_enable == 1 && main_config_data_gsm->aprsis_enable == 0) {
 		   api_init((const char *)main_config_data_gsm->api_base_url, (const char *)(main_config_data_gsm->api_station_name));
-	   }
+	   //}
 
 	   if (main_config_data_gsm->api_enable == 0 && main_config_data_gsm->aprsis_enable == 1) {
 		   aprsis_init(&main_gsm_srl_ctx,
@@ -1439,6 +1444,12 @@ int main(int argc, char* argv[]){
 					   configuration_get_power_cycle_gsmradio_on_no_communications(),
 					   main_callsign_with_ssid);
 	   }
+
+	   // extract events from NVM to then sent them into the API
+	   main_events_extracted_for_api_stat =
+			nvm_event_get_last_events_in_exposed (main_exposed_events,
+												  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2,
+												  EVENT_INFO_CYCLIC);
    }
 
    if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
@@ -1831,20 +1842,23 @@ int main(int argc, char* argv[]){
 					// reset flag if the time is not 18:xx
 					backup_reg_reset_event_log_report_sent_aprsis ();
 				}
+			}
 
-				if (pwr_save_is_currently_cutoff () == 0) {
-					// this checks when APRS-IS was alive last time and when any packet
-					// has been sent to the server.
-					const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive ();
+			if ((main_config_data_gsm->aprsis_enable != 0) &&
+				(main_config_data_mode->gsm == 1) &&
+				(pwr_save_is_currently_cutoff () == 0))
+			{
+				// this checks when APRS-IS was alive last time and when any packet
+				// has been sent to the server.
+				const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive ();
 
-					if (i_am_ok_with_aprsis != 0) {
+				if (i_am_ok_with_aprsis != 0) {
 
-						// increase counter stored in RTC backup register
-						backup_reg_increment_aprsis_check_reset ();
+					// increase counter stored in RTC backup register
+					backup_reg_increment_aprsis_check_reset ();
 
-						// trigger a restart
-						NVIC_SystemReset ();
-					}
+					// trigger a restart
+					NVIC_SystemReset ();
 				}
 			}
 #endif
@@ -2030,12 +2044,24 @@ int main(int argc, char* argv[]){
 
 			max31865_pool();
 
-#ifdef PARAMETEO
 			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
 				rte_main_woken_up == 0) {
-				gsm_comm_state_handler (ntp_done, 0, main_gsm_state);
+				gsm_comm_state_handler (ntp_done, main_events_extracted_for_api_stat.zz_total, main_gsm_state);
 			}
-#endif
+
+			// if GSM module is enabled and GPRS communication state is now on API phase
+			if (	(main_config_data_mode->gsm == 1) &&
+					(gsm_comm_state_get_current () == GSM_COMM_API)) {
+
+				// if there are any events remaining to push to API
+				if (main_events_extracted_for_api_stat.zz_total > 0) {
+					// send current event
+					api_send_json_event(&main_exposed_events[main_events_extracted_for_api_stat.zz_total - 1]);
+
+					// end decrement remaining number of events
+					main_events_extracted_for_api_stat.zz_total--;
+				}
+			}
 
 			if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
 				ntp_get_sync();
@@ -2114,7 +2140,7 @@ int main(int argc, char* argv[]){
 
 				gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-				if (gsm_comm_state_get_current == GSM_COMM_APRSIS) {
+				if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
 					packet_tx_tcp_handler ();
 				}
 			}

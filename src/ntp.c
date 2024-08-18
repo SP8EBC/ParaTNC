@@ -10,6 +10,9 @@
 #include "gsm/sim800c_tcpip.h"
 #include "tm/tm_stm32_rtc.h"
 
+#include "./event_log.h"
+#include "./events_definitions/events_main.h"
+
 #include "stm32l4xx_ll_rtc.h"
 
 #include <string.h>
@@ -188,7 +191,45 @@ void ntp_get_sync (void)
 				PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
 
 				ntp_done = 1;
+
+				event_log_sync(
+						  EVENT_TIMESYNC,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_TIMESYNC_NTP,
+						  ntp_rtc_date.Day,
+						  ntp_rtc_date.Month,
+						  ntp_rtc_date.Year,
+						  ntp_rtc_time.Hours,
+						  ntp_rtc_time.Minutes,
+						  ntp_rtc_time.Seconds);
+			}
+			else {
+				event_log_sync(
+						  EVENT_ERROR,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_TIMESYNC_NTP,
+						  receive_result, 0,
+						  0, 0,
+						  0, 0);
 			}
 		}
+		else {
+			event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_MAIN,
+					  EVENTS_MAIN_TIMESYNC_NTP,
+					  0, write_result,
+					  0, 0,
+					  0, 0);
+		}
+	}
+	else {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_MAIN,
+				  EVENTS_MAIN_TIMESYNC_NTP,
+				  0, 0,
+				  connect_status, 0,
+				  0, 0);
 	}
 }

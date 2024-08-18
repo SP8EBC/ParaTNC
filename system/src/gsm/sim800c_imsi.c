@@ -25,7 +25,7 @@
 	 .password = _pass},
 
 #define SIM800C_IMSI_GENERATE_PREPROGMD_MCC_CODES_ENUM(_mcc, _mnc, _apn, _user, _pass) \
-	SIM800C_PREPROGMD_MCC_##_mcc,
+	SIM800C_PREPROGMD_MCC_##_mcc_##_mnc,
 
 /// ==================================================================================================
 ///	LOCAL TYPEDEFS
