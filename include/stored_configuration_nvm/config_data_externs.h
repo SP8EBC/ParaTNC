@@ -57,7 +57,7 @@ extern const config_data_wx_sources_t config_data_wx_sources_second;
 
 #endif
 
-
+extern uint32_t config_running_pgm_counter;
 
 
 #endif /* CONFIG_DATA_EXTERNS_H_ */

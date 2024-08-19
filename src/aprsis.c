@@ -1231,3 +1231,15 @@ uint8_t aprsis_get_aprsis_logged(void) {
 void aprsis_debug_set_simulate_timeout(void) {
 	aprsis_debug_simulate_timeout = 1;
 }
+
+uint8_t aprsis_get_successfull_conn_counter(void) {
+	return aprsis_successfull_conn_counter;
+}
+
+uint8_t aprsis_get_unsucessfull_conn_counter(void) {
+	return aprsis_unsucessfull_conn_counter;
+}
+
+uint16_t aprsis_get_tx_counter(void) {
+	return aprsis_tx_counter;
+}

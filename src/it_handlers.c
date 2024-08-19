@@ -127,7 +127,9 @@ void SysTick_Handler(void) {
 
 	if (master_time > SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 86400) {
 		if (configuration_get_reboot_after_24_hours() == 1) {
-			NVIC_SystemReset();
+			if (pwr_save_is_currently_cutoff () == 0) {
+				NVIC_SystemReset();
+			}
 		}
 	}
 

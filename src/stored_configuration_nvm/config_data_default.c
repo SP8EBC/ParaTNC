@@ -213,17 +213,26 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 #ifdef ENG1
 		.engineering1 = ENG1,
 #else
-		.engineering1 = 0,
+		.engineering1 = ENGINEERING1,
 #endif
 
 #ifdef ENG2
 		.engineering2 = ENG2,
 #else
-		.engineering2 = 0,
+		.engineering2 = ENGINEERING2,
 #endif
 
+#ifdef _BATTERY_SCALLING_A
+		.battery_scalling_a = _BATTERY_SCALLING_A,
+#else
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
+#endif
+
+#ifdef _BATTERY_SCALLING_B
+		.battery_scalling_b = _BATTERY_SCALLING_B,
+#else
 		.battery_scalling_b = VBAT_MEAS_B_COEFF,
+#endif
 
 #ifdef _BUTTON_ONE_LEFT
 		.button_one_left = _BUTTON_ONE_LEFT,

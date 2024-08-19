@@ -112,6 +112,11 @@ char * aprsis_get_tx_buffer(void);
 #endif
 uint8_t aprsis_get_aprsis_logged(void);
 
+uint8_t aprsis_get_successfull_conn_counter(void);
+uint8_t aprsis_get_unsucessfull_conn_counter(void);
+
+uint16_t aprsis_get_tx_counter(void);
+
 void aprsis_debug_set_simulate_timeout(void);
 
 #endif /* APRSIS_H_ */

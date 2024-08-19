@@ -720,7 +720,7 @@ int main(int argc, char* argv[]){
   // initialize nvm logger
   nvm_event_log_init();
 
-  const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+  //const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
 
   event_log_sync(
 		  	  EVENT_TIMESYNC,
@@ -1914,6 +1914,16 @@ int main(int argc, char* argv[]){
 						  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
 						  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
 						  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
+
+			  event_log_sync(
+						  EVENT_INFO_CYCLIC,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_CYCLIC,
+						  aprsis_get_successfull_conn_counter(),
+						  aprsis_get_unsucessfull_conn_counter(),
+						  aprsis_get_tx_counter(),
+						  rte_main_average_battery_voltage,
+						  rte_main_rx_total, rte_main_tx_total);
 
 			}
 

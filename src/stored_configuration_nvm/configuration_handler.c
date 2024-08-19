@@ -148,6 +148,8 @@ configuration_handler_region_t configuration_handler_loaded;
 
 uint8_t config_kiss_flash_state = 0;
 
+uint32_t config_running_pgm_counter = 0;
+
 #define WAIT_FOR_PGM_COMPLETION			\
 	while (1) {\
 		flash_status = FLASH_GetBank1Status();				\
@@ -641,6 +643,8 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 		main_config_data_rtu = &config_data_rtu_default;
 	}
 	else if (region == REGION_FIRST) {
+		config_running_pgm_counter = config_data_pgm_cntr_first;
+
 		main_config_data_mode = config_data_mode_first_ptr;
 		main_config_data_basic = config_data_basic_first_ptr;
 		main_config_data_wx_sources = config_data_wx_sources_first_ptr;
@@ -648,6 +652,8 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 		main_config_data_rtu = config_data_rtu_first_ptr;
 	}
 	else if (region == REGION_SECOND) {
+		config_running_pgm_counter = config_data_pgm_cntr_second;
+
 		main_config_data_mode = config_data_mode_second_ptr;
 		main_config_data_basic = config_data_basic_second_ptr;
 		main_config_data_wx_sources = config_data_wx_sources_second_ptr;

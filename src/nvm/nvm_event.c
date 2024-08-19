@@ -387,15 +387,16 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 				// increment the iterator
 				output_arr_iterator++;
 
-				// check if there is room left for more events to be stored in output array
-				if (output_arr_iterator >= max_num_events) 
-				{
-					break;		// exit the loop if there is no more room in output array
-				}
-				else
-				{
-					newest--;	// decrement pointer towards the beginning of area
-				}
+
+			}
+			// check if there is room left for more events to be stored in output array
+			if (output_arr_iterator >= max_num_events)
+			{
+				break;		// exit the loop if there is no more room in output array
+			}
+			else
+			{
+				newest--;	// decrement pointer towards the beginning of area
 			}
 
 		}
