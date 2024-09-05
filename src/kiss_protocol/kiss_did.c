@@ -11,6 +11,8 @@
 #include <etc/kiss_did_configuration.h>
 #include <etc/kiss_configuation.h>
 
+#include "variant.h"
+
 #include <string.h>
 
 #ifdef STM32F10X_MD_VL
@@ -153,8 +155,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 			if 	((definition->first_data_size == sizeof(int8_t) ||
 				definition->first_data_size == sizeof(int16_t) ||
 				definition->first_data_size == sizeof(int32_t)) &&
-						(uint32_t)definition->first_data > SRAM_BASE &&
-						(uint32_t)definition->first_data < SRAM_BASE + SRAM1_SIZE_MAX) {
+						variant_validate_is_within_ram(definition->first_data)) {
 
 				// valid
 				out = 1;
@@ -165,8 +166,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 					if 	((definition->first_data_size == sizeof(int8_t) ||
 						definition->first_data_size == sizeof(int16_t) ||
 						definition->first_data_size == sizeof(int32_t)) &&
-							(uint32_t)definition->second_data > SRAM_BASE &&
-							(uint32_t)definition->second_data < SRAM_BASE + SRAM1_SIZE_MAX) {
+							variant_validate_is_within_ram(definition->second_data)) {
 
 						// valid
 						out = 1;
@@ -178,8 +178,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 							if 	((definition->first_data_size == sizeof(int8_t) ||
 								definition->first_data_size == sizeof(int16_t) ||
 								definition->first_data_size == sizeof(int32_t)) &&
-									(uint32_t)definition->third_data > SRAM_BASE &&
-									(uint32_t)definition->third_data < SRAM_BASE + SRAM1_SIZE_MAX) {
+									variant_validate_is_within_ram(definition->third_data)) {
 
 								// valid
 								out = 1;
