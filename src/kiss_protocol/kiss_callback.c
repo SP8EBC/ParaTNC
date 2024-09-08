@@ -26,13 +26,45 @@
 
 #include "backup_registers.h"
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define KISS_MAX_CONFIG_PAYLOAD_SIZE	0x80
 #define KISS_LAST_ASYNC_MSG				0xFF
 
 #define KISS_RESET_SOFTRESET			0x03
 
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
 uint8_t kiss_async_message_counter = 0;
 
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ *
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
 int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 	#define CALLBACK_GET_RUNNING_CFG_LN	7
@@ -70,6 +102,12 @@ int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_
 
 }
 
+/**
+ *
+ * @param output_buffer
+ * @param buffer_size
+ * @return
+ */
 int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t buffer_size){
 
 	uint32_t conf_size = 0, offset = 0;
@@ -128,6 +166,14 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
 	return config_payload_size + 7;
 }
 
+/**
+ *
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
 int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 	uint8_t config_payload_size = 0;
@@ -183,6 +229,18 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 	return ERASE_STARTUP_LN;
 
 }
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
@@ -349,6 +407,14 @@ int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16
 	return out;
 }
 
+/**
+ *
+ * @param input_frame_from_host
+ * @param input_len
+ * @param response_buffer
+ * @param buffer_size
+ * @return
+ */
 int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
 
 	int32_t out = 0;

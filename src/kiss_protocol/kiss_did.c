@@ -24,12 +24,17 @@
 #include <stm32l4xx.h>
 #endif
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define KISS_DID_SIZE_MAPPING_INT8		1
 #define KISS_DID_SIZE_MAPPING_INT16		2
 #define KISS_DID_SIZE_MAPPING_INT32		3
 
-//!< Dummy variable used only as end of definition marker in tables
-char did_dummy_data;
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
 
 //!< Structure to define a DID which return numeric data
 typedef struct kiss_did_numeric_definition_t {
@@ -41,6 +46,10 @@ typedef struct kiss_did_numeric_definition_t {
 	void* third_data;
 	uint8_t third_data_size;
 }kiss_did_numeric_definition_t;
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
 
 //!< Definition of all DIDs with numeric data
 const static kiss_did_numeric_definition_t kiss_did_def[] = {
@@ -57,6 +66,17 @@ const static uint8_t kiss_did_sizeof_to_sizebyte_mapping[5] = {
 		0,	// nothing
 		KISS_DID_SIZE_MAPPING_INT32		// int32_t	-> 3
 };
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+//!< Dummy variable used only as end of definition marker in tables
+char did_dummy_data;
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Checks how many variables will be returned by this DID
@@ -225,6 +245,10 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 
 	return out;
 }
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Creates a response for DID request into specified buffer. Please take into account

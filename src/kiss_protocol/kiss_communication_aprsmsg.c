@@ -8,6 +8,10 @@
 
 #include "kiss_communication/kiss_communication_aprsmsg.h"
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define KISS_COMMUNICATION_APRSMSG_DEC_CURRENT_CHAR     *(message_payload + payload_it)
 
 #define KISS_COMMUNICATION_APRSMSG_DEC_NEXT_CHAR        *(message_payload + payload_it + 1)
@@ -25,6 +29,14 @@
 #define KISS_COMMUNICATION_APRSMSG_IS_HEXSTRING(s)      ((*(s) == 'H') && (*(s + 1) == 'S'))
 
 #define KISS_COMMUNICATION_APRSMSG_IS_ENCR_HEXSTRING(s) (*(s) == 'P')
+
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
 
 static uint8_t kiss_communication_aprsmsg_lookup_table[] = 
                     {   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 

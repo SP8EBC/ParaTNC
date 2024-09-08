@@ -14,12 +14,23 @@
 
 #include <string.h>
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN	6
 #define KISS_NRC_RESPONSE_OUT_OF_RANGE_LN		6
 #define KISS_NRC_RESPONSE_INCORRECT_MESSAGE_LN	6
 #define KISS_NRC_RESPONSE_SEC_ACCESS_DENIED_LN	6
 #define KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN	6
 
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
 
 //!< Neagitve response to a request with unknown service id
 static const uint8_t kiss_nrc_response_unknown_service[KISS_NRC_RESPONSE_UNKNOWN_SERVICE_LN] = {
@@ -70,7 +81,23 @@ static const uint8_t kiss_nrc_conditions_not_correct[KISS_NRC_RESPONSE_COND_NOT_
 		FEND
 };
 
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
 
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ *
+ * @param buffer
+ * @return
+ */
 int kiss_nrc_response_fill_unknown_service(uint8_t * buffer) {
 
 	if (buffer != 0x00) {
@@ -82,6 +109,11 @@ int kiss_nrc_response_fill_unknown_service(uint8_t * buffer) {
 	return 0;
 }
 
+/**
+ *
+ * @param buffer
+ * @return
+ */
 int kiss_nrc_response_fill_request_out_of_range(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_response_out_of_range, KISS_NRC_RESPONSE_OUT_OF_RANGE_LN);
@@ -92,6 +124,11 @@ int kiss_nrc_response_fill_request_out_of_range(uint8_t * buffer) {
 	return 0;
 }
 
+/**
+ *
+ * @param buffer
+ * @return
+ */
 int kiss_nrc_response_fill_incorrect_message_ln(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_response_incorrect_message_ln_or_format, KISS_NRC_RESPONSE_INCORRECT_MESSAGE_LN);
@@ -102,6 +139,11 @@ int kiss_nrc_response_fill_incorrect_message_ln(uint8_t * buffer) {
 	return 0;
 }
 
+/**
+ *
+ * @param buffer
+ * @return
+ */
 int kiss_nrc_response_fill_security_access_denied(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_response_security_access_denied, KISS_NRC_RESPONSE_OUT_OF_RANGE_LN);
@@ -112,6 +154,11 @@ int kiss_nrc_response_fill_security_access_denied(uint8_t * buffer) {
 	return 0;
 }
 
+/**
+ *
+ * @param buffer
+ * @return
+ */
 int kiss_nrc_response_fill_conditions_not_correct(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_conditions_not_correct, KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN);
