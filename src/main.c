@@ -2066,10 +2066,17 @@ int main(int argc, char* argv[]){
 				// if there are any events remaining to push to API
 				if (main_events_extracted_for_api_stat.zz_total > 0) {
 					// send current event
-					api_send_json_event(&main_exposed_events[main_events_extracted_for_api_stat.zz_total - 1]);
+					const uint8_t api_connection_result = api_send_json_event(&main_exposed_events[main_events_extracted_for_api_stat.zz_total - 1]);
 
-					// end decrement remaining number of events
-					main_events_extracted_for_api_stat.zz_total--;
+					// if TCP connection is established and data is currently sent asynchronously
+					if (api_connection_result == HTTP_CLIENT_OK) {
+						// end decrement remaining number of events
+						main_events_extracted_for_api_stat.zz_total--;
+					}
+					else {
+						// for sake of simplicity break on first connection error
+						main_events_extracted_for_api_stat.zz_total = 0;
+					}
 				}
 			}
 

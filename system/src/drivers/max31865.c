@@ -34,34 +34,34 @@ typedef enum max31865_pool_state_t {
 
 static const float max31865_rref_lookup_table[32] =
 {
-		430.0f,
-		432.0f,
-		442.0f,
-		470.0f,
-		499.0f,
-		510.0f,
-		560.0f,
-		620.0f,
-		680.0f,
+		430.0f,	// index 0
+		432.0f,	// index 1
+		442.0f,	// index 2
+		470.0f,	// index 3
+		499.0f,	// index 4
+		510.0f,	// index 5
+		560.0f,	// index 6
+		620.0f,	// index 7
+		680.0f,	// index 8
 		768.0f,	// index 9
-		1000.0f,
-		1100.0f,
-		1200.0f,
-		1300.0f,
-		1400.0f,
-		1500.0f,
-		1600.0f,
-		1740.0f,
-		1800.0f,
+		1000.0f,	// index 10
+		1100.0f,	// index 11
+		1200.0f,	// index 12
+		1300.0f,	// index 13
+		1400.0f,	// index 14
+		1500.0f,	// index 15
+		1600.0f,	// index 16
+		1740.0f,	// index 17
+		1800.0f,	// index 18
 		1910.0f,	// index 19
 		2000.0f,	// index 20
-		2100.0f,
-		2400.0f,
-		2700.0f,
-		3000.0f,
-		3090.0f,
-		3400.0f,
-		3900.0f,
+		2100.0f,	// index 21
+		2400.0f,	// index 22
+		2700.0f,	// index 23
+		3000.0f,	// index 24
+		3090.0f,	// index 25
+		3400.0f,	// index 26
+		3900.0f,	// index 27
 		4300.0f,	// index 28
 		4700.0f,	// index 29
 		4990.0f,	// index 30

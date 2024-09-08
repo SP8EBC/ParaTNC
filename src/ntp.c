@@ -23,7 +23,9 @@
 
 #define NTP_PACKET_SIZE 48
 
-#define NTP_TXTM_S_OFFSET (NTP_PACKET_SIZE - sizeof (uint32_t) * 2)
+#define NTP_TXTM_S_OFFSET 		(NTP_PACKET_SIZE - sizeof (uint32_t) * 2)
+
+#define NTP_MAXIMUM_ERRORS		(3U)
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -82,6 +84,9 @@ static LL_RTC_TimeTypeDef ntp_rtc_time;
 
 static LL_RTC_DateTypeDef ntp_rtc_date;
 
+//!< Counter of various kind of comm errors while trying to get date and time from NTP
+static uint8_t ntp_synchro_errors_cnt = 0;
+
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
@@ -131,6 +136,13 @@ void ntp_init (srl_context_t *context, gsm_sim800_state_t *gsm_modem_state)
  */
 void ntp_get_sync (void)
 {
+	// check if too many connection errors has been detected before
+	if (ntp_synchro_errors_cnt > NTP_MAXIMUM_ERRORS)
+	{
+		ntp_done = 2u;
+		return;
+	}
+
 	memset (ntp_packet_buffer, 0, sizeof (ntp_packet_t));
 
 	// Initialize values needed to form NTP request
@@ -204,6 +216,7 @@ void ntp_get_sync (void)
 						  ntp_rtc_time.Seconds);
 			}
 			else {
+				ntp_synchro_errors_cnt++;
 				event_log_sync(
 						  EVENT_ERROR,
 						  EVENT_SRC_MAIN,
@@ -214,6 +227,7 @@ void ntp_get_sync (void)
 			}
 		}
 		else {
+			ntp_synchro_errors_cnt++;
 			event_log_sync(
 					  EVENT_ERROR,
 					  EVENT_SRC_MAIN,
@@ -224,6 +238,7 @@ void ntp_get_sync (void)
 		}
 	}
 	else {
+		ntp_synchro_errors_cnt++;
 		event_log_sync(
 				  EVENT_ERROR,
 				  EVENT_SRC_MAIN,

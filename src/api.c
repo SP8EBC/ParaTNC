@@ -31,7 +31,7 @@ char api_url_buffer[URL_BUFFER_LN];
 uint32_t api_buffer_idx = 0;
 
 /**
- * Value returned from http client
+ * Last value returned from http client
  */
 uint8_t api_retval = 0xFF;
 
@@ -175,7 +175,7 @@ void api_send_json_measuremenets(void) {
 	}
 }
 
-void api_send_json_event(const event_log_exposed_t * event) {
+uint8_t api_send_json_event(const event_log_exposed_t * event) {
 	BEGIN
 	PRINT_STRING(api_station_name, station_name);
 	PRINT_32INT(event->event_master_time, event_master_time);
@@ -196,6 +196,8 @@ void api_send_json_event(const event_log_exposed_t * event) {
 
 		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
 	}
+
+	return api_retval;
 }
 
 

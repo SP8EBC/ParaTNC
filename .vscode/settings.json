@@ -20,6 +20,14 @@
         "nvm_event.h": "c",
         "nvm_internals.h": "c",
         "main.h": "c",
-        "main_master_time.h": "c"
+        "main_master_time.h": "c",
+        "preprogrammed_gprs_apn_list.h": "c",
+        "sim800c_gprs.h": "c",
+        "sim800c_imsi.h": "c",
+        "events_gsm_gprs.h": "c",
+        "gsm_comm_state_handler.h": "c",
+        "sim800_state_t.h": "c",
+        "tm_stm32_rtc.h": "c",
+        "stm32l4xx_ll_rtc.h": "c"
     }
 }

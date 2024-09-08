@@ -10,6 +10,8 @@
 // reprogram it from the default set stored somewhere within .code section
 
 #include <stored_configuration_nvm/config_data.h>
+#include <stored_configuration_nvm/config_data_ptsensor.h>
+
 #include "io_default_vbat_scaling.h"
 
 #include "station_config.h"
@@ -78,7 +80,11 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 		.wx_umb = 0,
 #endif
 
-		.wx_pt_sensor = 0x71,		// TODO:
+#if ((!defined _PT_SENSOR_REFERENCE_RES) && (!defined _PT_SENSOR_TYPE))
+		.wx_pt_sensor = 0x71,		// TODO: index 28 (4k1 reference resistor), 4-wire sensor
+#else
+		.wx_pt_sensor = CONFIG_DATA_PTSENSOR_ASSEMBLE_CONFIG(_PT_SENSOR_TYPE, _PT_SENSOR_REFERENCE_RES),
+#endif
 
 #ifdef _DUST_SDS011_SERIAL
 		.wx_dust_sensor = WX_DUST_SDS011_SERIAL,

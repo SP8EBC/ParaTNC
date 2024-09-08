@@ -46,11 +46,11 @@ void gsm_comm_state_handler (uint8_t ntp_done,
         {
             gsm_comm_state_machine = GSM_COMM_NTP;
         }
-        else if (ntp_done > 0 && api_log_events_remaining > 0) 
+        else if (ntp_done > 0 && api_log_events_remaining > 0)
         {
             gsm_comm_state_machine = GSM_COMM_API;
         }
-        else if (ntp_done > 0 && api_log_events_remaining == 0) 
+        else if (ntp_done > 0 && api_log_events_remaining == 0)
         {
             gsm_comm_state_machine = GSM_COMM_APRSIS;
         }

@@ -336,6 +336,7 @@
 									<listOptionValue builtIn="false" value="&quot;../system/include/tiny-aes&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/aprs&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/tm&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/cmsis/stm32l4xx&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/cmsis/stm32l4xx/device&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/stm32l4-hal-driver&quot;"/>

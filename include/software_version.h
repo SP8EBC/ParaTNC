@@ -8,8 +8,8 @@
 #ifndef SOFTWARE_VERSION_H_
 #define SOFTWARE_VERSION_H_
 
-#define SW_VER "EC00"
-#define SW_DATE "19082024"
+#define SW_VER "EC01"
+#define SW_DATE "08092024"
 #define SW_KISS_PROTO	"C"
 
 extern const char software_version_str[5];

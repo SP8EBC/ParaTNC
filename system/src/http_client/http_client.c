@@ -394,6 +394,11 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 		http_client_connection_errors++;
 	}
 
+	// check if TCPIP communication was successfull
+	if (connect_result != SIM800_OK) {
+		out = HTTP_CLIENT_RET_TCPIP_ERROR;
+	}
+
 	return out;
 }
 
