@@ -26,6 +26,9 @@
 #define KISS_SECURITY_ACCESS		(uint8_t) 0x27
 #define kISS_SECURITY_ACCESS_RESP	(uint8_t) 0x67
 
+#define KISS_ROUTINE_CONTROL		(uint8_t) 0x31
+#define KISS_ROUTINE_CONTROL_RESP	(uint8_t) 0x71
+
 #define KISS_PROGRAM_STARTUP_CFG		(uint8_t) 0x34
 #define KISS_PROGRAM_STARTUP_CFG_RESP	(uint8_t) 0x74
 

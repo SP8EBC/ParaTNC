@@ -27,6 +27,7 @@ RM := rm -rf
 -include system/src/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
 -include src/nvm/subdir.mk
+-include src/kiss_protocol/routines/subdir.mk
 -include src/kiss_protocol/subdir.mk
 -include src/subdir.mk
 -include subdir.mk

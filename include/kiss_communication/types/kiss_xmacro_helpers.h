@@ -10,6 +10,37 @@
 
 #define DID_EMPTY	did_dummy_data
 
+// clang-format off
+/// ==================================================================================================
+///	X-MACROS
+/// ==================================================================================================
+
+/**
+ * Expands diagnostic routine definition from big #define table into const def in flash
+ */
+#define KISS_ROUTINE_DEF_EXPAND(_routine_number, _start_fn, _stop_fn, _get_result_fn, _synchro)		\
+	{													\
+		.routine_number = _routine_number,				\
+		.start_fn = _start_fn,							\
+		.stop_fn = _stop_fn,							\
+		.get_result_fn = _get_result_fn,				\
+		.asynchronous = _synchro						\
+	},													\
+
+/**
+ * Creates an array of status type for each defined diagnostics routine
+ */
+#define KISS_ROUTINE_STATUS_EXPAND(_routine_number, _start_fn, _stop_fn, _get_result_fn, _synchro)		\
+	{													\
+		.routine_number = __routine_number,				\
+		.running = false								\
+	}													\
+
+/**
+ * Creates an enum, used mostly to count how many diagnostic routines are defined
+ */
+#define KISS_DIAGNOSTIC_ROUTINE_ENUM_EXPAND(_routine_number, _start_fn, _stop_fn, _get_result_fn, _synchro)		\
+	KISS_ROUTINE_NUMBER_##_routine_number,														\
 
 /**
  * This macro is used to define DIDs which return integer values
@@ -52,3 +83,5 @@
 		},
 
 #endif /* KISS_XMACRO_HELPERS_H_ */
+
+// clang-format on

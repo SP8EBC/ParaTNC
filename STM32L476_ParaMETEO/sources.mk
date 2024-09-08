@@ -30,6 +30,7 @@ CPP_DEPS :=
 SUBDIRS := \
 src \
 src/kiss_protocol \
+src/kiss_protocol/routines \
 src/nvm \
 src/stored_configuration_nvm \
 system/src/aprs \

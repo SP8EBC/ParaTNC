@@ -222,6 +222,11 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 				break;
 			}
 
+			case KISS_ROUTINE_CONTROL: {
+				output = kiss_callback_routine_control(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				break;
+			}
+
 			case KISS_PROGRAM_STARTUP_CFG: {
 				output = kiss_callback_program_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
 				break;

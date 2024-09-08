@@ -28,6 +28,11 @@
         "gsm_comm_state_handler.h": "c",
         "sim800_state_t.h": "c",
         "tm_stm32_rtc.h": "c",
-        "stm32l4xx_ll_rtc.h": "c"
+        "stm32l4xx_ll_rtc.h": "c",
+        "kiss_xmacro_helpers.h": "c",
+        "kiss_routine_control.h": "c",
+        "routine_5254_set_datetime.h": "c",
+        "kiss_communication.h": "c",
+        "kiss_communication_service_ids.h": "c"
     }
 }

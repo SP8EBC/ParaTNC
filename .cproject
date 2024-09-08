@@ -222,7 +222,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="include"/>
-						<entry excluding="button_parameteo.c|Timer.cpp|pwr_save.c|nvm.c|aprsis.c|api.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="ntp.c|button_parameteo.c|Timer.cpp|pwr_save.c|nvm.c|aprsis.c|api.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry excluding="src/stm32f1-stdperiph/stm32f10x_dac.c|src/stm32f1-stdperiph/stm32f10x_adc.c|src/stm32f1-stdperiph/stm32f10x_can.c|src/drivers/l4|src/stm32f1-stdperiph/stm32f10x_pwr.c|src/stm32f1-stdperiph/stm32f10x_sdio.c|src/drivers/tm_stm32fonewire/tm_stm32f1_onewire.c|src/fatfs|src/cmsis/stm32l4xx|src/stm32f1-stdperiph/stm32f10x_fsmc.c|src/stm32l4-hal-driver|src/stm32f1-stdperiph/stm32f10x_spi.c|src/drivers/max31865.c|src/stm32f1-stdperiph/stm32f10x_wwdg.c|src/stm32f1-stdperiph/stm32f10x_cec.c|src/gsm|src/dsp|src/stm32f1-stdperiph/stm32f10x_bkp.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="system"/>
 					</sourceEntries>
 				</configuration>

@@ -11,6 +11,7 @@
 
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/types/kiss_communication_service_ids.h>
+#include <kiss_communication/kiss_routine_control.h>
 #include <kiss_communication/kiss_did.h>
 #include <kiss_communication/kiss_read_memory.h>
 #include <kiss_communication/kiss_nrc_response.h>
@@ -452,3 +453,45 @@ int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, 
 
 	return out;
 }
+
+/**
+ * 
+ */
+int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size)
+{
+	/**
+	 * Input frame structure
+	 *
+	 * FEND, KISS_ROUTINE_CONTROL, SUBFUNCTION_START_STOP_RESULT, ROUTINE_ID_LSB, ROUTINE_ID_MSB, lparam, wparam, FEND
+	 */
+
+	int32_t out = 0;
+
+	// what to do with given routine identifier
+	const uint8_t subfunction = *(input_frame_from_host + 2);
+
+	// routine identifier
+	const uint16_t routineid = *(input_frame_from_host + 3);
+
+	// checks if given function ID exists
+	const uint8_t routine_type = kiss_routine_control_check_routine_id(routineid);
+
+	// if routine is defined simply call it
+	if (routine_type != 0) {
+		switch (subfunction) {
+
+			case KISS_ROUTINE_CONTROL_SUBFUNC_START:
+				break;
+			case KISS_ROUTINE_CONTROL_SUBFUNC_STOP:
+				break;
+			case KISS_ROUTINE_CONTROL_SUBFUNC_RESULT:
+				break;
+		}
+	}
+	else {
+		out = kiss_nrc_response_fill_request_out_of_range(response_buffer);
+	}
+
+	return out;
+}
+
