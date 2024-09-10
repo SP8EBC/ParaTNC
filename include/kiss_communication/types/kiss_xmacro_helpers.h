@@ -32,8 +32,8 @@
  */
 #define KISS_ROUTINE_STATUS_EXPAND(_routine_number, _start_fn, _stop_fn, _get_result_fn, _synchro)		\
 	{													\
-		.routine_number = __routine_number,				\
-		.running = false								\
+		.routine_number = _routine_number,				\
+		.running = 0									\
 	}													\
 
 /**

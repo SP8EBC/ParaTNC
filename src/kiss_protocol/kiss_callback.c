@@ -467,11 +467,19 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 
 	int32_t out = 0;
 
+	// this is a result of starting or stopping a routine, but it might be also a result of routine operation
+	uint16_t routine_processing_result = 0;
+
 	// what to do with given routine identifier
 	const uint8_t subfunction = *(input_frame_from_host + 2);
 
 	// routine identifier
-	const uint16_t routineid = *(input_frame_from_host + 3);
+	const uint16_t routineid = *(input_frame_from_host + 3) | (*(input_frame_from_host + 4) << 8);
+
+	const uint32_t lparam = 	*(input_frame_from_host + 5) | (*(input_frame_from_host + 6) << 8) | 
+								(*(input_frame_from_host + 7) << 16) | (*(input_frame_from_host + 8) << 24);
+
+	const uint32_t wparam = 	(*(input_frame_from_host + 9)) | (*(input_frame_from_host + 10) << 8);
 
 	// checks if given function ID exists
 	const uint8_t routine_type = kiss_routine_control_check_routine_id(routineid);
@@ -481,8 +489,34 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 		switch (subfunction) {
 
 			case KISS_ROUTINE_CONTROL_SUBFUNC_START:
+				routine_processing_result = kiss_routine_control_start_routine(routineid, wparam, lparam);
+
+				if (routine_processing_result == KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED) {
+					out = 8;			// size of a response
+
+					response_buffer[0] = FEND;
+					response_buffer[1] = NONSTANDARD;
+					response_buffer[2] = out;				// message lenght
+					response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
+					response_buffer[4] = *(input_frame_from_host + 3);
+					response_buffer[5] = *(input_frame_from_host + 4);
+					response_buffer[7] = FEND;
+				}
+				else if (routine_processing_result == KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES) {
+					out = kiss_nrc_response_fill_incorrect_message_ln(response_buffer);
+				}
 				break;
 			case KISS_ROUTINE_CONTROL_SUBFUNC_STOP:
+				routine_processing_result = kiss_routine_control_stop_routine(routineid);
+
+				if (routine_processing_result == KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE) {
+					// synchronous routine cannot be stopped, because it block diagnostics I/O on the
+					// controller and terminates itself after everything is done
+					out = 
+				}
+				else if (routine_processing_result == KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING) {
+					
+				}
 				break;
 			case KISS_ROUTINE_CONTROL_SUBFUNC_RESULT:
 				break;
