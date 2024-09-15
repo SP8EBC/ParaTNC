@@ -14,7 +14,7 @@
 
 #define MESSAGE_MAX_LENGHT				67
 
-#define MESSAGE_NUMBER_STRING_BUFFER    5   ///!< include room of null terminator
+#define MESSAGE_NUMBER_STRING_BUFFER    7   ///!< include room of null terminator
 
 /**
  * 
@@ -22,9 +22,9 @@
 typedef enum message_source_t {
 	MESSAGE_SOURCE_UNINITIALIZED = 0x0,
 	MESSAGE_SOURCE_APRSIS = 0x1,
-	MESSAGE_SOURCE_APRSIS_HEXCNTR = 0x2,
+	MESSAGE_SOURCE_APRSIS_HEXCNTR = 0x2,	//!< message counter is a hex number
 	MESSAGE_SOURCE_RADIO = 0x11,
-	MESSAGE_SOURCE_RADIO_HEXCNTR = 0x12
+	MESSAGE_SOURCE_RADIO_HEXCNTR = 0x12		//!< mnessage counter is a hex number
 }message_source_t;
 
 /**

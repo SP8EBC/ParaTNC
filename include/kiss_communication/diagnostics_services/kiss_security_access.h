@@ -27,5 +27,11 @@ void kiss_security_access_init(config_data_basic_t * config);
  */
 uint8_t kiss_security_check_service_req_unlocking(uint8_t service_id, kiss_communication_transport_t transport_media, uint32_t lparam);
 
+uint8_t kiss_security_access_get_access_unlocked_serial(void);
+
+uint8_t kiss_security_access_get_access_unlocked_aprsmessage(void);
+
+uint8_t kiss_security_access_get_unlocked_per_transport(kiss_communication_transport_t transport);
+
 
 #endif /* KISS_COMMUNICATION_KISS_SECURITY_ACCESS_H_ */

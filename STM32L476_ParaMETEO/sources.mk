@@ -29,8 +29,9 @@ CPP_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src \
+src/kiss_protocol/diagnostics_routines \
+src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
-src/kiss_protocol/routines \
 src/nvm \
 src/stored_configuration_nvm \
 system/src/aprs \

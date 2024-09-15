@@ -5,7 +5,7 @@
  *      Author: mateusz
  */
 
-#include "kiss_communication/kiss_security_access.h"
+#include "kiss_communication/diagnostics_services/kiss_security_access.h"
 #include "kiss_communication/types/kiss_communication_service_ids.h"
 #include "backup_registers.h"
 #include "system_stm32l4xx.h"
@@ -88,6 +88,17 @@ static uint32_t kiss_security_access_config = 0U;
  */
 static uint8_t kiss_security_access_encrypted_unclock = 0U;
 
+/**
+ * Set to one if security access for transport KISS_TRANSPORT_SERIAL_PORT is unlocked
+ */
+static uint8_t kiss_security_access_unlocked_serial = 1U;
+
+/**
+ * Set to one if security access for transports KISS_TRANSPORT_ENCRYPTED_HEXSTRING
+ * and KISS_TRANSPORT_HEXSTRING
+ */
+static uint8_t kiss_security_access_unlocked_aprsmessage = 0U;
+
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
@@ -139,13 +150,13 @@ uint8_t kiss_security_check_service_req_unlocking(uint8_t service_id, kiss_commu
 			transport_media == KISS_TRANSPORT_HEXSTRING) {
 		switch (service_id) {
 			case KISS_RESTART:
-				if (lparam == KISS_RESET_HARD) {
+				if (lparam == KISS_RESET_SOFT) {
 					if (system_get_rtc_date() != backup_reg_get_last_restart_date()) {
 						// one restart per day is always allowed
 						out = 0;
 					}
 					else {
-						out = KISS_SECURITY_CHECK_MESSAGE(KISS_RESTART);
+						out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_RESTART_RESET);
 					}
 				}
 				break;
@@ -155,11 +166,13 @@ uint8_t kiss_security_check_service_req_unlocking(uint8_t service_id, kiss_commu
 				out = 0;
 				break;
 			case KISS_READ_DID:
-				out = KISS_SECURITY_CHECK_MESSAGE(KISS_READ_DID);
+				out = 0;	// temporary always allowed
+				//out = KISS_SECURITY_CHECK_MESSAGE(KISS_READ_DID);
 				break;
 			case KISS_READ_MEM_ADDR:
 				if (variant_validate_is_within_flash_logger_events((void*)lparam) == 1) {
-					out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_READ_MEM_RESTRICTED);
+					out = 0;	// temporary always allowed
+					//out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_READ_MEM_RESTRICTED);
 				}
 				else {
 					// it is assumed that DID handler checks if address to be read
@@ -225,4 +238,24 @@ uint8_t kiss_security_check_service_req_unlocking(uint8_t service_id, kiss_commu
 
 	return out;
 
+}
+
+uint8_t kiss_security_access_get_access_unlocked_serial(void)
+{
+	return kiss_security_access_unlocked_serial;
+}
+
+uint8_t kiss_security_access_get_access_unlocked_aprsmessage(void)
+{
+	return kiss_security_access_unlocked_aprsmessage;
+}
+
+uint8_t kiss_security_access_get_unlocked_per_transport(kiss_communication_transport_t transport)
+{
+	if (transport == KISS_TRANSPORT_SERIAL_PORT) {
+		return kiss_security_access_unlocked_serial;
+	}
+	else {
+		return kiss_security_access_unlocked_aprsmessage;
+	}
 }

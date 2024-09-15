@@ -33,6 +33,8 @@
         "kiss_routine_control.h": "c",
         "routine_5254_set_datetime.h": "c",
         "kiss_communication.h": "c",
-        "kiss_communication_service_ids.h": "c"
+        "kiss_communication_service_ids.h": "c",
+        "kiss_security_access.h": "c",
+        "kiss_communication_transport_t.h": "c"
     }
 }

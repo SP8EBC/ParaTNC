@@ -11,7 +11,6 @@ AllowShortLoopsOnASingleLine: 'false'
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: 'false'
 AlwaysBreakTemplateDeclarations: MultiLine
-BinPackParameters: false
 BreakBeforeBraces: Stroustrup
 ColumnLimit: '100'
 IndentWidth: '4'
@@ -20,5 +19,4 @@ SpaceBeforeParens: Always
 Standard: Cpp11
 TabWidth: '4'
 UseTab: Always
-
 ...

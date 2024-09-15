@@ -275,8 +275,14 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 							// trigger preparing ACK
 							rte_main_trigger_message_ack = 1;
 						}
-
-
+						else {
+							// this message is not for me, so no sense in keeping in longer
+							memset(&rte_main_received_message, 0x00, sizeof(message_t));
+						}
+					}
+					else {
+						// cannot decode message, maybe it is broken
+						memset(&rte_main_received_message, 0x00, sizeof(message_t));
 					}
 				}
 			}

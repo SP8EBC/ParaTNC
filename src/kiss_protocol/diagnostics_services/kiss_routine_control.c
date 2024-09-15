@@ -27,8 +27,8 @@
  *      Author: mateusz
  */
 
-#include "./kiss_communication/kiss_routine_control.h"
-#include "./kiss_communication/routines/routine_5254_set_datetime.h"
+#include "./kiss_communication/diagnostics_services/kiss_routine_control.h"
+#include "./kiss_communication/diagnostics_routines/routine_5254_set_datetime.h"
 #include "./kiss_communication/types/kiss_xmacro_helpers.h"
 
 #include "./etc/kiss_routine_configuration.h"
@@ -113,6 +113,8 @@ static kiss_routine_control_t *kiss_routine_get_by_id (uint16_t id)
 			break;
 		}
 	}
+
+	return routine;
 }
 
 /// ==================================================================================================

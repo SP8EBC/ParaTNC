@@ -1,4 +1,4 @@
-#include "./kiss_communication/routines/routine_5254_set_datetime.h"
+#include "./kiss_communication/diagnostics_routines/routine_5254_set_datetime.h"
 
 #include "tm/tm_stm32_rtc.h"
 #include "stm32l4xx_ll_rtc.h"

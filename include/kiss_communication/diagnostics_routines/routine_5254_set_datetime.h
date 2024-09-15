@@ -1,22 +1,18 @@
-/*
- * kiss_read_memory.c
- *
- *  Created on: Aug 3, 2024
- *      Author: mateusz
- */
+#ifndef FECBA2A0_59AB_4F1A_8C66_10091DC348D3
+#define FECBA2A0_59AB_4F1A_8C66_10091DC348D3
 
-#include "kiss_communication/kiss_read_memory.h"
+#include "./kiss_communication/diagnostics_services/kiss_routine_control.h"
 
 /// ==================================================================================================
-///	LOCAL DEFINITIONS
+///	GLOBAL MACROS
 /// ==================================================================================================
 
 /// ==================================================================================================
-///	LOCAL DATA TYPES
+///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
 /// ==================================================================================================
-///	LOCAL VARIABLES
+///	GLOBAL TYPEDEFS
 /// ==================================================================================================
 
 /// ==================================================================================================
@@ -24,40 +20,21 @@
 /// ==================================================================================================
 
 /// ==================================================================================================
-///	LOCAL FUNCTIONS
-/// ==================================================================================================
-
-/// ==================================================================================================
-///	LOCAL FUNCTIONS
-/// ==================================================================================================
-
-/// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+/**
+ * Sets RTC date and time to values provided by diagnostcs call
+ * @param lparam date in binary coded decimal 0xYYYYMMDD
+ * @param wparam time in binary coded decimal 0xHHMM
+ */
+void routine_5254_start(uint32_t lparam, uint16_t wparam);
+
+// this doesn't have stop function, because it is synchronous
 
 /**
- *
- * @param address
- * @param size
- * @param output_buffer
- * @param buffer_ln
- * @return
+ * Returns zero if RTC date and time has been updated successfully, or non zero in case of error
  */
-uint8_t kiss_read_memory_response(uint32_t address, uint8_t size, uint8_t * output_buffer, uint16_t buffer_ln) {
+uint16_t routine_5254_get_result(void);
 
-	uint8_t out;
-
-	const uint8_t* pointer = (const uint8_t*)address;
-	uint16_t output_buffer_iterator = 0;
-
-	for (int i = 0; i < size; i++) {
-		output_buffer[output_buffer_iterator++] = pointer[i];
-	}
-
-	out = size;
-
-	return out;
-}
-
-
+#endif /* FECBA2A0_59AB_4F1A_8C66_10091DC348D3 */

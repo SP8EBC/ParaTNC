@@ -5,18 +5,18 @@
  *      Author: mateusz
  */
 
-#include "main.h"
-#include "station_config.h"
-
-
-#include <crc.h>
-#include <kiss_communication/kiss_callback.h>
 #include <kiss_communication/kiss_communication.h>
+#include <kiss_communication/kiss_callback.h>
 #include <kiss_communication/types/kiss_communication_service_ids.h>
-#include <string.h>
-#include <stdlib.h>
 #include <stored_configuration_nvm/config_data_externs.h>
 #include <stored_configuration_nvm/configuration_handler.h>
+
+#include <crc.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "main.h"
+#include "station_config.h"
 
 #include "variant.h"
 
@@ -156,8 +156,15 @@ int32_t kiss_send_ax25_to_host(uint8_t* input_frame, uint16_t input_frame_len, u
  * @param resp_buf_ln
  * @return
  */
-int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, AX25Ctx* ax25, Afsk* a, uint8_t * response_buffer, uint16_t resp_buf_ln ) {
-	int i/* zmienna do poruszania sie po buforze odbiorczym usart */;
+int32_t kiss_parse_received (uint8_t *input_frame_from_host, 
+							uint16_t input_len, 
+							AX25Ctx *ax25,
+							Afsk *a, 
+							uint8_t *response_buffer, 
+							uint16_t resp_buf_ln,
+							kiss_communication_transport_t transport_media)
+{
+	int i /* zmienna do poruszania sie po buforze odbiorczym usart */;
 	int j/* zmienna do poruszania sie po lokalnej tablicy do przepisywania*/;
 
 	int32_t output = 0;
@@ -214,39 +221,39 @@ int32_t kiss_parse_received(uint8_t* input_frame_from_host, uint16_t input_len, 
 			} break;
 
 			case KISS_GET_RUNNING_CONFIG: {
-				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 			} break;
 
 			case KISS_GET_VERSION_AND_ID: {
-				output = kiss_callback_get_version_id(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_get_version_id(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 
 			case KISS_ROUTINE_CONTROL: {
-				output = kiss_callback_routine_control(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_routine_control(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 
 			case KISS_PROGRAM_STARTUP_CFG: {
-				output = kiss_callback_program_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_program_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 
 			case KISS_ERASE_STARTUP_CFG: {
-				output = kiss_callback_erase_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_erase_startup(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 
 			case KISS_READ_DID: {
-				output = kiss_callback_read_did(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_read_did(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 			case KISS_READ_MEM_ADDR : {
-				output = kiss_callback_read_memory_by_addr(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_read_memory_by_addr(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 			case KISS_RESTART: {
-				output = kiss_callback_reset(input_frame_from_host, input_len, response_buffer, resp_buf_ln);
+				output = kiss_callback_reset(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
 

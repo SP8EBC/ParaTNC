@@ -11,9 +11,9 @@
 
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/types/kiss_communication_service_ids.h>
-#include <kiss_communication/kiss_routine_control.h>
-#include <kiss_communication/kiss_did.h>
-#include <kiss_communication/kiss_read_memory.h>
+#include <kiss_communication/diagnostics_services/kiss_routine_control.h>
+#include <kiss_communication/diagnostics_services/kiss_did.h>
+#include <kiss_communication/diagnostics_services/kiss_read_memory.h>
 #include <kiss_communication/kiss_nrc_response.h>
 #include "main.h"
 #include "rte_main.h"
@@ -66,7 +66,7 @@ uint8_t kiss_async_message_counter = 0;
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 	#define CALLBACK_GET_RUNNING_CFG_LN	7
 
@@ -74,32 +74,38 @@ int32_t kiss_callback_get_running_config(uint8_t* input_frame_from_host, uint16_
 
 	configuration_handler_region_t current_region;
 
-	// set current message to start pooling
-	kiss_current_async_message = KISS_RUNNING_CONFIG;
+	if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
 
-	// the rest of content of an input frame is irrevelant, but we need to send
-	// a response telling how long configuration data is
-	memset(response_buffer, 0x00, buffer_size);
+		// set current message to start pooling
+		kiss_current_async_message = KISS_RUNNING_CONFIG;
 
-	// get currently used configuration and its size in flash memory
-	current_region = configuration_get_current(&conf_size);
+		// the rest of content of an input frame is irrevelant, but we need to send
+		// a response telling how long configuration data is
+		memset(response_buffer, 0x00, buffer_size);
 
-	// reset async message counter
-	kiss_async_message_counter = 0;
+		// get currently used configuration and its size in flash memory
+		current_region = configuration_get_current(&conf_size);
 
-	// construct a response
-	response_buffer[0] = FEND;
-	response_buffer[1] = NONSTANDARD;
-	response_buffer[2] = CALLBACK_GET_RUNNING_CFG_LN;				// message lenght
-	response_buffer[3] = KISS_RUNNING_CONFIG;
-	response_buffer[4] = (uint8_t)(current_region & 0xFF);
-	if ((conf_size % KISS_MAX_CONFIG_PAYLOAD_SIZE) == 0)
-		response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE);
-	else
-		response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE + 1);
-	response_buffer[6] = FEND;
+		// reset async message counter
+		kiss_async_message_counter = 0;
 
-	return CALLBACK_GET_RUNNING_CFG_LN;
+		// construct a response
+		response_buffer[0] = FEND;
+		response_buffer[1] = NONSTANDARD;
+		response_buffer[2] = CALLBACK_GET_RUNNING_CFG_LN;				// message lenght
+		response_buffer[3] = KISS_RUNNING_CONFIG;
+		response_buffer[4] = (uint8_t)(current_region & 0xFF);
+		if ((conf_size % KISS_MAX_CONFIG_PAYLOAD_SIZE) == 0)
+			response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE);
+		else
+			response_buffer[5] = (uint8_t)(conf_size / KISS_MAX_CONFIG_PAYLOAD_SIZE + 1);
+		response_buffer[6] = FEND;
+
+		return CALLBACK_GET_RUNNING_CFG_LN;
+	}
+	else {
+		return kiss_nrc_response_fill_security_access_denied(response_buffer);
+	}
 
 }
 
@@ -175,7 +181,7 @@ int16_t kiss_pool_callback_get_running_config(uint8_t * output_buffer, uint16_t 
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 	uint8_t config_payload_size = 0;
 
@@ -205,50 +211,44 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 #define ERASE_STARTUP_LN	6
 
-	kiss_communication_nrc_t result = configuration_handler_erase_startup();
+	if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
 
-	response_buffer[0] = FEND;
-	response_buffer[1] = NONSTANDARD;
-	response_buffer[2] = ERASE_STARTUP_LN;				// message lenght
+		kiss_communication_nrc_t result = configuration_handler_erase_startup();
 
-	if (result == NRC_POSITIVE) {
-		// construct a response
-		response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
+		response_buffer[0] = FEND;
+		response_buffer[1] = NONSTANDARD;
+		response_buffer[2] = ERASE_STARTUP_LN;				// message lenght
+
+		if (result == NRC_POSITIVE) {
+			// construct a response
+			response_buffer[3] = KISS_ERASE_STARTUP_CFG_RESP;
+		}
+		else {
+			response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
+
+		}
+
+		response_buffer[4] = (uint8_t)result;
+		response_buffer[5] = FEND;
+
+		return ERASE_STARTUP_LN;
 	}
 	else {
-		response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
-
+		return kiss_nrc_response_fill_security_access_denied(response_buffer);
 	}
 
-	response_buffer[4] = (uint8_t)result;
-	response_buffer[5] = FEND;
-
-	return ERASE_STARTUP_LN;
-
 }
-
-/// ==================================================================================================
-///	GLOBAL VARIABLES
-/// ==================================================================================================
-
-/// ==================================================================================================
-///	LOCAL FUNCTIONS
-/// ==================================================================================================
-
-/// ==================================================================================================
-///	GLOBAL FUNCTIONS
-/// ==================================================================================================
 
 /**
  * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
  * what it receives and program. It is up to host PC to provide senseful configuration with properly calculated checksum as this isn't
  * recalculated during programming.
  */
-int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 #define PROGRAM_STARTUP_LN	6
 
@@ -272,27 +272,32 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	uint8_t data_size =  *(input_frame_from_host + 2);
 
 	uint16_t config_block_offset = *(input_frame_from_host + 3) | (*(input_frame_from_host + 4) << 8);
+	
+	if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
+		result = configuration_handler_program_startup(data_ptr, data_size, config_block_offset);
 
-	result = configuration_handler_program_startup(data_ptr, data_size, config_block_offset);
-
-	// construct a response
-	response_buffer[0] = FEND;
-	response_buffer[1] = NONSTANDARD;
-	response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
-
-	if (result == NRC_POSITIVE) {
 		// construct a response
-		response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
+		response_buffer[0] = FEND;
+		response_buffer[1] = NONSTANDARD;
+		response_buffer[2] = PROGRAM_STARTUP_LN;				// message lenght
+
+		if (result == NRC_POSITIVE) {
+			// construct a response
+			response_buffer[3] = KISS_PROGRAM_STARTUP_CFG_RESP;
+		}
+		else {
+			response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
+
+		}
+
+		response_buffer[4] = (uint8_t)result;
+		response_buffer[5] = FEND;
+
+		return PROGRAM_STARTUP_LN;
 	}
 	else {
-		response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
-
+		return kiss_nrc_response_fill_security_access_denied(response_buffer);
 	}
-
-	response_buffer[4] = (uint8_t)result;
-	response_buffer[5] = FEND;
-
-	return PROGRAM_STARTUP_LN;
 }
 
 /**
@@ -303,7 +308,7 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 	/**
 	 * Response frame structure
@@ -348,7 +353,7 @@ int32_t kiss_callback_read_did(uint8_t* input_frame_from_host, uint16_t input_le
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 	/**
 	 * Response frame structure
 	 *
@@ -368,11 +373,15 @@ int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16
 	// size
 	const uint8_t size = *(input_frame_from_host + 7);
 
+	// if security access must be unlocked
+	const uint8_t require_unlock = kiss_security_check_service_req_unlocking(KISS_READ_MEM_ADDR, transport_media, address);
+
 	// allow only one byte of size and four byte of address
 	if (size_format == 0x14) {
 
 		if (size > 0 && size < KISS_CONFIG_DIAGNOSTIC_BUFFER_LN - 4) {
-			if (variant_validate_is_within_read_mem_by_addr((const void*)address) == 1) {
+			if ((require_unlock == 1 && kiss_security_access_get_unlocked_per_transport (transport_media) == 1) ||
+				(variant_validate_is_within_read_mem_by_addr ((const void *)address) == 1)) {
 				// construct DID response to an output buffer
 				const uint8_t response_size = kiss_read_memory_response(address, size, response_buffer + 4, buffer_size - 5);
 
@@ -416,11 +425,14 @@ int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16
  * @param buffer_size
  * @return
  */
-int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size) {
+int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media) {
 
 	int32_t out = 0;
 
 	const uint8_t reset_type = *(input_frame_from_host + 2);
+
+	// if security access must be unlocked
+	const uint8_t require_unlock = kiss_security_check_service_req_unlocking(KISS_RESTART, transport_media, reset_type);
 
 	// as for now only soft reset is allowed
 	if (reset_type == KISS_RESET_SOFT) {
@@ -428,8 +440,8 @@ int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, 
 		// get last bootup date
 		const uint32_t last_restart_date = backup_reg_get_last_restart_date();
 
-		// only one restart per day is allowed
-		if (RTC->DR != last_restart_date) {
+		// only one restart per day is allowed, more needs security access unlock
+		if ((RTC->DR != last_restart_date) || (require_unlock == 1 && kiss_security_access_get_unlocked_per_transport (transport_media) == 1)) {
 
 			// update last restart date
 			backup_reg_set_last_restart_date();
@@ -457,7 +469,7 @@ int32_t kiss_callback_reset(uint8_t* input_frame_from_host, uint16_t input_len, 
 /**
  * 
  */
-int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size)
+int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media)
 {
 	/**
 	 * Input frame structure
@@ -492,7 +504,7 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 				routine_processing_result = kiss_routine_control_start_routine(routineid, wparam, lparam);
 
 				if (routine_processing_result == KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED) {
-					out = 8;			// size of a response
+					out = 7;			// size of a response
 
 					response_buffer[0] = FEND;
 					response_buffer[1] = NONSTANDARD;
@@ -500,7 +512,7 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 					response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
 					response_buffer[4] = *(input_frame_from_host + 3);
 					response_buffer[5] = *(input_frame_from_host + 4);
-					response_buffer[7] = FEND;
+					response_buffer[6] = FEND;
 				}
 				else if (routine_processing_result == KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES) {
 					out = kiss_nrc_response_fill_incorrect_message_ln(response_buffer);
@@ -512,13 +524,42 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 				if (routine_processing_result == KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE) {
 					// synchronous routine cannot be stopped, because it block diagnostics I/O on the
 					// controller and terminates itself after everything is done
-					out = 
+					out = kiss_nrc_response_fill_subfunction_not_supported(response_buffer);
 				}
 				else if (routine_processing_result == KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING) {
-					
+					// it is not possible to stop a routine which is not running now
+					out = kiss_nrc_response_fill_sequence_error(response_buffer);
+				}
+				else {
+					// success
+					out = 7;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
+
+					response_buffer[0] = FEND;
+					response_buffer[1] = NONSTANDARD;
+					response_buffer[2] = out;				// message lenght
+					response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
+					response_buffer[4] = *(input_frame_from_host + 3);
+					response_buffer[5] = *(input_frame_from_host + 4);
+					response_buffer[6] = FEND;
 				}
 				break;
 			case KISS_ROUTINE_CONTROL_SUBFUNC_RESULT:
+
+				routine_processing_result = kiss_routine_control_get_result_routine(routineid);
+
+				// success
+				out = 9;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
+
+				response_buffer[0] = FEND;
+				response_buffer[1] = NONSTANDARD;
+				response_buffer[2] = out;				// message lenght
+				response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
+				response_buffer[4] = *(input_frame_from_host + 3);
+				response_buffer[5] = *(input_frame_from_host + 4);
+				response_buffer[6] = routine_processing_result & 0xFFu;
+				response_buffer[7] = (routine_processing_result & 0xFF00u) >> 8;
+				response_buffer[8] = FEND;
+
 				break;
 		}
 	}

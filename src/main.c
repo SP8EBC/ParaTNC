@@ -102,6 +102,7 @@
 
 #include "drivers/dallas.h"
 
+#include "kiss_communication/diagnostics_services/kiss_security_access.h"
 #include <kiss_communication/kiss_communication.h>
 #include <kiss_communication/kiss_communication_aprsmsg.h>
 #include <etc/kiss_configuation.h>
@@ -469,7 +470,7 @@ static void main_gsm_pool_handler(
 #define KISS_RESPONSE_MESSAGE_LN retval
 
 				// parse KISS request
-				KISS_RESPONSE_MESSAGE_LN = kiss_parse_received(from_message, *from_message_ln, NULL, NULL, response_message, MAIN_KISS_FROM_MESSAGE_LEN);
+				KISS_RESPONSE_MESSAGE_LN = kiss_parse_received(from_message, *from_message_ln, NULL, NULL, response_message, MAIN_KISS_FROM_MESSAGE_LEN, type);
 
 				// if a response was generated
 				if (KISS_RESPONSE_MESSAGE_LN > 0) {
@@ -1256,6 +1257,8 @@ int main(int argc, char* argv[]){
 		bme280_read_calibration(bme280_calibration_data);
 	}
 
+ kiss_security_access_init(main_config_data_basic);
+
  if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
@@ -1669,26 +1672,33 @@ int main(int argc, char* argv[]){
 			// if new KISS message has been received from the host
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
 				// parse i ncoming data and then transmit on radio freq
-				ln = kiss_parse_received(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), srl_get_num_bytes_rxed(main_kiss_srl_ctx_ptr), &main_ax25, &main_afsk, main_small_buffer, KISS_CONFIG_DIAGNOSTIC_BUFFER_LN);
+				ln = kiss_parse_received (srl_get_rx_buffer (main_kiss_srl_ctx_ptr),
+										  srl_get_num_bytes_rxed (main_kiss_srl_ctx_ptr),
+										  &main_ax25,
+										  &main_afsk,
+										  main_small_buffer,
+										  KISS_CONFIG_DIAGNOSTIC_BUFFER_LN,
+										  KISS_TRANSPORT_SERIAL_PORT);
 				if (ln == 0) {
-					kiss10m++;	// increase kiss messages counter
+					kiss10m++; // increase kiss messages counter
 				}
 				else if (ln > 0) {
 					// if a response (ACK) to this KISS frame shall be sent
 
 					// wait for any pending transmission to complete
-					srl_wait_for_tx_completion(main_kiss_srl_ctx_ptr);
+					srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
 
-					srl_send_data(main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln, SRL_INTERNAL);
+					srl_send_data (main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln,
+								   SRL_INTERNAL);
 				}
 
 				// restart KISS receiving to be ready for next frame
-				srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+				srl_receive_data (main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
 			}
 
 			// if there were an error during receiving frame from host, restart rxing once again
 			if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
-				srl_receive_data(main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+				srl_receive_data (main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
 			}
 		}
 
