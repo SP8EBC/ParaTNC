@@ -49,7 +49,8 @@ static int routine_5254_get_weekday_from_date(const LL_RTC_DateTypeDef * in)
         + ((year + 4800 - ((14 - month) / 12)) / 400)              \
         - 32045                                                    \
       ) % 7;
-    return out;
+    return out + 1;	// calculation above gives week days from 0 -> monday
+    				// to 6 -> sunday
 }
 
 /// ==================================================================================================
@@ -61,28 +62,30 @@ static int routine_5254_get_weekday_from_date(const LL_RTC_DateTypeDef * in)
  * @param lparam date in binary coded decimal 0xYYYYMMDD
  * @param wparam time in binary coded decimal 0xHHMM
  */
-void routine_5254_start (uint32_t lparam, uint16_t wparam)
+uint8_t routine_5254_start (uint32_t lparam, uint16_t wparam)
 {
 
-				routine_5254_rtc_time.TimeFormat = LL_RTC_TIME_FORMAT_AM_OR_24;
-				routine_5254_rtc_time.Hours = (wparam & 0xFF00) >> 8;
-				routine_5254_rtc_time.Minutes = wparam & 0xFF;
-				routine_5254_rtc_time.Seconds = 0;
+	routine_5254_rtc_time.TimeFormat = LL_RTC_TIME_FORMAT_AM_OR_24;
+	routine_5254_rtc_time.Hours = (wparam & 0xFF00) >> 8;
+	routine_5254_rtc_time.Minutes = wparam & 0xFF;
+	routine_5254_rtc_time.Seconds = 0;
 
-				routine_5254_rtc_date.Day = lparam & 0xFF;
-				routine_5254_rtc_date.Month = (lparam & 0xFF00) >> 8;
-				routine_5254_rtc_date.Year = (lparam & 0xFFFF0000) >> 16;
-				
-                const int weekday = routine_5254_get_weekday_from_date(&routine_5254_rtc_date);
-                routine_5254_rtc_date.WeekDay = weekday;
+	routine_5254_rtc_date.Day = lparam & 0xFF;
+	routine_5254_rtc_date.Month = (lparam & 0xFF00) >> 8;
+	routine_5254_rtc_date.Year = (lparam & 0xFFFF0000) >> 16;
 
-				// enable access to backup domain
-				PWR->CR1 |= PWR_CR1_DBP;
+	const int weekday = routine_5254_get_weekday_from_date(&routine_5254_rtc_date);
+	routine_5254_rtc_date.WeekDay = weekday;
 
-				routine_5254_result |=  (0x00FF & LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_date));
-				routine_5254_result |=  (0xFF00 & LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_time)) << 8;
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
 
-				PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+	routine_5254_result |=  (0x00FF & LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_date));
+	routine_5254_result |=  (0xFF00 & LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_time)) << 8;
+
+	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+
+	return KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED;
 
 }
 

@@ -14,6 +14,7 @@
 #include <kiss_communication/diagnostics_services/kiss_routine_control.h>
 #include <kiss_communication/diagnostics_services/kiss_did.h>
 #include <kiss_communication/diagnostics_services/kiss_read_memory.h>
+#include <kiss_communication/diagnostics_services/kiss_security_access.h>
 #include <kiss_communication/kiss_nrc_response.h>
 #include "main.h"
 #include "rte_main.h"
@@ -35,6 +36,8 @@
 #define KISS_LAST_ASYNC_MSG				0xFF
 
 #define KISS_RESET_SOFTRESET			0x03
+
+#define KISS_CALLBACK_ROUTINE_CONTROL_START_MINIMUM_PAYLOAD_LN	9u
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -411,7 +414,7 @@ int32_t kiss_callback_read_memory_by_addr(uint8_t* input_frame_from_host, uint16
 		}
 	}
 	else {
-		out = kiss_nrc_response_fill_incorrect_message_ln(response_buffer);
+		out = kiss_nrc_response_fill_incorrect_message_lenght_or_format(response_buffer);
 	}
 
 	return out;
@@ -501,21 +504,33 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 		switch (subfunction) {
 
 			case KISS_ROUTINE_CONTROL_SUBFUNC_START:
-				routine_processing_result = kiss_routine_control_start_routine(routineid, wparam, lparam);
+				// greater than is used here instead of equals, because of a difference between diagnostics got
+				// through serial port and decoded from aprs message. diagnostics from aprs message has only
+				// FEND put at the beginning to retain offsets.
+				if (input_len > KISS_CALLBACK_ROUTINE_CONTROL_START_MINIMUM_PAYLOAD_LN ) {
+					routine_processing_result = kiss_routine_control_start_routine(routineid, wparam, lparam);
 
-				if (routine_processing_result == KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED) {
-					out = 7;			// size of a response
+					if (routine_processing_result == KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED) {
+						out = 8;			// size of a response
 
-					response_buffer[0] = FEND;
-					response_buffer[1] = NONSTANDARD;
-					response_buffer[2] = out;				// message lenght
-					response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
-					response_buffer[4] = *(input_frame_from_host + 3);
-					response_buffer[5] = *(input_frame_from_host + 4);
-					response_buffer[6] = FEND;
+						response_buffer[0] = FEND;
+						response_buffer[1] = NONSTANDARD;
+						response_buffer[2] = out;				// message lenght
+						response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
+						response_buffer[4] = KISS_ROUTINE_CONTROL_SUBFUNC_START;
+						response_buffer[5] = *(input_frame_from_host + 3);
+						response_buffer[6] = *(input_frame_from_host + 4);
+						response_buffer[7] = FEND;
+					}
+					else if (routine_processing_result == KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES) {
+						out = kiss_nrc_response_fill_incorrect_message_lenght_or_format(response_buffer);
+					}
+					else {	// KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR
+						out = kiss_nrc_response_fill_general_reject(response_buffer);
+					}
 				}
-				else if (routine_processing_result == KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES) {
-					out = kiss_nrc_response_fill_incorrect_message_ln(response_buffer);
+				else {
+					out = kiss_nrc_response_fill_incorrect_message_lenght_or_format(response_buffer);
 				}
 				break;
 			case KISS_ROUTINE_CONTROL_SUBFUNC_STOP:
@@ -532,15 +547,16 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 				}
 				else {
 					// success
-					out = 7;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
+					out = 8;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
 
 					response_buffer[0] = FEND;
 					response_buffer[1] = NONSTANDARD;
 					response_buffer[2] = out;				// message lenght
 					response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
-					response_buffer[4] = *(input_frame_from_host + 3);
-					response_buffer[5] = *(input_frame_from_host + 4);
-					response_buffer[6] = FEND;
+					response_buffer[4] = KISS_ROUTINE_CONTROL_SUBFUNC_STOP;
+					response_buffer[5] = *(input_frame_from_host + 3);
+					response_buffer[6] = *(input_frame_from_host + 4);
+					response_buffer[7] = FEND;
 				}
 				break;
 			case KISS_ROUTINE_CONTROL_SUBFUNC_RESULT:
@@ -548,17 +564,18 @@ int32_t kiss_callback_routine_control(uint8_t* input_frame_from_host, uint16_t i
 				routine_processing_result = kiss_routine_control_get_result_routine(routineid);
 
 				// success
-				out = 9;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
+				out = 10;			// size of a response //  out = KISS_ROUTINE_RETVAL_SUCCESS;
 
 				response_buffer[0] = FEND;
 				response_buffer[1] = NONSTANDARD;
 				response_buffer[2] = out;				// message lenght
 				response_buffer[3] = KISS_ROUTINE_CONTROL_RESP;
-				response_buffer[4] = *(input_frame_from_host + 3);
-				response_buffer[5] = *(input_frame_from_host + 4);
-				response_buffer[6] = routine_processing_result & 0xFFu;
-				response_buffer[7] = (routine_processing_result & 0xFF00u) >> 8;
-				response_buffer[8] = FEND;
+				response_buffer[4] = KISS_ROUTINE_CONTROL_SUBFUNC_RESULT;
+				response_buffer[5] = *(input_frame_from_host + 3);
+				response_buffer[6] = *(input_frame_from_host + 4);
+				response_buffer[7] = routine_processing_result & 0xFFu;
+				response_buffer[8] = (routine_processing_result & 0xFF00u) >> 8;
+				response_buffer[9] = FEND;
 
 				break;
 		}

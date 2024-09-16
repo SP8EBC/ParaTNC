@@ -62,7 +62,7 @@ static const uint8_t kiss_nrc_response_out_of_range[KISS_NRC_RESPONSE_OUT_OF_RAN
 		FEND
 };
 
-//!< Negative response to incorrect message lenght or format
+//!< NRC_INCORRECT_MESSAGE_LENGTH_OR_FORMAT
 static const uint8_t kiss_nrc_response_incorrect_message_ln_or_format[KISS_NRC_RESPONSE_INCORRECT_MESSAGE_LN] = {
 		FEND,
 		NONSTANDARD,
@@ -101,6 +101,17 @@ static const uint8_t kiss_nrc_sequence_error[KISS_NRC_RESPONSE_SEQUENCE_ERR_LN] 
 		NRC_REQUEST_SEQUENCE_ERROR,
 		FEND
 };
+
+//!< NRC_GENERAL_REJECT
+static const uint8_t kiss_nrc_general_reject[KISS_NRC_RESPONSE_SEQUENCE_ERR_LN] = {
+		FEND,
+		NONSTANDARD,
+		KISS_NRC_RESPONSE_SEQUENCE_ERR_LN,
+		KISS_NEGATIVE_RESPONSE_SERVICE,
+		NRC_GENERAL_REJECT,
+		FEND
+};
+
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -166,7 +177,7 @@ int kiss_nrc_response_fill_request_out_of_range(uint8_t * buffer) {
  * @param buffer
  * @return a lenght of a response with a nrc
  */
-int kiss_nrc_response_fill_incorrect_message_ln(uint8_t * buffer) {
+int kiss_nrc_response_fill_incorrect_message_lenght_or_format(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_response_incorrect_message_ln_or_format, KISS_NRC_RESPONSE_INCORRECT_MESSAGE_LN);
 
@@ -214,6 +225,21 @@ int kiss_nrc_response_fill_conditions_not_correct(uint8_t * buffer) {
 int kiss_nrc_response_fill_sequence_error(uint8_t * buffer) {
 	if (buffer != 0x00) {
 		memcpy(buffer, kiss_nrc_sequence_error, KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN);
+
+		return KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN;
+	}
+
+	return 0;
+}
+
+/**
+ *
+ * @param buffer
+ * @return
+ */
+int kiss_nrc_response_fill_general_reject(uint8_t * buffer) {
+	if (buffer != 0x00) {
+		memcpy(buffer, kiss_nrc_general_reject, KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN);
 
 		return KISS_NRC_RESPONSE_COND_NOT_CORRECT_LN;
 	}

@@ -28,7 +28,7 @@
  * @param lparam date in binary coded decimal 0xYYYYMMDD
  * @param wparam time in binary coded decimal 0xHHMM
  */
-void routine_5254_start(uint32_t lparam, uint16_t wparam);
+uint8_t routine_5254_start(uint32_t lparam, uint16_t wparam);
 
 // this doesn't have stop function, because it is synchronous
 
