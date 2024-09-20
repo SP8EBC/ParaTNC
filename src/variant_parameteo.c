@@ -18,11 +18,11 @@ int variant_validate_is_within_ram(const void * address) {
 #ifdef STM32L471xx
 	uint32_t addr_value = (uint32_t)address;
 
-	if (addr_value > SRAM_BASE &&
+	if (addr_value >= SRAM_BASE &&
 		addr_value < SRAM_BASE + SRAM1_SIZE_MAX) {
 		return 1;
 	}
-	else if (addr_value > SRAM2_BASE &&
+	else if (addr_value >= SRAM2_BASE &&
 		addr_value < SRAM2_BASE + SRAM2_SIZE) {
 		return 1;
 	}
@@ -37,7 +37,7 @@ int variant_validate_is_within_ram(const void * address) {
 int variant_validate_is_within_sram2(const void * address) {
 	uint32_t addr_value = (uint32_t)address;
 
-	if (addr_value > SRAM2_BASE &&
+	if (addr_value >= SRAM2_BASE &&
 		addr_value < SRAM2_BASE + SRAM2_SIZE) {
 		return 1;
 	}
