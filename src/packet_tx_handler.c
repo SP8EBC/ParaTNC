@@ -314,8 +314,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 
 				packet_tx_multi_per_call_handler();
-
-				status_send_raw_values_modbus();
+//				#ifndef TATRY
+//				telemetry_send_status_raw_values_modbus();
+//				#else
+//
+//				#endif
 			}
 		}
 
@@ -370,6 +373,9 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_counter >= packet_tx_telemetry_interval) {
 
 		packet_tx_multi_per_call_handler();
+
+		// GET TEMPERATURE FOR TELEMETRY - HAS SIDE EFFECTS
+		wx_get_temperature_measurement(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu, &rte_wx_temperature_internal_valid);
 
 		// ASSEMBLY QUALITY FACTORS
 
@@ -480,6 +486,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
+#ifndef TATRY
 		if (config_mode->victron == 1) {
 			telemetry_send_values_pv(rx10m, digi10m, rte_pv_battery_current, rte_pv_battery_voltage, rte_pv_cell_voltage, dallas_qf, pressure_qf, humidity_qf, wind_qf);
 		}
@@ -537,6 +544,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 							telemetry_vbatt_low,
 							config_mode);
 #endif
+#else
+		telemetry_send_values_tatry();
+#endif
+
+		packet_tx_telemetry_counter = 0;
 
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
 
@@ -545,11 +557,14 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 
 #ifdef PARAMETEO
-		rte_main_trigger_gsm_telemetry_descriptions = 1;
-		status_send_powersave_registers();
+//		rte_main_trigger_gsm_telemetry_descriptions = 1;
+//		status_send_powersave_registers();
+		telemetry_send_nvm_status_tatry();
 #endif
 
 		packet_tx_multi_per_call_handler();
+
+#ifndef TATRY
 
 		if (config_mode->victron == 1) {
 			telemetry_send_chns_description_pv(config_basic);
@@ -559,13 +574,18 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				rte_main_reboot_req = 1;
 			}
 
+			//telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state);
 		}
 		else {
 			telemetry_send_chns_description(config_basic, config_mode);
 
 			packet_tx_multi_per_call_handler();
 
+			//telemetry_send_status();
 		}
+#else
+		telemetry_send_chns_description_tatry(config_basic);
+#endif
 
 		status_send();
 

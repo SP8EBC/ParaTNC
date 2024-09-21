@@ -8,7 +8,7 @@
 #ifndef SOFTWARE_VERSION_H_
 #define SOFTWARE_VERSION_H_
 
-#define SW_VER "EC01"
+#define SW_VER "ZT19"
 #define SW_DATE "20092024"
 #define SW_KISS_PROTO	"C"
 

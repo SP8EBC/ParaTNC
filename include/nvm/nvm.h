@@ -58,6 +58,7 @@ typedef struct __attribute__((packed)) nvm_measurement_t {
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+extern uint8_t * nvm_data_ptr;
 
 /**
  *

@@ -21,6 +21,9 @@
 
 int32_t test;
 
+//tary specific
+#include "io.h"
+
 typedef enum max31865_pool_state_t {
 	MAX_UNINITIALIZED,
 	MAX_IDLE,
@@ -327,6 +330,8 @@ void max31865_pool(void) {
 			// go back to idle in case of any error
 			max31865_current_state = MAX_IDLE;
 
+			io___cntrl_vbat_s_enable();
+
 			max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 
 			break;
@@ -398,6 +403,9 @@ void max31865_pool(void) {
 				max31865_shutdown_ticks = 0;
 			}
 
+			// tatry specific
+			io___cntrl_vbat_s_disable();
+
 			break;
 		case MAX_SHUTDOWN:
 			// MAX31865 is powered up and initialized but PT bias is disabled
@@ -405,6 +413,8 @@ void max31865_pool(void) {
 			if (max31865_shutdown_ticks++ > MAX31865_INTERVAL) {
 
 				max31865_current_state = MAX_IDLE;	//
+
+				io___cntrl_vbat_s_enable();
 
 				max31865_shutdown_ticks = 0;
 			}
@@ -491,4 +501,10 @@ int32_t max31865_get_result(uint32_t RTDnominal) {
 
 max31865_qf_t max31865_get_qf(void) {
 	return max31865_quality_factor;
+}
+
+void max31865_set_state_after_wkup(void) {
+	max31865_current_state = MAX_SHUTDOWN;
+
+	max31865_shutdown_ticks = MAX31865_INTERVAL - 1;
 }

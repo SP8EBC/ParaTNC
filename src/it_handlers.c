@@ -110,6 +110,7 @@ void RTC_WKUP_IRQHandler(void) {
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
 
 	EXTI->PR1 |= EXTI_PR1_PIF20;
+
 }
 
 void SPI2_IRQHandler(void) {

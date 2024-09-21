@@ -43,6 +43,8 @@ extern uint8_t rte_main_trigger_radio_event_log;
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 
+extern uint8_t rte_main_woken_up_for_telemetry;
+
 extern uint8_t rte_main_reboot_req;
 
 extern uint8_t rte_main_reboot_scheduled_diag;

@@ -322,6 +322,9 @@ static void pwr_save_after_stop2_rtc_wakeup_it(void) {
 		pwr_save_exit_after_last_stop2_cycle();
 
 		rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
+		rte_main_woken_up_for_telemetry = 1;
+
+		max31865_set_state_after_wkup();	// TODO: tatry variant
 	}
 
 }
@@ -334,9 +337,7 @@ int pwr_save_switch_mode_to_c0(void) {
 	//backup_reg_is_in_powersave_state
 
 	// turn ON +5V_S
-	io___cntrl_vbat_s_enable();
-
-	io___cntrl_vbat_m_enable();
+	//io___cntrl_vbat_s_enable();	//TODO: Tatry specific!!!
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -382,9 +383,7 @@ int pwr_save_switch_mode_to_c1(void) {
 	srl_close(main_gsm_srl_ctx_ptr);
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io___cntrl_vbat_s_enable();
-
-	io___cntrl_vbat_m_enable();
+	//io___cntrl_vbat_s_enable();	// TODO: tatry specific!!!
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable();
@@ -514,9 +513,7 @@ int pwr_save_switch_mode_to_m4(void) {
 	srl_close(main_gsm_srl_ctx_ptr);
 
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
-	io___cntrl_vbat_s_enable();
-
-	io___cntrl_vbat_m_enable();
+	//io___cntrl_vbat_s_enable();	// TODO: tatry specific!!
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable();
@@ -998,7 +995,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_NONE : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if ((config->wx & WX_ENABLED) == 1) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {
@@ -1047,7 +1044,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_NORMAL : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if ((config->wx & WX_ENABLED) == 1) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {
@@ -1129,7 +1126,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_AGGRESV : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if ((config->wx & WX_ENABLED) == 1) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {
