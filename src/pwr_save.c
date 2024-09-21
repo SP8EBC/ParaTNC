@@ -734,6 +734,17 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	///////////
 	if (system_is_rtc_ok() == 0) {
+		event_log_sync(
+		  EVENT_ERROR,
+		  EVENT_SRC_PWR_SAVE,
+		  EVENTS_PWR_SAVE_ERROR_RTC_WHILE_GOING_L7_SLEEP,
+		  0,
+		  0,
+		  sleep_time,
+		  rte_main_going_sleep_count,
+		  0,
+		  0);
+
 		pwr_save_switch_mode_to_i5();
 
 		return;
@@ -745,6 +756,17 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 
 	// calculate amount of STOP2 cycles
 	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
+
+	event_log_sync(
+	  EVENT_INFO_CYCLIC,
+	  EVENT_SRC_PWR_SAVE,
+	  EVENTS_PWR_SAVE_CYCLIC_GOING_L7_SLEEP,
+	  pwr_save_number_of_sleep_cycles,
+	  (uint8_t)system_is_rtc_ok(),
+	  sleep_time,
+	  rte_main_going_sleep_count,
+	  0,
+	  0);
 
 	backup_reg_set_monitor(26);
 

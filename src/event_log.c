@@ -50,6 +50,8 @@ static int8_t event_log_fifo_current_depth = 0;
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
+const char * event_log_str_nostring			="__MISSING\0";
+
 /**
  * Strings for different event sources
  */
@@ -267,7 +269,7 @@ const char * event_log_source_to_str(event_log_source_t src) {
 		case EVENT_SRC_DRV_I2C:				return event_log_str_src_drv_i2c; break;
 		case EVENT_SRC_DRV_UART:			return event_log_str_src_drv_uart; break;
 		case EVENT_SRC_DRV_SPI:				return event_log_str_src_drv_spi; break;
-		default: return 0;
+		default: return event_log_str_nostring;
 	}
 }
 
@@ -279,7 +281,7 @@ const char * event_log_source_to_str(event_log_source_t src) {
  */
 const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 {
-	const char * out = 0x0;
+	const char * out = event_log_str_nostring;
 
 	switch (source) {
 		case EVENT_SRC_MAIN: {
@@ -377,7 +379,7 @@ const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 		case EVENT_SRC_DRV_I2C:				 break;
 		case EVENT_SRC_DRV_UART:			 break;
 		case EVENT_SRC_DRV_SPI:				 break;
-		default: out = 0x0;
+		default: out = event_log_str_nostring;
 	}
 
 	return out;

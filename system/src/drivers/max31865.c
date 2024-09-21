@@ -10,9 +10,12 @@
 #include "drivers/max31865.h"
 #include <math.h>
 
+#include "./event_log.h"
+#include "./events_definitions/events_drv_spi.h"
+
 #define DATA_RACE_WORKAROUND
 
-#define REFERENCE_RESISTOR 4300.0f
+//#define REFERENCE_RESISTOR 4300.0f
 
 #define RTD_A 3.9083e-3
 #define RTD_B -5.775e-7
@@ -327,6 +330,7 @@ void max31865_pool(void) {
 
 			break;
 		case MAX_ERROR:
+
 			// go back to idle in case of any error
 			max31865_current_state = MAX_IDLE;
 
@@ -348,6 +352,18 @@ void max31865_pool(void) {
 
 			// check a SPI status
 			if (spi_get_rx_state() != SPI_RX_DONE) {
+
+				event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_DRV_SPI,
+				  EVENTS_DRV_SPI_MAX31865_ERROR_SPI_WHILE_REG_REQUEST,
+				  max31865_merasurements_error_counter,
+				  max31865_current_config_register,
+				  max31865_current_fault_status,
+				  max31865_measurements_counter,
+				  0,
+				  0);
+
 				// if SPI is not done
 				max31865_current_state = MAX_ERROR;
 			}
@@ -392,6 +408,17 @@ void max31865_pool(void) {
 					max31865_current_state = MAX_ERROR;
 
 					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
+
+					event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_DRV_SPI,
+					  EVENTS_DRV_SPI_MAX31865_ERROR_INCONSIST_RESULTS,
+					  max31865_merasurements_error_counter,
+					  max31865_current_config_register,
+					  *result_ptr,
+					  *(result_ptr + 1),
+					  *(result_ptr + 2),
+					  *(result_ptr + 3));
 				}
 
 				// disable VBIAS to reduce power consumption

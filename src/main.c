@@ -1873,19 +1873,20 @@ int main(int argc, char* argv[]){
 			}
 #endif
 
-			if (main_config_data_mode->wx != 0) {
-				if (rte_wx_check_weather_measurements() == 0) {
-					backup_reg_increment_weather_measurements_check_reset();
-
-					NVIC_SystemReset();
-				}
-
-				if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
-					backup_reg_increment_dallas_degraded_reset();
-
-					rte_main_reboot_req = 1;
-				}
-			}
+//		TODO: TATRY SPECIFIC!!!!!
+//			if (main_config_data_mode->wx != 0) {
+//				if (rte_wx_check_weather_measurements() == 0) {
+//					backup_reg_increment_weather_measurements_check_reset();
+//
+//					NVIC_SystemReset();
+//				}
+//
+//				if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
+//					backup_reg_increment_dallas_degraded_reset();
+//
+//					rte_main_reboot_req = 1;
+//				}
+//			}
 
 			/**
 			 * ONE HOUR POOLING
