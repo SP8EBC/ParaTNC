@@ -2056,18 +2056,6 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PARAMETEO
-			// get current battery voltage. for non parameteo this will return 0
-			main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
-
-			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
-				// get average battery voltage
-				rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
-			}
-
-		    // meas average will return 0 if internal buffer isn't filled completely
-		    if (rte_main_average_battery_voltage == 0) {
-		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
-		    }
 
 			max31865_pool();
 
@@ -2129,6 +2117,20 @@ int main(int argc, char* argv[]){
 		 * TEN SECOND POOLING
 		 */
 		if (main_ten_second_pool_timer < 10) {
+
+			// get current battery voltage. for non parameteo this will return 0
+			//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
+			rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
+			rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+
+//			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
+//				// get average battery voltage
+//			}
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
 
 			backup_reg_set_monitor(8);
 

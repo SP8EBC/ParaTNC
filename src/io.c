@@ -370,7 +370,7 @@ void io_vbat_meas_fill(uint16_t * last, uint16_t * average) {
 	uint16_t average_resut = 0;
 
 	for (int i = 0; i < VBATT_HISTORY_LN; i++) {
-		tempo_result = io_vbat_meas_get_synchro();
+		tempo_result = io_vbat_meas_get_synchro_old();
 
 		average_resut = io_vbat_meas_average(tempo_result);
 	}
