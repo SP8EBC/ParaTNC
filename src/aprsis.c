@@ -21,6 +21,9 @@
 
 #include "gsm_comm_state_handler.h"
 
+#include "./event_log.h"
+#include "./events_definitions/events_aprsis.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -129,7 +132,7 @@ static uint8_t aprsis_successfull_conn_counter = 0;
  * some reason etc. Of course there is no guarantee that a reset in such
  * case will help, but there is nothing better to do.
  */
-static uint8_t aprsis_unsucessfull_conn_counter = 0;
+uint8_t aprsis_unsucessfull_conn_counter = 0;
 
 /**
  * Set to one if the GSM modem shall be immediately reset when APRS-IS communication
@@ -369,6 +372,15 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 	}
 
 	if (gsm_comm_state_get_current() != GSM_COMM_APRSIS) {
+	    event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_APRSIS,
+				  EVENTS_APRSIS_WARN_WRONG_STATE,
+				  gsm_comm_state_get_current(),
+				  0,
+				  0, 0,
+				  0, 0);
+
 		return APRSIS_WRONG_COMM_STATE;
 	}
 
@@ -465,6 +477,17 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 						}
 						else {
+						    event_log_sync(
+									  EVENT_WARNING,
+									  EVENT_SRC_APRSIS,
+									  EVENTS_APRSIS_WARN_AUTH_FAILED,
+									  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+									  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+									  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+									  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+									  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+									  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
+
 							// if authoruzation wasn't successfull drop a connection
 							disconnection_result = aprsis_disconnect();
 
@@ -472,8 +495,31 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							aprsis_unsucessfull_conn_counter++;
 						}
 					}
+					else {
+					    event_log_sync(
+								  EVENT_WARNING,
+								  EVENT_SRC_APRSIS,
+								  EVENTS_APRSIS_WARN_TIMEOUT_WAITING_AUTH,
+								  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+								  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+								  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+								  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+								  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+								  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
+					}
 				}
 				else {
+				    event_log_sync(
+							  EVENT_WARNING,
+							  EVENT_SRC_APRSIS,
+							  EVENTS_APRSIS_WARN_NO_HELLO_MESSAGE,
+							  *(receive_buff + offset),
+							  *(receive_buff + offset + 1),
+							  *(receive_buff + offset + 2),
+							  *(receive_buff + offset + 3),
+							  *(receive_buff + offset + 4),
+							  *(receive_buff + offset + 5));
+
 					disconnection_result = aprsis_disconnect();
 
 					// increase failure counter
@@ -481,11 +527,34 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 				}
 			}
 			else {
+			    event_log_sync(
+						  EVENT_WARNING,
+						  EVENT_SRC_APRSIS,
+						  EVENTS_APRSIS_WARN_TIMEOUT_WAITING_HELLO_MSG,
+						  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+						  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+						  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+						  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+						  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+						  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
+
 				disconnection_result = aprsis_disconnect();
 
 				// increase failure counter
 				aprsis_unsucessfull_conn_counter++;
 			}
+		}
+		else {
+		    event_log_sync(
+					  EVENT_WARNING,
+					  EVENT_SRC_APRSIS,
+					  EVENTS_APRSIS_WARN_CONNECT_FAILED,
+					  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+					  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+					  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
+					  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+					  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
+					  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
 		}
 
 		// if a connection has been ordered to close, but there were severe errors during that
@@ -547,10 +616,32 @@ void aprsis_check_alive(void) {
 
 	if (aprsis_successfull_conn_counter > 0) {
 		if (timestamp > (aprsis_last_keepalive_ts + APRSIS_TIMEOUT_MS)) {
+		    event_log_sync(
+					  EVENT_WARNING,
+					  EVENT_SRC_APRSIS,
+					  EVENTS_APRSIS_WARN_DEAD_KEEPALIVE,
+					  aprsis_successfull_conn_counter,
+					  0,
+					  0,
+					  0,
+					  timestamp,
+					  aprsis_last_keepalive_ts);
+
 			dead =  1;
 		}
 
 		if (timestamp > (aprsis_last_packet_transmit_ts + APRSIS_TIMEOUT_MS * 3 )) {
+		    event_log_sync(
+					  EVENT_WARNING,
+					  EVENT_SRC_APRSIS,
+					  EVENTS_APRSIS_WARN_DEAD_TRANSMIT,
+					  aprsis_successfull_conn_counter,
+					  0,
+					  0,
+					  0,
+					  timestamp,
+					  aprsis_last_packet_transmit_ts);
+
 			dead = 1;
 		}
 	}
@@ -600,10 +691,33 @@ int aprsis_check_connection_attempt_alive(void) {
 	const uint32_t timestamp = main_get_master_time();
 
 	if (timestamp > (aprsis_last_keepalive_long_ts + APRSIS_TIMEOUT_MS * 6)) {
+
+		  event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_APRSIS,
+					  EVENTS_APRSIS_ERROR_IM_NOT_OK_LAST_KEEPALIVE,
+					  aprsis_logged,
+					  aprsis_connected,
+					  aprsis_successfull_conn_counter,
+					  aprsis_unsucessfull_conn_counter,
+					  aprsis_last_keepalive_ts,
+					  aprsis_last_keepalive_long_ts);
+
 		out =  1;
 	}
 
 	if (timestamp > (aprsis_last_packet_transmit_long_ts + APRSIS_TIMEOUT_MS * 6 )) {
+		  event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_APRSIS,
+					  EVENTS_APRSIS_ERROR_IM_NOT_OK_LAST_TRANSMIT_LONG,
+					  aprsis_logged,
+					  aprsis_connected,
+					  aprsis_successfull_conn_counter,
+					  aprsis_unsucessfull_conn_counter,
+					  aprsis_last_keepalive_ts,
+					  aprsis_last_keepalive_long_ts);
+
 		out = 1;
 	}
 

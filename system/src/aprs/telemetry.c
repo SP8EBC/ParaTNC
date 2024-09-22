@@ -447,6 +447,10 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		telemetry_anemometer_degradated = '1';
 		telemetry_anemometer_navble = '1';
 	}
+	else {
+		telemetry_anemometer_degradated = '0';
+		telemetry_anemometer_navble = '0';
+	}
 
 	// scale the physical temperature and limit upper and lower boundary if
 	// it is required

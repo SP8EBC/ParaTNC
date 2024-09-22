@@ -363,23 +363,32 @@ void max31865_pool(void) {
 
 					max31865_raw_result = max31865_raw_result >> 1;
 
-//					rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
-					if (max31865_rdt_sensor_type == 0) {
-						max31865_physical_result = max31865_get_result(1000);
+					if (max31865_raw_result < 0x7FFF) {
+						rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
+						if (max31865_rdt_sensor_type == 0) {
+							max31865_physical_result = max31865_get_result(1000);
+						}
+						else {
+							max31865_physical_result = max31865_get_result(100);
+						}
+
+						int_average(max31865_physical_result, &max31865_average);
+
+						rte_wx_temperature_average_pt = (int16_t)int_get_min(&max31865_average);
+
+						max31865_current_fault_status = *(result_ptr + 7);
+
+						max31865_measurements_counter++;
+
+						max31865_quality_factor = MAX_QF_FULL;
 					}
 					else {
-						max31865_physical_result = max31865_get_result(100);
+						max31865_merasurements_error_counter++;
+
+						max31865_current_state = MAX_ERROR;
+
+						max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 					}
-
-					int_average(max31865_physical_result, &max31865_average);
-
-					rte_wx_temperature_average_pt = (int16_t)int_get_min(&max31865_average);
-
-					max31865_current_fault_status = *(result_ptr + 7);
-
-					max31865_measurements_counter++;
-
-					max31865_quality_factor = MAX_QF_FULL;
 				}
 				else {
 					max31865_merasurements_error_counter++;

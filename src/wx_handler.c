@@ -322,29 +322,31 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 
 	}
 
-	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind != WX_SOURCE_RTU) {
-		if (modbus_retval == MODBUS_RET_OK) {
-			rte_wx_wind_qf = AN_WIND_QF_FULL;
-		}
-		else if (modbus_retval == MODBUS_RET_DEGRADED) {
-			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
-		}
-		else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
-			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-		}
-		else {
-			if ((config_mode->wx & WX_INTERNAL_AS_BACKUP) != 0)
-				rte_wx_wind_qf = analog_anemometer_get_qf();
-			else
-				rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-		}
-	}
-	else if (config_sources->wind == WX_SOURCE_INTERNAL) {
-		rte_wx_wind_qf = analog_anemometer_get_qf();
-	}
-	else {
-		rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
-	}
+	rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+
+//	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind == WX_SOURCE_RTU) {
+//		if (modbus_retval == MODBUS_RET_OK) {
+//			rte_wx_wind_qf = AN_WIND_QF_FULL;
+//		}
+//		else if (modbus_retval == MODBUS_RET_DEGRADED) {
+//			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
+//		}
+//		else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
+//			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+//		}
+//		else {
+//			if ((config_mode->wx & WX_INTERNAL_AS_BACKUP) != 0)
+//				rte_wx_wind_qf = analog_anemometer_get_qf();
+//			else
+//				rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+//		}
+//	}
+//	else if (config_sources->wind == WX_SOURCE_INTERNAL) {
+//		rte_wx_wind_qf = analog_anemometer_get_qf();
+//	}
+//	else {
+//		rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
+//	}
 
 
 }

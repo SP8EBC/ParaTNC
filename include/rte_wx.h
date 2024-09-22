@@ -59,6 +59,11 @@ extern uint16_t rte_wx_average_windspeed;
 extern uint16_t rte_wx_max_windspeed;
 extern int16_t rte_wx_average_winddirection;
 
+extern uint8_t rte_wx_analog_anemometer_counter_timer_has_been_fired;
+extern uint8_t rte_wx_analog_anemometer_counter_slew_limit_fired;
+extern uint8_t rte_wx_analog_anemometer_counter_deboucing_fired;
+extern uint8_t rte_wx_analog_anemometer_counter_direction_doesnt_work;
+
 inline uint16_t rte_wx_get_minimum_windspeed(void) {
 	uint16_t out = 0xFFFF;
 

@@ -1448,11 +1448,16 @@ int main(int argc, char* argv[]){
 					   main_callsign_with_ssid);
 	   }
 
-	   // extract events from NVM to then sent them into the API
-	   main_events_extracted_for_api_stat =
-			nvm_event_get_last_events_in_exposed (main_exposed_events,
-												  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2,
-												  EVENT_INFO_CYCLIC);
+	   if (backup_reg_get_inhibit_log_report_send_api() == 0) {
+		   // extract events from NVM to then sent them into the API
+		   main_events_extracted_for_api_stat =
+				nvm_event_get_last_events_in_exposed (main_exposed_events,
+													  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2,
+													  EVENT_INFO_CYCLIC);
+	   }
+	   else {
+		  backup_reg_reset_inhibit_log_report_send_api();
+	   }
    }
 
    if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
@@ -1875,6 +1880,8 @@ int main(int argc, char* argv[]){
 
 			if (main_config_data_mode->wx != 0) {
 				if (rte_wx_check_weather_measurements() == 0) {
+					backup_reg_set_inhibit_log_report_send_api();
+
 					backup_reg_increment_weather_measurements_check_reset();
 
 					NVIC_SystemReset();
@@ -2260,7 +2267,7 @@ uint16_t main_get_rtc_datetime(uint16_t param) {
 	switch (param) {
 		case MAIN_GET_RTC_YEAR:		out = date.Year; break;
 		case MAIN_GET_RTC_MONTH:	out = date.Month; break;
-		case MAIN_GET_RTC_DAY:		out = date.WeekDay; break;
+		case MAIN_GET_RTC_DAY:		out = date.Date; break;
 		case MAIN_GET_RTC_HOUR:		out = time.Hours; break;
 		case MAIN_GET_RTC_MIN:		out = time.Minutes; break;
 		case MAIN_GET_RTC_SEC:		out = time.Seconds; break;
