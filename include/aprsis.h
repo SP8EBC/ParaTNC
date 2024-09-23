@@ -27,6 +27,10 @@ typedef enum aprsis_return {
 
 extern uint8_t aprsis_connected;
 
+extern uint8_t aprsis_logged;
+
+extern uint8_t aprsis_unsucessfull_conn_counter;
+
 /**
  * Initialize APRS-IS client
  * @param context

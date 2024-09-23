@@ -32,6 +32,9 @@
 #define BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H 	1u
 #define BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK 		(0xFFu << 2)
 
+#define BACKUP_REG_PERSISTENT_APRSIS_LOG_REPORT			(1 << 0)
+#define BACKUP_REG_PERSISTENT_RADIO_LOG_REPORT			(1 << 1)
+#define BACKUP_REG_PERSISTENT_INHIBIT_API_LOG_REPORT	(1 << 2)
 
 // backup registers (ParaTNC)
 // 0 ->
@@ -765,7 +768,7 @@ void backup_reg_set_last_restart_date(void) {
 void backup_reg_set_event_log_report_sent_aprsis(void) {
 	backup_reg_unclock();
 
-	REGISTER_PERSISTENT_STATUS |= (1 << 0);
+	REGISTER_PERSISTENT_STATUS |= BACKUP_REG_PERSISTENT_APRSIS_LOG_REPORT;
 
 	backup_reg_lock();
 
@@ -774,14 +777,14 @@ void backup_reg_set_event_log_report_sent_aprsis(void) {
 void backup_reg_reset_event_log_report_sent_aprsis(void) {
 	backup_reg_unclock();
 
-	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ (1 << 0));
+	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ BACKUP_REG_PERSISTENT_APRSIS_LOG_REPORT);
 
 	backup_reg_lock();
 }
 
 uint8_t backup_reg_get_event_log_report_sent_aprsis(void) {
 
-	if ((REGISTER_PERSISTENT_STATUS & (1 << 0)) != 0) {
+	if ((REGISTER_PERSISTENT_STATUS & BACKUP_REG_PERSISTENT_APRSIS_LOG_REPORT) != 0) {
 		return 1;
 	}
 	else {
@@ -793,7 +796,7 @@ uint8_t backup_reg_get_event_log_report_sent_aprsis(void) {
 void backup_reg_set_event_log_report_sent_radio(void) {
 	backup_reg_unclock();
 
-	REGISTER_PERSISTENT_STATUS |= (1 << 1);
+	REGISTER_PERSISTENT_STATUS |= BACKUP_REG_PERSISTENT_RADIO_LOG_REPORT;
 
 	backup_reg_lock();
 }
@@ -801,16 +804,42 @@ void backup_reg_set_event_log_report_sent_radio(void) {
 void backup_reg_reset_event_log_report_sent_radio(void) {
 	backup_reg_unclock();
 
-	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ (1 << 1));
+	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ BACKUP_REG_PERSISTENT_RADIO_LOG_REPORT);
 
 	backup_reg_lock();
 }
 
 uint8_t backup_reg_get_event_log_report_sent_radio(void) {
-	if ((REGISTER_PERSISTENT_STATUS & (1 << 1)) != 0) {
+	if ((REGISTER_PERSISTENT_STATUS & BACKUP_REG_PERSISTENT_RADIO_LOG_REPORT) != 0) {
 		return 1;
 	}
 	else {
 		return 0;
 	}
 }
+
+void backup_reg_set_inhibit_log_report_send_api(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS |= BACKUP_REG_PERSISTENT_RADIO_LOG_REPORT;
+
+	backup_reg_lock();
+}
+
+void backup_reg_reset_inhibit_log_report_send_api(void) {
+	backup_reg_unclock();
+
+	REGISTER_PERSISTENT_STATUS &= (0xFFFFFFFF ^ BACKUP_REG_PERSISTENT_INHIBIT_API_LOG_REPORT);
+
+	backup_reg_lock();
+}
+
+uint8_t backup_reg_get_inhibit_log_report_send_api(void) {
+	if ((REGISTER_PERSISTENT_STATUS & BACKUP_REG_PERSISTENT_INHIBIT_API_LOG_REPORT) != 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+

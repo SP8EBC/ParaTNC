@@ -368,6 +368,8 @@ void analog_anemometer_deinit(void) {
  */
 void analog_anemometer_timer_irq(void) {
 	analog_anemometer_timer_has_been_fired = 1;
+
+	rte_wx_analog_anemometer_counter_timer_has_been_fired++;
 }
 
 /**
@@ -428,6 +430,7 @@ void analog_anemometer_dma_irq(void) {
 		if (analog_anemometer_time_between_pulses[i] < MINUM_PULSE_LN) {
 			analog_anemometer_time_between_pulses[i] = 0;
 			analog_anemometer_deboucing_fired = 1;
+			rte_wx_analog_anemometer_counter_deboucing_fired++;
 		}
 	}
 
@@ -474,11 +477,13 @@ void analog_anemometer_dma_irq(void) {
 
 			analog_anemometer_time_between_pulses[i] = previous_pulse_ln + ((uint32_t)slew_rate_limit);
 			analog_anemometer_slew_limit_fired = 1;
+			rte_wx_analog_anemometer_counter_slew_limit_fired++;
 		}
 		// if previous inter-pulse time is much longer than current
 		else if (diff < -slew_rate_limit){
 			analog_anemometer_time_between_pulses[i - 1] = pulse_ln + ((uint32_t)slew_rate_limit);
 			analog_anemometer_slew_limit_fired = 1;
+			rte_wx_analog_anemometer_counter_slew_limit_fired++;
 		}
 		// if this pulse time is ok do nothing.
 		else {
@@ -639,6 +644,8 @@ int16_t analog_anemometer_direction_handler(void) {
 		LL_TIM_EnableCounter(TIM3);
 
 		analog_anemometer_direction_doesnt_work = 1;
+
+		rte_wx_analog_anemometer_counter_direction_doesnt_work++;
 
 		return rte_wx_winddirection_last;
 	}

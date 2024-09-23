@@ -118,5 +118,9 @@ void backup_reg_set_event_log_report_sent_radio(void);
 void backup_reg_reset_event_log_report_sent_radio(void);
 uint8_t backup_reg_get_event_log_report_sent_radio(void);
 
+void backup_reg_set_inhibit_log_report_send_api(void);
+void backup_reg_reset_inhibit_log_report_send_api(void);
+uint8_t backup_reg_get_inhibit_log_report_send_api(void);
+
 
 #endif /* BACKUP_REGISTERS_H_ */

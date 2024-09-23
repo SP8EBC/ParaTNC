@@ -291,7 +291,7 @@ static uint8_t main_kiss_response_message[32];
 static io_vbat_state_t main_battery_measurement_res;
 
 //!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
-static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2];
+static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
 #endif
 
 char main_symbol_f = '/';
@@ -1448,11 +1448,16 @@ int main(int argc, char* argv[]){
 					   main_callsign_with_ssid);
 	   }
 
-	   // extract events from NVM to then sent them into the API
-	   main_events_extracted_for_api_stat =
-			nvm_event_get_last_events_in_exposed (main_exposed_events,
-												  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2,
-												  EVENT_INFO_CYCLIC);
+	   if (backup_reg_get_inhibit_log_report_send_api() == 0) {
+		   // extract events from NVM to then sent them into the API
+		   main_events_extracted_for_api_stat =
+				nvm_event_get_last_events_in_exposed (main_exposed_events,
+													  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3,
+													  EVENT_INFO_CYCLIC);
+	   }
+	   else {
+		  backup_reg_reset_inhibit_log_report_send_api();
+	   }
    }
 
    if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
@@ -1888,6 +1893,7 @@ int main(int argc, char* argv[]){
 //				}
 //			}
 
+
 			/**
 			 * ONE HOUR POOLING
 			 */
@@ -2050,18 +2056,6 @@ int main(int argc, char* argv[]){
 #endif
 
 #ifdef PARAMETEO
-			// get current battery voltage. for non parameteo this will return 0
-			main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
-
-			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
-				// get average battery voltage
-				rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
-			}
-
-		    // meas average will return 0 if internal buffer isn't filled completely
-		    if (rte_main_average_battery_voltage == 0) {
-		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
-		    }
 
 			max31865_pool();
 
@@ -2123,6 +2117,20 @@ int main(int argc, char* argv[]){
 		 * TEN SECOND POOLING
 		 */
 		if (main_ten_second_pool_timer < 10) {
+
+			// get current battery voltage. for non parameteo this will return 0
+			//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
+			rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
+			rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
+
+//			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
+//				// get average battery voltage
+//			}
+
+		    // meas average will return 0 if internal buffer isn't filled completely
+		    if (rte_main_average_battery_voltage == 0) {
+		    	rte_main_average_battery_voltage = rte_main_battery_voltage;
+		    }
 
 			backup_reg_set_monitor(8);
 
@@ -2261,7 +2269,7 @@ uint16_t main_get_rtc_datetime(uint16_t param) {
 	switch (param) {
 		case MAIN_GET_RTC_YEAR:		out = date.Year; break;
 		case MAIN_GET_RTC_MONTH:	out = date.Month; break;
-		case MAIN_GET_RTC_DAY:		out = date.WeekDay; break;
+		case MAIN_GET_RTC_DAY:		out = date.Date; break;
 		case MAIN_GET_RTC_HOUR:		out = time.Hours; break;
 		case MAIN_GET_RTC_MIN:		out = time.Minutes; break;
 		case MAIN_GET_RTC_SEC:		out = time.Seconds; break;

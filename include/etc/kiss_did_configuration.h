@@ -24,6 +24,7 @@
 #include "rte_wx.h"
 #include "main_master_time.h"
 #include "main.h"
+#include "aprsis.h"
 #include "gsm/sim800c.h"
 #include "packet_tx_handler.h"
 #include <stored_configuration_nvm/config_data_externs.h>
@@ -61,6 +62,8 @@ extern char did_dummy_data;
 		ENTRY(0x2006U, rte_wx_winddirection[0], rte_wx_winddirection[1], rte_wx_winddirection[2])	\
 		ENTRY(0x2007U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2008U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x2009U, rte_wx_analog_anemometer_counter_timer_has_been_fired, rte_wx_analog_anemometer_counter_slew_limit_fired, rte_wx_analog_anemometer_counter_direction_doesnt_work)	\
+		ENTRY(0x2100U, aprsis_logged, aprsis_connected, aprsis_unsucessfull_conn_counter)	\
 		ENTRY(0x2200U, packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_telemetry_counter)	\
 		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\

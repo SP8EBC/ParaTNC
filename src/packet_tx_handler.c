@@ -471,7 +471,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		// wind quality factor
 		if (rte_wx_wind_qf == AN_WIND_QF_UNKNOWN) {
-			;
+			wind_qf = WIND_QF_FULL;
 		}
 		else {
 			switch (rte_wx_wind_qf) {
