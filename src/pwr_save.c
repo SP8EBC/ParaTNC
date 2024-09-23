@@ -103,12 +103,12 @@ static void pwr_save_presleep(uint16_t current, uint16_t average) {
 			   EVENT_WARNING,
 			   EVENT_SRC_PWR_SAVE,
 			   EVENTS_PWR_SAVE_BATT_LOW_GOING_SLEEP,
-			   (uint8_t)system_is_rtc_ok(),
-			   0,
+			   main_get_rtc_datetime(MAIN_GET_RTC_DAY),
+			   main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
+			   main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
+			   main_get_rtc_datetime(MAIN_GET_RTC_MIN),
 			   current,
-			   average,
-			   0,
-			   0);
+			   average);
 }
 #endif
 
@@ -909,11 +909,19 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		vbatt_average = 0xFFFFu;
 	}
 
+	// check if battery voltage measurement is done and senseful
+	if (vbatt_current < MINIMUM_SENSEFUL_VBATT_VOLTAGE) {
+		// inhibit both cutoff and aggresive powersave if vbatt measurement is either not
+		// done at all or scaling factor are really screwed
+		vbatt_current = 0xFFFFu;
+	}
+
 	#ifdef INHIBIT_CUTOFF
 	vbatt_average = 0xFFFFu;		// TODO:: THis shall not be uncommented on production!!!
+	vbatt_current = 0xFFFFu;
 	#endif
 
-	if (vbatt_average > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
+	if (vbatt_current > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
 
 		backup_reg_set_monitor(23);
@@ -924,10 +932,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
-
-#ifdef PWR_SAVE_PRESLEEP_CALLBACK
-			PWR_SAVE_PRESLEEP_CALLBACK(vbatt_current, vbatt_average);
-#endif
 		}
 		// check if battery voltage is below low voltage level
 		else if (vbatt_average <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {
@@ -950,6 +954,10 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
 		backup_reg_set_monitor(19);
+
+#ifdef PWR_SAVE_PRESLEEP_CALLBACK
+		PWR_SAVE_PRESLEEP_CALLBACK(vbatt_current, vbatt_average);
+#endif
 
 		// clear all previous powersave indication bits as we want to go sleep being already in L7 state
 		pwr_save_clear_powersave_idication_bits();

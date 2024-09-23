@@ -21,7 +21,7 @@
  * This is the restore voltage (averaged) a battery must be charged to
  * for ParaMETEO to restore it's normal operation
  */
-#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1200u		// 12.0V
+#define PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF 	1220u		// 12.2V
 
 /**
  * This is voltage above which controller will switch to PWSAVE_AGGRESV

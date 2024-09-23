@@ -291,7 +291,7 @@ static uint8_t main_kiss_response_message[32];
 static io_vbat_state_t main_battery_measurement_res;
 
 //!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
-static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2];
+static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
 #endif
 
 char main_symbol_f = '/';
@@ -1452,7 +1452,7 @@ int main(int argc, char* argv[]){
 		   // extract events from NVM to then sent them into the API
 		   main_events_extracted_for_api_stat =
 				nvm_event_get_last_events_in_exposed (main_exposed_events,
-													  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 2,
+													  MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3,
 													  EVENT_INFO_CYCLIC);
 	   }
 	   else {
