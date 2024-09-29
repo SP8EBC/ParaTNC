@@ -45,7 +45,7 @@ void AD_Start() {
 // 	max_value = 0;
 
 	//Timer3 ENABLE
-	TIM2->CR1 |= TIM_CR1_CEN;
+	//TIM2->CR1 |= TIM_CR1_CEN;
 
 }
 
@@ -55,7 +55,7 @@ void AD_Stop() {
 /*********************************************************************************************************************/
 
 	//Timer3 DISABLE
-	TIM2->CR1 &= ~TIM_CR1_CEN;
+	//TIM2->CR1 &= ~TIM_CR1_CEN;
 
 // 	AD_Reset();
 

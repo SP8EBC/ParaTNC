@@ -656,7 +656,7 @@ void io_vbat_meas_enable(void) {
 	ADC2->CR |= ADC_CR_ADVREGEN;
 
 	// wait for voltage regulator to start
-	for (; stupid_delay < 0x1FFFF; stupid_delay++);
+	for (; stupid_delay < 0x3FFFF; stupid_delay++);
 
 	// start the calibration
 	ADC2->CR |= ADC_CR_ADCAL;

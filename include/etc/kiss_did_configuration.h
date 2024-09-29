@@ -68,6 +68,7 @@ extern char did_dummy_data;
 		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF000U, config_running_pgm_counter, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0xF010U, 	ADC2->CALFACT, ADC2->CR, ADC2->ISR)	\
 		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)
 #endif
 

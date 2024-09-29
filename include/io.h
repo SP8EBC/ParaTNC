@@ -113,7 +113,7 @@ void io_pool_vbat_r(int16_t minutes_to_wx);
  * Keep this uncommented to configure ADC which monitor Vbatt to
  * continous mode, instead of single shot
  */
-//#define VBAT_MEAS_CONTINOUS
+#define VBAT_MEAS_CONTINOUS
 
 inline void io_5v_isol_sw_enable(void) {
 	// ParaMETEO - UC_CNTRL_VS
