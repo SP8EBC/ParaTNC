@@ -15,6 +15,8 @@
 //!< Set after everything was reinitialized from
 #define RTE_MAIN_WOKEN_UP_EXITED			4u
 
+#define RTE_MAIN_GO_TO_SLEEP				8u
+
 #define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
 
 extern message_t rte_main_received_message;

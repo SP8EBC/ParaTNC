@@ -117,6 +117,7 @@
 extern int8_t pwr_save_currently_cutoff;
 
 void pwr_save_init(config_data_powersave_mode_t mode);
+int pwr_save_check_stop2_cycles(void);
 int pwr_save_switch_mode_to_c0(void);
 int pwr_save_switch_mode_to_c1(void);
 void pwr_save_switch_mode_to_c2(void);
@@ -131,7 +132,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(
 											const config_data_basic_t * timers,
 											int16_t minutes_to_wx,
 											uint16_t vbatt_average,
-											uint16_t vbatt_current);		// this should be called from 10 seconds pooler
+											uint16_t vbatt_current,
+											uint8_t * continue_loop);		// this should be called from 10 seconds pooler
 
 int pwr_save_is_currently_cutoff(void);
 #endif
