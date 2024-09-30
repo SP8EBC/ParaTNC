@@ -183,36 +183,6 @@ static void pwr_save_enter_stop2(void) {
 }
 
 /**
- * Used after each of 30 seconds long STOP2 sleep, to check
- * how many sleeps the micro must be put in, to complete
- * L6/L7 powersave mode
- */
-static void pwr_save_check_stop2_cycles(void) {
-
-	while(1) {
-		// decrement stop2 cycles for current L7 or L6 powersave mode
-		pwr_save_number_of_sleep_cycles--;
-
-		// if there is time left to exit from depp sleep
-		if (pwr_save_number_of_sleep_cycles > 0) {
-			backup_reg_set_monitor(15);
-
-			// go back to sleep
-			// configure how long micro should sleep
-			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
-
-			pwr_save_enter_stop2();
-		}
-		else {
-			backup_reg_set_monitor(14);
-
-			// we are done sleeping so exit from this loop
-			break;
-		}
-	}
-}
-
-/**
  * This function has to be called after last 30 second long cycle of STOP2 sleep,
  * to bounce all frames transmission counters.
  */
@@ -325,6 +295,102 @@ static void pwr_save_after_stop2_rtc_wakeup_it(void) {
 	}
 
 }
+
+/**
+ * This function initializes everything related to power saving features
+ * including programming Flash memory option bytes
+ */
+void pwr_save_init(config_data_powersave_mode_t mode) {
+
+	// make a pointer to option byte
+	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
+
+	// content of option byte read from the flash memory
+	uint32_t option_byte_content = *option_byte;
+
+	// definition of bitmask
+	#define IWDG_STBY_STOP (0x3 << 17)
+
+	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
+	// at 0x1FFF7800
+	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
+
+		// unlock write/erase operations on flash memory
+		FLASH->KEYR = 0x45670123;
+		FLASH->KEYR = 0xCDEF89AB;
+
+		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// unlock operations on option bytes
+		FLASH->OPTKEYR = 0x08192A3B;
+		FLASH->OPTKEYR = 0x4C5D6E7F;
+
+		// set the flash option register (in RAM!!)
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
+
+		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
+		FLASH->CR |= FLASH_CR_OPTSTRT;
+
+		// wait for option bytes to be updated
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// lock flash memory
+		FLASH-> CR |= FLASH_CR_LOCK;
+
+		// forcre reloading option bytes
+		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
+
+	}
+
+	// reset a status register
+	backup_reg_reset_all_powersave_states();
+	backup_reg_reset_inhibit_periodic_pwr_switch();
+
+	// switch power switch handler inhibition if it is needed
+	switch (mode) {
+		case PWSAVE_NONE:
+			break;
+		case PWSAVE_NORMAL:
+		case PWSAVE_AGGRESV:
+			backup_reg_inhibit_periodic_pwr_switch();
+			break;
+	}
+
+
+}
+
+/**
+ * Used after each of 30 seconds long STOP2 sleep, to check
+ * how many sleeps the micro must be put in, to complete
+ * L6/L7 powersave mode
+ */
+int pwr_save_check_stop2_cycles(void) {
+
+	while(1) {
+		// decrement stop2 cycles for current L7 or L6 powersave mode
+		pwr_save_number_of_sleep_cycles--;
+
+		// if there is time left to exit from depp sleep
+		if (pwr_save_number_of_sleep_cycles > 0) {
+			backup_reg_set_monitor(15);
+
+			// go back to sleep
+			// configure how long micro should sleep
+			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
+
+			pwr_save_enter_stop2();
+		}
+		else {
+			backup_reg_set_monitor(14);
+
+			// we are done sleeping so exit from this loop
+			break;
+		}
+	}
+}
+
 
 int pwr_save_switch_mode_to_c0(void) {
 
@@ -816,76 +882,12 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	backup_reg_set_monitor(25);
 }
 
-/**
- * This function initializes everything related to power saving features
- * including programming Flash memory option bytes
- */
-void pwr_save_init(config_data_powersave_mode_t mode) {
-
-	// make a pointer to option byte
-	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
-
-	// content of option byte read from the flash memory
-	uint32_t option_byte_content = *option_byte;
-
-	// definition of bitmask
-	#define IWDG_STBY_STOP (0x3 << 17)
-
-	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
-	// at 0x1FFF7800
-	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
-
-		// unlock write/erase operations on flash memory
-		FLASH->KEYR = 0x45670123;
-		FLASH->KEYR = 0xCDEF89AB;
-
-		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// unlock operations on option bytes
-		FLASH->OPTKEYR = 0x08192A3B;
-		FLASH->OPTKEYR = 0x4C5D6E7F;
-
-		// set the flash option register (in RAM!!)
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
-
-		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
-		FLASH->CR |= FLASH_CR_OPTSTRT;
-
-		// wait for option bytes to be updated
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// lock flash memory
-		FLASH-> CR |= FLASH_CR_LOCK;
-
-		// forcre reloading option bytes
-		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
-
-	}
-
-	// reset a status register
-	backup_reg_reset_all_powersave_states();
-	backup_reg_reset_inhibit_periodic_pwr_switch();
-
-	// switch power switch handler inhibition if it is needed
-	switch (mode) {
-		case PWSAVE_NONE:
-			break;
-		case PWSAVE_NORMAL:
-		case PWSAVE_AGGRESV:
-			backup_reg_inhibit_periodic_pwr_switch();
-			break;
-	}
-
-
-}
-
 config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t * config,
 														const config_data_basic_t * timers,
 														int16_t minutes_to_wx,
 														uint16_t vbatt_average,
-														uint16_t vbatt_current) {
+														uint16_t vbatt_current,
+														uint8_t * continue_loop) {
 	// this function should be called from 10 seconds pooler
 
 	int8_t reinit_sensors = 0;
