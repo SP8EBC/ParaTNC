@@ -133,10 +133,75 @@ static void pwr_save_clear_powersave_idication_bits() {
 }
 
 /**
+ * This function initializes everything related to power saving features
+ * including programming Flash memory option bytes
+ */
+void pwr_save_init(config_data_powersave_mode_t mode) {
+
+	// make a pointer to option byte
+	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
+
+	// content of option byte read from the flash memory
+	uint32_t option_byte_content = *option_byte;
+
+	// definition of bitmask
+	#define IWDG_STBY_STOP (0x3 << 17)
+
+	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
+	// at 0x1FFF7800
+	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
+
+		// unlock write/erase operations on flash memory
+		FLASH->KEYR = 0x45670123;
+		FLASH->KEYR = 0xCDEF89AB;
+
+		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// unlock operations on option bytes
+		FLASH->OPTKEYR = 0x08192A3B;
+		FLASH->OPTKEYR = 0x4C5D6E7F;
+
+		// set the flash option register (in RAM!!)
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
+		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
+
+		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
+		FLASH->CR |= FLASH_CR_OPTSTRT;
+
+		// wait for option bytes to be updated
+		while((FLASH->SR & FLASH_SR_BSY) != 0);
+
+		// lock flash memory
+		FLASH-> CR |= FLASH_CR_LOCK;
+
+		// forcre reloading option bytes
+		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
+
+	}
+
+	// reset a status register
+	backup_reg_reset_all_powersave_states();
+	backup_reg_reset_inhibit_periodic_pwr_switch();
+
+	// switch power switch handler inhibition if it is needed
+	switch (mode) {
+		case PWSAVE_NONE:
+			break;
+		case PWSAVE_NORMAL:
+		case PWSAVE_AGGRESV:
+			backup_reg_inhibit_periodic_pwr_switch();
+			break;
+	}
+
+
+}
+
+/**
  * Entering STOP2 power save mode. In this mode all clocks except LSI and LSE are disabled. StaticRAM content
  * is preserved, optionally GPIO and few other peripherals can be kept power up depending on configuration
  */
-static void pwr_save_enter_stop2(void) {
+void pwr_save_enter_stop2(void) {
 
 	// set 31st monitor bit
 	backup_reg_set_monitor(31);
@@ -183,10 +248,88 @@ static void pwr_save_enter_stop2(void) {
 }
 
 /**
+ * This function is called in two places within a pooler.
+ * 1st: just after the micro wakes up from STOP2 deep sleep caused by low battery
+ * voltage and returns from an interrupt
+ * from RTC interrupt handler.
+ * 2nd: just after the micro wakes up from STOP2 caues by aggressive powersave
+ * configuration.
+ */
+void pwr_save_after_stop2_rtc_wakeup_it(void) {
+
+	// if yes set curent state
+	rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP;
+
+//	// check if this is an intermediate wakeup from STOP2
+//	pwr_save_check_stop2_cycles();
+//
+//	system_clock_configure_l4();
+//
+//	pwr_save_exit_after_last_stop2_cycle();
+
+	// reload internal watchdog
+	main_reload_internal_wdg();
+
+	// decrement stop2 cycles for current L7 or L6 powersave mode
+	pwr_save_number_of_sleep_cycles--;
+
+	// if there is time left to exit from depp sleep
+	if (pwr_save_number_of_sleep_cycles > 0) {
+		backup_reg_set_monitor(15);
+
+//		// go back to sleep
+//		// configure how long micro should sleep
+//		system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
+//
+//		pwr_save_enter_stop2();
+		rte_main_woken_up = RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP;
+	}
+	else {
+		backup_reg_set_monitor(14);
+
+		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP;
+		rte_main_woken_up_for_telemetry = 1;
+
+		max31865_set_state_after_wkup();	// TODO: tatry variant
+	}
+
+}
+
+/**
+ * Used after each of 30 seconds long STOP2 sleep, to check
+ * how many sleeps the micro must be put in, to complete
+ * L6/L7 powersave mode
+ */
+//int pwr_save_check_stop2_cycles(void) {
+//
+//	while(1) {
+//		// decrement stop2 cycles for current L7 or L6 powersave mode
+//		pwr_save_number_of_sleep_cycles--;
+//
+//		// if there is time left to exit from depp sleep
+//		if (pwr_save_number_of_sleep_cycles > 0) {
+//			backup_reg_set_monitor(15);
+//
+//			// go back to sleep
+//			// configure how long micro should sleep
+//			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
+//
+//			pwr_save_enter_stop2();
+//		}
+//		else {
+//			backup_reg_set_monitor(14);
+//
+//			// we are done sleeping so exit from this loop
+//			break;
+//		}
+//	}
+//}
+
+/**
  * This function has to be called after last 30 second long cycle of STOP2 sleep,
  * to bounce all frames transmission counters.
  */
-static void pwr_save_exit_after_last_stop2_cycle(void) {
+void pwr_save_exit_after_last_stop2_cycle(void) {
 
 	uint32_t counter = 0;
 
@@ -267,128 +410,6 @@ static void pwr_save_exit_after_last_stop2_cycle(void) {
 	led_init();
 
 	backup_reg_set_monitor(29);
-}
-
-/**
- * This function is called in two places within a pooler.
- * 1st: just after the micro wakes up from STOP2 deep sleep caused by low battery
- * voltage and returns from an interrupt
- * from RTC interrupt handler.
- * 2nd: just after the micro wakes up from STOP2 caues by aggressive powersave
- * configuration.
- */
-static void pwr_save_after_stop2_rtc_wakeup_it(void) {
-	// check if we are just after waking up from STOP2 mode
-	if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
-
-		// if yes set curent state
-		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_RTC_IT;
-
-		// check if this is an intermediate wakeup from STOP2
-		pwr_save_check_stop2_cycles();
-
-		system_clock_configure_l4();
-
-		pwr_save_exit_after_last_stop2_cycle();
-
-		rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
-	}
-
-}
-
-/**
- * This function initializes everything related to power saving features
- * including programming Flash memory option bytes
- */
-void pwr_save_init(config_data_powersave_mode_t mode) {
-
-	// make a pointer to option byte
-	uint32_t* option_byte = (uint32_t*)0x1FFF7800;
-
-	// content of option byte read from the flash memory
-	uint32_t option_byte_content = *option_byte;
-
-	// definition of bitmask
-	#define IWDG_STBY_STOP (0x3 << 17)
-
-	// check if IWDG_STDBY and IWDG_STOP is set in ''User and read protection option bytes''
-	// at 0x1FFF7800
-	if ((option_byte_content & IWDG_STBY_STOP) != IWDG_STBY_STOP) {
-
-		// unlock write/erase operations on flash memory
-		FLASH->KEYR = 0x45670123;
-		FLASH->KEYR = 0xCDEF89AB;
-
-		// wait for any possible flash operation to finish (rather impossible here, but ST manual recommend doing this)
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// unlock operations on option bytes
-		FLASH->OPTKEYR = 0x08192A3B;
-		FLASH->OPTKEYR = 0x4C5D6E7F;
-
-		// set the flash option register (in RAM!!)
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STDBY;
-		FLASH->OPTR |= FLASH_OPTR_IWDG_STOP;
-
-		// trigger an update of flash option bytes with values from RAM (from FLASH->OPTR)
-		FLASH->CR |= FLASH_CR_OPTSTRT;
-
-		// wait for option bytes to be updated
-		while((FLASH->SR & FLASH_SR_BSY) != 0);
-
-		// lock flash memory
-		FLASH-> CR |= FLASH_CR_LOCK;
-
-		// forcre reloading option bytes
-		FLASH->CR |= FLASH_CR_OBL_LAUNCH;
-
-	}
-
-	// reset a status register
-	backup_reg_reset_all_powersave_states();
-	backup_reg_reset_inhibit_periodic_pwr_switch();
-
-	// switch power switch handler inhibition if it is needed
-	switch (mode) {
-		case PWSAVE_NONE:
-			break;
-		case PWSAVE_NORMAL:
-		case PWSAVE_AGGRESV:
-			backup_reg_inhibit_periodic_pwr_switch();
-			break;
-	}
-
-
-}
-
-/**
- * Used after each of 30 seconds long STOP2 sleep, to check
- * how many sleeps the micro must be put in, to complete
- * L6/L7 powersave mode
- */
-int pwr_save_check_stop2_cycles(void) {
-
-	while(1) {
-		// decrement stop2 cycles for current L7 or L6 powersave mode
-		pwr_save_number_of_sleep_cycles--;
-
-		// if there is time left to exit from depp sleep
-		if (pwr_save_number_of_sleep_cycles > 0) {
-			backup_reg_set_monitor(15);
-
-			// go back to sleep
-			// configure how long micro should sleep
-			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
-
-			pwr_save_enter_stop2();
-		}
-		else {
-			backup_reg_set_monitor(14);
-
-			// we are done sleeping so exit from this loop
-			break;
-		}
-	}
 }
 
 
@@ -890,9 +911,11 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 														uint8_t * continue_loop) {
 	// this function should be called from 10 seconds pooler
 
+	*continue_loop = 1;
+
 	int8_t reinit_sensors = 0;
 
-	int8_t reinit_gprs = 0;
+	//int8_t reinit_gprs = 0;
 
 	packet_tx_counter_values_t counters;
 
@@ -968,7 +991,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		pwr_save_switch_mode_to_l7(60 * PWR_SAVE_CUTOFF_SLEEP_TIME_IN_MINUTES);
 
 		// RTC interrupt is between this call and previous one (switching to l7)
-		pwr_save_after_stop2_rtc_wakeup_it();
+		//pwr_save_after_stop2_rtc_wakeup_it();
+		*continue_loop = 0;
 
 		return psave_mode;
 	}
@@ -1117,8 +1141,10 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							// if there is more than two minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
+							*continue_loop = 0;
+
 							// GSM module is kept turned on, but the connection must be reastablished
-							reinit_gprs = 1;
+							//reinit_gprs = 1;
 						}
 						else {
 							// TODO: Workaround here for HW-RevB!!!
@@ -1163,7 +1189,9 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
 
-							reinit_gprs = 1;
+							*continue_loop = 0;
+
+							//reinit_gprs = 1;
 
 						}
 						else {
@@ -1189,7 +1217,9 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to send wx packet
 							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
-							reinit_gprs = 1;
+							*continue_loop = 0;
+
+							//reinit_gprs = 1;
 						}
 						else {
 							if (pwr_save_seconds_to_wx <= 30) {
@@ -1222,14 +1252,14 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	backup_reg_set_monitor(16);
 
-	pwr_save_after_stop2_rtc_wakeup_it();
+	//pwr_save_after_stop2_rtc_wakeup_it();
 
 	backup_reg_set_monitor(13);
 
-	if (reinit_gprs != 0) {
-		// reset GSM modem, internally this also check if GSM modem is inhibited or not
-		rte_main_reset_gsm_modem = 1;
-	}
+//	if (reinit_gprs != 0) {
+//		// reset GSM modem, internally this also check if GSM modem is inhibited or not
+//		rte_main_reset_gsm_modem = 1;
+//	}
 
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors

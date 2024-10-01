@@ -55,6 +55,8 @@ uint8_t rte_main_trigger_radio_event_log = 0;
 //!< Trigger some reinitialization after waking up from deep sleep
 uint8_t rte_main_woken_up = 0;
 
+uint8_t rte_main_woken_up_for_telemetry = 0;
+
 //!< Current battery voltage as 10mV increments
 uint16_t rte_main_battery_voltage;
 
