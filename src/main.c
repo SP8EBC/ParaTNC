@@ -7,7 +7,7 @@
 #include <drivers/f1/gpio_conf_stm32f1x.h>
 #endif
 
-#ifdef STM32L471xx
+#ifdef STM32L471xx		/////////
 #include <stm32l4xx_hal_cortex.h>
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_iwdg.h>
@@ -37,7 +37,9 @@
 
 #include "ntp.h"
 #include "gsm_comm_state_handler.h"
-#endif
+
+#include "./etc/pwr_save_configuration.h"
+#endif				////////
 
 #include <delay.h>
 #include <LedConfig.h>
@@ -289,6 +291,8 @@ static uint8_t main_kiss_from_message_ln = 0;
 static uint8_t main_kiss_response_message[32];
 
 static io_vbat_state_t main_battery_measurement_res;
+
+static uint8_t main_continue_loop = 0;
 
 //!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
 static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
@@ -1521,13 +1525,29 @@ int main(int argc, char* argv[]){
 	  backup_reg_set_monitor(0);
 
 #if defined(PARAMETEO)
-	  if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
-		  pwr_save_after_stop2_rtc_wakeup_it();
-	  }
-	  else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_AFTER_RTC_IT) {
+	  if (rte_main_woken_up == RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP) {
+			// this sleep is used by @link{pwr_save_after_stop2_rtc_wakeup_it} to
+		  	// go to the intermediate sleep in L4 powersave mode, when xxx seconds
+		  	// long sleep is divided into 'PWR_SAVE_STOP2_CYCLE_LENGHT_SEC' to
+		    // serwice IWDG in between
+			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
 
+			pwr_save_enter_stop2();
 	  }
-	  if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED) {
+	  else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_RTC_INTERRUPT) {
+		  // controller is woken up from sleep in stop2 mode, now it must
+		  // be checked if this was the last sleep in the row, or micro
+		  // must go to sleep (stop2 mode) once again
+		  	pwr_save_after_stop2_rtc_wakeup_it();
+	  }
+	  else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP) {
+			system_clock_configure_l4();
+
+			pwr_save_exit_after_last_stop2_cycle();
+
+			rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
+	  }
+	  else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED) {
 
 	  		// restart ADCs
 	  		io_vbat_meas_enable();
@@ -1555,6 +1575,8 @@ int main(int argc, char* argv[]){
 
 			rte_main_woken_up = 0;
 
+			rte_main_reset_gsm_modem = 1;
+
 	  		main_check_adc = 1;
 
 			// reinitialize UART used to communicate with GPRS modem
@@ -1562,9 +1584,6 @@ int main(int argc, char* argv[]){
 
 	  		backup_reg_set_monitor(1);
 	  	}
-	  else if (rte_main_woken_up == RTE_MAIN_GO_TO_SLEEP) {
-
-	  }
 	  	else {
 #endif
 
@@ -2162,7 +2181,11 @@ int main(int argc, char* argv[]){
 
 				// inhibit any power save switching when modem transmits data
 				if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
-					pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage);
+					pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage, &main_continue_loop);
+				}
+
+				if (main_continue_loop == 0) {
+					continue;
 				}
 
 				if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {

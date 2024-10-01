@@ -7,15 +7,15 @@
 #include "message.h"
 
 //!< Set immediately after waking up in RTC interrupt handler
-#define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT		1u
+#define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT			1u
 
 //!< Set after exiting from RTC interrupt, but before reinitializing clocks
-#define RTE_MAIN_WOKEN_UP_AFTER_RTC_IT		2u
+#define RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP		2u
 
 //!< Set after everything was reinitialized from
-#define RTE_MAIN_WOKEN_UP_EXITED			4u
+#define RTE_MAIN_WOKEN_UP_EXITED				4u
 
-#define RTE_MAIN_GO_TO_SLEEP				8u
+#define RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP		8u
 
 #define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
 
