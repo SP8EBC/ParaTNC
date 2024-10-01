@@ -34,7 +34,7 @@
  * this current (momentary) voltage is below
  * PWR_SAVE_CUTOFF_VOLTAGE_DEF
  */
-#define PWR_SAVE_CUTOFF_AVG_VOLTAGE_MARGIN		100u		// 0.1V
+#define PWR_SAVE_CUTOFF_AVG_VOLTAGE_MARGIN		30u		// 0.3V
 
 /**
  * How long in minutes the controller will sleep in L7 state between checking
