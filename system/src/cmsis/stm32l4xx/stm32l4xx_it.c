@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32l4xx_it.h"
+#include "debug_hardfault.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -87,6 +88,20 @@ void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
+    __asm__("MOVS R0, #4");
+    __asm__("MOV R1, LR");
+    __asm__("TST R1, R0");     // Test LR (EXC_RETURN[2])
+    __asm__("ITE NE");
+    __asm__("MRSNE R1, PSP");  // EXC_RETURN[2] = 1
+    __asm__("MRSEQ R1, MSP");  // EXC_RETURN[2] = 0
+
+    __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
+    __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
+
+    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_HFLT);
+
+    DEBUG_STACKFRAME_CHECKSUM
+
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -102,6 +117,20 @@ void HardFault_Handler(void)
 void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
+
+    __asm__("MOVS R0, #4");
+    __asm__("MOV R1, LR");
+    __asm__("TST R1, R0");     // Test LR (EXC_RETURN[2])
+    __asm__("ITE NE");
+    __asm__("MRSNE R1, PSP");  // EXC_RETURN[2] = 1
+    __asm__("MRSEQ R1, MSP");  // EXC_RETURN[2] = 0
+
+    __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
+    __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
+
+    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_MMUFLT);
+
+    DEBUG_STACKFRAME_CHECKSUM
 
   /* USER CODE END MemoryManagement_IRQn 0 */
   while (1)
@@ -119,6 +148,20 @@ void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
 
+    __asm__("MOVS R0, #4");
+    __asm__("MOV R1, LR");
+    __asm__("TST R1, R0");     // Test LR (EXC_RETURN[2])
+    __asm__("ITE NE");
+    __asm__("MRSNE R1, PSP");  // EXC_RETURN[2] = 1
+    __asm__("MRSEQ R1, MSP");  // EXC_RETURN[2] = 0
+
+    __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
+    __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
+
+    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_BUSFLT);
+
+    DEBUG_STACKFRAME_CHECKSUM
+
   /* USER CODE END BusFault_IRQn 0 */
   while (1)
   {
@@ -134,6 +177,20 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
+
+    __asm__("MOVS R0, #4");
+    __asm__("MOV R1, LR");
+    __asm__("TST R1, R0");     // Test LR (EXC_RETURN[2])
+    __asm__("ITE NE");
+    __asm__("MRSNE R1, PSP");  // EXC_RETURN[2] = 1
+    __asm__("MRSEQ R1, MSP");  // EXC_RETURN[2] = 0
+
+    __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
+    __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
+
+    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_USAGEFLT);
+
+    DEBUG_STACKFRAME_CHECKSUM
 
   /* USER CODE END UsageFault_IRQn 0 */
   while (1)
