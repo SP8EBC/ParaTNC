@@ -12,6 +12,7 @@ C_SRCS += \
 ../src/aprsis.c \
 ../src/backup_registers.c \
 ../src/button_parameteo.c \
+../src/debug_hardfault.c \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/event_log.c \
@@ -44,6 +45,7 @@ OBJS += \
 ./src/aprsis.o \
 ./src/backup_registers.o \
 ./src/button_parameteo.o \
+./src/debug_hardfault.o \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/event_log.o \
@@ -76,6 +78,7 @@ C_DEPS += \
 ./src/aprsis.d \
 ./src/backup_registers.d \
 ./src/button_parameteo.d \
+./src/debug_hardfault.d \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/event_log.d \

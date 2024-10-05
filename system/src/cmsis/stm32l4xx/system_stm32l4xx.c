@@ -222,6 +222,11 @@ void SystemInit(void)
   SCB->CPACR |= ((3UL << 20U)|(3UL << 22U));  /* set CP10 and CP11 Full Access */
 #endif
 
+  /* Enable usage, bus and memory faults */
+  SCB->SHCSR |= SCB_SHCSR_USGFAULTACT_Msk;
+  SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
+  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+
   /* Reset the RCC clock configuration to the default reset state ------------*/
   /* Set MSION bit */
   RCC->CR |= RCC_CR_MSION;
