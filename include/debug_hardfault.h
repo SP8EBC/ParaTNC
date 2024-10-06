@@ -21,26 +21,35 @@
 /**
  *
  */
-#define DEBUG_STACKFRAME_STORE(stackpointer, source)                                     \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_R0);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_R1);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_R2);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_R3);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12) =    \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_R12);     \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_LR);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC) =     \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_PC);      \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR) =   \
-		*((volatile uint32_t *)stackpointer + (uint32_t)DEBUG_HARDFAULT_OFFSET_XPSR);    \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE) = \
-		((uint32_t)source & 0xFF);                                                       \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR) = SCB->CFSR;   \
+#define DEBUG_STACKFRAME_EXTRACT(stackpointer, source)        \
+	debug_hardfault_stack_pointer = (uint32_t *)stackpointer; \
+	debug_hardfault_r0 = debug_hardfault_stack_pointer[0];    \
+	debug_hardfault_r1 = debug_hardfault_stack_pointer[1];    \
+	debug_hardfault_r2 = debug_hardfault_stack_pointer[2];    \
+	debug_hardfault_r3 = debug_hardfault_stack_pointer[3];    \
+	debug_hardfault_r12 = debug_hardfault_stack_pointer[4];   \
+	debug_hardfault_lr = debug_hardfault_stack_pointer[5];    \
+	debug_hardfault_pc = debug_hardfault_stack_pointer[6];    \
+	debug_hardfault_xpsr = debug_hardfault_stack_pointer[7];  \
+	debug_hardfault_cfsr = SCB->CFSR;                         \
+    debug_hardfault_mmfar = SCB->MMFAR;                       \
+    debug_hardfault_bfar = SCB->BFAR;                         \
+	debug_hardfault_source = source;
+
+/**
+ *
+ */
+#define DEBUG_STACKFRAME_STORE							\
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0) = debug_hardfault_r0;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1) = debug_hardfault_r1;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2) = debug_hardfault_r2;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3) = debug_hardfault_r3;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12) = debug_hardfault_r12;           \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR) = debug_hardfault_lr;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC) = debug_hardfault_pc;             \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR) = debug_hardfault_xpsr;         \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE) = debug_hardfault_source;     \
+    *((uint32_t*)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR) = debug_hardfault_cfsr;         \
 
 /**
  *
@@ -71,7 +80,9 @@
 #define DEBUG_HARDFAULT_OFFSET_XPSR         (uint32_t)7u
 #define DEBUG_HARDFAULT_OFFSET_SOURCE	    (uint32_t)8u
 #define DEBUG_HARDFAULT_OFFSET_CFSR         (uint32_t)9u
-#define DEBUG_HARDFAULT_OFFSET_CHECKSUM     (uint32_t)10u
+#define DEBUG_HARDFAULT_OFFSET_MMFAR        (uint32_t)10u
+#define DEBUG_HARDFAULT_OFFSET_BFAR         (uint32_t)11u
+#define DEBUG_HARDFAULT_OFFSET_CHECKSUM     (uint32_t)12u
 
 
 #define DEBUG_HARDFAULT_SOURCE_HFLT			(uint8_t)0x10u
@@ -103,6 +114,21 @@ typedef struct debug_hardfault_postmortem_stackframe_t {
 /// ==================================================================================================
 
 extern volatile uint32_t debug_hardfault_stack_pointer_value;
+
+extern volatile uint32_t * debug_hardfault_stack_pointer;
+
+extern uint32_t debug_hardfault_r0;
+extern uint32_t debug_hardfault_r1;
+extern uint32_t debug_hardfault_r2;
+extern uint32_t debug_hardfault_r3;
+extern uint32_t debug_hardfault_r12;
+extern uint32_t debug_hardfault_lr;
+extern uint32_t debug_hardfault_pc;
+extern uint32_t debug_hardfault_xpsr;
+extern uint32_t debug_hardfault_cfsr;
+extern uint32_t debug_hardfault_source;
+extern uint32_t debug_hardfault_mmfar;
+extern uint32_t debug_hardfault_bfar;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

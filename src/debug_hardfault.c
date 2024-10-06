@@ -28,6 +28,22 @@
 
 volatile uint32_t debug_hardfault_stack_pointer_value = 0;
 
+volatile uint32_t * debug_hardfault_stack_pointer = 0;
+
+uint32_t debug_hardfault_r0 = 0;
+uint32_t debug_hardfault_r1 = 0;
+uint32_t debug_hardfault_r2 = 0;
+uint32_t debug_hardfault_r3 = 0;
+uint32_t debug_hardfault_r12 = 0;
+uint32_t debug_hardfault_lr = 0;
+uint32_t debug_hardfault_pc = 0;
+uint32_t debug_hardfault_xpsr = 0;
+uint32_t debug_hardfault_cfsr = 0;
+uint32_t debug_hardfault_source = 0;
+uint32_t debug_hardfault_mmfar = 0;
+uint32_t debug_hardfault_bfar = 0;
+
+
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
@@ -44,11 +60,13 @@ uint8_t debug_hardfault_check_have_postmortem (void)
 {
 	uint32_t sum = 0;
 	const uint32_t sum_from_postmortem =
-		*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM);
+		*(((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CHECKSUM);
 
 	for (int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {
-		sum += (*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + i) & 0x7FFFFFFFu);
+		sum += (*(((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START) + i) & 0x7FFFFFFFu);
 	}
+
+	sum += 9u;
 
 	if (sum == sum_from_postmortem) {
 		return 1;
