@@ -84,7 +84,7 @@ void NMI_Handler(void)
 /**
   * @brief This function handles Hard fault interrupt.
   */
-void HardFault_Handler(void)
+__attribute__((optimize("O0"))) void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
@@ -98,7 +98,9 @@ void HardFault_Handler(void)
     __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
     __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
 
-    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_HFLT);
+    DEBUG_STACKFRAME_EXTRACT(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_HFLT);
+
+    DEBUG_STACKFRAME_STORE
 
     DEBUG_STACKFRAME_CHECKSUM
 
@@ -114,7 +116,7 @@ void HardFault_Handler(void)
 /**
   * @brief This function handles Memory management fault.
   */
-void MemManage_Handler(void)
+__attribute__((optimize("O0"))) void MemManage_Handler(void)
 {
   /* USER CODE BEGIN MemoryManagement_IRQn 0 */
 
@@ -128,7 +130,9 @@ void MemManage_Handler(void)
     __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
     __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
 
-    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_MMUFLT);
+    DEBUG_STACKFRAME_EXTRACT(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_MMUFLT);
+
+    DEBUG_STACKFRAME_STORE
 
     DEBUG_STACKFRAME_CHECKSUM
 
@@ -144,7 +148,7 @@ void MemManage_Handler(void)
 /**
   * @brief This function handles Prefetch fault, memory access fault.
   */
-void BusFault_Handler(void)
+__attribute__((naked)) void BusFault_Handler(void)
 {
   /* USER CODE BEGIN BusFault_IRQn 0 */
 
@@ -158,7 +162,9 @@ void BusFault_Handler(void)
     __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
     __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
 
-    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_BUSFLT);
+    DEBUG_STACKFRAME_EXTRACT(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_BUSFLT);
+
+    DEBUG_STACKFRAME_STORE
 
     DEBUG_STACKFRAME_CHECKSUM
 
@@ -174,7 +180,7 @@ void BusFault_Handler(void)
 /**
   * @brief This function handles Undefined instruction or illegal state.
   */
-void UsageFault_Handler(void)
+__attribute__((optimize("O0"))) void UsageFault_Handler(void)
 {
   /* USER CODE BEGIN UsageFault_IRQn 0 */
 
@@ -188,7 +194,9 @@ void UsageFault_Handler(void)
     __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
     __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
 
-    DEBUG_STACKFRAME_STORE(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_USAGEFLT);
+    DEBUG_STACKFRAME_EXTRACT(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_USAGEFLT);
+
+    DEBUG_STACKFRAME_STORE
 
     DEBUG_STACKFRAME_CHECKSUM
 

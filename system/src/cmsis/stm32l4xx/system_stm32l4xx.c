@@ -223,9 +223,11 @@ void SystemInit(void)
 #endif
 
   /* Enable usage, bus and memory faults */
-  SCB->SHCSR |= SCB_SHCSR_USGFAULTACT_Msk;
+  SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
   SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
   SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+
+  //SCnSCB->ACTLR |= SCnSCB_ACTLR_DISDEFWBUF_Msk;
 
   /* Reset the RCC clock configuration to the default reset state ------------*/
   /* Set MSION bit */
