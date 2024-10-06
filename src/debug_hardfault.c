@@ -62,7 +62,9 @@ uint8_t debug_hardfault_check_have_postmortem (void)
  * Delete collected postmortem data
  */
 void debug_hardfault_delete_postmortem(void) {
-
+	for (int i = 0; i <= DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {
+		*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + i) = 0;
+	}
 }
 
 /**
