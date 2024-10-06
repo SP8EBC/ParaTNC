@@ -34,6 +34,7 @@
 #include "drivers/l4/spi_speed_stm32l4x.h"
 #include "drivers/max31865.h"
 
+#include "debug_hardfault.h"
 
 #include "ntp.h"
 #include "gsm_comm_state_handler.h"
@@ -296,6 +297,11 @@ static uint8_t main_continue_loop = 0;
 
 //!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
 static event_log_exposed_t main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
+
+//!< Stack frame stored from hard fault or other exceptions
+static debug_hardfault_postmortem_stackframe_t main_faulty_stack_frame;
+
+static uint8_t main_was_hardfault = 0;;
 #endif
 
 char main_symbol_f = '/';
@@ -713,6 +719,8 @@ int main(int argc, char* argv[]){
 #endif
 
 #endif
+
+  main_was_hardfault = debug_hardfault_get_postmortem(&main_faulty_stack_frame);
 
   rte_main_reboot_req = 0;
 
@@ -1473,14 +1481,26 @@ int main(int argc, char* argv[]){
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
 #if defined(PARAMETEO)
-	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
-	main_wait_for_tx_complete();
+	   if (main_was_hardfault == 0) {
+			beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
+			main_wait_for_tx_complete();
 
-	// this delay is put in case if beacon is configured to use
-	// any path like WIDE1-1 or WIDE2-1 or another. The delay
-	// will wait for some time to have this beacon digipeated
-	// by the APRS radio network
-	delay_fixed(1500);
+			// this delay is put in case if beacon is configured to use
+			// any path like WIDE1-1 or WIDE2-1 or another. The delay
+			// will wait for some time to have this beacon digipeated
+			// by the APRS radio network
+			delay_fixed(1500);
+
+			// TODO:: TEST TEST TEST
+			main_current_cpu_idle_ticks = 10 / rte_main_reboot_req;
+	   }
+	   else {
+		   main_own_aprs_msg_len = debug_hardfault_assemble_info_string(&main_faulty_stack_frame, main_own_aprs_msg, OWN_APRS_MSG_LN);
+
+		   beacon_send_from_user_content(main_own_aprs_msg_len, main_own_aprs_msg);
+
+		   debug_hardfault_delete_postmortem();
+	   }
 #else
 	   beacon_send_own(0, 0);
 

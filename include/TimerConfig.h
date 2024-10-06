@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 void TimerConfig(void);
-void TIM2Delay(char delay);
+void TIM2Delay(void);
 void TIM2DelayDeConfig(void);
 
 #ifdef __cplusplus

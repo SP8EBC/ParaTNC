@@ -6,6 +6,7 @@
  */
 
 #include "main.h"
+#include "TimerConfig.h"
 
 int32_t preset_delay_msecs = 0;
 uint8_t preset_use_random = 0;
@@ -59,7 +60,6 @@ void delay_set(uint16_t delay_in_msecs, uint8_t randomize) {
 void delay_from_preset(void) {
 
 	delay_cnt = preset_delay_msecs;
-
 
 	while(delay_cnt > (int32_t)0);
 
