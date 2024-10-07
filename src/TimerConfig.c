@@ -94,3 +94,13 @@ void TIM2Delay(void) {
 void TIM2DelayDeConfig(void) {
 	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
 }
+
+void TimerAdcDisable(void) {
+	TIM7->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
+
+}
+
+void TimerAdcEnable(void) {
+	TIM7->CR1 |= TIM_CR1_CEN;
+
+}

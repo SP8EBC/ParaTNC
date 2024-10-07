@@ -15,6 +15,7 @@
 #include "wx_pwr_switch.h"
 #include "io.h"
 #include "LedConfig.h"
+#include "TimerConfig.h"
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "main.h"
@@ -213,6 +214,8 @@ void pwr_save_enter_stop2(void) {
 	rte_main_battery_voltage = 0;
 
 	analog_anemometer_deinit();
+
+	TimerAdcDisable();
 
 	// clear previous low power mode selection
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_LPMS_Msk);

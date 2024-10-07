@@ -17,6 +17,9 @@ void TimerConfig(void);
 void TIM2Delay(void);
 void TIM2DelayDeConfig(void);
 
+void TimerAdcDisable(void);
+void TimerAdcEnable(void);
+
 #ifdef __cplusplus
 }
 #endif
