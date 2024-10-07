@@ -282,8 +282,19 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			// it waits for transmission completion and add some delay to let digipeaters do theris job
 			packet_tx_multi_per_call_handler();
 
-			// send WX frame through RF
-			SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+			if (main_was_hardfault == 0) {
+				// send WX frame through RF
+				SendWXFrame(rte_wx_average_windspeed, rte_wx_max_windspeed, rte_wx_average_winddirection, rte_wx_temperature_average_external_valid, rte_wx_pressure_valid, rte_wx_humidity_valid);
+			}
+			else {
+			   main_own_aprs_msg_len = debug_hardfault_assemble_info_string(&main_faulty_stack_frame, main_own_aprs_msg, OWN_APRS_MSG_LN);
+
+			   beacon_send_from_user_content(main_own_aprs_msg_len, main_own_aprs_msg);
+
+			   debug_hardfault_delete_postmortem();
+
+			   main_was_hardfault = 0;
+			}
 
 			/**
 			 * debug
@@ -545,7 +556,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 							config_mode);
 #endif
 #else
-		telemetry_send_values_tatry();
+		telemetry_send_values_tatry();		// TODO: tatry specific
 #endif
 
 		packet_tx_telemetry_counter = 0;

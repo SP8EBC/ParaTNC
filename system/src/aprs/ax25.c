@@ -168,7 +168,7 @@ static void ax25_decode(AX25Ctx *ctx) {
 void ax25_poll(AX25Ctx *ctx) {
 /*********************************************************************************************************************/
 
-	int16_t c;
+	int16_t c;		// TODO: put an assert here!!!!
 
 while ((c = fifo_getc(&ctx->afsk->rx_fifo)) != -1)
 	{

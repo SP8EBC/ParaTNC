@@ -15,7 +15,11 @@
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
-#define INTERNAL_WATCHDOG
+#ifdef PARAMETEO
+#include "debug_hardfault.h"
+#endif
+
+//#define INTERNAL_WATCHDOG
 //#define EXTERNAL_WATCHDOG
 
 #define PWR_SWITCH_BOTH
@@ -90,6 +94,12 @@ extern char after_tx_lock;
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 extern gsm_sim800_state_t main_gsm_state;
+
+#ifdef PARAMETEO
+extern debug_hardfault_postmortem_stackframe_t main_faulty_stack_frame;
+
+extern uint8_t main_was_hardfault;
+#endif
 
 uint16_t main_get_adc_sample(void);
 
