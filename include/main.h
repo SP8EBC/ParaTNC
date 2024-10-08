@@ -19,7 +19,7 @@
 #include "debug_hardfault.h"
 #endif
 
-//#define INTERNAL_WATCHDOG
+#define INTERNAL_WATCHDOG
 //#define EXTERNAL_WATCHDOG
 
 #define PWR_SWITCH_BOTH
