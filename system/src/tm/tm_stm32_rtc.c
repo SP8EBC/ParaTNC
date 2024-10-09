@@ -61,6 +61,10 @@ static uint8_t RTC_Months[2][12] = {
 	{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}	/* Leap year */
 };
 
+void TM_RTC_SetInstance(RTC_TypeDef *instance) {
+	hRTC.Instance = instance;
+}
+
 uint32_t TM_RTC_Init(TM_RTC_ClockSource_t source) {
 	uint32_t status;
 	TM_RTC_t datatime;

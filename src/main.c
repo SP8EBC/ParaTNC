@@ -108,6 +108,10 @@
 #include <kiss_communication/kiss_communication_aprsmsg.h>
 #include <etc/kiss_configuation.h>
 
+#if defined(TATRY)
+#include <kiss_communication/diagnostics_routines/routine_5254_set_datetime.h>
+#endif
+
 #include <etc/dallas_temperature_limits.h>
 
 #include <etc/misc_config.h>
@@ -339,6 +343,19 @@ uint8_t main_check_adc = 0;
 telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
 nvm_event_result_stats_t main_events_extracted_for_api_stat = {0u};
+#endif
+
+#if defined(TATRY)
+/**
+ * Sets RTC date and time to values provided by diagnostcs call
+ * @param main_lparam_date date in binary coded decimal 0xYYYYMMDD
+ * @param main_wparam_time time in binary coded decimal 0xHHMM
+ */
+
+uint32_t main_lparam_date = 0u;
+
+uint16_t main_wparam_time = 0u;
+
 #endif
 
 char after_tx_lock;
@@ -624,6 +641,8 @@ int main(int argc, char* argv[]){
 #if defined(PARAMETEO)
   main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 #endif
+
+  TM_RTC_SetInstance(RTC);
 
 #if defined(STM32F10X_MD_VL)
   RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
@@ -1526,6 +1545,16 @@ int main(int argc, char* argv[]){
     {
 	backup_reg_set_monitor(-1);
 
+#if defined(TATRY)
+	if (main_wparam_time != 0 && main_lparam_date != 0) {
+
+		routine_5254_start(main_lparam_date, main_wparam_time);
+
+		main_wparam_time = 0;
+		main_lparam_date = 0;
+	}
+#endif
+
 	// incrementing current cpu ticks
 	main_current_cpu_idle_ticks++;
 
@@ -1849,28 +1878,28 @@ int main(int argc, char* argv[]){
 
 				}
 
-				// send event log each 24 hours, but only once at the top of an hour
-				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 21) {
-					if (backup_reg_get_event_log_report_sent_radio() == 0) {
-						// set status bit in non-volatile backup register not to loop over and over again in case of a restart
-						backup_reg_set_event_log_report_sent_radio();
-
-						// extract events from NVM
-						const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
-
-						// set a trigger to number of events, which shall be sent
-						// please note that we do not need to check here if APRS-IS
-						// is connected. The check is done within specific APRS-IS functions
-						//
-						// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
-						// because NVM can contain less events
-						rte_main_trigger_radio_event_log = events_stat.zz_total;
-					}
-				}
-				else {
-					// reset flag if the time is not 21:xx
-					backup_reg_reset_event_log_report_sent_radio();
-				}
+//				// send event log each 24 hours, but only once at the top of an hour
+//				if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 21) {
+//					if (backup_reg_get_event_log_report_sent_radio() == 0) {
+//						// set status bit in non-volatile backup register not to loop over and over again in case of a restart
+//						backup_reg_set_event_log_report_sent_radio();
+//
+//						// extract events from NVM
+//						const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+//
+//						// set a trigger to number of events, which shall be sent
+//						// please note that we do not need to check here if APRS-IS
+//						// is connected. The check is done within specific APRS-IS functions
+//						//
+//						// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
+//						// because NVM can contain less events
+//						rte_main_trigger_radio_event_log = events_stat.zz_total;
+//					}
+//				}
+//				else {
+//					// reset flag if the time is not 21:xx
+//					backup_reg_reset_event_log_report_sent_radio();
+//				}
 
 				if ((main_config_data_gsm->aprsis_enable != 0) &&
 					(main_config_data_mode->gsm == 1) &&

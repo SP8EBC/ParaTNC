@@ -518,7 +518,7 @@ void system_clock_start_rtc_l4(void) {
 	}
 
 	// set date
-	RTC->DR = 0x0024E714;
+	RTC->DR = 0x00245008;
 
 	// set time
 	RTC->TR = 0x00182044;
