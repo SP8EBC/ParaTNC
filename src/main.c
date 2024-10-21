@@ -1529,7 +1529,7 @@ int main(int argc, char* argv[]){
 			// this sleep is used by @link{pwr_save_after_stop2_rtc_wakeup_it} to
 		  	// go to the intermediate sleep in L4 powersave mode, when xxx seconds
 		  	// long sleep is divided into 'PWR_SAVE_STOP2_CYCLE_LENGHT_SEC' to
-		    // serwice IWDG in between
+		    // service IWDG in between
 			system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
 
 			pwr_save_enter_stop2();

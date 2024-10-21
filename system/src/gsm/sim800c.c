@@ -363,16 +363,20 @@ void gsm_sim800_initialization_pool(srl_context_t * srl_context, gsm_sim800_stat
 	else if (*state == SIM800_POWERING_ON) {
 		gsm_sim800_press_pwr_button();
 
+		*state = SIM800_WAITING_FOR_POWERUP;
+
+	}
+	else if (*state == SIM800_WAITING_FOR_POWERUP) {
+		// depress power button
+		gsm_sim800_depress_pwr_button();
+
+		// give GSM module some time for its bootup to complete
 		*state = SIM800_NOT_YET_COMM;
 
 	}
 	else if (*state == SIM800_NOT_YET_COMM) {
-
-		// depress power button
-		gsm_sim800_depress_pwr_button();
-
-		// configure rx timeout
-		srl_switch_timeout(srl_context, 1, 0);
+		// configure rx timeout - give some more time
+		srl_switch_timeout(srl_context, 1, 3000u);
 
 		// send handshake
 		srl_send_data(srl_context, (const uint8_t*) AUTOBAUD_STRING, SRL_MODE_ZERO, strlen(AUTOBAUD_STRING), SRL_INTERNAL);

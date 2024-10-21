@@ -30,5 +30,6 @@ void max31865_pool(void);
 int32_t max31865_get_pt100_result();
 int32_t max31865_get_result(uint32_t RTDnominal);
 max31865_qf_t max31865_get_qf(void);
+void max31865_set_state_after_wkup(void);
 
 #endif /* INCLUDE_DRIVERS_MAX31865_H_ */

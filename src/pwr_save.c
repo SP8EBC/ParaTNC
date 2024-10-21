@@ -257,16 +257,6 @@ void pwr_save_enter_stop2(void) {
  */
 void pwr_save_after_stop2_rtc_wakeup_it(void) {
 
-	// if yes set curent state
-	rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP;
-
-//	// check if this is an intermediate wakeup from STOP2
-//	pwr_save_check_stop2_cycles();
-//
-//	system_clock_configure_l4();
-//
-//	pwr_save_exit_after_last_stop2_cycle();
-
 	// reload internal watchdog
 	main_reload_internal_wdg();
 
@@ -277,11 +267,6 @@ void pwr_save_after_stop2_rtc_wakeup_it(void) {
 	if (pwr_save_number_of_sleep_cycles > 0) {
 		backup_reg_set_monitor(15);
 
-//		// go back to sleep
-//		// configure how long micro should sleep
-//		system_clock_configure_auto_wakeup_l4(PWR_SAVE_STOP2_CYCLE_LENGHT_SEC);
-//
-//		pwr_save_enter_stop2();
 		rte_main_woken_up = RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP;
 	}
 	else {
