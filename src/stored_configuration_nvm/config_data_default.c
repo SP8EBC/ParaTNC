@@ -345,14 +345,16 @@ const config_data_umb_t __attribute__((section(".config_section_default.umb"))) 
 		.channel_wingsusts = _UMB_CHANNEL_WINDGUSTS,
 		.channel_winddirection = _UMB_CHANNEL_WINDDIRECTION,
 		.channel_temperature = _UMB_CHANNEL_TEMPERATURE,
-		.channel_qnh = _UMB_CHANNEL_QFE
+		.channel_qnh = _UMB_CHANNEL_QFE,
 #else
 		.channel_windspeed = 0xFFFF,
 		.channel_wingsusts = 0xFFFF,
 		.channel_winddirection = 0xFFFF,
 		.channel_temperature = 0xFFFF,
-		.channel_qfe = 0xFFFF
+		.channel_qfe = 0xFFFF,
 #endif
+
+		.serial_speed = 19200
 };
 
 

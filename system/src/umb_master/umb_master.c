@@ -27,7 +27,7 @@
 #define TEN_MINUTES (1000 * 600)
 
 void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config_data_umb_t * const config_umb) {
-	ctx->current_routine = -1;
+	ctx->current_routine = UMB_CONTEXT_IDLE_ROUTINE;
 	ctx->state = UMB_STATUS_IDLE;
 	ctx->nok_error_it = 0;
 	ctx->time_of_last_nok = 0xFFFFFFFFu;
@@ -196,7 +196,7 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 				srl_receive_data(ctx->serial_context, 8, SOH, 0x00, 0, 6, 12);
 
 				// enable timeout in case that sensor won't send any reponse
-				srl_switch_timeout(ctx->serial_context, 1, 0);
+				srl_switch_timeout(ctx->serial_context, 1, 2345);
 				srl_switch_timeout_for_waiting(ctx->serial_context, 1);
 
 				ctx->state = UMB_STATUS_WAITING_FOR_RESPONSE;
@@ -253,11 +253,13 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 		}
 		case UMB_STATUS_ERROR: {
 			ctx->state = UMB_STATUS_IDLE;
+			ctx->current_routine = UMB_CONTEXT_IDLE_ROUTINE;
 
 			break;
 		}
 		case UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE: {
 			ctx->state = UMB_STATUS_IDLE;
+			ctx->current_routine = UMB_CONTEXT_IDLE_ROUTINE;
 
 			break;
 		}
@@ -279,6 +281,9 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 		return UMB_GENERAL_ERROR;
 	}
+	else {
+		ctx->current_routine = UMB_CONTEXT_IDLE_ROUTINE;
+	}
 
 	// looking for a callback to this response
 	switch (frame->command_id) {
@@ -299,9 +304,8 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 	return UMB_OK;
 }
-//	ctx->time_of_last_nok = 0xFFFFFFFFu;
-//ctx->time_of_last_comms_timeout = 0xFFFFFFFFu;
-//ctx->time_of_last_successful_comms = 0;
+
+
 umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 
 	umb_qf_t out = UMB_QF_UNKNOWN;

@@ -13,6 +13,7 @@
 #include "umb_defines.h"
 #include <drivers/serial.h>
 
+#define UMB_CONTEXT_IDLE_ROUTINE			(-1)
 
 #define UMB_CONTEXT_ERR_HISTORY_LN 4
 

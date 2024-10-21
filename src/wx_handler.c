@@ -244,7 +244,7 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 		;
 	}
 
-	if (config_sources->wind != WX_SOURCE_FULL_RTU) {
+	if (config_sources->wind != WX_SOURCE_FULL_RTU && config_sources->wind != WX_SOURCE_UMB) {
 		// check how many times before the pool function was called
 		if (wx_wind_pool_call_counter < WIND_AVERAGE_LEN) {
 			// if it was called less time than a length of buffers, the average length
@@ -323,6 +323,10 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 	}
 
 	rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
+
+	if (config_sources->wind == WX_SOURCE_UMB) {
+		rte_wx_wind_qf = umb_get_current_qf(&rte_wx_umb_context, main_get_master_time());
+	}
 
 //	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind == WX_SOURCE_RTU) {
 //		if (modbus_retval == MODBUS_RET_OK) {

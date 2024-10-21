@@ -822,7 +822,7 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			*state = SIM800_INITIALIZING;
 		}
 		else {
-			*state = SIM800_NOT_YET_COMM;
+			*state = SIM800_UNKNOWN;
 		}
 	}
 	else if (*state == SIM800_INITIALIZING) {

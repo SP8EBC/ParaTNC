@@ -83,7 +83,12 @@ void srl_init(
 	USART_InitStructure.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
 	USART_InitStructure.OverSampling = LL_USART_OVERSAMPLING_16;
 
-	LL_USART_Init(port, &USART_InitStructure);
+	const ErrorStatus init_res = LL_USART_Init(port, &USART_InitStructure);
+
+	if (init_res != SUCCESS) {
+		ctx->srl_rx_state = SRL_RX_ERROR;
+		return;
+	}
 
 	if (port == USART1) {
 		NVIC_EnableIRQ( USART1_IRQn );
