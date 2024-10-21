@@ -54,6 +54,9 @@
 //!< Registered, home network
 #define SIM800_REGISTRATION_STATUS_ROAMING							(5u)
 
+//!< It was tested that SIM800C module needs up to 2..3 seconds to be responsive over UART
+#define SIM800_MAX_HANDSHAKE_ERRORS									(4u)
+
 /// ==================================================================================================
 ///	LOCAL VARIABLES
 /// ==================================================================================================
@@ -127,6 +130,8 @@ static sim800_simcard_status_t gsm_sim800_simcard_status = SIMCARD_UNKNOWN;
 static sim800_mcc_t gsm_sim800_mcc_from_imsi;
 
 static uint8_t gsm_sim800_mnc_from_imsi;
+
+static uint8_t gsm_sim800_handshaking_errors = 0;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -826,7 +831,15 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 			*state = SIM800_INITIALIZING;
 		}
 		else {
-			*state = SIM800_UNKNOWN;
+			gsm_sim800_handshaking_errors++;
+
+			if (gsm_sim800_handshaking_errors > SIM800_MAX_HANDSHAKE_ERRORS) {
+				*state = SIM800_UNKNOWN;
+				gsm_sim800_handshaking_errors = 0;
+			}
+			else {
+				*state = SIM800_WAITING_FOR_POWERUP;	// go back to sending handshake
+			}
 		}
 	}
 	else if (*state == SIM800_INITIALIZING) {
