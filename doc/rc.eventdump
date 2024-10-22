@@ -1,0 +1,18 @@
+#!/bin/bash
+
+DATE=$(date +%Y%m%d)
+TIME=$(date +%H%M%S)
+
+FILENAME=events_$DATE-$TIME
+
+if [ ! -d "./parameteo-events" ]; then
+	mkdir "./parameteo-events"
+fi
+
+echo "dumping to Intel-HEX file ./parameteo-events/$FILENAME.hex"
+st-flash --debug --format ihex read ./parameteo-events/$FILENAME.hex 0x0805A800 0x22800  > ./parameteo-events/$FILENAME.hex.log 2>&1
+
+echo "dumping to binary file ./parameteo-events/$FILENAME.bin"
+st-flash --debug --format ihex read ./parameteo-events/$FILENAME.bin 0x0805A800 0x22800  > ./parameteo-events/$FILENAME.bin.log 2>&1
+
+

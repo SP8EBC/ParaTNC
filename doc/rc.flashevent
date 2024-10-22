@@ -1,0 +1,32 @@
+#!/bin/bash
+
+FILE=$1
+BSN=$(basename $FILE)
+TYPE_EXT=$(echo $BSN | grep -o -E ...$)
+TYPE=""
+
+DATE=$(date +%Y%m%d)
+TIME=$(date +%H%M%S)
+
+LOGFN=flashevent_$DATE-$TIME.log
+
+if [ ! -f $1 ]; then
+	echo "input file doesn't exists"
+	exit
+fi
+
+
+if [ ${TYPE_EXT,,} = "bin" ]; then
+	TYPE="binary"
+	echo "flashing $BSN binary file into events area"
+elif [ ${TYPE_EXT,,} = "hex" ]; then
+        TYPE="ihex"
+	echo "flashing $BSN Intel-HEX file into events area"
+else
+	echo "unknown file type"
+	exit
+fi
+
+st-flash --format $TYPE write $FILE 0x0805A800 
+
+
