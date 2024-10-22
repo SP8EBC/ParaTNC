@@ -8,6 +8,8 @@ Release/
 *.hex
 *.elf
 /temp/
+*.bin
+*.log
 
 /STM32F100/
 /STM32F100_ParaTNC/
