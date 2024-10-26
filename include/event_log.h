@@ -14,9 +14,9 @@
 ///	GLOBAL MACROS
 /// ==================================================================================================
 
-#define EVENT_LOG_GET_SEVERITY(x) ((x & 0xF0) >> 4)
+#define EVENT_LOG_GET_SEVERITY(x) (x & 0x7F)
 
-#define EVENT_LOG_GET_SOURCE(x) (x & 0x0F)
+#define EVENT_LOG_GET_SOURCE(x) (x & 0x7F)
 
 #define EVENT_LOG_SET_SEVERITY_SOURCE(severity, source) \
 	(((uint8_t)severity & 0xF) << 4) | ((uint8_t)source & 0xF)
@@ -71,19 +71,28 @@ typedef enum event_log_source_t {
 
 /**
  * Structure used to store single system event in RAM2 area and Flash
- * non volatile storage
+ * non volatile storage. If MSB of severity is set to one, parameters area is 
+ * used to store 16 character wide string 
  */
+#ifdef UNIT_TEST
+typedef struct __attribute__((packed)) event_log_t {
+#else 
 typedef struct __attribute__ ((aligned (1))) event_log_t {
+#endif
 	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
+	uint32_t event_rtc;			 //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
 	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
-	uint8_t severity_and_source; //!< high nibble -> severity level, low nibble -> source
+	uint8_t severity; 			 //!< severity level defined by @link{event_log_severity_t}.
+	uint8_t source;			     //!< event source defined by @link{event_log_source_t}
 	uint8_t event_id;			 //!< event id, unique across different sources & severity level
 	uint8_t param;				 //!< Optional single-byte data, specific per event
 	uint8_t param2;				 //!< Optional single-byte data, specific per event
 	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
 	uint16_t wparam2;			 //!< Optional 2-byte data, specific per event
+	uint16_t wparam3;			 //!< Optional 2-byte data, specific per event
 	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
 	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
+	uint8_t crc8_checksum;		 //!< CRC8 checksum of this entry
 } event_log_t;
 
 /**
@@ -104,8 +113,11 @@ typedef struct event_log_exposed_t {
 	uint8_t param2;				 //!< Optional single-byte data, specific per event
 	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
 	uint16_t wparam2;			 //!< Optional 2-byte data, specific per event
+	uint16_t wparam3;
 	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
 	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
+	uint8_t crc8_from_frame;	
+	uint8_t crc8_calculated;
 }event_log_exposed_t;
 
 /// ==================================================================================================

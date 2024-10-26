@@ -43,7 +43,7 @@
  * @param _page_size
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM(_name, _area_start_addr, _area_end_addr, _erase_fn, _severity, _page_size)	\
-if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
+if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{						\
 		nvm_event_log_perform_pointer_arithmetics(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, &nvm_event_counter_id_for_last_##_name, _erase_fn, _page_size, &nvm_event_fill_rate_##_name);	\
 																								\
 }																								\
@@ -61,7 +61,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{						\
  * @param _severity level of an event
  */
 #define NVM_EVENT_PUSH_POINTERS_FLASH_OPER(_name, _event_to_insert, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity)	\
-if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{																		\
+if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
 	/* Set event counter id, if it hasn't been set so far  */																					\
 	if (event->event_counter_id == 0) {																											\
 		event->event_counter_id = nvm_event_counter_id_for_last_##_name;																		\
@@ -179,9 +179,9 @@ if (EVENT_LOG_GET_SEVERITY(event->severity_and_source) >= _severity )	{									
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================
-#define NVM_EVENT_GET_SEVERITY(x)	(x->severity_and_source & 0xF0) >> 4
+#define NVM_EVENT_GET_SEVERITY(x)	(x->severity)
 
-#define NVM_EVENT_GET_SOURCE(x)		(x->severity_and_source & 0xF)
+#define NVM_EVENT_GET_SOURCE(x)		(x->source)
 
 /// ==================================================================================================
 ///	GLOBAL DEFINITIONS

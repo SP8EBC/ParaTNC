@@ -223,7 +223,9 @@ int8_t event_log_sync (event_log_severity_t severity,
 
 	new_event.event_id = event_id;
 	new_event.event_master_time = main_get_master_time();
-	new_event.severity_and_source = EVENT_LOG_SET_SEVERITY_SOURCE(severity, source);
+	new_event.event_rtc = main_get_nvm_timestamp();
+	new_event.severity = EVENT_LOG_GET_SEVERITY(severity);
+	new_event.source = EVENT_LOG_GET_SOURCE(source);
 
 	new_event.param = param;
 	new_event.param2 = param2;

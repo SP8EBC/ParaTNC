@@ -214,6 +214,8 @@ void pwr_save_enter_stop2(void) {
 
 	analog_anemometer_deinit();
 
+	TimerAdcDisable();
+
 	// clear previous low power mode selection
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_LPMS_Msk);
 

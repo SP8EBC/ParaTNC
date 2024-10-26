@@ -1571,7 +1571,7 @@ int main(int argc, char* argv[]){
 			DACStartConfig();
 			AFSK_Init(&main_afsk);
 			ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
-			//TimerConfig();
+			TimerAdcEnable();
 
 			rte_main_woken_up = 0;
 

@@ -270,7 +270,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 		else {
 			// check if another fields are also in initiazed state or not
 			if ((current->event_id != 0x0 && current->event_id != 0xFFu) ||
-				(current->severity_and_source != 0x0 && current->severity_and_source != 0xFFu)) {
+				(current->severity != 0x0 && current->severity != 0xFFu)) {
 					// NVM event area is screwed very badly and cannot be recovered at all
 					// it must be formatted and reinitialized from scratch
 					return NVM_EVENT_AREA_ERROR;
@@ -344,7 +344,7 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 		while (newest >= area_start) {
 
 			// get severity level of currently processed event
-			const event_log_severity_t severity = (event_log_severity_t)EVENT_LOG_GET_SEVERITY(newest->severity_and_source);
+			const event_log_severity_t severity = (event_log_severity_t)EVENT_LOG_GET_SEVERITY(newest->severity);
 
 			// check if this event has appropriate severity level
 			if (severity >= min_severity_lvl)
@@ -354,7 +354,7 @@ nvm_event_result_stats_t nvm_event_get_last_events_in_exposed(event_log_exposed_
 				output_arr[output_arr_iterator].event_id = newest->event_id;
 				output_arr[output_arr_iterator].event_master_time = newest->event_master_time;
 				output_arr[output_arr_iterator].severity = severity;
-				output_arr[output_arr_iterator].source = (event_log_source_t)EVENT_LOG_GET_SOURCE(newest->severity_and_source);
+				output_arr[output_arr_iterator].source = (event_log_source_t)EVENT_LOG_GET_SOURCE(newest->source);
 				output_arr[output_arr_iterator].lparam = newest->lparam;
 				output_arr[output_arr_iterator].lparam2 = newest->lparam2;
 				output_arr[output_arr_iterator].wparam = newest->wparam;
