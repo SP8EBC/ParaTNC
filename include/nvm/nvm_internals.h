@@ -91,6 +91,12 @@ if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
 	*((uint32_t*)(ptr_place_for_new_event)+ 5) = *(ptr_event_to_insert + 5);																	\
 	_wait_for_pgm_fn																															\
 																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 6) = *(ptr_event_to_insert + 6);																	\
+	_wait_for_pgm_fn																															\
+																																				\
+	*((uint32_t*)(ptr_place_for_new_event)+ 7) = *(ptr_event_to_insert + 7);																	\
+	_wait_for_pgm_fn																															\
+																																				\
 	_disable_pgm_fn																																\
 																																				\
 }																																				\

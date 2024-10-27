@@ -31,6 +31,11 @@ typedef enum nvm_event_next_t {
  */
 static nvm_state_after_last_oper_t nvm_general_state = NVM_UNINITIALIZED;
 
+/**
+ * Amount of CRC errors after last call to @link{nvm_event_log_find_first_oldest_newest}
+ */
+static uint16_t nvm_event_crc_errors = 0;
+
 NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_ENUM_FOR_TARGETS);
 
 /**
@@ -174,6 +179,14 @@ void nvm_event_log_init(void)
 }
 
 /**
+ * Gets current value of @link{nvm_event_crc_errors}
+ */
+uint16_t nvm_event_get_crc_errors(void)
+{
+	return nvm_event_crc_errors;
+}
+
+/**
  *
  * @param oldest
  * @param newest
@@ -197,6 +210,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 #endif
 
 	*area_percentage_use = 0;
+	nvm_event_crc_errors = 0;
 
 	// lowest date found within events in NVM
 	uint32_t lowest_counter_id = 0xFFFFFFFFu;
@@ -221,6 +235,16 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 		// do not go through erased flash memory on uninitialized RAM. The first valid counter
 		// value is 1 and the last valid is 0xFFFFFFFE
 		if (current->event_counter_id != 0x0u && current->event_counter_id != 0xFFFFFFFFu) {
+
+			// calculate crc checksum for this entry
+			const uint32_t crc = calcCRC32std(current, sizeof(event_log_t) - 1, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
+
+			// skip entries with bad crc
+			if ((uint8_t)(crc & 0xFF) != current->crc_checksum) {
+				nvm_event_crc_errors++;
+
+				continue;
+			}
 
 			log_entries_counter++;
 

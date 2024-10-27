@@ -92,7 +92,7 @@ typedef struct __attribute__ ((aligned (1))) event_log_t {
 	uint16_t wparam3;			 //!< Optional 2-byte data, specific per event
 	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
 	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
-	uint8_t crc8_checksum;		 //!< CRC8 checksum of this entry
+	uint8_t crc_checksum;		 //!< less significant byte of CRC32 checksum of this entry
 } event_log_t;
 
 /**

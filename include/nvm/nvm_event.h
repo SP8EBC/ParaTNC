@@ -9,7 +9,15 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+/**
+ * 
+ */
 void nvm_event_log_init(void);
+
+/**
+ * Gets current value of @link{nvm_event_crc_errors}
+ */
+uint16_t nvm_event_get_crc_errors(void);
 
 /**
  *
