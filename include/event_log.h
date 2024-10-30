@@ -36,15 +36,20 @@
  * TYpe used to distinguish between event of different severity
  */
 typedef enum event_log_severity_t {
-	EVENT_DEBUG,		/**< EVENT_DEBUG */
-	EVENT_INFO,			/**< EVENT_INFO */
+	EVENT_DEBUG, 	/**< EVENT_DEBUG */ 
+	EVENT_INFO,	 	/**< EVENT_INFO */
 	EVENT_INFO_CYCLIC,
-	EVENT_WARNING,		/**< EVENT_WARNING */
-	EVENT_ERROR,		/**< EVENT_ERROR */
-	EVENT_ASSERT,		/**< EVENT_ASSERT assert failure, which result in hard reset*/
-	EVENT_BOOTUP,		/**< EVENT_BOOTUP all info events generated during bootup */
-	EVENT_TIMESYNC, 	/**< EVENT_TIMESYNC event generated once at startup and then every 6 hours to
-					   		   keep master_time and RTC date and time sync */
+	EVENT_WARNING,	/**< EVENT_WARNING */
+	EVENT_ERROR,	/**< EVENT_ERROR */
+	EVENT_ASSERT,	/**< EVENT_ASSERT assert failure, which result in hard reset*/
+	EVENT_BOOTUP,	/**< EVENT_BOOTUP all info events generated during bootup */
+	EVENT_TIMESYNC, /**< EVENT_TIMESYNC event generated once at startup and then every 6 hours to
+					   keep master_time and RTC date and time sync */
+
+	EVENT_MARKER_BAD = 0xBA /**< EVENT_MARKER_BAD this is not a severity level, it is only a marker,
+							   which may be placed only at the first element of new memory page. It
+							   marks previous memory page as defective and exclude it from pointer
+							   arithmetics and looking for newest and oldest  */
 } event_log_severity_t;
 
 /**

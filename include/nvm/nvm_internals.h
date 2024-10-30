@@ -212,7 +212,7 @@ if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
 
 #if (defined UNIT_TEST)
 //!< Size of single flash memory page
-#define NVM_PAGE_SIZE				2048
+//#define NVM_PAGE_SIZE				2048
 
 //!< How flash program operation are aligned, how many bytes must be programmed at once
 #define NVM_WRITE_BYTE_ALIGN		8
