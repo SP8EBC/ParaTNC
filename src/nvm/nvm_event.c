@@ -322,6 +322,8 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 
 	nvm_event_result_t res = NVM_EVENT_OK;
 
+	uint8_t sequence_number_error = 0u;
+
 	uint32_t log_entries_counter = 0u;
 
 	// size of single log entry
@@ -417,28 +419,32 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 						else {
 							// NVM event area is screwed very badly and cannot be recovered at all
 							// it must be formatted and reinitialized from scratch
-							res = NVM_EVENT_AREA_ERROR;
+							sequence_number_error = 1;
+
+							res = NVM_EVENT_FIX_IDS;
 						}
 					}
+					else {
+						sequence_number_error = 0;
+					}
+				}
+				// continue only if no critical error has been detected
+				if (res != NVM_EVENT_AREA_ERROR && sequence_number_error == 0u)
+				{
+					previous_counter_id = current->event_counter_id;
 
-					// continue only if no critical error has been detected
-					if (res != NVM_EVENT_AREA_ERROR)
-					{
-						previous_counter_id = current->event_counter_id;
+					if (current->event_counter_id < lowest_counter_id) {
+						lowest_counter_id = current->event_counter_id;
 
-						if (current->event_counter_id < lowest_counter_id) {
-							lowest_counter_id = current->event_counter_id;
+						// the smallest counter id is, the older this event is
+						*oldest = (event_log_t*)current;
+					}
 
-							// the smallest counter id is, the older this event is
-							*oldest = (event_log_t*)current;
-						}
+					if (current->event_counter_id > highest_counter_id) {
+						highest_counter_id = current->event_counter_id;
 
-						if (current->event_counter_id > highest_counter_id) {
-							highest_counter_id = current->event_counter_id;
-
-							// the higher counter id is, the newer this event is
-							*newest = (event_log_t*)current;
-						}
+						// the higher counter id is, the newer this event is
+						*newest = (event_log_t*)current;
 					}
 				}
 			}

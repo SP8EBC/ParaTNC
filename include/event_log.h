@@ -82,7 +82,7 @@ typedef enum event_log_source_t {
 #ifdef UNIT_TEST
 typedef struct __attribute__((packed)) event_log_t {
 #else 
-typedef struct __attribute__ ((aligned (1))) event_log_t {
+typedef struct __attribute__ ((packed)) event_log_t {
 #endif
 	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
 	uint32_t event_rtc;			 //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}

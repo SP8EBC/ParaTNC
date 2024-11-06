@@ -17,6 +17,7 @@ typedef enum nvm_event_result_t {
 	NVM_EVENT_SINGLE,
 	NVM_EVENT_EMPTY,		///!< NVM event logger memory is in erased state
 	NVM_EVENT_AREA_ERROR,	///!< NVM event area is screwed very badly and cannot be recovered at all it must be formatted and reinitialized from scratch
+	NVM_EVENT_FIX_IDS,		///!< Call to @link{nvm_fix_broken_event_ids} is required
 	NVM_EVENT_ERROR
 }nvm_event_result_t;
 
