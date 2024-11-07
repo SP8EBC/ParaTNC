@@ -113,6 +113,8 @@
 
 #include <etc/misc_config.h>
 
+#include "memory_map.h"
+
 #define SOH 0x01
 
 //#include "variant.h"
@@ -174,6 +176,9 @@ const config_data_rtu_t * main_config_data_rtu = 0;
 #ifdef PARAMETEO
 const config_data_gsm_t * main_config_data_gsm = 0;
 #endif
+
+uint32_t main_flash_log_start = MEMORY_MAP_EVENT_LOG_START;
+uint32_t main_flash_log_end = MEMORY_MAP_EVENT_LOG_END;
 
 //! global variable incremented by the SysTick handler to measure time in miliseconds
 volatile uint32_t master_time = 0;
@@ -2325,7 +2330,7 @@ uint32_t main_get_nvm_timestamp(void) {
 	 * Date-time timestamp in timezone local for a place where station is installed.
 	 * Mixture of BCD and integer format, this is just sligtly processed RTC registers
 	 * content.
-	 *	bit 0  - bit 12 === number of minutes starting from midnight (max 1440)
+	 *	bit 0  - bit 10 === number of minutes starting from midnight (max 1440)
 	 *	bit 16 - bit 24 === days from new year (max 356)
 	 *	bit 25 - bit 31 === years (from 00 to 99, from 2000 up to 2099)
 	 */

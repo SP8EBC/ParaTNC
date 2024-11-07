@@ -29,6 +29,7 @@
 #include "packet_tx_handler.h"
 #include <stored_configuration_nvm/config_data_externs.h>
 #include "software_version.h"
+#include "memory_map.h"
 
 //!< Dummy variable used only as end of definition marker in tables
 extern char did_dummy_data;
@@ -69,6 +70,7 @@ extern char did_dummy_data;
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF000U, config_running_pgm_counter, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF010U, 	ADC2->CALFACT, ADC2->CR, ADC2->ISR)	\
+		ENTRY(0xFF00U, main_flash_log_start, main_flash_log_end, DID_EMPTY)	\
 		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)
 #endif
 

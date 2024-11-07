@@ -40,6 +40,11 @@ typedef enum main_usart_mode_t {
 	USART_MODE_UNINIT
 }main_usart_mode_t;
 
+
+extern uint32_t main_flash_log_start;
+extern uint32_t main_flash_log_end;
+
+
 extern const config_data_mode_t * main_config_data_mode;
 extern const config_data_basic_t * main_config_data_basic;
 extern const config_data_wx_sources_t * main_config_data_wx_sources;

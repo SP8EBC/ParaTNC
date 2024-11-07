@@ -107,7 +107,8 @@ typedef struct __attribute__ ((packed)) event_log_t {
  */
 typedef struct event_log_exposed_t {
 	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
-	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
+	uint32_t event_master_time;	 //!< value of master time at the moment an event is generated
+	uint32_t event_rtc;			 //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
 	event_log_severity_t severity;
 	const char * severity_str;
 	event_log_source_t source;
