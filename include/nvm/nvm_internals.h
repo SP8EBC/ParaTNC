@@ -25,6 +25,10 @@
 		uint32_t nvm_event_counter_id_for_last_##_name;					\
 		uint16_t nvm_event_fill_rate_##_name;							\
 
+#define NVM_EVENT_CREATE_EXTERNS_FOR_TARGET(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access)  \
+		extern event_log_t* nvm_event_oldest##_name;							\
+		extern event_log_t* nvm_event_newest##_name;							\
+
 /**
  *	Macro performing pre-insertion pointer arithmetics for all directly i/o
  *	mapped areas. This usually involves checking if an end of a buffer area

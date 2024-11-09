@@ -8,24 +8,17 @@
 #ifndef KISSCOMMUNICATION_H_
 #define KISSCOMMUNICATION_H_
 
+#include <kiss_communication/kiss_communication_defs.h>
 #include "etc/ax25_config.h"
 #include "aprs/ax25.h"
 #include "aprs/afsk.h"
 
 #include "kiss_communication/types/kiss_communication_transport_t.h"
-
 #include "stdint.h"
 
 #include "drivers/serial.h"
 
 #define KISS_TOO_LONG_FRM -1
-
-	#define FEND	(uint8_t)0xC0
-	#define FESC	(uint8_t)0xDB
-	#define TFEND	(uint8_t)0xDC
-	#define TFESC	(uint8_t)0xDD
-
-	#define NONSTANDARD	(uint8_t)0x0F
 
 #define KISS_COMM_RESULT_MISSING_PREFIX		-1
 #define KISS_COMM_RESULT_WRONG_POINTER		-2

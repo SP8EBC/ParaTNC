@@ -3,7 +3,7 @@
 #include "station_config.h"
 #include "station_config_target_hw.h"
 
-#include "diag/Trace.h"
+#include "kiss_communication/kiss_communication_defs.h"
 
 #include "main.h" 	// global_time is here
 
@@ -117,6 +117,9 @@ void srl_init(
 
 	ctx->srl_rx_timeout_enable = 0;
 	ctx->srl_rx_timeout_waiting_enable = 0;
+
+	ctx->srl_rx_kiss_mode = 0;
+	ctx->srl_rx_kiss_escaping_now = 0;
 }
 
 void srl_reset(srl_context_t *ctx) {
@@ -134,6 +137,8 @@ void srl_reset(srl_context_t *ctx) {
 
 	//ctx->srl_rx_timeout_enable = 0;
 	ctx->srl_rx_timeout_waiting_enable = 0;
+	ctx->srl_rx_kiss_mode = 0;
+	ctx->srl_rx_kiss_escaping_now = 0;
 }
 
 void srl_close(srl_context_t *ctx) {
@@ -351,6 +356,9 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 
 	ctx->srl_rx_error_reason = SRL_ERR_NONE;
 
+	ctx->srl_rx_kiss_mode = 0;
+	ctx->srl_rx_kiss_escaping_now = 0;
+
 	// checking if user want
 	if (start != 0x00) {
 		ctx->srl_triggered_start = 1;
@@ -404,6 +412,54 @@ uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, cha
 }
 
 /**
+ * Triggers reception of KISS protocol data
+ * @param ctx pointer to serial port context
+ * @param num maximum frame lenght to be received
+ * @return
+ */
+uint8_t srl_receive_data_kiss_protocol(srl_context_t *ctx, int num)
+{
+	if (ctx->srl_rx_state == SRL_RXING)
+		return SRL_BUSY;
+
+	if (num >= ctx->srl_rx_buf_ln)
+		return SRL_DATA_TOO_LONG;
+
+	// clear the rx buffer
+	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+
+	ctx->srl_rx_kiss_mode = 1;
+	ctx->srl_rx_kiss_escaping_now = 0;
+
+	ctx->srl_triggered_start = 1;
+	ctx->srl_start_trigger = FEND;
+
+	ctx->srl_triggered_stop = 1;
+	ctx->srl_stop_trigger = FEND;
+
+	ctx->srl_enable_echo = 0;
+	ctx->srl_rx_bytes_counter = 0;
+	ctx->srl_rx_bytes_req = num;
+
+	ctx->srl_rx_lenght_param_addres = num + 1;
+	ctx->srl_rx_lenght_param_modifier = 0;
+
+	ctx->srl_rx_timeout_calc_started = 0;
+
+	ctx->srl_rx_state = SRL_WAITING_TO_RX;
+	ctx->srl_rx_waiting_start_time = master_time;
+
+	ctx->srl_rx_term = 0;
+
+	ctx->port->CR1 |= USART_CR1_RE;					// uruchamianie odbiornika
+	ctx->port->CR1 |= USART_CR1_RXNEIE;			// przerwanie od przepe�nionego bufora odbioru
+	ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_IDLEIE);
+
+ 	return SRL_OK;
+
+}
+
+/**
  * This function start the transfer with
  */
 uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier) {
@@ -414,6 +470,9 @@ uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char 
 		return SRL_DATA_TOO_LONG;
 
 	memset(ctx->srl_rx_buf_pointer, 0x00, ctx->srl_rx_buf_ln);
+
+	ctx->srl_rx_kiss_mode = 0;
+	ctx->srl_rx_kiss_escaping_now = 0;
 
 	// checking if user want
 	if (start != 0x00) {
@@ -479,6 +538,9 @@ uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_ca
 			retval = SRL_WRONG_PARAMS_COMBINATION;
 		}
 		else {
+			ctx->srl_rx_kiss_mode = 0;
+			ctx->srl_rx_kiss_escaping_now = 0;
+
 			// set the callback pointer within the context
 			ctx->srl_rx_term = cbk;
 
@@ -546,58 +608,84 @@ void srl_irq_handler(srl_context_t *ctx) {
 				// if there is any data remaining to receive
 				if (ctx->srl_rx_bytes_counter < ctx->srl_rx_bytes_req) {
 
-					// storing received byte into buffer
-					ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter] = (uint8_t)ctx->port->RDR;
+					// get value from UART register
+					value = (uint8_t)ctx->port->RDR;
 
-					// check if termination callback pointer has been set
-					if (ctx->srl_rx_term != NULL) {
-						// if yes call it
-						stop_rxing = ctx->srl_rx_term(	ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
-														ctx->srl_rx_buf_pointer,
-														ctx->srl_rx_bytes_counter);
+					// if kiss mode is ative and escape character is received
+					if (ctx->srl_rx_kiss_mode == 1 && value == FESC) {
+						ctx->srl_rx_kiss_escaping_now = 1;
+					}
+					else {		// if kiss protocol is not enabled or received character is not FESC
 
-						// and check the return value
-						if (stop_rxing == 1) {
-							// if this was the last byte of transmission switch the state
-							// of receiving part to done
-							ctx->srl_rx_state = SRL_RX_DONE;
+						// check if current byte is escaped
+						if (ctx->srl_rx_kiss_escaping_now == 1) {
+							switch (value) {
+								case TFEND: value = FEND; break;
+								case TFESC: value = FESC; break;
+								default: stop_rxing = 1; break;			// error situation, should be handled better
+							}
 
-							ctx->srl_triggered_stop = 0;
 						}
 
-					}
+						// storing received byte into buffer
+						ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter] = value;
 
-					// checking if this byte in stream holds the protocol information about
-					// how many bytes needs to be received.
-					if (ctx->srl_rx_lenght_param_addres == ctx->srl_rx_bytes_counter && ctx->srl_rx_lenght_param_addres != 0xFF) {
-						len_temp = ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter];
+						// check if termination callback pointer has been set
+						if (ctx->srl_rx_term != NULL) {
+							// if yes call it
+							stop_rxing = ctx->srl_rx_term(	ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
+															ctx->srl_rx_buf_pointer,
+															ctx->srl_rx_bytes_counter);
 
-						// adding (or substracting) a length modifier
-						len_temp += ctx->srl_rx_lenght_param_modifier;
+							// and check the return value
+							if (stop_rxing == 1) {
+								// if this was the last byte of transmission switch the state
+								// of receiving part to done
+								ctx->srl_rx_state = SRL_RX_DONE;
 
-						// if the target length is bigger than buffer size switch to error state
-						if (len_temp >= ctx->srl_rx_buf_ln) {
-							ctx->srl_rx_error_reason = SRL_ERR_OVERFLOW;
-							ctx->srl_rx_state = SRL_RX_ERROR;
-							stop_rxing = 1;
+								ctx->srl_triggered_stop = 0;
+							}
+
+						}
+
+						// checking if this byte in stream holds the protocol information about
+						// how many bytes needs to be received.
+						if (ctx->srl_rx_lenght_param_addres == ctx->srl_rx_bytes_counter && ctx->srl_rx_lenght_param_addres != 0xFF) {
+							len_temp = ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter];
+
+							// adding (or substracting) a length modifier
+							len_temp += ctx->srl_rx_lenght_param_modifier;
+
+							// if the target length is bigger than buffer size switch to error state
+							if (len_temp >= ctx->srl_rx_buf_ln) {
+								ctx->srl_rx_error_reason = SRL_ERR_OVERFLOW;
+								ctx->srl_rx_state = SRL_RX_ERROR;
+								stop_rxing = 1;
+							}
+							else {
+								ctx->srl_rx_bytes_req = len_temp;
+							}
+						}
+
+						if (ctx->srl_rx_kiss_escaping_now == 0) {
+							// if the user want the driver to stop receiving after certain is received
+							if (ctx->srl_triggered_stop == 1) {
+								if (value == ctx->srl_stop_trigger) {
+									ctx->srl_rx_state = SRL_RX_DONE;
+									stop_rxing = 1;
+								}
+							}
 						}
 						else {
-							ctx->srl_rx_bytes_req = len_temp;
+							ctx->srl_rx_kiss_escaping_now = 0;
 						}
-					}
 
-					// moving buffer pointer forward
-					ctx->srl_rx_bytes_counter++;
+						// moving buffer pointer forward
+						ctx->srl_rx_bytes_counter++;
 
-				}
-
-				// if the user want the driver to stop receiving after certain is received
-				if (ctx->srl_triggered_stop == 1) {
-					if (ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter - 1] == ctx->srl_stop_trigger) {
-						ctx->srl_rx_state = SRL_RX_DONE;
-						stop_rxing = 1;
 					}
 				}
+				////////////////////ssss
 
 				// if after incrementing a pointer we reached the end of the buffer
 				if (ctx->srl_rx_bytes_counter >= ctx->srl_rx_bytes_req) {

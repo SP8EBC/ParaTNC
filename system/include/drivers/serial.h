@@ -135,6 +135,9 @@ typedef struct srl_context_t {
 	uint8_t srl_rx_lenght_param_addres;
 	uint8_t srl_rx_lenght_param_modifier;
 
+	uint8_t srl_rx_kiss_mode;
+	uint8_t srl_rx_kiss_escaping_now;
+
 	// this is a pointer to function which could be optionally called
 	// after each byte received by the serial port
 	// the value returned by this function determines if the receiving shall
@@ -193,6 +196,7 @@ void srl_wait_for_tx_completion(srl_context_t *ctx);
 uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output);
 void srl_irq_handler(srl_context_t *ctx);
 uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
+uint8_t srl_receive_data_kiss_protocol(srl_context_t *ctx, int num);
 uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
 uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_callback_t cbk);
 uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);

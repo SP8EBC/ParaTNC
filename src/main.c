@@ -1360,7 +1360,7 @@ int main(int argc, char* argv[]){
 #else
   if (main_kiss_enabled == 1) {
 	  // switching UART to receive mode to be ready for KISS frames from host
-	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
+	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 100);
   }
   else {
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
@@ -1732,12 +1732,12 @@ int main(int argc, char* argv[]){
 					}
 
 					// restart KISS receiving to be ready for next frame
-					srl_receive_data (main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+					srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 120);
 				}
 
 				// if there were an error during receiving frame from host, restart rxing once again
 				if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
-					srl_receive_data (main_kiss_srl_ctx_ptr, 120, FEND, FEND, 0, 0, 0);
+					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
 				}
 			}
 
