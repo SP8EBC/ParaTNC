@@ -113,11 +113,6 @@ int8_t event_log_sync (event_log_severity_t severity,
 	new_event.lparam = lparam;
 	new_event.lparam2 = lparam2;
 
-	// calculate crc32 checksum over whole event log entry, excluding the checksum itself
-	uint32_t crc = calcCRC32std(&new_event, sizeof(event_log_t) - 1, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
-	// store only lsb :D 
-	new_event.crc_checksum = crc & 0xFF;
-
 	const nvm_event_result_t res = nvm_event_log_push_new_event(&new_event);
 
 	if (res == NVM_EVENT_OK) {

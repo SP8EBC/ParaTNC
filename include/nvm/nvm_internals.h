@@ -71,6 +71,11 @@ if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
 		event->event_counter_id = nvm_event_counter_id_for_last_##_name;																		\
 	}																																			\
 																																				\
+	/* calculate crc32 checksum over whole event log entry, excluding the checksum itself */													\
+	crc = calcCRC32std(event, sizeof(event_log_t) - 1, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);														\
+	/* store only lsb :D */																														\
+	event->crc_checksum = crc & 0xFF;																											\
+																																				\
 	/* programming 32 bits at once */																											\
 	uint32_t * ptr_event_to_insert = (uint32_t*)_event_to_insert;																				\
 	uint32_t * ptr_place_for_new_event = (uint32_t*)nvm_event_newest##_name;																	\
