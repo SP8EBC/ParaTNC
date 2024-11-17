@@ -11,6 +11,9 @@
 #include "main.h"
 #include "misc_config.h"
 
+#include "event_log.h"
+#include "events_definitions/events_wx_handler.h"
+
 #ifndef RTE_WX_PROBLEMS_MAX_THRESHOLD
 #define RTE_WX_PROBLEMS_MAX_THRESHOLD 20
 #endif
@@ -177,22 +180,63 @@ int8_t rte_wx_check_weather_measurements(void) {
 	}
 
 	if (rte_wx_analog_anemometer_counter_timer_has_been_fired > (RTE_WX_PROBLEMS_MAX_THRESHOLD << 2)) {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_WX_HANDLER,
+				  EVENTS_WX_HANDLER_ERROR_RTE_CHECK_ANEM_TIMER_HAS_BEEN_FIRED,
+				  rte_wx_analog_anemometer_counter_timer_has_been_fired, 0,
+				  0, 0,
+				  0, 0);
+
 		looks_good = 0;
 	}
 
 	if (rte_wx_analog_anemometer_counter_slew_limit_fired > (RTE_WX_PROBLEMS_MAX_THRESHOLD << 2)) {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_WX_HANDLER,
+				  EVENTS_WX_HANDLER_ERROR_RTE_CHECK_SLEW_LIMIT,
+				  rte_wx_analog_anemometer_counter_slew_limit_fired, 0,
+				  0, 0,
+				  0, 0);
+
 		looks_good = 0;
 	}
 
 	if (rte_wx_analog_anemometer_counter_deboucing_fired > (RTE_WX_PROBLEMS_MAX_THRESHOLD << 2)) {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_WX_HANDLER,
+				  EVENTS_WX_HANDLER_ERROR_RTE_CHECK_DEBOUCING,
+				  rte_wx_analog_anemometer_counter_deboucing_fired, 0,
+				  0, 0,
+				  0, 0);
+
+
 		looks_good = 0;
 	}
 
 	if (rte_wx_analog_anemometer_counter_direction_doesnt_work > (RTE_WX_PROBLEMS_MAX_THRESHOLD << 2)) {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_WX_HANDLER,
+				  EVENTS_WX_HANDLER_ERROR_RTE_CHECK_UF_CONVERTER_FAIL,
+				  rte_wx_analog_anemometer_counter_direction_doesnt_work, 0,
+				  0, 0,
+				  0, 0);
+
 		looks_good = 0;
 	}
 
 	if (rte_wx_problems_wind_buffers > RTE_WX_PROBLEMS_MAX_THRESHOLD) {
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_WX_HANDLER,
+				  EVENTS_WX_HANDLER_ERROR_RTE_CHECK_WINDSPEED_BUFFERS,
+				  rte_wx_problems_wind_buffers, 0,
+				  0, 0,
+				  0, 0);
+
 		looks_good = 0;
 	}
 

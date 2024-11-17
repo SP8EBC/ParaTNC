@@ -10,6 +10,9 @@
 #include "../umb_master/umb_0x26_status.h"
 #include "main.h"
 
+#include "event_log.h"
+#include "events_definitions/events_umb.h"
+
 #include <string.h>
 
 umb_retval_t umb_0x26_status_request(umb_frame_t* frame, umb_context_t* ctx, const config_data_umb_t * const config_umb) {
@@ -63,6 +66,14 @@ umb_retval_t umb_0x26_status_callback(umb_frame_t* frame, umb_context_t* ctx) {
 
 		// storing the time when last error code will be stored
 		ctx->time_of_last_nok = main_get_master_time();
+
+		event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_UMB,
+				  EVENTS_UMB_WARN_NOK_STATUS_IN_GET_STATUS_RESP,
+				  ctx->nok_error_codes[UMB_CONTEXT_ERR_HISTORY_LN - 4], ctx->nok_error_codes[UMB_CONTEXT_ERR_HISTORY_LN - 3],
+				  ctx->nok_error_codes[UMB_CONTEXT_ERR_HISTORY_LN - 2], ctx->nok_error_codes[UMB_CONTEXT_ERR_HISTORY_LN - 1],
+				  0, 0);
 
 		// trigger the status message with a content of fault store
 		ctx->trigger_status_msg = 1;

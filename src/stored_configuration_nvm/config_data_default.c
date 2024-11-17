@@ -96,10 +96,12 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 		.victron = 0,
 #endif
 
-#ifdef _SENSOR_BME280
+#if (defined _SENSOR_BME280)
 		.wx_ms5611_or_bme = 1,
-#else
+#elif (defined _SENSOR_MS5611)
 		.wx_ms5611_or_bme = 0,
+#else
+		.wx_ms5611_or_bme = 0xFFu,
 #endif
 
 		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,

@@ -29,7 +29,7 @@ int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const confi
 				// but MS5611 isn't a humidity sensor
 				rte_wx_humidity_available = 2;
 			}
-			else {
+			else if (config_mode->wx_ms5611_or_bme == 0) {
 				// BME280
 				measurement_result = wx_get_humidity_bme280(&rte_wx_humidity);
 
@@ -42,6 +42,9 @@ int32_t wx_get_humidity_measurement(const config_data_wx_sources_t * const confi
 				else {
 					rte_wx_humidity_available = 0;
 				}
+			}
+			else {
+				;
 			}
 
 			break;

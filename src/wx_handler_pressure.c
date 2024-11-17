@@ -36,8 +36,11 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 		if (config_mode->wx_ms5611_or_bme == 1) {
 			measurement_retval = wx_get_pressure_bme280(&rte_wx_pressure);
 		}
-		else {
+		else if (config_mode->wx_ms5611_or_bme == 0) {
 			measurement_retval = wx_get_pressure_ms5611(&rte_wx_pressure);
+		}
+		else {
+			measurement_retval = 0xFFFFFFFFu;
 		}
 
 		// check if pressure has been retrieved correctly
@@ -85,6 +88,9 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
 
 		}
+		else if (measurement_retval == 0xFFFFFFFFu) {
+			;
+		}
 		else {
 			// store an event
 		    event_log_sync(EVENT_WARNING, EVENT_SRC_WX_HANDLER,
@@ -102,6 +108,8 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 
 			// get the average pressure directly, there is no need for any further processing
 			rte_wx_pressure = umb_get_qnh(config_umb);
+
+			rte_wx_pressure_valid = rte_wx_pressure;
 
 			// set the flag that external temperature is available
 			output |= WX_HANDLER_PARAMETER_RESULT_PRESSURE;

@@ -80,6 +80,9 @@ void wx_check_force_i2c_reset(void) {
 		 bme280_setup();
 		 bme280_read_calibration(bme280_calibration_data);
 		}
+		else {
+			;
+		}
 	}
 
 }

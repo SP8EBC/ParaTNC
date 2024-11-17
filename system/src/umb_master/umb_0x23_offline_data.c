@@ -10,6 +10,10 @@
 #include "rte_wx.h"
 #include "main.h"
 
+#include "event_log.h"
+#include "events_definitions/events_umb.h"
+
+
 #define UNSIGNED_CHAR 	0x10
 #define SIGNED_CHAR		0x11
 #define UNSIGNED_SHORT	0x12
@@ -184,6 +188,14 @@ umb_retval_t umb_0x23_offline_data_callback(umb_frame_t* frame, umb_context_t* c
 		ctx->time_of_last_nok = main_get_master_time();
 
 		output = UMB_NOK_STATUS_GOT_WITH_RESP;
+
+		event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_UMB,
+				  EVENTS_UMB_WARN_NOK_STATUS_IN_OFFLINE_DATA_RESP,
+				  status, 0,
+				  channel, 0,
+				  0, 0);
 	}
 
 	return output;

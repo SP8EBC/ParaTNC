@@ -14,6 +14,9 @@
 #include <umb_master/umb_channel_pool.h>
 #include <rte_wx.h>
 
+#include "event_log.h"
+#include "events_definitions/events_umb.h"
+
 #define SOH 0x01
 #define STX 0x02
 #define ETX 0x03
@@ -62,44 +65,85 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 
 	uint16_t crc = 0xFFFFu;
 
-	if (serial_buffer[0] != SOH && serial_buffer[1] != V10)
-		return UMB_NOT_VALID_FRAME;
+	umb_retval_t out = UMB_UNINITIALIZED;
 
-	if (serial_buffer[3] != (MASTER_CLASS >> 4) && serial_buffer[2] != MASTER_ID)
+	if (serial_buffer[0] != SOH && serial_buffer[1] != V10) {
+		return UMB_NOT_VALID_FRAME;
+	}
+
+	if (serial_buffer[3] != (MASTER_CLASS >> 4) && serial_buffer[2] != MASTER_ID) {
 		return UMB_TO_ANOTHER_MASTER;
+	}
 
 	frame->slave_class 		= serial_buffer[5] >> 4;
 	frame->slave_id 		= serial_buffer[4];
 	frame->lenght 			= serial_buffer[6] - 2;
 
-	if (serial_buffer[7] != STX)
-		return UMB_NOT_VALID_FRAME;
+	if (serial_buffer[7] != STX) {
+		out = UMB_NOT_VALID_FRAME;
 
-	frame->command_id		= serial_buffer[8];
-	frame->protocol_version = serial_buffer[9];
+		event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_UMB,
+				  EVENTS_UMB_WARN_RECEIVED_FRAME_MALFORMED,
+				  0, serial_buffer[7],
+				  0, 0,
+				  0, 0);
+	}
+	else {
 
-	// checking if payload isn't too big to fit into structure
-	if (frame->lenght >= UMB_FRAME_MAX_PAYLOAD_LN)
-		return UMB_RECV_FRAME_TOO_LONG;
+		frame->command_id		= serial_buffer[8];
+		frame->protocol_version = serial_buffer[9];
 
-	// Copying payload of the frame from a serial buffer
-	for (int i = 0; (i < frame->lenght && i < buffer_ln); i++) {
-		frame->payload[i] = serial_buffer[10 + i];
+		// checking if payload isn't too big to fit into structure
+		if (frame->lenght >= UMB_FRAME_MAX_PAYLOAD_LN) {
+			out = UMB_RECV_FRAME_TOO_LONG;
+
+			event_log_sync(
+					  EVENT_WARNING,
+					  EVENT_SRC_UMB,
+					  EVENTS_UMB_WARN_RECEIVED_FRAME_MALFORMED,
+					  frame->lenght, 0,
+					  0, 0,
+					  0, 0);
+		}
+		else {
+			// Copying payload of the frame from a serial buffer
+			for (int i = 0; (i < frame->lenght && i < buffer_ln); i++) {
+				frame->payload[i] = serial_buffer[10 + i];
+			}
+
+			// recalculating crc from frame content
+			for (int j = 0; j <= frame->lenght + 8 + 2; j++) {
+				crc = umb_calc_crc(crc, serial_buffer[j]);
+			}
+
+			frame->calculated_checksum_lsb = crc & 0xFF;
+			frame->calculated_checksum_msb = (crc & 0xFF00) >> 8;
+
+			if (	serial_buffer[frame->lenght + 9 + 2] != frame->calculated_checksum_lsb ||
+					serial_buffer[frame->lenght + 10 + 2] != frame->calculated_checksum_msb) {
+				out = UMB_WRONG_CRC;
+
+				const uint16_t crc_from_frame = (serial_buffer[frame->lenght + 10 + 2] << 8) |
+												(serial_buffer[frame->lenght + 9 + 2]);
+
+				event_log_sync(
+						  EVENT_WARNING,
+						  EVENT_SRC_UMB,
+						  EVENTS_UMB_WARN_CRC_FAILED_IN_RECEIVED_FRAME,
+						  0, 0,
+						  crc, crc_from_frame,
+						  0, 0);
+
+			}
+			else {
+				out = UMB_OK;
+			}
+		}
 	}
 
-	// recalculating crc from frame content
-	for (int j = 0; j <= frame->lenght + 8 + 2; j++) {
-		crc = umb_calc_crc(crc, serial_buffer[j]);
-	}
-
-	frame->calculated_checksum_lsb = crc & 0xFF;
-	frame->calculated_checksum_msb = (crc & 0xFF00) >> 8;
-
-	if (	serial_buffer[frame->lenght + 9 + 2] != frame->calculated_checksum_lsb ||
-			serial_buffer[frame->lenght + 10 + 2] != frame->calculated_checksum_msb)
-		return UMB_WRONG_CRC;
-
-	return UMB_OK;
+	return out;
 }
 
 umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame, uint16_t* target_ln, const config_data_umb_t * const config_umb) {
@@ -241,6 +285,14 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 
 				ctx->time_of_last_comms_timeout = master_time;
 
+				event_log_sync(
+						  EVENT_ERROR,
+						  EVENT_SRC_UMB,
+						  EVENTS_UMB_ERROR_RECEIVING,
+						  0, 0,
+						  0, 0,
+						  0, 0);
+
 			}
 			break;
 		}
@@ -278,6 +330,14 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 	// check if this is a response to routine which was queried recently
 	if (frame->command_id != ctx->current_routine) {
 		ctx->state = UMB_STATUS_ERROR_WRONG_RID_IN_RESPONSE;
+
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_UMB,
+				  EVENTS_UMB_ERROR_UNEXPECTED_ROUTINE_ID,
+				  frame->command_id, ctx->current_routine,
+				  0, 0,
+				  0, 0);
 
 		return UMB_GENERAL_ERROR;
 	}
@@ -321,6 +381,7 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 	// if the last error has been received later than 10 minutes ago
 	else {
 		out =  UMB_QF_DEGRADED;
+
 	}
 
 	// if there were no timeouts so far
@@ -340,6 +401,14 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 	// if the last successfull communication with the sensor was 10 minutes ago or sooner
 	if (master_time - ctx->time_of_last_successful_comms > TEN_MINUTES) {
 		out = UMB_QF_NOT_AVALIABLE;
+
+		event_log_sync(
+				  EVENT_ERROR,
+				  EVENT_SRC_UMB,
+				  EVENTS_UMB_ERROR_QF_NOT_AVAILABLE,
+				  0, 0,
+				  0, 0,
+				  ctx->time_of_last_comms_timeout, 0);
 	}
 
 	return out;

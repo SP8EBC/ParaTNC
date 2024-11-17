@@ -96,9 +96,12 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				// this will get all three parameters (humidity, pressure, internal temp) in single call
 				measurement_result = wx_get_temperature_bme280(&rte_wx_temperature_internal);
 			}
-			else {
+			else if (config_mode->wx_ms5611_or_bme == 0) {
 				// ms5611 is a bit different as the sensor (internal) temperature is collected separately from pressure
 				measurement_result = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
+			}
+			else {
+				measurement_result = 0xFFFFFFFFu;
 			}
 
 			// check if temperature from pressure sensor has been retrieved w/o errors
@@ -109,6 +112,9 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				// set the flag for internal temperature
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 
+			}
+			else if (measurement_result == 0xFFFFFFFFu) {
+				;
 			}
 			else {
 				// store an event
@@ -132,6 +138,9 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				if (dallas_slew_exceeded > 0) {
 					rte_wx_current_dallas_qf = DALLAS_QF_NOT_AVALIABLE;
 				}
+			}
+			else if (config_mode->wx_ms5611_or_bme == 0xFFu) {
+				; // if internal sensor is completely disabled
 			}
 			else {
 				// additional delay to finish measurement

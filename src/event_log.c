@@ -217,6 +217,23 @@ const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 			else if (event_id == EVENTS_WX_HANDLER_WARN_HUMIDITY_FAILED) {
 				out = event_log_str_wx_handler_temperature_humidity_fail;
 			}
+			///////
+			///
+			else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_ANEM_TIMER_HAS_BEEN_FIRED) {
+				out = event_log_str_wx_handler_error_rte_check_anem_timer_has_been_fired;
+			}
+			else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_SLEW_LIMIT) {
+				out = event_log_str_wx_handler_error_rte_check_slew_limit;
+			}
+			else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_DEBOUCING) {
+				out = event_log_str_wx_handler_error_rte_check_debouncing;
+			}
+			else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_UF_CONVERTER_FAIL) {
+				out = event_log_str_wx_handler_error_rte_check_uf_converter_fail;
+			}
+			else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_WINDSPEED_BUFFERS) {
+				out = event_log_str_wx_handler_error_rte_check_windspeed_buffers;
+			}
 
 			break;
 		}
@@ -281,7 +298,31 @@ const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 			break;
 		case EVENT_SRC_HTTP_CLIENT:			 break;
 		case EVENT_SRC_MODBUS:				 break;
-		case EVENT_SRC_UMB:					 break;
+		case EVENT_SRC_UMB:		{
+			if (event_id == EVENTS_UMB_WARN_CRC_FAILED_IN_RECEIVED_FRAME) {
+				out = event_log_str_umb_warn_crc_failed_in_received_frame;
+			}
+			else if (event_id == EVENTS_UMB_WARN_RECEIVED_FRAME_MALFORMED) {
+				out = event_log_str_umb_warn_received_frame_malformed;
+			}
+			else if (event_id == EVENTS_UMB_WARN_NOK_STATUS_IN_GET_STATUS_RESP) {
+				out = event_log_str_umb_warn_nok_sensor_status_in_get_status_data;
+			}
+			else if (event_id == EVENTS_UMB_WARN_NOK_STATUS_IN_OFFLINE_DATA_RESP) {
+				out = event_log_str_umb_warn_nok_sensor_status_in_offline_data;
+			}
+			else if (event_id == EVENTS_UMB_ERROR_RECEIVING) {
+				out = event_log_str_umb_error_receiving;
+			}
+			else if (event_id == EVENTS_UMB_ERROR_UNEXPECTED_ROUTINE_ID) {
+				out = event_log_str_umb_error_unexp_routine_id;
+			}
+			else if (event_id == EVENTS_UMB_ERROR_QF_NOT_AVAILABLE) {
+				out = event_log_str_umb_error_quality_factor_not_avail;
+			}
+
+			break;
+		}
 		case EVENT_SRC_DRV_ANEMOMETER: {
 
 			if (event_id == EVENTS_DRV_ANEMOMETER_WARN_NO_PULSES_INT_FIRED) {

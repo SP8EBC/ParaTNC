@@ -442,7 +442,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			}
 		}
 		else {
-			pressure_qf = PRESSURE_QF_NOT_AVALIABLE;
+			pressure_qf = PRESSURE_QF_NOT_AVALIABLE;		// TODO:
 			humidity_qf = HUMIDITY_QF_NOT_AVALIABLE;
 		}
 

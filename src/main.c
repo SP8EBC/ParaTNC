@@ -1265,6 +1265,9 @@ int main(int argc, char* argv[]){
 		bme280_setup();
 		bme280_read_calibration(bme280_calibration_data);
 	}
+	else {
+		;	// no internal sensor enabled
+	}
 
  kiss_security_access_init(main_config_data_basic);
 
@@ -2339,6 +2342,14 @@ uint32_t main_get_nvm_timestamp(void) {
 
 	uint16_t temp = 0;
 
+	const uint16_t real_year = 	2000u +
+								10 * ((RTC->DR & RTC_DR_YT) >> RTC_DR_YT_Pos) +
+			 	 	 	 	 	 1 * ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos);
+
+
+    const bool is_leap = ((real_year % 4) == 0) ? true : false;
+
+
 	// minutes
 	temp = 600 * ((RTC->TR & RTC_TR_HT) >> RTC_TR_HT_Pos) +
 			60 * ((RTC->TR & RTC_TR_HU) >> RTC_TR_HU_Pos) +
@@ -2351,19 +2362,39 @@ uint32_t main_get_nvm_timestamp(void) {
 	temp = 	 1 * ((RTC->DR & RTC_DR_MU) >> RTC_DR_MU_Pos) +
 			10 * ((RTC->DR & RTC_DR_MT) >> RTC_DR_MT_Pos);
 
-	switch (temp) {
-	case 1: temp = 0; break;
-	case 2: temp = 31; break;
-	case 3: temp = 31 + 28; break;
-	case 4:	temp = 31 + 28 + 31; break;
-	case 5: temp = 31 + 28 + 31 + 30; break;
-	case 6: temp = 31 + 28 + 31 + 30 + 31; break;
-	case 7: temp = 31 + 28 + 31 + 30 + 31 + 30; break;
-	case 8: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31; break;
-	case 9: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31; break;
-	case 10:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30; break;
-	case 11:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31; break;
-	case 12:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30; break;
+	if (is_leap == true)
+	{
+		switch (temp) {
+		case 1: temp = 0; break;
+		case 2: temp = 31; break;
+		case 3: temp = 31 + 29; break;
+		case 4:	temp = 31 + 29 + 31; break;
+		case 5: temp = 31 + 29 + 31 + 30; break;
+		case 6: temp = 31 + 29 + 31 + 30 + 31; break;
+		case 7: temp = 31 + 29 + 31 + 30 + 31 + 30; break;
+		case 8: temp = 31 + 29 + 31 + 30 + 31 + 30 + 31; break;
+		case 9: temp = 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31; break;
+		case 10:temp = 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30; break;
+		case 11:temp = 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31; break;
+		case 12:temp = 31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30; break;
+		}
+	}
+	else
+	{
+		switch (temp) {
+		case 1: temp = 0; break;
+		case 2: temp = 31; break;
+		case 3: temp = 31 + 28; break;
+		case 4:	temp = 31 + 28 + 31; break;
+		case 5: temp = 31 + 28 + 31 + 30; break;
+		case 6: temp = 31 + 28 + 31 + 30 + 31; break;
+		case 7: temp = 31 + 28 + 31 + 30 + 31 + 30; break;
+		case 8: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31; break;
+		case 9: temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31; break;
+		case 10:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30; break;
+		case 11:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31; break;
+		case 12:temp = 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30; break;
+		}
 	}
 
 	// then add number of days from current month
