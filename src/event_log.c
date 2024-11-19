@@ -285,6 +285,12 @@ const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 			else if (event_id == EVENTS_GSM_GPRS_WARN_ASYNC_MSG_DETECTED) {
 				out = event_log_str_tcpip_warn_async_msg_detected;
 			}
+			else if (event_id == EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS) {
+				out = event_log_str_tcpip_error_sim_card_status;
+			}
+			else if (event_id == EVENTS_GSM_GPRS_WARN_NOT_REGISTERED_TO_NETWORK) {
+				out = event_log_str_tcpip_warn_not_registered_to_nework;
+			}
 
 			break;
 		case EVENT_SRC_TCPIP:				 

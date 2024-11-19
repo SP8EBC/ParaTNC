@@ -36,6 +36,18 @@
 	#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
+#ifdef _METEO_DISABLE_DALLAS
+#define _METEO_DEF_DISABLE_DALLAS 		WX_INTERNAL_DISABLE_DALLAS
+#else
+#define _METEO_DEF_DISABLE_DALLAS		(0u)
+#endif
+
+#ifdef _METEO_VALIDATE_PARAMETERS
+#define	_METEO_DEF_VALIDATE_PARAMS		WX_CHECK_VALIDATE_PARAMS
+#else
+#define _METEO_DEF_VALIDATE_PARAMS		(0u)
+#endif
+
 const uint16_t __attribute__((section(".config_section_second"))) config_data_pgm_cntr_second = 0x2;
 
 const uint32_t __attribute__((section(".config_section_second.crc"))) config_data_crc_val_second = 0xDEADBEEF;
@@ -51,7 +63,7 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 #endif
 
 #ifdef _METEO
-		.wx = 1,
+		.wx = (1 | _METEO_DEF_DISABLE_DALLAS | _METEO_DEF_VALIDATE_PARAMS),
 #else
 		.wx = 0,
 #endif

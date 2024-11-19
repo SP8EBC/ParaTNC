@@ -206,6 +206,17 @@ void sim800_gprs_response_callback(srl_context_t * srl_context, gsm_sim800_state
 		strncpy(gsm_sim800_ip_address, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 18);
 
 		gsm_sim800_replace_non_printable_with_space(gsm_sim800_ip_address);
+
+		 event_log_sync(
+				 EVENT_BOOTUP,
+				 EVENT_SRC_GSM_GPRS,
+				 EVENTS_GSM_GPRS_IP_ADDRESS,
+				 *((uint8_t*)&gsm_sim800_ip_address[12]),
+				 *((uint8_t*)&gsm_sim800_ip_address[13]),
+				 *((uint16_t*)&gsm_sim800_ip_address[8]),
+				 *((uint16_t*)&gsm_sim800_ip_address[10]),
+				 *((uint32_t*)&gsm_sim800_ip_address[0]),
+				 *((uint32_t*)&gsm_sim800_ip_address[4]));
 	}
 	else if (gsm_at_command_sent_last == CONFIGURE_DTR) {
 		comparision_result = strncmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 2);

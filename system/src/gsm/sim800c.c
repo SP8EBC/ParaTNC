@@ -865,6 +865,17 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 			sim800c_imsi_decode(gsm_sim800_imsi, strlen(gsm_sim800_imsi), &gsm_sim800_mcc_from_imsi, &gsm_sim800_mnc_from_imsi);
 
+			 event_log_sync(
+					 EVENT_BOOTUP,
+					 EVENT_SRC_GSM_GPRS,
+					 EVENTS_GSM_GPRS_IMSI,
+					 *((uint8_t*)&gsm_sim800_imsi[12]),
+					 *((uint8_t*)&gsm_sim800_imsi[13]),
+					 *((uint16_t*)&gsm_sim800_imsi[8]),
+					 *((uint16_t*)&gsm_sim800_imsi[10]),
+					 *((uint32_t*)&gsm_sim800_imsi[0]),
+					 *((uint32_t*)&gsm_sim800_imsi[4]));
+
 		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
 			comparision_result = strncmp(CPIN, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx), 5);
@@ -885,6 +896,15 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 				if (comparision_result == 0) {
 					gsm_sim800_simcard_status = SIMCARD_ERROR;
+
+					 event_log_sync(
+							 EVENT_ERROR,
+							 EVENT_SRC_GSM_GPRS,
+							 EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS,
+							 0, 0,
+							 0, 0,
+							 0, 0);
+
 				}
 			}
 
@@ -898,6 +918,14 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				if (*(const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 7) == '0' &&
 					*(const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx + 9) != '0') {
 					gsm_sim800_network_status = NETWORK_NOT_REGISTERED;
+
+					 event_log_sync(
+							 EVENT_WARNING,
+							 EVENT_SRC_GSM_GPRS,
+							 EVENTS_GSM_GPRS_WARN_NOT_REGISTERED_TO_NETWORK,
+							 0, 0,
+							 0, 0,
+							 0, 0);
 				}
 				else {
 					gsm_sim800_network_status = NETWORK_REGISTERED;
@@ -910,6 +938,17 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 
 					// trim network name with excessive spaces
 					text_replace_space_with_null(gsm_sim800_registered_network, REGISTERED_NETWORK_LN);
+
+					 event_log_sync(
+							 EVENT_BOOTUP,
+							 EVENT_SRC_GSM_GPRS,
+							 EVENTS_GSM_GPRS_REGISTERED_NETWORK,
+							 *((uint8_t*)&gsm_sim800_registered_network[12]),
+							 *((uint8_t*)&gsm_sim800_registered_network[13]),
+							 *((uint16_t*)&gsm_sim800_registered_network[8]),
+							 *((uint16_t*)&gsm_sim800_registered_network[10]),
+							 *((uint32_t*)&gsm_sim800_registered_network[0]),
+							 *((uint32_t*)&gsm_sim800_registered_network[4]));
 				}
 
 			}
@@ -930,6 +969,14 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				else {
 					gsm_sim800_signal_level_dbm = -115;
 				}
+
+				 event_log_sync(
+						 EVENT_BOOTUP,
+						 EVENT_SRC_GSM_GPRS,
+						 EVENTS_GSM_GPRS_SIGNAL_LEVEL,
+						 0, 0,
+						 gsm_sim800_signal_level_dbm, 0,
+						 0, 0);
 			}
 
 		}

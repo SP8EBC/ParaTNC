@@ -1237,7 +1237,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(PARAMETEO)
-	  if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
+	  if (configuration_get_disable_dallas() == 0) {
 		  // initialize dallas one-wire driver for termometer
 		  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 	  }
@@ -1914,7 +1914,7 @@ int main(int argc, char* argv[]){
 					}
 				}
 	#endif
-				if (main_config_data_mode->wx != 0) {
+				if (configuration_get_validate_parameters() == 1) {
 					if (rte_wx_check_weather_measurements() == 0) {
 						backup_reg_increment_weather_measurements_check_reset();
 
@@ -1955,17 +1955,6 @@ int main(int argc, char* argv[]){
 				 */
 				if (--main_six_hour_pool_timer < 0) {
 					main_six_hour_pool_timer = 6;
-
-				  event_log_sync(
-							  EVENT_TIMESYNC,
-							  EVENT_SRC_MAIN,
-							  EVENTS_MAIN_TIMESYNC_PERIODIC,
-							  main_get_rtc_datetime(MAIN_GET_RTC_DAY),
-							  main_get_rtc_datetime(MAIN_GET_RTC_MONTH),
-							  main_get_rtc_datetime(MAIN_GET_RTC_YEAR),
-							  main_get_rtc_datetime(MAIN_GET_RTC_HOUR),
-							  main_get_rtc_datetime(MAIN_GET_RTC_MIN),
-							  main_get_rtc_datetime(MAIN_GET_RTC_SEC));
 
 				  event_log_sync(
 							  EVENT_INFO_CYCLIC,

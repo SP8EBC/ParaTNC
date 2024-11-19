@@ -12,6 +12,8 @@
 #include <main.h>
 #include <delay.h>
 
+#include "stored_configuration_nvm/configuration_handler.h"
+
 #include <event_log.h>
 #include <events_definitions/events_wx_handler.h>
 
@@ -124,7 +126,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			}
 
 			// check if dallas temperature sensor is not disabled (it is enabled by default)
-			if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
+			if (configuration_get_disable_dallas() == 0) {
 
 				// measure an external temperature using Dallas one wire sensor.
 				// this function has blocking I/O which also adds a delay required by MS5611
@@ -157,7 +159,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 			}
 	#endif
 
-			if ((main_config_data_mode->wx & WX_INTERNAL_DISABLE_DALLAS) == 0) {
+			if (configuration_get_disable_dallas() == 0) {
 				if (config_sources->temperature == WX_SOURCE_INTERNAL && rte_wx_current_dallas_qf == DALLAS_QF_FULL) {
 					// updating last good measurement time
 					wx_last_good_temperature_time = master_time;

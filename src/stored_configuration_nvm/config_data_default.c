@@ -42,6 +42,18 @@
 #endif
 
 
+#ifdef _METEO_DISABLE_DALLAS
+#define _METEO_DEF_DISABLE_DALLAS 		WX_INTERNAL_DISABLE_DALLAS
+#else
+#define _METEO_DEF_DISABLE_DALLAS		(0u)
+#endif
+
+#ifdef _METEO_VALIDATE_PARAMETERS
+#define	_METEO_DEF_VALIDATE_PARAMS		WX_CHECK_VALIDATE_PARAMS
+#else
+#define _METEO_DEF_VALIDATE_PARAMS		(0u)
+#endif
+
 /**
  *
  */
@@ -53,11 +65,7 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #ifdef _METEO
-	#ifdef _METEO_DISABLE_DALLAS
-		.wx = (1 | WX_INTERNAL_DISABLE_DALLAS),
-	#else
-		.wx = 1,
-	#endif
+		.wx = (1 | _METEO_DEF_DISABLE_DALLAS | _METEO_DEF_VALIDATE_PARAMS),
 #else
 		.wx = 0,
 #endif

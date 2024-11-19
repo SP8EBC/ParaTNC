@@ -793,6 +793,17 @@ int configuration_get_disable_dallas(void) {
 	return out;
 }
 
+int configuration_get_validate_parameters(void) {
+
+	int out = 0;
+
+	if ((main_config_data_mode->wx & WX_CHECK_VALIDATE_PARAMS) != 0) {
+		out = 1;
+	}
+
+	return out;
+}
+
 int configuration_get_inhibit_wx_pwr_handle(void) {
 
 	int out = 0;
