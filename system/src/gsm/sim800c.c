@@ -110,6 +110,9 @@ volatile static int8_t gsm_terminating_newline_counter = 1;
 //! used to receive echo and response separately
 static uint8_t gsm_receive_newline_counter = 0;
 
+//! used to receive echo and response separately
+volatile static uint8_t gsm_receive_previous_newline_counter = 0;
+
 //! first character of non-echo response from the module
 static uint16_t gsm_response_start_idx = 0;
 
@@ -721,7 +724,7 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 
 	// special case for CENG request
 	if (gsm_at_command_sent_last == ENGINEERING_GET) {
-		gsm_terminating_newline_counter = 10;
+		gsm_terminating_newline_counter = 8;
 	}
 	else if (gsm_at_command_sent_last == GET_CONNECTION_STATUS) {
 		gsm_terminating_newline_counter = 4;
@@ -756,6 +759,8 @@ uint8_t gsm_sim800_rx_terminating_callback(uint8_t current_data, const uint8_t *
 
 	// if an echo is enabled and second newline has been received
 	if (gsm_at_comm_echo == 1 && gsm_receive_newline_counter > gsm_terminating_newline_counter && gsm_response_start_idx > 0) {
+
+		gsm_receive_previous_newline_counter = gsm_receive_newline_counter;
 
 		gsm_receive_newline_counter = 0;
 
@@ -1022,14 +1027,35 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
  */
 void gsm_sim800_tx_done_event_handler(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 	if (*state == SIM800_ALIVE_SENDING_TO_MODEM) {
-		srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
-		// start timeout calculation
-		srl_context->srl_rx_timeout_calc_started = 1;
+		if (gsm_at_command_sent_last == ENGINEERING_ENABLE) {
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
 
-		*state = SIM800_ALIVE_WAITING_MODEM_RESP;
+			//
+			srl_switch_timeout(srl_context, 1, SIM800_DEFAULT_TIMEOUT * 16);
 
-		gsm_time_of_last_command_send_to_module = main_get_master_time();
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			*state = SIM800_ALIVE_WAITING_MODEM_RESP;
+
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+		else {
+			srl_receive_data_with_callback(srl_context, gsm_sim800_rx_terminating_callback);
+
+			// reverting back to default timeout
+			srl_switch_timeout(srl_context, 1, SIM800_DEFAULT_TIMEOUT);
+
+			// start timeout calculation
+			srl_context->srl_rx_timeout_calc_started = 1;
+
+			*state = SIM800_ALIVE_WAITING_MODEM_RESP;
+
+			gsm_time_of_last_command_send_to_module = main_get_master_time();
+		}
+
+
 	}
 	else if (*state == SIM800_TCP_CONNECTED) {
 		gsm_sim800_tcpip_tx_done_callback(srl_context, state);

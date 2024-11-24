@@ -36,13 +36,18 @@ const gsm_comm_state_machine_t gsm_comm_state_get_current (void)
     return gsm_comm_state_machine;
 }
 
-void gsm_comm_state_handler (uint8_t ntp_done,
+void gsm_comm_state_handler (uint8_t engineering_done,
+							 uint8_t ntp_done,
 							 uint8_t api_log_events_remaining,
-							 gsm_sim800_state_t gsm_state) 
+							 uint8_t gprs_ready)
 {
-    if (gsm_state == SIM800_ALIVE)
+    if (gprs_ready == 1)
     {
-        if (ntp_done == 0) 
+    	if (engineering_done == 0)
+    	{
+            gsm_comm_state_machine = GSM_COMM_ENGINEERING;
+    	}
+    	else if (ntp_done == 0)
         {
             gsm_comm_state_machine = GSM_COMM_NTP;
         }
@@ -59,7 +64,7 @@ void gsm_comm_state_handler (uint8_t ntp_done,
             gsm_comm_state_machine = GSM_COMM_APRSIS; // ????? TODO
         }
     }
-    else if (gsm_state < SIM800_ALIVE) 
+    else
     {
         gsm_comm_state_machine = GSM_COMM_NO_GPRS;       
     }

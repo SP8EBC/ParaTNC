@@ -17,16 +17,13 @@
 
 #include <stdint.h>
 
-//!< Set to one externally to request engineering, get one time at startup by default
-uint8_t sim800_poolers_request_engineering = 1;
-
 void gsm_sim800_poolers_ten_seconds (srl_context_t *srl_context, gsm_sim800_state_t *state)
 {
 
 	// if no engineering is currently processed, gprs is ready and APRS-IS connection
 	// is not alive now.
-	if (sim800_poolers_request_engineering == 0 && 
-		gsm_sim800_gprs_ready == 1 &&
+	if (/* sim800_poolers_request_engineering == 0 &&
+		gsm_sim800_gprs_ready == 1 && */
 		aprsis_connected == 0 && 
 		gsm_comm_state_get_current () == GSM_COMM_APRSIS) 
 		{
@@ -44,45 +41,13 @@ void gsm_sim800_poolers_one_second(srl_context_t * srl_context, gsm_sim800_state
 		if (gsm_sim800_gprs_ready == 0) {
 			sim800_gprs_initialize(srl_context, state, config);
 
-			return;
+			//return;
 		}
 		else {
 			// if GPRS is ready an there is a request to obtain engineering information
-			if (sim800_poolers_request_engineering == 1 && aprsis_connected == 0) {
+			if (gsm_comm_state_get_current() == GSM_COMM_ENGINEERING) {
 
-				// check if engineering has failed or not
-				if (gsm_sim800_engineering_fail == 1) {
-					sim800_poolers_request_engineering = 0;
-
-					gsm_sim800_engineering_fail = 0;
-
-					return;
-				}
-
-				// initial state when engineering is not enabled and not finished
-				if (gsm_sim800_engineering_is_enabled == 0 && gsm_sim800_engineering_successed == 0) {
-					gsm_sim800_engineering_enable(srl_context, state);
-
-					return;
-				}
-
-				if (gsm_sim800_engineering_is_enabled == 1 && gsm_sim800_engineering_successed == 0) {
-					gsm_sim800_engineering_request_data(srl_context, state);
-
-					return;
-				}
-
-				if (gsm_sim800_engineering_successed == 1) {
-					gsm_sim800_engineering_disable(srl_context, state);
-
-					// engineering request is single shot
-					sim800_poolers_request_engineering = 0;
-
-					// request
-					packet_tx_force_gsm_status();
-
-					return;
-				}
+				gsm_sim800_engineering_pool(srl_context, state);
 			}
 
 		}

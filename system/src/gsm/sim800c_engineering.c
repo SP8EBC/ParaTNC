@@ -14,12 +14,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-const char * ENGINEERING_ENABLE = "AT+CENG=4,0\r\0";
-const char * ENGINEERING_DISABLE = "AT+CENG=0,0\r\0";
-const char * ENGINEERING_GET = "AT+CENG?\r\0";
-
-static const char * OK = "OK\r\n\0";
-static const char * CENG0 = "+CENG: 0,\0";
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
 
 #define CENG0_RECORD_LN 	77		// including '+CENG' heading
 
@@ -30,24 +27,55 @@ static const char * CENG0 = "+CENG: 0,\0";
 #define LAC_OFFSET		42
 #define LAC_LN			4
 
-/**
- * Set to one if correct response to engineering enable AT command
- * has been received
- */
-uint8_t gsm_sim800_engineering_is_enabled = 0;
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+typedef enum gsm_sim800_engineering_state_t {
+	GSM_SIM800_ENGINEERING_NOT_ENABLED,
+	GSM_SIM800_ENGINEERING_ENABLING,
+	GSM_SIM800_ENGINEERING_ENABLED,
+	GSM_SIM800_ENGINEERING_REQUESTED,
+	GSM_SIM800_ENGINEERING_SUCCEEDED,
+	GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED,
+	GSM_SIM800_ENGINEERING_FAILED
+}gsm_sim800_engineering_state_t;
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+static const char * OK = "OK\r\n\0";
+static const char * CENG0 = "+CENG: 0,\0";
 
 /**
- * set to one if correct response has been received for engineering data request
- * and new engineering data have been read. This is reset back to zero
- * after disabling CENG or after 'gsm_sim800_engineering_request_data' is called
+ * Set to one externally to request engineering, get one time at startup by default
  */
-uint8_t gsm_sim800_engineering_successed = 0;
+static uint8_t gsm_sim800_engineering_requested = 1;
+
+static uint8_t gsm_sim800_engineering_delay = 5;
+
+static gsm_sim800_engineering_state_t gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_NOT_ENABLED;
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+const char * ENGINEERING_ENABLE = "AT+CENG=4,0\r\n\0";
+const char * ENGINEERING_DISABLE = "AT+CENG=0,0\r\0";
+const char * ENGINEERING_GET = "AT+CENG?\r\0";
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
 
 /**
- * Set to one in case of any failure during engineering AT commands communication
+ *
+ * @param srl_rx_buf_pointer
+ * @param buffer_ln
+ * @param gsm_response_start_idx
+ * @return
  */
-uint8_t gsm_sim800_engineering_fail = 0;
-
 static uint16_t gsm_sim800_rewind_to_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_t buffer_ln, uint16_t gsm_response_start_idx) {
 
 	int comparision_result = 123;
@@ -70,6 +98,11 @@ static uint16_t gsm_sim800_rewind_to_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_
 
 }
 
+/**
+ *
+ * @param srl_rx_buf_pointer
+ * @param ceng_0_payload_start
+ */
 static void gsm_sim800_engineering_parse_ceng_0(uint8_t *srl_rx_buf_pointer, uint16_t ceng_0_payload_start) {
 
 	/**
@@ -124,50 +157,118 @@ static void gsm_sim800_engineering_parse_ceng_0(uint8_t *srl_rx_buf_pointer, uin
 
 }
 
-void gsm_sim800_engineering_enable(srl_context_t * srl_context, gsm_sim800_state_t * state) {
-	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 0) {
-		// send a command to module
-		srl_send_data(srl_context, (const uint8_t*) ENGINEERING_ENABLE, SRL_MODE_ZERO, strlen(ENGINEERING_ENABLE), SRL_INTERNAL);
+/**
+ *
+ * @param srl_context
+ * @param state
+ */
+static void gsm_sim800_engineering_enable(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+	// send a command to module
+	srl_send_data(srl_context, (const uint8_t*) ENGINEERING_ENABLE, SRL_MODE_ZERO, strlen(ENGINEERING_ENABLE), SRL_INTERNAL);
 
-		// set what has been just send
-		gsm_at_command_sent_last = ENGINEERING_ENABLE;
+	// set what has been just send
+	gsm_at_command_sent_last = ENGINEERING_ENABLE;
 
-		// switch the internal state
-		*state = SIM800_ALIVE_SENDING_TO_MODEM;
-	}
+	// switch the internal state
+	*state = SIM800_ALIVE_SENDING_TO_MODEM;
 }
 
-void gsm_sim800_engineering_disable(srl_context_t * srl_context, gsm_sim800_state_t * state) {
-	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1) {
-		// send a command to module
-		srl_send_data(srl_context, (const uint8_t*) ENGINEERING_DISABLE, SRL_MODE_ZERO, strlen(ENGINEERING_DISABLE), SRL_INTERNAL);
+/**
+ *
+ * @param srl_context
+ * @param state
+ */
+static void gsm_sim800_engineering_disable(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+	// send a command to module
+	srl_send_data(srl_context, (const uint8_t*) ENGINEERING_DISABLE, SRL_MODE_ZERO, strlen(ENGINEERING_DISABLE), SRL_INTERNAL);
 
-		// set what has been just send
-		gsm_at_command_sent_last = ENGINEERING_DISABLE;
+	// set what has been just send
+	gsm_at_command_sent_last = ENGINEERING_DISABLE;
 
-		// switch the internal state
-		*state = SIM800_ALIVE_SENDING_TO_MODEM;
+	// switch the internal state
+	*state = SIM800_ALIVE_SENDING_TO_MODEM;
 
-		// clear the flag
-		gsm_sim800_engineering_successed = 0;
-	}
 }
 
-void gsm_sim800_engineering_request_data(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+/**
+ *
+ * @param srl_context
+ * @param state
+ */
+static void gsm_sim800_engineering_request_data(srl_context_t * srl_context, gsm_sim800_state_t * state) {
 
-	if (*state == SIM800_ALIVE && gsm_sim800_engineering_is_enabled == 1 && gsm_sim800_engineering_successed == 0) {
+	// send a command to module
+	srl_send_data(srl_context, (const uint8_t*) ENGINEERING_GET, SRL_MODE_ZERO, strlen(ENGINEERING_GET), SRL_INTERNAL);
 
-		// clear the flag
-		gsm_sim800_engineering_successed = 0;
+	// set what has been just send
+	gsm_at_command_sent_last = ENGINEERING_GET;
 
-		// send a command to module
-		srl_send_data(srl_context, (const uint8_t*) ENGINEERING_GET, SRL_MODE_ZERO, strlen(ENGINEERING_GET), SRL_INTERNAL);
+	// switch the internal state
+	*state = SIM800_ALIVE_SENDING_TO_MODEM;
+}
 
-		// set what has been just send
-		gsm_at_command_sent_last = ENGINEERING_GET;
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
-		// switch the internal state
-		*state = SIM800_ALIVE_SENDING_TO_MODEM;
+uint8_t gsm_sim800_engineering_get_is_done(void) {
+	return ((gsm_sim800_engineering_state == GSM_SIM800_ENGINEERING_SUCCEEDED) ||
+			(gsm_sim800_engineering_state == GSM_SIM800_ENGINEERING_FAILED) ||
+			(gsm_sim800_engineering_state == GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED));
+}
+
+/**
+ *
+ * @param srl_context
+ * @param state
+ */
+void gsm_sim800_engineering_pool(srl_context_t * srl_context, gsm_sim800_state_t * state) {
+
+	switch (gsm_sim800_engineering_state) {
+		case GSM_SIM800_ENGINEERING_NOT_ENABLED: {
+
+			if (--gsm_sim800_engineering_delay > 0) {
+				;
+			}
+			else {
+
+				if (gsm_sim800_engineering_requested == 1) {
+					gsm_sim800_engineering_enable(srl_context, state);
+
+					gsm_sim800_engineering_requested = 0;
+
+					gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_ENABLING;
+				}
+				else {
+					;
+				}
+			}
+			break;
+		}
+		case GSM_SIM800_ENGINEERING_ENABLING: {
+			break;
+		}
+		case GSM_SIM800_ENGINEERING_ENABLED: {
+			gsm_sim800_engineering_request_data(srl_context, state);
+
+			gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_REQUESTED;
+			break;
+
+		}
+		case GSM_SIM800_ENGINEERING_REQUESTED: {
+			break;
+		}
+		case GSM_SIM800_ENGINEERING_SUCCEEDED: {
+			gsm_sim800_engineering_disable(srl_context, state);
+			break;
+		}
+		case GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED: {
+			packet_tx_force_gsm_status();
+			break;
+		}
+		case GSM_SIM800_ENGINEERING_FAILED: {
+			break;
+		}
 	}
 }
 
@@ -177,13 +278,10 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 		int comparision_result = strcmp(OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx));
 
 		if (comparision_result == 0) {
-			gsm_sim800_engineering_is_enabled = 1;
-
+			gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_ENABLED;
 		}
 		else {
-			//gsm_sim800_engineering_is_enabled = 0;
-
-			gsm_sim800_engineering_fail = 1;
+			gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_FAILED;
 
 		}
 	}
@@ -196,17 +294,15 @@ void gsm_sim800_engineering_response_callback(srl_context_t * srl_context, gsm_s
 			// if it has been found
 			gsm_sim800_engineering_parse_ceng_0(srl_context->srl_rx_buf_pointer, ceng_start);
 
-			gsm_sim800_engineering_successed = 1;
+			gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_SUCCEEDED;
 		}
 		else {
-			gsm_sim800_engineering_successed = 0;
-
-			gsm_sim800_engineering_fail = 1;
+			gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_FAILED;
 		}
 
 	}
 	else if (gsm_at_command_sent_last == ENGINEERING_DISABLE) {
-		gsm_sim800_engineering_is_enabled = 0;
+		gsm_sim800_engineering_state = GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED;
 	}
 
 }

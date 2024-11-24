@@ -2085,7 +2085,7 @@ int main(int argc, char* argv[]){
 
 				if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
 					rte_main_woken_up == 0) {
-					gsm_comm_state_handler (ntp_done, main_events_extracted_for_api_stat.zz_total, main_gsm_state);
+						gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
 				}
 
 				// if GSM module is enabled and GPRS communication state is now on API phase
