@@ -80,8 +80,8 @@ uint8_t routine_5254_start (uint32_t lparam, uint16_t wparam)
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
 
-	routine_5254_result |=  (0x00FF & LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_date));
-	routine_5254_result |=  (0xFF00 & LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BCD, &routine_5254_rtc_time)) << 8;
+	routine_5254_result |=  (0x00FF & LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &routine_5254_rtc_date));
+	routine_5254_result |=  (0xFF00 & LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &routine_5254_rtc_time)) << 8;
 
 	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
 

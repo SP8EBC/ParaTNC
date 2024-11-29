@@ -22,6 +22,7 @@
 #include "kiss_communication/types/kiss_xmacro_helpers.h"
 #include "rte_main.h"
 #include "rte_wx.h"
+#include "rte_rtu.h"
 #include "main_master_time.h"
 #include "main.h"
 #include "aprsis.h"
@@ -65,6 +66,18 @@ extern char did_dummy_data;
 		ENTRY(0x2007U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2008U, rte_wx_humidity, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2009U, rte_wx_analog_anemometer_counter_timer_has_been_fired, rte_wx_analog_anemometer_counter_slew_limit_fired, rte_wx_analog_anemometer_counter_direction_doesnt_work)	\
+		ENTRY(0x2010U, rte_wx_umb_context.current_routine, rte_wx_umb_context.current_channel, rte_wx_umb_context.state)	\
+		ENTRY(0x2011U, rte_wx_umb_context.time_of_last_nok, rte_wx_umb_context.time_of_last_comms_timeout, rte_wx_umb_context.time_of_last_successful_comms)	\
+		ENTRY(0x2012U, rte_wx_umb_channel_values[0][0], rte_wx_umb_channel_values[0][1], DID_EMPTY)	\
+		ENTRY(0x2013U, rte_wx_umb_channel_values[1][0], rte_wx_umb_channel_values[1][1], DID_EMPTY)	\
+		ENTRY(0x2014U, rte_wx_umb_channel_values[2][0], rte_wx_umb_channel_values[2][1], DID_EMPTY)	\
+		ENTRY(0x2015U, rte_wx_umb_channel_values[3][0], rte_wx_umb_channel_values[3][1], DID_EMPTY)	\
+		ENTRY(0x2020U, rte_rtu_number_of_serial_io_errors, rte_rtu_number_of_successfull_serial_comm, DID_EMPTY)	\
+		ENTRY(0x2021U, rte_rtu_last_modbus_rx_error_timestamp, rte_rtu_last_modbus_exception_timestamp, DID_EMPTY)	\
+		ENTRY(0x2022U, rte_wx_modbus_rtu_f1.base_address, rte_wx_modbus_rtu_f1.registers_values[0], rte_wx_modbus_rtu_f1.registers_values[1])	\
+		ENTRY(0x2023U, rte_wx_modbus_rtu_f2.base_address, rte_wx_modbus_rtu_f2.registers_values[0], rte_wx_modbus_rtu_f2.registers_values[1])	\
+		ENTRY(0x2024U, rte_wx_modbus_rtu_f3.base_address, rte_wx_modbus_rtu_f3.registers_values[0], rte_wx_modbus_rtu_f3.registers_values[1])	\
+		ENTRY(0x2025U, rte_wx_modbus_rtu_f4.base_address, rte_wx_modbus_rtu_f4.registers_values[0], rte_wx_modbus_rtu_f4.registers_values[1])	\
 		ENTRY(0x2100U, aprsis_logged, aprsis_connected, aprsis_unsucessfull_conn_counter)	\
 		ENTRY(0x2200U, packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_telemetry_counter)	\
 		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
