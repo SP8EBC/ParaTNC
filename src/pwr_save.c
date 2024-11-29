@@ -1019,7 +1019,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_NONE : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if (config->wx != 0) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {
@@ -1068,7 +1068,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_NORMAL : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if (config->wx != 0) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {
@@ -1152,7 +1152,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		case PWSAVE_AGGRESV : {
 
 			// if weather station is enabled
-			if (config->wx == 1) {
+			if (config->wx != 0) {
 
 				// if GSM modem is enabled in configuration
 				if (config->gsm == 1) {

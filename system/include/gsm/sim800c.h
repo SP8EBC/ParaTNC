@@ -20,6 +20,8 @@ extern int8_t gsm_sim800_signal_level_dbm;
 extern float gsm_sim800_bcch_frequency;
 extern char gsm_sim800_cellid[5];
 extern char gsm_sim800_lac[5];
+extern uint16_t gsm_sim800_cellid_int;
+extern uint16_t gsm_sim800_lac_int;
 
 uint32_t gsm_sim800_check_for_extra_newlines(uint8_t * ptr, uint16_t size);
 sim800_async_message_t gsm_sim800_check_for_async_messages(uint8_t * ptr, uint16_t size, uint16_t * offset);

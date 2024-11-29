@@ -90,7 +90,7 @@ static const char * event_log_str_tcpip_warn_async_msg_detected = "ASYNC_MSG_DET
 static const char * event_log_str_tcpip_error_sim_card_status = "SIMCARD_ERROR\0";
 static const char * event_log_str_tcpip_warn_not_registered_to_nework = "NOT_REG_TO_NETWORK\0";
 static const char * event_log_str_tcpip_bootup_registered_network = "NETWORK_NAME\0";
-static const char * event_log_str_tcpip_bootup_signal_level = "SIGNAL_LEVEL_DBM\0";
+static const char * event_log_str_tcpip_bootup_signal_level = "SIGNAL_LEVEL_AND_FREQ\0";
 static const char * event_log_str_tcpip_bootup_imsi = "IMSI\0";
 static const char * event_log_str_tcpip_bootup_ip_address = "IP_ADDR\0";
 
@@ -189,7 +189,7 @@ static const char * event_log_str_tcpip_warn_async_msg_detected = "Asynchronous 
 static const char * event_log_str_tcpip_error_sim_card_status = "Can't communicate with SIM card\0";
 static const char * event_log_str_tcpip_warn_not_registered_to_nework = "Not registered to GSM network\0";
 static const char * event_log_str_tcpip_bootup_registered_network = "GSM network name\0";
-static const char * event_log_str_tcpip_bootup_signal_level = "Signal level in dBm\0";
+static const char * event_log_str_tcpip_bootup_signal_level = "Freq and Signal level in dBm\0";
 static const char * event_log_str_tcpip_bootup_imsi = "IMSI\0";
 static const char * event_log_str_tcpip_bootup_ip_address = "GPRS IP Address\0";
 /**

@@ -17,4 +17,8 @@ int system_is_rtc_ok(void);
 uint32_t system_get_rtc_date(void);
 uint32_t system_get_rtx_time(void);
 
+void system_set_rtc_date(uint16_t year, uint8_t month, uint8_t day_of_month);
+void system_set_rtc_time(uint8_t hour, uint8_t minute, uint8_t second);
+
+
 #endif /* INCLUDE_CMSIS_STM32L4XX_SYSTEM_STM32L4XX_H_ */

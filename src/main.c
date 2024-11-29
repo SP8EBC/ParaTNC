@@ -116,6 +116,7 @@
 #include "memory_map.h"
 
 #define SOH 0x01
+#define MANUAL_RTC_SET
 
 //#include "variant.h"
 
@@ -340,6 +341,11 @@ uint8_t main_check_adc = 0;
 telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
 nvm_event_result_stats_t main_events_extracted_for_api_stat = {0u};
+#endif
+
+#if defined (MANUAL_RTC_SET)
+uint16_t main_year = 0; uint8_t main_month = 0; uint8_t main_day_of_month = 0;
+uint8_t main_hour = 0; uint8_t main_minute = 0; uint8_t main_second = 0;
 #endif
 
 char after_tx_lock;
@@ -749,6 +755,11 @@ int main(int argc, char* argv[]){
 
   // calculate CRC over configuration blocks
   main_crc_result = configuration_handler_check_crc();
+
+  if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
+	  	system_set_rtc_date(main_year, main_month, main_day_of_month);
+		system_set_rtc_time(main_hour, main_minute, main_second);
+  }
 
   // restore config to default if requested
   if (main_reset_config_to_default == 1) {

@@ -21,6 +21,9 @@
 #include "rte_main.h"
 #include "rte_rtu.h"
 
+#include "event_log.h"
+#include "events_definitions/events_modbus.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -453,6 +456,14 @@ int32_t rtu_serial_pool(void) {
 			rte_rtu_number_of_serial_io_errors++;
 
 			rte_rtu_last_modbus_rx_error_timestamp = main_get_master_time();
+
+			event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_MODBUS,
+					  EVENTS_MODBUS_RTU_ERROR_RECEIVING,
+					  rte_rtu_number_of_serial_io_errors, 0,
+					  rte_rtu_number_of_successfull_serial_comm, 0,
+					  rte_rtu_last_modbus_rx_error_timestamp, rtu_time_of_last_successfull_comm);
 
 			// icrease the error counter for this queue element
 			rtu_used_queue->number_of_errors[rtu_used_queue->it] = rtu_used_queue->number_of_errors[rtu_used_queue->it] + 1;

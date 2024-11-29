@@ -9,6 +9,9 @@
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c.h"
 
+#include <event_log.h>
+#include <events_definitions/events_gsm_gprs.h>
+
 #include "drivers/serial.h"
 
 #include <string.h>
@@ -154,7 +157,9 @@ static void gsm_sim800_engineering_parse_ceng_0(uint8_t *srl_rx_buf_pointer, uin
 	// copying LAC
 	memcpy(gsm_sim800_lac, srl_rx_buf_pointer + ceng_0_payload_start + LAC_OFFSET, LAC_LN);
 
+	gsm_sim800_cellid_int = (uint16_t)strtol(gsm_sim800_cellid, NULL, 16) & 0xFFFFu;
 
+	gsm_sim800_lac_int = (uint16_t)strtol(gsm_sim800_lac, NULL, 16) & 0xFFFFu;
 }
 
 /**
@@ -260,6 +265,14 @@ void gsm_sim800_engineering_pool(srl_context_t * srl_context, gsm_sim800_state_t
 		}
 		case GSM_SIM800_ENGINEERING_SUCCEEDED: {
 			gsm_sim800_engineering_disable(srl_context, state);
+
+			 event_log_sync(
+					 EVENT_BOOTUP,
+					 EVENT_SRC_GSM_GPRS,
+					 EVENTS_GSM_GPRS_SIGNAL_LEVEL,
+					 gsm_sim800_signal_level_dbm, 0,
+					 gsm_sim800_cellid_int, gsm_sim800_lac_int,
+					 0, (uint32_t)(gsm_sim800_bcch_frequency * 100.0f));
 			break;
 		}
 		case GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED: {
@@ -267,6 +280,14 @@ void gsm_sim800_engineering_pool(srl_context_t * srl_context, gsm_sim800_state_t
 			break;
 		}
 		case GSM_SIM800_ENGINEERING_FAILED: {
+
+			 event_log_sync(
+					 EVENT_ERROR,
+					 EVENT_SRC_GSM_GPRS,
+					 EVENTS_GSM_GPRS_SIGNAL_LEVEL,
+					 gsm_sim800_signal_level_dbm, 0,
+					 0, 0,
+					 0, 0);
 			break;
 		}
 	}

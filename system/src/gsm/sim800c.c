@@ -164,7 +164,11 @@ float gsm_sim800_bcch_frequency = 0;
 
 char gsm_sim800_cellid[5] = {0, 0, 0, 0, 0};
 
+uint16_t gsm_sim800_cellid_int = 0;
+
 char gsm_sim800_lac[5] = {0, 0, 0, 0, 0};
+
+uint16_t gsm_sim800_lac_int = 0;
 
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
@@ -974,14 +978,6 @@ void gsm_sim800_rx_done_event_handler(srl_context_t * srl_context, gsm_sim800_st
 				else {
 					gsm_sim800_signal_level_dbm = -115;
 				}
-
-				 event_log_sync(
-						 EVENT_BOOTUP,
-						 EVENT_SRC_GSM_GPRS,
-						 EVENTS_GSM_GPRS_SIGNAL_LEVEL,
-						 0, 0,
-						 gsm_sim800_signal_level_dbm, 0,
-						 0, 0);
 			}
 
 		}

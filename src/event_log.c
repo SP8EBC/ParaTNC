@@ -291,6 +291,26 @@ const char * event_id_to_str(event_log_source_t source, uint8_t event_id)
 			else if (event_id == EVENTS_GSM_GPRS_WARN_NOT_REGISTERED_TO_NETWORK) {
 				out = event_log_str_tcpip_warn_not_registered_to_nework;
 			}
+			else if (event_id == EVENTS_GSM_GPRS_REGISTERED_NETWORK) {
+				out = event_log_str_tcpip_bootup_registered_network;
+			}
+			else if (event_id == EVENTS_GSM_GPRS_SIGNAL_LEVEL) {
+				out = event_log_str_tcpip_bootup_signal_level;
+			}
+			else if (event_id == EVENTS_GSM_GPRS_IMSI) {
+				out = event_log_str_tcpip_bootup_imsi;
+			}
+			else if (event_id == EVENTS_GSM_GPRS_IP_ADDRESS) {
+				out = event_log_str_tcpip_bootup_ip_address;
+			}
+			/**
+			 * static const char * event_log_str_tcpip_bootup_registered_network = "NETWORK_NAME\0";
+static const char * event_log_str_tcpip_bootup_signal_level = "SIGNAL_LEVEL_DBM\0";
+static const char * event_log_str_tcpip_bootup_imsi = "IMSI\0";
+static const char * event_log_str_tcpip_bootup_ip_address = "IP_ADDR\0";
+			 *
+			 *
+			 */
 
 			break;
 		case EVENT_SRC_TCPIP:				 
