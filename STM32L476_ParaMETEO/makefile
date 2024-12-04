@@ -78,6 +78,9 @@ BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ART
 SECONDARY_FLASH += \
 ParaTNC.hex \
 
+SECONDARY_LIST += \
+ParaTNC.lst \
+
 SECONDARY_SIZE += \
 ParaTNC.siz \
 
@@ -92,13 +95,19 @@ main-build: ParaTNC.elf secondary-outputs
 ParaTNC.elf: $(OBJS) $(USER_OBJS) makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -Wuninitialized -Wall -Wextra -Wlogical-op -Waggregate-return -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs -u _printf_float --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 ParaTNC.hex: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Flash Image'
 	arm-none-eabi-objcopy -O ihex "ParaTNC.elf"  "ParaTNC.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+ParaTNC.lst: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
+	@echo 'Invoking: Cross ARM GNU Create Listing'
+	arm-none-eabi-objdump --source --all-headers --demangle --line-numbers --wide "ParaTNC.elf" > "ParaTNC.lst"
 	@echo 'Finished building: $@'
 	@echo ' '
 
@@ -110,10 +119,10 @@ ParaTNC.siz: ParaTNC.elf makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(SECONDARY_FLASH)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(CPP_DEPS) ParaTNC.elf
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(CPP_DEPS) ParaTNC.elf
 	-@echo ' '
 
-secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
+secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
 .PHONY: all clean dependents main-build
 
