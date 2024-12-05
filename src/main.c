@@ -2229,6 +2229,24 @@ int main(int argc, char* argv[]){
 					rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 				}
 
+				if (main_config_data_mode->wx_umb == 1) {
+					const uint8_t umb_watchdog_state = umb_master_watchdog(&rte_wx_umb_context, master_time);
+
+					if (umb_watchdog_state == 1) {
+					  main_target_wx_baudrate = main_config_data_umb->serial_speed;
+
+					  srl_close(main_wx_srl_ctx_ptr);
+					  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, 1);
+					  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+					}
+					else if (umb_watchdog_state > 1) {
+						rte_main_reboot_req = 1;
+					}
+					else {
+						; // everything is ok
+					}
+				}
+
 				if (main_config_data_mode->wx != 0) {
 
 					#ifdef STM32L471xx

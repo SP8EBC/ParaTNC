@@ -591,7 +591,7 @@ void srl_irq_handler(srl_context_t *ctx) {
 	// if any data has been received by the UART controller
 	if ((ctx->port->ISR & USART_ISR_RXNE) == USART_ISR_RXNE) {
 
-		// incremenet the received bytes counter
+		// increment the counter of received bytes
 		ctx->total_rx_bytes++;
 
 		switch (ctx->srl_rx_state) {
@@ -731,6 +731,11 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 					// as receiving is started there is no point to calculate waiting timeout
 					ctx->srl_rx_timeout_waiting_enable = 0;
+
+					ctx->srl_rx_start_time = master_time;
+
+					// raise a flag to signalize that timeout shall be calulated from now.
+					ctx->srl_rx_timeout_calc_started = 1;
 				}
 				else {
 					// if this is not start byte just store it in garbage buffer to clear interrupt condition

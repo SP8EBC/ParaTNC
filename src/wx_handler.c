@@ -381,7 +381,7 @@ uint16_t wx_get_nvm_record_wind(void) {
 
 	uint8_t scaled_average_windspeed = 0;
 	uint8_t scaled_windgusts = 0;
-	uint8_t wind_direction = 0;
+	uint16_t wind_direction = 0;
 
 	scaled_average_windspeed = rte_wx_average_windspeed / 2;
 	if ((rte_wx_max_windspeed - scaled_average_windspeed) < 52) {

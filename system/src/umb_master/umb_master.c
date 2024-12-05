@@ -17,6 +17,10 @@
 #include "event_log.h"
 #include "events_definitions/events_umb.h"
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define SOH 0x01
 #define STX 0x02
 #define ETX 0x03
@@ -29,6 +33,43 @@
 
 #define TEN_MINUTES (1000 * 600)
 
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+/**
+ * 0 -> Watchdog hasn't fired yet
+ * 1 -> UMB master got stuck once, so the serial port and master itself was reinitialized
+ * 2 -> UMB master still has some problems, even after reinitialization. It's time to reset
+ */
+static uint8_t umb_master_watchdog_state = 0;
+
+static uint32_t umb_master_watchdog_last_fired = 0;
+
+static uint8_t umb_master_qf_error_log_debouncer = 0;
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ *
+ * @param ctx
+ * @param serial_ctx
+ * @param config_umb
+ */
 void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config_data_umb_t * const config_umb) {
 	ctx->current_routine = UMB_CONTEXT_IDLE_ROUTINE;
 	ctx->state = UMB_STATUS_IDLE;
@@ -61,6 +102,74 @@ void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config
 
 }
 
+/**
+ *
+ * @return
+ */
+uint8_t umb_master_watchdog(umb_context_t* ctx, uint32_t current_master_time)
+{
+	uint8_t out = 0;
+
+	const uint32_t last_successfull_ago = current_master_time - ctx->time_of_last_successful_comms;
+
+	const uint32_t last_timeout_fail_ago = current_master_time - ctx->time_of_last_comms_timeout;
+
+	const uint32_t last_watchdog_ago = current_master_time - umb_master_watchdog_last_fired;
+
+	// inhibit any watchdog checks if library is initialized but no UMB sensor comms has been
+	// done so far
+	if (ctx->time_of_last_successful_comms != 0) {
+		if (last_successfull_ago > (TEN_MINUTES)) {
+
+			// if there is no correct response from the response for longer than 2 minutes
+			umb_master_watchdog_state++;
+
+			// store a moment when a watchdog has been fired
+			umb_master_watchdog_last_fired = current_master_time;
+
+			out = umb_master_watchdog_state;
+		}
+		else if (ctx->time_of_last_comms_timeout != 0xFFFFFFFFu) {
+			// inhibit this check when no timeouts was detected so far
+			// as default value of 0xFFFFFFFF will mess the value.
+			// in ideal world this always will be 0xFFFFFFFF
+
+			if (last_timeout_fail_ago > (TEN_MINUTES)) {
+				// if there is no correct response from the response for longer than 2 minutes
+				umb_master_watchdog_state++;
+
+				// store a moment when a watchdog has been fired
+				umb_master_watchdog_last_fired = current_master_time;
+
+				out = umb_master_watchdog_state;
+			}
+		}
+		else {
+			; // no explicit action
+		}
+	}
+	else if (umb_master_watchdog_state > 0) {
+		// if no UMB protocol communication has been done so far, but the watchdog fired
+		// at least once
+
+		if (last_watchdog_ago > (TEN_MINUTES)) {
+			umb_master_watchdog_state++;
+
+			out = umb_master_watchdog_state;
+
+		}
+	}
+
+	return out;
+}
+
+/**
+ *
+ * @param serial_buffer
+ * @param buffer_ln
+ * @param frame
+ * @return
+ */
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame) {
 
 	uint16_t crc = 0xFFFFu;
@@ -146,6 +255,15 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	return out;
 }
 
+/**
+ *
+ * @param serial_buffer
+ * @param buffer_ln
+ * @param frame
+ * @param target_ln
+ * @param config_umb
+ * @return
+ */
 umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame, uint16_t* target_ln, const config_data_umb_t * const config_umb) {
 
 	int i = 0;
@@ -186,6 +304,12 @@ umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t b
 	return UMB_OK;
 }
 
+/**
+ *
+ * @param crc_buff
+ * @param input
+ * @return
+ */
 uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input) {
 	uint8_t i;
 	uint16_t x16;
@@ -365,7 +489,12 @@ umb_retval_t umb_master_callback(umb_frame_t* frame, umb_context_t* ctx) {
 	return UMB_OK;
 }
 
-
+/**
+ *
+ * @param ctx
+ * @param master_time
+ * @return
+ */
 umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 
 	umb_qf_t out = UMB_QF_UNKNOWN;
@@ -402,18 +531,35 @@ umb_qf_t umb_get_current_qf(umb_context_t* ctx, uint32_t master_time) {
 	if (master_time - ctx->time_of_last_successful_comms > TEN_MINUTES) {
 		out = UMB_QF_NOT_AVALIABLE;
 
-		event_log_sync(
-				  EVENT_ERROR,
-				  EVENT_SRC_UMB,
-				  EVENTS_UMB_ERROR_QF_NOT_AVAILABLE,
-				  0, 0,
-				  0, 0,
-				  ctx->time_of_last_comms_timeout, 0);
+		umb_master_qf_error_log_debouncer++;
+
+		if (	(umb_master_qf_error_log_debouncer < 0xF) ||
+				(umb_master_qf_error_log_debouncer % 0xF))
+		{
+			event_log_sync(
+					  EVENT_ERROR,
+					  EVENT_SRC_UMB,
+					  EVENTS_UMB_ERROR_QF_NOT_AVAILABLE,
+					  umb_master_qf_error_log_debouncer, 0,
+					  0, 0,
+					  ctx->time_of_last_comms_timeout, 0);
+		}
+	}
+	else {
+		umb_master_qf_error_log_debouncer = 0;
 	}
 
 	return out;
 }
 
+/**
+ *
+ * @param ctx
+ * @param out_buffer
+ * @param buffer_size
+ * @param status_string_ln
+ * @param master_time
+ */
 void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buffer_size, uint16_t* status_string_ln, uint32_t master_time) {
 
 	uint32_t string_ln;
@@ -480,6 +626,10 @@ void umb_construct_status_str(umb_context_t* ctx, char* out_buffer, uint16_t buf
 	*status_string_ln = string_ln;
 }
 
+/**
+ *
+ * @param ctx
+ */
 void umb_clear_error_history(umb_context_t* ctx) {
 	ctx->last_fault_channel = 0;
 
@@ -490,7 +640,11 @@ void umb_clear_error_history(umb_context_t* ctx) {
 	ctx->trigger_status_msg = 0;
 }
 
-
+/**
+ *
+ * @param config_umb
+ * @return
+ */
 uint16_t umb_get_windspeed(const config_data_umb_t * const config_umb) {
 
 	uint16_t out = 0;
@@ -505,6 +659,11 @@ uint16_t umb_get_windspeed(const config_data_umb_t * const config_umb) {
 	return out;
 }
 
+/**
+ *
+ * @param config_umb
+ * @return
+ */
 uint16_t umb_get_windgusts(const config_data_umb_t * const config_umb) {
 	uint16_t out = 0;
 
@@ -518,6 +677,11 @@ uint16_t umb_get_windgusts(const config_data_umb_t * const config_umb) {
 	return out;
 }
 
+/**
+ *
+ * @param config_umb
+ * @return
+ */
 int16_t umb_get_winddirection(const config_data_umb_t * const config_umb) {
 	int16_t out = 0;
 
@@ -531,6 +695,11 @@ int16_t umb_get_winddirection(const config_data_umb_t * const config_umb) {
 	return out;
 }
 
+/**
+ *
+ * @param config_umb
+ * @return
+ */
 float umb_get_temperature(const config_data_umb_t * const config_umb) {
 	float out = 0.0f;
 
@@ -544,6 +713,11 @@ float umb_get_temperature(const config_data_umb_t * const config_umb) {
 	return out;
 }
 
+/**
+ *
+ * @param config_umb
+ * @return
+ */
 float umb_get_qnh(const config_data_umb_t * const config_umb) {
 	float out = 0;
 

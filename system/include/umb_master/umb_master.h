@@ -17,6 +17,8 @@
 
 
 void umb_master_init(umb_context_t* ctx, srl_context_t* serial_ctx, const config_data_umb_t * const config_umb);
+uint8_t umb_master_watchdog(umb_context_t* ctx, uint32_t current_master_time);
+
 umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame);
 umb_retval_t umb_parse_frame_to_serial_buffer(uint8_t* serial_buffer, uint16_t buffer_ln, umb_frame_t* frame, uint16_t* target_ln, const config_data_umb_t * const config_umb);
 uint16_t umb_calc_crc(uint16_t crc_buff, uint8_t input);
@@ -31,6 +33,5 @@ uint16_t umb_get_windgusts(const config_data_umb_t * const config_umb);
 int16_t umb_get_winddirection(const config_data_umb_t * const config_umb);
 float umb_get_temperature(const config_data_umb_t * const config_umb);
 float umb_get_qnh(const config_data_umb_t * const config_umb);
-
 
 #endif /* INCLUDE_UMB_MASTER_UMB_MASTER_H_ */
