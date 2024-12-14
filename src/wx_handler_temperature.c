@@ -103,11 +103,11 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				measurement_result = wx_get_temperature_ms5611(&rte_wx_temperature_internal);
 			}
 			else {
-				measurement_result = 0xFFFFFFFFu;
+				measurement_result = -1;
 			}
 
 			// check if temperature from pressure sensor has been retrieved w/o errors
-			if (measurement_result == BME280_OK || measurement_result == MS5611_OK) {
+			if ((measurement_result == BME280_OK) || (measurement_result == MS5611_OK)) {
 
 				rte_wx_temperature_internal_valid = rte_wx_temperature_internal;
 
@@ -115,7 +115,7 @@ int32_t wx_get_temperature_measurement(const config_data_wx_sources_t * const co
 				parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL;
 
 			}
-			else if (measurement_result == 0xFFFFFFFFu) {
+			else if (measurement_result == -1) {
 				;
 			}
 			else {

@@ -134,7 +134,7 @@ uint8_t umb_master_watchdog(umb_context_t* ctx, uint32_t current_master_time)
 			// as default value of 0xFFFFFFFF will mess the value.
 			// in ideal world this always will be 0xFFFFFFFF
 
-			if (last_timeout_fail_ago > (TEN_MINUTES)) {
+			if (last_timeout_fail_ago > (TEN_MINUTES) && last_successfull_ago > (TEN_MINUTES)) {
 				// if there is no correct response from the response for longer than 2 minutes
 				umb_master_watchdog_state++;
 
