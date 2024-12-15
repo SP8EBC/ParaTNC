@@ -83,6 +83,9 @@ uint8_t spi_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * tx_bu
 //! Sends data synchronously to selected slave and after that receives data from it. Everything received before TX is finish is discarded.
 uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_rx, uint16_t ln_to_tx);
 
+//! Sends data to selected slave and in the same moment receive everything sent from slave. It receive exactly ln_to_exchange bytes
+uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_exchange);
+
 //! Returns pointer to receive buffer and if reception is done resets RX state back to idle.
 uint8_t * spi_get_rx_data(void);
 

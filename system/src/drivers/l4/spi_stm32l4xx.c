@@ -507,6 +507,95 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx
 	return out;
 }
 
+//! Sends data to selected slave and in the same moment receive everything sent from slave. It receive exactly ln_to_exchange bytes
+uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_exchange) {
+
+	uint8_t out = SPI_UKNOWN;
+
+	if (slave_id == 0 || slave_id > 2) {
+		return SPI_WRONG_SLAVE_ID;
+	}
+
+	// check if SPI is busy
+	if (spi_rx_state == SPI_RX_IDLE && (spi_tx_state == SPI_TX_IDLE || spi_tx_state == SPI_TX_DONE)) {
+
+		spi_current_slave = slave_id;
+
+		spi_current_rx_cntr = 0;
+		spi_current_tx_cntr = 0;
+
+		// check if external RX buffer shall be used or not
+		if (rx_buffer == 0) {
+			// no, internal one is needed
+			spi_rx_buffer_ptr = spi_rx_buffer;
+
+			// clear the buffer
+			memset (spi_rx_buffer_ptr, 0x00, SPI_BUFFER_LN);
+		}
+		else {
+			spi_rx_buffer_ptr = rx_buffer;
+
+			// clear the buffer
+			memset (spi_rx_buffer_ptr, 0x00, ln_to_exchange);
+		}
+
+		// set the lenght
+		spi_rx_bytes_rq = ln_to_exchange;
+
+		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+			// clear RX fifo queue
+			do {
+				spi_garbage_counter++;
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
+
+		// check if external TX buffer shall be user or not
+		if (tx_from_internal == SPI_TX_FROM_INTERNAL) {
+			spi_tx_buffer_ptr = spi_tx_buffer;
+
+			// check if internal buffer has enought room for data
+			if (ln_to_exchange <= SPI_BUFFER_LN) {
+				// clear the buffer
+				memset(spi_tx_buffer, 0x00, SPI_BUFFER_LN);
+
+				// set the lenght
+				spi_tx_buffer_ptr = spi_tx_buffer;
+
+				// copy the content into a buffer
+				memcpy(spi_tx_buffer_ptr, tx_buffer, ln_to_exchange);
+
+				// set amount of data for transmission
+				spi_tx_bytes_rq = ln_to_exchange;
+			}
+			else {
+				out = SPI_TX_DATA_TO_LONG;
+			}
+		}
+		else {
+			// if external buffer shall be sent
+			spi_tx_buffer_ptr = tx_buffer;
+
+			spi_tx_bytes_rq = ln_to_exchange;
+		}
+
+//		// set first byte for transmission
+//		SPI2->DR = spi_tx_buffer_ptr[0];
+
+		spi_rx_state = SPI_RX_RXING;
+		spi_tx_state = SPI_TX_TXING;
+
+		// start trasmission
+		spi_enable(1);
+	}
+	else {
+		// exit if either transmission or reception is ongoing
+		out = SPI_BUSY;
+	}
+
+	return out;
+}
+
 uint8_t * spi_get_rx_data(void) {
 	spi_rx_state = SPI_RX_IDLE;
 
