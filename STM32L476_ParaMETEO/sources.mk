@@ -41,6 +41,7 @@ system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \
 system/src/drivers/l4 \
+system/src/drivers/sx1262 \
 system/src/dust_sensor \
 system/src/fatfs \
 system/src/gsm \

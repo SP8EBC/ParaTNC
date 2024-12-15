@@ -18,6 +18,7 @@ RM := rm -rf
 -include system/src/gsm/subdir.mk
 -include system/src/fatfs/subdir.mk
 -include system/src/dust_sensor/subdir.mk
+-include system/src/drivers/sx1262/subdir.mk
 -include system/src/drivers/l4/subdir.mk
 -include system/src/drivers/subdir.mk
 -include system/src/diag/subdir.mk
