@@ -572,7 +572,7 @@ void pwr_save_switch_mode_to_c3(void) {
 
 }
 
-// in HW-RevB this will keep internal VHF radio module working!
+
 int pwr_save_switch_mode_to_m4(void) {
 
 	if (backup_reg_is_in_powersave_state(IN_M4_STATE) != 0) {
@@ -902,7 +902,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	int8_t reinit_sensors = 0;
 
-	//int8_t reinit_gprs = 0;
+	int8_t reinit_gprs = 0;
 
 	packet_tx_counter_values_t counters;
 
@@ -1076,27 +1076,27 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX + GSM
 						// if weather packets are send 5 minutes or less often
-						if (timers->wx_transmit_period >= 5) {
-							if (minutes_to_wx > 1) {
-								pwr_save_switch_mode_to_c2();
-
-								//reinit_gprs = 1;
+//						if (timers->wx_transmit_period >= 5) {
+//							if (minutes_to_wx > 1) {
+//								pwr_save_switch_mode_to_c2();
+//
+//								//reinit_gprs = 1;
+//							}
+//							else {
+//								reinit_sensors = pwr_save_switch_mode_to_c0();
+//							}
+//						}
+//						else {
+							if (minutes_to_wx > 3) {
+								pwr_save_switch_mode_to_m4();
 							}
 							else {
-								reinit_sensors = pwr_save_switch_mode_to_c0();
+								reinit_gprs = pwr_save_switch_mode_to_c0();
 							}
-						}
-						else {
-							if (minutes_to_wx > 1) {
-								pwr_save_switch_mode_to_c3();
-							}
-							else {
-								reinit_sensors = pwr_save_switch_mode_to_c0();
-							}
-						}
+//						}
 					}
 					else {		// WX + GSM
-						if (minutes_to_wx > 1) {
+						if (minutes_to_wx > 2) {
 							if (config->powersave_keep_gsm_always_enabled == 0){
 								reinit_sensors = pwr_save_switch_mode_to_m4();
 
@@ -1108,17 +1108,19 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c0();
+
+							reinit_gprs = reinit_sensors;
 						}
 					}
 				}
 				else {
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX
-						if (minutes_to_wx > 1) {
-							pwr_save_switch_mode_to_c2();
+						if (minutes_to_wx > 3) {
+							pwr_save_switch_mode_to_m4();
 						}
 						else {
-							reinit_sensors = pwr_save_switch_mode_to_c1();
+							pwr_save_switch_mode_to_c1();
 						}
 					}
 					else {		// WX
@@ -1137,6 +1139,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							// TODO: Workaround here for HW-RevB!!!
 							//reinit_sensors= pwr_save_switch_mode_to_c1();
 							reinit_sensors = pwr_save_switch_mode_to_c0();
+
+							reinit_gprs = reinit_sensors;
 						}
 					}
 				}
@@ -1159,13 +1163,16 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX + GSM
-						if (minutes_to_wx > 1) {
-							pwr_save_switch_mode_to_c2();
+						if (minutes_to_wx > (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1)) {
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
 
+							*continue_loop = 0;
 							//reinit_gprs = 1;
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c0();
+
+							reinit_gprs = reinit_sensors;
 						}
 
 					}
@@ -1182,16 +1189,20 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 						}
 						else {
-							// if there is 30 seconds or less to next wx packet
+							// if there is WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES or less to next wx packet
 							reinit_sensors = pwr_save_switch_mode_to_c0();
+
+							reinit_gprs = reinit_sensors;
 						}
 					}
 				}
 				else {	// gsm is not enabled
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX
-						if (minutes_to_wx > 1) {
-							pwr_save_switch_mode_to_c2();
+						if (minutes_to_wx > (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1)) {
+							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
+
+							*continue_loop = 0;
 						}
 						else {
 							reinit_sensors = pwr_save_switch_mode_to_c1();
@@ -1243,16 +1254,32 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	backup_reg_set_monitor(13);
 
-//	if (reinit_gprs != 0) {
-//		// reset GSM modem, internally this also check if GSM modem is inhibited or not
-//		rte_main_reset_gsm_modem = 1;
-//	}
+	// check if reset request is set to initial value
+	// if yes inhibit any explicit reset, not to spoil startup
+	if (rte_main_reset_gsm_modem != 0xFFu) {
+		if (reinit_gprs != 0) {
+			// reset GSM modem, internally this also check if GSM modem is inhibited or not
+			rte_main_reset_gsm_modem = 1;
+		}
+	}
+	else {
+		rte_main_reset_gsm_modem = 0;
+	}
+
+	if (rte_main_reset_modbus_rtu != 0xFFu) {
+		if (reinit_sensors != 0) {
+			rte_main_reset_modbus_rtu = 1;
+		}
+	}
+	else {
+		rte_main_reset_modbus_rtu = 0;
+	}
 
 	if (reinit_sensors != 0) {
 		// reinitialize all i2c sensors
 		wx_force_i2c_sensor_reset = 1;
 
-		// reinitialize everything realted to anemometer
+		// reinitialize everything related to anemometer
 		analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
 	}
 

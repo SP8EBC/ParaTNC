@@ -70,7 +70,9 @@ uint16_t rte_main_going_sleep_count = 0;
 uint32_t rte_main_last_sleep_master_time = 0;
 
 //!< Set to one after waking up from L7 / L6 powersave mode and
-uint8_t rte_main_reset_gsm_modem = 0;
+uint8_t rte_main_reset_gsm_modem = 0xFFu;
+
+uint8_t rte_main_reset_modbus_rtu = 0xFFu;
 
 config_data_powersave_mode_t rte_main_curret_powersave_mode;
 #endif

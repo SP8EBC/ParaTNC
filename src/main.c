@@ -1785,7 +1785,22 @@ int main(int argc, char* argv[]){
 			}
 			// if modbus rtu master is enabled
 			else if (main_modbus_rtu_master_enabled == 1 && io_get_cntrl_vbat_m() == 1) {
-				rtu_serial_pool();
+
+				if (rte_main_reset_modbus_rtu == 1) {
+					rte_main_reset_modbus_rtu = 0;
+
+//				  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr, main_config_data_rtu);
+//
+//				  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
+//
+//				  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
+//				  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
+//
+//				  rtu_serial_start();
+				}
+				else {
+					rtu_serial_pool();
+				}
 			}
 
 			button_check_all(main_button_one_left, main_button_two_right);
@@ -1795,7 +1810,7 @@ int main(int argc, char* argv[]){
 			// get all meteo measuremenets each 65 seconds. some values may not be
 			// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 			if (main_wx_sensors_pool_timer < 10) {
-				if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				if ((main_config_data_mode->wx & WX_ENABLED) == 1 && (io_get_cntrl_vbat_s() == 1)) {
 
 					// notice: UMB-master and Modbus-RTU uses the same UART
 					// so they cannot be enabled both at once
@@ -1844,7 +1859,7 @@ int main(int argc, char* argv[]){
 				backup_reg_set_monitor(5);
 
 				#ifdef STM32L471xx
-				if (main_config_data_mode->gsm == 1) {
+				if (main_config_data_mode->gsm == 1 && (io_get_cntrl_vbat_g() == 1)) {
 
 					if (http_client_connection_errors > HTTP_CLIENT_MAX_CONNECTION_ERRORS) {
 						NVIC_SystemReset();
@@ -1909,7 +1924,8 @@ int main(int argc, char* argv[]){
 
 				if ((main_config_data_gsm->aprsis_enable != 0) &&
 					(main_config_data_mode->gsm == 1) &&
-					(pwr_save_is_currently_cutoff () == 0))
+					(pwr_save_is_currently_cutoff () == 0) &&
+					(io_get_cntrl_vbat_g() == 1))
 				{
 					// this checks when APRS-IS was alive last time and when any packet
 					// has been sent to the server.
@@ -2011,7 +2027,7 @@ int main(int argc, char* argv[]){
 					gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
 				}
 
-				if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1 && rte_main_woken_up == 0) {
+				if ((main_config_data_mode->gsm == 1)  && (io_get_cntrl_vbat_g() == 1) && (rte_main_woken_up == 0)) {
 
 					// check if GSM modem must be power-cycled / restarted like after
 					// waking up from deep sleep or chaning power saving mode
@@ -2054,7 +2070,7 @@ int main(int argc, char* argv[]){
 				}
 				#endif
 
-				if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+				if ((io_get_cntrl_vbat_s() == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
 					analog_anemometer_direction_handler();
 				}
 
@@ -2092,36 +2108,40 @@ int main(int argc, char* argv[]){
 
 	#ifdef PARAMETEO
 
-				max31865_pool();
-
-				if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
-					rte_main_woken_up == 0) {
-						gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
+				if (io_get_cntrl_vbat_s() == 1) {
+					max31865_pool();
 				}
 
-				// if GSM module is enabled and GPRS communication state is now on API phase
-				if (	(main_config_data_mode->gsm == 1) &&
-						(gsm_comm_state_get_current () == GSM_COMM_API)) {
+				if (io_get_cntrl_vbat_g () == 1) {
+					if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
+						rte_main_woken_up == 0) {
+							gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
+					}
 
-					// if there are any events remaining to push to API
-					if (main_events_extracted_for_api_stat.zz_total > 0) {
-						// send current event
-						const uint8_t api_connection_result = api_send_json_event(&main_exposed_events[main_events_extracted_for_api_stat.zz_total - 1]);
+					// if GSM module is enabled and GPRS communication state is now on API phase
+					if (	(main_config_data_mode->gsm == 1) &&
+							(gsm_comm_state_get_current () == GSM_COMM_API)) {
 
-						// if TCP connection is established and data is currently sent asynchronously
-						if (api_connection_result == HTTP_CLIENT_OK) {
-							// end decrement remaining number of events
-							main_events_extracted_for_api_stat.zz_total--;
-						}
-						else {
-							// for sake of simplicity break on first connection error
-							main_events_extracted_for_api_stat.zz_total = 0;
+						// if there are any events remaining to push to API
+						if (main_events_extracted_for_api_stat.zz_total > 0) {
+							// send current event
+							const uint8_t api_connection_result = api_send_json_event(&main_exposed_events[main_events_extracted_for_api_stat.zz_total - 1]);
+
+							// if TCP connection is established and data is currently sent asynchronously
+							if (api_connection_result == HTTP_CLIENT_OK) {
+								// end decrement remaining number of events
+								main_events_extracted_for_api_stat.zz_total--;
+							}
+							else {
+								// for sake of simplicity break on first connection error
+								main_events_extracted_for_api_stat.zz_total = 0;
+							}
 						}
 					}
-				}
 
-				if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
-					ntp_get_sync();
+					if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
+						ntp_get_sync();
+					}
 				}
 	#endif
 				main_reload_internal_wdg();
@@ -2136,7 +2156,7 @@ int main(int argc, char* argv[]){
 				main_four_second_pool_timer = 4000;
 
 	#ifdef PARAMETEO
-				if (rte_main_trigger_radio_event_log > 0) {
+				if (rte_main_trigger_radio_event_log > 0 && io_get_cntrl_vbat_r() == 1) {
 
 					// set a pointer to even in exposed form which will be sent now
 					const event_log_exposed_t * current_exposed_event = &main_exposed_events[rte_main_trigger_radio_event_log - 1];
@@ -2170,7 +2190,7 @@ int main(int argc, char* argv[]){
 				backup_reg_set_monitor(8);
 
 				// check if consecutive weather frame has been triggered from 'packet_tx_handler'
-				if (rte_main_trigger_wx_packet == 1) {
+				if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
 
 					packet_tx_send_wx_frame();
 
