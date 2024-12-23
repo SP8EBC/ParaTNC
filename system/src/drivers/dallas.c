@@ -37,7 +37,7 @@ static void dallas_delay_start(void) {
 
 	NVIC_SetPriority(TIM2_IRQn, 1);
 	TIM2->PSC = 0;
-	TIM2->ARR = 119;
+	TIM2->ARR = 239;
 	TIM2->CR1 |= TIM_CR1_DIR;
 	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
 	TIM2->CR1 |= TIM_CR1_CEN;

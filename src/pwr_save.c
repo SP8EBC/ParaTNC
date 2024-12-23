@@ -25,6 +25,8 @@
 #include "aprsis.h"
 #include "it_handlers.h"
 #include "main.h"
+#include "stored_configuration_nvm/configuration_handler.h"
+#include "tm_stm32_rtc.h"
 
 #include "event_log.h"
 #include "events_definitions/events_pwr_save.h"
@@ -96,6 +98,8 @@ const uint16_t pwr_save_startup_restore_voltage =	PWR_SAVE_STARTUP_RESTORE_VOLTA
  * mode to PWSAVE_AGGRESV
  */
 const uint16_t pwr_save_aggressive_powersave_voltage = PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE;
+
+static TM_RTC_t pwr_save_datetime;
 
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
 static void pwr_save_presleep(uint16_t current, uint16_t average) {
@@ -909,6 +913,8 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 	// by default use powersave mode from controller configuration
 	config_data_powersave_mode_t psave_mode = config->powersave;
 
+	uint8_t schedule_from = 0, schedule_to = 0;
+
 	backup_reg_set_monitor(24);
 
 	// save previous state
@@ -990,9 +996,41 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		psave_mode = PWSAVE_AGGRESV;
 	}
 
+	const int sch_res = configuration_get_powersave_aggresive_schedule(&schedule_from, &schedule_to);
+
+	TM_RTC_GetDateTime(&pwr_save_datetime, TM_RTC_Format_BIN);
+
+	// if aggresive powersave schedule is enabled in the configuration
+	if (sch_res == 0) {
+
+		// like start at 1 PM and stop on 6 PM
+		if (schedule_to > schedule_from) {
+			if (pwr_save_datetime.Hours > schedule_from) {
+				if (pwr_save_datetime.Hours < schedule_to) {
+					psave_mode = PWSAVE_AGGRESV;
+				}
+			}
+		}
+
+		// like starting at 6 PM and stop on 8 AM next day
+		else {
+			if (pwr_save_datetime.Hours < schedule_to || pwr_save_datetime.Hours > schedule_from) {
+				psave_mode = PWSAVE_AGGRESV;
+			}
+		}
+	}
 
 	// get current counter values
 	packet_tx_get_current_counters(&counters);
+
+	if (psave_mode != config->powersave) {
+		if (psave_mode == PWSAVE_AGGRESV) {
+			packet_tx_changed_powersave_callback(1);
+		}
+		else {
+			packet_tx_changed_powersave_callback(0);
+		}
+	}
 
 	// decrement seconds in last minute
 	if (pwr_save_seconds_to_wx != -1) {

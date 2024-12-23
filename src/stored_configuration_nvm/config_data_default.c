@@ -155,10 +155,25 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #if (defined _NVM_LOGGER)
-		.nvm_logger = 1
+		.nvm_logger = 1,
 #else
-		.nvm_logger = 0
+		.nvm_logger = 0,
 #endif
+
+#if (defined _AGGRESIVE_SCHEDULE_START)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_start = _AGGRESIVE_SCHEDULE_START,
+#else
+		.powersave_aggresive_schedule_start = 100,
+#endif
+
+#if (defined _AGGRESIVE_SCHEDULE_STOP)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_stop = _AGGRESIVE_SCHEDULE_STOP,
+#else
+		.powersave_aggresive_schedule_stop = 100,
+#endif
+
 };
 
 /**
@@ -257,10 +272,18 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
 #endif
 
 #ifdef _BUTTON_TWO_RIGHT
-		.button_two_right = _BUTTON_TWO_RIGHT
+		.button_two_right = _BUTTON_TWO_RIGHT,
 #else
-		.button_two_right = 0
+		.button_two_right = 0,
 #endif
+
+#if (defined _AGGRESIVE_POWERSAVE_WX_INTERVAL)
+		// only for ParaMETEO
+		.wx_transmit_period_forced_aggresive_pwrsave = _AGGRESIVE_POWERSAVE_WX_INTERVAL,
+#else
+		.wx_transmit_period_forced_aggresive_pwrsave = 100,
+#endif
+
 };
 
 /**

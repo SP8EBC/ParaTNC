@@ -879,7 +879,10 @@ int main(int argc, char* argv[]){
   main_button_two_right = configuration_get_right_button();
 
   // set packets intervals
-  packet_tx_init(main_config_data_basic->wx_transmit_period, main_config_data_basic->beacon_transmit_period, main_config_data_mode->powersave);
+  packet_tx_init(	main_config_data_basic->wx_transmit_period,
+		  	  	  	main_config_data_basic->wx_transmit_period_forced_aggresive_pwrsave,
+					main_config_data_basic->beacon_transmit_period,
+					main_config_data_mode->powersave);
 
   // initialie telemetry frames counter
   telemetry_init();
@@ -2178,9 +2181,6 @@ int main(int argc, char* argv[]){
 				rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
 				rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
 
-	//			if (main_battery_measurement_res == IO_VBAT_RESULT_AVAILABLE) {
-	//				// get average battery voltage
-	//			}
 
 				// meas average will return 0 if internal buffer isn't filled completely
 				if (rte_main_average_battery_voltage == 0) {

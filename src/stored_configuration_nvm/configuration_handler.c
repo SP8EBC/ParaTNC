@@ -944,3 +944,49 @@ configuration_button_function_t configuration_get_right_button(void) {
 int configuration_get_is_security_access_required(uint8_t medium, uint8_t routine_type) {
 	return 0;
 }
+
+/**
+ * Checks if current configuration contains valid values for aggressive powersave
+ * schedule and returns start and stop time in parameters if this is a case.
+ * @param from hours at which powersaving shall switch to aggressive mode
+ * @param to hours at which powersaving shall return from aggressive mode to what is configured
+ * @return zero if configuration has schedule activated. non zero otherwise
+ * @note It should be obvious, but just to remind: aggressive powersave schedule requires RTC
+ * to be set to correct date and time, to have this working correctly
+ */
+int configuration_get_powersave_aggresive_schedule(uint8_t* from, uint8_t* to) {
+	int out = 1;
+
+	if ((main_config_data_mode->powersave_aggresive_schedule_start >= (uint8_t)0u) && (main_config_data_mode->powersave_aggresive_schedule_start < (uint8_t)24u)) {
+
+		if ((main_config_data_mode->powersave_aggresive_schedule_stop >= (uint8_t)0u) && (main_config_data_mode->powersave_aggresive_schedule_stop < (uint8_t)24u)) {
+
+			if (main_config_data_mode->powersave_aggresive_schedule_start != main_config_data_mode->powersave_aggresive_schedule_stop) {
+				out = 0;
+
+				*from = main_config_data_mode->powersave_aggresive_schedule_start;
+				*to = main_config_data_mode->powersave_aggresive_schedule_stop;
+			}
+		}
+	}
+
+	return out;
+}
+
+/**
+ *
+ * @return
+ */
+int configuration_get_powersave_aggresive_wxinvertal(void) {
+	int out = 0;
+
+	if (main_config_data_basic->wx_transmit_period_forced_aggresive_pwrsave > main_config_data_basic->wx_transmit_period) {
+
+		if (main_config_data_basic->wx_transmit_period_forced_aggresive_pwrsave < 60) {
+			out = main_config_data_basic->wx_transmit_period_forced_aggresive_pwrsave;
+		}
+	}
+
+	return out;
+}
+

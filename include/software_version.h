@@ -9,7 +9,7 @@
 #define SOFTWARE_VERSION_H_
 
 #define SW_VER "ED03"
-#define SW_DATE "16122024"
+#define SW_DATE "23122024"
 #define SW_KISS_PROTO	"C"
 
 extern const char software_version_str[5];

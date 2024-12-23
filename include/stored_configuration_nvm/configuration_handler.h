@@ -70,5 +70,7 @@ configuration_button_function_t configuration_get_right_button(void);
 
 int configuration_get_is_security_access_required(uint8_t medium, uint8_t routine_type);
 
+int configuration_get_powersave_aggresive_schedule(uint8_t* from, uint8_t* to);
+int configuration_get_powersave_aggresive_wxinvertal(void);
 
 #endif /* CONFIGURATION_HANDLER_H_ */
