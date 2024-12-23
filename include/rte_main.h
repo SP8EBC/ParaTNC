@@ -69,6 +69,8 @@ extern uint32_t rte_main_last_sleep_master_time;
 
 extern uint8_t rte_main_reset_gsm_modem;
 
+extern uint8_t rte_main_reset_modbus_rtu;
+
 extern config_data_powersave_mode_t rte_main_curret_powersave_mode;
 
 #endif

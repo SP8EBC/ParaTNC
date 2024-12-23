@@ -145,6 +145,27 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 #else
 		.powersave_keep_gsm_always_enabled = 0
 #endif
+
+#if (defined _AGGRESIVE_SCHEDULE_START)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_start = _AGGRESIVE_SCHEDULE_START,
+#else
+		.powersave_aggresive_schedule_start = 100,
+#endif
+
+#if (defined _AGGRESIVE_SCHEDULE_STOP)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_stop = _AGGRESIVE_SCHEDULE_STOP,
+#else
+		.powersave_aggresive_schedule_stop = 100,
+#endif
+
+#if (defined _AGGRESIVE_SCHEDULE_WXINTERVAL)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_wxinterval = _AGGRESIVE_SCHEDULE_WXINTERVAL,
+#else
+		.powersave_aggresive_schedule_wxinterval = 100,
+#endif
 };
 
 /**

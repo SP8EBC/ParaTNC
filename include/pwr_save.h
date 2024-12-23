@@ -86,12 +86,11 @@
  *  |=======================|===================|=======================================================================================|
  *  |   DIGI                |   don't care      |   Always stays in C2 no matter of how config_data_powersave_mode_t is set             |
  *  |   DIGI + WX           |   PWSAVE_NONE     |       C1                                                                              |
- *  |   DIGI + WX           |   PWSAVE_NORMAL   |       C2 --- (1 minute before WX frame)---> C1 -> C2                                  |
- *  |   DIGI + WX           |   PWSAVE_AGGRESV  |       C2 --- (1 minute before WX frame)---> C1 -> C2                                  |
+ *  |   DIGI + WX           |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C1 -> M4                                  |
+ *  |   DIGI + WX           |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C1 -> L7                                  |
  *  |   DIGI + WX + GSM     |   PWSAVE_NONE     |       C0                                                                              |
- *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       C2 --- (1 minute before WX frame)---> C0 -> C2  ; if WX_INTERVAL >= 5 minutes   |
- *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       C3 --- (1 minute before WX frame)---> C0 -> C3  ; if WX_INTERVAL < 5 minutes    |
- *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       C2 --- (1 minute before WX frame)---> C0 -> C2  ; no matter WX_INTERVAL         |
+ *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C0 -> M4									|
+ *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C0 -> L7 									|
  *  |   WX + GSM            |   PWSAVE_NONE     |       C0                                                                              |
  *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute before WX frame)---> C0 -> M4                                  |
  *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7									|

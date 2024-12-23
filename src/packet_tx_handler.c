@@ -41,6 +41,8 @@ uint8_t packet_tx_beacon_counter = 0;
 uint8_t packet_tx_error_status_interval = 2;
 uint8_t packet_tx_error_status_counter = 0;
 
+uint8_t packet_tx_meteo_aggresive_interval = 0;
+uint8_t packet_tx_meteo_non_aggresive_interval = 0;
 uint8_t packet_tx_meteo_interval = 0;
 uint8_t packet_tx_meteo_counter = 0;
 
@@ -85,10 +87,32 @@ void packet_tx_send_wx_frame(void) {
 
 }
 
-void packet_tx_init(uint8_t meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
-	packet_tx_meteo_interval = meteo_interval;
+void packet_tx_init(uint8_t meteo_interval, uint8_t aggressive_meteo_interval, uint8_t beacon_interval, config_data_powersave_mode_t powersave) {
 
-	packet_tx_beacon_interval = beacon_interval;
+	// check if values are set reasonable
+	if (meteo_interval >= 5 && meteo_interval < 60) {
+		packet_tx_meteo_interval = meteo_interval;
+	}
+	else {
+		packet_tx_meteo_interval = 5;
+	}
+
+	if (aggressive_meteo_interval > packet_tx_meteo_interval) {
+		packet_tx_meteo_aggresive_interval = aggressive_meteo_interval;
+	}
+	else {
+		packet_tx_meteo_aggresive_interval = 0;
+	}
+
+	packet_tx_meteo_non_aggresive_interval = packet_tx_meteo_interval;
+
+	// check if values are set reasonable
+	if (beacon_interval >= 10 && beacon_interval < 90) {
+		packet_tx_beacon_interval = beacon_interval;
+	}
+	else {
+		packet_tx_beacon_interval = 15;
+	}
 
 #ifdef PARAMETEO
 	backup_reg_get_packet_counters(&packet_tx_beacon_counter, &packet_tx_meteo_counter, &packet_tx_meteo_gsm_counter);
@@ -138,8 +162,6 @@ void packet_tx_tcp_handler(void) {
 
 	// TODO: fixme currently there is no way to have APRS-IS and rest api
 	// client working at the same time
-
-	aprsis_return_t aprsis_result = APRSIS_UNKNOWN;
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		if (gsm_sim800_tcpip_tx_busy() == 0 && aprsis_connected == 1) {
@@ -716,4 +738,26 @@ void packet_tx_force_gsm_status(void) {
 #ifdef STM32L471xx
 	packet_tx_gsm_status_sent = 0;
 #endif
+}
+
+/**
+ * Callback used by @link{pwr_save_pooling_handler} in case of change in current
+ * powersave mode due to schedule or battery voltage
+ * @param non_aggressive_or_aggressive
+ */
+void packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive) {
+	if (non_aggressive_or_aggressive == 0) {
+		packet_tx_meteo_interval = packet_tx_meteo_non_aggresive_interval;
+		packet_tx_telemetry_interval = 10;
+	}
+	else {
+		packet_tx_meteo_interval = packet_tx_meteo_aggresive_interval;
+
+		if (packet_tx_meteo_aggresive_interval < 10) {
+			packet_tx_telemetry_interval = 2 * packet_tx_meteo_aggresive_interval;
+		}
+		else {
+			packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
+		}
+	}
 }

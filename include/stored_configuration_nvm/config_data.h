@@ -94,6 +94,12 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 	// only for ParaMETEO
 	uint8_t nvm_logger;
 
+	// only for ParaMETEO
+	uint8_t powersave_aggresive_schedule_start;
+
+	// only for ParaMETEO
+	uint8_t powersave_aggresive_schedule_stop;
+
 } config_data_mode_t;
 
 typedef struct __attribute__((aligned (4))) config_data_basic_t {
@@ -240,6 +246,11 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	 *		31 - this should be one to enable
 	 */
 	uint32_t uds_diagnostics_security_access;
+
+	/**
+	 * only for ParaMETEO
+	 */
+	uint8_t wx_transmit_period_forced_aggresive_pwrsave;
 
 } config_data_basic_t;
 

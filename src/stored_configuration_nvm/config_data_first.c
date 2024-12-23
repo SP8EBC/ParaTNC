@@ -151,6 +151,21 @@ const config_data_mode_t __attribute__((section(".config_section_first.mode"))) 
 #else
 		.powersave_keep_gsm_always_enabled = 0
 #endif
+
+#if (defined _AGGRESIVE_SCHEDULE_START)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_start = _AGGRESIVE_SCHEDULE_START,
+#else
+		.powersave_aggresive_schedule_start = 100,
+#endif
+
+#if (defined _AGGRESIVE_SCHEDULE_STOP)
+		// only for ParaMETEO
+		.powersave_aggresive_schedule_stop = _AGGRESIVE_SCHEDULE_STOP,
+#else
+		.powersave_aggresive_schedule_stop = 100,
+#endif
+
 };
 
 /**
@@ -227,6 +242,13 @@ const config_data_basic_t __attribute__((section(".config_section_first.basic"))
 
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
 		.battery_scalling_b = VBAT_MEAS_B_COEFF
+
+#if (defined _AGGRESIVE_POWERSAVE_WX_INTERVAL)
+		// only for ParaMETEO
+		.wx_transmit_period_forced_aggresive_pwrsave = _AGGRESIVE_POWERSAVE_WX_INTERVAL,
+#else
+		.wx_transmit_period_forced_aggresive_pwrsave = 100,
+#endif
 };
 
 /**
