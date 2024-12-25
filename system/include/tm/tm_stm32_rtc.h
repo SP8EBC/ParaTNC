@@ -95,9 +95,10 @@ extern "C" {
  - attributes.h
 \endverbatim
  */
-#include "stm32fxxx_hal.h"
-#include "defines.h"
-#include "attributes.h"
+//#include "stm32fxxx_hal.h"
+//#include "defines.h"
+//#include "attributes.h"
+#include <stm32l4xx.h>
 
 /**
  * @defgroup TM_RTC_Macros

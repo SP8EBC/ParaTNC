@@ -16,6 +16,7 @@
 #include <stm32l4xx_hal_rtc.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 
+
 #include "gsm/sim800c.h"
 #include "gsm/sim800c_engineering.h"
 #include "gsm/sim800c_poolers.h"
@@ -674,6 +675,7 @@ int main(int argc, char* argv[]){
 #endif
 
 #if defined(STM32L471xx)
+
   system_clock_update_l4();
 
   if (system_clock_configure_l4() != 0) {

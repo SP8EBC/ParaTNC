@@ -102,6 +102,8 @@
 
 #include "tm/tm_stm32_rtc.h"
 
+#include "build_datetime.h"
+
 /**
   * @}
   */
@@ -207,6 +209,62 @@
 /** @addtogroup STM32L4xx_System_Private_Functions
   * @{
   */
+
+  static int system_get_weekday_from_date(const LL_RTC_DateTypeDef * in)
+  {
+
+      int day = __LL_RTC_CONVERT_BIN2BCD(in->Day);
+      int month = __LL_RTC_CONVERT_BIN2BCD(in->Month);
+      int year = __LL_RTC_CONVERT_BIN2BCD(in->Year);
+
+         const int out =(                                            \
+            day                                                      \
+          + ((153 * (month + 12 * ((14 - month) / 12) - 3) + 2) / 5) \
+          + (365 * (year + 4800 - ((14 - month) / 12)))              \
+          + ((year + 4800 - ((14 - month) / 12)) / 4)                \
+          - ((year + 4800 - ((14 - month) / 12)) / 100)              \
+          + ((year + 4800 - ((14 - month) / 12)) / 400)              \
+          - 32045                                                    \
+        ) % 7;
+      return out + 1;	// calculation above gives week days from 0 -> monday
+      				// to 6 -> sunday
+  }
+
+  void system_set_rtc_date(uint16_t year, uint8_t month, uint8_t day_of_month) {
+  	LL_RTC_DateTypeDef date;
+
+  	date.Day = day_of_month;
+  	date.Month = month;
+  	date.Year = year;
+
+  	const int weekday = system_get_weekday_from_date(&date);
+  	date.WeekDay = weekday;
+
+  	// enable access to backup domain
+  	PWR->CR1 |= PWR_CR1_DBP;
+
+  	LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &date);
+
+  	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+  }
+
+  void system_set_rtc_time(uint8_t hour, uint8_t minute, uint8_t second) {
+  	LL_RTC_TimeTypeDef time;
+
+  	time.TimeFormat = LL_RTC_TIME_FORMAT_AM_OR_24;
+  	time.Hours = hour;
+  	time.Minutes = minute;
+  	time.Seconds = second;
+
+  	// enable access to backup domain
+  	PWR->CR1 |= PWR_CR1_DBP;
+
+  	LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &time);
+
+  	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+
+  }
+
 
 /**
   * @brief  Setup the microcontroller system.
@@ -520,11 +578,8 @@ void system_clock_start_rtc_l4(void) {
 		}
 	}
 
-	// set date
-	RTC->DR = 0x0024E714;
-
-	// set time
-	RTC->TR = 0x00182044;
+  	system_set_rtc_date(BUILD_YEAR, BUILD_MONTH, BUILD_DAY);
+	system_set_rtc_time(BUILD_HOUR, BUILD_MINUTE, BUILD_SECOND);
 
 	// exit RTC set mode
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
@@ -542,6 +597,8 @@ void system_clock_start_rtc_l4(void) {
 int system_clock_configure_rtc_l4(void) {
 
 	int retval = 0;
+
+	TM_RTC_Init(TM_RTC_ClockSource_External);
 
 	// check if LSE is working now
 	uint8_t lse_is_working = ((RCC->BDCR & RCC_BDCR_LSERDY) > 0) ? 1 : 0;
@@ -684,61 +741,6 @@ uint32_t system_get_rtc_date(void) {
 
 uint32_t system_get_rtx_time(void) {
 	return RTC->TR;
-}
-
-static int system_get_weekday_from_date(const LL_RTC_DateTypeDef * in)
-{
-
-    int day = __LL_RTC_CONVERT_BIN2BCD(in->Day);
-    int month = __LL_RTC_CONVERT_BIN2BCD(in->Month);
-    int year = __LL_RTC_CONVERT_BIN2BCD(in->Year);
-
-       const int out =(                                            \
-          day                                                      \
-        + ((153 * (month + 12 * ((14 - month) / 12) - 3) + 2) / 5) \
-        + (365 * (year + 4800 - ((14 - month) / 12)))              \
-        + ((year + 4800 - ((14 - month) / 12)) / 4)                \
-        - ((year + 4800 - ((14 - month) / 12)) / 100)              \
-        + ((year + 4800 - ((14 - month) / 12)) / 400)              \
-        - 32045                                                    \
-      ) % 7;
-    return out + 1;	// calculation above gives week days from 0 -> monday
-    				// to 6 -> sunday
-}
-
-void system_set_rtc_date(uint16_t year, uint8_t month, uint8_t day_of_month) {
-	LL_RTC_DateTypeDef date;
-
-	date.Day = day_of_month;
-	date.Month = month;
-	date.Year = year;
-
-	const int weekday = system_get_weekday_from_date(&date);
-	date.WeekDay = weekday;
-
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &date);
-
-	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
-}
-
-void system_set_rtc_time(uint8_t hour, uint8_t minute, uint8_t second) {
-	LL_RTC_TimeTypeDef time;
-
-	time.TimeFormat = LL_RTC_TIME_FORMAT_AM_OR_24;
-	time.Hours = hour;
-	time.Minutes = minute;
-	time.Seconds = second;
-
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &time);
-
-	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
-
 }
 
 

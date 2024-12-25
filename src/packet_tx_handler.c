@@ -97,14 +97,14 @@ void packet_tx_init(uint8_t meteo_interval, uint8_t aggressive_meteo_interval, u
 		packet_tx_meteo_interval = 5;
 	}
 
+	packet_tx_meteo_non_aggresive_interval = packet_tx_meteo_interval;
+
 	if (aggressive_meteo_interval > packet_tx_meteo_interval) {
 		packet_tx_meteo_aggresive_interval = aggressive_meteo_interval;
 	}
 	else {
 		packet_tx_meteo_aggresive_interval = 0;
 	}
-
-	packet_tx_meteo_non_aggresive_interval = packet_tx_meteo_interval;
 
 	// check if values are set reasonable
 	if (beacon_interval >= 10 && beacon_interval < 90) {

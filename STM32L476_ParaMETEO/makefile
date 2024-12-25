@@ -87,7 +87,8 @@ ParaTNC.siz \
 
 
 # All Target
-all: main-build
+all:
+	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build
 
 # Main-build Target
 main-build: ParaTNC.elf secondary-outputs
@@ -123,8 +124,12 @@ clean:
 	-$(RM) $(CC_DEPS)$(C++_DEPS)$(OBJS)$(C_UPPER_DEPS)$(CXX_DEPS)$(SECONDARY_FLASH)$(SECONDARY_LIST)$(SECONDARY_SIZE)$(ASM_DEPS)$(S_UPPER_DEPS)$(C_DEPS)$(CPP_DEPS) ParaTNC.elf
 	-@echo ' '
 
+pre-build:
+	-/bin/bash rc.timestamp
+	-@echo ' '
+
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
-.PHONY: all clean dependents main-build
+.PHONY: all clean dependents main-build pre-build
 
 -include ../makefile.targets

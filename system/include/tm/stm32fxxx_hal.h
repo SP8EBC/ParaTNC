@@ -169,7 +169,7 @@ extern "C" {
 #endif
 
 /* STM32F4xx */
-#if defined(STM32F4xx) || defined(STM32F4XX)
+#if defined(STM32F4xx) || defined(STM32F4XX) || defined(STM32L471xx)
 #ifndef STM32F4xx
 #define STM32F4xx
 #endif

@@ -30,6 +30,6 @@
 
 /* Put your global defines for all libraries here used in your project */
 
-#define STM32F4xx
+//#define STM32F4xx
 
 #endif

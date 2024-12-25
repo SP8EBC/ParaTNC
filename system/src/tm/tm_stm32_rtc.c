@@ -25,6 +25,12 @@
  */
 #include "tm_stm32_rtc.h"
 
+#include <stm32l4xx_ll_iwdg.h>
+#include <stm32l4xx_ll_rcc.h>
+#include <stm32l4xx_ll_gpio.h>
+#include <stm32l4xx_hal_rtc.h>
+#include <stm32l4xx_hal_rcc.h>
+
 /* Private macros */
 /* Internal status registers for RTC */
 #if defined(STM32F7xx)
@@ -67,73 +73,75 @@ uint32_t TM_RTC_Init(TM_RTC_ClockSource_t source) {
 	
 	/* Set instance */
 	hRTC.Instance = RTC;
-	hRTC.Init.AsynchPrediv = RTC_ASYNC_PREDIV;
-	hRTC.Init.SynchPrediv = RTC_SYNC_PREDIV;
-	hRTC.Init.HourFormat = RTC_HOURFORMAT_24;
-	hRTC.Init.OutPut = RTC_OUTPUT_DISABLE;
-	hRTC.Init.OutPutType = RTC_OUTPUT_TYPE_PUSHPULL;
-	hRTC.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-	
-	/* Enable PWR peripheral clock */
-	__HAL_RCC_PWR_CLK_ENABLE();
 
-	/* Allow access to BKP Domain */
-	HAL_PWR_EnableBkUpAccess();
-	
-	/* Get RTC status */
-	status = HAL_RTCEx_BKUPRead(&hRTC, RTC_STATUS_REG);
-	
-	/* Check if RTC already initialized */
-	if (status == RTC_STATUS_TIME_OK) {
-		/* Start internal clock if we choose internal clock */
-		if (source == TM_RTC_ClockSource_Internal) {
-			TM_RTC_Config(TM_RTC_ClockSource_Internal);
-		}
-		
-		/* Wait for RTC APB registers synchronisation (needed after start-up from Reset) */
-		HAL_RTC_WaitForSynchro(&hRTC);
-		
-		/* Get date and time */
-		TM_RTC_GetDateTime(&datatime, TM_RTC_Format_BIN);
-		
-		/* Clear reset flags */
-		__HAL_RCC_CLEAR_RESET_FLAGS();
-		
-		/* Return OK */
-		return 1;
-	} else {
-		/* Start RTC clock */
-		TM_RTC_Config(source);
-		
-		/* Set date */
-		RTC_DateStruct.Year = 0;
-		RTC_DateStruct.Month = 1;
-		RTC_DateStruct.Date = 1;
-		RTC_DateStruct.WeekDay = RTC_WEEKDAY_TUESDAY;
-
-		/* Set date */
-		HAL_RTC_SetDate(&hRTC, &RTC_DateStruct, RTC_FORMAT_BIN);
-
-		/* Set time */
-		RTC_TimeStruct.Hours = 0x00;
-		RTC_TimeStruct.Minutes = 0x00;
-		RTC_TimeStruct.Seconds = 0x00;
-		RTC_TimeStruct.TimeFormat = RTC_HOURFORMAT_24;
-		RTC_TimeStruct.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-		RTC_TimeStruct.StoreOperation = RTC_STOREOPERATION_RESET;
-
-		/* Set time */
-		HAL_RTC_SetTime(&hRTC, &RTC_TimeStruct, RTC_FORMAT_BCD);
-		
-		/* Init RTC */
-		HAL_RTC_Init(&hRTC);
-
-		/* Save data to backup regiser */
-		HAL_RTCEx_BKUPWrite(&hRTC, RTC_STATUS_REG, RTC_STATUS_TIME_OK); 
-		
-		/* RTC was initialized now */
-		return 0;
-	}
+	return 0;
+//	hRTC.Init.AsynchPrediv = RTC_ASYNC_PREDIV;
+//	hRTC.Init.SynchPrediv = RTC_SYNC_PREDIV;
+//	hRTC.Init.HourFormat = RTC_HOURFORMAT_24;
+//	hRTC.Init.OutPut = RTC_OUTPUT_DISABLE;
+//	hRTC.Init.OutPutType = RTC_OUTPUT_TYPE_PUSHPULL;
+//	hRTC.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+//
+//	/* Enable PWR peripheral clock */
+//	__HAL_RCC_PWR_CLK_ENABLE();
+//
+//	/* Allow access to BKP Domain */
+//	HAL_PWR_EnableBkUpAccess();
+//
+//	/* Get RTC status */
+//	status = HAL_RTCEx_BKUPRead(&hRTC, RTC_STATUS_REG);
+//
+//	/* Check if RTC already initialized */
+//	if (status == RTC_STATUS_TIME_OK) {
+//		/* Start internal clock if we choose internal clock */
+//		if (source == TM_RTC_ClockSource_Internal) {
+//			TM_RTC_Config(TM_RTC_ClockSource_Internal);
+//		}
+//
+//		/* Wait for RTC APB registers synchronisation (needed after start-up from Reset) */
+//		HAL_RTC_WaitForSynchro(&hRTC);
+//
+//		/* Get date and time */
+//		TM_RTC_GetDateTime(&datatime, TM_RTC_Format_BIN);
+//
+//		/* Clear reset flags */
+//		__HAL_RCC_CLEAR_RESET_FLAGS();
+//
+//		/* Return OK */
+//		return 1;
+//	} else {
+//		/* Start RTC clock */
+//		TM_RTC_Config(source);
+//
+//		/* Set date */
+//		RTC_DateStruct.Year = 0;
+//		RTC_DateStruct.Month = 1;
+//		RTC_DateStruct.Date = 1;
+//		RTC_DateStruct.WeekDay = RTC_WEEKDAY_TUESDAY;
+//
+//		/* Set date */
+//		HAL_RTC_SetDate(&hRTC, &RTC_DateStruct, RTC_FORMAT_BIN);
+//
+//		/* Set time */
+//		RTC_TimeStruct.Hours = 0x00;
+//		RTC_TimeStruct.Minutes = 0x00;
+//		RTC_TimeStruct.Seconds = 0x00;
+//		RTC_TimeStruct.TimeFormat = RTC_HOURFORMAT_24;
+//		RTC_TimeStruct.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+//		RTC_TimeStruct.StoreOperation = RTC_STOREOPERATION_RESET;
+//
+//		/* Set time */
+//		HAL_RTC_SetTime(&hRTC, &RTC_TimeStruct, RTC_FORMAT_BCD);
+//
+//		/* Init RTC */
+//		HAL_RTC_Init(&hRTC);
+//
+//		/* Save data to backup regiser */
+//		HAL_RTCEx_BKUPWrite(&hRTC, RTC_STATUS_REG, RTC_STATUS_TIME_OK);
+//
+//		/* RTC was initialized now */
+//		return 0;
+//	}
 }
 
 TM_RTC_Result_t TM_RTC_SetDateTime(TM_RTC_t* data, TM_RTC_Format_t format) {
