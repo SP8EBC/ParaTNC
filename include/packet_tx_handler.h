@@ -52,6 +52,7 @@ void packet_tx_set_current_counters(packet_tx_counter_values_t * in);
 int16_t packet_tx_get_minutes_to_next_wx(void);
 uint8_t packet_tx_is_gsm_meteo_pending(void);
 void packet_tx_force_gsm_status(void);
-void packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive);
+uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive);
+uint8_t packet_tx_get_meteo_counter(void);
 
 #endif /* PACKET_TX_HANDLER_H_ */

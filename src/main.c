@@ -2209,7 +2209,7 @@ int main(int argc, char* argv[]){
 
 				// inhibit any power save switching when modem transmits data
 				if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
-					pwr_save_pooling_handler(main_config_data_mode, main_config_data_basic, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage, &main_continue_loop);
+					pwr_save_pooling_handler(main_config_data_mode, packet_tx_meteo_interval, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage, &main_continue_loop);
 				}
 
 				if (main_continue_loop == 0) {
@@ -2276,7 +2276,7 @@ int main(int argc, char* argv[]){
 					#else
 						if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
 					#endif
-							// pool anemometer only when power is applied
+							// pool anemometer only when power is applied  /// RESET
 							wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 						}
 				}

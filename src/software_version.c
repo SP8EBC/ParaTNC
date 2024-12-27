@@ -8,5 +8,7 @@
  */
 
 #include "software_version.h"
+#include "build_datetime.h"
 
 const char software_version_str[5] = SW_VER;
+const char software_version_date[9] = BUILD_SWVERSTR;

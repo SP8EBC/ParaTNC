@@ -28,7 +28,8 @@ typedef enum config_data_powersave_mode_t {
 	 */
 	PWSAVE_NONE = 0,
 	PWSAVE_NORMAL = 1,
-	PWSAVE_AGGRESV = 3
+	PWSAVE_AGGRESV = 3,
+	PWSAVE_NULL	= 0xFF
 
 	//PWSAVE_
 

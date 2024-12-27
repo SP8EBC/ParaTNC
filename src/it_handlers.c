@@ -272,6 +272,7 @@ void TIM5_IRQHandler( void ) {
 void TIM7_IRQHandler(void) {
 // obsluga przetwarzania analog-cyfra. Wersja z oversamplingiem
 	TIM7->SR &= ~(1<<0);
+	NVIC_ClearPendingIRQ(TIM7_IRQn);
 	#define ASC adc_sample_count
 	#define ASC2 adc_sample_c2
 	AdcBuffer[ASC] =  ADC1->DR;
@@ -292,8 +293,9 @@ void TIM7_IRQHandler(void) {
 		}
 
 	}
-	else
+	else {
 		ASC++;
+	}
 
 }
 

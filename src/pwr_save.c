@@ -101,6 +101,8 @@ const uint16_t pwr_save_aggressive_powersave_voltage = PWR_SAVE_AGGRESIVE_POWERS
 
 static TM_RTC_t pwr_save_datetime;
 
+static config_data_powersave_mode_t pwr_save_previous_mode = PWSAVE_NULL;
+
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
 static void pwr_save_presleep(uint16_t current, uint16_t average) {
 	   event_log_sync(
@@ -188,6 +190,8 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
 	backup_reg_reset_all_powersave_states();
 	backup_reg_reset_inhibit_periodic_pwr_switch();
 
+	pwr_save_previous_mode = mode;
+
 	// switch power switch handler inhibition if it is needed
 	switch (mode) {
 		case PWSAVE_NONE:
@@ -215,10 +219,6 @@ void pwr_save_enter_stop2(void) {
 
 	// clear main battery voltage to be sure that it'd be updated???
 	rte_main_battery_voltage = 0;
-
-	analog_anemometer_deinit();
-
-	TimerAdcDisable();
 
 	// clear previous low power mode selection
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_LPMS_Msk);
@@ -248,7 +248,7 @@ void pwr_save_enter_stop2(void) {
 	// disabling all IRQs
 	//__disable_irq();
 
-	asm("sev");
+	//asm("sev");
 	asm("wfi");
 
 }
@@ -769,6 +769,10 @@ void pwr_save_switch_mode_to_l6(uint16_t sleep_time) {
 	// de inhibit GSM modem
 	gsm_sim800_inhibit(0);
 
+	analog_anemometer_deinit();
+
+	TimerAdcDisable();
+
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
 
@@ -865,6 +869,10 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	// inhibit GSM modem
 	gsm_sim800_inhibit(1);
 
+	analog_anemometer_deinit();
+
+	TimerAdcDisable();
+
 	// clear all previous powersave indication bits
 	backup_reg_reset_all_powersave_states();
 
@@ -895,8 +903,8 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 }
 
 config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t * config,
-														const config_data_basic_t * timers,
-														int16_t minutes_to_wx,
+														uint8_t minutes_between_wx_frames,
+														int16_t minutes_left_to_wx,
 														uint16_t vbatt_average,
 														uint16_t vbatt_current,
 														uint8_t * continue_loop) {
@@ -907,6 +915,12 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 	int8_t reinit_sensors = 0;
 
 	int8_t reinit_gprs = 0;
+
+	// this value might be updated later in case of powersave mode change
+	int16_t minutes_to_wx = minutes_left_to_wx;
+
+	// how frequent in minutes station sends wx frame over radio
+	uint8_t wx_frame_interval = minutes_between_wx_frames;
 
 	packet_tx_counter_values_t counters;
 
@@ -1005,6 +1019,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 		// like start at 1 PM and stop on 6 PM
 		if (schedule_to > schedule_from) {
+			// check if current RTC time (hours) is within configured schedule
 			if (pwr_save_datetime.Hours > schedule_from) {
 				if (pwr_save_datetime.Hours < schedule_to) {
 					psave_mode = PWSAVE_AGGRESV;
@@ -1014,6 +1029,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 		// like starting at 6 PM and stop on 8 AM next day
 		else {
+			// check if current RTC time (hours) is within configured schedule
 			if (pwr_save_datetime.Hours < schedule_to || pwr_save_datetime.Hours > schedule_from) {
 				psave_mode = PWSAVE_AGGRESV;
 			}
@@ -1023,14 +1039,22 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 	// get current counter values
 	packet_tx_get_current_counters(&counters);
 
-	if (psave_mode != config->powersave) {
-		if (psave_mode == PWSAVE_AGGRESV) {
-			packet_tx_changed_powersave_callback(1);
-		}
-		else {
-			packet_tx_changed_powersave_callback(0);
+	// check if powersave mode has changed because of battery voltage or a schedule
+	if (pwr_save_previous_mode != PWSAVE_NULL) {	// this check might be retundand as pwr_save_previous_mode
+													// is nitialized in @link{pwr_save_init}
+		if (psave_mode != pwr_save_previous_mode) {
+			if (psave_mode == PWSAVE_AGGRESV) {
+				wx_frame_interval = packet_tx_changed_powersave_callback(1);
+				minutes_to_wx = wx_frame_interval -  packet_tx_get_meteo_counter();
+			}
+			else {
+				wx_frame_interval = packet_tx_changed_powersave_callback(0);
+				minutes_to_wx = wx_frame_interval -  packet_tx_get_meteo_counter();
+			}
 		}
 	}
+
+	pwr_save_previous_mode = psave_mode;
 
 	// decrement seconds in last minute
 	if (pwr_save_seconds_to_wx != -1) {
@@ -1166,7 +1190,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							backup_reg_set_monitor(17);
 
 							// if there is more than two minutes to send wx packet
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
+							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
 							*continue_loop = 0;
 
@@ -1202,7 +1226,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX + GSM
 						if (minutes_to_wx > (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1)) {
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
+							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
 
 							*continue_loop = 0;
 							//reinit_gprs = 1;
@@ -1219,7 +1243,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							backup_reg_set_monitor(17);
 
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to wx packet
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
+							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
 
 							*continue_loop = 0;
 
@@ -1238,7 +1262,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					// if digipeater is enabled
 					if (config->digi == 1) {		// DIGI + WX
 						if (minutes_to_wx > (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1)) {
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
+							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - ((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));
 
 							*continue_loop = 0;
 						}
@@ -1251,7 +1275,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 							backup_reg_set_monitor(17);
 
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to send wx packet
-							pwr_save_switch_mode_to_l7((timers->wx_transmit_period * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
+							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
 							*continue_loop = 0;
 

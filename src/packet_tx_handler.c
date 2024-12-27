@@ -744,8 +744,9 @@ void packet_tx_force_gsm_status(void) {
  * Callback used by @link{pwr_save_pooling_handler} in case of change in current
  * powersave mode due to schedule or battery voltage
  * @param non_aggressive_or_aggressive
+ * @return new value of packet_tx_meteo_interval
  */
-void packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive) {
+uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive) {
 	if (non_aggressive_or_aggressive == 0) {
 		packet_tx_meteo_interval = packet_tx_meteo_non_aggresive_interval;
 		packet_tx_telemetry_interval = 10;
@@ -760,4 +761,22 @@ void packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive) 
 			packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
 		}
 	}
+
+	if (packet_tx_meteo_counter > packet_tx_meteo_interval) {
+		packet_tx_meteo_counter = packet_tx_meteo_interval - 1;
+	}
+
+	if (packet_tx_telemetry_counter > packet_tx_telemetry_interval) {
+		packet_tx_telemetry_counter = packet_tx_telemetry_interval - 1;
+	}
+
+	return packet_tx_meteo_interval;
+}
+
+/**
+ * As name should explain this returns current value of meteo packet counter
+ * @return
+ */
+uint8_t packet_tx_get_meteo_counter(void) {
+	return packet_tx_meteo_counter;
 }

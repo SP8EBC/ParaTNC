@@ -97,10 +97,13 @@ void TIM2DelayDeConfig(void) {
 
 void TimerAdcDisable(void) {
 	TIM7->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
-
+	TIM7->SR &= (0xFFFFFFFF ^ TIM_SR_UIF_Msk);
+	NVIC_ClearPendingIRQ(TIM7_IRQn);
+	NVIC_DisableIRQ( TIM7_IRQn );
 }
 
 void TimerAdcEnable(void) {
+	NVIC_EnableIRQ( TIM7_IRQn );
 	TIM7->CR1 |= TIM_CR1_CEN;
 
 }

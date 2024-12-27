@@ -566,6 +566,9 @@ void system_clock_start_rtc_l4(void) {
 	RTC->WPR = 0xCA;
 	RTC->WPR = 0x53;
 
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRAF_Msk);
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRBF_Msk);
+
 	// enter the clock set mode
 	RTC->ISR |= RTC_ISR_INIT;
 
@@ -689,6 +692,10 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 	// clear wakeup flag
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
 
+	// clear alarm flags
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRAF_Msk);
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRBF_Msk);
+
 	// set auto wakeup timer
 	RTC->WUTR = seconds;
 
@@ -705,7 +712,7 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 	EXTI->RTSR1 |= EXTI_RTSR1_RT20;
 
 	// by enabling this all pending interrupt will wake up cpu from low-power mode, even from those disabled in NVIC
-	SCB->SCR |= SCB_SCR_SEVONPEND_Msk;
+	//SCB->SCR |= SCB_SCR_SEVONPEND_Msk;
 
 	// enable wakeup interrupt
 	NVIC_EnableIRQ(RTC_WKUP_IRQn);
