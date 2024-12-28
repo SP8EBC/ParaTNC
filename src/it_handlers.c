@@ -107,9 +107,33 @@ void RTC_WKUP_IRQHandler(void) {
 	// clear pending interrupt
 	NVIC_ClearPendingIRQ(RTC_WKUP_IRQn);
 
+	// enable access to backup domain
+	PWR->CR1 |= PWR_CR1_DBP;
+
+	// enable write access to RTC registers by writing two magic words
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+
+	// disable wakeup interrupt
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTIE);
+
+	// disable wakeup timer
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
+
+	// clear Wakeup timer flag
+	// This flag is set by hardware when the wakeup auto-reload counter reaches 0.
+	// This flag is cleared by software by writing 0.
+	// This flag must be cleared by software at least 1.5 RTCCLK periods before WUTF is set to 1
+	// again.
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
 
+	// wait for wakeup timer to disable
+	while((RTC->ISR & RTC_ISR_WUTWF) == 0);
+
 	EXTI->PR1 |= EXTI_PR1_PIF20;
+
+	// disable access do backup domain
+	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 }
 
 void SPI2_IRQHandler(void) {

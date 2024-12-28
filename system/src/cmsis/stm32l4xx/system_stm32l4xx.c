@@ -210,6 +210,21 @@
   * @{
   */
 
+inline static void system_clock_enable_access_to_rtc(void)
+{
+  	// enable access to backup domain
+  	PWR->CR1 |= PWR_CR1_DBP;
+
+	// enable write access to RTC registers by writing two magic words
+	RTC->WPR = 0xCA;
+	RTC->WPR = 0x53;
+}
+
+inline static void system_clock_disable_access_to_rtc(void)
+{
+  	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
+}
+
   static int system_get_weekday_from_date(const LL_RTC_DateTypeDef * in)
   {
 
@@ -562,9 +577,7 @@ void system_clock_start_rtc_l4(void) {
 	// starting RTC
 	RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	// enable write access to RTC registers by writing two magic words
-	RTC->WPR = 0xCA;
-	RTC->WPR = 0x53;
+	system_clock_enable_access_to_rtc();
 
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRAF_Msk);
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRBF_Msk);
@@ -584,6 +597,10 @@ void system_clock_start_rtc_l4(void) {
   	system_set_rtc_date(BUILD_YEAR, BUILD_MONTH, BUILD_DAY);
 	system_set_rtc_time(BUILD_HOUR, BUILD_MINUTE, BUILD_SECOND);
 
+  	// enable access to backup domain once again. Access is disabled inside
+	// @link{system_set_rtc_time} function
+	system_clock_enable_access_to_rtc();
+
 	// exit RTC set mode
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_INIT);
 
@@ -595,6 +612,9 @@ void system_clock_start_rtc_l4(void) {
 
 	// set the source clock for RTC wakeup as CK_SPRE
 	RTC->CR |= RTC_CR_WUCKSEL_2;
+
+	// disable access to backup domain
+	system_clock_disable_access_to_rtc();
 }
 
 int system_clock_configure_rtc_l4(void) {
@@ -658,16 +678,35 @@ int system_clock_configure_rtc_l4(void) {
 		}
 	}
 
-	// disable access do backup domain
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+	system_clock_enable_access_to_rtc();
+
+	// disable wakeup interrupt
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTIE);
+
+	// disable wakeup timer
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
+
+	// clear Wakeup timer flag
+	// This flag is set by hardware when the wakeup auto-reload counter reaches 0.
+	// This flag is cleared by software by writing 0.
+	// This flag must be cleared by software at least 1.5 RTCCLK periods before WUTF is set to 1
+	// again.
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
+
+	// wait for wakeup timer to disable
+	while((RTC->ISR & RTC_ISR_WUTWF) == 0);
+
+	// enable wakeup interrupt
+	NVIC_DisableIRQ(RTC_WKUP_IRQn);
+
+	system_clock_disable_access_to_rtc();
 
 	return retval;
 }
 
 void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
+	system_clock_enable_access_to_rtc();
 
 	// check if RTC is working
 	if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0) {
@@ -683,20 +722,29 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 	RTC->WPR = 0xCA;
 	RTC->WPR = 0x53;
 
+	// disable wakeup interrupt -> will be reenanbled just in the moment
+	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTIE);
+
 	// disable wakeup timer
 	RTC->CR &= (0xFFFFFFFF ^ RTC_CR_WUTE);
 
+	// clear Wakeup timer flag
+	// This flag is set by hardware when the wakeup auto-reload counter reaches 0.
+	// This flag is cleared by software by writing 0.
+	// This flag must be cleared by software at least 1.5 RTCCLK periods before WUTF is set to 1
+	// again.
+	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
+
 	// wait for wakeup timer to disable
 	while((RTC->ISR & RTC_ISR_WUTWF) == 0);
-
-	// clear wakeup flag
-	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_WUTF_Msk);
 
 	// clear alarm flags
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRAF_Msk);
 	RTC->ISR &= (0xFFFFFFFF ^ RTC_ISR_ALRBF_Msk);
 
 	// set auto wakeup timer
+	// RTC wakeup timer register (RTC_WUTR)
+	// This register can be written only when WUTWF is set to 1 in RTC_ISR.
 	RTC->WUTR = seconds;
 
 	// start wakeup timer once again
@@ -717,8 +765,7 @@ void system_clock_configure_auto_wakeup_l4(uint16_t seconds) {
 	// enable wakeup interrupt
 	NVIC_EnableIRQ(RTC_WKUP_IRQn);
 
-	// disable access do backup domain
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+	system_clock_disable_access_to_rtc();
 }
 
 int system_is_rtc_ok(void) {
