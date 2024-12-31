@@ -752,23 +752,32 @@ uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressiv
 		packet_tx_telemetry_interval = 10;
 	}
 	else {
-		packet_tx_meteo_interval = packet_tx_meteo_aggresive_interval;
+		if ((packet_tx_meteo_aggresive_interval > packet_tx_meteo_non_aggresive_interval) &&
+			(packet_tx_meteo_aggresive_interval < 60)) {
+				packet_tx_meteo_interval = packet_tx_meteo_aggresive_interval;
 
-		if (packet_tx_meteo_aggresive_interval < 10) {
-			packet_tx_telemetry_interval = 2 * packet_tx_meteo_aggresive_interval;
+				if (packet_tx_meteo_aggresive_interval < 10) {
+					packet_tx_telemetry_interval = 2 * packet_tx_meteo_aggresive_interval;
+				}
+				else {
+					packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
+				}
 		}
 		else {
-			packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
+			packet_tx_meteo_interval = packet_tx_meteo_non_aggresive_interval;
+			packet_tx_telemetry_interval = 10;
 		}
 	}
 
-	if (packet_tx_meteo_counter > packet_tx_meteo_interval) {
-		packet_tx_meteo_counter = packet_tx_meteo_interval - 1;
-	}
-
-	if (packet_tx_telemetry_counter > packet_tx_telemetry_interval) {
-		packet_tx_telemetry_counter = packet_tx_telemetry_interval - 1;
-	}
+	packet_tx_meteo_counter = 0;
+	packet_tx_telemetry_counter = 0;
+//	if (packet_tx_meteo_counter > packet_tx_meteo_interval) {
+//		packet_tx_meteo_counter = packet_tx_meteo_interval - 1;
+//	}
+//
+//	if (packet_tx_telemetry_counter > packet_tx_telemetry_interval) {
+//		packet_tx_telemetry_counter = packet_tx_telemetry_interval - 1;
+//	}
 
 	return packet_tx_meteo_interval;
 }
