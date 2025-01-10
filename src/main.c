@@ -119,6 +119,12 @@
 #define SOH 0x01
 #define MANUAL_RTC_SET
 
+#define SX1262_IMPLEMENTATION
+
+#ifdef SX1262_IMPLEMENTATION
+#include "drivers/sx1262/sx1262_modes.h"
+#endif
+
 //#include "variant.h"
 
 //#define SERIAL_TX_TEST_MODE
@@ -1398,6 +1404,10 @@ int main(int argc, char* argv[]){
    if (main_config_data_mode->gsm == 1) {
 	   pwr_save_switch_mode_to_c0();
    }
+
+#ifdef SX1262_IMPLEMENTATION
+   sx1262_modes_set_standby(1);
+#endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
 

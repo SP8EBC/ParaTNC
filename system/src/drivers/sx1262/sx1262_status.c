@@ -1,51 +1,32 @@
 /*
- * sx1262_internals.h
+ * sx1262_status.c
  *
- *  Created on: Dec 15, 2024
+ *  Created on: Jan 9, 2025
  *      Author: mateusz
  */
 
-#ifndef INCLUDE_DRIVERS_SX1262_SX1262_INTERNALS_H_
-#define INCLUDE_DRIVERS_SX1262_SX1262_INTERNALS_H_
 
-
-#include <stdint.h>
-
-#include "drivers/sx1262/sx1262_api_return_t.h"
 
 /// ==================================================================================================
-///	GLOBAL MACROS
+///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
 /// ==================================================================================================
-///	GLOBAL DEFINITIONS
+///	LOCAL DATA TYPES
 /// ==================================================================================================
 
-#define SX1262_TRANSMIT_SPI_BUFFER_LN	(128)
-#define SX1262_RECEIVE_SPI_BUFFER_LN	(128)
-
 /// ==================================================================================================
-///	GLOBAL TYPEDEFS
+///	LOCAL VARIABLES
 /// ==================================================================================================
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
-extern uint8_t sx1262_transmit_spi_buffer[SX1262_TRANSMIT_SPI_BUFFER_LN];
-
-extern uint8_t sx1262_receive_spi_buffer[SX1262_RECEIVE_SPI_BUFFER_LN];
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
-
-/**
- * Checks if SX1262 radio is currently busy or not using IO pin 14- BUSY located on the chip. Radio is
- * treated as busy also when the SPI bus used to comm with it is also busy on any RX/TX transaction
- * @return
- */
-uint8_t sx1262_is_busy(void);
-
-
-#endif /* INCLUDE_DRIVERS_SX1262_SX1262_INTERNALS_H_ */

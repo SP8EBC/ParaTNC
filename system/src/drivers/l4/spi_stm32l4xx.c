@@ -201,14 +201,14 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);		// SPI_NSS_PT100
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_11);
 
-//	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
-//	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
-//	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-//	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-//	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
-//	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_NSS
-//	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_11);
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_5;
+	LL_GPIO_Init(GPIOB, &GPIO_InitTypeDef);		// SPI_NSS
+	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
 
 	RCC->APB1RSTR1 &= (0xFFFFFFFF ^ RCC_APB1RSTR1_SPI2RST);
 
@@ -628,6 +628,28 @@ uint8_t spi_wait_for_comms_done(void) {
 	}
 }
 
+//! Returns non zero if SPI currently busy on receiving and/or transmitting
+uint8_t spi_is_busy(void) {
+
+	if ((SPI2->SR & SPI_SR_BSY) != 0)
+	{
+		return 1;
+	}
+	else if (spi_rx_state == SPI_RX_RXING)
+	{
+		return 1;
+	}
+	else if (spi_tx_state == SPI_TX_TXING)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+//! Resets all errors and reverts state back to IDLE
 void spi_reset_errors(void) {
 	if (spi_rx_state == SPI_RX_ERROR_MODF || spi_rx_state == SPI_RX_ERROR_OVERRUN) {
 		spi_rx_state = SPI_RX_IDLE;
@@ -642,6 +664,7 @@ spi_tx_state_t spi_get_tx_state(void) {
 	return spi_tx_state;
 }
 
+//! Returns an ID of current SPI slave or zero if SPI is idle
 uint32_t spi_get_current_slave(void) {
 	if (spi_rx_state != SPI_RX_RXING && spi_tx_state != SPI_TX_TXING) {
 		return 0;

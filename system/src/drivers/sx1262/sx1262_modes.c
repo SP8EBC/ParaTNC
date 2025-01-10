@@ -6,6 +6,11 @@
  */
 
 #include "drivers/sx1262/sx1262_modes.h"
+#include "drivers/sx1262/sx1262_internals.h"
+
+#include "drivers/spi.h"
+
+#include <string.h>
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -94,6 +99,32 @@ sx1262_api_return_t sx1262_modes_set_sleep(uint8_t cold_warm_start, uint8_t rtc_
 sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		if (standby_rc_xosc <= 1) {
+			memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+			sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_CONFIG;
+			sx1262_transmit_spi_buffer[1] = standby_rc_xosc;
+
+			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+			spi_wait_for_comms_done();
+
+			const uint8_t * ptr = spi_get_rx_data();
+
+			if (ptr[0] == 0x00u) {
+				out = SX1262_API_OK;
+			}
+		}
+		else {
+			out = SX1262_API_OUT_OF_RNG;
+		}
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }

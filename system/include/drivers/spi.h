@@ -92,6 +92,9 @@ uint8_t * spi_get_rx_data(void);
 //! Blocking wait until both RX and TX is done
 uint8_t spi_wait_for_comms_done(void);
 
+//! Returns non zero if SPI currently busy on receiving and/or transmitting
+uint8_t spi_is_busy(void);
+
 //! Resets all errors and reverts state back to IDLE
 void spi_reset_errors(void);
 
