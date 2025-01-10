@@ -1,0 +1,38 @@
+#!/bin/bash
+
+FULLYEAR=$(date +%Y)
+YEAR=$(($(date +%Y)-2000))
+MONTHS=$(date +%01m)
+DAY=$(date +%01d)
+
+HOUR=$(date +%01H)
+MINUTES=$(date +%01M)
+SECONDS=$(date +%01S)
+
+SWVERSTR=$(date +%02d%02m%Y)
+
+HEADER='../include/build_datetime.h'
+
+git symbolic-ref -q HEAD
+DETACHED=$?
+
+if [ $DETACHED != '0' ]; then
+	echo 'GIT repo is in detached state, maybe a tag is checked out. Not updating anything'
+	exit
+fi
+
+rm -f -- $HEADER
+touch $HEADER
+echo $'#ifndef BUILD_DATETIME_H\r#define BUILD_DATETIME_H\r\r' >> $HEADER
+echo "#define BUILD_FULLYEAR 	$FULLYEAR" >> $HEADER
+echo "#define BUILD_YEAR 	$YEAR" >> $HEADER
+echo "#define BUILD_MONTH 	$MONTHS" >> $HEADER
+echo "#define BUILD_DAY 	$DAY" >> $HEADER
+echo "#define BUILD_HOUR 	$HOUR" >> $HEADER
+echo "#define BUILD_MINUTE 	$MINUTES" >> $HEADER
+echo "#define BUILD_SECOND 	$SECONDS" >> $HEADER
+echo "#define BUILD_SWVERSTR 	\"$SWVERSTR\"" >> $HEADER
+echo $'\r\r' >> $HEADER
+echo $'#endif' >> $HEADER
+
+echo "compilation timestamp generated successfully to a file $HEADER"
