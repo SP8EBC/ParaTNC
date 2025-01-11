@@ -123,6 +123,7 @@
 
 #ifdef SX1262_IMPLEMENTATION
 #include "drivers/sx1262/sx1262_modes.h"
+#include "drivers/sx1262/sx1262_status.h"
 #endif
 
 //#include "variant.h"
@@ -1406,7 +1407,7 @@ int main(int argc, char* argv[]){
    }
 
 #ifdef SX1262_IMPLEMENTATION
-   sx1262_modes_set_standby(1);
+   sx1262_status_get();
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();

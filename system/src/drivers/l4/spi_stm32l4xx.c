@@ -157,6 +157,9 @@ uint8_t spi_init_full_duplex_pio(spi_transfer_mode_t mode, spi_clock_polarity_st
 
 	RCC->APB1RSTR1 |= RCC_APB1RSTR1_SPI2RST;
 
+	spi_rx_buffer_ptr = spi_rx_buffer;
+	spi_tx_buffer_ptr = spi_tx_buffer;
+
 	spi_rx_state = SPI_RX_IDLE;
 	spi_tx_state = SPI_TX_IDLE;
 
@@ -507,12 +510,26 @@ uint8_t spi_rx_tx_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx
 	return out;
 }
 
-//! Sends data to selected slave and in the same moment receive everything sent from slave. It receive exactly ln_to_exchange bytes
+/**
+ * Sends data to selected slave and in the same moment receive everything sent from slave. It receive exactly ln_to_exchange bytes
+ * @warning TThere is known bug with exchanging data, due to current ISR implementation first byte received from slave is discarded.
+ * spi_rx_buffer_ptr[0] contains the second byte transmitted by slave over MISO. As example, if the slave transmits 0xAA 0x2A 0x2A
+ * the receive buffer will cotains 0x2A 0x2A!! In most cases it should not be a problem, but You must be aware of it!
+ * In case of communication with SX1261 module this 0xAA (first transmitted byte) is always defined as RFU and not used to anything
+ * useful
+ * @param slave_id
+ * @param tx_from_internal
+ * @param rx_buffer
+ * @param tx_buffer
+ * @param ln_to_exchange
+ * @return
+ */
+//!
 uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uint8_t * rx_buffer, uint8_t * tx_buffer, uint16_t ln_to_exchange) {
 
 	uint8_t out = SPI_UKNOWN;
 
-	if (slave_id == 0 || slave_id > 2) {
+	if (slave_id == 0 || slave_id > 3) {
 		return SPI_WRONG_SLAVE_ID;
 	}
 
@@ -692,7 +709,7 @@ void spi_irq_handler(void) {
 			// get all data from RX FIFO
 			do {
 				// put received data into a buffer
-				spi_rx_buffer[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+				spi_rx_buffer_ptr[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
 
 				// check if all data has been received
 				if (spi_current_rx_cntr >= spi_rx_bytes_rq) {

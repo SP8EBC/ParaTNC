@@ -5,11 +5,19 @@
  *      Author: mateusz
  */
 
+#include "drivers/sx1262/sx1262_status.h"
+#include "drivers/sx1262/sx1262_internals.h"
 
+#include "drivers/spi.h"
+
+#include <string.h>
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
+
+#define SX1262_STATUS_OPCODE_GET				(0xC0)
+
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -30,3 +38,32 @@
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
+
+sx1262_api_return_t sx1262_status_get(void)
+{
+	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET;
+		sx1262_transmit_spi_buffer[1] = 0x00;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+		spi_wait_for_comms_done();
+
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == 0x00u) {
+			out = SX1262_API_OK;
+		}
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
+	return out;
+}
+

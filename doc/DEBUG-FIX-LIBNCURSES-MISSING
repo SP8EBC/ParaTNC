@@ -1,0 +1,33 @@
+If debugging session in Eclipse won't start please invoke this command below in the console and check if You have correct output
+
+mateusz@mateusz-Latitude-D620:~$ /usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gdb --version
+GNU gdb (GNU Tools for Arm Embedded Processors 7-2018-q2-update) 8.1.0.20180315-git
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "--host=x86_64-linux-gnu --target=arm-none-eabi".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+mateusz@mateusz-Latitude-D620:~$ 
+
+
+if You see an error that libncurses.5.so library is missing please apply this solution taken from stackoverflow. The root cause is that in some 
+newet system, like Ubuntu/Xubuntu 24.04 libncurses was updated to version 6.xx and the older one is no longer available
+
+For Ubuntu 24 add to source list and then install:
+
+    deb http://security.ubuntu.com/ubuntu focal-security main universe
+
+    echo "deb http://security.ubuntu.com/ubuntu focal-security main universe" > /etc/apt/sources.list.d/ubuntu-focal-sources.list
+
+    sudo apt-get update
+
+    sudo apt-get install libncurses5
+

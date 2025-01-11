@@ -8,6 +8,7 @@
 #ifndef INCLUDE_DRIVERS_SX1262_SX1262_STATUS_H_
 #define INCLUDE_DRIVERS_SX1262_SX1262_STATUS_H_
 
+#include "drivers/sx1262/sx1262_api_return_t.h"
 
 /// ==================================================================================================
 ///	GLOBAL MACROS
@@ -29,6 +30,8 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+
+sx1262_api_return_t sx1262_status_get(void);
 
 
 #endif /* INCLUDE_DRIVERS_SX1262_SX1262_STATUS_H_ */
