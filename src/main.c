@@ -1407,13 +1407,20 @@ int main(int argc, char* argv[]){
    }
 
 #ifdef SX1262_IMPLEMENTATION
-   sx1262_status_get();
+   sx1262_status_chip_mode_t mode;
+   sx1262_status_last_command_t command_status;
+
+   sx1262_modes_set_standby(1);
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
 
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
+
+#ifdef SX1262_IMPLEMENTATION
+   sx1262_status_get(&mode, &command_status);
+#endif
 
    led_control_led1_upper(true);
    led_control_led2_bottom(false);

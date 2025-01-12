@@ -39,11 +39,15 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-sx1262_api_return_t sx1262_status_get(void)
+sx1262_api_return_t sx1262_status_get(
+								sx1262_status_chip_mode_t * chip_mode,
+								sx1262_status_last_command_t * last_command_status)
 {
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
 	const uint8_t is_busy = sx1262_is_busy();
+
+	uint8_t temp = 0;
 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
@@ -56,8 +60,18 @@ sx1262_api_return_t sx1262_status_get(void)
 
 		const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[0] == 0x00u) {
+		if (ptr[0] != 0x00u && ptr[0] != 0xFFu) {
+			temp = ptr[0] & 0x70u;
+			temp >>= 4;
+			*chip_mode = (sx1262_status_chip_mode_t) temp;
+
+			temp = ptr[0] & 0x0Eu;
+			temp >>= 1;
+			*last_command_status = (sx1262_status_last_command_t)temp;
 			out = SX1262_API_OK;
+		}
+		else {
+			out = SX1262_API_DAMAGED_RESP;
 		}
 	}
 	else {

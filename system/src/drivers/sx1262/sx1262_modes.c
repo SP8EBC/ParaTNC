@@ -114,6 +114,15 @@ sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 
 			const uint8_t * ptr = spi_get_rx_data();
 
+			/**
+			 * Name : *ptr
+	Details:170 'ª'
+	Default:170 'ª'
+	Decimal:-86
+	Hex:0xaa
+	Binary:10101010
+	Octal:0252
+			 */
 			if (ptr[0] == 0x00u) {
 				out = SX1262_API_OK;
 			}

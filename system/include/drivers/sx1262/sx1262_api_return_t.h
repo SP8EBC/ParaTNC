@@ -17,7 +17,8 @@ typedef enum sx1262_api_return_t {
 	SX1262_API_SPI_BUSY,	//!< SPI bus is currently busy on other transfer from/to modem.
 	SX1262_API_MODEM_BUSY,	//!< Modem is currently busy on something and cannot process this request
 	SX1262_API_OUT_OF_RNG,	//!< Values provided to the API are out of range, so the request was rejected
-	SX1262_API_LIB_NOINIT	//!< Driver hasn't been initialized yet, thus it is inoperative
+	SX1262_API_LIB_NOINIT,	//!< Driver hasn't been initialized yet, thus it is inoperative
+	SX1262_API_DAMAGED_RESP	//!< Response received from the modem is completly malformed and damaged
 }sx1262_api_return_t;
 
 
