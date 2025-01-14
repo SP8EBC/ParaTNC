@@ -54,9 +54,9 @@ sx1262_api_return_t sx1262_status_get(
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET;
 		sx1262_transmit_spi_buffer[1] = 0x00;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
 
-		spi_wait_for_comms_done();
+		SX1262_SPI_WAIT_UNTIL_BUSY();
 
 		const uint8_t * ptr = spi_get_rx_data();
 

@@ -1230,7 +1230,7 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
   // initialize SPI
-  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
+  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_NORMAL_FALLING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
   // initialize measurements averager
   max31865_init_average();
@@ -1410,7 +1410,7 @@ int main(int argc, char* argv[]){
    sx1262_status_chip_mode_t mode;
    sx1262_status_last_command_t command_status;
 
-   sx1262_modes_set_standby(1);
+   sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();

@@ -84,6 +84,42 @@ sx1262_api_return_t sx1262_modes_set_sleep(uint8_t cold_warm_start, uint8_t rtc_
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	uint8_t sleep_config = 0;
+
+	if (is_busy == 0) {
+		if (rtc_timeout_disable_enable > 0) {
+			sleep_config |= 1;
+		}
+
+		if (cold_warm_start > 0) {
+			sleep_config |= (1 << 2);
+		}
+
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_SLEEP;
+		sx1262_transmit_spi_buffer[1] = sleep_config;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -110,7 +146,9 @@ sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 
 			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
 
-			spi_wait_for_comms_done();
+			SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
 
 			const uint8_t * ptr = spi_get_rx_data();
 
@@ -123,9 +161,12 @@ sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 	Binary:10101010
 	Octal:0252
 			 */
-			if (ptr[0] == 0x00u) {
+			if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
 				out = SX1262_API_OK;
 			}
+#else
+			out = SX1262_API_OK;
+#endif
 		}
 		else {
 			out = SX1262_API_OUT_OF_RNG;
@@ -152,6 +193,30 @@ sx1262_api_return_t sx1262_modes_set_fs(void) {
 	 */
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_FS;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+
+#endif
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }
@@ -191,6 +256,15 @@ sx1262_api_return_t sx1262_modes_set_tx(uint32_t timeout) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 /**
@@ -217,6 +291,15 @@ sx1262_api_return_t sx1262_modes_set_rx(uint32_t timeout) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -236,6 +319,15 @@ sx1262_api_return_t sx1262_modes_stop_timer_on_preamble(uint8_t disable_enable) 
 	 */
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }
@@ -283,6 +375,15 @@ sx1262_api_return_t sx1262_modes_set_rx_duty_cycle(uint32_t rx_period, uint32_t 
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -309,6 +410,15 @@ sx1262_api_return_t sx1262_modes_set_tx_cw(void) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -330,6 +440,15 @@ sx1262_api_return_t sx1262_modes_set_tx_infinite_preamble(void) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -343,6 +462,15 @@ sx1262_api_return_t sx1262_modes_set_tx_infinite_preamble(void) {
 sx1262_api_return_t sx1262_modes_set_regulator_mode(uint8_t ldo_dcdcldo) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }
@@ -364,6 +492,34 @@ sx1262_api_return_t sx1262_modes_set_calibrate_function(uint8_t rc64k, uint8_t r
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	uint8_t data = (image << 6) | (adc_p << 5) | (adc_n << 4) | (adc_ps << 3) | (pll << 2) | (rc13m << 1) | rc64k;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_CALIBRATE_FUNCTION;
+		sx1262_transmit_spi_buffer[1] = data;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -378,6 +534,12 @@ sx1262_api_return_t sx1262_modes_set_calibrate_image(uint8_t freq_lo, uint8_t fr
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+
 	return out;
 }
 
@@ -390,6 +552,15 @@ sx1262_api_return_t sx1262_modes_set_calibrate_image(uint8_t freq_lo, uint8_t fr
 sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }
@@ -404,6 +575,15 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 sx1262_api_return_t sx1262_modes_set_rxtx_fallback_mode(uint8_t fallback_mode) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
 
 	return out;
 }

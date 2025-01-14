@@ -21,8 +21,18 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
+#define SX1262_BLOCKING_IO
+
 #define SX1262_TRANSMIT_SPI_BUFFER_LN	(128)
 #define SX1262_RECEIVE_SPI_BUFFER_LN	(128)
+
+#ifdef SX1262_BLOCKING_IO
+#define SX1262_SPI_WAIT_UNTIL_BUSY()	spi_wait_for_comms_done()
+#else
+#define SX1262_SPI_WAIT_UNTIL_BUSY()
+#endif
+
+#define SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE		(0x00u)
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
