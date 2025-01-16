@@ -342,6 +342,8 @@ volatile int i = 0;
 //! or powerup if RTC coin cell battery is put into a holder.
 static uint16_t main_powersave_state_at_bootup = 0;
 
+static config_data_powersave_mode_t main_current_powersave_mode = PWSAVE_NULL;
+
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 
@@ -2124,8 +2126,13 @@ int main(int argc, char* argv[]){
 				}
 
 	#ifdef PARAMETEO
-				if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
-					io_pool_vbat_r(packet_tx_get_minutes_to_next_wx());
+				if (main_current_powersave_mode != PWSAVE_AGGRESV) {
+					if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
+						io_pool_vbat_r();
+					}
+				}
+				else {
+					io_inhibit_pool_vbat_r();
 				}
 	#endif
 
@@ -2227,7 +2234,14 @@ int main(int argc, char* argv[]){
 
 				// inhibit any power save switching when modem transmits data
 				if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
-					pwr_save_pooling_handler(main_config_data_mode, packet_tx_meteo_interval, packet_tx_get_minutes_to_next_wx(), rte_main_average_battery_voltage, rte_main_battery_voltage, &main_continue_loop);
+					main_current_powersave_mode =
+							pwr_save_pooling_handler(
+									main_config_data_mode,
+									packet_tx_meteo_interval,
+									packet_tx_get_minutes_to_next_wx(),
+									rte_main_average_battery_voltage,
+									rte_main_battery_voltage,
+									&main_continue_loop);
 				}
 
 				if (main_continue_loop == 0) {

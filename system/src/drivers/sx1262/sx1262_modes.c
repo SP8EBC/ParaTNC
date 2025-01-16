@@ -211,7 +211,7 @@ sx1262_api_return_t sx1262_modes_set_fs(void) {
 			out = SX1262_API_OK;
 		}
 #else
-
+		out = SX1262_API_OK;
 #endif
 	}
 	else {
@@ -259,7 +259,26 @@ sx1262_api_return_t sx1262_modes_set_tx(uint32_t timeout) {
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_TX;
+		sx1262_transmit_spi_buffer[1] = (timeout & 0x000000FF);
+		sx1262_transmit_spi_buffer[2] = (timeout & 0x0000FF00) >> 8;
+		sx1262_transmit_spi_buffer[3] = (timeout & 0x00FF0000) >> 16;
+		//sx1262_transmit_spi_buffer[4] = (timeout & 0xFF000000) >> 24;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -294,7 +313,26 @@ sx1262_api_return_t sx1262_modes_set_rx(uint32_t timeout) {
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_RX;
+		sx1262_transmit_spi_buffer[1] = (timeout & 0x000000FF);
+		sx1262_transmit_spi_buffer[2] = (timeout & 0x0000FF00) >> 8;
+		sx1262_transmit_spi_buffer[3] = (timeout & 0x00FF0000) >> 16;
+		//sx1262_transmit_spi_buffer[4] = (timeout & 0xFF000000) >> 24;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -323,7 +361,28 @@ sx1262_api_return_t sx1262_modes_stop_timer_on_preamble(uint8_t disable_enable) 
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_STOP_TIMER_ON_PREAMBLE;
+		if (disable_enable > 0) {
+			sx1262_transmit_spi_buffer[1] = 1;
+		}
+		else {
+			sx1262_transmit_spi_buffer[1] = 0;
+		}
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -378,7 +437,28 @@ sx1262_api_return_t sx1262_modes_set_rx_duty_cycle(uint32_t rx_period, uint32_t 
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_RX_DUTY_CYCLE;
+		sx1262_transmit_spi_buffer[1] = (rx_period & 0x000000FF);
+		sx1262_transmit_spi_buffer[2] = (rx_period & 0x0000FF00) >> 8;
+		sx1262_transmit_spi_buffer[3] = (rx_period & 0x00FF0000) >> 16;
+		sx1262_transmit_spi_buffer[4] = (sleep_period & 0x000000FF);
+		sx1262_transmit_spi_buffer[5] = (sleep_period & 0x0000FF00) >> 8;
+		sx1262_transmit_spi_buffer[6] = (sleep_period & 0x00FF0000) >> 16;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 7);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -397,6 +477,30 @@ sx1262_api_return_t sx1262_modes_set_cad(void) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_CAD;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
 	return out;
 }
 
@@ -413,7 +517,22 @@ sx1262_api_return_t sx1262_modes_set_tx_cw(void) {
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_TX_CW;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -443,7 +562,22 @@ sx1262_api_return_t sx1262_modes_set_tx_infinite_preamble(void) {
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_TX_INFINITE_PREAMB;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -466,7 +600,28 @@ sx1262_api_return_t sx1262_modes_set_regulator_mode(uint8_t ldo_dcdcldo) {
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_REGULATOR_MODE;
+		if (ldo_dcdcldo > 0) {
+			sx1262_transmit_spi_buffer[1] = 1u;
+		}
+		else {
+			sx1262_transmit_spi_buffer[1] = 0u;
+		}
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -501,7 +656,7 @@ sx1262_api_return_t sx1262_modes_set_calibrate_function(uint8_t rc64k, uint8_t r
 		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_CALIBRATE_FUNCTION;
 		sx1262_transmit_spi_buffer[1] = data;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
 
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 
@@ -530,14 +685,57 @@ sx1262_api_return_t sx1262_modes_set_calibrate_function(uint8_t rc64k, uint8_t r
  * @param freq_hi
  * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t} declaration
  */
-sx1262_api_return_t sx1262_modes_set_calibrate_image(uint8_t freq_lo, uint8_t freq_hi) {
+sx1262_api_return_t sx1262_modes_set_calibrate_image(uint16_t freq_lo, uint16_t freq_hi) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	uint8_t freq1 = 0, freq2 = 0;
+
+	if ((freq_lo == 430u) && (freq_hi == 440u)) {
+		freq1 = 0x6B;
+		freq2 = 0x6F;
+	}
+	else if ((freq_lo == 470u) && (freq_hi == 510u)) {
+		freq1 = 0x75;
+		freq2 = 0x81;
+	}
+	else if ((freq_lo == 779u) && (freq_hi == 787u)) {
+		freq1 = 0xC1;
+		freq2 = 0xC5;
+	}
+	else if ((freq_lo == 863u) && (freq_hi == 870u)) {
+		freq1 = 0xD7;
+		freq2 = 0xDB;
+	}
+	else if ((freq_lo == 902u) && (freq_hi == 928u)) {
+		freq1 = 0xE1;
+		freq2 = 0xE9;
+	}
+	else {
+		out = SX1262_API_OUT_OF_RNG;
+	}
+
 	const uint8_t is_busy = sx1262_is_busy();
 
-	if (is_busy == 0) {
+	if ((is_busy == 0) && (out != SX1262_API_OUT_OF_RNG)) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_CALIBRATE_IMAGE;
+		sx1262_transmit_spi_buffer[1] = freq1;
+		sx1262_transmit_spi_buffer[2] = freq2;
 
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 3);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 
 	return out;
@@ -555,8 +753,35 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 
 	const uint8_t is_busy = sx1262_is_busy();
 
-	if (is_busy == 0) {
+	uint8_t pa_duty_cycle = 0u;
 
+	uint8_t hp_max = 0u;
+
+	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+
+	}
+	else 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+	}
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_PA_CONFIG;
+		sx1262_transmit_spi_buffer[1] = data;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+
+		const uint8_t * ptr = spi_get_rx_data();
+
+		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+			out = SX1262_API_OK;
+		}
+#else
+		out = SX1262_API_OK;
+#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -578,11 +803,33 @@ sx1262_api_return_t sx1262_modes_set_rxtx_fallback_mode(uint8_t fallback_mode) {
 
 	const uint8_t is_busy = sx1262_is_busy();
 
-	if (is_busy == 0) {
+	if ((fallback_mode == 0x40) || (fallback_mode == 0x30) || (fallback_mode == 0x20)) {
+		if (is_busy == 0) {
+			memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+			sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_RX_TX_FALLBACK;
+			sx1262_transmit_spi_buffer[1] = fallback_mode;
 
+			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+
+			SX1262_SPI_WAIT_UNTIL_BUSY();
+
+	#ifdef SX1262_BLOCKING_IO
+
+			const uint8_t * ptr = spi_get_rx_data();
+
+			if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+				out = SX1262_API_OK;
+			}
+	#else
+			out = SX1262_API_OK;
+	#endif
+		}
+		else {
+			out = SX1262_API_MODEM_BUSY;
+		}
 	}
 	else {
-		out = SX1262_API_MODEM_BUSY;
+
 	}
 
 	return out;

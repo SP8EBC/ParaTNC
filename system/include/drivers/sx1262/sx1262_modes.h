@@ -149,7 +149,7 @@ sx1262_api_return_t sx1262_modes_set_calibrate_function(uint8_t rc64k, uint8_t r
  * @param freq_hi
  * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t} declaration
  */
-sx1262_api_return_t sx1262_modes_set_calibrate_image(uint8_t freq_lo, uint8_t freq_hi);
+sx1262_api_return_t sx1262_modes_set_calibrate_image(uint16_t freq_lo, uint16_t freq_hi);
 
 /**
  * SetPaConfig is the command to set transmit power. Internally it select values for 'paDutyCycle' and 'hpMax'

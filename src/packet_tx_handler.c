@@ -560,6 +560,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 							config_mode);
 #endif
 
+		if (rx10m == 0) {
+			main_wait_for_tx_complete();
+			rte_main_reboot_req = io_reset_vbat_r();
+		}
+
 		rx10m = 0, tx10m = 0, digi10m = 0, kiss10m = 0, digidrop10m = 0;
 
 	}

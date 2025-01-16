@@ -104,7 +104,9 @@ uint16_t io_vbat_meas_average(uint16_t sample);
 void io_vbat_meas_disable(void);
 void io_vbat_meas_enable(void);
 
-void io_pool_vbat_r(int16_t minutes_to_wx);
+void io_inhibit_pool_vbat_r(void);
+void io_pool_vbat_r(void);
+uint8_t io_reset_vbat_r(void);
 #endif
 
 

@@ -21,6 +21,25 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
+//!< lenght of an average buffer
+#define VBATT_HISTORY_LN	16
+
+//!< maximum number of state machine iterations which will not trigger an assert
+#define MAXIMUM_VBAT_GET_ASYNC_ITERATIONS	32
+
+//!< minimum voltage as an increment of 10mV, which will me treated as senseful
+#define MINIMUM_SENSEFUL_VBATT_VOLTAGE		512u
+
+#define MAXIMUM_ALLOWED_VBAT_R_FAILS		16u
+
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
 /**
  * Internal state of VBAT R pooler
  */
@@ -35,14 +54,10 @@ typedef enum io_pool_vbat_r_state_t {
 #include "station_config.h"
 
 #if defined(PARAMETEO)
-//!< Used across this file to configure I/O pins
-LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-//!< coefficient used to convert value read by ADC into battery volage
-int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
-
-//!< lenght of an average buffer
-#define VBATT_HISTORY_LN	16
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
 
 //!< circular buffer used to calculate average battery voltage
 static uint16_t io_vbatt_history[VBATT_HISTORY_LN];
@@ -53,11 +68,17 @@ static uint8_t io_vbatt_history_it = 0;
 //!< State machine of battery voltage measurement
 static io_vbat_state_t io_vbatt_state = IO_VBAT_UNINITIALIZED;
 
-//!< maximum number of state machine iterations which will not trigger an assert
-#define MAXIMUM_VBAT_GET_ASYNC_ITERATIONS	32
+static uint8_t io_reset_vbat_r_counter = 0;
 
-//!< minimum voltage as an increment of 10mV, which will me treated as senseful
-#define MINIMUM_SENSEFUL_VBATT_VOLTAGE	512u
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+//!< Used across this file to configure I/O pins
+LL_GPIO_InitTypeDef GPIO_InitTypeDef;
+
+//!< coefficient used to convert value read by ADC into battery volage
+int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 
 //! An instance of VBAT_R pooler internal state
 io_pool_vbat_r_state_t io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
@@ -701,41 +722,53 @@ void io_vbat_meas_enable(void) {
 	io_vbatt_state = IO_VBAT_ADC_DISABLE;
 }
 
-void io_pool_vbat_r(int16_t minutes_to_wx) {
+void io_inhibit_pool_vbat_r(void) {
+	io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
+}
 
-	// check how many minutes reamins to weather packet
-	if (minutes_to_wx == 1) {
-		// hardcoded to 2 minutes
+void io_pool_vbat_r(void) {
 
-		switch(io_vbat_r_state) {
-		case POOL_VBAT_R_TURNED_ON:
-			io_vbat_r_state = POOL_VBAT_R_TURNED_OFF;
+	switch(io_vbat_r_state) {
+	case POOL_VBAT_R_TURNED_ON:
+		io_vbat_r_state = POOL_VBAT_R_TURNED_OFF;
 
-			// turn off VBAT_R
-			io___cntrl_vbat_r_disable();
+		// turn off VBAT_R
+		io___cntrl_vbat_r_disable();
 
-			break;
-		case POOL_VBAT_R_TURNED_OFF:
-			// wait few more seconds before turning on back
-			io_vbat_r_state = POOL_VBAT_R_WAIT;
+		break;
+	case POOL_VBAT_R_TURNED_OFF:
+		// wait few more seconds before turning on back
+		io_vbat_r_state = POOL_VBAT_R_WAIT;
 
-			break;
-		case POOL_VBAT_R_WAIT:
-			io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
+		break;
+	case POOL_VBAT_R_WAIT:
+		io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
 
-			// turn back on
-			io___cntrl_vbat_r_enable();
+		// turn back on
+		io___cntrl_vbat_r_enable();
 
-			break;
-		case POOL_VBAT_R_DONT_SWITCH:
-			// VBAT_R has been already power cycled, do nothing more
-			break;
-		}
+		break;
+	case POOL_VBAT_R_DONT_SWITCH:
+		// VBAT_R has been already power cycled, do nothing more
+		break;
 	}
-	else {
-		// don't do nothing with VBAT_R and keep it turned on
+}
+
+uint8_t io_reset_vbat_r(void) {
+	uint8_t out = 0;
+
+	io_reset_vbat_r_counter++;
+
+	if (io_reset_vbat_r_counter < MAXIMUM_ALLOWED_VBAT_R_FAILS) {
+		out = 0;
+
 		io_vbat_r_state = POOL_VBAT_R_TURNED_ON;
 	}
+	else {
+		out = 1;
+	}
+
+	return out;
 }
 
 #endif
