@@ -751,41 +751,41 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
-	const uint8_t is_busy = sx1262_is_busy();
-
-	uint8_t pa_duty_cycle = 0u;
-
-	uint8_t hp_max = 0u;
-
-	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
-
-	}
-	else 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
-	}
-
-	if (is_busy == 0) {
-		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
-		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_PA_CONFIG;
-		sx1262_transmit_spi_buffer[1] = data;
-
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
-
-		SX1262_SPI_WAIT_UNTIL_BUSY();
-
-#ifdef SX1262_BLOCKING_IO
-
-		const uint8_t * ptr = spi_get_rx_data();
-
-		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
-			out = SX1262_API_OK;
-		}
-#else
-		out = SX1262_API_OK;
-#endif
-	}
-	else {
-		out = SX1262_API_MODEM_BUSY;
-	}
+//	const uint8_t is_busy = sx1262_is_busy();
+//
+//	uint8_t pa_duty_cycle = 0u;
+//
+//	uint8_t hp_max = 0u;
+//
+//	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+//
+//	}
+//	else 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+//	}
+//
+//	if (is_busy == 0) {
+//		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+//		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_PA_CONFIG;
+//		sx1262_transmit_spi_buffer[1] = data;
+//
+//		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+//
+//		SX1262_SPI_WAIT_UNTIL_BUSY();
+//
+//#ifdef SX1262_BLOCKING_IO
+//
+//		const uint8_t * ptr = spi_get_rx_data();
+//
+//		if (ptr[0] == SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE) {
+//			out = SX1262_API_OK;
+//		}
+//#else
+//		out = SX1262_API_OK;
+//#endif
+//	}
+//	else {
+//		out = SX1262_API_MODEM_BUSY;
+//	}
 
 	return out;
 }

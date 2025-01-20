@@ -62,6 +62,8 @@ typedef enum spi_rx_state_t {
 	SPI_RX_WAITING_FOR_RX,	//!< SPI is currently transmitting and reception is queued
 	SPI_RX_ERROR_OVERRUN,	//!< Overrun had been detected and reception was terminated
 	SPI_RX_ERROR_MODF,
+	SPI_RX_EXCHANGE,
+	SPI_RX_EXCHANGE_FINISH,
 }spi_rx_state_t;
 
 /**
@@ -71,7 +73,9 @@ typedef enum spi_tx_state_t {
 	SPI_TX_IDLE,
 	SPI_TX_TXING,
 	SPI_TX_DONE,
-	SPI_TX_ERROR_MODF
+	SPI_TX_ERROR_MODF,
+	SPI_TX_EXCHANGE,
+	SPI_TX_EXCHANGE_FINISH
 }spi_tx_state_t;
 
 //! This function initializes SPI bus to work as full duplex two-wire connection, w/o DMA data flow

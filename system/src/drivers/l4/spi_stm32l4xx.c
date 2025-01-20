@@ -599,8 +599,8 @@ uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uin
 //		// set first byte for transmission
 //		SPI2->DR = spi_tx_buffer_ptr[0];
 
-		spi_rx_state = SPI_RX_RXING;
-		spi_tx_state = SPI_TX_TXING;
+		spi_rx_state = SPI_RX_EXCHANGE;
+		spi_tx_state = SPI_TX_EXCHANGE;
 
 		// start trasmission
 		spi_enable(1);
@@ -620,12 +620,12 @@ uint8_t * spi_get_rx_data(void) {
 }
 
 uint8_t spi_wait_for_comms_done(void) {
-	if (spi_tx_state == SPI_TX_TXING) {
+	if ((spi_tx_state == SPI_TX_TXING) || (spi_tx_state == SPI_TX_EXCHANGE)) {
 		while (spi_tx_state == SPI_TX_TXING);
 		while ((SPI2->SR & SPI_SR_BSY) != 0);
 	}
 
-	if (spi_rx_state == SPI_RX_RXING) {
+	if ((spi_rx_state == SPI_RX_RXING) || (spi_rx_state == SPI_RX_EXCHANGE)) {
 		while (spi_rx_state == SPI_RX_RXING);
 	}
 
@@ -726,6 +726,28 @@ void spi_irq_handler(void) {
 				}
 			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
 		}
+		else if (spi_rx_state == SPI_RX_EXCHANGE) {
+			// get all data from RX FIFO
+			//do {
+				// put received data into a buffer
+				spi_rx_buffer_ptr[spi_current_rx_cntr++] = SPI2->DR & 0xFF;
+
+				// check if all data has been received
+				if (spi_current_rx_cntr >= spi_rx_bytes_rq) {
+					// if yes, set slave select line high
+					//LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+					// and switch the state
+					spi_rx_state = SPI_RX_EXCHANGE_FINISH;
+
+					// and exit the loop
+					//break;
+
+					// RXFIFO will be purged by 'spi_disable'
+				}
+			//} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+
+		}
 		else {
 			do {
 				spi_garbage = SPI2->DR & 0xFF;
@@ -772,6 +794,15 @@ void spi_irq_handler(void) {
 				// if there are only two or one byte for slave device
 				// TXE flag won't be cleared
 			} while ((SPI2->SR & SPI_SR_TXE));
+		}
+		else if (spi_tx_state == SPI_TX_EXCHANGE) {
+			if (spi_current_tx_cntr < spi_tx_bytes_rq) {
+				// put next byte into the data register
+				*(uint8_t *)(&SPI2->DR) = spi_tx_buffer_ptr[spi_current_tx_cntr++];
+			}
+			else {
+				spi_tx_state = SPI_TX_EXCHANGE_FINISH;
+			}
 		}
 		else if (spi_tx_state == SPI_TX_DONE) {
 			if (spi_rx_state == SPI_RX_RXING) {
@@ -831,6 +862,21 @@ void spi_irq_handler(void) {
 	if ((SPI2->SR & SPI_SR_FRE) != 0) {
 		spi_disable(1);
 
+	}
+
+	if ((spi_rx_state == SPI_RX_EXCHANGE_FINISH) && (spi_tx_state == SPI_TX_EXCHANGE_FINISH)) {
+		LL_GPIO_SetOutputPin((GPIO_TypeDef *)spi_slaves_cfg[spi_current_slave - 1][1], spi_slaves_cfg[spi_current_slave - 1][2]);
+
+		if ((SPI2->SR & SPI_SR_RXNE) != 0) {
+			// clear RX fifo queue
+			do {
+				spi_garbage_counter++;
+
+				spi_garbage = SPI2->DR & 0xFF;
+			} while ((SPI2->SR & SPI_SR_RXNE) != 0);
+		}
+
+		spi_disable(1);
 	}
 
 	// disable SPI if all communication is done

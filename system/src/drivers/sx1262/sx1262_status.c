@@ -54,18 +54,18 @@ sx1262_api_return_t sx1262_status_get(
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET;
 		sx1262_transmit_spi_buffer[1] = 0x00;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 1);
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
 
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 
 		const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[0] != 0x00u && ptr[0] != 0xFFu) {
-			temp = ptr[0] & 0x70u;
+		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+			temp = ptr[1] & 0x70u;
 			temp >>= 4;
 			*chip_mode = (sx1262_status_chip_mode_t) temp;
 
-			temp = ptr[0] & 0x0Eu;
+			temp = ptr[1] & 0x0Eu;
 			temp >>= 1;
 			*last_command_status = (sx1262_status_last_command_t)temp;
 			out = SX1262_API_OK;
