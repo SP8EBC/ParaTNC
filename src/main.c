@@ -1232,7 +1232,7 @@ int main(int argc, char* argv[]){
 
 #if defined(PARAMETEO)
   // initialize SPI
-  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_REVERSED_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
+  spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_NORMAL_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
   // initialize measurements averager
   max31865_init_average();
@@ -1411,20 +1411,24 @@ int main(int argc, char* argv[]){
 #ifdef SX1262_IMPLEMENTATION
    sx1262_status_chip_mode_t mode;
    sx1262_status_last_command_t command_status;
+   uint8_t errors;
 
    //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
+   sx1262_modes_set_regulator_mode(1);
+   // 0xFF - this gives approx 100us of delay
+   for (i = 0; i < 0x4F; i++);
+   sx1262_modes_set_fs();
+   for (i = 0; i < 0x7F; i++);
+   sx1262_status_get_device_errors(&mode, &command_status, &errors);
+
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
-
-   //sx1262_modes_set_standby(1);
-   sx1262_modes_set_fs();
 
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
 
 #ifdef SX1262_IMPLEMENTATION
-   sx1262_status_get(&mode, &command_status);
 #endif
 
    led_control_led1_upper(true);

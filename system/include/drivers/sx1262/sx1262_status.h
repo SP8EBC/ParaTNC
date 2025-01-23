@@ -9,6 +9,7 @@
 #define INCLUDE_DRIVERS_SX1262_SX1262_STATUS_H_
 
 #include "drivers/sx1262/sx1262_api_return_t.h"
+#include <stdint.h>
 
 /// ==================================================================================================
 ///	GLOBAL MACROS
@@ -16,6 +17,10 @@
 
 /// ==================================================================================================
 ///	GLOBAL DEFINITIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL TYPEDEFS
 /// ==================================================================================================
 
 typedef enum sx1262_status_chip_mode_t {
@@ -38,9 +43,6 @@ typedef enum sx1262_status_last_command_t {
 	SX1262_LAST_COMMAND_TX_DONE					= 0x6
 }sx1262_status_last_command_t;
 
-/// ==================================================================================================
-///	GLOBAL TYPEDEFS
-/// ==================================================================================================
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -54,6 +56,11 @@ typedef enum sx1262_status_last_command_t {
 sx1262_api_return_t sx1262_status_get(
 								sx1262_status_chip_mode_t * chip_mode,
 								sx1262_status_last_command_t * last_command_status);
+
+sx1262_api_return_t sx1262_status_get_device_errors(
+								sx1262_status_chip_mode_t * chip_mode,
+								sx1262_status_last_command_t * last_command_status,
+								uint8_t * errors);
 
 
 #endif /* INCLUDE_DRIVERS_SX1262_SX1262_STATUS_H_ */
