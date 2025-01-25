@@ -51,7 +51,7 @@ sx1262_api_return_t sx1262_status_get(
 	uint8_t temp = 0;
 
 	if (is_busy == 0) {
-		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET;
 		sx1262_transmit_spi_buffer[1] = 0x00;
 
@@ -94,7 +94,7 @@ sx1262_api_return_t sx1262_status_get_device_errors(
 	uint8_t temp = 0;
 
 	if (is_busy == 0) {
-		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET_DEVICE_ERR;
 		sx1262_transmit_spi_buffer[1] = 0x00;
 		sx1262_transmit_spi_buffer[2] = 0x00;
@@ -125,13 +125,6 @@ sx1262_api_return_t sx1262_status_get_device_errors(
 
 		out = SX1262_API_OK;
 
-//		if (ptr[3] != 0x00u && ptr[1] != 0xFFu) {
-//			*errors = ptr[3];
-//			out = SX1262_API_OK;
-//		}
-//		else {
-//			out = SX1262_API_DAMAGED_RESP;
-//		}
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;

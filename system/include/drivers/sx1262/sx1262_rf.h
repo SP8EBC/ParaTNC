@@ -146,7 +146,8 @@ typedef enum sx1262_rf_lora_channel_act_exit_mode_t {
  * in the different packet type sections
  * @param tx_base
  * @param rx_base
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_buffer_base_addresses (uint8_t tx_base, uint8_t rx_base);
 
@@ -164,7 +165,8 @@ sx1262_api_return_t sx1262_rf_buffer_base_addresses (uint8_t tx_base, uint8_t rx
  *
  *
  * @param frequency in kilohertz
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_frequency (uint32_t frequency);
 
@@ -175,14 +177,16 @@ sx1262_api_return_t sx1262_rf_frequency (uint32_t frequency);
  * SetPacketType(...). The parameters from the previous mode are not kept internally. The switch
  * from one frame to another must be done in STDBY_RC mode.
  * @param type
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_packet_type (sx1262_rf_packet_type_t type);
 
 /**
  * Returns currently selected packet type
  * @param type output pointer to an instance of @link{sx1262_rf_packet_type_t}
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_packet_type_get (sx1262_rf_packet_type_t *type);
 
@@ -191,7 +195,8 @@ sx1262_api_return_t sx1262_rf_packet_type_get (sx1262_rf_packet_type_t *type);
 time by using the parameter ramp_time. This command is available for all protocols selected.
  * @param transmit_power -9 to +22 (0x16) dBm by step of 1 dB
  * @param ramp_time TX ramping time
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_tx_params (int8_t transmit_power, sx1262_rf_tx_ramp_time_t ramp_time);
 
@@ -205,7 +210,8 @@ tailored
  * @param opt corresponds to the Low Data Rate Optimization (LDRO). This parameter is usually set
 when the LoRa® symbol time is equal or above 16.38 ms (typically for SF11 with BW125 and SF12 with
 BW125 and BW250).
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_lora_modulation_params (sx1262_rf_lora_spreading_factor_t sf,
 													  sx1262_rf_lora_bandwidth_t bw,
@@ -221,7 +227,8 @@ sx1262_api_return_t sx1262_rf_lora_modulation_params (sx1262_rf_lora_spreading_f
  * @param header_ln see description of @link{sx1262_rf_lora_header_t}
  * @param enable_crc
  * @param invert_iq
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t sx1262_rf_lora_packet_params (uint16_t preamble_ln, uint8_t payload_ln,
 												  sx1262_rf_lora_header_t header_ln,
@@ -243,7 +250,8 @@ sx1262_api_return_t sx1262_rf_lora_packet_params (uint16_t preamble_ln, uint8_t 
  * optional.
  * @param timeout The parameter is only used when the CAD is performed with cadExitMode = CAD_RX,
  *  and indicates the time the device will stay in Rx following a successful CAD.
- * @return
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
  */
 sx1262_api_return_t
 sx1262_rf_lora_channel_act_detect (sx1262_rf_lora_channel_act_symbols_num_t symbol_num,
@@ -251,5 +259,24 @@ sx1262_rf_lora_channel_act_detect (sx1262_rf_lora_channel_act_symbols_num_t symb
 								   sx1262_rf_lora_channel_act_symbols_num_t det_min,
 								   sx1262_rf_lora_channel_act_exit_mode_t exit_mode,
 								   uint32_t timeout);
+
+/**
+ * This command sets the number of symbols used by the modem to validate a successful reception.
+ * In LoRa® mode, when going into Rx, the modem will lock as soon as a LoRa® symbol has been
+ * detected which may lead to false detection. This phenomena is quite rare but nevertheless
+ * possible. To avoid this, the command SetLoRaSymbNumTimeout can be used to define the number of
+ * symbols which will be used to validate the correct reception of a packet. When the SymbNum
+ * parameter is set the 0, the modem will validate the reception as soon as a LoRa® Symbol has been
+ * detected.
+ * When SymbNum is different from 0, the modem will wait for a total of SymbNum LoRa® symbol to
+ * validate, or not, the correct detection of a LoRa® packet. If the various states of the
+ * demodulator are not lock at this moment, the radio will generate the RxTimeout IRQ.
+ *
+ *
+ * @param timeout
+ * @return success or kind of an error. For more info refer to @link{sx1262_api_return_t}
+ * declaration
+ */
+sx1262_api_return_t sx1262_rf_lora_symbol_num_timeout (uint8_t timeout);
 
 #endif /* INCLUDE_DRIVERS_SX1262_SX1262_RF_H_ */

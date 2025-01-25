@@ -26,6 +26,9 @@
 #define SX1262_TRANSMIT_SPI_BUFFER_LN	(128)
 #define SX1262_RECEIVE_SPI_BUFFER_LN	(128)
 
+//!< Shorter lenght passed to memset in configuration commands
+#define SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD	(16)
+
 #ifdef SX1262_BLOCKING_IO
 #define SX1262_SPI_WAIT_UNTIL_BUSY()	spi_wait_for_comms_done()
 #else
@@ -33,6 +36,9 @@
 #endif
 
 #define SX1262_DEFAULT_VALUE_FOR_OK_RESPONSE		(0x00u)
+
+#define SX1262_TCXO_FREQ	32000ull // in kHz
+#define SX1262_RXOSC_FREQ	13000u
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS

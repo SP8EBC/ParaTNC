@@ -124,6 +124,8 @@
 #ifdef SX1262_IMPLEMENTATION
 #include "drivers/sx1262/sx1262_modes.h"
 #include "drivers/sx1262/sx1262_status.h"
+#include "drivers/sx1262/sx1262_rf.h"
+#include "drivers/sx1262/sx1262_irq_dio.h"
 #endif
 
 //#include "variant.h"
@@ -1413,13 +1415,25 @@ int main(int argc, char* argv[]){
    sx1262_status_last_command_t command_status;
    uint8_t errors;
 
+   sx1262_rf_packet_type_t type;
+
+   sx1262_irq_dio_set_dio2_as_rf_switch(1);
+   for (i = 0; i < 0x4F; i++);
+   sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
+   for (i = 0; i < 0x4F; i++);
+   sx1262_status_get_device_errors(&mode, &command_status, &errors);
+   for (i = 0; i < 0x4F; i++);
+   sx1262_modes_set_standby(1);
+   for (i = 0; i < 0x4F; i++);
+   sx1262_status_get(&mode, &command_status);
+   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
+
    //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
-   sx1262_modes_set_regulator_mode(1);
+   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);
    // 0xFF - this gives approx 100us of delay
    for (i = 0; i < 0x4F; i++);
-   sx1262_modes_set_fs();
+   sx1262_rf_packet_type_get(&type);
    for (i = 0; i < 0x7F; i++);
-   sx1262_status_get_device_errors(&mode, &command_status, &errors);
 
 #endif
 
