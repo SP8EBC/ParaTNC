@@ -126,6 +126,7 @@
 #include "drivers/sx1262/sx1262_status.h"
 #include "drivers/sx1262/sx1262_rf.h"
 #include "drivers/sx1262/sx1262_irq_dio.h"
+#include "drivers/sx1262/sx1262_data_io.h"
 #endif
 
 //#include "variant.h"
@@ -1417,6 +1418,8 @@ int main(int argc, char* argv[]){
 
    sx1262_rf_packet_type_t type;
 
+   sx1262_irq_dio_enable_disable_on_pin_dio1(1, 1, 1, 1);
+   for (i = 0; i < 0x4F; i++);
    sx1262_irq_dio_set_dio2_as_rf_switch(1);
    for (i = 0; i < 0x4F; i++);
    sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
@@ -1434,7 +1437,23 @@ int main(int argc, char* argv[]){
    for (i = 0; i < 0x4F; i++);
    sx1262_rf_packet_type_get(&type);
    for (i = 0; i < 0x7F; i++);
+   sx1262_rf_frequency(868500);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_modes_set_pa_config(5);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_rf_buffer_base_addresses(0, 128);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_data_io_write_buffer(0, strlen(main_test_string), (const uint8_t*)main_test_string);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_data_io_write_register_byte(0x740, 0xF4);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_data_io_write_register_byte(0x741, 0x14);
+   for (i = 0; i < 0x7F; i++);
+   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
+   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
+   sx1262_modes_set_tx(0x1234);
 
+   //sx1262_data_io_write_register(start_address, data_ln, data)
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();

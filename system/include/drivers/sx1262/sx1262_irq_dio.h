@@ -43,6 +43,8 @@ typedef enum sx1262_irq_dio_tcxo_voltage_t {
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask);
+
 /**
  * Functions enables or disabled interrupt globally by setting IrqMask, it also sets DIO1Mask to
  * expose these interrupts on dio1 pin

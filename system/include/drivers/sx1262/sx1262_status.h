@@ -38,7 +38,7 @@ typedef enum sx1262_status_chip_mode_t {
  */
 typedef enum sx1262_status_last_command_t {
 	SX1262_LAST_COMMAND_UNUSED					= 0x0, /**< Looks like radio returns this as OK  */
-	SX1262_LAST_COMMAND_RESERVED				= 0x1, /**< Sometimes it uses also this? Nobody knows why */
+	SX1262_LAST_COMMAND_RESERVED_OR_OK			= 0x1, /**< Sometimes it uses also this? Nobody knows why */
 	SX1262_LAST_COMMAND_DATA_AVAILABLE_TO_HOST	= 0x2, /**< SX1262_LAST_COMMAND_DATA_AVAILABLE_TO_HOST */
 	SX1262_LAST_COMMAND_TIMEOUT					= 0x3, /**< SX1262_LAST_COMMAND_TIMEOUT */
 	SX1262_LAST_COMMAND_PROCESSING_ERROR		= 0x4, /**< SX1262_LAST_COMMAND_PROCESSING_ERROR */

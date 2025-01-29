@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../system/src/drivers/sx1262/sx1262_data_io.c \
 ../system/src/drivers/sx1262/sx1262_internals.c \
 ../system/src/drivers/sx1262/sx1262_irq_dio.c \
 ../system/src/drivers/sx1262/sx1262_modes.c \
@@ -11,6 +12,7 @@ C_SRCS += \
 ../system/src/drivers/sx1262/sx1262_status.c 
 
 OBJS += \
+./system/src/drivers/sx1262/sx1262_data_io.o \
 ./system/src/drivers/sx1262/sx1262_internals.o \
 ./system/src/drivers/sx1262/sx1262_irq_dio.o \
 ./system/src/drivers/sx1262/sx1262_modes.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./system/src/drivers/sx1262/sx1262_status.o 
 
 C_DEPS += \
+./system/src/drivers/sx1262/sx1262_data_io.d \
 ./system/src/drivers/sx1262/sx1262_internals.d \
 ./system/src/drivers/sx1262/sx1262_irq_dio.d \
 ./system/src/drivers/sx1262/sx1262_modes.d \
