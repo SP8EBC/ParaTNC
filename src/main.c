@@ -1451,6 +1451,7 @@ int main(int argc, char* argv[]){
    for (i = 0; i < 0x7F; i++);
    sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
    sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
+   for (i = 0; i < 0x7F; i++);
    sx1262_modes_set_tx(0x1234);
 
    //sx1262_data_io_write_register(start_address, data_ln, data)
@@ -1462,6 +1463,10 @@ int main(int argc, char* argv[]){
    delay_fixed(1000);
 
 #ifdef SX1262_IMPLEMENTATION
+   sx1262_status_get(&mode, &command_status);
+
+   uint16_t interrupt_mask = 0;
+   sx1262_irq_dio_get_mask(&interrupt_mask);
 #endif
 
    led_control_led1_upper(true);

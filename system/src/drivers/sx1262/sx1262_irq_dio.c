@@ -122,10 +122,10 @@ sx1262_api_return_t sx1262_irq_dio_enable_disable_on_pin_dio1 (uint8_t tx_done, 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_SET_DIO_IRQ_PARAMS;
-		sx1262_transmit_spi_buffer[1] = (uint8_t) (temp & 0xFF);
-		sx1262_transmit_spi_buffer[2] = (uint8_t) ((temp & 0xFF00) >> 8);
-		sx1262_transmit_spi_buffer[3] = (uint8_t) (temp & 0xFF);
-		sx1262_transmit_spi_buffer[4] = (uint8_t) ((temp & 0xFF00) >> 8);
+		sx1262_transmit_spi_buffer[2] = (uint8_t) (temp & 0xFF);
+		sx1262_transmit_spi_buffer[1] = (uint8_t) ((temp & 0xFF00) >> 8);
+		sx1262_transmit_spi_buffer[4] = (uint8_t) (temp & 0xFF);
+		sx1262_transmit_spi_buffer[3] = (uint8_t) ((temp & 0xFF00) >> 8);
 
 		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 9);
 
