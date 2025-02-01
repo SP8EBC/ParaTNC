@@ -27,6 +27,7 @@ RM := rm -rf
 -include system/src/aprs/subdir.mk
 -include system/src/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
+-include src/skytrax_fanet/subdir.mk
 -include src/nvm/subdir.mk
 -include src/kiss_protocol/diagnostics_services/subdir.mk
 -include src/kiss_protocol/diagnostics_routines/subdir.mk

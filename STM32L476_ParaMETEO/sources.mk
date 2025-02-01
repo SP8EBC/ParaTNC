@@ -33,6 +33,7 @@ src/kiss_protocol/diagnostics_routines \
 src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
 src/nvm \
+src/skytrax_fanet \
 src/stored_configuration_nvm \
 system/src/aprs \
 system/src/cmsis/stm32l4xx \

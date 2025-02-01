@@ -1,0 +1,220 @@
+#include "./skytrax_fanet/fanet_serialization.h"
+#include <math.h>
+
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
+/**
+ * Port of 'constrain' function used in uint16_t Frame::coord2payload_compressed(float deg) method
+ */
+#define FANET_SERIALIZE_CONSTRAIN(x, lo, hi) ((x < lo) ? (lo) : (x > hi ? hi : x))
+
+/*
+ * Frame
+ */
+#define FANET_SERIALIZE_MIN_HEADER_LENGTH (4)
+#define FANET_SERIALIZE_ADDR_LENGTH		  (3)
+#define FANET_SERIALIZE_SIGNATURE_LENGTH  (4)
+
+/* Header Byte */
+#define FANET_SERIALIZE_HEADER_EXTHEADER_BIT (7)
+#define FANET_SERIALIZE_HEADER_FORWARD_BIT	 (6)
+#define FANET_SERIALIZE_HEADER_TYPE_MASK	 (0x3F)
+
+/* Extended Header Byte */
+#define FANET_SERIALIZE_EXTHEADER_ACK_BIT1		7
+#define FANET_SERIALIZE_EXTHEADER_ACK_BIT0		6
+#define FANET_SERIALIZE_EXTHEADER_UNICAST_BIT	5
+#define FANET_SERIALIZE_EXTHEADER_SIGNATURE_BIT 4
+
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ * Direct port of Frame::coord2payload_compressed from C++ codebase
+ * @param deg
+ * @return
+ */
+static uint16_t fanet_serialize_coordinates_compressed (float deg)
+{
+	const float deg_round = round (deg);
+	const int deg_round_int = (int)deg_round;
+	uint8_t deg_odd = (deg_round_int & 1);
+	const float decimal = deg - deg_round;
+	const int dec_int = FANET_SERIALIZE_CONSTRAIN ((int)(decimal * 32767), -16383, 16383);
+
+	return ((dec_int & 0x7FFF) | (!!deg_odd << 15));
+}
+
+/**
+ * Direct port of Frame::coord2payload_absolut from C++ codebase
+ * @param lat
+ * @param lon
+ * @param buf
+ */
+void fanet_serialize_coordinates_absolute (float lat, float lon, uint8_t *buf)
+{
+	int32_t lat_i = round (lat * 93206.0f);
+	int32_t lon_i = round (lon * 46603.0f);
+
+	buf[0] = ((uint8_t *)&lat_i)[0];
+	buf[1] = ((uint8_t *)&lat_i)[1];
+	buf[2] = ((uint8_t *)&lat_i)[2];
+
+	buf[3] = ((uint8_t *)&lon_i)[0];
+	buf[4] = ((uint8_t *)&lon_i)[1];
+	buf[5] = ((uint8_t *)&lon_i)[2];
+}
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ * Serializes FANET frame into buffer of bytes, which then can be directly used to transmit
+ * through SX1262 or similar radio IC.
+ * @param input
+ * @param output
+ * @param output_size
+ * @return positive value is a length of the output data after successful serialization, negative
+ * value means an error
+ */
+int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_size)
+{
+	const fanet_mac_adress_t *src = &input->source;
+	const fanet_mac_adress_t *dest = &input->destination;
+
+	// comparison is always false due to limited range of data type [-Wtype-limits]
+	if (src->id <= 0 || src->id >= 0xFFFF || src->manufacturer <= 0 || src->manufacturer >= 0xFE) {
+		return -2;
+	}
+
+	int16_t blength = FANET_SERIALIZE_MIN_HEADER_LENGTH + input->payload_length;
+
+	/* extended header? */
+	if ((input->ack_requested > FANET_ACK_NOACK) || input->destination.id != 0 ||
+		input->destination.manufacturer != 0 || input->signature != 0)
+		blength++;
+
+	/* none broadcast frame */
+	if (dest->id != 0 || dest->manufacturer != 0)
+		blength += FANET_SERIALIZE_ADDR_LENGTH;
+
+	/* signature */
+	if (input->signature != 0)
+		blength += FANET_SERIALIZE_SIGNATURE_LENGTH;
+
+	/* frame to long */
+	if (blength > 255)
+		return -1;
+
+	/* get memory */
+	int idx = 0;
+
+	// clang-format off
+	/* header */			// not sure why there is double negation here. This is something copied directly from C++ codebase
+	output[idx++] = 	!!(input->ack_requested || dest->id != 0 || dest->manufacturer != 0 || input->signature != 0)<<FANET_SERIALIZE_HEADER_EXTHEADER_BIT |
+							!!input->forward << FANET_SERIALIZE_HEADER_FORWARD_BIT | 
+							(input->type & FANET_SERIALIZE_HEADER_TYPE_MASK);
+	output[idx++] = src->manufacturer & 0x000000FF;
+	output[idx++] = src->id & 0x000000FF;
+	output[idx++] = (src->id >> 8) & 0x000000FF;
+	// clang-format on
+
+	/* extended header */
+	if (output[0] & (1 << FANET_SERIALIZE_HEADER_EXTHEADER_BIT)) {
+		output[idx++] = (input->ack_requested & 3) << FANET_SERIALIZE_EXTHEADER_ACK_BIT0 |
+						!!(dest->id != 0 || dest->manufacturer != 0)
+							<< FANET_SERIALIZE_EXTHEADER_UNICAST_BIT |
+						!!input->signature << FANET_SERIALIZE_EXTHEADER_SIGNATURE_BIT;
+	}
+
+	/* extheader and unicast -> add destination addr */
+	if ((output[0] & (1 << FANET_SERIALIZE_HEADER_EXTHEADER_BIT)) &&
+		(output[4] & 1 << FANET_SERIALIZE_EXTHEADER_UNICAST_BIT)) {
+		output[idx++] = dest->manufacturer & 0x000000FF;
+		output[idx++] = dest->id & 0x000000FF;
+		output[idx++] = (dest->id >> 8) & 0x000000FF;
+	}
+
+	/* extheader and signature -> add signature */
+	if ((output[0] & 1 << 7) && (output[4] & 1 << 4)) {
+		output[idx++] = input->signature & 0x000000FF;
+		output[idx++] = (input->signature >> 8) & 0x000000FF;
+		output[idx++] = (input->signature >> 16) & 0x000000FF;
+		output[idx++] = (input->signature >> 24) & 0x000000FF;
+	}
+
+	/* fill payload */
+	for (int i = 0; i < input->payload_length && idx < blength; i++)
+		output[idx++] = input->payload[i];
+
+	return blength;
+}
+
+/**
+ *
+ * @param input
+ * @param input_size
+ * @param output
+ * @return
+ */
+int32_t fanet_deserialize (uint8_t *input, uint8_t input_size, fanet_frame_t *output)
+{
+	fanet_mac_adress_t *src = &output->source;
+	fanet_mac_adress_t *dest = &output->destination;
+
+	int payload_start = FANET_SERIALIZE_MIN_HEADER_LENGTH;
+
+	/* header */
+	output->forward = !!(input[0] & (1 << FANET_SERIALIZE_HEADER_FORWARD_BIT));
+	output->type = input[0] & FANET_SERIALIZE_HEADER_TYPE_MASK;
+	src->manufacturer = input[1];
+	src->id = input[2] | (input[3] << 8);
+
+	/* extended header */
+	if (input[0] & 1 << FANET_SERIALIZE_HEADER_EXTHEADER_BIT) {
+		payload_start++;
+
+		/* ack type */
+		output->ack_requested = (input[4] >> FANET_SERIALIZE_EXTHEADER_ACK_BIT0) & 3;
+
+		/* unicast */
+		if (input[4] & (1 << FANET_SERIALIZE_EXTHEADER_UNICAST_BIT)) {
+			dest->manufacturer = input[5];
+			dest->id = input[6] | (input[7] << 8);
+
+			payload_start += FANET_SERIALIZE_ADDR_LENGTH;
+		}
+
+		/* signature */
+		if (input[4] & (1 << FANET_SERIALIZE_EXTHEADER_SIGNATURE_BIT)) {
+			output->signature = input[payload_start] | (input[payload_start + 1] << 8) |
+						(input[payload_start + 2] << 16) | (input[payload_start + 3] << 24);
+			payload_start += FANET_SERIALIZE_SIGNATURE_LENGTH;
+		}
+	}
+
+	/* payload */
+	output->payload_length = input_size - payload_start;
+	if (output->payload_length > 0) {
+		//payload = new uint8_t[payload_length];
+		memcpy (output->payload, &input[payload_start], output->payload_length);
+	}
+
+	return 0;
+}
