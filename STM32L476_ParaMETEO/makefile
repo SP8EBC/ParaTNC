@@ -13,6 +13,7 @@ RM := rm -rf
 -include system/src/tm/subdir.mk
 -include system/src/tiny-aes/subdir.mk
 -include system/src/stm32l4-hal-driver/subdir.mk
+-include system/src/skytrax_fanet/subdir.mk
 -include system/src/modbus_rtu/subdir.mk
 -include system/src/http_client/subdir.mk
 -include system/src/gsm/subdir.mk
@@ -27,7 +28,6 @@ RM := rm -rf
 -include system/src/aprs/subdir.mk
 -include system/src/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
--include src/skytrax_fanet/subdir.mk
 -include src/nvm/subdir.mk
 -include src/kiss_protocol/diagnostics_services/subdir.mk
 -include src/kiss_protocol/diagnostics_routines/subdir.mk

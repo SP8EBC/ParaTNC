@@ -35,6 +35,20 @@
         "kiss_communication.h": "c",
         "kiss_communication_service_ids.h": "c",
         "kiss_security_access.h": "c",
-        "kiss_communication_transport_t.h": "c"
+        "kiss_communication_transport_t.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "compare": "c",
+        "functional": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "variant": "c",
+        "istream": "c",
+        "ostream": "c",
+        "fanet_factory_frames.h": "c",
+        "fanet_internals.h": "c"
     }
 }

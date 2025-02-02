@@ -33,7 +33,6 @@ src/kiss_protocol/diagnostics_routines \
 src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
 src/nvm \
-src/skytrax_fanet \
 src/stored_configuration_nvm \
 system/src/aprs \
 system/src/cmsis/stm32l4xx \
@@ -48,6 +47,7 @@ system/src/fatfs \
 system/src/gsm \
 system/src/http_client \
 system/src/modbus_rtu \
+system/src/skytrax_fanet \
 system/src/stm32l4-hal-driver \
 system/src/tiny-aes \
 system/src/tm \
