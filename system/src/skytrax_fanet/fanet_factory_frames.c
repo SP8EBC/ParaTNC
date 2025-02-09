@@ -19,6 +19,13 @@
 #define FANET_FACTORY_FRAMES_TYPE1_SIZE 13 // 11+2
 #define FANET_FACTORY_FRAMES_TYPE7_SIZE 7
 
+#define FANET_FACTORY_FRAMES_SERVICE_INTERNET_GW	(1 << 7)
+#define FANET_FACTORY_FRAMES_SERVICE_TEMPERATURE	(1 << 6)
+#define FANET_FACTORY_FRAMES_SERVICE_WIND			(1 << 5)
+#define FANET_FACTORY_FRAMES_SERVICE_HUMIDITY		(1 << 4)
+#define FANET_FACTORY_FRAMES_SERVICE_BARO			(1 << 3)
+#define FANET_FACTORY_FRAMES_SERVICE_EXTHEADER		(1 << 0)
+
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -107,7 +114,7 @@ uint32_t fanet_factory_frames_tracking (fanet_aircraft_t type, fanet_aircraft_st
 	// 	return APP_TYPE1_SIZE - 2;
 
 	if (state_vector->has_turnrate == 0 && state_vector->qne_offset == 0.0f) {
-		out = FANET_FACTORY_FRAMES_TYPE1_SIZE - 2;
+		retval = FANET_FACTORY_FRAMES_TYPE1_SIZE - 2;
 	}
 	else {
 		if (state_vector->has_turnrate == 0) {
@@ -159,7 +166,7 @@ uint32_t fanet_factory_frames_tracking (fanet_aircraft_t type, fanet_aircraft_st
  * @param out
  */
 void fanet_factory_frames_ground (float latitude, float longitude, uint8_t online,
-								  fanet_frame_type_t *out)
+		fanet_frame_t *out)
 {
 }
 
@@ -168,6 +175,147 @@ void fanet_factory_frames_ground (float latitude, float longitude, uint8_t onlin
  * @param weather_data
  * @param out
  */
-void fanet_factory_frames_weather (fanet_wx_input_t *weather_data, fanet_frame_type_t *out)
+uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_input_t *weather_data, fanet_frame_t *out)
 {
+
+	uint8_t *buffer = out->payload;
+
+	/**
+	 * [Byte 0]	Header	(additional payload will be added in order 6 to 1, followed by Extended Header payload 7 to 0 once defined)
+	 * 	bit 7		Internet Gateway (no additional payload required, other than a position)
+	 * 	bit 6		Temperature (+1byte in 0.5 degree, 2-Complement)
+	 * 	bit 5		Wind (+3byte: 1byte Heading in 360/256 degree, 1byte speed and 1byte gusts in 0.2km/h (each: bit 7 scale 5x or 1x, bit 0-6))
+ 	 * 	bit 4		Humidity (+1byte: in 0.4% (%rh*10/4))
+	 * 	bit 3		Barometric pressure normailized (+2byte: in 10Pa, offset by 430hPa, unsigned little endian (hPa-430)*10)
+	 * 	bit 2		Support for Remote Configuration (Advertisement)
+	 * 	bit 1		State of Charge  (+1byte lower 4 bits: 0x00 = 0%, 0x01 = 6.666%, .. 0x0F = 100%)
+	 * 	bit 0		Extended Header (+1byte directly after byte 0)
+	 * 	The following is only mandatory if no additional data will be added. Broadcasting only the gateway/remote-cfg flag doesn't require pos information.
+	 */
+	// it seems like extended header is mandatory
+	buffer[0] = FANET_FACTORY_FRAMES_SERVICE_TEMPERATURE |
+			FANET_FACTORY_FRAMES_SERVICE_WIND |
+			FANET_FACTORY_FRAMES_SERVICE_HUMIDITY |
+			FANET_FACTORY_FRAMES_SERVICE_BARO |
+			FANET_FACTORY_FRAMES_SERVICE_EXTHEADER;
+
+	/**
+	 * Extended Header:
+	 *		7-6bit 		ACK:
+	 *			0: none (default)
+	 *			1: requested
+	 *			2: requested (via forward, if received via forward (received forward bit = 0). must
+	 * be used if forward is set) 			
+	 * 			3: reserved
+
+	*		5bit		Cast:
+	*			0: Broadcast (default)
+	*			1: Unicast (adds destination address (8+16bit)) (shall only be forwarded if dest
+	* addr in cache and no 'better' retransmission received)
+	* 		4bit 		Signature (if 1, add 4byte)
+	* 		3bit		Geo-based Forwarded	(prevent any further geo-based forwarding, can be
+	* ignored by any none-forwarding instances)
+	*		2-0bit 		Reserved	(ideas: indicate multicast interest add 16bit addr, emergency)
+	*
+	*
+	*/
+	buffer[1] = 0;
+
+	/**
+	 * [Byte 2-4]	Position	(Little Endian, 2-Complement)		
+	 *		bit 0-23	Latitude
+	 *	[Byte Byte 5-7]	Position	(Little Endian, 2-Complement)
+	 *		bit 0-23	Longitude
+	 */
+	fanet_coordinates_absolute (latitude, longitude, &buffer[2]);
+
+	/**
+	 * Temperature (+1byte in 0.5 degree, 2-Complement)
+	 */
+	int16_t scaled_temperature = weather_data->temperature;
+
+	// convert temperature from 0.1 degree resolution to 0.5 resolution
+	scaled_temperature /= 5;
+
+	// check maximum/minimum
+	if (scaled_temperature > INT8_MAX) {
+		buffer[8] = INT8_MAX;
+	}
+	else if (scaled_temperature < INT8_MIN) {
+		buffer[8] = INT8_MIN;
+	}
+	else {
+		// store rescaled temperature in output buffer
+		buffer[8] = scaled_temperature;
+	}
+
+	/**
+	 * Wind (+3byte: 1byte Heading in 360/256 degree, 1byte speed and 1byte gusts in 0.2km/h (each: bit 7 scale 5x or 1x, bit 0-6))
+	 */
+	const float winddirection_scaling = 256.0f / 360.0f;
+	buffer[9] = (uint8_t)(winddirection_scaling * (float)weather_data->wind_direction);
+
+	const float windspeed_scaling = 1.8f;
+	const float high_windpseed_scaling = 0.36f;
+
+	// windspeed
+	if (weather_data->wind_average_speed < 71)
+	{
+		buffer[10] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_average_speed);
+
+	}
+	else
+	{
+		buffer[10] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_average_speed);
+		buffer[10] |= (1 << 7);
+	}
+
+	// windgusts
+	if (weather_data->wind_gusts < 71)
+	{
+		buffer[10] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_gusts);
+
+	}
+	else
+	{
+		buffer[10] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_gusts);
+		buffer[10] |= (1 << 7);
+	}
+
+	/**
+	 * Humidity (+1byte: in 0.4% (%rh*10/4))
+	 */
+	const float humidity_scaling = 2.5f;
+	buffer[11] = (uint8_t)(humidity_scaling * (float)weather_data->humidity);
+
+	/**
+	 * Barometric pressure normailized (+2byte: in 10Pa, offset by 430hPa, unsigned little endian (hPa-430)*10)
+	 */
+	if (weather_data->qnh > 4700u)
+	{
+		buffer[12] = (uint8_t)(weather_data->qnh - 4300ul);
+	}
+	else
+	{
+		buffer[12] = 0u;
+	}
+
+	/**
+	 * Extended Header:
+	 *	[Byte 4 (if Extended Header bit is set)]
+	 *	7-6bit 		ACK:
+	 *				0: none (default)
+	 *				1: requested
+	 *				2: requested (via forward, if received via forward (received forward bit = 0). must be used if forward is set)
+	 *				3: reserved
+	 *	5bit		Cast:
+	 *				0: Broadcast (default)
+	 *				1: Unicast (adds destination address (8+16bit)) (shall only be forwarded if dest addr in cache and no 'better' retransmission received)
+	 *	4bit 		Signature (if 1, add 4byte)
+	 *	3bit		Geo-based Forwarded	(prevent any further geo-based forwarding, can be ignored by any none-forwarding instances)
+	 *	2-0bit 		Reserved	(ideas: indicate multicast interest add 16bit addr, emergency)
+	 */
+	buffer[13] = 0;
+
+	return 14;
 }
