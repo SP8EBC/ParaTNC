@@ -59,7 +59,7 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 	const fanet_mac_adress_t *dest = &input->destination;
 
 	// comparison is always false due to limited range of data type [-Wtype-limits]
-	if (src->id <= 0 || src->id >= 0xFFFF || src->manufacturer <= 0 || src->manufacturer >= 0xFE) {
+	if (src->id == 0 || src->id == 0xFFFF || src->manufacturer == 0 || src->manufacturer >= 0xFE) {
 		return -2;
 	}
 

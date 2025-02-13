@@ -20,7 +20,7 @@
 
 #define PWR_SWITCH_BOTH
 
-#define OWN_APRS_MSG_LN 	256u
+#define OWN_APRS_MSG_LN 	255u
 
 #define MAIN_GET_RTC_YEAR	1u
 #define MAIN_GET_RTC_MONTH	2u

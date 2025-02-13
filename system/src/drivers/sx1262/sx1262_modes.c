@@ -753,9 +753,9 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 
 	const uint8_t is_busy = sx1262_is_busy();
 
-	uint8_t pa_duty_cycle = 3u;
+	uint8_t pa_duty_cycle = 4u;
 
-	uint8_t hp_max = 5u;
+	uint8_t hp_max = 7u;
 
 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
 
@@ -768,7 +768,7 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 		sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_PA_CONFIG;
 		sx1262_transmit_spi_buffer[1] = pa_duty_cycle;
 		sx1262_transmit_spi_buffer[2] = hp_max;
-		sx1262_transmit_spi_buffer[3] = 0x01;
+		sx1262_transmit_spi_buffer[3] = 0x00;
 		sx1262_transmit_spi_buffer[4] = 0x01;
 
 		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);

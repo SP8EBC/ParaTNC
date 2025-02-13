@@ -115,6 +115,7 @@ sx1262_api_return_t sx1262_rf_frequency (uint32_t frequency)
 	const uint8_t is_busy = sx1262_is_busy();
 
 	const uint64_t pll_steps_counter = 0x2000000ull;
+	//								   0x2000000
 
 	if (frequency < 930000u && frequency > 850000u) {
 		if (is_busy == 0) {
@@ -122,10 +123,10 @@ sx1262_api_return_t sx1262_rf_frequency (uint32_t frequency)
 
 			memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 			sx1262_transmit_spi_buffer[0] = SX1262_RF_OPCODE_SET_RF_FREQUENCY;
-			sx1262_transmit_spi_buffer[1] = (uint8_t) (freq & 0x000000FFu);
-			sx1262_transmit_spi_buffer[2] = (uint8_t) ((freq & 0x0000FF00u) >> 8);
-			sx1262_transmit_spi_buffer[3] = (uint8_t) ((freq & 0x00FF0000u) >> 16);
-			sx1262_transmit_spi_buffer[4] = (uint8_t) ((freq & 0xFF000000u) >> 24);
+			sx1262_transmit_spi_buffer[4] = (uint8_t) (freq & 0x000000FFu);
+			sx1262_transmit_spi_buffer[3] = (uint8_t) ((freq & 0x0000FF00u) >> 8);
+			sx1262_transmit_spi_buffer[2] = (uint8_t) ((freq & 0x00FF0000u) >> 16);
+			sx1262_transmit_spi_buffer[1] = (uint8_t) ((freq & 0xFF000000u) >> 24);
 
 			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 5);
 
@@ -370,8 +371,8 @@ sx1262_api_return_t sx1262_rf_lora_packet_params (uint16_t preamble_ln, uint8_t 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_RF_OPCODE_SET_MODULATION_PARAMS;
-		sx1262_transmit_spi_buffer[1] = (uint8_t) (preamble_ln & 0x00FF);
-		sx1262_transmit_spi_buffer[2] = (uint8_t) ((preamble_ln & 0xFF00) >> 8);
+		sx1262_transmit_spi_buffer[2] = (uint8_t) (preamble_ln & 0x00FF);
+		sx1262_transmit_spi_buffer[1] = (uint8_t) ((preamble_ln & 0xFF00) >> 8);
 		sx1262_transmit_spi_buffer[3] = (uint8_t) header_ln;
 		sx1262_transmit_spi_buffer[4] = (uint8_t) payload_ln;
 		if (enable_crc == 0)

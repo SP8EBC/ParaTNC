@@ -291,13 +291,17 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	/**
 	 * Barometric pressure normailized (+2byte: in 10Pa, offset by 430hPa, unsigned little endian (hPa-430)*10)
 	 */
+	uint16_t scaled_pressure = (uint8_t)(weather_data->qnh - 4300ul);
 	if (weather_data->qnh > 4700u)
 	{
-		buffer[12] = (uint8_t)(weather_data->qnh - 4300ul);
+		buffer[12] = (scaled_pressure & 0xFFu);
+		buffer[13] = (scaled_pressure & 0xFF00u) >> 8;
 	}
 	else
 	{
 		buffer[12] = 0u;
+		buffer[13] = 0u;
+
 	}
 
 	/**
@@ -315,7 +319,9 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	 *	3bit		Geo-based Forwarded	(prevent any further geo-based forwarding, can be ignored by any none-forwarding instances)
 	 *	2-0bit 		Reserved	(ideas: indicate multicast interest add 16bit addr, emergency)
 	 */
-	buffer[13] = 0;
+	buffer[14] = 0;
 
-	return 14;
+	out->payload_length = 15;
+
+	return 15;
 }

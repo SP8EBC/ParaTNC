@@ -104,11 +104,11 @@ sx1262_api_return_t sx1262_status_get_device_errors(
 
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 
-		const uint16_t * ptr8 = spi_get_rx_data();
+		const uint8_t * ptr8 = spi_get_rx_data();
 
 		const uint16_t * ptr16 = (const uint16_t*) spi_get_rx_data();
 
-		volatile const uint16_t _err = *(ptr16 + 1);
+		volatile const uint16_t _err = ptr8[3];
 
 		*errors = (uint8_t)(_err);
 
