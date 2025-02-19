@@ -1428,6 +1428,8 @@ int main(int argc, char* argv[]){
    out.source.id = 0x5000;
    out.source.manufacturer = 0xEE;
 
+   volatile uint8_t regi = 0u;
+
    volatile sx1262_api_return_t sx_result = SX1262_API_UNINIT;
 
    fanet_factory_frames_weather(19.0298f, 49.8277f, &wx_input, &out);
@@ -1441,10 +1443,10 @@ int main(int argc, char* argv[]){
    delay_fixed(10);
    sx1262_status_get_device_errors(&mode, &command_status, &errors);
    delay_fixed(10);
-   sx1262_modes_set_standby(0);
+   sx1262_modes_set_regulator_mode(1);
    delay_fixed(1300);		// 1200ms seems to be a minimum value
    sx1262_status_get(&mode, &command_status);
-   if (mode == SX1262_CHIP_MODE_STDBY_RC) {
+   if (mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
 	   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
 	   delay_fixed(10);
 
@@ -1461,40 +1463,51 @@ int main(int argc, char* argv[]){
 			   sx1262_modes_set_pa_config(5);
 			   sx_result = sx1262_status_get(&mode, &command_status);
 			   delay_fixed(100);
-			   sx1262_rf_tx_params(22, SX1262_RF_TX_RAMPTIME_800US);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-			   delay_fixed(100);
-
-			   sx1262_rf_buffer_base_addresses(0, 128);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-			   delay_fixed(100);
-			   sx1262_data_io_write_buffer(0, fanet_ln, (const uint8_t*)main_own_aprs_msg);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-			   delay_fixed(100);
-			   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-			   delay_fixed(100);
-			   sx1262_rf_lora_packet_params(fanet_ln << 2, fanet_ln, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-			   delay_fixed(100);
-			   sx_result = sx1262_status_get(&mode, &command_status);
-
-			   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
-				   sx1262_data_io_write_register_byte(0x740, 0xF4);
+			   sx_result = sx1262_rf_tx_params(14, SX1262_RF_TX_RAMPTIME_200US);
+			   if (sx_result == SX1262_API_OK) {
+				   sx_result = sx1262_status_get(&mode, &command_status);
 				   delay_fixed(100);
-				   sx1262_data_io_write_register_byte(0x741, 0x14);
+
+				   sx1262_data_io_write_register_byte(0x08E7u, 0x38u);
+				   sx1262_data_io_read_register(0x08E7u, 1u, &regi);
+
+				   sx1262_rf_buffer_base_addresses(0, 128);
+				   sx_result = sx1262_status_get(&mode, &command_status);
 				   delay_fixed(100);
-				   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
-				   if (i == 0xF4) {
-					   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
-					   if (i == 0x14) {
-						   sx1262_modes_set_fs();
-						   delay_fixed(1500);
-						   sx_result = sx1262_status_get(&mode, &command_status);
-						   sx1262_status_get_device_errors(&mode, &command_status, &errors);
-						   //sx1262_modes_set_tx(0x1234);
-						   sx1262_modes_set_tx_infinite_preamble();
-						   //sx1262_data_io_write_register(start_address, data_ln, data)
+				   sx1262_data_io_write_buffer(0, fanet_ln, (const uint8_t*)main_own_aprs_msg);
+				   sx_result = sx1262_status_get(&mode, &command_status);
+				   delay_fixed(100);
+				   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
+				   sx_result = sx1262_status_get(&mode, &command_status);
+				   delay_fixed(100);
+				   sx1262_rf_lora_packet_params(fanet_ln, fanet_ln, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
+				   sx_result = sx1262_status_get(&mode, &command_status);
+				   delay_fixed(100);
+				   sx_result = sx1262_status_get(&mode, &command_status);
+
+				   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+					   sx1262_data_io_write_register_byte(0x740, 0xF4);
+					   delay_fixed(100);
+					   sx1262_data_io_write_register_byte(0x741, 0x14);
+					   delay_fixed(100);
+					   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
+					   if (i == 0xF4) {
+						   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
+						   if (i == 0x14) {
+	//						   sx1262_modes_set_standby(1);
+							   sx1262_modes_set_fs();
+							   delay_fixed(150);
+							   sx_result = sx1262_status_get(&mode, &command_status);
+							   sx1262_status_get_device_errors(&mode, &command_status, &errors);
+	//						   sx1262_modes_set_tx(0x1234);
+	//						   sx1262_modes_set_tx_infinite_preamble();
+							   sx1262_modes_set_tx_cw();
+							   delay_fixed(150);
+							   sx1262_status_get_device_errors(&mode, &command_status, &errors);
+							   sx_result = sx1262_status_get(&mode, &command_status);
+	//						   delay_fixed(15);
+							   //sx1262_data_io_write_register(start_address, data_ln, data)
+						   }
 					   }
 				   }
 			   }

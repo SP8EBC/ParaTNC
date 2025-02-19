@@ -771,7 +771,7 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 		sx1262_transmit_spi_buffer[3] = 0x00;
 		sx1262_transmit_spi_buffer[4] = 0x01;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 5);
 
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 
