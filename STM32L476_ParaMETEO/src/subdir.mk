@@ -16,6 +16,7 @@ C_SRCS += \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/event_log.c \
+../src/fanet_app.c \
 ../src/gsm_comm_state_handler.c \
 ../src/io.c \
 ../src/it_handlers.c \
@@ -49,6 +50,7 @@ OBJS += \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/event_log.o \
+./src/fanet_app.o \
 ./src/gsm_comm_state_handler.o \
 ./src/io.o \
 ./src/it_handlers.o \
@@ -82,6 +84,7 @@ C_DEPS += \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/event_log.d \
+./src/fanet_app.d \
 ./src/gsm_comm_state_handler.d \
 ./src/io.d \
 ./src/it_handlers.d \

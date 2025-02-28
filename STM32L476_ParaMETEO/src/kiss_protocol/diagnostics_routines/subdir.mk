@@ -4,13 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.c 
+../src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.c \
+../src/kiss_protocol/diagnostics_routines/routine_6001_fanet.c 
 
 OBJS += \
-./src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.o 
+./src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.o \
+./src/kiss_protocol/diagnostics_routines/routine_6001_fanet.o 
 
 C_DEPS += \
-./src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.d 
+./src/kiss_protocol/diagnostics_routines/routine_5254_set_datetime.d \
+./src/kiss_protocol/diagnostics_routines/routine_6001_fanet.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

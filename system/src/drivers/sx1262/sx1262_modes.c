@@ -6,6 +6,7 @@
  */
 
 #include "drivers/sx1262/sx1262_modes.h"
+#include "drivers/sx1262/sx1262_status.h"
 #include "drivers/sx1262/sx1262_internals.h"
 
 #include "drivers/spi.h"
@@ -256,6 +257,12 @@ sx1262_api_return_t sx1262_modes_set_tx(uint32_t timeout) {
 
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
+	uint8_t temp = 0;
+
+	volatile sx1262_status_chip_mode_t chip_mode;
+
+	volatile sx1262_status_last_command_t last_command_status;
+
 	const uint8_t is_busy = sx1262_is_busy();
 
 	if (is_busy == 0) {
@@ -274,7 +281,24 @@ sx1262_api_return_t sx1262_modes_set_tx(uint32_t timeout) {
 		const uint8_t * ptr = spi_get_rx_data();
 
 		if (ptr[0] != 0x00  && ptr[0] != 0xFF) {
-			out = SX1262_API_OK;
+
+			temp = ptr[0] & 0x70u;
+			temp >>= 4;
+			chip_mode = (sx1262_status_chip_mode_t) temp;
+
+			temp = ptr[0] & 0x0Eu;
+			temp >>= 1;
+			last_command_status = (sx1262_status_last_command_t)temp;
+
+			if (last_command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK)
+			{
+				out = SX1262_API_OK;
+			}
+			else
+			{
+				out = SX1262_API_DAMAGED_RESP;
+			}
+
 		}
 #else
 		out = SX1262_API_OK;

@@ -5,6 +5,7 @@
 
 #define KISS_ROUTINES(ENTRY)                                                                                \
     ENTRY(0x5254, routine_5254_start, 0x0, routine_5254_get_result, KISS_ROUTINE_CONTROL_SYNCHRO)           \
+    ENTRY(0x6001, routine_6001_start, 0x0, routine_6001_get_result, KISS_ROUTINE_CONTROL_SYNCHRO)			\
 
 #endif
 

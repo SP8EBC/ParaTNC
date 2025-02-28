@@ -15,6 +15,8 @@
 
 #include <stm32l4xx_ll_gpio.h>
 
+#include "fanet_app.h"
+
 /**
  * Used for
  */
@@ -44,13 +46,16 @@ void button_check_all(configuration_button_function_t left, configuration_button
 	// current state of left button
 	const uint32_t state_left = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0);
 
+	volatile int res = 123;
+
 	// check falling edge on right button
 	if (state_left == 0 && button_left_previous_state == 1) {
 		button_left_previous_state = 0;
 
 		switch (left) {
 		case BUTTON_SEND_BEACON:
-			beacon_send_own(0,0);
+			res = fanet_test();
+			//beacon_send_own(0,0);
 			break;
 		case BUTTON_RECONNECT_APRSIS:
 			aprsis_disconnect();
@@ -72,7 +77,8 @@ void button_check_all(configuration_button_function_t left, configuration_button
 
 		switch (right) {
 		case BUTTON_SEND_BEACON:
-			beacon_send_own(0,0);
+			res = fanet_test();
+			//beacon_send_own(0,0);
 			break;
 		case BUTTON_RECONNECT_APRSIS:
 			aprsis_disconnect();
@@ -86,6 +92,11 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		default:
 			break;
 		}
+	}
+
+	if (res == 0)
+	{
+		button_left_previous_state = 0;
 	}
 
 }

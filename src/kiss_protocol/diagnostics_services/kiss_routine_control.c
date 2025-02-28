@@ -29,6 +29,7 @@
 
 #include "./kiss_communication/diagnostics_services/kiss_routine_control.h"
 #include "./kiss_communication/diagnostics_routines/routine_5254_set_datetime.h"
+#include "./kiss_communication/diagnostics_routines/routine_6001_fanet.h"
 #include "./kiss_communication/types/kiss_xmacro_helpers.h"
 
 #include "./etc/kiss_routine_configuration.h"

@@ -34,7 +34,7 @@
 	{													\
 		.routine_number = _routine_number,				\
 		.running = 0									\
-	}													\
+	},													\
 
 /**
  * Creates an enum, used mostly to count how many diagnostic routines are defined
