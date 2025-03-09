@@ -31,7 +31,9 @@
 ///	LOCAL VARIABLES
 /// ==================================================================================================
 
+#ifdef SX1262_IMPLEMENTATION
 static uint8_t fanet_test_array[64];
+#endif
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -51,7 +53,7 @@ static uint8_t fanet_test_array[64];
 int fanet_test(void)
 {
 		int i = 1;
-
+#ifdef SX1262_IMPLEMENTATION
 	   sx1262_status_chip_mode_t mode;
 	   sx1262_status_last_command_t command_status;
 	   uint8_t errors;
@@ -202,7 +204,7 @@ int fanet_test(void)
 	   {
 		i = -2;
 	   }
-
+#endif
 	   return i;
 }
 

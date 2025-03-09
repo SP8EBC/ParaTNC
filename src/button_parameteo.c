@@ -54,8 +54,11 @@ void button_check_all(configuration_button_function_t left, configuration_button
 
 		switch (left) {
 		case BUTTON_SEND_BEACON:
+#ifdef SX1262_IMPLEMENTATION
 			res = fanet_test();
-			//beacon_send_own(0,0);
+#else
+			beacon_send_own(0,0);
+#endif
 			break;
 		case BUTTON_RECONNECT_APRSIS:
 			aprsis_disconnect();
@@ -77,8 +80,11 @@ void button_check_all(configuration_button_function_t left, configuration_button
 
 		switch (right) {
 		case BUTTON_SEND_BEACON:
+#ifdef SX1262_IMPLEMENTATION
 			res = fanet_test();
-			//beacon_send_own(0,0);
+#else
+			beacon_send_own(0,0);
+#endif
 			break;
 		case BUTTON_RECONNECT_APRSIS:
 			aprsis_disconnect();
