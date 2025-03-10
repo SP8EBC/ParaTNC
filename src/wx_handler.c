@@ -137,39 +137,6 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 
 }
 
-
-
-int32_t wx_get_bme280_temperature_pressure_humidity(float * const temperature, float * const pressure, int8_t * const humidity) {
-
-	int32_t return_value = 0;
-
-	// reading raw values from BME280 sensor
-	return_value = bme280_read_raw_data(bme280_data_buffer);
-
-	if (return_value == BME280_OK) {
-
-		// setting back the Quality Factor to FULL to trace any problems with sensor readouts
-		rte_wx_bme280_qf = BME280_QF_FULL;
-
-		// converting raw values to temperature
-		//bme280_get_temperature(temperature, bme280_get_adc_t(), &rte_wx_bme280_qf);
-
-		// if modbus RTU is enabled but the quality factor for RTU-pressure is set to NOT_AVALIABLE
-		//bme280_get_pressure(pressure, bme280_get_adc_p(), &rte_wx_bme280_qf);
-
-		// if modbus RTU is enabled but the quality factor for RTU-humidity is set to NOT_AVALIABLE
-		//bme280_get_humidity(humidity, bme280_get_adc_h(), &rte_wx_bme280_qf);
-
-	}
-	else {
-		// set the quality factor is sensor is not responding on the i2c bus
-		rte_wx_bme280_qf = BME280_QF_NOT_AVAILABLE;
-	}
-
-	return return_value;
-}
-
-
 void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
 
 	// locals
@@ -186,14 +153,8 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 	int32_t modbus_retval = MODBUS_RET_UNINITIALIZED;
 	uint16_t scaled_windspeed = 0;
 
-//#ifdef STM32L471xx
-//	if (io_get_cntrl_vbat_c() == 0) {
-//#else
-//	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
-//#endif
-//		// inhibit any measurement when power is not applied to sensors
-//		return;
-//	}
+	(void)(config_mode);
+
 
 	wx_wind_pool_call_counter++;
 
@@ -233,7 +194,7 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 
 	else if (config_sources->wind == WX_SOURCE_FULL_RTU) {
 		// get the value from modbus registers
-		modbus_retval = rtu_get_wind_direction(&rte_wx_average_winddirection, config_rtu);
+		modbus_retval = rtu_get_wind_direction((uint16_t*)(&rte_wx_average_winddirection), config_rtu);
 
 		// check if this value has been processed w/o errors
 		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
@@ -331,30 +292,6 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 		rte_wx_wind_qf = umb_get_current_qf(&rte_wx_umb_context, main_get_master_time());
 	}
 
-//	if (config_sources->wind == WX_SOURCE_FULL_RTU || config_sources->wind == WX_SOURCE_RTU) {
-//		if (modbus_retval == MODBUS_RET_OK) {
-//			rte_wx_wind_qf = AN_WIND_QF_FULL;
-//		}
-//		else if (modbus_retval == MODBUS_RET_DEGRADED) {
-//			rte_wx_wind_qf = AN_WIND_QF_DEGRADED;
-//		}
-//		else if (modbus_retval == MODBUS_RET_NOT_AVALIABLE) {
-//			rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-//		}
-//		else {
-//			if ((config_mode->wx & WX_INTERNAL_AS_BACKUP) != 0)
-//				rte_wx_wind_qf = analog_anemometer_get_qf();
-//			else
-//				rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
-//		}
-//	}
-//	else if (config_sources->wind == WX_SOURCE_INTERNAL) {
-//		rte_wx_wind_qf = analog_anemometer_get_qf();
-//	}
-//	else {
-//		rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
-//	}
-
 
 }
 
@@ -388,7 +325,7 @@ uint16_t wx_get_nvm_record_wind(void) {
 		scaled_windgusts = (uint8_t)lroundf((rte_wx_max_windspeed - scaled_average_windspeed) / 3.0f);
 	}
 
-	if (wind_direction <= 11 && wind_direction >= 349)
+	if (wind_direction <= 11 || wind_direction >= 349)
 		wind_direction = 0;
 	else if (wind_direction <= 34 && wind_direction > 11)
 		wind_direction = 1;
@@ -420,7 +357,9 @@ uint16_t wx_get_nvm_record_wind(void) {
 		wind_direction = 14;
 	else if (wind_direction <= 349 && wind_direction > 327)
 		wind_direction = 15;
-	else;
+	else {
+		;
+	}
 
 	out = (scaled_average_windspeed | (scaled_windgusts & 0xF) << 8 | (wind_direction & 0xF) << 12 );
 

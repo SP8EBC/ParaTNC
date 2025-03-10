@@ -40,7 +40,7 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 			measurement_retval = wx_get_pressure_ms5611(&rte_wx_pressure);
 		}
 		else {
-			measurement_retval = 0xFFFFFFFFu;
+			measurement_retval = 0xFFFFFFFF;
 		}
 
 		// check if pressure has been retrieved correctly
@@ -88,7 +88,7 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
 
 		}
-		else if (measurement_retval == 0xFFFFFFFFu) {
+		else if (measurement_retval == 0xFFFFFFFF) {
 			;
 		}
 		else {

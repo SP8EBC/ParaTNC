@@ -38,6 +38,7 @@
 #include "io.h"
 #include "button.h"
 #include "backup_registers.h"
+#include "supervisor.h"
 
 #include "rte_main.h"
 
@@ -160,6 +161,10 @@ void SysTick_Handler(void) {
 	if ((it_handlers_cpu_load_pool++) > SYSTICK_TICKS_PER_SECONDS) {
 		main_service_cpu_load_ticks();
 		it_handlers_cpu_load_pool = 0;
+	}
+
+	if (supervisor_service() != 0) {
+		NVIC_SystemReset();
 	}
 
 	// decrementing a timer to trigger meteo measuremenets
