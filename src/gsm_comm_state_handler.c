@@ -33,7 +33,7 @@ static gsm_comm_state_machine_t gsm_comm_state_machine = GSM_COMM_NO_GPRS;
 
 const gsm_comm_state_machine_t gsm_comm_state_get_current (void) 
 {
-    return gsm_comm_state_machine;
+    return (const gsm_comm_state_machine_t)gsm_comm_state_machine;
 }
 
 void gsm_comm_state_handler (uint8_t engineering_done,

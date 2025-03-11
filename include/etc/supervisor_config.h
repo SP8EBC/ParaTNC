@@ -12,6 +12,7 @@
 #define SUPERVISOR_CONFIG(ENTRY)										\
 			/* Thread or library,		timeout seconds - max 65535 */	\
 	ENTRY(	SEND_WX,					180)							\
+	ENTRY(	MAIN_LOOP,					10)								\
 
 
 

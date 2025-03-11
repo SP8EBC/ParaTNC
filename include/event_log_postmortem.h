@@ -1,30 +1,20 @@
 /*
- * supervisor.h
+ * event_log_postmortem.h
  *
- *  Created on: Mar 10, 2025
+ *  Created on: Mar 11, 2025
  *      Author: mateusz
  */
 
-#ifndef SUPERVISOR_H_
-#define SUPERVISOR_H_
-
-#include "etc/supervisor_config.h"
+#ifndef EVENT_LOG_POSTMORTEM_H_
+#define EVENT_LOG_POSTMORTEM_H_
 
 /// ==================================================================================================
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
-#define SUPERVISOR_MAKE_ENUM_TYPE(thread, timeout)				\
-		SUPERVISOR_THREAD_##thread,								\
-
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
 /// ==================================================================================================
-
-typedef enum supervisor_watchlist_t {
-	SUPERVISOR_CONFIG(SUPERVISOR_MAKE_ENUM_TYPE)
-	SUPERVISOR_THREAD_COUNT
-}supervisor_watchlist_t;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -34,23 +24,17 @@ typedef enum supervisor_watchlist_t {
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-/**
- * Called by all supervised threads or library from a place in which the entity
- * could be considered as alive and working OK
- * @param thread_or_library
- */
-void supervisor_iam_alive(supervisor_watchlist_t thread_or_library);
 
 /**
- * Should be called periodically from systick
- * @return non zero if something died
+ * Check if noinit area contains a stack frame from hardfault. If yes stores it
+ * as set of events in
  */
-int supervisor_service(void);
+void event_log_postmortem_checknstore_hardfault(void);
 
 /**
- * Check if noinit area contains valid postmortem supervisor coredump
- * @return
+ * Checks if noinit are contains a coredump of supervisor array at the moment
+ * fail has been detected
  */
-int supervisor_check_have_postmortem(void);
+void event_log_postmortem_checknstore_supervisor(void);
 
-#endif /* SUPERVISOR_H_ */
+#endif /* EVENT_LOG_POSTMORTEM_H_ */

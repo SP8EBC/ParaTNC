@@ -10,6 +10,8 @@
 #include "main.h"
 #include "rte_main.h"
 
+#include "supervisor.h"
+
 #include "station_config.h"
 
 #include <string.h>
@@ -59,6 +61,8 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 	after_tx_lock = 1;
 	WAIT_FOR_CHANNEL_FREE();
  	afsk_txStart(&main_afsk);
+
+	supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 }
 
 
@@ -99,6 +103,8 @@ void SendWXFrameToKissBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t wi
 
 	output_frame_ln = ax25_sendVia_toBuffer(main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len, buffer, buffer_ln);
 	*output_ln = output_frame_ln;
+
+	supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 
 	return;
 }

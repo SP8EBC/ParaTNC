@@ -29,6 +29,8 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 	float pressure_average_sum = 0.0f;
 	umb_qf_t umb_quality_factor = UMB_QF_UNITIALIZED;	// quality factor for UMB communication
 
+	(void)config_rtu;
+
 	switch(config_sources->pressure) {
 	case WX_SOURCE_INTERNAL: {
 
@@ -88,7 +90,7 @@ int32_t wx_get_pressure_measurement(const config_data_wx_sources_t * const confi
 			rte_wx_pressure_valid = pressure_average_sum / (float)j;
 
 		}
-		else if (measurement_retval == 0xFFFFFFFF) {
+		else if (measurement_retval == (int32_t)0xFFFFFFFF) {
 			;
 		}
 		else {

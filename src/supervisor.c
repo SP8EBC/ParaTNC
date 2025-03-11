@@ -8,7 +8,12 @@
 #include "supervisor.h"
 #include <stdint.h>
 
+#ifdef STM32L471xx
+#include <stm32l4xx.h>
+#endif
+
 #include "main_master_time.h"
+#include "memory_map.h"
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -39,6 +44,43 @@ const static uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
 
+/**
+ * Stores a content of fist 16 entries from 'supervisor_last_im_alive' into NONINIT area 
+ */
+static void supervisor_store(void)
+{
+	uint32_t * ptr = (uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+
+	uint32_t checksum = 0;
+
+	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i++)
+	{
+		ptr[i] = 0;
+	}
+
+	ptr[0] = main_get_master_time();
+	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++) 
+	{
+		if (i == (MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2))
+		{
+			break;
+		}
+		else
+		{
+			ptr[i + 1] = supervisor_last_im_alive[i];
+		}
+	}
+
+	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1; i++)
+	{
+		const uint32_t elem = ptr[i];
+		checksum += elem;
+	}
+
+	ptr[MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1] = 0xFFFFFFFFu - checksum;
+}
+
+
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
@@ -50,7 +92,10 @@ const static uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
  */
 void supervisor_iam_alive(supervisor_watchlist_t thread_or_library)
 {
-
+	if (thread_or_library < SUPERVISOR_THREAD_COUNT)
+	{
+		supervisor_last_im_alive[thread_or_library] = main_get_master_time();
+	}
 }
 
 /**
@@ -61,7 +106,7 @@ int supervisor_service(void)
 {
 	int nok = 0;
 
-	// current time sunce bootup
+	// current time since bootup
 	const uint32_t current_time = main_get_master_time();
 
 	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
@@ -74,6 +119,7 @@ int supervisor_service(void)
 
 		if (since_last_alive > (int32_t)(max_seconds_since * 1000))
 		{
+			supervisor_store();
 			nok = 1;
 			break;
 		}
@@ -83,3 +129,30 @@ int supervisor_service(void)
 	return nok;
 
 }
+
+/**
+ * Check if noinit area contains valid postmortem supervisor coredump
+ * @return
+ */
+int supervisor_check_have_postmortem(void)
+{
+	int have = 0;
+
+	uint32_t * ptr = (uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+
+	uint32_t checksum = 0;
+
+	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1; i++)
+	{
+		const uint32_t elem = ptr[i];
+		checksum += elem;
+	}
+
+	if (ptr[MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1] == 0xFFFFFFFFu - checksum)
+	{
+		have = 1;
+	}
+
+	return have;
+}
+

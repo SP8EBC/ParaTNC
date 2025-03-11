@@ -59,8 +59,10 @@ uint32_t debug_hardfault_bfar = 0;
 uint8_t debug_hardfault_check_have_postmortem (void)
 {
 	uint32_t sum = 0;
-	const uint32_t sum_from_postmortem =
-		*(((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CHECKSUM);
+
+	void * ptr_to_checksum = MEMORY_MAP_SRAM1_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM * sizeof(uint32_t);
+
+	const uint32_t sum_from_postmortem = *((uint32_t*)ptr_to_checksum);
 
 	for (int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {
 		sum += (*(((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START) + i) & 0x7FFFFFFFu);

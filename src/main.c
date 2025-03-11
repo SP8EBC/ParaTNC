@@ -67,6 +67,8 @@
 #include "button.h"
 #include <wx_pwr_switch.h>
 #include "io_default_vbat_scaling.h"
+#include "supervisor.h"
+#include "event_log_postmortem.h"
 
 #include "it_handlers.h"
 
@@ -746,7 +748,10 @@ int main(int argc, char* argv[]){
   // initialize nvm logger
   nvm_event_log_init();
 
-  //const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
+  if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
+	  	system_set_rtc_date(main_year, main_month, main_day_of_month);
+		system_set_rtc_time(main_hour, main_minute, main_second);
+  }
 
   event_log_sync(
 		  	  EVENT_TIMESYNC,
@@ -763,13 +768,11 @@ int main(int argc, char* argv[]){
   rte_wx_init();
   rte_rtu_init();
 
+  event_log_postmortem_checknstore_hardfault();
+  event_log_postmortem_checknstore_supervisor();
+
   // calculate CRC over configuration blocks
   main_crc_result = configuration_handler_check_crc();
-
-  if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
-	  	system_set_rtc_date(main_year, main_month, main_day_of_month);
-		system_set_rtc_time(main_hour, main_minute, main_second);
-  }
 
   // restore config to default if requested
   if (main_reset_config_to_default == 1) {
@@ -1413,9 +1416,10 @@ int main(int argc, char* argv[]){
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
 
+	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
-
 
 #ifdef SX1262_IMPLEMENTATION
 //   sx1262_status_get(&mode, &command_status);
@@ -1443,6 +1447,8 @@ int main(int argc, char* argv[]){
    led_control_led2_bottom(false);
 
 #endif
+
+	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
   // configuring system timers
   TimerConfig();
@@ -1554,6 +1560,8 @@ int main(int argc, char* argv[]){
   while (1)
     {
 	backup_reg_set_monitor(-1);
+
+	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
 	// incrementing current cpu ticks
 	main_current_cpu_idle_ticks++;
