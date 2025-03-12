@@ -10,6 +10,7 @@
 #include "./nvm/nvm_event.h"
 #include "main_master_time.h"
 #include "variant.h"
+#include "debug_hardfault.h"
 
 #include "crc_.h"
 
@@ -403,7 +404,8 @@ uint16_t event_exposed_to_string(const event_log_exposed_t * exposed, char * out
 		case EVENT_TIMESYNC:	severity = 'T'; break;
 	}
 
-	if (exposed->severity == EVENT_TIMESYNC) {
+	if (exposed->severity == EVENT_TIMESYNC)
+	{
 		out = snprintf(output, output_ln,
 						"[%c][CNT:%lu][MT:%lu][RTC_TIMESYNC][DATE:%d/%d/%d][TIME:%d:%d:%d]",
 						severity,
@@ -416,9 +418,94 @@ uint16_t event_exposed_to_string(const event_log_exposed_t * exposed, char * out
 						(uint16_t)exposed->lparam,
 						(uint16_t)exposed->lparam2);
 	}
-	else {
+	else if (exposed->severity == EVENT_ERROR &&
+					exposed->event_id == EVENTS_MAIN_POSTMORTEM_HARDFAULT
+			)
+	{
+		// special format for hardfault postmortem logs
+
+		char * first		= (char *)event_log_default;
+		char * second		= (char *)event_log_default;
+
+		// param value defines which stackframe registers are stored as lparams
+		switch (exposed->param)
+		{
+			case 1: first = (char *)event_log_str_hardfault_lr; second = (char *)event_log_str_hardfault_pc; break;
+			case 2: first = (char *)event_log_str_hardfault_r0; second = (char *)event_log_str_hardfault_r1; break;
+			case 3: first = (char *)event_log_str_hardfault_r2; second = (char *)event_log_str_hardfault_r3; break;
+			case 4: first = (char *)event_log_str_hardfault_r12; second = (char *)event_log_str_hardfault_cfsr; break;
+			case 5: first = (char *)event_log_str_hardfault_src; second = (char *)event_log_str_hardfault_xpsr; break;
+			default: first = (char *)event_log_default; second = (char *)event_log_default; break;
+		}
+
+		// value of 5 contain hard fault source, which might be decoded from numeric value to dedicated string
+		if (exposed->param == 5)
+		{
+			char * source = (char *)event_log_default;
+
+			switch (exposed->lparam)
+			{
+				case DEBUG_HARDFAULT_SOURCE_HFLT:		source = (char *)event_log_str_hardfault_hf; break;
+				case DEBUG_HARDFAULT_SOURCE_USAGEFLT:	source = (char *)event_log_str_hardfault_usage; break;
+				case DEBUG_HARDFAULT_SOURCE_BUSFLT:		source = (char *)event_log_str_hardfault_bus; break;
+				case DEBUG_HARDFAULT_SOURCE_MMUFLT:		source = (char *)event_log_str_hardfault_mmu; break;
+			}
+			// special case if the fault source can be printed
+			out = snprintf(output, output_ln,
+							"[ERR-HF][CNT:%lu][%s: %s][%s: 0x%lX]",
+							exposed->event_counter_id,
+							first,
+							source,
+							second,
+							exposed->lparam2);
+		}
+		else
+		{
+			// everything else which has only registers values
+			out = snprintf(output, output_ln,
+							"[ERR-HF][CNT:%lu][%s: 0x%lX][%s: 0x%lX]",
+							exposed->event_counter_id,
+							first,
+							exposed->lparam,
+							second,
+							exposed->lparam2);
+		}
+	}
+	else if (exposed->severity == EVENT_ERROR &&
+					exposed->event_id == EVENTS_MAIN_POSTMORTEM_SUPERVISOR
+			)
+	{
+		// special case for a log with a master time value on which
+		// supervisor failure has been detected
+		if (exposed->param == 0)
+		{
+			out = snprintf(output, output_ln,
+							"[ERR-SUP][CNT:%lu][0][MT-FLT: %lu][%d: %lu]",
+							exposed->event_counter_id,
+							exposed->lparam,
+							exposed->param + 1,
+							exposed->lparam2);
+		}
+		else
+		{
+			if (exposed->lparam != 0 && exposed->lparam2 != 0)
+			{
+				// everything else which has only registers values
+				out = snprintf(output, output_ln,
+								"[ERR-SUP][CNT:%lu][0][%d: %lu][%d: %lu]",
+								exposed->event_counter_id,
+								exposed->param,
+								exposed->lparam,
+								exposed->param + 1,
+								exposed->lparam2);
+			}
+		}
+	}
+	else
+	{
 		// if pointer to event string is set
-		if (variant_validate_is_within_flash((const void*)exposed->event_str_name) == 1) {
+		if (variant_validate_is_within_flash((const void*)exposed->event_str_name) == 1)
+		{
 			out = snprintf(output, output_ln,
 							"[%c][CNT:%lu][MT:%lu][%s][%s][P: %X %X %X %X %lX %lX]",
 							severity,
@@ -433,7 +520,8 @@ uint16_t event_exposed_to_string(const event_log_exposed_t * exposed, char * out
 							exposed->lparam,
 							exposed->lparam2);
 		}
-		else {
+		else
+		{
 			out = snprintf(output, output_ln,
 							"[%c][CNT:%lu][MT:%lu][%s][EV:%d][P: %X %X %X %X %lX %lX]",
 							severity,

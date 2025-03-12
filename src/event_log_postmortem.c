@@ -101,7 +101,7 @@ void event_log_postmortem_checknstore_supervisor(void)
 			event_log_sync(
 					EVENT_ERROR,
 					EVENT_SRC_MAIN,
-					EVENTS_MAIN_POSTMORTEM_HARDFAULT,
+					EVENTS_MAIN_POSTMORTEM_SUPERVISOR,
 					i, 0, 0, 0, ptr[i], ptr[i + 1]);
 
 			ptr[i] 		= 0;

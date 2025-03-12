@@ -49,6 +49,8 @@
         "istream": "c",
         "ostream": "c",
         "fanet_factory_frames.h": "c",
-        "fanet_internals.h": "c"
+        "fanet_internals.h": "c",
+        "supervisor.h": "c",
+        "supervisor_config.h": "c"
     }
 }
