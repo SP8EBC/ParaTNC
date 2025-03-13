@@ -33,6 +33,8 @@
 
 #ifdef SX1262_IMPLEMENTATION
 static uint8_t fanet_test_array[64];
+
+static const uint8_t * fanet_test_2 = {0x42u, 0x12u, 0x34u, 0x56u, 0x31u, 0x32u, 0x33u};
 #endif
 
 /// ==================================================================================================
@@ -53,6 +55,7 @@ static uint8_t fanet_test_array[64];
 int fanet_test(void)
 {
 		int i = 1;
+		uint16_t interrupt_mask = 0;
 #ifdef SX1262_IMPLEMENTATION
 	   sx1262_status_chip_mode_t mode;
 	   sx1262_status_last_command_t command_status;
@@ -71,8 +74,10 @@ int fanet_test(void)
 
 	   volatile sx1262_api_return_t sx_result = SX1262_API_UNINIT;
 
-	   fanet_factory_frames_weather(19.0298f, 49.8277f, &wx_input, &out);
-	   const int fanet_ln = fanet_serialize(&out, (uint8_t*)fanet_test_array, 64u);
+//	   fanet_factory_frames_weather(19.0298f, 49.8277f, &wx_input, &out);
+//	   const int fanet_ln = fanet_serialize(&out, (uint8_t*)fanet_test_array, 64u);
+
+
 
 	   //io___cntrl_vbat_c_disable();
 	   //delay_fixed(300);
@@ -125,7 +130,7 @@ int fanet_test(void)
 					   delay_fixed(10);
 					   sx_result = sx1262_status_get(&mode, &command_status);
 					   delay_fixed(10);
-					   sx1262_data_io_write_buffer(0, fanet_ln, (const uint8_t*)fanet_test_array);
+					   sx1262_data_io_write_buffer(0, 7, (const uint8_t*)fanet_test_2);
 					   delay_fixed(10);
 					   sx_result = sx1262_status_get(&mode, &command_status);
 					   delay_fixed(10);
@@ -133,7 +138,7 @@ int fanet_test(void)
 					   delay_fixed(10);
 					   sx_result = sx1262_status_get(&mode, &command_status);
 					   delay_fixed(10);
-					   sx1262_rf_lora_packet_params(fanet_ln, fanet_ln, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
+					   sx1262_rf_lora_packet_params(12, 7, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
 					   delay_fixed(10);
 					   sx_result = sx1262_status_get(&mode, &command_status);
 					   delay_fixed(10);
@@ -166,6 +171,8 @@ int fanet_test(void)
 								   {
 									   i = -1;
 								   }
+
+								   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);
 								   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
 								   //						   delay_fixed(15);
 								   //sx1262_data_io_write_register(start_address, data_ln, data)
@@ -205,6 +212,15 @@ int fanet_test(void)
 		i = -2;
 	   }
 #endif
+
+	   if ((interrupt_mask & 0x1) != 0)
+	   {
+		   i = 0;
+	   }
+	   else
+	   {
+		   i = 2;
+	   }
 	   return i;
 }
 
