@@ -16,6 +16,7 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
+#define SX1262_STATUS_OPCODE_CLEAR_IRQ_STATUS			(0x02)
 #define SX1262_STATUS_OPCODE_GET_IRQ_STATUS				(0x12)
 #define SX1262_STATUS_OPCODE_SET_DIO_IRQ_PARAMS			(0x08)
 #define SX1262_STATUS_OPCODE_SET_DIO2_AS_RF_SWITCH		(0x9D)
@@ -41,6 +42,36 @@
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
+
+sx1262_api_return_t sx1262_irq_dio_clear_all(void)
+{
+	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
+
+	const uint8_t is_busy = sx1262_is_busy();
+
+	if (is_busy == 0) {
+		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
+		memset(sx1262_receive_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
+		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_CLEAR_IRQ_STATUS;
+		sx1262_transmit_spi_buffer[1] = 0x01u;
+		sx1262_transmit_spi_buffer[2] = 0xFFu;
+
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 3);
+
+		SX1262_SPI_WAIT_UNTIL_BUSY();
+
+#ifdef SX1262_BLOCKING_IO
+		out = SX1262_API_OK;
+#else
+		out = SX1262_API_OK;
+#endif
+	}
+	else {
+		out = SX1262_API_MODEM_BUSY;
+	}
+
+	return out;
+}
 
 sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask)
 {

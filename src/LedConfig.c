@@ -18,8 +18,8 @@
 // PC8 - LED1 - upper
 // PC9 - LED2 - lower
 
-uint8_t led_blinking_led2;
-uint8_t led_blinking_led1;
+uint8_t led_blinking_led2 = 0u;
+uint8_t led_blinking_led1 = 0u;
 
 void led_init(void) {
 #ifdef PARATNC
@@ -100,10 +100,12 @@ void led_service_blink(void) {
 
 	if (led_blinking_led1 == BLINK_MSEC_PER_SVC_CALL) {
 		led_flip_led1_upper();
+		led_blinking_led1 = 0;
 	}
 
 	if (led_blinking_led2 == BLINK_MSEC_PER_SVC_CALL) {
 		led_flip_led2_bottom();
+		led_blinking_led2 = 0;
 	}
 
 

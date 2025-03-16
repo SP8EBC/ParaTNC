@@ -43,6 +43,8 @@ typedef enum sx1262_irq_dio_tcxo_voltage_t {
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
+sx1262_api_return_t sx1262_irq_dio_clear_all(void);
+
 sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask);
 
 /**

@@ -1411,6 +1411,7 @@ int main(int argc, char* argv[]){
    }
 
 #ifdef SX1262_IMPLEMENTATION
+   fanet_test_init();
    fanet_test();
 #endif
 
@@ -2124,6 +2125,10 @@ int main(int argc, char* argv[]){
 			 * TWO SECOND POOLING
 			 */
 			if (main_two_second_pool_timer < 10) {
+
+#ifdef SX1262_IMPLEMENTATION
+   fanet_test();
+#endif
 
 				if (main_config_data_mode->wx != 0) {
 					if (configuration_get_inhibit_wx_pwr_handle() == 0) {

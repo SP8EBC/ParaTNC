@@ -99,12 +99,15 @@ inline void led_blink_led2_botoom(void) {
  * @param _in
  */
 inline void led_control_led1_upper(bool _in) {
-	if (_in == true) {
-		GPIOC->BSRR |= GPIO_BSRR_BS8;
-	}
-	else {
-		GPIOC->BSRR |= GPIO_BSRR_BR8;
-	}
+
+	// do not interrupt blinking cycle
+	if (led_blinking_led1 == 0) {
+		if (_in == true) {
+			GPIOC->BSRR |= GPIO_BSRR_BS8;
+		}
+		else {
+			GPIOC->BSRR |= GPIO_BSRR_BR8;
+		}	}
 }
 
 /**
@@ -115,12 +118,18 @@ inline void led_control_led1_upper(bool _in) {
  * @param _in
  */
 inline void led_control_led2_bottom(bool _in) {
-	if (_in == true) {
-		GPIOC->BSRR |= GPIO_BSRR_BS9;
+
+	// do not interrupt blinking cycle
+	if (led_blinking_led2 == 0) {
+		if (_in == true) {
+			GPIOC->BSRR |= GPIO_BSRR_BS9;
+		}
+		else {
+			GPIOC->BSRR |= GPIO_BSRR_BR9;
+		}
 	}
-	else {
-		GPIOC->BSRR |= GPIO_BSRR_BR9;
-	}
+
+
 }
 
 inline void led_flip_led1_upper(void) {
@@ -133,7 +142,7 @@ inline void led_flip_led1_upper(void) {
 }
 
 inline void led_flip_led2_bottom(void) {
-	if ((GPIOA->ODR & GPIO_ODR_ODR_9)  == GPIO_ODR_ODR_9) {
+	if ((GPIOC->ODR & GPIO_ODR_ODR_9)  == GPIO_ODR_ODR_9) {
 		GPIOC->BSRR |= GPIO_BSRR_BR9;
 	}
 	else {

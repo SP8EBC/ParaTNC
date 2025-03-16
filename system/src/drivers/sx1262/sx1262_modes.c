@@ -777,15 +777,15 @@ sx1262_api_return_t sx1262_modes_set_pa_config(uint8_t tx_power_dbm) {
 
 	const uint8_t is_busy = sx1262_is_busy();
 
-	uint8_t pa_duty_cycle = 4u;
+	uint8_t pa_duty_cycle = 2u;
 
-	uint8_t hp_max = 7u;
+	uint8_t hp_max = 2u;
 
-	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
-
-	}
-	else 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
-	}
+//	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+//
+//	}
+//	else 	if ((tx_power_dbm == 22) || (tx_power_dbm == 21)) {
+//	}
 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN);
