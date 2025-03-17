@@ -8,6 +8,9 @@
 #include "rte_wx.h"
 #include "int_average.h"
 #include "drivers/max31865.h"
+
+#include "delay.h"
+
 #include <math.h>
 
 #define DATA_RACE_WORKAROUND
@@ -425,6 +428,21 @@ void max31865_pool(void) {
 			// is currently possible
 			break;
 	}
+}
+
+/**
+ * Gets measurement results synchronously, so this has blocking I/O
+ * @return quality factor after measurement
+ */
+max31865_qf_t max31865_pool_synchro(void) {
+	max31865_current_state = MAX_IDLE;
+
+	for (int i = 0; i < 4; i++) {
+	  max31865_pool();
+	  delay_fixed(200);
+	}
+
+	return max31865_current_state;
 }
 
 int32_t max31865_get_pt100_result(void) {

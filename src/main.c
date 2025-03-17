@@ -1359,10 +1359,7 @@ int main(int argc, char* argv[]){
   ax25_init(&main_ax25, &main_afsk, 0, message_callback, 0);
 
 	if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-	  for (int i = 0; i < 4; i++) {
-		  max31865_pool();
-		  delay_fixed(70);
-	  }
+		max31865_pool_synchro();
 
 	  // getting all meteo measuremenets to be sure that WX frames want be sent with zeros
 	  wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
@@ -1556,6 +1553,8 @@ int main(int argc, char* argv[]){
 	main_nvm_timestamp = main_get_nvm_timestamp();
 
 	it_handlers_inhibit_radiomodem_dcd_led = 0;
+
+	packet_tx_meteo_counter = main_config_data_basic->wx_transmit_period - 1;
 
   // Infinite loop
   while (1)

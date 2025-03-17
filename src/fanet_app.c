@@ -102,6 +102,7 @@ void fanet_test_init(void)
 int fanet_test(void)
 {
 		int i = 1;
+		int current_limit = 0;
 		uint16_t interrupt_mask = 0;
 #ifdef SX1262_IMPLEMENTATION
 	   sx1262_status_chip_mode_t mode;
@@ -164,7 +165,7 @@ int fanet_test(void)
 				   fanet_wait_not_busy(10);
 				   sx_result = sx1262_status_get(&mode, &command_status);
 				   fanet_wait_not_busy(10);
-				   sx_result = sx1262_rf_tx_params(4, SX1262_RF_TX_RAMPTIME_3400US);
+				   sx_result = sx1262_rf_tx_params(14, SX1262_RF_TX_RAMPTIME_200US);
 				   fanet_wait_not_busy(10);
 				   if (sx_result == SX1262_API_OK) {
 					   sx_result = sx1262_status_get(&mode, &command_status);
@@ -197,13 +198,15 @@ int fanet_test(void)
 						   fanet_wait_not_busy(300);
 						   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
 						   fanet_wait_not_busy(10);
-						   if ((uint8_t)(i & 0xFFu) == 0xF4u) {
+						   sx1262_data_io_read_register(0x8E7, 1, (uint8_t*)&current_limit);
+						   fanet_wait_not_busy(10);
+						   if (((uint8_t)(i & 0xFFu) == 0xF4u) && ((uint8_t)(current_limit & 0xFFu) == 0x38u)) {
 							   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
 							   if ((uint8_t)(i & 0xFFu) == 0x14u) {
 		//						   sx1262_modes_set_standby(1);
 		//						   sx1262_modes_set_fs();
 								   fanet_wait_not_busy(1200);
-								   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x12345);
+								   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);
 		//						   sx1262_modes_set_tx_infinite_preamble();
 								   //sx1262_modes_set_tx_cw();
 								  // const sx1262_api_return_t tx_res = SX1262_API_OK;
