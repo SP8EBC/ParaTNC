@@ -1,6 +1,7 @@
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
 #include "backup_registers.h"
+#include "supervisor.h"
 
 #include "rte_wx.h"
 #include "rte_pv.h"
@@ -588,7 +589,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 		}
 		else {
+			supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+
 			telemetry_send_chns_description(config_basic, config_mode);
+
+			supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
 			packet_tx_multi_per_call_handler();
 
