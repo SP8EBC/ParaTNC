@@ -270,10 +270,7 @@ int fanet_test(void)
 		   led_blink_led2_botoom();
 		   i = 0;
 	   }
-	   else
-	   {
-		   i = 2;
-	   }
+
 	   return i;
 }
 

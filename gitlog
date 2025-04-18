@@ -1,0 +1,770 @@
+* 72166a6 - (3 weeks ago) ED04 - Mateusz Lubecki (HEAD -> master, tag: ED04, origin/master)
+* 00deb17 - (3 weeks ago) internal watchdog enabled. supervisor call placed while sending telemetry description. - Mateusz Lubecki
+* 9163fa9 - (4 weeks ago) bufix with requesting pt1000 measurements at startup - Mateusz Lubecki
+* c5c905e - (4 weeks ago) fanet test code, better way to blink leds - Mateusz Lubecki
+* 15b17cc - (4 weeks ago) sx1262: looks like something which is transmitted wo problems - Mateusz Lubecki
+* e62191b - (4 weeks ago) decoding supervisor failt and hardfault events - Mateusz Lubecki
+* df02d57 - (4 weeks ago) supervisor integration and logging postmortem information - Mateusz Lubecki
+* 788f7ce - (5 weeks ago) supervisor draft - Mateusz Lubecki
+* 7234b7e - (5 weeks ago) fanet enabled by define - Mateusz Lubecki
+* 1e7cb0d - (6 weeks ago) testing fanet - Mateusz Lubecki
+* 2b4e3d1 - (7 weeks ago) sx1262: driver fixedgit add *! - Mateusz Lubecki
+* c2c931c - (8 weeks ago) sx1262 - Mateusz Lubecki
+* 447351b - (9 weeks ago) fanet: assembling weather frames - Mateusz Lubecki
+* 073868a - (10 weeks ago) fanet: moved from src to system, factory function porting - Mateusz Lubecki
+* 38386e9 - (2 months ago) fanet: basic types, serialization, deserialization - Mateusz Lubecki
+* d0c011a - (2 months ago) sx1262: fixed code to set interrupt mask, successfull transmit and then irq set - Mateusz Lubecki
+* 71dc376 - (2 months ago) sx1262: buffers and registers read-write operations, ready for transmit - Mateusz Lubecki
+* b3a7e65 - (3 months ago) sx1272 api for io pins control, full api to rf and status. first successfull TCXO startup and switch to stby xosc mode - Mateusz Lubecki
+* bdbce75 - (3 months ago) sx1262 rf api header - Mateusz Lubecki
+* 0329726 - (3 months ago) spi driver: changes in IRQ handling for exchange mode. NEEDS THOROUGH TESTING - Mateusz Lubecki
+* 3b74691 - (3 months ago) changed vbat r pooling strategy to protect against dying receiver - Mateusz Lubecki
+* 44303fd - (3 months ago) sx1262 status functions - Mateusz Lubecki
+* 40119d5 - (3 months ago) sx1262 daily - Mateusz Lubecki
+* ff18bda - (3 months ago) sx1262 - Mateusz Lubecki
+* 80d9e59 - (3 months ago) makefile - Mateusz Lubecki
+* 021b866 - (3 months ago) sx1262: first test integration - Mateusz Lubecki
+* 16ff2e3 - (3 months ago) soft_reset_message_.jpg - Mateusz Lubecki (tag: ED03)
+* 5ffb481 - (3 months ago) powersave mode callback fixed to validate aggressive powersave wx frames interval - Mateusz Lubecki
+* 29dc6a4 - (4 months ago) fixed a bug with selecting RTC clock source, what caused sleeping to be completely screwed - Mateusz Lubecki
+* 3a33392 - (4 months ago) aggressive powersave schedule. WARNINGgit add *! going to sleep not working. wakeups immediately for some reason - Mateusz Lubecki
+* 0097a85 - (4 months ago) autogenerating build date and default date and time for RTC - Mateusz Lubecki
+* fd54f28 - (4 months ago) Agresive powersave test (#16) - SP8EBC
+* d243e85 - (4 months ago) spi driver to exchange data at single transaction - Mateusz Lubecki
+* 7e23320 - (4 months ago) sx1262 modem: unimplemented definition and declaration for modes setters - Mateusz Lubecki
+* 713b5ce - (4 months ago) bugfix in umb watchdog - Mateusz Lubecki
+* 2b8d1e0 - (4 months ago) little bugfix in serial driver, umb watchdog - Mateusz Lubecki (tag: ED01)
+* e0a1dff - (4 months ago) create full listing enabled - Mateusz Lubecki
+* e35c5e3 - (4 months ago) missing makefiles for subdirs - Mateusz Lubecki
+* 131d1f1 - (4 months ago) internal watchsog reenabled, more diagnostics dids - Mateusz Lubecki (tag: ED00)
+* 8886be6 - (4 months ago) ED00 release candidate - Mateusz Lubecki
+* 237e41b - (5 months ago) gsm engineering data refactoring - Mateusz Lubecki
+* 17e3721 - (5 months ago) new events from SIM800 driver code, option to disable wx values validation - Mateusz Lubecki
+* 43a352f - (5 months ago) bugfix in generating nvm timestamp to take leap years into account, logging errors from UMB driver, disabling internal sensor completely - Mateusz Lubecki
+* fbb6b14 - (5 months ago) different event log strings for ParaMETEO and pc diagnostics software - Mateusz Lubecki
+* 95fc508 - (5 months ago) event log crc calculation moved to the last step before programming to include counter value - Mateusz Lubecki
+* 97a7b2d - (5 months ago) correct handling of serial kiss protocol natively within a driver code, including escaping - Mateusz Lubecki
+* f241530 - (5 months ago) bigger buffer for diagnostics response, did to read begin and end log storage area - Mateusz Lubecki
+* a0c663b - (5 months ago) different way of handling non consecutive event ids outside border between flash pages. packed attribute to event_log_t - Mateusz Lubecki
+* 168a896 - (5 months ago) rework nvm_event_log_find_first_oldest_newest to remove continue statement in for loop, implementation of nvm_fix_broken_event_ids - Mateusz Lubecki
+* af2e7d1 - (6 months ago) event log: calculating crc for each entry and counting errors - Mateusz Lubecki
+* b1b5343 - (6 months ago) event log: changed entry structure to fix critical problem with misalignment with flash page size - Mateusz Lubecki
+* d6c302d - (6 months ago) gitignore - Mateusz Lubecki
+* 1d53d54 - (6 months ago) bash scripts to downloading and uploading events area - Mateusz Lubecki
+* e21fc6f - (6 months ago) power cycling gsm modem if the handshake is not finished in long amount of time - Mateusz Lubecki
+* b476ecc - (6 months ago) some delay after power button is pressed for gsm modem - Mateusz Lubecki
+* 6ca9151 - (6 months ago) refactoring stop2 sleeping cycles to be handled in main loop in main function - Mateusz Lubecki
+* b58f13a - (6 months ago) refactoring daily - Mateusz Lubecki
+* e3014a4 - (6 months ago) integration of hardfault debug in exceptions handler - Mateusz Lubecki
+* e47d89b - (6 months ago) hardfault logger: extract to global variables and then store in noinit ram - Mateusz Lubecki
+* 922ceca - (6 months ago) hardfault logger: delete_postmortem - Mateusz Lubecki
+* 9fceb3b - (6 months ago) hardfault logger - Mateusz Lubecki
+* a1d3cf6 - (6 months ago) integration of hardffault logger - Mateusz Lubecki
+* 5a0d2d6 - (6 months ago) hardfault logger - Mateusz Lubecki
+* 1a97275 - (6 months ago) umb master: checking if currently there is no other service request pending - Mateusz Lubecki
+* b1dbbab - (6 months ago) parameteo hw-rev f schematics and bom - Mateusz Lubecki
+* 4047bba - (6 months ago) corrected cutoff average voltage margin - Mateusz Lubecki (tag: EC03-LS)
+* ece4ae7 - (7 months ago) battery voltage measurement switched to non continous - Mateusz Lubecki
+* 1036635 - (7 months ago) noreset debug launch configuration - Mateusz Lubecki (tag: EC02-LS)
+* 0da4032 - (7 months ago) HI_SPEED reduced to standard 24MHz, battery voltae measurement set to continous, do not turning TIM2 when it is not neccessary - Mateusz Lubecki
+| * dda8796 - (6 months ago) parameteo hw-rev f schematics and bom - Mateusz Lubecki (tag: ZT20, origin/ZT20, ZT20)
+| * 07ea324 - (6 months ago) positionless weather frame with history of 4 previous measurements - Mateusz Lubecki
+| * 8dc382f - (6 months ago) INTERNAL WATCHDOG REENABLED - Mateusz Lubecki (tag: ZT19, origin/ZT19, ZT19)
+| * 0256792 - (6 months ago) INTERNAL WATCHDOG DISABLED - Mateusz Lubecki
+| * 1b8b1f7 - (6 months ago) datarace fix: NULL pointer access when ADC timer was running before AX25 reinit - Mateusz Lubecki
+| * ecdee2a - (6 months ago) unwantend noreset config - Mateusz Lubecki
+| * 963dcb3 - (6 months ago) integration of hardfault debug in exceptions handler - Mateusz Lubecki
+| * ac85efc - (6 months ago) hardfault logger: extract to global variables and then store in noinit ram - Mateusz Lubecki
+| * 2bfca15 - (6 months ago) daily - Mateusz Lubecki
+| * dcb6dc7 - (6 months ago) hardfault logger: delete_postmortem - Mateusz Lubecki
+| * bdd000f - (6 months ago) hardfault logger - Mateusz Lubecki
+| * 9c8957f - (6 months ago) integration of hardffault logger - Mateusz Lubecki
+| * 26c26dd - (6 months ago) hardfault logger - Mateusz Lubecki
+| * 64d971c - (6 months ago) refactoring stop2 sleeping cycles to be handled in main loop in main function - Mateusz Lubecki
+| * ec3ce05 - (6 months ago) refactoring daily - Mateusz Lubecki
+| * f68aee7 - (7 months ago) noreset debug launch configuration - Mateusz Lubecki
+| *   0f6c6c4 - (7 months ago) Merge branch 'master' into ZT19 - Mateusz Lubecki
+| |\  
+| |/  
+|/|   
+* | 47acd08 - (7 months ago) less restrictive conditions to wakeup after cutoff due to low battery voltage - Mateusz Lubecki (tag: EC01)
+* | 0a22676 - (7 months ago) commenting out inhibit powersave - Mateusz Lubecki
+* | 869c43b - (7 months ago) checking if max31865 suggest that PT is no connected, different way of checking weather measurements, more error and warning logging in aprsis - Mateusz Lubecki
+| * 7fcd529 - (7 months ago) logging error events in max31865 driver - Mateusz Lubecki
+| * 6f7bc5d - (7 months ago) backporting tatry specific features from ZT18 - Mateusz Lubecki
+|/  
+* 9993649 - (7 months ago) bugfix in memory validation for SRAM2 - Mateusz Lubecki
+* f64f26b - (7 months ago) few fixes in diagnostics routing control - returning general_reject, fixing 5254 routine - rtc set - Mateusz Lubecki
+* ab65d48 - (7 months ago) kiss diagnostics routines and some refactoring - Mateusz Lubecki
+* d9ae80c - (7 months ago) kiss routine control daily - Mateusz Lubecki
+* adc1b19 - (7 months ago) sketch of diagnostic routine control - Mateusz Lubecki
+* 2be062e - (7 months ago) comment banners in kiss_xxxxx source files - Mateusz Lubecki
+* 8229c87 - (7 months ago) interrupting ntp and api communication if tcpip connection cant be established too many times. configuring PT1000_PT100 by station_config.h file - Mateusz Lubecki
+* 9da9d12 - (7 months ago) bugfix for DID stored in noinit RAM2 area - Mateusz Lubecki
+* fb3f4d0 - (8 months ago) do not auto restart after 24h if controller is in cutoff, option to set vbatt scaling from config file - Mateusz Lubecki (tag: EC00)
+* db1930a - (8 months ago) sending events from nvm to api - Mateusz Lubecki
+* 1164545 - (8 months ago) rtc date and time synchronization from ntp client - Mateusz Lubecki
+* f4cbcc8 - (8 months ago) ntp client, gsm communication state handler, fix in TCP connect callback - Mateusz Lubecki
+* d12abe4 - (8 months ago) retrieving IMSI number grom gsm modem and looking on apn configuration basing on that - Mateusz Lubecki
+* 2726807 - (8 months ago) read memory by address service, checking IMSI at sim800c - Mateusz Lubecki
+* c837c79 - (8 months ago) logging events - Mateusz Lubecki
+* ba38587 - (8 months ago) probe max31865 temperature on bootup phase and disable dallas one wire from configuration - Mateusz Lubecki
+* c4a31f2 - (8 months ago) sending newest events in aprs status messages - Mateusz Lubecki
+* 813b684 - (8 months ago) daily - Mateusz Lubecki
+* 6c9c4bb - (8 months ago) implementing sending event log report via aprsis - Mateusz Lubecki
+* 36bfee0 - (9 months ago) bufix with initializing of pointer to serial contexts - Mateusz Lubecki
+* c35584b - (9 months ago) daily - Mateusz Lubecki
+* 1792b37 - (9 months ago) events definition refactor - Mateusz Lubecki
+* 746bc1e - (9 months ago) spi chip select initialization fixed for hardware revision f - Mateusz Lubecki
+* a1b384c - (9 months ago) new event log format, timers prescaler - Mateusz Lubecki
+* bea154e - (9 months ago) NvmEvents2 (#15) - SP8EBC
+| * f8ad707 - (7 months ago) backporting spi slaves configuration and TIM2 start and stop changes from EC01 - Mateusz Lubecki (origin/EB10, EB10)
+| | *   92de14d - (9 months ago) Merge branch 'master' into nvm_events - SP8EBC (origin/nvm_events)
+| | |\  
+| |_|/  
+|/| |   
+* | | 273838f - (9 months ago) nvm event logger, documentation and comments to macros and the module configuration - Mateusz Lubecki
+* | | d444bad - (9 months ago) nvm event logger - Mateusz Lubecki
+* | | 1e23ed3 - (9 months ago) macro to create pointers for each logging instance - Mateusz Lubecki
+* | | d84a0d6 - (9 months ago) nvm_event_log_push_new_event reworked to use x-macro - Mateusz Lubecki
+* | | 0c0a587 - (9 months ago) daily - Mateusz Lubecki
+* | | e5f9a91 - (9 months ago) refactored some nvm event code to separate file - Mateusz Lubecki
+* | | bd82222 - (9 months ago) nvm - Mateusz Lubecki
+* | | b7fb7cf - (9 months ago) optional callback send just before going to deep sleep - Mateusz Lubecki
+| | * 0b72010 - (9 months ago) ready for second integration - Mateusz Lubecki (nvm_events)
+| | * dbd4e30 - (9 months ago) ready for integration - Mateusz Lubecki
+| | * 67f2713 - (9 months ago) nvm event: commit before refactoring this bullshit - Mateusz Lubecki
+| | * 3e4556e - (9 months ago) nvm event logger, documentation and comments to macros and the module configuration - Mateusz Lubecki
+| | * 6e1c60f - (9 months ago) nvm event logger - Mateusz Lubecki
+| | * c230626 - (9 months ago) macro to create pointers for each logging instance - Mateusz Lubecki
+| | * 181a8e8 - (9 months ago) nvm_event_log_push_new_event reworked to use x-macro - Mateusz Lubecki
+| | * 82b6823 - (9 months ago) daily - Mateusz Lubecki
+| | * 40471f2 - (9 months ago) refactored some nvm event code to separate file - Mateusz Lubecki
+| | * 3c05488 - (9 months ago) nvm - Mateusz Lubecki
+| |/  
+|/|   
+* | 42daa13 - (9 months ago) prefilling battery voltage measurements - Mateusz Lubecki
+* | a00c66d - (9 months ago) parameteo: cpu speed switchable by define - Mateusz Lubecki
+* | 5659758 - (9 months ago) performing vbat measurement in a state machine - Mateusz Lubecki
+* | fce6a39 - (9 months ago) cpu clock increased to 48MHz for STM32L476 target - Mateusz Lubecki
+| | * 3245769 - (9 months ago) test - Mateusz Lubecki (ECXX-test)
+| |/  
+|/|   
+* | 18b2fa9 - (10 months ago) daily event log nvm - Mateusz Lubecki
+* | 3522cc8 - (10 months ago) daily - Mateusz Lubecki
+* | 61608ae - (10 months ago) finding oldest and newest event stored in the nvm - Mateusz Lubecki
+* | bd209d6 - (11 months ago) nvm events, function to find oldest and newest event - Mateusz Lubecki
+* | a520b69 - (11 months ago) nvm events, function to find oldest and newest event - Mateusz Lubecki
+* | 9a407cd - (11 months ago) nvm event logger and security access - Mateusz Lubecki
+* | 4db4883 - (11 months ago) backport to ParaTNC - Mateusz Lubecki (tag: ECXX)
+* | 168749a - (11 months ago) kiss_communication_transport refactor - Mateusz Lubecki
+* | 6a1ec93 - (11 months ago) remapping application completely to make a room for bootloader. doubling vector table to 0x08000000 to be able to run app without flashed bootloader - Mateusz Lubecki
+* | 548c3fd - (11 months ago) remapping RTE to RAM2 - Mateusz Lubecki
+* | df6195c - (11 months ago) increased stack size and refactoring main_gsm_pool_handler - Mateusz Lubecki
+* | cf7e364 - (11 months ago) sending nrc when unknown service id has been requested across APRS message KISS encapsulation, sending REGISTER_RESET_CHECK_FAIL on login - Mateusz Lubecki
+* | 9235ac5 - (11 months ago) first integration of kiss diagnostics across aprs message - Mateusz Lubecki
+* | f93c4e5 - (11 months ago) KISS diagnostics: decoding hex-encoded kiss request from aprs request and passing this to diagnotics engine - Mateusz Lubecki
+* | 6a0766e - (11 months ago) decoding and encoding kiss diagnostic messages as aprs messages - Mateusz Lubecki
+* | 73ab9ca - (11 months ago) storing message counter as a string of character to support situation when it may contain a string of character, not hex of dec base number - Mateusz Lubecki
+* | 012e2b3 - (12 months ago) integrating aprs-is message decoder, sending ACK to messages, string to int converter for messages - Mateusz Lubecki
+* | 428f6a2 - (12 months ago) aprs message decoding - Mateusz Lubecki
+* | 1582970 - (12 months ago) break windspeed validation check if it set to zero - Mateusz Lubecki
+* | 9b52612 - (12 months ago) counting restarts caused by verification failure - Mateusz Lubecki
+|/  
+* d5614db - (12 months ago) watchdog reenabled - Mateusz Lubecki (tag: EB04)
+* ef26fd9 - (1 year, 5 months ago) bugfix in read DID response handler - Mateusz Lubecki
+* f62de20 - (1 year, 5 months ago) internal watchdog enabled once again. bugfix in sending telemetry channel descritpions - Mateusz Lubecki (tag: EB03)
+* 4ced3c5 - (1 year, 5 months ago) Update README.md - SP8EBC
+* 733dbfa - (1 year, 5 months ago) dallas temperature sensor: different handling of measurement results depends on quality factor, set qf to degraded if temperature is below or above set treshold. removed modbus rtu status message completely - Mateusz Lubecki
+* 654540f - (1 year, 5 months ago) missing makefiles for subdirs - Mateusz Lubecki
+* 228a64e - (1 year, 5 months ago) stack analysis stuff - Mateusz Lubecki
+* b642c3c - (1 year, 5 months ago) kiss communication. did: bugfix in lengh of response, get_version: bugfix in overwriting first byte of a response - Mateusz Lubecki
+* ee541a5 - (1 year, 5 months ago) kiss did: few bugfixes here and there. warninggit add * internal watchdig is disabledgit add *! - Mateusz Lubecki
+* eaee4cf - (1 year, 5 months ago) internal watchdog enabled once again, fixed quality factor for modbus-rtu himidity sensors, average voltage margin for cutoff condition - Mateusz Lubecki (tag: EB02)
+* d22917b - (1 year, 5 months ago) simplified state machine for aggressive powersaving in WX + GSM mode, inhibiting powersave state machine when GSM module may be busy on sending weather packet - Mateusz Lubecki
+* 502a1e0 - (1 year, 5 months ago) launch configuration - Mateusz Lubecki
+* 2cd9c2f - (1 year, 5 months ago) do not try to do anything with gprs module before usart will be reinitialized after micro had woken up - Mateusz Lubecki
+* 4429c67 - (1 year, 5 months ago) revert changes in serial drivers - Mateusz Lubecki
+* 28b65cc - (1 year, 5 months ago) aprsis telemetry: battery voltage fix, serial port driver: disable TX interrupts while there is an interrupt in TX_IDLE state, powersaving: few changes and deinitializing GSM uart before go to deep sleep - Mateusz Lubecki
+* 6648c8c - (1 year, 5 months ago) daily - Mateusz Lubecki
+* 86818e8 - (1 year, 5 months ago) aprsis: sending gsm status to aprs-is server, powersave: different handling of cutoff event using both average and current measurements, powersave: sampling battery voltage every 10 seconds instead of 1 minute - Mateusz Lubecki
+* 7ae2d75 - (1 year, 5 months ago) gitignore - Mateusz Lubecki
+* 421639f - (1 year, 5 months ago) telemetry: telemetry description for visous mode handled by separate enum values - Mateusz Lubecki
+* 95712de - (1 year, 6 months ago) sending telemetry and telemetry description - Mateusz Lubecki
+* 8090c1e - (1 year, 6 months ago) measurements - Mateusz Lubecki
+* d8fb993 - (1 year, 6 months ago) sending telemetry to aprs-is - Mateusz Lubecki
+* 6f0a9c3 - (1 year, 6 months ago) osciloscope measurements - Mateusz Lubecki
+* 09b6dda - (1 year, 6 months ago) stroring and loading packet counters from backup registers - Mateusz Lubecki
+* 973fbd4 - (1 year, 6 months ago) refactoring rtc backup registers set/get/reset to separate code module - Mateusz Lubecki
+* 11deee6 - (1 year, 6 months ago) aprsis: another watchdog to reset controller if connection cannot be established for very long time - Mateusz Lubecki (tag: EB01)
+* d0c9fd2 - (1 year, 6 months ago) different way of handling aprsis timeout and do not query for engineering while reconnecting - Mateusz Lubecki
+* 3c60210 - (1 year, 6 months ago) sending aprsis login string and status - Mateusz Lubecki (tag: EB00)
+* c219a6b - (1 year, 6 months ago) reduced frequency of modbus rtu status messages on error - Mateusz Lubecki
+* cf5f668 - (1 year, 6 months ago) powersave rework around handling an exit from STOP2 sleep - Mateusz Lubecki
+* b650142 - (1 year, 6 months ago) reworking L6/L7 powersave modes with STOP2 sleep completely to engage iwdg - Mateusz Lubecki
+* d89d477 - (1 year, 8 months ago) changes to make it working back on ParaTNC targer - Mateusz Lubecki
+* 1b115e0 - (1 year, 8 months ago) Update CURRENT-DRAW-MEASUREMENTS - SP8EBC
+* 4b06208 - (1 year, 9 months ago) aprs-is igate: bugfix not receiving data from server after non-heartbeat was received - Mateusz Lubecki (tag: EA24)
+* 86c06e4 - (1 year, 9 months ago) restarting ADC after wake up if conversion is not working - Mateusz Lubecki
+* c660040 - (1 year, 9 months ago) aprs-is igate: adding missing newline after data to be sent to server, inhibiting some status messags while in aggresive powersave, sligtly different reinitialization after waking up - Mateusz Lubecki
+* 7ece134 - (1 year, 9 months ago) - KISS DID: distinguish size_byte value for integer and float types - KISS DID: returning did value as first two bytes, before size_byte - KISS diagnostics: bugfix in NRC service identifier - APRS-IS comm: better way to close tcp connection in case of connecting failure - functions to send status via radio channel moved to separate files and refactored. - Mateusz Lubecki
+* b4cd120 - (1 year, 9 months ago) - KISS DID: distinguish size_byte value for integer and float types - KISS DID: returning did value as first two bytes, before size_byte - KISS diagnostics: bugfix in NRC service identifier - APRS-IS comm: better way to close tcp connection in case of connecting failure - functions to send status via radio channel moved to separate files. - Mateusz Lubecki
+* 50187cd - (1 year, 9 months ago) daily - Mateusz Lubecki
+* 56d0f44 - (1 year, 9 months ago) did with string content - Mateusz Lubecki
+* 280a12e - (1 year, 9 months ago) daily commit did - Mateusz Lubecki
+* 431d5a8 - (1 year, 9 months ago) comaptibility numbers structure defined - Mateusz Lubecki
+* 3a6fd2c - (1 year, 9 months ago) daily - Mateusz Lubecki
+* 06d3375 - (1 year, 9 months ago) daily - Mateusz Lubecki
+* 0d5acc1 - (1 year, 9 months ago) did daily - Mateusz Lubecki
+* ce21b58 - (1 year, 10 months ago) kiss communication dids - Mateusz Lubecki
+* 00f222a - (1 year, 10 months ago) initialize io for buttons only if there is any function configured to them - Mateusz Lubecki (tag: EA22)
+* 45d02a7 - (1 year, 10 months ago) inhibit GSM mdoule reset for few minutes if few errors in the row is detected, like SIM card is not working or it cannot register into the network - Mateusz Lubecki
+* 4102d74 - (1 year, 10 months ago) igate packet received from rf network. send status message after gsm module is registered to network and gprs is working - Mateusz Lubecki
+* 3f51027 - (1 year, 10 months ago) fixes in aprsis igate code after ut - Mateusz Lubecki
+* 007f086 - (1 year, 10 months ago) sketch of aprs-is igate - Mateusz Lubecki
+* 115db54 - (1 year, 10 months ago) buttons with programable function - Mateusz Lubecki
+* 2a75bb6 - (1 year, 10 months ago) WARNING THIS COMIT DOESNT COMPILE!! Please previous or next one. Requesting engineering from GSM module and button handling - Mateusz Lubecki
+* 9c32927 - (1 year, 10 months ago) more reliable way of disconnecting tcp connection and establishing APRS-IS connection - Mateusz Lubecki
+* 83526ea - (1 year, 10 months ago) - Move push button handling to seaparate *.c and *.h files - Store SIM card and gsm network registration status in dedicated enums - Power cycle and reset GPRS modem if there is SIM card failure or its not able to register to network - Put aprsis connect function in a one second pooler - Optionally power cycle and reset GPRS modem if there is a timeout while TCP connection to APRS-IS is established. - Mateusz Lubecki
+* 6b9f965 - (1 year, 10 months ago) bugfix: wrong sizeof argument leading to damaging modbus rtu config - Mateusz Lubecki (tag: EA21, _EA21)
+* da3dd53 - (1 year, 10 months ago) switchin vbatt_m on and off - Mateusz Lubecki
+*   922aa3a - (1 year, 11 months ago) Merge remote-tracking branch 'origin/master' - Mateusz Lubecki
+|\  
+| * 40247dc - (1 year, 11 months ago) opole configuration - Mateusz Lubecki
+* | 535cfee - (1 year, 11 months ago) opole configuration - Mateusz Lubecki
+|/  
+* b46ed34 - (2 years ago) readme - Mateusz Lubecki (tag: EA20)
+* ccfdab8 - (2 years ago) after updating Eclipse to 2023-03 - Mateusz Lubecki
+* 265969b - (2 years ago) eclipse configuration sligtly changed - Mateusz Lubecki
+* 7498ba2 - (2 years ago) make master time volatile - Mateusz Lubecki
+* 6a4d834 - (2 years ago) curent version of configuration for sr9wxz - Mateusz Lubecki
+* e698022 - (2 years ago) timeout while waiting for channel to free - Mateusz Lubecki
+* 3c44e7e - (2 years ago) conditional compilation of nvm logger using platform depends defines, loading battery scaling from configuration - Mateusz Lubecki
+* a943af0 - (2 years, 2 months ago) bugfix of ms5611 pressure measurements bouncing up and down - Mateusz Lubecki
+* c42bd1c - (2 years, 2 months ago) iwdg watchdog - Mateusz Lubecki (tag: EA19)
+* 0ed92d0 - (2 years, 2 months ago) cycle vbat r only when radio is not transmitting - Mateusz Lubecki
+* 3e4ed6d - (2 years, 2 months ago) power cycling vbat_r if engineering2 is enabled - Mateusz Lubecki
+* 67d08ff - (2 years, 2 months ago) vbat_r power cycle daily - Mateusz Lubecki
+* d92a164 - (2 years, 2 months ago) backporting spi driver changes from tatry variant - Mateusz Lubecki
+* d0b73e9 - (2 years, 2 months ago) backport max31865 driver from tatry variant - Mateusz Lubecki
+* a733712 - (2 years, 5 months ago) patch to make STM32F100 work again - Mateusz Lubecki (tag: EA18)
+| * f017cf8 - (2 years, 3 months ago) switching max31865 state after wakeup - Mateusz Lubecki (tag: ZT18, origin/tatry_variant, tatry_variant)
+| * 0b3552a - (2 years, 3 months ago) bigfix: missing vbat s enable in MAX_ERROR state - Mateusz Lubecki
+| * 2f2cb1b - (2 years, 3 months ago) bigfuxes: unwanted RTC initialization each start, bug in PT reference resistor index.... specific powersave changes, not enabling vbat_c from pwr_save, it will be handled by max31865 driver - Mateusz Lubecki
+| * 55e5d36 - (2 years, 3 months ago) changed powersave timings in WX only and PWSAVE_NONE - Mateusz Lubecki
+| * 504d777 - (2 years, 4 months ago) patch to give support for SPI ground separator - Mateusz Lubecki
+| * 8ae5538 - (2 years, 5 months ago) watchdog timeout extended, backup of current config for litworowy - Mateusz Lubecki (tag: ZT17)
+| * b3c4267 - (2 years, 5 months ago) iwdg enabled - Mateusz Lubecki
+| * 5db80d2 - (2 years, 5 months ago) sligtly different teleemtry - Mateusz Lubecki
+| *   652817f - (2 years, 5 months ago) Merge branch 'tatry_variant' of github.com:SP8EBC/ParaTNC into tatry_variant - Mateusz Lubecki
+| |\  
+| | * 516239b - (2 years, 5 months ago) even mroe delay - Mateusz Lubecki
+| | * 99d6dde - (2 years, 5 months ago) delay before doubled wx transmission - Mateusz Lubecki
+| | * bd53774 - (2 years, 5 months ago) configuration for litworowy with modbus rtu disabled - Mateusz Lubecki
+| | * 635249a - (2 years, 5 months ago) sending max_ok - Mateusz Lubecki
+| | * 9ee710b - (2 years, 5 months ago) config - Mateusz Lubecki
+| | * e752c2c - (2 years, 5 months ago) tatry speicifc - Mateusz Lubecki
+| * | c54f0da - (2 years, 5 months ago) even mroe delay - Mateusz Lubecki
+| * | 273a8ec - (2 years, 5 months ago) delay before doubled wx transmission - Mateusz Lubecki
+| * | 80ec770 - (2 years, 5 months ago) configuration for litworowy with modbus rtu disabled - Mateusz Lubecki
+| * | 35befec - (2 years, 5 months ago) sending max_ok - Mateusz Lubecki
+| * | a7c4cc9 - (2 years, 5 months ago) config - Mateusz Lubecki
+| * | 2f16340 - (2 years, 5 months ago) tatry speicifc - Mateusz Lubecki
+|/ /  
+* | f6e4314 - (2 years, 5 months ago) commented test code - Mateusz Lubecki (tag: EA17)
+* | acddab7 - (2 years, 5 months ago) nvm: measurement storage - Mateusz Lubecki
+|/  
+* 88fd298 - (2 years, 5 months ago) bugfix: transient glitch with turning vbat_c on during startup - Mateusz Lubecki
+* d1ce25f - (2 years, 5 months ago) version number increased - Mateusz Lubecki
+* 935c7b9 - (2 years, 5 months ago) last value from average and storing current fault status from max31865 - Mateusz Lubecki
+* 937e26b - (2 years, 5 months ago) sending rtc state and battery voltage in bootup beacon - Mateusz Lubecki
+* 68fe300 - (2 years, 5 months ago) poting missing stuff from max31865 - Mateusz Lubecki
+* 8c71e6b - (2 years, 5 months ago) race condition in RTC clock selection fixerd - Mateusz Lubecki
+* 2a80d13 - (2 years, 5 months ago) vbat measurement: disabling adc after taking measure - Mateusz Lubecki
+* 6416c9f - (2 years, 5 months ago) bugfix int int_average - Mateusz Lubecki
+* 4c5c124 - (2 years, 5 months ago) integer average - Mateusz Lubecki
+* eebaf4f - (2 years, 5 months ago) nvm draft - Mateusz Lubecki
+* c5f9270 - (2 years, 5 months ago) spi data race fix to be tested - Mateusz Lubecki
+* 5b11731 - (2 years, 6 months ago) temperature measurement handling refactored (probably) - Mateusz Lubecki
+* be29dcb - (2 years, 6 months ago) daily - Mateusz Lubecki
+* a1ede74 - (2 years, 6 months ago) temperature handling refactoring - Mateusz Lubecki
+* 79716a3 - (2 years, 6 months ago) new config for skrzycznr - Mateusz Lubecki
+* f1f2c3b - (2 years, 6 months ago) max31865: another way of converting to temperature - Mateusz Lubecki
+* fe6efb3 - (2 years, 6 months ago) conveting max ADC results into temperature - Mateusz Lubecki
+* fbaf9df - (2 years, 6 months ago) retrieving raw results from pt100 sensor - Mateusz Lubecki
+* faaffd7 - (2 years, 6 months ago) max31865 pooling and state machine. warning! it seems that JTAG hangs up after few seconds of debugging - Mateusz Lubecki
+* f094422 - (2 years, 6 months ago) max31865 pooling - not finished, some tweaks and comments for spi driver - Mateusz Lubecki
+* 37c76ae - (2 years, 6 months ago) spi seems to work - Mateusz Lubecki
+* fd9ed99 - (2 years, 6 months ago) spi expiremnts almost working - Mateusz Lubecki
+* 7f5368a - (2 years, 6 months ago) spi, something not work - Mateusz Lubecki
+* 9c5632f - (2 years, 7 months ago) spi daily - Mateusz Lubecki
+* a6d8a57 - (2 years, 7 months ago) daily - Mateusz Lubecki
+* 13cabee - (2 years, 7 months ago) spi daily - Mateusz Lubecki
+* dbc5ece - (2 years, 7 months ago) fatfs integration, first version of spi library - Mateusz Lubecki
+* c09d51d - (2 years, 7 months ago) api: mac calculation - Mateusz Lubecki (tag: EA16)
+* fe74e93 - (2 years, 7 months ago) config data: engineering to disable some stuff in the application - Mateusz Lubecki
+* 827c797 - (2 years, 7 months ago) daily - Mateusz Lubecki
+* 5dae491 - (2 years, 7 months ago) dust sensor: first working sketch - Mateusz Lubecki
+* bd8b738 - (2 years, 7 months ago) dust sensor sketch - Mateusz Lubecki
+* f9df2f7 - (2 years, 7 months ago) kiss communication: fixed flashing startup - Mateusz Lubecki
+* 2592930 - (2 years, 7 months ago) kiss communication: call to erase startup callback - Mateusz Lubecki
+* d7bd382 - (2 years, 7 months ago) kiss protocol: erasing and downloading startup config - Mateusz Lubecki
+* abb329d - (2 years, 7 months ago) kiss protocol, retuning version and protocol version - Mateusz Lubecki
+* b951503 - (2 years, 7 months ago) fixed restoring default configuation on parameteo - Mateusz Lubecki
+* 2c100b3 - (2 years, 7 months ago) crc32 calculation replaced with software library - Mateusz Lubecki
+* e00ceed - (2 years, 7 months ago) before replacing hardware and odd CRC32 with software one - Mateusz Lubecki
+* 17fdef6 - (2 years, 8 months ago) bufix in offsetting current config - Mateusz Lubecki
+* 27e89cf - (2 years, 8 months ago) sending data from optional KISS ack - Mateusz Lubecki
+* cecb88b - (2 years, 8 months ago) kiss get running config command length - Mateusz Lubecki
+* 9107108 - (2 years, 8 months ago) updated config for halny - Mateusz Lubecki
+* 641db9c - (2 years, 8 months ago) bufix stm32f100: do not read a content of DR register in IDLE state handler within irq handler, callback and pooling callback for KISS_GET_RUNNING_CONFIG - Mateusz Lubecki
+* 9b6f801 - (2 years, 8 months ago) fix with erasing flash memory in STM32F100 target - Mateusz Lubecki
+* 9048419 - (2 years, 8 months ago) daily with kiss commnication - Mateusz Lubecki
+* 5537f5d - (2 years, 8 months ago) sketch of kiss diagnostics communication - Mateusz Lubecki
+* ba12a65 - (2 years, 8 months ago) configuration NvMem area properly handled for STM32L4xx target - Mateusz Lubecki
+* d6733f2 - (2 years, 8 months ago) reworked configuration handler for STM32L476 target - Mateusz Lubecki
+* eff75da - (2 years, 8 months ago) not working linkerscript for STM32L476 target - to be fixed - Mateusz Lubecki
+* 3bc8608 - (2 years, 8 months ago) new configuration for magurka wilkowicka - Mateusz Lubecki (tag: EA14)
+* 1a59d09 - (2 years, 8 months ago) new example config - Mateusz Lubecki
+* 5e4f1e4 - (2 years, 8 months ago) missing makefile - Mateusz Lubecki
+* 07447c2 - (2 years, 8 months ago) new example config - Mateusz Lubecki
+* a8f783a - (2 years, 8 months ago) critical bugfix in stm32l4 serial driver - to narrow type srl_rx_lenght_param_addres, improved callback for tcpip connecting - Mateusz Lubecki
+* 7002cd6 - (2 years, 8 months ago) gsm and api configuration moved to station_config. protection not to enable API and APRS-IS at once - Mateusz Lubecki
+* 4161c36 - (2 years, 9 months ago) daily - Mateusz Lubecki
+* db219b7 - (2 years, 9 months ago) apn configuration for orange subscription plan - Mateusz Lubecki
+* 6484c8c - (2 years, 9 months ago) hitfixing in ABAKUS - Mateusz Lubecki (tag: EA10)
+* 16d70c7 - (2 years, 9 months ago) virgin mobile apn config - Mateusz Lubecki
+* 3605f4f - (2 years, 9 months ago) switching to i5 mode instead of sleepin in l6 and l7 of RTC isn't working - Mateusz Lubecki (tag: EA09)
+* 8d0dd57 - (2 years, 10 months ago) timeout during RTC initialization amd low vbatt cutoff patch - Mateusz Lubecki (tag: EA08)
+* 1663fa7 - (2 years, 10 months ago) timeout during lse oscillator initialization - Mateusz Lubecki
+* f27d139 - (2 years, 10 months ago) things which should be moved to an external configuration file - Mateusz Lubecki
+* 00e4adb - (2 years, 10 months ago) added M4a powersave mode which allows to keep gsm modem enabled in normal powersave modes, added missing api fields - Mateusz Lubecki (tag: EA07)
+* ee69308 - (2 years, 10 months ago) pm results moved to separate rte variables and added to api content - Mateusz Lubecki
+* c7cc245 - (2 years, 10 months ago) pwm input frequency clock increased - Mateusz Lubecki
+* a85d016 - (2 years, 10 months ago) storing temperature readings for all sensors enabled. bugix? or workaround? of pwm input code - Mateusz Lubecki
+* 3f296d9 - (2 years, 10 months ago) fixed TE control pin for rs495 transveriver - Mateusz Lubecki
+* 11959b3 - (2 years, 10 months ago) missing entry in api request - Mateusz Lubecki
+* 2ba15cc - (2 years, 10 months ago) daily - Mateusz Lubecki
+* 75a2711 - (2 years, 11 months ago) return type for sim800 gsm module driver. api client now accepts ports greater 9999 - Mateusz Lubecki
+| * 43786d5 - (2 years, 6 months ago) new config for skrzyczne - Mateusz Lubecki (origin/DF17, DF17)
+| * e71aec2 - (2 years, 10 months ago) new example config?? - Mateusz Lubecki
+| * 9814c9d - (2 years, 10 months ago) new configuration for sr9wxg, june 2022, enabled victron energy - Mateusz Lubecki
+| * 4eb39dd - (3 years, 5 months ago) gitignore - Mateusz Lubecki
+| * 3710314 - (3 years, 6 months ago) DF17 - special lagacy release for controllers equipped with an external watchdog IC and watchdog reset period shorter than 5 minutes - Mateusz Lubecki
+| | * bf02292 - (2 years, 10 months ago) sr9wxz new config to be merget later - Mateusz Lubecki (origin/sr9wxz_new_configuration_for_ZZ06, sr9wxz_new_configuration_for_ZZ06)
+| |/  
+|/|   
+* | 7860523 - (2 years, 11 months ago) ZZ06 unstablegit add *git add * - Mateusz Lubecki (tag: ZZ06)
+* | dbf464e - (2 years, 11 months ago) sim800, tcp, new way of disconnecting - Mateusz Lubecki
+* | c9cc5b6 - (2 years, 11 months ago) reseting pool timers in main.c - Mateusz Lubecki (tag: EA05)
+* | 1375352 - (2 years, 11 months ago) cproject - Mateusz Lubecki
+* | 47564c6 - (2 years, 11 months ago) daily, a lot of reworking. tcp disconnecto doesn't work - Mateusz Lubecki
+* | 433050d - (2 years, 11 months ago) indexer and debug configuration - Mateusz Lubecki
+* | 85296d5 - (2 years, 11 months ago) gsm tcpip close function bugfix, comments and hashdefines cleaned - Mateusz Lubecki
+* | 4f301c6 - (2 years, 11 months ago) api, aprsis: send data to both systems. fixed indexer configuration - Mateusz Lubecki
+* | d0a3f8b - (2 years, 11 months ago) weather sensor pooling fixed - Mateusz Lubecki
+* |   55f3b42 - (2 years, 11 months ago) Merge branch 'master' of github.com:SP8EBC/ParaTNC - Mateusz Lubecki
+|\ \  
+| * | d487847 - (2 years, 11 months ago) Update README - SP8EBC
+* | | 206538f - (2 years, 11 months ago) gsm module power button control - Mateusz Lubecki
+|/ /  
+* | 1bf375b - (2 years, 11 months ago) more fields in api requests. api configuration moved to structure - Mateusz Lubecki
+* | a4b1486 - (2 years, 11 months ago) http client rx callback fix for empty response body - Mateusz Lubecki
+* | a284074 - (2 years, 11 months ago) both api added - Mateusz Lubecki
+* |   6eded06 - (2 years, 11 months ago) Merge: Pwm inputs (#8) - Mateusz Lubecki
+|\ \  
+| * | 96a9d99 - (3 years ago) pwm input - Mateusz Lubecki
+| * | 9a3358f - (3 years ago) pwm input - Mateusz Lubecki
+* | | b5d0a25 - (2 years, 11 months ago) daily - Mateusz Lubecki
+* | | ef312e6 - (2 years, 11 months ago) api client - Mateusz Lubecki
+* | | dbd5090 - (3 years ago) configuration moved to separate directory - Mateusz Lubecki
+* | | 6a7e6b8 - (3 years ago) switchng pwr_save_pooling to use average battery voltage instead of momentary - Mateusz Lubecki
+* | | dcd064a - (3 years ago) configuration files reorganized - Mateusz Lubecki
+* | | 4896c62 - (3 years ago) Merge: Fixing wakeup deadlock during cutoff (#7) - SP8EBC
+|/ /  
+* | 0c481f7 - (3 years ago) http client post method - Mateusz Lubecki
+* | ae1fd39 - (3 years ago) post test - Mateusz Lubecki
+* | b4fa8d7 - (3 years ago) http client post ready for testing with api - Mateusz Lubecki
+* | 193ff66 - (3 years ago) new libraries for aes and json - Mateusz Lubecki
+* | fef5a97 - (3 years ago) missing headers for http request - Mateusz Lubecki
+* | da68fd3 - (3 years ago) bugfix in powersaving, wrong handling voltage between cutoff and low level, sending battery voltage with startup beacon - Mateusz Lubecki
+* | ed5897d - (3 years ago) bugfix in sending VBATT_LOW in telemetry - Mateusz Lubecki
+* | 16f1478 - (3 years ago) bugfix in serial port driver regarding switching between internal and external tx buffer - Mateusz Lubecki
+* | 129b286 - (3 years ago) bugfix in low voltage cutoff, switching powersave mode on low battery voltage, eight bit in telemetry to send low battery warning - Mateusz Lubecki
+* | 590d579 - (3 years ago) bugfix in windsensor handling related to misusing power supply state - Mateusz Lubecki
+* | 4e634a4 - (3 years ago) sending battery voltage in telemetry - Mateusz Lubecki
+* | fc9f1bd - (3 years ago) daily - Mateusz Lubecki
+* | 0dd67e4 - (3 years ago) fix in +5V_C voltage switching in ParaMETEO - Mateusz Lubecki
+* | 1cc9012 - (3 years, 1 month ago) cutoff on too low battery voltage - Mateusz Lubecki
+* | 67b8c3f - (3 years, 1 month ago) vbatt measurement - Mateusz Lubecki
+* | 327e6c3 - (3 years, 1 month ago) gpio configuration changed to comply with ParaMETEO hardware revision c - Mateusz Lubecki
+* | f899378 - (3 years, 1 month ago) http client daily - Mateusz Lubecki
+* | 00f9124 - (3 years, 1 month ago) http client initialization - Mateusz Lubecki
+* | 38c3d41 - (3 years, 1 month ago) http client rx done callback - counting content lenght - Mateusz Lubecki
+* | 169f255 - (3 years, 1 month ago) http client rx done callback - Mateusz Lubecki
+* | 241975c - (3 years, 1 month ago) sketch of http client - Mateusz Lubecki
+* | 21db804 - (3 years, 1 month ago) aprsis beacon and closing connection of failed login attempt - Mateusz Lubecki
+* | 1b25b29 - (3 years, 1 month ago) aprs is weather packets - Mateusz Lubecki
+* | 56b4a15 - (3 years, 2 months ago) sim800 aprsis logging working, fixed serial reset in wrong place - Mateusz Lubecki
+* | 1beb687 - (3 years, 2 months ago) aprs is logging successfull - Mateusz Lubecki
+* | 72624df - (3 years, 2 months ago) fixing corrupted STM32F100 build - Mateusz Lubecki (tag: EA04)
+* | acca31f - (3 years, 2 months ago) sim800 tcpip connection handling ready for aprs-is implementation - Mateusz Lubecki
+* | 5bb7fcb - (3 years, 2 months ago) sim800 tcp and gprs - Mateusz Lubecki
+* | 7facd24 - (3 years, 2 months ago) bugfix in serial port driver and sim800 engineering - Mateusz Lubecki
+* | ed076e7 - (3 years, 2 months ago) sim800 different way of terminating communication with sim - Mateusz Lubecki
+* | cbccd95 - (3 years, 2 months ago) some changes to make unit tests working again - Mateusz Lubecki
+* | 3a0e9d6 - (3 years, 2 months ago) daily - Mateusz Lubecki
+* | dee9e09 - (3 years, 2 months ago) checking initialization status - Mateusz Lubecki
+* | 18cd4a2 - (3 years, 2 months ago) sim800 initializing gprs and checking status - Mateusz Lubecki
+* | 01f9f33 - (3 years, 2 months ago) sim800 configuring apn username and password - Mateusz Lubecki
+* | c23e013 - (3 years, 2 months ago) sim800 periodically pool engineering data - Mateusz Lubecki
+* | 739ea29 - (3 years, 2 months ago) sim800 engineering data - Mateusz Lubecki
+* | d6909c2 - (3 years, 3 months ago) checking registration status - Mateusz Lubecki
+* | 628b1e1 - (3 years, 3 months ago) requesting registration status from sim800 - Mateusz Lubecki
+* | 673c981 - (3 years, 3 months ago) uart rx terminating callback for sim800c - Mateusz Lubecki
+* | 1fbcd13 - (3 years, 3 months ago) first sketch of communication with serial port - Mateusz Lubecki
+* | c266446 - (3 years, 3 months ago) removed sections for configuration data from ParaMETEO linker script, temporary workaround for ParaMETEO hw rev b power management - Mateusz Lubecki
+* | 83b9753 - (3 years, 3 months ago) missing >FLASH directive in linkerscript for ParaMETEO - Mateusz Lubecki
+* | 40c2981 - (3 years, 3 months ago) original linkerscript - Mateusz Lubecki
+* | 88a17b1 - (3 years, 3 months ago) pilsko config - Mateusz Lubecki
+* | 2968089 - (3 years, 3 months ago) less restricted _POWERSAVE_NORMAL in wx only - Mateusz Lubecki
+* | a74c08d - (3 years, 3 months ago) flashing config from kiss transmission - Mateusz Lubecki
+* | d4f723b - (3 years, 3 months ago) changed linkerscript for parameteo - Mateusz Lubecki
+* | c619539 - (3 years, 3 months ago) bugfix in digi initialization - Mateusz Lubecki (tag: EA03)
+* | 48833c7 - (3 years, 3 months ago) bugfix in handling ParaMETEO power, missing io_12v_sw___cntrl_vbat_g_disable call - Mateusz Lubecki
+* | 67d9cb8 - (3 years, 4 months ago) viscous pooling - Mateusz Lubecki (tag: EA02)
+* | 7af4623 - (3 years, 4 months ago) some unfinished bugfixes in digipeater code - Mateusz Lubecki
+* | 5d2311f - (3 years, 4 months ago) sending amount of viscous digi dropped packet, configuring digi delay properly - Mateusz Lubecki
+* | 4752ced - (3 years, 6 months ago) changes required by unit tests - Mateusz Lubecki
+* | a2117f5 - (3 years, 6 months ago) parameteo specific: added NVIC_SystemReset in all fault handlers - Mateusz Lubecki (tag: EA01)
+* | 5639618 - (3 years, 6 months ago) bugfixes: wind direction > 180 degrees and spikes on windspeed - Mateusz Lubecki
+* | 499cd18 - (3 years, 7 months ago) reinitializing analogue anemometer each wakeup event - Mateusz Lubecki (tag: EA00)
+* | f84f6b1 - (3 years, 7 months ago) example configiuration - Mateusz Lubecki
+* | 390d0e2 - (3 years, 7 months ago) double wx packet transmit on configuration request - Mateusz Lubecki
+* | f1a661f - (3 years, 7 months ago) error bigger/bigger-equals within powersaving handler - Mateusz Lubecki
+* | a34cbc9 - (3 years, 7 months ago) few improvements in powersaving - Mateusz Lubecki
+* | 790b611 - (3 years, 7 months ago) led diodes switching corrected - Mateusz Lubecki
+* | b85d885 - (3 years, 7 months ago) fixed wind speed handling & regarding dma configuration - Mateusz Lubecki
+* | e3d02de - (3 years, 7 months ago) daily bugfixes - Mateusz Lubecki
+* | 275f1a0 - (3 years, 7 months ago) bugfixes in DAC configuration - Mateusz Lubecki
+* | 48c15a1 - (3 years, 7 months ago) daily with power saving works - Mateusz Lubecki
+* | ae49c44 - (3 years, 7 months ago) some changes around and related to power saving - Mateusz Lubecki
+* | 0c36746 - (3 years, 7 months ago) a lot of work on powersaving - Mateusz Lubecki
+* | 4b40720 - (3 years, 7 months ago) powersaving features - Mateusz Lubecki
+* |   1074226 - (3 years, 7 months ago) Merge pull request #5 from SP8EBC/station_config_backup - SP8EBC
+|\ \  
+| * | 913ee90 - (3 years, 7 months ago) example config for parameteo - Mateusz Lubecki
+| |/  
+* | 325c87d - (3 years, 8 months ago) cproject - Mateusz Lubecki
+* | f222cdd - (3 years, 8 months ago) daily - Mateusz Lubecki
+* | ec952b1 - (3 years, 8 months ago) power modes explanation in pwr_save.h - Mateusz Lubecki
+* | d12b2c4 - (3 years, 8 months ago) first working prototype of freezing micro in STOP2 - Mateusz Lubecki
+* | 13de42e - (3 years, 8 months ago) power save function but not yet working - Mateusz Lubecki
+* | 0d8a02e - (3 years, 8 months ago) wakeup timer configuration moved to separate function - Mateusz Lubecki
+* | 7f66de2 - (3 years, 8 months ago) rtc and wakeup configuration - Mateusz Lubecki
+* | ff89d13 - (3 years, 8 months ago) return values from drivers - Mateusz Lubecki
+* | 8797f2b - (3 years, 8 months ago) gitignore and backup copy of config file - Mateusz Lubecki
+* | 31ac5c9 - (3 years, 8 months ago) PLL configuration corrected for L476_Parameteo target - Mateusz Lubecki
+* | e0cf172 - (3 years, 8 months ago) ADC initialization corrected - Mateusz Lubecki
+* | ddee673 - (3 years, 8 months ago) counting too big u/f frequency output - Mateusz Lubecki
+* |   908cd60 - (3 years, 8 months ago) Merge branch 'master' of https://github.com/SP8EBC/ParaTNC - Mateusz Lubecki
+|\ \  
+| * \   6209058 - (3 years, 8 months ago) Merge pull request #4 from SP8EBC/migration_to_stm32l476_micro - SP8EBC
+| |\ \  
+| | * | 0b33d7e - (3 years, 9 months ago) daily - Mateusz Lubecki
+| | * | 201b77c - (3 years, 9 months ago) some bugfixes in usart driver - Mateusz Lubecki
+| | * | 2b98cf5 - (3 years, 9 months ago) i2c timeout enabled - Mateusz Lubecki
+| | * | fc826ba - (3 years, 9 months ago) i2c works but w/o timeout handling - Mateusz Lubecki
+| | * | bf291b9 - (3 years, 9 months ago) i2c seems to initialize properly - Mateusz Lubecki
+| | * | 46e3e17 - (3 years, 9 months ago) adc calibration fixed - Mateusz Lubecki
+| | * | 8147078 - (3 years, 9 months ago) clock initializing - Mateusz Lubecki
+| | * | cf18fe1 - (3 years, 9 months ago) unwanted build output removed - Mateusz Lubecki
+| | * | 2de7bfc - (3 years, 9 months ago) daily - Mateusz Lubecki
+| | * | a30dd72 - (3 years, 9 months ago) first compilable version - Mateusz Lubecki
+| | * | 1792d83 - (3 years, 10 months ago) porting_i2c_driver - Mateusz Lubecki
+| | * | 44ed8c6 - (3 years, 10 months ago) stm32l471 startup assembling fixed - Mateusz Lubecki
+| | * | 6facfbb - (3 years, 10 months ago) added makefiles and build structure for two separate builds - Mateusz Lubecki
+| | * | 6d37ee7 - (3 years, 10 months ago) compiling but not linking for stm32l471 - Mateusz Lubecki
+| | * | e8052b1 - (3 years, 10 months ago) porting main.c and serial driver - Mateusz Lubecki
+| | * | acba137 - (3 years, 10 months ago) flash programming driver for stm32l4x - Mateusz Lubecki
+| | * | 40b03fa - (3 years, 10 months ago) few more files refactored to stm32l4x - Mateusz Lubecki
+| | * | 6cc5de0 - (3 years, 10 months ago) serial driver reworked to work on stm32l4xx family - Mateusz Lubecki
+| | * | 095a594 - (3 years, 10 months ago) analog anemometer driver and dallas one wire drivers ported to stm32l4 platform - Mateusz Lubecki
+| | * | 3a99c8d - (3 years, 11 months ago) added system files for stm32l4xx - Mateusz Lubecki
+| |/ /  
+* / / 306794a - (3 years, 9 months ago) gitignore - Mateusz Lubecki
+|/ /  
+* | 5c7d595 - (3 years, 11 months ago) few small changes according to compiler warning - Mateusz Lubecki
+* |   15a1106 - (3 years, 11 months ago) Merge pull request #2 from SP8EBC/EA_series_development - SP8EBC
+|\ \  
+| |/  
+|/|   
+| *   3a556c2 - (3 years, 11 months ago) Merge branch 'master' into EA_series_development - SP8EBC
+| |\  
+| |/  
+|/|   
+* | 7e67141 - (3 years, 11 months ago) production configuration of sr9wxl - Mateusz Lubecki (tag: DF16)
+* | d63f6d4 - (3 years, 11 months ago) enabling or disabling RTU debug status info, SR9WXL configuration file - Mateusz Lubecki
+* |   a5ccf92 - (3 years, 11 months ago) Merge branch 'master' of https://github.com/SP8EBC/ParaTNC - Mateusz Lubecki
+|\ \  
+| * | a22501c - (4 years ago) Update README - SP8EBC
+* | | 483ea68 - (3 years, 11 months ago) reseting +12V_SW in meteo watchdog and rebooting whole controller in case of hard temperature measurement fault - Mateusz Lubecki
+|/ /  
+* | 879a895 - (4 years ago) open collector initialization moved before turning on relay - Mateusz Lubecki (tag: DF15-04042021)
+* | a7a530c - (4 years ago) software version - Mateusz Lubecki (tag: DF15)
+* | 11dbf4b - (4 years ago) missing includes in telemetry - Mateusz Lubecki
+* | d06e401 - (4 years ago) sr9wxg config - Mateusz Lubecki
+* | 93603e3 - (4 years, 1 month ago) DF14 - Mateusz Lubecki (tag: DF14)
+* | 9a86d99 - (4 years, 1 month ago) average queue lenght inside VE.direct driver shortened - Mateusz Lubecki
+* | 342dff3 - (4 years, 1 month ago) modified configuration for SR9WXG with VE.direct enabled - Mateusz Lubecki
+| * 1883a60 - (3 years, 11 months ago) rest of confitional compilation removed - Mateusz Lubecki
+| * 6962ad1 - (3 years, 11 months ago) bugfixes in UMB protocol driver - using serial port context - Mateusz Lubecki
+| * babec22 - (3 years, 11 months ago) fix weird openocd issues with erasing flash memory - Mateusz Lubecki
+| * e69be09 - (3 years, 11 months ago) more conditional compilation removed from main.c - Mateusz Lubecki
+| * bfe4bfb - (3 years, 11 months ago) conditional compilation removed from wx_pool_anemometer - Mateusz Lubecki
+| * 9a7131f - (3 years, 11 months ago) float to string converting function - Mateusz Lubecki
+| * efd255b - (3 years, 11 months ago) configuration restoring - Mateusz Lubecki
+| * 00eba91 - (3 years, 11 months ago) working linker script placing the configuration structures in right places in sections - Mateusz Lubecki
+| * 0db2088 - (4 years ago) const config data moved to separate sections in flash - Mateusz Lubecki
+| * 7d5a106 - (4 years ago) daily1 - Mateusz Lubecki
+| * 0116e61 - (4 years ago) fixed bug in bme280_get_humidity - Mateusz Lubecki
+| * 6fb028d - (4 years ago) changed liker script to allocate less space for the stack to fix crashes with sprintf, refactoring of wx_handlers almost done - Mateusz Lubecki
+| * fba10b0 - (4 years ago) daily - Mateusz Lubecki
+| * 2a76426 - (4 years ago) daily - Mateusz Lubecki
+| * ab7eccc - (4 years ago) daily - Mateusz Lubecki
+| * 0f73259 - (4 years ago) tx20 cleaned out - Mateusz Lubecki
+| * 612807c - (4 years ago) .... - Mateusz Lubecki
+| * e7f9d70 - (4 years, 1 month ago) ... - Mateusz Lubecki
+| * 21a8ee8 - (4 years, 1 month ago) added rtu configuration into config_data structs - Mateusz Lubecki
+| * 41e4203 - (4 years, 1 month ago) .... - Mateusz Lubecki
+| * 4de3403 - (4 years, 1 month ago) ... - Mateusz Lubecki
+|/  
+* 475af5e - (4 years, 1 month ago) fixed string fields lenght in config data - Mateusz Lubecki (tag: DF14-rc)
+* 81b084f - (4 years, 1 month ago) defines removed from telemetry.c - Mateusz Lubecki
+* 8c14c40 - (4 years, 1 month ago) worarounds of problem with communication with PV controller - Mateusz Lubecki
+* f84a46d - (4 years, 1 month ago) daily - Mateusz Lubecki
+* 135e11b - (4 years, 1 month ago) quality factor for tx20 - Mateusz Lubecki (tag: DF13)
+* fad8ef5 - (4 years, 1 month ago) opole config - Mateusz Lubecki
+* 2637371 - (4 years, 1 month ago) fixed anemometer watchdog, adjusted timers not to spam RF network as much - Mateusz Lubecki
+* 298998b - (4 years, 1 month ago) quality factors in telemetry for BME sensor - Mateusz Lubecki
+* da29b5c - (4 years, 1 month ago) wrong operator priorites - Mateusz Lubecki
+* de7fcbb - (4 years, 1 month ago) some refactoring and changes in cooperating between modbus-rtu and internal sensors - Mateusz Lubecki
+* 731db66 - (4 years, 1 month ago) bugfixing specific for certain station configuration - Mateusz Lubecki
+* 6f088d7 - (4 years, 2 months ago) fixed compilation for certain configurations - Mateusz Lubecki (tag: DF12)
+* a24cc81 - (4 years, 3 months ago) bugfix in telemetry description messages if callsign has less than 6 characters - Mateusz Lubecki (tag: DF11)
+* 32bd6f4 - (4 years, 3 months ago) some configuration moved to the separate structure instead of direct defines. bugfix for callsigns shorter than 6 characters - Mateusz Lubecki
+* 240a969 - (4 years, 3 months ago) Sparkfun SEN15901 aka PM1S analog/mechanic anemometer - Mateusz Lubecki
+* 7279cee - (4 years, 3 months ago) waiting for a while if more than one frame is transmitted from single packet_tx_handler call - Mateusz Lubecki (tag: DF10)
+* 53ebcfe - (4 years, 3 months ago) compilation without Modbus RTU enabled in station_config.h - Mateusz Lubecki
+* cf3a855 - (4 years, 4 months ago) hardware documentation - Mateusz Lubecki (tag: DF09)
+* 7f9aa0f - (4 years, 5 months ago) bugfix in rtu temperature getter - Mateusz Lubecki
+* 4956722 - (4 years, 5 months ago) fixes in wx packets content and min/max valid pressure - Mateusz Lubecki
+* 60c9389 - (4 years, 5 months ago) updated hardware documentation - Mateusz Lubecki
+* d636a92 - (4 years, 5 months ago) modbus-rtu getters updated to check if physical values have any sense - Mateusz Lubecki
+* 6327d7d - (4 years, 5 months ago) :... - Mateusz Lubecki
+* 6df0aff - (4 years, 5 months ago) modbus-rtu: sensor power control and quality factors adjusted to modbus-rtu com errors, changed value returned from getters when parameters is not conf - Mateusz Lubecki
+* a54e904 - (4 years, 5 months ago) Squashed commit of the following: - Mateusz Lubecki
+* bc7f3ef - (4 years, 5 months ago) modbus_rtu - Mateusz Lubecki
+* 4021e28 - (4 years, 5 months ago) Modbus-RTU blocking io mode - Mateusz Lubecki
+* 3c7144a - (4 years, 5 months ago) serial driver hotfix - Mateusz Lubecki
+* 2038b13 - (4 years, 5 months ago) rtu autoreset fixed - Mateusz Lubecki
+* 69d257f - (4 years, 5 months ago) global Modbus RTU related stuff moved to separate RTE file, couting successfull RTU queries - Mateusz Lubecki
+* e31373d - (4 years, 5 months ago) changes to allow compilation and working in plain kiss mode - Mateusz Lubecki
+* fa6fee0 - (4 years, 5 months ago) fix in modbus-rtu I/O routines and cpu load calculator - Mateusz Lubecki
+* 85c17dc - (4 years, 5 months ago) configuration for polaris, sopotnia wielka and compilation date pumped up - Mateusz Lubecki (tag: DF08)
+* 00a3291 - (4 years, 6 months ago) modbus rtu: rx error counters for each functions in queue - Mateusz Lubecki
+* 4c42099 - (4 years, 6 months ago) Changes in modbus-rtu quality factors and getters - Mateusz Lubecki
+* 61d04d0 - (4 years, 6 months ago) more modbus-rtu channels and errors status messsage - Mateusz Lubecki
+* 1ead1e1 - (4 years, 6 months ago) untested - changes within modbus-rtu and serial code to fix problem with idle frames - Mateusz Lubecki
+* aa4d990 - (4 years, 6 months ago) experiments with sserial driver - Mateusz Lubecki
+* dad84dd - (4 years, 6 months ago) testy w polarisie - Mateusz Lubecki
+* c791e03 - (4 years, 6 months ago) modbus-rtu scaling corrections, digi initialization and mute own packets - Mateusz Lubecki
+* 3235582 - (4 years, 6 months ago) updated readme and openocd configuration - Mateusz Lubecki
+* 4650a52 - (4 years, 6 months ago) compilation fixes 5 - makefiles and new path to the toolchain - Mateusz Lubecki
+* 91bce63 - (4 years, 6 months ago) compilation fixes 4 - debug - Mateusz Lubecki
+* ac8fee4 - (4 years, 6 months ago) compilation fixes 3 - new example configuration file - Mateusz Lubecki
+* 797ccbb - (4 years, 6 months ago) compilation fixes 2 - missing linkerscript - Mateusz Lubecki
+* f5e3703 - (4 years, 6 months ago) compilation fixes 1 - Mateusz Lubecki
+* ccb9ec8 - (4 years, 6 months ago) modbus rtu getters improved, rtu configuration moved to separate header, wx_handlers modified - Mateusz Lubecki
+* b4ca1ee - (4 years, 6 months ago) getters for data from modbus rtu - Mateusz Lubecki
+* 0ac3a27 - (4 years, 6 months ago) example config file - Mateusz Lubecki
+* 5ab37f1 - (4 years, 6 months ago) modbus rtu exception handling - Mateusz Lubecki
+* bad16f5 - (4 years, 7 months ago) timeouts added to modbus rtu serial i/o handling - Mateusz Lubecki
+* 3a55eba - (4 years, 7 months ago) few more bugfixes in serial driver and serial crc callback for modbus rtu - Mateusz Lubecki
+* 4756d9c - (4 years, 7 months ago) few bugfixes in mobus rtu and serial driver - Mateusz Lubecki
+* 6b0fbcd - (4 years, 7 months ago) testy w polarisie - Mateusz Lubecki
+* 3c67678 - (4 years, 7 months ago) ... - Mateusz Lubecki
+* 3c96eb2 - (4 years, 7 months ago) modbus rtu pooler - Mateusz Lubecki (tag: DF07)
+* cadde74 - (4 years, 7 months ago) davis serial protocol - Mateusz Lubecki
+* c908d39 - (4 years, 7 months ago) a lot of changes in davis vantage serialprotocol client - Mateusz Lubecki
+* 10a7faf - (4 years, 7 months ago) davis vantage LOOP packet parser improved - Mateusz Lubecki
+* 9900950 - (4 years, 7 months ago) sw date - Mateusz Lubecki (tag: DF06)
+* d76a0e9 - (4 years, 7 months ago) bugfix in serial driver code which were handling len_modifier parameter in wrong way - Mateusz Lubecki
+* 5bafddd - (4 years, 7 months ago) a little bit more photos of partially assembled pcb - Mateusz Lubecki
+* d02c654 - (4 years, 7 months ago) release files for hardware revision c-plus - Mateusz Lubecki
+* b44dbca - (4 years, 7 months ago) modbus rtu - Mateusz Lubecki
+* 2f3e304 - (4 years, 7 months ago) backlight control for davis base unit and first sketch of modbus rtu - Mateusz Lubecki
+* 26fa8c0 - (4 years, 8 months ago) added serial receive function with immediate timeout calculation. first test and minor bugfixes in davis code - Mateusz Lubecki
+* dd4e057 - (4 years, 8 months ago) parser for loop packets from davis vantage - Mateusz Lubecki
+* 3ea8aec - (4 years, 8 months ago) crc calculation routine for davis vantage - Mateusz Lubecki
+* 6094a70 - (4 years, 8 months ago) daily commit - Mateusz Lubecki
+* 962ee06 - (4 years, 8 months ago) dailu commit - Mateusz Lubecki
+* 96232c3 - (4 years, 8 months ago) first sketch of Davis Vantage Pro2 driver - Mateusz Lubecki
+* db2d637 - (4 years, 8 months ago) Viscous digi in prototype state - Mateusz Lubecki
+* a1b248a - (4 years, 8 months ago) pdf - Mateusz Lubecki (tag: DF05)
+* 1e3c97b - (4 years, 8 months ago) documentation update from yesterday - Mateusz Lubecki
+* b644c8d - (4 years, 9 months ago) support for external watchdog IC, some code refactoring around the quality factor for analog anemometer - Mateusz Lubecki
+* dc347c2 - (4 years, 9 months ago) new configuration for SR9NSK - Mateusz Lubecki
+* 8d36922 - (4 years, 9 months ago) disabled WX transmission over radio after keypress - Mateusz Lubecki
+*   ebb1356 - (4 years, 9 months ago) Merge branch 'master' of https://github.com/SP8EBC/ParaTNC - Mateusz Lubecki
+|\  
+| * f998604 - (4 years, 9 months ago) Delete i2c_loop_error.jpg - SP8EBC
+| * 442d723 - (4 years, 9 months ago) Delete WIRING - SP8EBC
+| * 9dd467a - (4 years, 9 months ago) Delete HARDWARE-README - SP8EBC
+* | 13ea140 - (4 years, 9 months ago) Quality Factors unified across different kinds of sensors - Mateusz Lubecki
+|/  
+* 1581920 - (4 years, 9 months ago) documentation - Mateusz Lubecki
+* d616617 - (4 years, 9 months ago) led blinking code unified - Mateusz Lubecki
+* a0409ef - (4 years, 9 months ago) Update HARDWARE-README - SP8EBC
+* 1d48505 - (4 years, 9 months ago) Update README - SP8EBC
+* cca2f74 - (4 years, 9 months ago) BOM to hardware revision C added - Mateusz Lubecki
+* 6c517d1 - (4 years, 9 months ago) backup for sr9wxm config and HW-RevC documentation - Mateusz Lubecki
+* 3534b1d - (4 years, 9 months ago) refactored name of one #define - Mateusz Lubecki (tag: DF03)
+* bd99c6a - (4 years, 10 months ago) bugfix with not enabling the timer back after the U/f converter failure - Mateusz Lubecki
+* c9ad538 - (4 years, 10 months ago) new example config file and extending maximum pretx delay - Mateusz Lubecki
+* a34c37c - (4 years, 10 months ago) quality factor for BME280 - Mateusz Lubecki
+* 9b58d3a - (4 years, 10 months ago) work on bme280 drivers, the name of files was corrected - Mateusz Lubecki
+* b47a25a - (4 years, 10 months ago) function to read raw measuremenets from sensor - Mateusz Lubecki
+* cb61958 - (4 years, 10 months ago) - Bosh BMA150 sensor deiver prototype - bugfixes in i2c (sending only first byte, correct types of function parameters) - Mateusz Lubecki
+* ab00af1 - (4 years, 10 months ago) longer IWDG watchdog to omit a reset during sending telemetry description - Mateusz Lubecki (tag: DF02)
+* 7c6e9ec - (4 years, 10 months ago) added watchdog, changed telemetry temperatuer scaling - Mateusz Lubecki
+* 9f6baac - (4 years, 10 months ago) open collector output support - Mateusz Lubecki
+*   51d2ad8 - (4 years, 10 months ago) DF00 - Mateusz Lubecki (tag: DF00)
+|\  
+| * fb714e1 - (4 years, 10 months ago) bugfix in routine which sends wx using kiss - Mateusz Lubecki
+| * b559b23 - (4 years, 11 months ago) Create LICENSE - SP8EBC
+* | 7845e45 - (4 years, 11 months ago) corrected coefficient in analog anemoemter calc - Mateusz Lubecki
+|/  
+* 6405a3d - (5 years ago) handling missing i2c state - Mateusz Lubecki
+* e9beb2b - (5 years ago) errata to hardware design files - Mateusz Lubecki
+* 521aeb6 - (5 years ago) new context aware serial drivers tested with HW-RevA - Mateusz Lubecki
+* 7b63ce1 - (5 years ago) multi uart based on DE08 software version - Mateusz Lubecki
+* b6841a0 - (5 years ago) software version changed to correct one - Mateusz Lubecki (tag: DE08)
+* 13796f6 - (5 years ago) - Storing an error code from a response on UMB offline request - Sending status on any UMB errors detected - Mateusz Lubecki
+* 033ccdd - (5 years ago) sending a status message on UMB errors - Mateusz Lubecki
+* ba4e3b8 - (5 years ago) changed configuration of UART pin. Added hardware errata - Mateusz Lubecki
+* f6401a5 - (5 years ago) ... - Mateusz Lubecki
+* 1dedfd2 - (5 years ago) fixed umb quality factor calculator - Mateusz Lubecki
+* 4b3b306 - (5 years ago) - handling timeout for serial port when driver is waiting for starting receive - sending quality factor for anemometer - Mateusz Lubecki
+* b9a255c - (5 years ago) copying data from umb channels into rte to give them into wx packet routines - Mateusz Lubecki
+* 83f4f59 - (5 years ago) Hardware Revision B documentation - Mateusz Lubecki
+* 1c540b7 - (5 years ago) first testable umb master code with offline data request - Mateusz Lubecki (tag: DE07)
+* 6e89660 - (5 years ago) umb routine 0x23 - Mateusz Lubecki
+* 77b81be - (5 years ago) some more modifications in UMB - Mateusz Lubecki
+* a2c47b1 - (5 years ago) added TE/RE handling for RS485 - Mateusz Lubecki
+* 3cebaae - (5 years ago) a lot of work with umb-master - Mateusz Lubecki
+* 7d11df2 - (5 years ago) calculating targer ms5611 pressure value from average calculated from 4 elements long history - Mateusz Lubecki
+* 11c5e0d - (5 years ago) quick bugfix in SendWXFrame - Mateusz Lubecki
+* 0ed71fc - (5 years ago) some more refactoring inside tx20 driver - Mateusz Lubecki
+* a095321 - (5 years ago) moving data from TX20 to global wx sesnros handler, to have an universal implementation between tx20 and analogue anemometer - Mateusz Lubecki
+* aa26acb - (5 years ago) more tweaks within analog anemometer driver - Mateusz Lubecki
+* 6919ddd - (5 years ago) some tweaking in analog_anemometer handling - Mateusz Lubecki
+* f1e4a00 - (5 years ago) - Some files renamed - Added callback and request for 0x26 routine - Added context structure - Mateusz Lubecki
+* 299c0a8 - (5 years ago) - First cketch of UMB client (UMB master) - Conditional compiling of analog anemometer driver - Mateusz Lubecki
+* 86fed70 - (5 years ago) recalculation of the wind direction angle fixed - Mateusz Lubecki
+* 1a8c337 - (5 years ago) a and b coefficients for recalculating the wind drection from analog anemometer - Mateusz Lubecki
+* eccb2f1 - (5 years ago) direction from analog anemometer corrected - Mateusz Lubecki (tag: DE06)
+* 062638c - (5 years ago) wind direction calculation basing on the frequency value - Mateusz Lubecki
+* 0732b2f - (5 years ago) new readme, schematics, partlist etc - Mateusz Lubecki
+* befdd40 - (5 years ago) Set of features implemented in code responsible for handling an analogue anemometer -> timer capture-compare configuration -> dma configuration to copy timer values into buffer -> converting impulse times into inter-pulse time -> debouncing & slew rate limitation of inter-pulse time -> converting inter-pulse time to windspeed -> averaging windspeed & looking for maximum vale -> calculating average wind direction - Mateusz Lubecki
+* 515da4b - (5 years ago) function to convert time between pulses to windspeed - Mateusz Lubecki
+* a108ab9 - (5 years ago) DMA Channel 7 initialization functionality refactored to external file to stub in UT - Mateusz Lubecki
+* 44e4bad - (5 years ago) analogue windspeed - Mateusz Lubecki
+* 4f8a3b2 - (5 years ago) first sketch of a driver for analogue pulses/voltage anemometers - Mateusz Lubecki
+* 1a08e27 - (5 years ago) temperature slew rate inhibiter to allow first measuremenets to be retrieved from the sensor - Mateusz Lubecki (tag: DE05)
+* f356576 - (5 years ago) resetting power to sensors if no comms received - Mateusz Lubecki (tag: DE04)
+* 02dca8e - (5 years ago) extended pressure resolution to proper .1 of hPa - Mateusz Lubecki (tag: DE03)
+* 0fd739d - (5 years ago) - Merging USART driver from ParaMETEO-UMB project to fix a bug with sending first byte twice - Merging Dallas one-wire temperature sensor from ParaMETEO-UMB to provide temperature averaging - Mateusz Lubecki
+* 2816697 - (6 years ago) corrected gerber files - Mateusz Lubecki
+* 9990260 - (6 years ago) config for sr8wxo and sr9wxg - Mateusz Lubecki
+* b6c9c5d - (6 years ago) hardware readme - Mateusz Lubecki (tag: DE02)
+* 2640158 - (6 years ago) hardware documentation and gerber files added - Mateusz Lubecki
+* 1624d0a - (6 years ago) some more documentation - Mateusz Lubecki
+* 62ca29e - (6 years ago) - Fixed critical bug in TX20 anemometer driver , which caused gusts to be calculated wrong - Button will trigger WX packets instead of Beaons if _METEO is triggered - Mateusz Lubecki
+* cbda441 - (6 years ago) english readme - Mateusz Lubecki
+* 9123b8b - (6 years ago) english readme - Mateusz Lubecki
+* 9d7d6b5 - (6 years ago) - Modified main.c to initialize Dalls OneWire pins according to the configuration - Updated config file for sr9nci - Mateusz Lubecki (tag: DE01)
+* 9c55d88 - (6 years ago) code documentation - Mateusz Lubecki
+* b562f45 - (6 years ago) - Added a pressure and temperature validator in MS5611 driver basing on min & max values - Mateusz Lubecki
+* bb66a7b - (6 years ago) - Fixed i2c timeout keeper - Added new function to reinitialize i2c controller after failure - Fixed CRC4 calculation for MS5611 sensor driver - Fixed timeout handling in MS5611 sensor driver - Mateusz Lubecki
+* 4b562d3 - (6 years ago) one-wire moved from pins conflicting with i2c. ELF name changed - Mateusz Lubecki
+* 7825b57 - (6 years ago) storing input pin in separate variable - Mateusz Lubecki
+* fcf7771 - (6 years ago) test - Mateusz Lubecki
+* a48ad96 - (6 years ago) prototype version with splited RX and TX pin for dallas one wire - Mateusz Lubecki
+*   534be2c - (6 years ago) Merge branch 'master' of https://github.com/SP8EBC/para-tnc - Mateusz Lubecki (tag: DC03)
+|\  
+| * 3450cb7 - (6 years ago) max slew rate increased - Mateusz Lubecki
+* | 9210625 - (6 years ago) max slew rate increased - Mateusz Lubecki
+|/  
+* 64cf11f - (6 years ago) a bugfix of major bug in sleew rate limiter in tx20 support - Mateusz Lubecki
+* 4be0de0 - (6 years ago) added config for sr9wxg - Mateusz Lubecki
+* 75a193f - (6 years ago) config for sr9wxs - Mateusz Lubecki (tag: DC02)
+* 77d6a04 - (6 years ago) tx tail decreased -> sr9wxs - June 9th 2019 - Mateusz Lubecki
+* b05322b - (6 years ago) digipeating only ssids 7, 8 and 9 - Mateusz Lubecki
+* 4afb22c - (6 years ago) critical bugfix in tx20.c - Mateusz Lubecki
+* 8a5fa8a - (6 years ago) sending own generated WX frames do host via KISS - Mateusz Lubecki (tag: DC00)
+* 7730447 - (6 years ago) added function to generate kiss frame from own aprs frames - Mateusz Lubecki
+* 6b8958d - (6 years ago) added slew rate limiter to tx20 driver - Mateusz Lubecki
+* 25406fc - (6 years ago) quality factor for ds12b20 fix - Mateusz Lubecki
+* 8570710 - (6 years ago) added some debugging to Exceptions handlers - Mateusz Lubecki
+* 504ace6 - (6 years ago) sw version increment after check - Mateusz Lubecki
+* bfbca12 - (6 years ago) bugfixes according to possible out of range buffers access - Mateusz Lubecki
+* aabeafa - (6 years ago) better handling of gallas quality factor in the telemetry - Mateusz Lubecki
+* 9075327 - (6 years ago) DB01 - Mateusz Lubecki
+* a8c0005 - (6 years ago) telemetry with data from pv controller - Mateusz Lubecki
+* f2117c4 - (6 years ago) Victron Energy VE text protocol - Mateusz Lubecki
+* 6255cc1 - (6 years ago) refactoring - changes in global variables names - Mateusz Lubecki
+* ed653bd - (6 years ago) ve_direct protocol parser added to project - Mateusz Lubecki
+* da09207 - (6 years ago) new way of testing uart - Mateusz Lubecki
+* 3f0c1b4 - (6 years ago) added separate static buffer for kiss transmission - Mateusz Lubecki
+* 36f080d - (6 years ago) few bugfixed around KISS communication with host - Mateusz Lubecki
+* d40e78f - (6 years ago) volatile keyword added to delay counter variable. telemetry modified to show NOT_AVALIABLE quality factors - Mateusz Lubecki
+* be03b44 - (6 years ago) DA00 release - Mateusz Lubecki (tag: DA00)
+* 5ce7f8f - (6 years ago) changes in IRQ priorities and names of functions defined for dallas ds12b20 - Mateusz Lubecki
+* 02274ad - (6 years ago) more work almost everywhere - Mateusz Lubecki
+* b238588 - (6 years ago) a lot of refactoring everywhere - Mateusz Lubecki
+* 2d0ecad - (6 years ago) a lot of refactoring in drivers - Mateusz Lubecki
+* 4f899df - (6 years ago) i2c timeout handler added, trasmit delay in afsk - Mateusz Lubecki
+* 7322ff5 - (6 years ago) refactoring of i2c code - Mateusz Lubecki
+* 10ed67f - (6 years ago) Systick configuration and timeout keeper for uart - Mateusz Lubecki
+* cb3b311 - (6 years ago) full duplex transmission over UART - Mateusz Lubecki
+* 5ce0c52 - (6 years ago) logic operator changed to proper one - Mateusz Lubecki
+* fab4e53 - (6 years ago) serial driver in compilable form - Mateusz Lubecki
+* 9c8f2c0 - (6 years ago) daily commit - Mateusz Lubecki
+* 143aa26 - (6 years ago) daily commit with work on serial driver - Mateusz Lubecki
+* 475f369 - (6 years ago) refactoring serial driver, code actually in incompilable state - Mateusz Lubecki
+* 2d672f6 - (6 years ago) interrupts routines moved to it_handlers.c - Mateusz Lubecki
+*   17b504a - (6 years ago) merging from sht22 branch - Mateusz Lubecki
+|\  
+| * 8f1b05a - (7 years ago) little bugfix in main and testing without trace_printf - Mateusz Lubecki
+| * 851919e - (7 years ago) humidity sensor working with ms5611 and dallas on the same time - Mateusz Lubecki
+| * 12dc1cf - (7 years ago) sht22 almost working - Mateusz Lubecki
+| * d783e75 - (7 years ago) some extra patching - Mateusz Lubecki
+| * 33c4620 - (7 years ago) ms5611 with added timeout handling - Mateusz Lubecki
+| * b78b36d - (7 years ago) sht22 driver almost ready - Mateusz Lubecki
+| * 8329a94 - (7 years ago) first sketch of the dht22 sensor driver - Mateusz Lubecki
+* | 538c443 - (7 years ago) support for the dallas ds12b20 in a telemetry data added - Mateusz Lubecki
+* | a5f5f49 - (7 years ago) sample config file and new gitignore - Mateusz Lubecki
+* | cf96694 - (7 years ago) cirital bug fixed in PathConfig.h - Mateusz Lubecki
+* | ef2272a - (7 years ago) fix in kiss communication with host - Mateusz Lubecki
+* | 850efea - (7 years ago) project config - Mateusz Lubecki
+* | 39f3877 - (7 years ago) fixed project configuration - Mateusz Lubecki
+|/  
+* 06e970e - (7 years ago) Some changes inside it_handlers and station_config. Propaly for RF_MUTE - Mateusz Lubecki
+* 4ca61f9 - (8 years ago) version 1.0.1 Serial baudrate config moved to station_config.h - Mateusz Lubecki
+* 18c7d73 - (8 years ago) USART inicialization modified - Mateusz Lubecki
+* d13ddfe - (8 years ago) Some more documentation - Mateusz Lubecki
+* 8330ef7 - (8 years ago) Fix of critical bug in makefile and add wiring description - Mateusz Lubecki
+* 7739296 - (8 years ago) Code cleanup and some more documentation - Mateusz Lubecki
+* fddf182 - (8 years ago) Documentation - Mateusz Lubecki
+* a344f98 - (8 years ago) First public relase - Mateusz Lubecki

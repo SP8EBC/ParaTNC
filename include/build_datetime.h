@@ -1,11 +1,11 @@
 #ifndef BUILD_DATETIME_H#define BUILD_DATETIME_H
 #define BUILD_FULLYEAR 	2025
 #define BUILD_YEAR 	25
-#define BUILD_MONTH 	3
-#define BUILD_DAY 	20
-#define BUILD_HOUR 	12
-#define BUILD_MINUTE 	4
-#define BUILD_SECOND 	34
-#define BUILD_SWVERSTR 	"20032025"
+#define BUILD_MONTH 	4
+#define BUILD_DAY 	16
+#define BUILD_HOUR 	19
+#define BUILD_MINUTE 	8
+#define BUILD_SECOND 	5
+#define BUILD_SWVERSTR 	"16042025"
 
 #endif

@@ -1408,6 +1408,9 @@ int main(int argc, char* argv[]){
    }
 
 #ifdef SX1262_IMPLEMENTATION
+	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+	supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
+
    fanet_test_init();
    fanet_test();
 #endif
@@ -2126,7 +2129,11 @@ int main(int argc, char* argv[]){
 			if (main_two_second_pool_timer < 10) {
 
 #ifdef SX1262_IMPLEMENTATION
-   fanet_test();
+				supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+				supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
+
+
+				retval = fanet_test();
 #endif
 
 				if (main_config_data_mode->wx != 0) {
