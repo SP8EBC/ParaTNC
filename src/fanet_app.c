@@ -29,6 +29,14 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
+#ifdef SX1262_SHMIDT_NOT_GATE
+#define SX1262_BUSY_ACTIVE 		0U
+#define SX1262_BUSY_NOTACTIVE	1U
+#else
+#define SX1262_BUSY_ACTIVE 		1U
+#define SX1262_BUSY_NOTACTIVE	0U
+#endif
+
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -55,13 +63,13 @@ static void fanet_wait_not_busy(int _unused)
 {
 	(void)_unused;
 	// PC6
-	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_6) == 0U)
+	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
 	{
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_6) == 0U);
+		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE);
 	}
 	else
 	{
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_6) == 1U)
+		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_NOTACTIVE)
 		{
 			_unused--;
 			if (_unused < 0)
@@ -69,7 +77,7 @@ static void fanet_wait_not_busy(int _unused)
 				break;
 			}
 		}
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_6) == 0U);
+		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE);
 	}
 }
 
@@ -82,7 +90,7 @@ void fanet_test_init(void)
 	//!< Used across this file to configure I/O pins
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-
+	// INTERRUPT
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
@@ -91,6 +99,7 @@ void fanet_test_init(void)
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
+	// IS BUSY
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
