@@ -89,7 +89,7 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #if ((!defined _PT_SENSOR_REFERENCE_RES) && (!defined _PT_SENSOR_TYPE))
-		.wx_pt_sensor = 0x71,		// TODO: index 28 (4k1 reference resistor), 4-wire sensor
+		.wx_pt_sensor = 0x00,		// TODO: index 28 (4k1 reference resistor), 4-wire sensor
 #else
 		.wx_pt_sensor = CONFIG_DATA_PTSENSOR_ASSEMBLE_CONFIG(_PT_SENSOR_TYPE, _PT_SENSOR_REFERENCE_RES),
 #endif

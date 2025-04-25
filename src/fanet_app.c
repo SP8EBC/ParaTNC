@@ -37,6 +37,9 @@
 #define SX1262_BUSY_NOTACTIVE	0U
 #endif
 
+#define FANET_TURN_OFF()	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_12)
+#define FANET_TURN_ON()		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
+
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -59,13 +62,15 @@ static const uint8_t fanet_test_2[7] = {0x42u, 0x12u, 0x34u, 0x56u, 0x31u, 0x32u
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
 
-static void fanet_wait_not_busy(int _unused)
+// this also should be moved to sx1262 driver
+static uint8_t fanet_wait_not_busy(int _unused)
 {
 	(void)_unused;
 	// PC6
 	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
 	{
 		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE);
+		return 0;
 	}
 	else
 	{
@@ -74,11 +79,22 @@ static void fanet_wait_not_busy(int _unused)
 			_unused--;
 			if (_unused < 0)
 			{
-				break;
+				return 1;
 			}
 		}
 		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE);
+		return 2;
 	}
+
+}
+
+// this should be moved to sx1262 driver
+static void fanet_reset(void)
+{
+	FANET_TURN_OFF();
+	delay_fixed(50);
+	FANET_TURN_ON();
+	fanet_wait_not_busy(10);
 }
 
 /// ==================================================================================================
@@ -103,6 +119,17 @@ void fanet_test_init(void)
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
+	// RESET output - A12
+	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
+	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
+
+	// keep RESET output hi-z
+	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
 }
 
 /**
@@ -128,100 +155,107 @@ int fanet_test(void)
 	   out.source.manufacturer = 0xEE;
 
 	   volatile uint8_t regi = 0u;
+	   volatile uint8_t waiting_res = 255u;
 
 	   volatile sx1262_api_return_t sx_result = SX1262_API_UNINIT;
 
 //	   fanet_factory_frames_weather(19.0298f, 49.8277f, &wx_input, &out);
 //	   const int fanet_ln = fanet_serialize(&out, (uint8_t*)fanet_test_array, 64u);
 
-
+	   fanet_reset();
 
 	   //io___cntrl_vbat_c_disable();
 	   //fanet_wait_not_busy(300);
 	   //io___cntrl_vbat_c_enable();
 
-	   sx1262_modes_set_standby(0);
-	   fanet_wait_not_busy(300);
+	   sx_result = sx1262_modes_set_standby(0);						// opcode 0x80
+	   waiting_res = fanet_wait_not_busy(0xFFFF);
 
-	   sx1262_irq_dio_enable_disable_on_pin_dio1(1, 1, 1, 1);
-	   fanet_wait_not_busy(10);
-	   sx1262_irq_dio_set_dio2_as_rf_switch(1);
-	   fanet_wait_not_busy(10);
-	   sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
-	   fanet_wait_not_busy(10);
-	   sx1262_status_get_device_errors(&mode, &command_status, &errors);
-	   fanet_wait_not_busy(10);
-	   sx1262_modes_set_regulator_mode(1);
-	   fanet_wait_not_busy(1300);		// 1200ms seems to be a minimum value
-	   sx1262_status_get(&mode, &command_status);
-	   if (mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
+	   sx_result = sx1262_irq_dio_enable_disable_on_pin_dio1(1, 1, 1, 1);
+	   waiting_res = fanet_wait_not_busy(0xF);
+	   sx_result = sx1262_irq_dio_set_dio2_as_rf_switch(1);
+	   waiting_res = fanet_wait_not_busy(0xFFFF);
+	   sx_result = sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
+	   waiting_res = fanet_wait_not_busy(0xFFFF);
+	   sx_result = sx1262_status_get_device_errors(&mode, &command_status, &errors);		// command 0x17 -- response 0xA2, 0xA2, 0x00, 0x20
+	   waiting_res = fanet_wait_not_busy(0xF);
+	   sx_result = sx1262_modes_set_regulator_mode(1);				// command 0x96
+	   waiting_res = fanet_wait_not_busy(0xFFFF);		// 1200ms seems to be a minimum value
+	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
+	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
 		   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
-		   fanet_wait_not_busy(10);
+		   //waiting_res = fanet_wait_not_busy(0xFFFF);
 
 		   //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
-		   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);
+		   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);		// command 0x8A, 0x3
 		   // 0xFF - this gives approx 100us of delay
-		   fanet_wait_not_busy(10);
-		   sx1262_rf_packet_type_get(&type);
+		   waiting_res = fanet_wait_not_busy(0xFFFF);
+		   sx_result = sx1262_rf_packet_type_get(&type);
 		   if (type == SX1262_RF_PACKET_TYPE_LORA) {
-			   fanet_wait_not_busy(10);
+			   waiting_res = fanet_wait_not_busy(0xF);
 			   sx1262_rf_frequency(868500);
-			   fanet_wait_not_busy(10);
+			   waiting_res = fanet_wait_not_busy(0xFFFF);
 			   sx_result = sx1262_status_get(&mode, &command_status);
-			   fanet_wait_not_busy(10);
+			   waiting_res = fanet_wait_not_busy(0xF);
 			   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
 				   sx1262_modes_set_pa_config(5);
-				   fanet_wait_not_busy(10);
+				   waiting_res = fanet_wait_not_busy(0xFFFF);
 				   sx_result = sx1262_status_get(&mode, &command_status);
-				   fanet_wait_not_busy(10);
+				   waiting_res = fanet_wait_not_busy(0xF);
 				   sx_result = sx1262_rf_tx_params(14, SX1262_RF_TX_RAMPTIME_200US);
-				   fanet_wait_not_busy(10);
+				   waiting_res = fanet_wait_not_busy(0xFFFF);
 				   if (sx_result == SX1262_API_OK) {
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(300);
+					   fanet_wait_not_busy(0xFFFF);
 
 //					   sx1262_data_io_write_register_byte(0x08E7u, 0x38u);
 //					   sx1262_data_io_read_register(0x08E7u, 1u, &regi);
 
 					   sx1262_rf_buffer_base_addresses(0, 128);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xFFFF);
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xFFFF);
 					   sx1262_data_io_write_buffer(0, 7, (const uint8_t*)fanet_test_2);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xF);
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xF);
 					   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xFFFF);
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xF);
 					   sx1262_rf_lora_packet_params(12, 7, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xFFFF);
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(10);
+					   waiting_res = fanet_wait_not_busy(0xFFFF);
 
 					   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
 						   sx1262_data_io_write_register_byte(0x740, 0xF4u);
-						   fanet_wait_not_busy(300);
+						   waiting_res = fanet_wait_not_busy(0xF);
 						   sx1262_data_io_write_register_byte(0x741, 0x14u);
-						   fanet_wait_not_busy(300);
+						   waiting_res = fanet_wait_not_busy(0xF);
 						   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
-						   fanet_wait_not_busy(10);
+						   waiting_res = fanet_wait_not_busy(0xFFFF);
 						   sx1262_data_io_read_register(0x8E7, 1, (uint8_t*)&current_limit);
-						   fanet_wait_not_busy(10);
+						   waiting_res = fanet_wait_not_busy(0xFFFF);
 						   if (((uint8_t)(i & 0xFFu) == 0xF4u) && ((uint8_t)(current_limit & 0xFFu) == 0x38u)) {
 							   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
 							   if ((uint8_t)(i & 0xFFu) == 0x14u) {
 		//						   sx1262_modes_set_standby(1);
 		//						   sx1262_modes_set_fs();
-								   fanet_wait_not_busy(1200);
+								   waiting_res = fanet_wait_not_busy(0xFFFF);
 								   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);
 		//						   sx1262_modes_set_tx_infinite_preamble();
 								   //sx1262_modes_set_tx_cw();
 								  // const sx1262_api_return_t tx_res = SX1262_API_OK;
-								   fanet_wait_not_busy(1200);
-									while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == 0U);
-								   sx_result = sx1262_status_get(&mode, &command_status);
+								   waiting_res = fanet_wait_not_busy(0xFFFFFF);
+								   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
+
+								   if ((interrupt_mask & 0x1) != 0)
+								   {
+									   i = 0;
+								   }
+									//while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == 0U);
+								   sx_result = sx1262_status_get(&mode, &command_status);		// command: 0xC0
 								   if (tx_res == SX1262_API_OK && command_status == SX1262_LAST_COMMAND_TX_DONE)
 								   {
 									   i = 0;
@@ -230,8 +264,6 @@ int fanet_test(void)
 								   {
 									   i = -1;
 								   }
-
-								   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);
 
 								   sx1262_irq_dio_clear_all();
 								   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
@@ -265,19 +297,26 @@ int fanet_test(void)
 		   }
 		   else
 		   {
-			   i = -3;
+			   i = -3;	// if (type == SX1262_RF_PACKET_TYPE_LORA)
 		   }
 	   }
 	   else
 	   {
-		i = -2;
+		i = -2;	// if (mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK)
 	   }
 #endif
 
-	   if ((interrupt_mask & 0x1) != 0)
+	   if (i == 0) {
+		   if ((interrupt_mask & 0x1) != 0)
+		   {
+			   led_blink_led2_botoom();
+			   i = 0;
+		   }
+	   }
+	   else
 	   {
-		   led_blink_led2_botoom();
-		   i = 0;
+		   sx_result = SX1262_API_UNINIT;
+		   led_blink_led1_upper();
 	   }
 
 	   return i;

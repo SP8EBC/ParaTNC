@@ -2134,6 +2134,17 @@ int main(int argc, char* argv[]){
 
 
 				retval = fanet_test();
+
+				if (retval != 0)
+				{
+					  event_log_sync(
+								  EVENT_INFO_CYCLIC,
+								  EVENT_SRC_MAIN,
+								  EVENTS_MAIN_CYCLIC,
+								  0, 0,
+								  0, 0,
+								  0xDDCCBBAA, retval);
+				}
 #endif
 
 				if (main_config_data_mode->wx != 0) {
