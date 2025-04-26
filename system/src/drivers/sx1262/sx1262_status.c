@@ -52,6 +52,7 @@ sx1262_api_return_t sx1262_status_get(
 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
+		memset(sx1262_receive_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET;
 		sx1262_transmit_spi_buffer[1] = 0x00;
 

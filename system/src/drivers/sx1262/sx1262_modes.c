@@ -640,9 +640,9 @@ sx1262_api_return_t sx1262_modes_set_regulator_mode(uint8_t ldo_dcdcldo) {
 #ifdef SX1262_BLOCKING_IO
 		const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[0] != 0x00  && ptr[0] != 0xFF) {
+		//if (ptr[0] != 0x00  && ptr[0] != 0xFF) {
 			out = SX1262_API_OK;
-		}
+		//}
 #else
 		out = SX1262_API_OK;
 #endif

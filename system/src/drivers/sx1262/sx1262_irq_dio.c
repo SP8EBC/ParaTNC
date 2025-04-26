@@ -275,7 +275,7 @@ sx1262_api_return_t sx1262_irq_dio_set_dio3_as_tcxo_ctrl (sx1262_irq_dio_tcxo_vo
 		sx1262_transmit_spi_buffer[2] = (uint8_t) (delay & 0x00FFu);
 		sx1262_transmit_spi_buffer[3] = (uint8_t) ((delay & 0xFF00u) >> 8);
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 5);
+		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
 
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 

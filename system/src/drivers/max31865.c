@@ -435,9 +435,9 @@ void max31865_pool(void) {
  * @return quality factor after measurement
  */
 max31865_qf_t max31865_pool_synchro(void) {
-	max31865_current_state = MAX_IDLE;
-
 	if (max31865_current_state != MAX_UNINITIALIZED) {
+
+		max31865_current_state = MAX_IDLE;
 
 		for (int i = 0; i < 4; i++) {
 		  max31865_pool();

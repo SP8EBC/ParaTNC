@@ -1888,6 +1888,11 @@ int main(int argc, char* argv[]){
 
 				main_nvm_timestamp = main_get_nvm_timestamp();
 
+#ifdef SX1262_IMPLEMENTATION
+				fanet_success_cnt = 0;
+				fanet_fail_cnt = 0;
+#endif
+
 				#ifndef _MUTE_OWN
 				packet_tx_handler(main_config_data_basic, main_config_data_mode);
 				#endif
