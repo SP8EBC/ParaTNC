@@ -101,31 +101,37 @@ sx1262_api_return_t sx1262_status_get_device_errors(
 		sx1262_transmit_spi_buffer[2] = 0x00;
 		sx1262_transmit_spi_buffer[3] = 0x00;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
+		const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
 
-		SX1262_SPI_WAIT_UNTIL_BUSY();
+		if (spi_res == SPI_OK) {
 
-		const uint8_t * ptr8 = spi_get_rx_data();
+			SX1262_SPI_WAIT_UNTIL_BUSY();
 
-		const uint16_t * ptr16 = (const uint16_t*) spi_get_rx_data();
+			const uint8_t * ptr8 = spi_get_rx_data();
 
-		volatile const uint16_t _err = ptr8[3];
+			const uint16_t * ptr16 = (const uint16_t*) spi_get_rx_data();
 
-		*errors = (uint8_t)(_err);
+			volatile const uint16_t _err = ptr8[3];
 
-		if (ptr8[1] != 0x00u && ptr8[1] != 0xFFu) {
-			temp = ptr8[1] & 0x70u;
-			temp >>= 4;
-			*chip_mode = (sx1262_status_chip_mode_t) temp;
+			*errors = (uint8_t)(_err);
 
-			temp = ptr8[1] & 0x0Eu;
-			temp >>= 1;
-			*last_command_status = (sx1262_status_last_command_t)temp;
-			out = SX1262_API_OK;
+			if (ptr8[1] != 0x00u && ptr8[1] != 0xFFu) {
+				temp = ptr8[1] & 0x70u;
+				temp >>= 4;
+				*chip_mode = (sx1262_status_chip_mode_t) temp;
+
+				temp = ptr8[1] & 0x0Eu;
+				temp >>= 1;
+				*last_command_status = (sx1262_status_last_command_t)temp;
+				out = SX1262_API_OK;
+			}
+			else {
+				out = SX1262_API_DAMAGED_RESP;
+			}
 		}
-
-		out = SX1262_API_OK;
-
+		else {
+			out = SX1262_API_SPI_BUSY;
+		}
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;

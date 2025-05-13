@@ -86,24 +86,32 @@ sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask)
 		memset(sx1262_receive_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_GET_IRQ_STATUS;
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
+		const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
 
-		SX1262_SPI_WAIT_UNTIL_BUSY();
+		if (spi_res == SPI_OK) {
+
+			SX1262_SPI_WAIT_UNTIL_BUSY();
 
 #ifdef SX1262_BLOCKING_IO
-		const uint8_t * ptr = spi_get_rx_data();
+			const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
 			temp = (ptr[2] << 8) | ptr[3];
 			*iterrupt_mask = temp;
+
+			// 0x14 0 0 0x56
+			if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+				out = SX1262_API_OK;
+			}
+			else {
+				out = SX1262_API_DAMAGED_RESP;
+			}
+#else
 			out = SX1262_API_OK;
+#endif
 		}
 		else {
-			out = SX1262_API_DAMAGED_RESP;
+			out = SX1262_API_SPI_BUSY;
 		}
-#else
-		out = SX1262_API_OK;
-#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -158,22 +166,28 @@ sx1262_api_return_t sx1262_irq_dio_enable_disable_on_pin_dio1 (uint8_t tx_done, 
 		sx1262_transmit_spi_buffer[4] = (uint8_t) (temp & 0xFF);
 		sx1262_transmit_spi_buffer[3] = (uint8_t) ((temp & 0xFF00) >> 8);
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 5);
+		const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 5);
 
-		SX1262_SPI_WAIT_UNTIL_BUSY();
+		if (spi_res == SPI_OK) {
+
+			SX1262_SPI_WAIT_UNTIL_BUSY();
 
 #ifdef SX1262_BLOCKING_IO
-		const uint8_t * ptr = spi_get_rx_data();
+			const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+			if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+				out = SX1262_API_OK;
+			}
+			else {
+				out = SX1262_API_DAMAGED_RESP;
+			}
+#else
 			out = SX1262_API_OK;
+#endif
 		}
 		else {
-			out = SX1262_API_DAMAGED_RESP;
+			out = SX1262_API_SPI_BUSY;
 		}
-#else
-		out = SX1262_API_OK;
-#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -205,22 +219,28 @@ sx1262_api_return_t sx1262_irq_dio_set_dio2_as_rf_switch (uint8_t enable)
 			sx1262_transmit_spi_buffer[1] = 1;
 		}
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+		const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
 
-		SX1262_SPI_WAIT_UNTIL_BUSY();
+		if (spi_res == SPI_OK) {
+
+			SX1262_SPI_WAIT_UNTIL_BUSY();
 
 #ifdef SX1262_BLOCKING_IO
-		const uint8_t * ptr = spi_get_rx_data();
+			const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+			if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+				out = SX1262_API_OK;
+			}
+			else {
+				out = SX1262_API_DAMAGED_RESP;
+			}
+#else
 			out = SX1262_API_OK;
+#endif
 		}
 		else {
-			out = SX1262_API_DAMAGED_RESP;
+			out = SX1262_API_SPI_BUSY;
 		}
-#else
-		out = SX1262_API_OK;
-#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -275,22 +295,28 @@ sx1262_api_return_t sx1262_irq_dio_set_dio3_as_tcxo_ctrl (sx1262_irq_dio_tcxo_vo
 		sx1262_transmit_spi_buffer[2] = (uint8_t) (delay & 0x00FFu);
 		sx1262_transmit_spi_buffer[3] = (uint8_t) ((delay & 0xFF00u) >> 8);
 
-		spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
+		const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 4);
 
-		SX1262_SPI_WAIT_UNTIL_BUSY();
+		if (spi_res == SPI_OK) {
 
-#ifdef SX1262_BLOCKING_IO
-		const uint8_t * ptr = spi_get_rx_data();
+			SX1262_SPI_WAIT_UNTIL_BUSY();
 
-		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+	#ifdef SX1262_BLOCKING_IO
+			const uint8_t * ptr = spi_get_rx_data();
+
+			if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
+				out = SX1262_API_OK;
+			}
+			else {
+				out = SX1262_API_DAMAGED_RESP;
+			}
+	#else
 			out = SX1262_API_OK;
+	#endif
 		}
 		else {
-			out = SX1262_API_DAMAGED_RESP;
+			out = SX1262_API_SPI_BUSY;
 		}
-#else
-		out = SX1262_API_OK;
-#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;

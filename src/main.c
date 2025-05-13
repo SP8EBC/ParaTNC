@@ -1891,6 +1891,7 @@ int main(int argc, char* argv[]){
 #ifdef SX1262_IMPLEMENTATION
 				fanet_success_cnt = 0;
 				fanet_fail_cnt = 0;
+				fanet_tx_success_cnt = 0;
 #endif
 
 				#ifndef _MUTE_OWN

@@ -26,6 +26,7 @@
 
 extern int fanet_success_cnt;
 extern int fanet_fail_cnt;
+extern int fanet_tx_success_cnt;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

@@ -604,6 +604,8 @@ uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uin
 
 		// start trasmission
 		spi_enable(1);
+
+		out = SPI_OK;
 	}
 	else {
 		// exit if either transmission or reception is ongoing

@@ -145,29 +145,35 @@ sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 			sx1262_transmit_spi_buffer[0] = SX1262_MODES_OPCODE_SET_CONFIG;
 			sx1262_transmit_spi_buffer[1] = standby_rc_xosc;
 
-			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
+			const uint8_t spi_res = spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, 2);
 
-			SX1262_SPI_WAIT_UNTIL_BUSY();
+			if (spi_res == SPI_OK) {
+
+				SX1262_SPI_WAIT_UNTIL_BUSY();
 
 #ifdef SX1262_BLOCKING_IO
 
-			const uint8_t * ptr = spi_get_rx_data();
+				const uint8_t * ptr = spi_get_rx_data();
 
-			/**
-			 * Name : *ptr
-	Details:170 'ª'
-	Default:170 'ª'
-	Decimal:-86
-	Hex:0xaa
-	Binary:10101010
-	Octal:0252
-			 */
-			if (ptr[0] != 0x00  && ptr[0] != 0xFF) {
-				out = SX1262_API_OK;
-			}
+				/**
+				 * Name : *ptr
+		Details:170 'ª'
+		Default:170 'ª'
+		Decimal:-86
+		Hex:0xaa
+		Binary:10101010
+		Octal:0252
+				 */
+				if (ptr[0] != 0x00  && ptr[0] != 0xFF) {
+					out = SX1262_API_OK;
+				}
 #else
-			out = SX1262_API_OK;
+				out = SX1262_API_OK;
 #endif
+			}
+			else {
+				out = SX1262_API_SPI_BUSY;
+			}
 		}
 		else {
 			out = SX1262_API_OUT_OF_RNG;
