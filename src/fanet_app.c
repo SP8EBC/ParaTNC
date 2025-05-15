@@ -55,7 +55,7 @@
 
 #define FANET_SX_WAIT_RES_TYPE		uint32_t
 #define FANET_SX_WAIT_NUMBER		33
-#define FANET_SX_RESULT_HISTORY_LN	10
+#define FANET_SX_RESULT_HISTORY_LN	12
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -155,6 +155,8 @@ static uint32_t fanet_wait_not_busy(int _unused)
 
 }
 
+
+
 // this should be moved to sx1262 driver
 static void fanet_reset(void)
 {
@@ -240,8 +242,7 @@ int fanet_test(void)
 	   //io___cntrl_vbat_c_enable();
 
 	   fanet_wait_ret_history[fanet_api_it_history][0] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x22d8
-
-	   //sx_result = sx1262_status_get(&initial_mode, &initial_status);		// command 0xC0  -- response 0xA2, 0x22
+/*
 	   sx_result = sx1262_status_get_device_errors(&initial_mode, &initial_status, &initial_errors);		// command 0x17 -- response 0xA2, 0xA2, 0x00, 0x20	   fanet_initial_mode[fanet_api_it_history] = initial_mode;
 	   fanet_initial_status[fanet_api_it_history] = initial_status;
 	   SX1262_CHECK_NOK_RESULT(sx_result, -10);
@@ -250,7 +251,7 @@ int fanet_test(void)
 	   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
 	   fanet_wait_ret_history[fanet_api_it_history][2] = fanet_wait_not_busy(FANET_DLY_READ);		// timeout
 	   SX1262_CHECK_NOK_RESULT(sx_result, -11);
-
+*/
 
 	   sx_result = sx1262_modes_set_standby(0);						// opcode 0x80
 	   fanet_wait_ret_history[fanet_api_it_history][3] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x7
@@ -266,9 +267,13 @@ int fanet_test(void)
 	   sx_result = sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
 	   SX1262_CHECK_NOK_RESULT(sx_result, -15);
 	   fanet_wait_ret_history[fanet_api_it_history][6] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x21
+
+/*
 	   sx_result = sx1262_status_get_device_errors(&mode, &command_status, &errors);		// command 0x17 -- response 0xA2, 0xA2, 0x00, 0x20
 	   SX1262_CHECK_NOK_RESULT(sx_result, -16);
 	   fanet_wait_ret_history[fanet_api_it_history][7] = fanet_wait_not_busy(FANET_DLY_READ);		// timeout
+*/
+
 //	   sx_result = sx1262_modes_set_regulator_mode(1);				// command 0x96
 //	   SX1262_CHECK_NOK_RESULT(sx_result, -14);
 //	   waiting_res = fanet_wait_not_busy(0xFFFF);		// 1200ms seems to be a minimum value
@@ -280,7 +285,8 @@ int fanet_test(void)
 //	   SX1262_FUCK_THIS_AND_WAIT
 	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
 	   fanet_chip_mode_hist[fanet_api_it_history] = mode;
-	   fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
+	   SX1262_CHECK_NOK_RESULT(sx_result, -17);
+	   //fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
 	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC/* && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK*/) {
 		   //sx1262_status_get_device_errors(&mode, &command_status, &errors);
 		   //waiting_res = fanet_wait_not_busy(0xFFFF);
@@ -450,12 +456,13 @@ nok:
 	   if (fanet_api_it_history >= FANET_SX_RESULT_HISTORY_LN) {
 		   fanet_api_it_history = 0;
 		   memset(fanet_wait_ret_history, 0xEEu, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 		   memset(fanet_chip_apiret_hist, 0xEEu, sizeof(sx1262_api_return_t) * FANET_SX_RESULT_HISTORY_LN);
 		   memset(fanet_initial_mode, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 		   memset(fanet_initial_status, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
+		   memset(fanet_mode_after_tx, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
+		   memset(fanet_cmdstatus_after_tx, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
 		   memset(fanet_i_value, 0xEEu, sizeof(int) * FANET_SX_RESULT_HISTORY_LN);
-
+		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 
 	   }
 

@@ -13,6 +13,59 @@
 
 #include "drivers/sx1262/sx1262_api_return_t.h"
 
+// clang-format off
+/// ==================================================================================================
+///	X-MACROS
+/// ==================================================================================================
+
+#define SX1262_CHECK_RECEIVED_DATA(rx_data, validated_ln)                \
+    SX1262_CHECK_RECEIVED_DATA_##validated_ln(rx_data)                   \
+
+#define SX1262_CHECK_RECEIVED_DATA_1(rx_data)                            \
+    ((rx_data[0] != 0x00) && (rx_data[0] != 0xFF))                       \
+
+#define SX1262_CHECK_RECEIVED_DATA_2(rx_data)               \
+    ((rx_data[0] != 0x00) && (rx_data[0] != 0xFF)           \
+    && (rx_data[1] != 0x00) && (rx_data[1] != 0xFF))        \
+
+#define SX1262_CHECK_RECEIVED_DATA_3(rx_data)               \
+    ((rx_data[0] != 0x00) && (rx_data[0] != 0xFF)           \
+    && (rx_data[1] != 0x00) && (rx_data[1] != 0xFF)         \
+    && (rx_data[2] != 0x00) && (rx_data[2] != 0xFF))        \
+
+
+#define SX1262_CHECK_RECEIVED_DATA_4(rx_data)               \
+    ((rx_data[0] != 0x00) && (rx_data[0] != 0xFF)           \
+    && (rx_data[1] != 0x00) && (rx_data[1] != 0xFF)         \
+    && (rx_data[2] != 0x00) && (rx_data[2] != 0xFF)         \
+    && (rx_data[3] != 0x00) && (rx_data[3] != 0xFF))        \
+
+
+
+#define SX1262_CHECK_RECEIVED_DATA_OR(rx_data, validated_ln)                \
+    SX1262_CHECK_RECEIVED_DATA_OR_##validated_ln(rx_data)                   \
+
+#define SX1262_CHECK_RECEIVED_DATA_OR_1(rx_data)                            \
+    ((rx_data[0] != 0x00) && (rx_data[0] != 0xFF))                       \
+
+#define SX1262_CHECK_RECEIVED_DATA_OR_2(rx_data)               \
+    (((rx_data[0] != 0x00) && (rx_data[0] != 0xFF))           \
+    || ((rx_data[1] != 0x00) && (rx_data[1] != 0xFF)))        \
+
+#define SX1262_CHECK_RECEIVED_DATA_OR_3(rx_data)               \
+    (((rx_data[0] != 0x00) && (rx_data[0] != 0xFF))            \
+    || ((rx_data[1] != 0x00) && (rx_data[1] != 0xFF))          \
+    || ((rx_data[2] != 0x00) && (rx_data[2] != 0xFF)))         \
+
+#define SX1262_CHECK_RECEIVED_DATA_OR_4(rx_data)               \
+    (((rx_data[0] != 0x00) && (rx_data[0] != 0xFF))            \
+    || ((rx_data[1] != 0x00) && (rx_data[1] != 0xFF))          \
+    || ((rx_data[2] != 0x00) && (rx_data[2] != 0xFF))          \
+    || ((rx_data[3] != 0x00) && (rx_data[3] != 0xFF)))         \
+
+
+// clang-format on
+
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================

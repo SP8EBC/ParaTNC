@@ -553,7 +553,7 @@ uint8_t spi_rx_tx_exchange_data(uint32_t slave_id, uint8_t tx_from_internal, uin
 			spi_rx_buffer_ptr = rx_buffer;
 
 			// clear the buffer
-			memset (spi_rx_buffer_ptr, 0x00, ln_to_exchange);
+			memset (spi_rx_buffer_ptr, 0x00, ln_to_exchange * 2);		// test test test!!!!!
 		}
 
 		// set the lenght

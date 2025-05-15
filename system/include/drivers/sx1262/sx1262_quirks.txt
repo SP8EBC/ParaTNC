@@ -1,0 +1,14 @@
+Sometimes, for unknown reasons Status byte returned in almost every command has a value of zero, 
+which seems to be invalid regarding official documentation. Such phenomenon was observed in 
+
+sx1262_status_get_device_errors - #define SX1262_STATUS_OPCODE_GET_DEVICE_ERR		(0x17)
+which sometimes returns 
+// 0x5, (0x6), 0x0, 0x40, 0x0
+where 0x5 sometimes become 0x6
+
+
+
+sx1262_irq_dio_get_mask - #define SX1262_STATUS_OPCODE_GET_IRQ_STATUS				(0x12)
+which sometimes returns 
+// 0x14 0 0 0x56
+

@@ -247,6 +247,7 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 
 #ifdef STM32L471xx
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;

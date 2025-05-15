@@ -9,9 +9,19 @@
 
 #include "drivers/spi.h"
 
+#include <stm32l4xx_ll_gpio.h>
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
+
+#ifdef SX1262_SHMIDT_NOT_GATE
+#define SX1262_BUSY_ACTIVE 		0U
+#define SX1262_BUSY_NOTACTIVE	1U
+#else
+#define SX1262_BUSY_ACTIVE 		1U
+#define SX1262_BUSY_NOTACTIVE	0U
+#endif
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -40,6 +50,18 @@ uint8_t sx1262_receive_spi_buffer[SX1262_RECEIVE_SPI_BUFFER_LN];
 
 uint8_t sx1262_is_busy(void) {
 
-	return spi_is_busy();
+	uint8_t out = 0;
+
+	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
+	{
+		out = 1;
+	}
+
+	if (spi_is_busy() == 1)
+	{
+		out = 1;
+	}
+
+	return out;
 }
 
