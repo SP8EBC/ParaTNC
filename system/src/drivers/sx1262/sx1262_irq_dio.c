@@ -99,7 +99,7 @@ sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask)
 			*iterrupt_mask = temp;
 
 			// 0x14 0 0 0x56
-			if (SX1262_CHECK_RECEIVED_DATA_OR(ptr, 2) == 1) {
+			if (SX1262_CHECK_RECEIVED_DATA(ptr, 2) == 1) {
 				out = SX1262_API_OK;
 			}
 			else {

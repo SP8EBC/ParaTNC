@@ -259,8 +259,7 @@ int fanet_test(void)
 	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
 	   fanet_chip_mode_hist[fanet_api_it_history] = mode;
 	   SX1262_CHECK_NOK_RESULT(sx_result, -17);
-	   //fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
-	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC/* && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK*/) {
+	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
 		   //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
 		   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);		// command 0x8A, 0x3
 		   // 0xFF - this gives approx 100us of delay

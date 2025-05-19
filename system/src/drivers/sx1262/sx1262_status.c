@@ -116,7 +116,7 @@ sx1262_api_return_t sx1262_status_get_device_errors(
 			*errors = (uint8_t)(_err);
 
 			// 0x5, (0x6), 0x0, 0x40, 0x0, 0xbb
-			if (SX1262_CHECK_RECEIVED_DATA_OR(ptr8, 2)) {
+			if (SX1262_CHECK_RECEIVED_DATA(ptr8, 2)) {
 				temp = ptr8[1] & 0x70u;
 				temp >>= 4;
 				*chip_mode = (sx1262_status_chip_mode_t) temp;
