@@ -120,10 +120,6 @@ sx1262_api_return_t sx1262_irq_dio_get_mask(uint16_t * iterrupt_mask)
 	return out;
 }
 
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static volatile uint8_t pin_dio1_previous_rx[5];
-#endif
-
 /**
  * Functions enables or disabled interrupt globally by setting IrqMask, it also sets DIO1Mask to
  * expose these interrupts on dio1 pin
@@ -188,9 +184,6 @@ sx1262_api_return_t sx1262_irq_dio_enable_disable_on_pin_dio1 (uint8_t tx_done, 
 #else
 			out = SX1262_API_OK;
 #endif
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(pin_dio1_previous_rx, ptr, 5);
-#endif
 
 		}
 		else {
@@ -203,10 +196,6 @@ sx1262_api_return_t sx1262_irq_dio_enable_disable_on_pin_dio1 (uint8_t tx_done, 
 
 	return out;
 }
-
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static volatile uint8_t set_dio2_previous_rx[2];
-#endif
 
 /**
  * This command is used to configure DIO2 so that it can be used to control an external RF switch.
@@ -249,9 +238,6 @@ sx1262_api_return_t sx1262_irq_dio_set_dio2_as_rf_switch (uint8_t enable)
 #else
 			out = SX1262_API_OK;
 #endif
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(set_dio2_previous_rx, ptr, 2);
-#endif
 		}
 		else {
 			out = SX1262_API_SPI_BUSY;
@@ -263,10 +249,6 @@ sx1262_api_return_t sx1262_irq_dio_set_dio2_as_rf_switch (uint8_t enable)
 
 	return out;
 }
-
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static volatile uint8_t set_dio3_previous_rx[4];
-#endif
 
 /**
  * This command is used to configure the chip for an external TCXO reference voltage controlled by
@@ -332,9 +314,6 @@ sx1262_api_return_t sx1262_irq_dio_set_dio3_as_tcxo_ctrl (sx1262_irq_dio_tcxo_vo
 	#else
 			out = SX1262_API_OK;
 	#endif
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(set_dio3_previous_rx, ptr, 4);
-#endif
 
 		}
 		else {

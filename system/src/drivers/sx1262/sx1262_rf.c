@@ -172,10 +172,6 @@ sx1262_api_return_t sx1262_rf_packet_type (sx1262_rf_packet_type_t type)
 
 	const uint8_t is_busy = sx1262_is_busy();
 
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static uint8_t previous_rx[2];
-#endif
-
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 		sx1262_transmit_spi_buffer[0] = SX1262_RF_OPCODE_SET_PACKET_TYPE;
@@ -197,9 +193,6 @@ sx1262_api_return_t sx1262_rf_packet_type (sx1262_rf_packet_type_t type)
 #else
 		out = SX1262_API_OK;
 #endif
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(previous_rx, ptr, 2);
-#endif
 	}
 	else {
 		out = SX1262_API_MODEM_BUSY;
@@ -219,10 +212,6 @@ sx1262_api_return_t sx1262_rf_packet_type_get (sx1262_rf_packet_type_t *type)
 	sx1262_api_return_t out = SX1262_API_LIB_NOINIT;
 
 	const uint8_t is_busy = sx1262_is_busy();
-
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static uint8_t previous_rx[3];
-#endif
 
 	if (is_busy == 0) {
 		memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
@@ -246,10 +235,6 @@ sx1262_api_return_t sx1262_rf_packet_type_get (sx1262_rf_packet_type_t *type)
 		}
 #else
 		out = SX1262_API_OK;
-#endif
-
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(previous_rx, ptr, 2);
 #endif
 
 	}

@@ -40,10 +40,6 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static volatile uint8_t status_get_previous_rx[2];
-#endif
-
 sx1262_api_return_t sx1262_status_get(
 								sx1262_status_chip_mode_t * chip_mode,
 								sx1262_status_last_command_t * last_command_status)
@@ -65,11 +61,6 @@ sx1262_api_return_t sx1262_status_get(
 		SX1262_SPI_WAIT_UNTIL_BUSY();
 
 		const uint8_t * ptr = spi_get_rx_data();
-
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(status_get_previous_rx, ptr, 2);
-#endif
-
 
 		if (ptr[1] != 0x00u && ptr[1] != 0xFFu) {
 			temp = ptr[1] & 0x70u;

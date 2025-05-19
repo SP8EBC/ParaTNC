@@ -124,10 +124,6 @@ sx1262_api_return_t sx1262_modes_set_sleep(uint8_t cold_warm_start, uint8_t rtc_
 	return out;
 }
 
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-	static volatile uint8_t set_standby_previous_rx[2];
-#endif
-
 /**
  * The command SetStandby(...) is used to set the device in a configuration mode which is at an intermediate level of
  * consumption. In this mode, the chip is placed in halt mode waiting for instructions via SPI.
@@ -173,9 +169,6 @@ sx1262_api_return_t sx1262_modes_set_standby(uint8_t standby_rc_xosc) {
 				}
 #else
 				out = SX1262_API_OK;
-#endif
-#ifdef SX1262_D_STORE_LAST_RX_BUFF
-				memcpy(set_standby_previous_rx, ptr, 2);
 #endif
 			}
 			else {
