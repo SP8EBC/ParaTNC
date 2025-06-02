@@ -174,7 +174,7 @@ void fanet_test_init(void)
 	//!< Used across this file to configure I/O pins
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-	// INTERRUPT
+	// INTERRUPT  - PC6
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
@@ -183,7 +183,7 @@ void fanet_test_init(void)
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
-	// IS BUSY
+	// IS BUSY  - PC7
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
