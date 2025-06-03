@@ -158,6 +158,11 @@ void EXTI9_5_IRQHandler(void) {
 	//spi_irq_handler();
 }
 
+void SPI2_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(SPI2_IRQn);
+
+	spi_irq_handler();
+}
 
 #endif
 
