@@ -19,6 +19,7 @@
 #include <stm32l471xx.h>
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 #include "pwr_save.h"
+#include "drivers/sx1262/sx1262.h"
 #endif
 
 #include "drivers/spi.h"
@@ -137,11 +138,27 @@ void RTC_WKUP_IRQHandler(void) {
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
 }
 
-void SPI2_IRQHandler(void) {
-	NVIC_ClearPendingIRQ(SPI2_IRQn);
+void EXTI9_5_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
 
-	spi_irq_handler();
+	const uint32_t current_pending = EXTI->PR1;
+
+	// // IS BUSY
+	if (current_pending & EXTI_PR1_PIF7) {
+		sx1262_busy_released_callback();
+		EXTI->PR1 |= EXTI_PR1_PIF7;
+	}
+
+	// INTERRUPT
+	if (current_pending & EXTI_PR1_PIF6) {
+		sx1262_interrupt_callback();
+		EXTI->PR1 |= EXTI_PR1_PIF6;
+	}
+
+	//spi_irq_handler();
 }
+
+
 #endif
 
 // Systick interrupt used for time measurements, checking timeouts and SysTick_Handler

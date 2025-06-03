@@ -1411,6 +1411,8 @@ int main(int argc, char* argv[]){
 	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 	supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 
+	//sx1262_init();
+
    fanet_test_init();
    fanet_test();
 #endif
