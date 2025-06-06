@@ -154,8 +154,6 @@ void EXTI9_5_IRQHandler(void) {
 		sx1262_interrupt_callback();
 		EXTI->PR1 |= EXTI_PR1_PIF6;
 	}
-
-	//spi_irq_handler();
 }
 
 void SPI2_IRQHandler(void) {

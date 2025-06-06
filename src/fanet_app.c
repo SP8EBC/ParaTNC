@@ -14,6 +14,7 @@
 #include "drivers/sx1262/sx1262_rf.h"
 #include "drivers/sx1262/sx1262_irq_dio.h"
 #include "drivers/sx1262/sx1262_data_io.h"
+#include "drivers/sx1262/sx1262_internals.h"
 
 #include "skytrax_fanet/fanet_factory_frames.h"
 #include "skytrax_fanet/fanet_serialization.h"
@@ -29,13 +30,13 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
-#ifdef SX1262_SHMIDT_NOT_GATE
-#define SX1262_BUSY_ACTIVE 		0U
-#define SX1262_BUSY_NOTACTIVE	1U
-#else
-#define SX1262_BUSY_ACTIVE 		1U
-#define SX1262_BUSY_NOTACTIVE	0U
-#endif
+//#ifdef SX1262_SHMIDT_NOT_GATE
+//#define SX1262_BUSY_ACTIVE 		0U
+//#define SX1262_BUSY_NOTACTIVE	1U
+//#else
+//#define SX1262_BUSY_ACTIVE 		1U
+//#define SX1262_BUSY_NOTACTIVE	0U
+//#endif
 
 #define SX1262_FUCK_THIS_AND_WAIT
 
@@ -122,9 +123,9 @@ static uint32_t fanet_wait_not_busy(int _unused)
 	uint32_t out = 0;
 	(void)_unused;
 	// PC6
-	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
+	if (sx1262_busy_flag == SX1262_BUSY_ACTIVE)
 	{
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE) 
+		while(sx1262_busy_flag == SX1262_BUSY_ACTIVE)
 		{
 			out++;
 		}
@@ -134,7 +135,7 @@ static uint32_t fanet_wait_not_busy(int _unused)
 	}
 	else
 	{
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_NOTACTIVE)
+		while(sx1262_busy_flag == SX1262_BUSY_NOTACTIVE)
 		{
 			_unused--;
 			if (_unused < 0)
@@ -144,7 +145,7 @@ static uint32_t fanet_wait_not_busy(int _unused)
 				return out;
 			}
 		}
-		while(LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
+		while(sx1262_busy_flag == SX1262_BUSY_ACTIVE)
 		{
 			out++;
 		}

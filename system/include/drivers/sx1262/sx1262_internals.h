@@ -74,6 +74,14 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
+#ifdef SX1262_SHMIDT_NOT_GATE
+#define SX1262_BUSY_ACTIVE 		0U
+#define SX1262_BUSY_NOTACTIVE	1U
+#else
+#define SX1262_BUSY_ACTIVE 		1U
+#define SX1262_BUSY_NOTACTIVE	0U
+#endif
+
 #define SX1262_BLOCKING_IO
 
 #define SX1262_TRANSMIT_SPI_BUFFER_LN	(128)
@@ -100,6 +108,8 @@
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
+
+extern volatile uint8_t sx1262_busy_flag;
 
 extern uint8_t sx1262_transmit_spi_buffer[SX1262_TRANSMIT_SPI_BUFFER_LN];
 

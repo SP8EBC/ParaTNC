@@ -6,11 +6,36 @@
  */
 
 #include "./drivers/sx1262/sx1262.h"
+#include "./drivers/sx1262/sx1262_internals.h"s
 
 #include <stdint.h>
 
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
+
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 void sx1262_init(void)
 {
@@ -19,11 +44,11 @@ void sx1262_init(void)
 
 	// INTERRUPT - PC6
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_0;
 	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
 	// IS BUSY - PC7
@@ -36,7 +61,7 @@ void sx1262_init(void)
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_0;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
 
 	// keep RESET output hi-z
@@ -54,25 +79,39 @@ void sx1262_init(void)
 	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI7_PC;
 
 #ifdef SX1262_SHMIDT_NOT_GATE
-	// 1: Rising trigger enabled (for Event and Interrupt) for input line
-	EXTI->RTSR1 |= EXTI_RTSR1_RT7;
 	// 1: Falling trigger enabled (for Event and Interrupt) for input line
-	EXTI->FTSR1 |= EXTI_FTSR1_FT6;
+	EXTI->FTSR1 |= EXTI_FTSR1_FT6;		// INTERRUPT
 
 #else
-	// 1: Falling trigger enabled (for Event and Interrupt) for input line
-	EXTI->FTSR1 |= EXTI_FTSR1_FT7;		// IS BUSY
 	// 1: Rising trigger enabled (for Event and Interrupt) for input line
 	EXTI->RTSR1 |= EXTI_RTSR1_RT6;		// INTERRUPT
 #endif
 
+	// 1: Rising trigger enabled (for Event and Interrupt) for input line
+	EXTI->RTSR1 |= EXTI_RTSR1_RT7;		// IS BUSY
+
+	// 1: Falling trigger enabled (for Event and Interrupt) for input line
+	EXTI->FTSR1 |= EXTI_FTSR1_FT7;		// IS BUSY
+
+	EXTI->IMR1 |= EXTI_IMR1_IM6;
+	EXTI->IMR1 |= EXTI_IMR1_IM7;
+
 	//   EXTI9_5_IRQn                = 23,     // !< External Line[9:5] Interrupts
-	//NVIC_EnableIRQ( EXTI9_5_IRQn );
+	NVIC_EnableIRQ( EXTI9_5_IRQn );
+
+	sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
 }
 
 void sx1262_busy_released_callback(void)
 {
-
+	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
+	{
+		sx1262_busy_flag = SX1262_BUSY_ACTIVE;
+	}
+	else
+	{
+		sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
+	}
 }
 
 void sx1262_interrupt_callback(void)
