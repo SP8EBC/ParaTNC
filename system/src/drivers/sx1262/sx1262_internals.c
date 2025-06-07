@@ -6,6 +6,8 @@
  */
 
 #include "drivers/sx1262/sx1262_internals.h"
+#include "drivers/sx1262/sx1262.h"
+
 
 #include "drivers/spi.h"
 
@@ -28,6 +30,8 @@
 /// ==================================================================================================
 
 volatile uint8_t sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
+
+volatile uint8_t sx1262_interrupt_flag = SX1262_BUSY_NOTACTIVE;
 
 uint8_t sx1262_transmit_spi_buffer[SX1262_TRANSMIT_SPI_BUFFER_LN];
 

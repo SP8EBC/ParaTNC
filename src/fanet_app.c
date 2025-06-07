@@ -14,7 +14,7 @@
 #include "drivers/sx1262/sx1262_rf.h"
 #include "drivers/sx1262/sx1262_irq_dio.h"
 #include "drivers/sx1262/sx1262_data_io.h"
-#include "drivers/sx1262/sx1262_internals.h"
+#include "drivers/sx1262/sx1262.h"
 
 #include "skytrax_fanet/fanet_factory_frames.h"
 #include "skytrax_fanet/fanet_serialization.h"
@@ -87,15 +87,15 @@ int  fanet_tx_success_cnt = 0;
  *
  *
  */
-volatile sx1262_status_chip_mode_t fanet_chip_mode_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-volatile sx1262_api_return_t fanet_chip_apiret_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-
-// initial
-volatile sx1262_status_chip_mode_t fanet_initial_mode[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-volatile sx1262_status_last_command_t fanet_initial_status[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-
-volatile sx1262_status_chip_mode_t fanet_mode_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-volatile sx1262_status_last_command_t fanet_cmdstatus_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//volatile sx1262_status_chip_mode_t fanet_chip_mode_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//volatile sx1262_api_return_t fanet_chip_apiret_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//
+//// initial
+//volatile sx1262_status_chip_mode_t fanet_initial_mode[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//volatile sx1262_status_last_command_t fanet_initial_status[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//
+//volatile sx1262_status_chip_mode_t fanet_mode_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+//volatile sx1262_status_last_command_t fanet_cmdstatus_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 
 
 volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
@@ -123,9 +123,10 @@ static uint32_t fanet_wait_not_busy(int _unused)
 	uint32_t out = 0;
 	(void)_unused;
 	// PC6
-	if (sx1262_busy_flag == SX1262_BUSY_ACTIVE)
+	sx1262_set_busy_flag_for_waiting();
+	if (sx1262_is_busy_io_line_active())
 	{
-		while(sx1262_busy_flag == SX1262_BUSY_ACTIVE)
+		while(sx1262_is_busy_flag_active())
 		{
 			out++;
 		}
@@ -135,7 +136,7 @@ static uint32_t fanet_wait_not_busy(int _unused)
 	}
 	else
 	{
-		while(sx1262_busy_flag == SX1262_BUSY_NOTACTIVE)
+		while(sx1262_is_busy_io_line_active() == 0)
 		{
 			_unused--;
 			if (_unused < 0)
@@ -145,7 +146,8 @@ static uint32_t fanet_wait_not_busy(int _unused)
 				return out;
 			}
 		}
-		while(sx1262_busy_flag == SX1262_BUSY_ACTIVE)
+		sx1262_set_busy_flag_for_waiting();
+		while(sx1262_is_busy_flag_active())
 		{
 			out++;
 		}
@@ -175,18 +177,18 @@ void fanet_test_init(void)
 	//!< Used across this file to configure I/O pins
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-	// INTERRUPT  - PC6
-	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
-	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
-
-	// IS BUSY  - PC7
-	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
-	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+//	// INTERRUPT  - PC6
+//	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
+//	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
+//	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
+//	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+//	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
+//	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+//
+//	// IS BUSY  - PC7
+//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
+//	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
 
 	// RESET output - A12
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
@@ -258,7 +260,7 @@ int fanet_test(void)
 	   SX1262_CHECK_NOK_RESULT(sx_result, -15);
 	   fanet_wait_ret_history[fanet_api_it_history][6] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x21
 	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
-	   fanet_chip_mode_hist[fanet_api_it_history] = mode;
+	   //fanet_chip_mode_hist[fanet_api_it_history] = mode;
 	   SX1262_CHECK_NOK_RESULT(sx_result, -17);
 	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
 		   //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
@@ -307,7 +309,7 @@ int fanet_test(void)
 								   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x607d94, 0x5453E4
 								   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
 
-								   if ((interrupt_mask & 0x1) != 0)
+								   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
 								   {
 									   fanet_tx_success_cnt ++;
 									   i = 0;
@@ -317,14 +319,14 @@ int fanet_test(void)
 								   {
 									   fanet_wait_ret_history[fanet_api_it_history][FANET_SX_WAIT_NUMBER - 1] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);
 									   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
-									   if ((interrupt_mask & 0x1) != 0)
+									   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
 									   {
 										   fanet_tx_success_cnt ++;
 									   }
 								   }
 								   sx_result = sx1262_status_get(&mode, &command_status);		// command: 0xC0
-								   fanet_mode_after_tx[fanet_api_it_history] = mode;
-								   fanet_cmdstatus_after_tx[fanet_api_it_history] = command_status;
+								   //fanet_mode_after_tx[fanet_api_it_history] = mode;
+								   //fanet_cmdstatus_after_tx[fanet_api_it_history] = command_status;
 								   if (tx_res == SX1262_API_OK && command_status == SX1262_LAST_COMMAND_TX_DONE)
 								   {
 									   i = 0;
@@ -389,11 +391,11 @@ nok:
 		   {
 			   fanet_fail_cnt++;
 		   }
-		   fanet_chip_apiret_hist[fanet_api_it_history] = SX1262_API_OK;
+		   //fanet_chip_apiret_hist[fanet_api_it_history] = SX1262_API_OK;
 	   }
 	   else
 	   {
-		   fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
+		   //fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
 		   sx_result = SX1262_API_UNINIT;
 		   fanet_fail_cnt++;
 	   }
@@ -403,14 +405,14 @@ nok:
 	   fanet_api_it_history++;
 	   if (fanet_api_it_history >= FANET_SX_RESULT_HISTORY_LN) {
 		   fanet_api_it_history = 0;
-		   memset(fanet_wait_ret_history, 0xEEu, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_chip_apiret_hist, 0xEEu, sizeof(sx1262_api_return_t) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_initial_mode, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_initial_status, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_mode_after_tx, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_cmdstatus_after_tx, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_i_value, 0xEEu, sizeof(int) * FANET_SX_RESULT_HISTORY_LN);
-		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_wait_ret_history, 0xEEu, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_chip_apiret_hist, 0xEEu, sizeof(sx1262_api_return_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_initial_mode, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_initial_status, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_mode_after_tx, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_cmdstatus_after_tx, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_i_value, 0xEEu, sizeof(int) * FANET_SX_RESULT_HISTORY_LN);
+//		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 
 	   }
 
