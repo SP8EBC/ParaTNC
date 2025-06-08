@@ -58,6 +58,9 @@
 #define FANET_SX_WAIT_NUMBER		33
 #define FANET_SX_RESULT_HISTORY_LN	12
 
+#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_array
+#define FANET_SX_WAHT_TO_TRANSMIT_LN	fanet_serialized_frame_out_ln
+
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -80,23 +83,24 @@ int  fanet_success_cnt = 0;
 int  fanet_fail_cnt = 0;
 int  fanet_tx_success_cnt = 0;
 
-/*
- * 	   sx1262_status_chip_mode_t mode = SX1262_CHIP_MODE_UNINIT;
- *sx1262_api_return_t sx_result
- *
- *
- *
- */
-//volatile sx1262_status_chip_mode_t fanet_chip_mode_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-//volatile sx1262_api_return_t fanet_chip_apiret_hist[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-//
-//// initial
-//volatile sx1262_status_chip_mode_t fanet_initial_mode[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-//volatile sx1262_status_last_command_t fanet_initial_status[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-//
-//volatile sx1262_status_chip_mode_t fanet_mode_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
-//volatile sx1262_status_last_command_t fanet_cmdstatus_after_tx[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
+const fanet_mac_adress_t fanet_src = { .manufacturer = 0x11, .id = 0x2233 };
+const fanet_mac_adress_t fanet_dest = {0u}; //!< zero for broadcast
 
+uint32_t fanet_serialized_frame_out_ln = 0;
+fanet_frame_t fanet_frame_out = {0u};
+const fanet_aircraft_t fanet_type = FANET_AIRCRAFT_PARAGLIDER;
+const fanet_aircraft_stv_t fanet_stv = {
+								.state = FANET_AIRCRAFT_STATUS_NEED_RIDE,
+								.latitude = 49.7828f,
+								.longitude = 19.0567f,
+								.altitude = 512.0f,
+								.speed = 1.0f,
+								.climb = 0.5f,
+								.heading = 128.0f,
+								.turnrate = 1.0f,
+								.qne_offset = 0.0f,
+								.has_turnrate = 0
+								};
 
 volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 
@@ -203,6 +207,14 @@ void fanet_test_init(void)
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
 
 	memset(fanet_wait_ret_history, 0x00, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
+
+	const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv, &fanet_frame_out);
+	fanet_frame_out.payload_length = frame_out_ln;
+	fanet_frame_out.type = FANET_FRAME_TRACKING;
+	fanet_frame_out.source = fanet_src;
+	fanet_frame_out.destination = fanet_dest;
+
+	FANET_SX_WAHT_TO_TRANSMIT_LN = fanet_serialize(&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
 }
 
 /**
@@ -249,111 +261,125 @@ int fanet_test(void)
 	   sx_result = sx1262_modes_set_standby(0);						// opcode 0x80
 	   fanet_wait_ret_history[fanet_api_it_history][3] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x7
 	   SX1262_CHECK_NOK_RESULT(sx_result, -12);
-
-
+	   ////
 	   sx_result = sx1262_irq_dio_enable_disable_on_pin_dio1(1, 1, 1, 1);  // command 0x08, 0x02, 0x43, 0x02 -- response 0xA2
 	   SX1262_CHECK_NOK_RESULT(sx_result, -13);
+	   ////
 	   sx_result = sx1262_irq_dio_set_dio2_as_rf_switch(1);			// command 0x9D, 0x01
-	   SX1262_CHECK_NOK_RESULT(sx_result, -14);
 	   fanet_wait_ret_history[fanet_api_it_history][5] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 15 msec	0x7
+	   SX1262_CHECK_NOK_RESULT(sx_result, -14);
+	   ////
 	   sx_result = sx1262_irq_dio_set_dio3_as_tcxo_ctrl(SX1262_IRQ_DIO_TCXO_VOLTAGE_3_3, 0xF000);
-	   SX1262_CHECK_NOK_RESULT(sx_result, -15);
 	   fanet_wait_ret_history[fanet_api_it_history][6] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x21
+	   SX1262_CHECK_NOK_RESULT(sx_result, -15);
+	   ////
 	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
-	   //fanet_chip_mode_hist[fanet_api_it_history] = mode;
 	   SX1262_CHECK_NOK_RESULT(sx_result, -17);
 	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
-		   //sx1262_modes_set_calibrate_function(1, 1, 1, 1, 1, 1, 1);
 		   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);		// command 0x8A, 0x3
-		   // 0xFF - this gives approx 100us of delay
 		   fanet_wait_ret_history[fanet_api_it_history][8] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x2B
+		   ////
 		   sx_result = sx1262_rf_packet_type_get(&type);
+		   ////
 		   if (type == SX1262_RF_PACKET_TYPE_LORA) {
 			   sx1262_rf_frequency(868500);
 			   fanet_wait_ret_history[fanet_api_it_history][10] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x9a
+			   ////
 			   sx_result = sx1262_status_get(&mode, &command_status);
 			   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
 				   sx1262_modes_set_pa_config(5);
 				   fanet_wait_ret_history[fanet_api_it_history][12] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x20
-				   sx_result = sx1262_status_get(&mode, &command_status);
+				   ////
 				   sx_result = sx1262_rf_tx_params(14, SX1262_RF_TX_RAMPTIME_200US);
 				   fanet_wait_ret_history[fanet_api_it_history][14] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x13
+				   ////
 				   if (sx_result == SX1262_API_OK) {
-					   sx_result = sx1262_status_get(&mode, &command_status);
-					   fanet_wait_not_busy(FANET_DLY_READ);
-
-//					   sx1262_data_io_write_register_byte(0x08E7u, 0x38u);
-//					   sx1262_data_io_read_register(0x08E7u, 1u, &regi);
-
 					   sx1262_rf_buffer_base_addresses(0, 128);
 					   fanet_wait_ret_history[fanet_api_it_history][15] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0xD
+					   ////
+					   sx1262_data_io_write_buffer(0, FANET_SX_WAHT_TO_TRANSMIT_LN, (const uint8_t*)FANET_SX_WHAT_TO_TRANSMIT);
+					   fanet_wait_ret_history[fanet_api_it_history][15] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0xD
+					   ////
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   sx1262_data_io_write_buffer(0, 7, (const uint8_t*)fanet_test_2);
-					   sx_result = sx1262_status_get(&mode, &command_status);
-					   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
-					   fanet_wait_ret_history[fanet_api_it_history][19] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x27
-					   sx_result = sx1262_status_get(&mode, &command_status);
-					   sx1262_rf_lora_packet_params(12, 7, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
-					   fanet_wait_ret_history[fanet_api_it_history][21] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x27
-					   sx_result = sx1262_status_get(&mode, &command_status);
-
 					   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
-						   sx1262_data_io_write_register_byte(0x740, 0xF4u);
-						   sx1262_data_io_write_register_byte(0x741, 0x14u);
-						   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);
-						   sx1262_data_io_read_register(0x8E7, 1, (uint8_t*)&current_limit);
-						   if (((uint8_t)(i & 0xFFu) == 0xF4u) && ((uint8_t)(current_limit & 0xFFu) == 0x38u)) {
-							   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);
-							   if ((uint8_t)(i & 0xFFu) == 0x14u) {
-								   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);
-								   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x607d94, 0x5453E4
-								   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
+						   // These parameters are set using the command SetModulationParams(...) which must be called after SetPacketType(...).
+						   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
+						   fanet_wait_ret_history[fanet_api_it_history][19] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x27
+						   ////
+						   sx_result = sx1262_status_get(&mode, &command_status);
+						   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+							   sx1262_rf_lora_packet_params(FANET_SX_WAHT_TO_TRANSMIT_LN + 128, FANET_SX_WAHT_TO_TRANSMIT_LN, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
+							   fanet_wait_ret_history[fanet_api_it_history][21] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x27
+							   ////
+							   sx_result = sx1262_status_get(&mode, &command_status);
+							   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+								   sx1262_data_io_write_register_byte(0x740, 0xF4u);			// Lora sync word MSB
+								   sx1262_data_io_write_register_byte(0x741, 0x14u);			// Lora sync word LSB
+								   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);			// read this sync word MSB back for verification
+								   sx1262_data_io_read_register(0x8E7, 1, (uint8_t*)&current_limit);
+								   ////
+								   if (((uint8_t)(i & 0xFFu) == 0xF4u) && ((uint8_t)(current_limit & 0xFFu) == 0x38u)) {
+									   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);		// read this sync word LSB back for verification
+									   if ((uint8_t)(i & 0xFFu) == 0x14u) {
+										   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);	// TRANSMIT HERE
+										   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x607d94, 0x5453E4
+										   ////
+										   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
 
-								   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
-								   {
-									   fanet_tx_success_cnt ++;
-									   i = 0;
-									   fanet_wait_ret_history[fanet_api_it_history][FANET_SX_WAIT_NUMBER - 1] = 0x80000000;
-								   }
-								   else
-								   {
-									   fanet_wait_ret_history[fanet_api_it_history][FANET_SX_WAIT_NUMBER - 1] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);
-									   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
-									   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
+										   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
+										   {
+											   fanet_tx_success_cnt ++;
+											   i = 0;
+											   fanet_wait_ret_history[fanet_api_it_history][FANET_SX_WAIT_NUMBER - 1] = 0x80000000;
+										   }
+										   else
+										   {
+											   fanet_wait_ret_history[fanet_api_it_history][FANET_SX_WAIT_NUMBER - 1] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);
+											   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
+											   if (sx1262_is_interrrupt_flag_active() && (interrupt_mask & 0x1) != 0)
+											   {
+												   fanet_tx_success_cnt ++;
+											   }
+										   }
+										   sx_result = sx1262_status_get(&mode, &command_status);		// command: 0xC0
+										   if (tx_res == SX1262_API_OK && command_status == SX1262_LAST_COMMAND_TX_DONE)
+										   {
+											   i = 0;
+										   }
+										   else
+										   {
+											   i = -1;
+										   }
+
+										   sx1262_irq_dio_clear_all();
+										   sx_result = sx1262_irq_dio_get_mask(&last_interrupt_mask);	// command 0x12
+
+										   sx1262_status_get_device_errors(&mode, &command_status, &errors);
+									   }
+									   else
 									   {
-										   fanet_tx_success_cnt ++;
+										   i = -8;
 									   }
 								   }
-								   sx_result = sx1262_status_get(&mode, &command_status);		// command: 0xC0
-								   //fanet_mode_after_tx[fanet_api_it_history] = mode;
-								   //fanet_cmdstatus_after_tx[fanet_api_it_history] = command_status;
-								   if (tx_res == SX1262_API_OK && command_status == SX1262_LAST_COMMAND_TX_DONE)
-								   {
-									   i = 0;
-								   }
 								   else
 								   {
-									   i = -1;
+									   i = -7;
 								   }
-
-								   sx1262_irq_dio_clear_all();
-								   sx_result = sx1262_irq_dio_get_mask(&last_interrupt_mask);	// command 0x12
-
-								   sx1262_status_get_device_errors(&mode, &command_status, &errors);
 							   }
 							   else
 							   {
-								   i = -8;
+								   i = -6;
 							   }
 						   }
 						   else
 						   {
-							   i = -7;
+							   i = -21;
 						   }
+						   //////////
 					   }
 					   else
 					   {
-						   i = -6;
+						   i = -20;
 					   }
 				   }
 				   else

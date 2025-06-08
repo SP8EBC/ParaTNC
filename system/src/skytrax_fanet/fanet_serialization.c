@@ -120,7 +120,7 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 	}
 
 	/* fill payload */
-	for (int i = 0; i < input->payload_length && idx < blength; i++)
+	for (int i = 0; (i < input->payload_length) && (idx < blength); i++)
 		output[idx++] = input->payload[i];
 
 	return blength;

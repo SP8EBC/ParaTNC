@@ -43,8 +43,8 @@
 
 typedef struct fanet_mac_adress_t {
 
-	int16_t manufacturer;	//!< zero for broadcast
-	int16_t id;				//!< zero for broadcast
+	uint16_t manufacturer;	//!< zero for broadcast
+	uint16_t id;				//!< zero for broadcast
 
 }fanet_mac_adress_t;
 
