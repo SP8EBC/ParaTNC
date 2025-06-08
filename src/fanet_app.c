@@ -262,6 +262,7 @@ int fanet_test(void)
 	   fanet_wait_ret_history[fanet_api_it_history][3] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x7
 	   SX1262_CHECK_NOK_RESULT(sx_result, -12);
 	   ////
+	   // 10. Configure DIO and IRQ: use the command SetDioIrqParams(...) to select TxDone IRQ and map this IRQ to a DIO (DIO1,
 	   sx_result = sx1262_irq_dio_enable_disable_on_pin_dio1(1, 1, 1, 1);  // command 0x08, 0x02, 0x43, 0x02 -- response 0xA2
 	   SX1262_CHECK_NOK_RESULT(sx_result, -13);
 	   ////
@@ -276,43 +277,52 @@ int fanet_test(void)
 	   sx_result = sx1262_status_get(&mode, &command_status);		// command 0xC0  -- response 0xA2, 0x22
 	   SX1262_CHECK_NOK_RESULT(sx_result, -17);
 	   if (SX1262_API_OK == sx_result && mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK) {
+		   // 2. Define the protocol (LoRa® or FSK) with the command SetPacketType(...)
 		   sx1262_rf_packet_type(SX1262_RF_PACKET_TYPE_LORA);		// command 0x8A, 0x3
 		   fanet_wait_ret_history[fanet_api_it_history][8] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x2B
 		   ////
 		   sx_result = sx1262_rf_packet_type_get(&type);
 		   ////
 		   if (type == SX1262_RF_PACKET_TYPE_LORA) {
+			   // 3. Define the RF frequency with the command SetRfFrequency(...)
 			   sx1262_rf_frequency(868500);
 			   fanet_wait_ret_history[fanet_api_it_history][10] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x9a
 			   ////
 			   sx_result = sx1262_status_get(&mode, &command_status);
-			   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+			   if (command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK && sx_result == SX1262_API_OK) {
+				   // 4. Define the Power Amplifier configuration with the command SetPaConfig(...)
 				   sx1262_modes_set_pa_config(5);
 				   fanet_wait_ret_history[fanet_api_it_history][12] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x20
 				   ////
+				   // 5. Define output power and ramping time with the command SetTxParams(...)
 				   sx_result = sx1262_rf_tx_params(14, SX1262_RF_TX_RAMPTIME_200US);
 				   fanet_wait_ret_history[fanet_api_it_history][14] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x13
 				   ////
 				   if (sx_result == SX1262_API_OK) {
+					   // 6. Define where the data payload will be stored with the command SetBufferBaseAddress(...)
 					   sx1262_rf_buffer_base_addresses(0, 128);
 					   fanet_wait_ret_history[fanet_api_it_history][15] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0xD
 					   ////
+					   // 7. Send the payload to the data buffer with the command WriteBuffer(...)
 					   sx1262_data_io_write_buffer(0, FANET_SX_WAHT_TO_TRANSMIT_LN, (const uint8_t*)FANET_SX_WHAT_TO_TRANSMIT);
 					   fanet_wait_ret_history[fanet_api_it_history][15] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0xD
 					   ////
 					   sx_result = sx1262_status_get(&mode, &command_status);
-					   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+					   if (command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK && sx_result == SX1262_API_OK) {
+						   // 8. Define the modulation parameter according to the chosen protocol with the command SetModulationParams(...)1
 						   // These parameters are set using the command SetModulationParams(...) which must be called after SetPacketType(...).
 						   sx1262_rf_lora_modulation_params(SX1262_RF_LORA_SF7, SX1262_RF_LORA_BW250, SX1262_RF_LORA_CR_45, SX1262_RF_LORA_OPTIMIZE_OFF);
 						   fanet_wait_ret_history[fanet_api_it_history][19] = fanet_wait_not_busy(FANET_DLY_WRITE);		// 0x27
 						   ////
 						   sx_result = sx1262_status_get(&mode, &command_status);
-						   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+						   if (command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK && sx_result == SX1262_API_OK) {
+							   // 9. Define the frame format to be used with the command SetPacketParams(...)2
 							   sx1262_rf_lora_packet_params(FANET_SX_WAHT_TO_TRANSMIT_LN + 128, FANET_SX_WAHT_TO_TRANSMIT_LN, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
 							   fanet_wait_ret_history[fanet_api_it_history][21] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x27
 							   ////
 							   sx_result = sx1262_status_get(&mode, &command_status);
-							   if (command_status != SX1262_LAST_COMMAND_FAIL_TO_EXEC && sx_result == SX1262_API_OK) {
+							   if (command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK && sx_result == SX1262_API_OK) {
+								   // 11. Define Sync Word value: use the command WriteReg(...) to write the value of the register via direct register access
 								   sx1262_data_io_write_register_byte(0x740, 0xF4u);			// Lora sync word MSB
 								   sx1262_data_io_write_register_byte(0x741, 0x14u);			// Lora sync word LSB
 								   sx1262_data_io_read_register(0x740, 1, (uint8_t*)&i);			// read this sync word MSB back for verification
@@ -321,6 +331,7 @@ int fanet_test(void)
 								   if (((uint8_t)(i & 0xFFu) == 0xF4u) && ((uint8_t)(current_limit & 0xFFu) == 0x38u)) {
 									   sx1262_data_io_read_register(0x741, 1, (uint8_t*)&i);		// read this sync word LSB back for verification
 									   if ((uint8_t)(i & 0xFFu) == 0x14u) {
+										   // 12. Set the circuit in transmitter mode to start transmission with the command SetTx(). Use the parameter to enable
 										   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);	// TRANSMIT HERE
 										   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x607d94, 0x5453E4
 										   ////
