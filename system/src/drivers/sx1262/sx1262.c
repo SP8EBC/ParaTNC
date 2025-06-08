@@ -170,6 +170,7 @@ short sx1262_is_interrrupt_flag_active(void)
 {
 	if (sx1262_interrupt_flag == SX1262_BUSY_ACTIVE)
 	{
+		sx1262_interrupt_flag = SX1262_BUSY_NOTACTIVE;
 		return 1;
 	}
 	else

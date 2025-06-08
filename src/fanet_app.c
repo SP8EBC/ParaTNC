@@ -233,7 +233,7 @@ int fanet_test(void)
 	   uint8_t errors;
 	   volatile uint8_t initial_errors = 0xFF;
 
-	   sx1262_rf_packet_type_t type;
+	   sx1262_rf_packet_type_t type = SX1262_RF_PACKET_TYPE_UNINIT;
 
 	   //fanet_wx_input_t wx_input = {0u};
 	   //wx_input.temperature = 23.3;
@@ -283,7 +283,7 @@ int fanet_test(void)
 		   ////
 		   sx_result = sx1262_rf_packet_type_get(&type);
 		   ////
-		   if (type == SX1262_RF_PACKET_TYPE_LORA) {
+		   if (type == SX1262_RF_PACKET_TYPE_LORA && sx_result == SX1262_API_OK) {
 			   // 3. Define the RF frequency with the command SetRfFrequency(...)
 			   sx1262_rf_frequency(868500);
 			   fanet_wait_ret_history[fanet_api_it_history][10] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x9a
@@ -333,7 +333,7 @@ int fanet_test(void)
 									   if ((uint8_t)(i & 0xFFu) == 0x14u) {
 										   // 12. Set the circuit in transmitter mode to start transmission with the command SetTx(). Use the parameter to enable
 										   const sx1262_api_return_t tx_res = sx1262_modes_set_tx(0x0);	// TRANSMIT HERE
-										   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x607d94, 0x5453E4
+										   fanet_wait_ret_history[fanet_api_it_history][28] = fanet_wait_not_busy(FANET_DLY_TRANSMIT);	// 0x32eaf5
 										   ////
 										   sx_result = sx1262_irq_dio_get_mask(&interrupt_mask);	// command 0x12
 

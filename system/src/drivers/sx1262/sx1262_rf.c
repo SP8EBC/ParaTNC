@@ -226,7 +226,7 @@ sx1262_api_return_t sx1262_rf_packet_type_get (sx1262_rf_packet_type_t *type)
 #ifdef SX1262_BLOCKING_IO
 		const uint8_t * ptr = spi_get_rx_data();
 
-		if (ptr[2] == 0x00u || ptr[2] == 0x03u || ptr[2] == 0x04u) {
+		if (ptr[2] == SX1262_RF_PACKET_TYPE_GFSK || ptr[2] == SX1262_RF_PACKET_TYPE_LORA || ptr[2] == SX1262_RF_PACKET_TYPE_LONG_RANGE_FHSS) {
 			*type = (sx1262_rf_packet_type_t)ptr[2];
 			out = SX1262_API_OK;
 		}
