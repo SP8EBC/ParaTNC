@@ -2055,6 +2055,25 @@ int main(int argc, char* argv[]){
 
 				button_debounce();
 
+#ifdef SX1262_IMPLEMENTATION
+				supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+				supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
+
+
+				retval = fanet_test();
+
+				if (retval != 0)
+				{
+					  event_log_sync(
+								  EVENT_INFO_CYCLIC,
+								  EVENT_SRC_MAIN,
+								  EVENTS_MAIN_CYCLIC,
+								  0, 0,
+								  0, 0,
+								  0xDDCCBBAA, retval);
+				}
+#endif
+
 				#ifdef PARAMETEO
 				if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
 					if (gsm_sim800_tcpip_tx_busy() == 0) {
@@ -2135,25 +2154,6 @@ int main(int argc, char* argv[]){
 			 * TWO SECOND POOLING
 			 */
 			if (main_two_second_pool_timer < 10) {
-
-#ifdef SX1262_IMPLEMENTATION
-				supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
-				supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
-
-
-				retval = fanet_test();
-
-				if (retval != 0)
-				{
-					  event_log_sync(
-								  EVENT_INFO_CYCLIC,
-								  EVENT_SRC_MAIN,
-								  EVENTS_MAIN_CYCLIC,
-								  0, 0,
-								  0, 0,
-								  0xDDCCBBAA, retval);
-				}
-#endif
 
 				if (main_config_data_mode->wx != 0) {
 					// TODO:

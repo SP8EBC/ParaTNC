@@ -57,6 +57,10 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 {
 	const fanet_mac_adress_t *src = &input->source;
 	const fanet_mac_adress_t *dest = &input->destination;
+	const uint8_t masked_frame_type = input->type & FANET_SERIALIZE_HEADER_TYPE_MASK;
+	const uint8_t extheader_bit = !!(input->ack_requested || dest->id != 0 || dest->manufacturer != 0 || input->signature != 0);
+	const uint8_t forward_bit = !!input->forward;
+
 
 	// comparison is always false due to limited range of data type [-Wtype-limits]
 	if (src->id == 0 || src->id == 0xFFFF || src->manufacturer == 0 || src->manufacturer >= 0xFE) {
@@ -79,7 +83,7 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 		blength += FANET_SERIALIZE_SIGNATURE_LENGTH;
 
 	/* frame to long */
-	if (blength > 255)
+	if (blength > output_size)
 		return -1;
 
 	/* get memory */
@@ -87,16 +91,16 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 
 	// clang-format off
 	/* header */			// not sure why there is double negation here. This is something copied directly from C++ codebase
-	output[idx++] = 	!!(input->ack_requested || dest->id != 0 || dest->manufacturer != 0 || input->signature != 0)<<FANET_SERIALIZE_HEADER_EXTHEADER_BIT |
-							!!input->forward << FANET_SERIALIZE_HEADER_FORWARD_BIT | 
-							(input->type & FANET_SERIALIZE_HEADER_TYPE_MASK);
+	output[idx++] = 		extheader_bit <<FANET_SERIALIZE_HEADER_EXTHEADER_BIT |
+							forward_bit << FANET_SERIALIZE_HEADER_FORWARD_BIT |
+							masked_frame_type;
 	output[idx++] = src->manufacturer & 0x000000FF;
 	output[idx++] = src->id & 0x000000FF;
 	output[idx++] = (src->id >> 8) & 0x000000FF;
 	// clang-format on
 
 	/* extended header */
-	if (output[0] & (1 << FANET_SERIALIZE_HEADER_EXTHEADER_BIT)) {
+	if (extheader_bit) {
 		output[idx++] = (input->ack_requested & 3) << FANET_SERIALIZE_EXTHEADER_ACK_BIT0 |
 						!!(dest->id != 0 || dest->manufacturer != 0)
 							<< FANET_SERIALIZE_EXTHEADER_UNICAST_BIT |
@@ -104,7 +108,7 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
 	}
 
 	/* extheader and unicast -> add destination addr */
-	if ((output[0] & (1 << FANET_SERIALIZE_HEADER_EXTHEADER_BIT)) &&
+	if (extheader_bit &&
 		(output[4] & 1 << FANET_SERIALIZE_EXTHEADER_UNICAST_BIT)) {
 		output[idx++] = dest->manufacturer & 0x000000FF;
 		output[idx++] = dest->id & 0x000000FF;

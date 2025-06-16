@@ -26,6 +26,8 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
+#include <string.h>
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -58,8 +60,11 @@
 #define FANET_SX_WAIT_NUMBER		33
 #define FANET_SX_RESULT_HISTORY_LN	12
 
-#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_array
-#define FANET_SX_WAHT_TO_TRANSMIT_LN	fanet_serialized_frame_out_ln
+//#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_array
+//#define FANET_SX_WAHT_TO_TRANSMIT_LN	fanet_serialized_frame_out_ln
+
+#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_2
+#define FANET_SX_WAHT_TO_TRANSMIT_LN	strlen(fanet_test_2)
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -72,7 +77,7 @@
 #ifdef SX1262_IMPLEMENTATION
 static uint8_t fanet_test_array[64];
 
-static const uint8_t fanet_test_2[7] = {0x42u, 0x12u, 0x34u, 0x56u, 0x31u, 0x32u, 0x33u};
+static const uint8_t fanet_test_2[7] = {0x42u, 0x12u, 0x34u, 0x56u, 0x31u, 0x32u, 0x33u, 0x00};
 
 volatile static uint16_t last_interrupt_mask = 0;
 
@@ -214,7 +219,7 @@ void fanet_test_init(void)
 	fanet_frame_out.source = fanet_src;
 	fanet_frame_out.destination = fanet_dest;
 
-	FANET_SX_WAHT_TO_TRANSMIT_LN = fanet_serialize(&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
+	//FANET_SX_WAHT_TO_TRANSMIT_LN = fanet_serialize(&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
 }
 
 /**
@@ -285,7 +290,7 @@ int fanet_test(void)
 		   ////
 		   if (type == SX1262_RF_PACKET_TYPE_LORA && sx_result == SX1262_API_OK) {
 			   // 3. Define the RF frequency with the command SetRfFrequency(...)
-			   sx1262_rf_frequency(868500);
+			   sx1262_rf_frequency(868200);
 			   fanet_wait_ret_history[fanet_api_it_history][10] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x9a
 			   ////
 			   sx_result = sx1262_status_get(&mode, &command_status);
@@ -317,7 +322,7 @@ int fanet_test(void)
 						   sx_result = sx1262_status_get(&mode, &command_status);
 						   if (command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK && sx_result == SX1262_API_OK) {
 							   // 9. Define the frame format to be used with the command SetPacketParams(...)2
-							   sx1262_rf_lora_packet_params(FANET_SX_WAHT_TO_TRANSMIT_LN + 128, FANET_SX_WAHT_TO_TRANSMIT_LN, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
+							   sx1262_rf_lora_packet_params(5, FANET_SX_WAHT_TO_TRANSMIT_LN, SX1262_RF_LORA_HEADER_VARIABLE_LN_PACKET,1,0);
 							   fanet_wait_ret_history[fanet_api_it_history][21] = fanet_wait_not_busy(FANET_DLY_WRITE);	// 0x27
 							   ////
 							   sx_result = sx1262_status_get(&mode, &command_status);
