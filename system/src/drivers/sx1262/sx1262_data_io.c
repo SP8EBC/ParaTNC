@@ -172,7 +172,7 @@ sx1262_api_return_t sx1262_data_io_write_buffer (uint8_t start_address, uint8_t 
 			memset(sx1262_transmit_spi_buffer, 0x00, SX1262_TRANSMIT_SPI_BUFFER_LN_FOR_CMD);
 			sx1262_transmit_spi_buffer[0] = SX1262_STATUS_OPCODE_WRITE_BUFFER;
 			sx1262_transmit_spi_buffer[1] = start_address;
-			memcpy(sx1262_transmit_spi_buffer + 3, data, data_ln);
+			memcpy(sx1262_transmit_spi_buffer + 2, data, data_ln);
 
 			spi_rx_tx_exchange_data(3, SPI_TX_FROM_EXTERNAL, sx1262_receive_spi_buffer, sx1262_transmit_spi_buffer, data_ln + 3);
 
