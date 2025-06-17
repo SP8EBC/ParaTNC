@@ -104,9 +104,10 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 void dallas_config_timer(void) {
 	// Disabling any time-consuming iterrupts
 	//NVIC_DisableIRQ( TIM3_IRQn );			// data transmission initializer
-	NVIC_DisableIRQ( TIM4_IRQn );			// data transmission initializer
+	NVIC_DisableIRQ( TIM4_IRQn );			// data transmission initialize
+#ifndef NO_AUDIO_REALTIME_RX
 	NVIC_DisableIRQ( TIM7_IRQn );			// data transmission initializer
-
+#endif
 
 	dallas_delay_start();
 
@@ -118,7 +119,9 @@ void dallas_deconfig_timer(void) {
 
 	//NVIC_EnableIRQ( TIM3_IRQn );	// adc
 	NVIC_EnableIRQ( TIM4_IRQn );	// data transmission initializer
+#ifndef NO_AUDIO_REALTIME_RX
 	NVIC_EnableIRQ( TIM7_IRQn );	// data transmission initializer
+#endif
 
 	dallas_delay_stop();
 	//timm = 0;

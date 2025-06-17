@@ -69,7 +69,9 @@ void TimerConfig(void) {
 			TIM5->DIER |= 1;
 			NVIC_EnableIRQ( TIM5_IRQn );
 #endif
-		///////////////////////////////////////////
+
+#ifndef NO_AUDIO_REALTIME_RX
+///////////////////////////////////////////
 		/// konfiguracja TIM7 --adc 	///
 		///////////////////////////////////////////
 		//NVIC_SetPriority(TIM7_IRQn, 3);
@@ -84,7 +86,7 @@ void TimerConfig(void) {
 		TIM7->CR1 |= TIM_CR1_CEN;
 		TIM7->DIER |= 1;
 		NVIC_EnableIRQ( TIM7_IRQn );
-
+#endif
 }
 
 void TIM2Delay(void) {
@@ -96,14 +98,17 @@ void TIM2DelayDeConfig(void) {
 }
 
 void TimerAdcDisable(void) {
+	#ifndef NO_AUDIO_REALTIME_RX
 	TIM7->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
 	TIM7->SR &= (0xFFFFFFFF ^ TIM_SR_UIF_Msk);
 	NVIC_ClearPendingIRQ(TIM7_IRQn);
 	NVIC_DisableIRQ( TIM7_IRQn );
+	#endif
 }
 
 void TimerAdcEnable(void) {
+	#ifndef NO_AUDIO_REALTIME_RX
 	NVIC_EnableIRQ( TIM7_IRQn );
 	TIM7->CR1 |= TIM_CR1_CEN;
-
+	#endif
 }

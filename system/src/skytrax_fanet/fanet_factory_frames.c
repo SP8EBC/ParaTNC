@@ -222,11 +222,11 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	buffer[1] = 0;
 
 	/**
-	 * [Byte 2-4]	Position	(Little Endian, 2-Complement)		
-	 *		bit 0-23	Latitude
-	 *	[Byte Byte 5-7]	Position	(Little Endian, 2-Complement)
-	 *		bit 0-23	Longitude
-	 */
+	  *	Byte 1-3 or Byte 2-4]	Position	(Little Endian, 2-Complement)
+	  *	bit 0-23	Latitude	(Absolute, see below)
+	  *	[Byte 4-6 or Byte 5-7]	Position	(Little Endian, 2-Complement)
+	  *	bit 0-23	Longitude   (Absolute, see below)
+	  */
 	fanet_coordinates_absolute (latitude, longitude, &buffer[2]);
 
 	/**

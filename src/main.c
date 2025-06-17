@@ -2055,7 +2055,7 @@ int main(int argc, char* argv[]){
 
 				button_debounce();
 
-#ifdef SX1262_IMPLEMENTATION
+				#ifdef SX1262_IMPLEMENTATION
 				supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 				supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 
@@ -2072,7 +2072,7 @@ int main(int argc, char* argv[]){
 								  0, 0,
 								  0xDDCCBBAA, retval);
 				}
-#endif
+				#endif
 
 				#ifdef PARAMETEO
 				if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {

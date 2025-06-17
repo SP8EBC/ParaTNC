@@ -60,11 +60,11 @@
 #define FANET_SX_WAIT_NUMBER		33
 #define FANET_SX_RESULT_HISTORY_LN	12
 
-//#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_array
-//#define FANET_SX_WAHT_TO_TRANSMIT_LN	fanet_serialized_frame_out_ln
+#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_array
+#define FANET_SX_WAHT_TO_TRANSMIT_LN	fanet_serialized_frame_out_ln
 
-#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_2
-#define FANET_SX_WAHT_TO_TRANSMIT_LN	strlen(fanet_test_2)
+//#define FANET_SX_WHAT_TO_TRANSMIT		fanet_test_2
+//#define FANET_SX_WAHT_TO_TRANSMIT_LN	strlen(fanet_test_2)
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -88,7 +88,7 @@ int  fanet_success_cnt = 0;
 int  fanet_fail_cnt = 0;
 int  fanet_tx_success_cnt = 0;
 
-const fanet_mac_adress_t fanet_src = { .manufacturer = 0x11, .id = 0x2233 };
+const fanet_mac_adress_t fanet_src = { .manufacturer = 0xDD, .id = 0x2233 };
 const fanet_mac_adress_t fanet_dest = {0u}; //!< zero for broadcast
 
 uint32_t fanet_serialized_frame_out_ln = 0;
@@ -106,6 +106,15 @@ const fanet_aircraft_stv_t fanet_stv = {
 								.qne_offset = 0.0f,
 								.has_turnrate = 0
 								};
+
+const fanet_wx_input_t fanet_wx = {
+		.temperature = 22,
+		.wind_direction = 90,
+		.wind_average_speed = 12,
+		.wind_gusts = 34,
+		.humidity = 70,
+		.qnh = 1013,
+};
 
 volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 
@@ -186,19 +195,6 @@ void fanet_test_init(void)
 	//!< Used across this file to configure I/O pins
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
-//	// INTERRUPT  - PC6
-//	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
-//	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_6;
-//	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-//	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-//	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-//	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
-//
-//	// IS BUSY  - PC7
-//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_7;
-//	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
-
 	// RESET output - A12
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
@@ -211,15 +207,19 @@ void fanet_test_init(void)
 	// keep RESET output hi-z
 	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
 
+#ifdef SX1262_IMPLEMENTATION
+
 	memset(fanet_wait_ret_history, 0x00, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
 
-	const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv, &fanet_frame_out);
+	const uint32_t frame_out_ln = fanet_factory_frames_weather(49.7828f, 19.0567f, &fanet_wx, &fanet_frame_out);
+	//const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv, &fanet_frame_out);
 	fanet_frame_out.payload_length = frame_out_ln;
-	fanet_frame_out.type = FANET_FRAME_TRACKING;
+	fanet_frame_out.type = FANET_FRAME_SERVICE;
 	fanet_frame_out.source = fanet_src;
 	fanet_frame_out.destination = fanet_dest;
 
-	//FANET_SX_WAHT_TO_TRANSMIT_LN = fanet_serialize(&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
+	FANET_SX_WAHT_TO_TRANSMIT_LN = fanet_serialize(&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
+#endif
 }
 
 /**
@@ -239,21 +239,8 @@ int fanet_test(void)
 	   volatile uint8_t initial_errors = 0xFF;
 
 	   sx1262_rf_packet_type_t type = SX1262_RF_PACKET_TYPE_UNINIT;
-
-	   //fanet_wx_input_t wx_input = {0u};
-	   //wx_input.temperature = 23.3;
-
-	   //fanet_frame_t out = {0u};
-	   //out.source.id = 0x5000;
-	   //out.source.manufacturer = 0xEE;
-
-	   //volatile uint8_t regi = 0u;
-	   //volatile uint8_t waiting_res = 255u, additional_waiting_res = 255u;
-
+	   
 	   volatile sx1262_api_return_t sx_result = SX1262_API_UNINIT;
-
-//	   fanet_factory_frames_weather(19.0298f, 49.8277f, &wx_input, &out);
-//	   const int fanet_ln = fanet_serialize(&out, (uint8_t*)fanet_test_array, 64u);
 
 	   fanet_reset();
 
@@ -417,7 +404,6 @@ int fanet_test(void)
 	   {
 		i = -2;	// if (mode == SX1262_CHIP_MODE_STDBY_RC && command_status == SX1262_LAST_COMMAND_RESERVED_OR_OK)
 	   }
-#endif
 
 nok:
 
@@ -457,6 +443,7 @@ nok:
 //		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 
 	   }
+#endif
 
 	   return i;
 }
