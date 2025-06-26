@@ -28,7 +28,10 @@ CPP_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 src \
+src/kiss_protocol/diagnostics_routines \
+src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
+src/nvm \
 src/stored_configuration_nvm \
 system/src/aprs \
 system/src/cmsis \
@@ -38,12 +41,15 @@ system/src/davis_vantage \
 system/src/diag \
 system/src/drivers \
 system/src/drivers/f1 \
+system/src/drivers/sx1262 \
 system/src/dust_sensor \
 system/src/http_client \
 system/src/modbus_rtu \
 system/src/newlib \
+system/src/skytrax_fanet \
 system/src/stm32f1-stdperiph \
 system/src/tiny-aes \
+system/src/tm \
 system/src/umb_master \
 system/src/ve_direct_protocol \
 

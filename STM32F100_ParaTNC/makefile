@@ -10,12 +10,15 @@ RM := rm -rf
 -include sources.mk
 -include system/src/ve_direct_protocol/subdir.mk
 -include system/src/umb_master/subdir.mk
+-include system/src/tm/subdir.mk
 -include system/src/tiny-aes/subdir.mk
 -include system/src/stm32f1-stdperiph/subdir.mk
+-include system/src/skytrax_fanet/subdir.mk
 -include system/src/newlib/subdir.mk
 -include system/src/modbus_rtu/subdir.mk
 -include system/src/http_client/subdir.mk
 -include system/src/dust_sensor/subdir.mk
+-include system/src/drivers/sx1262/subdir.mk
 -include system/src/drivers/f1/subdir.mk
 -include system/src/drivers/subdir.mk
 -include system/src/diag/subdir.mk
@@ -25,6 +28,9 @@ RM := rm -rf
 -include system/src/aprs/subdir.mk
 -include system/src/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
+-include src/nvm/subdir.mk
+-include src/kiss_protocol/diagnostics_services/subdir.mk
+-include src/kiss_protocol/diagnostics_routines/subdir.mk
 -include src/kiss_protocol/subdir.mk
 -include src/subdir.mk
 -include subdir.mk

@@ -10,9 +10,13 @@ C_SRCS += \
 ../src/_write.c \
 ../src/backup_registers.c \
 ../src/button_paratnc.c \
+../src/debug_hardfault.c \
 ../src/delay.c \
 ../src/dummy.c \
 ../src/event_log.c \
+../src/event_log_postmortem.c \
+../src/fanet_app.c \
+../src/gsm_comm_state_handler.c \
 ../src/io.c \
 ../src/it_handlers.c \
 ../src/main.c \
@@ -23,6 +27,7 @@ C_SRCS += \
 ../src/rte_rtu.c \
 ../src/rte_wx.c \
 ../src/software_version.c \
+../src/supervisor.c \
 ../src/variant_parameteo.c \
 ../src/wx_handler.c \
 ../src/wx_handler_humidity.c \
@@ -37,9 +42,13 @@ OBJS += \
 ./src/_write.o \
 ./src/backup_registers.o \
 ./src/button_paratnc.o \
+./src/debug_hardfault.o \
 ./src/delay.o \
 ./src/dummy.o \
 ./src/event_log.o \
+./src/event_log_postmortem.o \
+./src/fanet_app.o \
+./src/gsm_comm_state_handler.o \
 ./src/io.o \
 ./src/it_handlers.o \
 ./src/main.o \
@@ -50,6 +59,7 @@ OBJS += \
 ./src/rte_rtu.o \
 ./src/rte_wx.o \
 ./src/software_version.o \
+./src/supervisor.o \
 ./src/variant_parameteo.o \
 ./src/wx_handler.o \
 ./src/wx_handler_humidity.o \
@@ -64,9 +74,13 @@ C_DEPS += \
 ./src/_write.d \
 ./src/backup_registers.d \
 ./src/button_paratnc.d \
+./src/debug_hardfault.d \
 ./src/delay.d \
 ./src/dummy.d \
 ./src/event_log.d \
+./src/event_log_postmortem.d \
+./src/fanet_app.d \
+./src/gsm_comm_state_handler.d \
 ./src/io.d \
 ./src/it_handlers.d \
 ./src/main.d \
@@ -77,6 +91,7 @@ C_DEPS += \
 ./src/rte_rtu.d \
 ./src/rte_wx.d \
 ./src/software_version.d \
+./src/supervisor.d \
 ./src/variant_parameteo.d \
 ./src/wx_handler.d \
 ./src/wx_handler_humidity.d \

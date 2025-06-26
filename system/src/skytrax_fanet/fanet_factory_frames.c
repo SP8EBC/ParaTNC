@@ -196,8 +196,8 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	buffer[0] = FANET_FACTORY_FRAMES_SERVICE_TEMPERATURE |
 			FANET_FACTORY_FRAMES_SERVICE_WIND |
 			FANET_FACTORY_FRAMES_SERVICE_HUMIDITY |
-			FANET_FACTORY_FRAMES_SERVICE_BARO |
-			FANET_FACTORY_FRAMES_SERVICE_EXTHEADER;
+			FANET_FACTORY_FRAMES_SERVICE_BARO /*|
+			FANET_FACTORY_FRAMES_SERVICE_EXTHEADER*/;
 
 	/**
 	 * Extended Header:
@@ -219,7 +219,7 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	*
 	*
 	*/
-	buffer[1] = 0;
+	//buffer[1] = 0;
 
 	/**
 	  *	Byte 1-3 or Byte 2-4]	Position	(Little Endian, 2-Complement)
@@ -227,7 +227,7 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	  *	[Byte 4-6 or Byte 5-7]	Position	(Little Endian, 2-Complement)
 	  *	bit 0-23	Longitude   (Absolute, see below)
 	  */
-	fanet_coordinates_absolute (latitude, longitude, &buffer[2]);
+	fanet_coordinates_absolute (latitude, longitude, &buffer[1]);
 
 	/**
 	 * Temperature (+1byte in 0.5 degree, 2-Complement)
@@ -239,21 +239,21 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 
 	// check maximum/minimum
 	if (scaled_temperature > INT8_MAX) {
-		buffer[8] = INT8_MAX;
+		buffer[7] = INT8_MAX;
 	}
 	else if (scaled_temperature < INT8_MIN) {
-		buffer[8] = INT8_MIN;
+		buffer[7] = INT8_MIN;
 	}
 	else {
 		// store rescaled temperature in output buffer
-		buffer[8] = scaled_temperature;
+		buffer[7] = scaled_temperature;
 	}
 
 	/**
 	 * Wind (+3byte: 1byte Heading in 360/256 degree, 1byte speed and 1byte gusts in 0.2km/h (each: bit 7 scale 5x or 1x, bit 0-6))
 	 */
 	const float winddirection_scaling = 256.0f / 360.0f;
-	buffer[9] = (uint8_t)(winddirection_scaling * (float)weather_data->wind_direction);
+	buffer[8] = (uint8_t)(winddirection_scaling * (float)weather_data->wind_direction);
 
 	const float windspeed_scaling = 1.8f;
 	const float high_windpseed_scaling = 0.36f;
@@ -261,32 +261,32 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	// windspeed
 	if (weather_data->wind_average_speed < 71)
 	{
-		buffer[10] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_average_speed);
+		buffer[9] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_average_speed);
 
 	}
 	else
 	{
-		buffer[10] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_average_speed);
-		buffer[10] |= (1 << 7);
+		buffer[9] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_average_speed);
+		buffer[9] |= (1 << 7);
 	}
 
 	// windgusts
 	if (weather_data->wind_gusts < 71)
 	{
-		buffer[10] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_gusts);
+		buffer[9] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_gusts);
 
 	}
 	else
 	{
-		buffer[10] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_gusts);
-		buffer[10] |= (1 << 7);
+		buffer[9] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_gusts);
+		buffer[9] |= (1 << 7);
 	}
 
 	/**
 	 * Humidity (+1byte: in 0.4% (%rh*10/4))
 	 */
 	const float humidity_scaling = 2.5f;
-	buffer[11] = (uint8_t)(humidity_scaling * (float)weather_data->humidity);
+	buffer[10] = (uint8_t)(humidity_scaling * (float)weather_data->humidity);
 
 	/**
 	 * Barometric pressure normailized (+2byte: in 10Pa, offset by 430hPa, unsigned little endian (hPa-430)*10)
@@ -294,13 +294,13 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	uint16_t scaled_pressure = (uint8_t)(weather_data->qnh - 4300ul);
 	if (weather_data->qnh > 4700u)
 	{
-		buffer[12] = (scaled_pressure & 0xFFu);
-		buffer[13] = (scaled_pressure & 0xFF00u) >> 8;
+		buffer[11] = (scaled_pressure & 0xFFu);
+		buffer[12] = (scaled_pressure & 0xFF00u) >> 8;
 	}
 	else
 	{
+		buffer[11] = 0u;
 		buffer[12] = 0u;
-		buffer[13] = 0u;
 
 	}
 
@@ -319,9 +319,9 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	 *	3bit		Geo-based Forwarded	(prevent any further geo-based forwarding, can be ignored by any none-forwarding instances)
 	 *	2-0bit 		Reserved	(ideas: indicate multicast interest add 16bit addr, emergency)
 	 */
-	buffer[14] = 0;
+	buffer[13] = 0;
 
-	out->payload_length = 15;
+	out->payload_length = 14;
 
-	return 15;
+	return 14;
 }

@@ -211,6 +211,8 @@ void fanet_test_init(void)
 
 	memset(fanet_wait_ret_history, 0x00, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
 
+	//				.latitude = 49.7828f,
+	//				.longitude = 19.0567f,
 	const uint32_t frame_out_ln = fanet_factory_frames_weather(49.7828f, 19.0567f, &fanet_wx, &fanet_frame_out);
 	//const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv, &fanet_frame_out);
 	fanet_frame_out.payload_length = frame_out_ln;
