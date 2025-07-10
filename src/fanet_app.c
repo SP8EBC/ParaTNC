@@ -107,15 +107,6 @@ const fanet_aircraft_stv_t fanet_stv = {
 								.has_turnrate = 0
 								};
 
-const fanet_wx_input_t fanet_wx = {
-		.temperature = 22,
-		.wind_direction = 90,
-		.wind_average_speed = 12,
-		.wind_gusts = 34,
-		.humidity = 70,
-		.qnh = 1013,
-};
-
 volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 
 #endif
@@ -211,8 +202,14 @@ void fanet_test_init(void)
 
 	memset(fanet_wait_ret_history, 0x00, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
 
-	//				.latitude = 49.7828f,
-	//				.longitude = 19.0567f,
+	const fanet_wx_input_t fanet_wx = {
+			.temperature = 22,
+			.wind_direction = 90,
+			.wind_average_speed = 12,
+			.wind_gusts = 34,
+			.humidity = 70,
+			.qnh = 10130,
+	};
 	const uint32_t frame_out_ln = fanet_factory_frames_weather(49.7828f, 19.0567f, &fanet_wx, &fanet_frame_out);
 	//const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv, &fanet_frame_out);
 	fanet_frame_out.payload_length = frame_out_ln;

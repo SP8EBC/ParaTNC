@@ -273,34 +273,34 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	// windgusts
 	if (weather_data->wind_gusts < 71)
 	{
-		buffer[9] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_gusts);
+		buffer[10] = (uint8_t)(windspeed_scaling * (float)weather_data->wind_gusts);
 
 	}
 	else
 	{
-		buffer[9] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_gusts);
-		buffer[9] |= (1 << 7);
+		buffer[10] = (uint8_t)(high_windpseed_scaling * (float)weather_data->wind_gusts);
+		buffer[10] |= (1 << 7);
 	}
 
 	/**
 	 * Humidity (+1byte: in 0.4% (%rh*10/4))
 	 */
 	const float humidity_scaling = 2.5f;
-	buffer[10] = (uint8_t)(humidity_scaling * (float)weather_data->humidity);
+	buffer[11] = (uint8_t)(humidity_scaling * (float)weather_data->humidity);
 
 	/**
 	 * Barometric pressure normailized (+2byte: in 10Pa, offset by 430hPa, unsigned little endian (hPa-430)*10)
 	 */
-	uint16_t scaled_pressure = (uint8_t)(weather_data->qnh - 4300ul);
+	uint16_t scaled_pressure = weather_data->qnh - 4300ul;
 	if (weather_data->qnh > 4700u)
 	{
-		buffer[11] = (scaled_pressure & 0xFFu);
-		buffer[12] = (scaled_pressure & 0xFF00u) >> 8;
+		buffer[12] = (scaled_pressure & 0xFFu);
+		buffer[13] = (scaled_pressure & 0xFF00u) >> 8;
 	}
 	else
 	{
-		buffer[11] = 0u;
 		buffer[12] = 0u;
+		buffer[13] = 0u;
 
 	}
 
@@ -319,9 +319,9 @@ uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_
 	 *	3bit		Geo-based Forwarded	(prevent any further geo-based forwarding, can be ignored by any none-forwarding instances)
 	 *	2-0bit 		Reserved	(ideas: indicate multicast interest add 16bit addr, emergency)
 	 */
-	buffer[13] = 0;
+	buffer[14] = 0;
 
-	out->payload_length = 14;
+	out->payload_length = 15;
 
-	return 14;
+	return 15;
 }
