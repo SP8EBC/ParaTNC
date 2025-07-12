@@ -30,6 +30,24 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "flash st-link nucleo",
+            "type": "shell",
+            "command": "st-flash",
+            "args": [
+                "--reset",
+                "--format",
+                "ihex",
+                "write",
+                "./ParaTNC.hex"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/STM32L476_ParaMETEO"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
     ]
     }

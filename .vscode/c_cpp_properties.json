@@ -12,6 +12,17 @@
             "intelliSenseMode": "linux-gcc-x64"
         },
         {
+            "name": "PARAMETEO_SX1262_IMPLEMENTATION",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": ["PARAMETEO", "STM32L471xx", "SX1262_IMPLEMENTATION", "NO_AUDIO_REALTIME_RX"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        },
+        {
             "name": "UNIT_TESTS",
             "includePath": [
                 "${workspaceFolder}/**"
