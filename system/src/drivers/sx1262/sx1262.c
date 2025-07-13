@@ -6,7 +6,9 @@
  */
 
 #include "./drivers/sx1262/sx1262.h"
-#include "./drivers/sx1262/sx1262_internals.h"s
+#include "./drivers/sx1262/sx1262_internals.h"
+
+#include "LedConfig.h"
 
 #include <stdint.h>
 
@@ -57,7 +59,7 @@ void sx1262_init(void)
 
 	// RESET output - A12
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
@@ -102,32 +104,15 @@ void sx1262_init(void)
 
 void sx1262_busy_released_callback(void)
 {
+	sx1262_busy_counter--;
 	sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
+	   //led_blink_led2_botoom();
 
-
-//	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_7) == SX1262_BUSY_ACTIVE)
-//	{
-//		sx1262_busy_flag = SX1262_BUSY_ACTIVE;
-//	}
-//	else
-//	{
-//		sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
-//	}
 }
 
 void sx1262_interrupt_callback(void)
 {
 	sx1262_interrupt_flag = SX1262_BUSY_ACTIVE;
-
-
-//	if (LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_6) == SX1262_BUSY_ACTIVE)
-//	{
-//		sx1262_interrupt_flag = SX1262_BUSY_ACTIVE;
-//	}
-//	else
-//	{
-//		sx1262_interrupt_flag = SX1262_BUSY_NOTACTIVE;
-//	}
 }
 
 short sx1262_is_busy_io_line_active(void)

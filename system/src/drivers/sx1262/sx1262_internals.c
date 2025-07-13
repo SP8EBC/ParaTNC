@@ -33,6 +33,8 @@ volatile uint8_t sx1262_busy_flag = SX1262_BUSY_NOTACTIVE;
 
 volatile uint8_t sx1262_interrupt_flag = SX1262_BUSY_NOTACTIVE;
 
+volatile uint32_t sx1262_busy_counter = 0xFFFFFFFFu;
+
 uint8_t sx1262_transmit_spi_buffer[SX1262_TRANSMIT_SPI_BUFFER_LN];
 
 uint8_t sx1262_receive_spi_buffer[SX1262_RECEIVE_SPI_BUFFER_LN];

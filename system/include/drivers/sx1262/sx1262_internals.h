@@ -109,6 +109,8 @@ extern uint8_t sx1262_transmit_spi_buffer[SX1262_TRANSMIT_SPI_BUFFER_LN];
 
 extern uint8_t sx1262_receive_spi_buffer[SX1262_RECEIVE_SPI_BUFFER_LN];
 
+extern volatile uint32_t sx1262_busy_counter;
+
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
