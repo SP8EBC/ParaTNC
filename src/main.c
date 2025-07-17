@@ -696,6 +696,8 @@ int main(int argc, char* argv[]){
   // enable access to PWR control registers
   RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
 
+  RCC->APB1ENR1 |= RCC_APB1ENR1_LPTIM1EN;
+
   system_clock_update_l4();
 
   system_clock_configure_rtc_l4();

@@ -18,12 +18,21 @@
 #ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_tim.h>
+#include <stm32l4xx_ll_lptim.h>
 #endif
 
 
 #if (_DELAY_BASE > 22)
 #error "Transmit delay shouldn't be longer that 1100msec. Decrease _DELAY_BASE in config below 22"
 #endif
+
+//#ifdef STM32L471xx
+//void TimerTimebaseConfig(void)
+//{
+//
+//}
+//#endif
+
 
 void TimerConfig(void) {
 	///////////////////////////////////////////

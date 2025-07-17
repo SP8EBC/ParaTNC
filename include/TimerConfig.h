@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+void TimerTimebaseConfig(void);
+
 void TimerConfig(void);
 void TIM2Delay(void);
 void TIM2DelayDeConfig(void);
