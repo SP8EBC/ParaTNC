@@ -696,8 +696,6 @@ int main(int argc, char* argv[]){
   // enable access to PWR control registers
   RCC->APB1ENR1 |= RCC_APB1ENR1_PWREN;
 
-  RCC->APB1ENR1 |= RCC_APB1ENR1_LPTIM1EN;
-
   system_clock_update_l4();
 
   system_clock_configure_rtc_l4();
@@ -711,11 +709,14 @@ int main(int argc, char* argv[]){
   /* Set Interrupt Group Priority */
   HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-  // set systick frequency
-  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
+//  // set systick frequency
+//  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
+//
+//  // set systick interrupt priority
+//  HAL_NVIC_SetPriority(SysTick_IRQn, 5, 0U);
 
-  // set systick interrupt priority
-  HAL_NVIC_SetPriority(SysTick_IRQn, 5, 0U);
+  // configure timer used as a system timebase instead of SysTick
+  TimerTimebaseConfig();
 
 #if defined(HI_SPEED)
  //
@@ -1518,12 +1519,6 @@ int main(int argc, char* argv[]){
 		  backup_reg_reset_inhibit_log_report_send_api();
 	   }
    }
-
-   if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
-	   pwm_input_io_init();
-
-	   pwm_input_init(1);
-   }
 #endif
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
@@ -2287,18 +2282,6 @@ int main(int argc, char* argv[]){
 
 				if (main_continue_loop == 0) {
 					continue;
-				}
-
-				if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_PWM) > 0) {
-					pwm_input_pool();
-				}
-
-				if (pwm_first_channel != 0) {
-					rte_wx_pm2_5 = pwm_first_channel;
-				}
-
-				if (pwm_second_channel != 0) {
-					rte_wx_pm10 = pwm_second_channel;
 				}
 	#endif
 

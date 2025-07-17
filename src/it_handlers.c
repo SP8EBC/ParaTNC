@@ -52,20 +52,33 @@
  *
  *	TIM2_IRQHandler 			- 1 -> Dallas delay (enable only during dallas comm)
  *	I2C1_EV_IRQHandler 			- 2 -> I2C comm interrupt (active & enable only during communication with i2c sensor)
- *	TIM4_IRQHandler 			- 3 -> APRS softmodem DAC (enable only during tx)
+ *	TIM5_IRQHandler 			- 3 -> APRS softmodem DAC (enable only during tx)
  *	TIM7_IRQHandler 			- 4 -> APRS softmodem ADC
  *	SysTick_Handler 			- 5
- *	TIM1_UP_TIM16_IRQHandler 	- 6 -> TX20 baudrate timer
- *	EXTI9_5_IRQHandler 			- 7 -> TX20 anemometer GPIO
+ *  SPI2_IRQHandler				- 6 -> SPI bus (PT1000 and sx1262 modem)
+ *	----------------------------- 7 -> not used
  *	EXTI4_IRQHandler 			- 8 -> DHT22 sensor GPIO interrupt
- *	USART1_IRQHandler 			- 9 -> uart to comm with KISS host
- *	I2C1_ER_IRQHandler			- 10 -> I2C error interrupt
+ *	USART2_IRQHandler			- 9 -> uart to Modbus RTU sensors
+ *  USART1_IRQHandler			- 10 -> uart for kiss communication with pc
+ *	I2C1_ER_IRQHandler			- 11 -> I2C error interrupt
  *
- *	TIM8_						- PWM input
+ *
+ *	 *	TIM1_TRG_COM_TIM17_IRQHandler  	- analog anemometer TIM17 - wind direction
+ *	 *	DMA1_Channel5_IRQHandler 		- analog anemometer DMA - windspeed
+ *	 USART3_IRQHandler 					-- GSM modem
+ *
  */
 
 
-// TIM1 w TX20
+/*
+ * TIMERS
+ *
+ * TIM2_IRQHandler
+ * TIM4 - windspeed
+ * TIM5_IRQHandler
+ * TIM7_IRQHandler
+ * TIM17 - TIM1_TRG_COM_TIM17_IRQHandler
+ */
 
 /* Zmienne używane do oversamplingu */
 int adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
@@ -88,8 +101,8 @@ void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
 	// systick
 	NVIC_SetPriority(SPI2_IRQn, 6);
-	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
-	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
+//	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
+//	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
 	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
 	NVIC_SetPriority(USART2_IRQn, 9);			// wx
 	NVIC_SetPriority(USART1_IRQn, 10);			// kiss
@@ -164,8 +177,11 @@ void SPI2_IRQHandler(void) {
 
 #endif
 
-// Systick interrupt used for time measurements, checking timeouts and SysTick_Handler
-void SysTick_Handler(void) {
+// TIM1_UP_TIM16_IRQn
+void TIM1_UP_TIM16_IRQHandler(void) {
+	NVIC_ClearPendingIRQ(TIM1_UP_TIM16_IRQn);
+
+	TIM1->SR = 0;
 
 	// systick interrupt is generated every 10ms
 	master_time += SYSTICK_TICKS_PERIOD;
@@ -215,8 +231,14 @@ void SysTick_Handler(void) {
 	if (it_handlers_inhibit_radiomodem_dcd_led == 0) {
 		led_control_led1_upper(main_ax25.dcd);
 	}
-
 }
+
+//// Systick interrupt used for time measurements, checking timeouts and SysTick_Handler
+//void SysTick_Handler(void) {
+//
+//
+//
+//}
 
 void USART1_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(USART1_IRQn);

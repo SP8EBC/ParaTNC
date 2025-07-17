@@ -5,6 +5,8 @@
  *      Author: mateusz
  */
 
+#if 0
+
 #ifndef INCLUDE_DRIVERS_L4_PWM_INPUT_STM32L4X_H_
 #define INCLUDE_DRIVERS_L4_PWM_INPUT_STM32L4X_H_
 
@@ -18,3 +20,5 @@ void pwm_input_init(uint8_t channel);
 void pwm_input_pool(void);
 
 #endif /* INCLUDE_DRIVERS_L4_PWM_INPUT_STM32L4X_H_ */
+
+#endif

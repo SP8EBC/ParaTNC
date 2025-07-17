@@ -1,4 +1,4 @@
-
+#if 0
 #include "drivers/l4/pwm_input_stm32l4x.h"
 
 #include <stm32l4xx.h>
@@ -197,3 +197,4 @@ void pwm_input_pool(void) {
 
 	}
 }
+#endif
