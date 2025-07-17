@@ -32,14 +32,6 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
-//#ifdef SX1262_SHMIDT_NOT_GATE
-//#define SX1262_BUSY_ACTIVE 		0U
-//#define SX1262_BUSY_NOTACTIVE	1U
-//#else
-//#define SX1262_BUSY_ACTIVE 		1U
-//#define SX1262_BUSY_NOTACTIVE	0U
-//#endif
-
 #define SX1262_FUCK_THIS_AND_WAIT
 
 								//  0x1FFFFE
@@ -134,41 +126,8 @@ static uint32_t fanet_wait_not_busy(int _unused)
 {
 	uint32_t out = 0;
 	(void)_unused;
-	// PC6
-//	if (sx1262_is_busy_io_line_active())
-//	{
-//		sx1262_set_busy_flag_for_waiting();
-//
-//		while(sx1262_is_busy_flag_active())
-//		{
-//			out++;
-//		}
-//		SX1262_FUCK_THIS_AND_WAIT
-//		out &= 0x7FFFFFFFu;
-//		return out;
-//	}
-//	else
-//	{
-//		while(sx1262_is_busy_io_line_active() == 0)
-//		{
-//			_unused--;
-//			if (_unused < 0)
-//			{
-//				SX1262_FUCK_THIS_AND_WAIT
-//				out = 0xFFFFFFFFu;
-//				return out;
-//			}
-//		}
-//		sx1262_set_busy_flag_for_waiting();
-//		while(sx1262_is_busy_flag_active())
-//		{
-//			out++;
-//		}
-//		SX1262_FUCK_THIS_AND_WAIT
-//		out |= 0x80000000u;
-//		return out;
-//	}
 
+#ifdef SX1262_IMPLEMENTATION
 	fanet_last_busy_counter = sx1262_busy_counter;
 
 	while (fanet_last_busy_counter <= sx1262_busy_counter)
@@ -180,7 +139,7 @@ static uint32_t fanet_wait_not_busy(int _unused)
 			break;
 		}
 	}
-
+#endif
 
 	return out;
 
@@ -202,21 +161,6 @@ static void fanet_reset(void)
 
 void fanet_test_init(void)
 {
-//	//!< Used across this file to configure I/O pins
-//	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
-//
-//	// RESET output - A12
-//	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
-//	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-//	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_12;
-//	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
-//	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
-//	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
-//	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
-//
-//	// keep RESET output hi-z
-//	LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
-
 #ifdef SX1262_IMPLEMENTATION
 
 	memset(fanet_wait_ret_history, 0x00, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
@@ -437,11 +381,9 @@ nok:
 		   {
 			   fanet_fail_cnt++;
 		   }
-		   //fanet_chip_apiret_hist[fanet_api_it_history] = SX1262_API_OK;
 	   }
 	   else
 	   {
-		   //fanet_chip_apiret_hist[fanet_api_it_history] = sx_result;
 		   sx_result = SX1262_API_UNINIT;
 		   fanet_fail_cnt++;
 	   }
@@ -451,14 +393,6 @@ nok:
 	   fanet_api_it_history++;
 	   if (fanet_api_it_history >= FANET_SX_RESULT_HISTORY_LN) {
 		   fanet_api_it_history = 0;
-//		   memset(fanet_wait_ret_history, 0xEEu, sizeof(FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_chip_apiret_hist, 0xEEu, sizeof(sx1262_api_return_t) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_initial_mode, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_initial_status, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_mode_after_tx, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_cmdstatus_after_tx, 0xEEu, sizeof(sx1262_status_last_command_t) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_i_value, 0xEEu, sizeof(int) * FANET_SX_RESULT_HISTORY_LN);
-//		   memset(fanet_chip_mode_hist, 0xEEu, sizeof(sx1262_status_chip_mode_t) * FANET_SX_RESULT_HISTORY_LN);
 
 	   }
 #endif
