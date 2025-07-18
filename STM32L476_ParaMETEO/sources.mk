@@ -34,6 +34,8 @@ src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
 src/nvm \
 src/stored_configuration_nvm \
+system/freertos \
+system/freertos/portable \
 system/src/aprs \
 system/src/cmsis/stm32l4xx \
 system/src \

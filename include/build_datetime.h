@@ -3,9 +3,9 @@
 #define BUILD_YEAR 	25
 #define BUILD_MONTH 	7
 #define BUILD_DAY 	17
-#define BUILD_HOUR 	19
-#define BUILD_MINUTE 	52
-#define BUILD_SECOND 	52
+#define BUILD_HOUR 	20
+#define BUILD_MINUTE 	55
+#define BUILD_SECOND 	14
 #define BUILD_SWVERSTR 	"17072025"
 
 #endif
