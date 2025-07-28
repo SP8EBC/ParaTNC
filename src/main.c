@@ -295,9 +295,6 @@ char main_callsign_with_ssid[10];
 uint8_t main_small_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
 #if defined(PARAMETEO)
 
-//! Lenght of a buffer for KISS diagnostic request
-#define MAIN_KISS_FROM_MESSAGE_LEN		33
-
 //! KISS (diagnostic) request decoded from APRS message
 static uint8_t main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
 
@@ -391,14 +388,14 @@ const char * post_content = "{\
 
 //#define SERIAL_TX_TEST_MODE
 
-static void main_set_ax25_my_callsign(AX25Call * call) {
+void main_set_ax25_my_callsign(AX25Call * call) {
 	if (variant_validate_is_within_ram(call)) {
 		strncpy(call->call, main_config_data_basic->callsign, 6);
 		call->ssid = main_config_data_basic->ssid;
 	}
 }
 
-static void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
+void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
 	if (variant_validate_is_within_ram(to)) {
 		strncpy(to->call, from->call, 6);
 		to->ssid = from->ssid;

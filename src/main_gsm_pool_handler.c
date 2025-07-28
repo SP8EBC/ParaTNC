@@ -9,14 +9,20 @@
 
 #include "main_gsm_pool_handler.h"
 
+#include "main.h"
 #include "rte_main.h"
+#include "kiss_communication/kiss_communication.h"
 #include "kiss_communication/kiss_communication_defs.h"
+#include "kiss_communication/kiss_nrc_response.h"
 #include "kiss_communication/types/kiss_communication_transport_t.h"
 #include "kiss_communication/kiss_communication_aprsmsg.h"
 
 #include "gsm/sim800c.h"
 
 #include "aprsis.h"
+#include "event_log.h"
+
+extern int system_is_rtc_ok(void);
 
 /**
  * Piece of code refactored from 'main' function responsible for pooling
@@ -64,6 +70,8 @@ void main_gsm_pool_handler(
 				const event_log_exposed_t   *const exposed_events		// 21
 				) {
 
+	int32_t i = 0;
+
 	// if data has been received
 	if (gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 
@@ -106,7 +114,7 @@ void main_gsm_pool_handler(
 				// put artificial FEND at the begining of a buffer to make it compatible with 'kiss_parse_received'
 				*(from_message) = FEND;
 
-#define KISS_RESPONSE_MESSAGE_LN retval
+#define KISS_RESPONSE_MESSAGE_LN i
 
 				// parse KISS request
 				KISS_RESPONSE_MESSAGE_LN = kiss_parse_received(from_message, *from_message_ln, NULL, NULL, response_message, MAIN_KISS_FROM_MESSAGE_LEN, type);
@@ -161,9 +169,9 @@ void main_gsm_pool_handler(
 		if (*trigger_send_message == 1 && message_for_transmitting->source == MESSAGE_SOURCE_APRSIS) {
 			*trigger_send_message = 0;
 
-			retval = message_encode(message_for_transmitting, (uint8_t*)own_aprs_msg, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
+			KISS_RESPONSE_MESSAGE_LN = message_encode(message_for_transmitting, (uint8_t*)own_aprs_msg, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
 
-			aprsis_send_any_string_buffer(own_aprs_msg, retval);
+			aprsis_send_any_string_buffer(own_aprs_msg, KISS_RESPONSE_MESSAGE_LN);
 		}
 		else if (*trigger_gsm_status == 1) {
 			*trigger_gsm_status = 0;

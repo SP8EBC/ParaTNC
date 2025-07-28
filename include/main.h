@@ -22,6 +22,9 @@
 
 #define OWN_APRS_MSG_LN 	255u
 
+//! Lenght of a buffer for KISS diagnostic request
+#define MAIN_KISS_FROM_MESSAGE_LEN		33
+
 #define MAIN_GET_RTC_YEAR	1u
 #define MAIN_GET_RTC_MONTH	2u
 #define MAIN_GET_RTC_DAY	3u
@@ -95,6 +98,10 @@ extern char after_tx_lock;
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 extern gsm_sim800_state_t main_gsm_state;
+
+void main_set_ax25_my_callsign(AX25Call * call);
+
+void main_copy_ax25_call(AX25Call * to, AX25Call * from);
 
 uint16_t main_get_adc_sample(void);
 
