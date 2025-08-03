@@ -75,5 +75,11 @@ uint8_t rte_main_reset_gsm_modem = 0xFFu;
 uint8_t rte_main_reset_modbus_rtu = 0xFFu;
 
 config_data_powersave_mode_t rte_main_curret_powersave_mode;
+
+//!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
+event_log_exposed_t rte_main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
+
+nvm_event_result_stats_t rte_main_events_extracted_for_api_stat = {0u};
+
 #endif
 

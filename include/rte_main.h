@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include "stored_configuration_nvm/config_data.h"
 #include "message.h"
+#include "etc/misc_config.h"
+#include "event_log_t.h"
+#include "nvm/nvm_t.h"
 
 //!< Set immediately after waking up in RTC interrupt handler
 #define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT			1u
@@ -72,5 +75,11 @@ extern uint8_t rte_main_reset_gsm_modem;
 extern uint8_t rte_main_reset_modbus_rtu;
 
 extern config_data_powersave_mode_t rte_main_curret_powersave_mode;
+
+//!< Array to extract events from NVM into. *2 is applied to have more room for data sent to API
+extern event_log_exposed_t rte_main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REPORT * 3];
+
+extern nvm_event_result_stats_t rte_main_events_extracted_for_api_stat;
+
 
 #endif

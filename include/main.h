@@ -5,6 +5,7 @@
 #include "main_master_time.h"
 
 #include "station_config_target_hw.h"
+#include "stored_configuration_nvm/configuration_handler.h"
 
 #include "aprs/ax25.h"
 #include "drivers/serial.h"
@@ -112,6 +113,16 @@ void main_reload_internal_wdg(void);
 uint16_t main_get_rtc_datetime(uint16_t param);
 
 uint32_t main_get_nvm_timestamp(void);
+
+uint8_t main_get_main_davis_serial_enabled(void);
+
+uint8_t main_get_modbus_rtu_master_enabled(void);
+
+//! function configuration for left button on ParaMETEO
+configuration_button_function_t main_get_button_one_left();
+
+//! function configuration for right button on ParaMETEO
+configuration_button_function_t main_get_button_two_right();
 
 #if defined(STM32L471xx)
 extern uint32_t rte_main_rx_total;
