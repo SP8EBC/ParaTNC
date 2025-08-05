@@ -209,18 +209,19 @@ __attribute__((optimize("O0"))) void UsageFault_Handler(void)
   }
 }
 
-/**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVCall_IRQn 0 */
-
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
-
-  /* USER CODE END SVCall_IRQn 1 */
-}
+// Now it is handled by FreeRTOS
+//**
+//  * @brief This function handles System service call via SWI instruction.
+//  */
+//void SVC_Handler(void)
+//{
+//  /* USER CODE BEGIN SVCall_IRQn 0 */
+//
+//  /* USER CODE END SVCall_IRQn 0 */
+//  /* USER CODE BEGIN SVCall_IRQn 1 */
+//
+//  /* USER CODE END SVCall_IRQn 1 */
+//}
 
 /**
   * @brief This function handles Debug monitor.

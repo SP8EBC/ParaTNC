@@ -63,6 +63,9 @@
 //#include "gsm/sim800c"
 #endif
 
+#include <FreeRTOS.h>
+#include <task.h>
+
 //! one hour interval incremented inside one minute
 static int8_t main_one_hour_pool_timer = 60;
 
@@ -106,8 +109,13 @@ void task_main( void * parameters )
 	int32_t ln = 0;
 	srl_context_t*  kiss_srl_ctx = main_get_kiss_srl_ctx_ptr();
 
+    /* Block for 100ms. */
+    const TickType_t xDelay = 2000 / portTICK_PERIOD_MS;
+
 	  while (1)
 	    {
+	    //vTaskDelay( xDelay );
+
 		backup_reg_set_monitor(-1);
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);

@@ -13,11 +13,11 @@
 //! a pointer to KISS context
 srl_context_t* main_get_kiss_srl_ctx_ptr(void);
 
-//! a pointer to wx comms context
-srl_context_t* main_get_wx_srl_ctx_ptr(void);
-
-//! a pointer to gsm context
-srl_context_t* main_get_gsm_srl_ctx_ptr(void);
+////! a pointer to wx comms context
+//srl_context_t* main_get_wx_srl_ctx_ptr(void);
+//
+////! a pointer to gsm context
+//srl_context_t* main_get_gsm_srl_ctx_ptr(void);
 
 #else
 #error "this file can be include only one time, within task_main.c!"

@@ -126,6 +126,9 @@
 #include <timers.h>
 #include <semphr.h>
 
+/* FreeRTOS tasks*/
+#include "task_main.h"
+
 #define SOH 0x01
 #define MANUAL_RTC_SET
 
@@ -389,6 +392,9 @@ void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
  * @return
  */
 int main(int argc, char* argv[]){
+
+  (void)argc;
+  (void)argv;
 
   int32_t ln = 0;
 
@@ -1319,6 +1325,21 @@ int main(int argc, char* argv[]){
 
 	packet_tx_meteo_counter = main_config_data_basic->wx_transmit_period - 1;
 
+	////////////////////////// FREERTOS       /////////////////////////////////
+	///
+
+	const UBaseType_t priority = tskIDLE_PRIORITY + 1;
+	TaskHandle_t task_handle = NULL;
+    const BaseType_t create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority, &task_handle );
+
+    if (create_result == pdPASS) {
+		/* Start the scheduler. */
+		vTaskStartScheduler();
+    }
+
+	///
+	///////////////////////////////////////////////////////////////////////////
+
   // Infinite loop
   while (1)
     {
@@ -1334,7 +1355,7 @@ int main(int argc, char* argv[]){
 		NVIC_SystemReset();
 	}
 	else {
-		;
+		i = __NVIC_PRIO_BITS;
 	}
 //
 //	  backup_reg_set_monitor(0);
@@ -2272,6 +2293,11 @@ uint32_t main_get_nvm_timestamp(void) {
 	return out;
 }
 
+srl_context_t* main_get_kiss_srl_ctx_ptr(void)
+{
+	return main_kiss_srl_ctx_ptr;
+}
+
 uint8_t main_get_main_davis_serial_enabled(void)
 {
 	return main_davis_serial_enabled;
@@ -2292,6 +2318,20 @@ configuration_button_function_t main_get_button_one_left()
 configuration_button_function_t main_get_button_two_right()
 {
 	return main_button_two_right;
+}
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    char *pcTaskName )
+{
+	(void)xTask;
+	(void)pcTaskName;
+
+}
+
+void vApplicationGetRandomHeapCanary(portPOINTER_SIZE_TYPE* pxHeapCanary ) {
+	if (pxHeapCanary != NULL) {
+		*pxHeapCanary = main_get_nvm_timestamp();
+	}
 }
 
 #pragma GCC diagnostic pop
