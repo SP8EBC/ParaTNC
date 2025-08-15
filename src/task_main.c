@@ -75,7 +75,7 @@ static int8_t main_six_hour_pool_timer = 4;
 static uint8_t main_continue_loop = 0;
 
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
-static uint8_t main_check_adc = 0;
+uint8_t main_check_adc = 0;
 
 //!< Used to store an information which telemetry descritpion frame should be sent next
 static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
@@ -83,8 +83,6 @@ static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 static uint8_t main_small_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
 
 #if defined(PARAMETEO)
-static config_data_powersave_mode_t main_current_powersave_mode = PWSAVE_NULL;
-
 //! KISS (diagnostic) request decoded from APRS message
 static uint8_t main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
 
@@ -108,9 +106,6 @@ void task_main( void * parameters )
 
 	int32_t ln = 0;
 	srl_context_t*  kiss_srl_ctx = main_get_kiss_srl_ctx_ptr();
-
-    /* Block for 100ms. */
-    const TickType_t xDelay = 2000 / portTICK_PERIOD_MS;
 
 	  while (1)
 	    {
@@ -598,106 +593,106 @@ void task_main( void * parameters )
 				 * ONE SECOND POOLING
 				 */
 				if (main_one_second_pool_timer < 10) {
-
-					backup_reg_set_monitor(6);
-
-					digi_pool_viscous();
-
-					button_debounce();
-
-					#ifdef SX1262_IMPLEMENTATION
-					supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
-					supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
-
-
-					retval = fanet_test();
-
-					if (retval != 0)
-					{
-						  event_log_sync(
-									  EVENT_INFO_CYCLIC,
-									  EVENT_SRC_MAIN,
-									  EVENTS_MAIN_CYCLIC,
-									  0, 0,
-									  0, 0,
-									  0xDDCCBBAA, retval);
-					}
-					#endif
-
-					#ifdef PARAMETEO
-					if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
-						if (gsm_sim800_tcpip_tx_busy() == 0) {
-							rte_main_reboot_scheduled_diag = 0;
-
-							NVIC_SystemReset();
-						}
-					}
-
-					// this if cannot be guarded by checking if VBAT_G is enabled
-					// because VBAT_G itself is controlled by initialization
-					// pooler
-					if (main_config_data_mode->gsm == 1) {
-						gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
-					}
-
-					if ((main_config_data_mode->gsm == 1)  && (io_get_cntrl_vbat_g() == 1) && (rte_main_woken_up == 0)) {
-
-						// check if GSM modem must be power-cycled / restarted like after
-						// waking up from deep sleep or chaning power saving mode
-						if (rte_main_reset_gsm_modem == 1) {
-							// rest the flag
-							rte_main_reset_gsm_modem = 0;
-
-							srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
-
-							// reset gsm modem
-							gsm_sim800_reset(&main_gsm_state);
-
-							// please remember that a reset might not be performed if
-							// the GSM modem is inhibited completely, due to current
-							// power saving mode and few another things. In that case
-							// the flag will be cleared but modem NOT restarted
-						}
-
-						if (aprsis_get_aprsis_logged() == 1) {
-							led_control_led1_upper(true);
-						}
-						else {
-							led_control_led1_upper(false);
-						}
-
-						if (gsm_sim800_gprs_ready == 1) {
-							/***
-							 *
-							 * TEST TEST TEST TODO
-							 */
-							//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
-							//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
-						}
-
-						gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
-
-						if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
-							aprsis_check_alive();
-						}
-					}
-					#endif
-
-					if ((io_get_cntrl_vbat_s() == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
-						analog_anemometer_direction_handler();
-					}
-
-					backup_reg_set_monitor(7);
-
-					main_one_second_pool_timer = 1000;
+//
+//					backup_reg_set_monitor(6);
+//
+//					digi_pool_viscous();
+//
+//					button_debounce();
+//
+//					#ifdef SX1262_IMPLEMENTATION
+//					supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+//					supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
+//
+//
+//					retval = fanet_test();
+//
+//					if (retval != 0)
+//					{
+//						  event_log_sync(
+//									  EVENT_INFO_CYCLIC,
+//									  EVENT_SRC_MAIN,
+//									  EVENTS_MAIN_CYCLIC,
+//									  0, 0,
+//									  0, 0,
+//									  0xDDCCBBAA, retval);
+//					}
+//					#endif
+//
+//					#ifdef PARAMETEO
+//					if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
+//						if (gsm_sim800_tcpip_tx_busy() == 0) {
+//							rte_main_reboot_scheduled_diag = 0;
+//
+//							NVIC_SystemReset();
+//						}
+//					}
+//
+//					// this if cannot be guarded by checking if VBAT_G is enabled
+//					// because VBAT_G itself is controlled by initialization
+//					// pooler
+//					if (main_config_data_mode->gsm == 1) {
+//						gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
+//					}
+//
+//					if ((main_config_data_mode->gsm == 1)  && (io_get_cntrl_vbat_g() == 1) && (rte_main_woken_up == 0)) {
+//
+//						// check if GSM modem must be power-cycled / restarted like after
+//						// waking up from deep sleep or chaning power saving mode
+//						if (rte_main_reset_gsm_modem == 1) {
+//							// rest the flag
+//							rte_main_reset_gsm_modem = 0;
+//
+//							srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
+//
+//							// reset gsm modem
+//							gsm_sim800_reset(&main_gsm_state);
+//
+//							// please remember that a reset might not be performed if
+//							// the GSM modem is inhibited completely, due to current
+//							// power saving mode and few another things. In that case
+//							// the flag will be cleared but modem NOT restarted
+//						}
+//
+//						if (aprsis_get_aprsis_logged() == 1) {
+//							led_control_led1_upper(true);
+//						}
+//						else {
+//							led_control_led1_upper(false);
+//						}
+//
+//						if (gsm_sim800_gprs_ready == 1) {
+//							/***
+//							 *
+//							 * TEST TEST TEST TODO
+//							 */
+//							//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
+//							//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
+//						}
+//
+//						gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
+//
+//						if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
+//							aprsis_check_alive();
+//						}
+//					}
+//					#endif
+//
+//					if ((io_get_cntrl_vbat_s() == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
+//						analog_anemometer_direction_handler();
+//					}
+//
+//					backup_reg_set_monitor(7);
+//
+//					main_one_second_pool_timer = 1000;
 				}	// end of one second pooler
 				else if (main_one_second_pool_timer < -10) {
-
-					if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-						analog_anemometer_direction_reset();
-					}
-
-					main_one_second_pool_timer = 1000;
+//
+//					if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
+//						analog_anemometer_direction_reset();
+//					}
+//
+//					main_one_second_pool_timer = 1000;
 				}
 
 				/**
@@ -705,67 +700,67 @@ void task_main( void * parameters )
 				 */
 				if (main_two_second_pool_timer < 10) {
 
-					if (main_config_data_mode->wx != 0) {
-						// TODO:
-						if (configuration_get_inhibit_wx_pwr_handle() == 0) {
-							wx_pwr_switch_periodic_handle();
-						}
-
-						wx_check_force_i2c_reset();
-					}
-
-		#ifdef PARAMETEO
-					if (main_current_powersave_mode != PWSAVE_AGGRESV) {
-						if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
-							io_pool_vbat_r();
-						}
-					}
-					else {
-						io_inhibit_pool_vbat_r();
-					}
-		#endif
-
-		#ifdef PARAMETEO
-
-					if (io_get_cntrl_vbat_s() == 1) {
-						max31865_pool();
-					}
-
-					if (io_get_cntrl_vbat_g () == 1) {
-						if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
-							rte_main_woken_up == 0) {
-								gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, rte_main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
-						}
-
-						// if GSM module is enabled and GPRS communication state is now on API phase
-						if (	(main_config_data_mode->gsm == 1) &&
-								(gsm_comm_state_get_current () == GSM_COMM_API)) {
-
-							// if there are any events remaining to push to API
-							if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
-								// send current event
-								const uint8_t api_connection_result = api_send_json_event(&rte_main_exposed_events[rte_main_events_extracted_for_api_stat.zz_total - 1]);
-
-								// if TCP connection is established and data is currently sent asynchronously
-								if (api_connection_result == HTTP_CLIENT_OK) {
-									// end decrement remaining number of events
-									rte_main_events_extracted_for_api_stat.zz_total--;
-								}
-								else {
-									// for sake of simplicity break on first connection error
-									rte_main_events_extracted_for_api_stat.zz_total = 0;
-								}
-							}
-						}
-
-						if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
-							ntp_get_sync();
-						}
-					}
-		#endif
-					main_reload_internal_wdg();
-
-					main_two_second_pool_timer = 2000;
+//					if (main_config_data_mode->wx != 0) {
+//						// TODO:
+//						if (configuration_get_inhibit_wx_pwr_handle() == 0) {
+//							wx_pwr_switch_periodic_handle();
+//						}
+//
+//						wx_check_force_i2c_reset();
+//					}
+//
+//		#ifdef PARAMETEO
+//					if (main_current_powersave_mode != PWSAVE_AGGRESV) {
+//						if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
+//							io_pool_vbat_r();
+//						}
+//					}
+//					else {
+//						io_inhibit_pool_vbat_r();
+//					}
+//		#endif
+//
+//		#ifdef PARAMETEO
+//
+//					if (io_get_cntrl_vbat_s() == 1) {
+//						max31865_pool();
+//					}
+//
+//					if (io_get_cntrl_vbat_g () == 1) {
+//						if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
+//							rte_main_woken_up == 0) {
+//								gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, rte_main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
+//						}
+//
+//						// if GSM module is enabled and GPRS communication state is now on API phase
+//						if (	(main_config_data_mode->gsm == 1) &&
+//								(gsm_comm_state_get_current () == GSM_COMM_API)) {
+//
+//							// if there are any events remaining to push to API
+//							if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
+//								// send current event
+//								const uint8_t api_connection_result = api_send_json_event(&rte_main_exposed_events[rte_main_events_extracted_for_api_stat.zz_total - 1]);
+//
+//								// if TCP connection is established and data is currently sent asynchronously
+//								if (api_connection_result == HTTP_CLIENT_OK) {
+//									// end decrement remaining number of events
+//									rte_main_events_extracted_for_api_stat.zz_total--;
+//								}
+//								else {
+//									// for sake of simplicity break on first connection error
+//									rte_main_events_extracted_for_api_stat.zz_total = 0;
+//								}
+//							}
+//						}
+//
+//						if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
+//							ntp_get_sync();
+//						}
+//					}
+//		#endif
+//					main_reload_internal_wdg();
+//
+//					main_two_second_pool_timer = 2000;
 				}	// end of two second pooling
 
 				/**
@@ -823,7 +818,7 @@ void task_main( void * parameters )
 
 					// inhibit any power save switching when modem transmits data
 					if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
-						main_current_powersave_mode =
+						rte_main_curret_powersave_mode =
 								pwr_save_pooling_handler(
 										main_config_data_mode,
 										packet_tx_meteo_interval,

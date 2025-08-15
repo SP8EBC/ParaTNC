@@ -29,6 +29,9 @@ uint8_t rte_main_trigger_message_ack = 0;
 uint8_t rte_main_trigger_send_message = 0;
 
 #ifdef PARAMETEO
+//!< Triggers additional check if ADC has properly reinitialized and conversion is working
+uint8_t rte_main_check_adc = 0;
+
 //!< Set to one if reboot is scheduled by diagnostics
 uint8_t rte_main_reboot_scheduled_diag = 0;
 
