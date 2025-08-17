@@ -19,7 +19,8 @@
 
 void gsm_sim800_poolers_ten_seconds (srl_context_t *srl_context, gsm_sim800_state_t *state)
 {
-
+	(void)srl_context;
+	(void)state;
 	// if no engineering is currently processed, gprs is ready and APRS-IS connection
 	// is not alive now.
 	if (/* sim800_poolers_request_engineering == 0 &&

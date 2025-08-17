@@ -90,7 +90,7 @@ STATIC uint32_t nvm_get_highest_event_id(void *area_start, void *area_end)
 	const uint32_t log_entries = (area_end - area_start + 1) / log_entry_size;
 
 	// iterate through all event log flash area
-	for (int i = 0; i < log_entries; i++) {
+	for (uint32_t i = 0; i < log_entries; i++) {
 		// temp pointer to currently processed event
 		const event_log_t *const current = ((const event_log_t *)area_start) + i;
 
@@ -101,6 +101,8 @@ STATIC uint32_t nvm_get_highest_event_id(void *area_start, void *area_end)
 			}
 		}
 	}
+
+	return out;
 }
 
 /**
@@ -360,7 +362,7 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 	}	
 
 	// iterate through all event log flash area
-	for (int i = 0; i < log_entries; i++) {
+	for (uint32_t i = 0; i < log_entries; i++) {
 		// continue only if there is no critical error
 		if (res != NVM_EVENT_AREA_ERROR) 
 		{

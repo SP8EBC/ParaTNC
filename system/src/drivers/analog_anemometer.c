@@ -738,11 +738,13 @@ int16_t analog_anemometer_direction_sparkfun(uint32_t timer_value) {
 
 	int16_t out = -1;
 
+	int16_t narrow_value = (int16_t)timer_value & 0xFFFF;
+
 	// iterate through table which consist ranges of valid timer counter values
 	// for each wind direction
 	for (int i = 0; i < 16; i++)  {
-		if (timer_value >= analog_anemometer_direction_sparkfun_ranges[i][0] &&
-			timer_value < analog_anemometer_direction_sparkfun_ranges[i][1]	) {
+		if (narrow_value >= analog_anemometer_direction_sparkfun_ranges[i][0] &&
+			narrow_value < analog_anemometer_direction_sparkfun_ranges[i][1]	) {
 
 			out = analog_anemometer_direction_sparkfun_ranges[i][2];
 

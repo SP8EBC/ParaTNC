@@ -93,7 +93,7 @@ static uint32_t gsm_time_of_last_command_send_to_module = 0;
 static int16_t gsm_reset_counter = 0;
 
 //!< how much reset counter is incremented each reset
-#define GSM_RESET_COUNTER_INCREMENT	50u
+#define GSM_RESET_COUNTER_INCREMENT	50
 
 //!< how much reset counter is decremented in 10 seconds pooler
 #define GSM_RESET_COUNTER_DECREMENT	2u
@@ -105,13 +105,13 @@ static int16_t gsm_reset_counter = 0;
 static uint8_t gsm_at_comm_echo = 1;
 
 //! how many newlines
-volatile static int8_t gsm_terminating_newline_counter = 1;
+static volatile int8_t gsm_terminating_newline_counter = 1;
 
 //! used to receive echo and response separately
 static uint8_t gsm_receive_newline_counter = 0;
 
 //! used to receive echo and response separately
-volatile static uint8_t gsm_receive_previous_newline_counter = 0;
+static volatile uint8_t gsm_receive_previous_newline_counter = 0;
 
 //! first character of non-echo response from the module
 static uint16_t gsm_response_start_idx = 0;

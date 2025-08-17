@@ -45,6 +45,11 @@ extern uint8_t rte_main_trigger_gsm_event_log;
 
 extern uint8_t rte_main_trigger_radio_event_log;
 
+extern uint8_t rte_main_trigger_wx_packet;
+
+//!< Triggers additional check if ADC has properly reinitialized and conversion is working
+extern uint8_t rte_main_check_adc;
+
 //!< Trigger some reinitialization after waking up from deep sleep
 extern uint8_t rte_main_woken_up;
 

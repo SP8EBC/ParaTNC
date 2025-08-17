@@ -142,10 +142,12 @@ inline static int text_fast_forward_to_first_printable(char * str, uint16_t size
 
 	int out = 0;
 
+	uint8_t* ptr = (uint8_t*)(str);
+
 	// check if input pointer is set to something
 	if (str != 0) {
 
-		while (*(str + out) < 0x21 || *(str + out) > 0x7F) {
+		while (*(ptr + out) < 0x21 || *(ptr + out) > 0x7F) {
 
 			// if null terminator is detected before a printable character
 			if (*(str + out) == 0x00) {
@@ -173,9 +175,11 @@ inline static int text_rewind_front_end_till_first_printable(char * str, uint16_
 
 	int out = size;
 
+	uint8_t* ptr = (uint8_t*)(str);
+
 	if (str != 0) {
 
-		while (*(str + out) < 0x21 || *(str + out) > 0x7F) {
+		while (*(ptr + out) < 0x21 || *(ptr + out) > 0x7F) {
 			// end and return if a begining of a text is reached
 			// and no printable character is found
 			if (out < 0) {

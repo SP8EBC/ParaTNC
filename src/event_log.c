@@ -69,6 +69,15 @@ int8_t event_log (event_log_severity_t severity,
 				uint32_t lparam,
 				uint32_t lparam2)
 {
+	(void)severity;
+	(void)source;
+	(void)event_id;
+	(void)param;
+	(void)param2;
+	(void)wparam;
+	(void)wparam2;
+	(void)lparam;
+	(void)lparam2;
 	return 0;
 }
 

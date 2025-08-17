@@ -125,6 +125,7 @@
 #include <queue.h>
 #include <timers.h>
 #include <semphr.h>
+#include <event_groups.h>
 
 /* FreeRTOS tasks*/
 #include "task_main.h"
@@ -300,6 +301,18 @@ char main_callsign_with_ssid[10];
 
 //static uint8_t main_continue_loop = 0;
 #endif
+
+/********************************************************************/
+/*************************FREE RTOS related**************************/
+
+//! data associated with the event group for powersave task sync
+static StaticEventGroup_t main_eventgroup_powersave;
+
+//! Declare a variable to hold the handle of the created event group.
+EventGroupHandle_t main_eventgroup_handle_powersave;
+
+/********************************************************************/
+
 
 char main_symbol_f = '/';
 char main_symbol_s = '#';
@@ -1327,6 +1340,8 @@ int main(int argc, char* argv[]){
 
 	////////////////////////// FREERTOS       /////////////////////////////////
 	///
+
+	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
 
 	const UBaseType_t priority = tskIDLE_PRIORITY + 1;
 	TaskHandle_t task_handle = NULL;

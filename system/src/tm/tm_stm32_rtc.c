@@ -68,8 +68,7 @@ static uint8_t RTC_Months[2][12] = {
 };
 
 uint32_t TM_RTC_Init(TM_RTC_ClockSource_t source) {
-	uint32_t status;
-	TM_RTC_t datatime;
+	(void)source;
 	
 	/* Set instance */
 	hRTC.Instance = RTC;
@@ -372,7 +371,7 @@ void TM_RTC_Config(TM_RTC_ClockSource_t source) {
 }
 
 TM_RTC_Result_t TM_RTC_Interrupts(TM_RTC_Int_t int_value) {
-	uint32_t int_val;
+	uint32_t int_val = 0;
 	
 	/* Disable wakeup interrupt */
 	__HAL_RTC_WAKEUPTIMER_DISABLE(&hRTC);
@@ -410,13 +409,15 @@ TM_RTC_Result_t TM_RTC_Interrupts(TM_RTC_Int_t int_value) {
 			int_val = 0x1FF;		/* 125 ms */
 		}		
 
-		/* Clock divided by 8, 32768 / 8 = 4096 */
-		/* 4096 ticks for 1second interrupt */
-		HAL_RTCEx_SetWakeUpTimer_IT(&hRTC, int_val, RTC_WAKEUPCLOCK_RTCCLK_DIV8);
-		
-		/* Set NVIC */
-		HAL_NVIC_SetPriority(RTC_WKUP_IRQn, RTC_NVIC_PRIORITY, RTC_NVIC_WAKEUP_SUBPRIORITY);
-		HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
+		if (int_val != 0) {
+			/* Clock divided by 8, 32768 / 8 = 4096 */
+			/* 4096 ticks for 1second interrupt */
+			HAL_RTCEx_SetWakeUpTimer_IT(&hRTC, int_val, RTC_WAKEUPCLOCK_RTCCLK_DIV8);
+
+			/* Set NVIC */
+			HAL_NVIC_SetPriority(RTC_WKUP_IRQn, RTC_NVIC_PRIORITY, RTC_NVIC_WAKEUP_SUBPRIORITY);
+			HAL_NVIC_EnableIRQ(RTC_WKUP_IRQn);
+		}
 	}
 
 	/* Return OK */

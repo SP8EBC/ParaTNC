@@ -138,11 +138,11 @@ const config_data_rtu_t * config_data_rtu_second_ptr						= &config_data_rtu_sec
 #define KISS_GET_RUNNING_CONFIG 	(uint8_t) 0x20
 #define KISS_RUNNING_CONFIG			(uint8_t) 0x70
 
-volatile extern const config_data_basic_t config_data_basic_default;
-volatile extern const config_data_mode_t config_data_mode_default;
-volatile extern const config_data_umb_t config_data_umb_default;
-volatile extern const config_data_rtu_t config_data_rtu_default;
-volatile extern const config_data_wx_sources_t config_data_wx_sources_default;
+extern volatile const config_data_basic_t config_data_basic_default;
+extern volatile const config_data_mode_t config_data_mode_default;
+extern volatile const config_data_umb_t config_data_umb_default;
+extern volatile const config_data_rtu_t config_data_rtu_default;
+extern volatile const config_data_wx_sources_t config_data_wx_sources_default;
 
 configuration_handler_region_t configuration_handler_loaded;
 
@@ -957,9 +957,9 @@ int configuration_get_is_security_access_required(uint8_t medium, uint8_t routin
 int configuration_get_powersave_aggresive_schedule(uint8_t* from, uint8_t* to) {
 	int out = 1;
 
-	if ((main_config_data_mode->powersave_aggresive_schedule_start >= (uint8_t)0u) && (main_config_data_mode->powersave_aggresive_schedule_start < (uint8_t)24u)) {
+	if ((main_config_data_mode->powersave_aggresive_schedule_start < (uint8_t)24u)) {
 
-		if ((main_config_data_mode->powersave_aggresive_schedule_stop >= (uint8_t)0u) && (main_config_data_mode->powersave_aggresive_schedule_stop < (uint8_t)24u)) {
+		if ((main_config_data_mode->powersave_aggresive_schedule_stop < (uint8_t)24u)) {
 
 			if (main_config_data_mode->powersave_aggresive_schedule_start != main_config_data_mode->powersave_aggresive_schedule_stop) {
 				out = 0;

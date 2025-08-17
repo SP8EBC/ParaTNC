@@ -37,6 +37,7 @@ C_SRCS += \
 ../src/task_main.c \
 ../src/task_one_minute.c \
 ../src/task_one_second.c \
+../src/task_power_save.c \
 ../src/task_ten_second.c \
 ../src/task_two_second.c \
 ../src/variant_parameteo.c \
@@ -80,6 +81,7 @@ OBJS += \
 ./src/task_main.o \
 ./src/task_one_minute.o \
 ./src/task_one_second.o \
+./src/task_power_save.o \
 ./src/task_ten_second.o \
 ./src/task_two_second.o \
 ./src/variant_parameteo.o \
@@ -123,6 +125,7 @@ C_DEPS += \
 ./src/task_main.d \
 ./src/task_one_minute.d \
 ./src/task_one_second.d \
+./src/task_power_save.d \
 ./src/task_ten_second.d \
 ./src/task_two_second.d \
 ./src/variant_parameteo.d \
