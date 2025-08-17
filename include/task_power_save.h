@@ -9,7 +9,7 @@
 #define TASK_POWER_SAVE_H_
 
 
-
+void task_power_save( void * parameters);
 
 
 #endif /* TASK_POWER_SAVE_H_ */

@@ -23,7 +23,7 @@ void task_power_save( void * parameters)
 {
 	(void)parameters;
 
-	/* Block for 10000ms. */
+	/* Block for 10000ms -> ten seconds */
 	const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
 
 	int main_continue_loop = 0;
@@ -32,6 +32,7 @@ void task_power_save( void * parameters)
 	{
 		vTaskDelay (xDelay);
 
+		xEventGroupWaitBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_WAIT_FOR, pdTRUE, pdTRUE, xDelay << 2);
 
 		// get current battery voltage. for non parameteo this will return 0
 		//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);

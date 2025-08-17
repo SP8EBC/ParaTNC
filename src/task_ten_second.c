@@ -10,8 +10,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <task.h>
+#include <event_groups.h>
 
 #include "main.h"
+#include "main_freertos_externs.h"
 #include "rte_main.h"
 #include "rte_wx.h"
 
@@ -34,6 +36,8 @@ void task_ten_second( void * parameters )
 
 	while(1) {
 		vTaskDelay (xDelay);
+
+		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
@@ -103,8 +107,9 @@ void task_ten_second( void * parameters )
 			// trigger consecutive LOOP packet
 			davis_trigger_loop_packet();
 		}
+		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 	}
-
+		// end of while loop
 }
 
 

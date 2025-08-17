@@ -129,6 +129,10 @@
 
 /* FreeRTOS tasks*/
 #include "task_main.h"
+#include "task_one_second.h"
+#include "task_two_second.h"
+#include "task_ten_second.h"
+#include "task_power_save.h"
 
 #define SOH 0x01
 #define MANUAL_RTC_SET
@@ -1341,15 +1345,31 @@ int main(int argc, char* argv[]){
 	////////////////////////// FREERTOS       /////////////////////////////////
 	///
 
-	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
-
 	const UBaseType_t priority = tskIDLE_PRIORITY + 1;
-	TaskHandle_t task_handle = NULL;
-    const BaseType_t create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority, &task_handle );
+	TaskHandle_t task_powersave_handle = NULL;
+	TaskHandle_t task_main_handle = NULL;
+	TaskHandle_t task_one_sec_handle = NULL;
+	TaskHandle_t task_two_sec_handle = NULL;
+	TaskHandle_t task_ten_sec_handle = NULL;
+	BaseType_t create_result = pdFAIL;
 
-    if (create_result == pdPASS) {
-		/* Start the scheduler. */
-		vTaskStartScheduler();
+	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
+	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority, &task_main_handle );
+	if (create_result == pdPASS) {
+		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
+		if (create_result == pdPASS) {
+			create_result = xTaskCreate( task_one_second, "task_one_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_one_sec_handle );
+			if (create_result == pdPASS) {
+				create_result = xTaskCreate( task_two_second, "task_two_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_two_sec_handle );
+				if (create_result == pdPASS) {
+					create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ten_sec_handle );
+					if (create_result == pdPASS) {
+						/* Start the scheduler. */
+						vTaskStartScheduler();
+					}
+				}
+			}
+		}
     }
 
 	///

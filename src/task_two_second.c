@@ -9,8 +9,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <task.h>
+#include <event_groups.h>
 
 #include "main.h"
+#include "main_freertos_externs.h"
 #include "rte_main.h"
 
 #include "gsm_comm_state_handler.h"
@@ -34,6 +36,8 @@ void task_two_second (void *parameters)
 
 	while (1) {
 		vTaskDelay (xDelay);
+
+		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
 
 		if (main_config_data_mode->wx != 0) {
 			// TODO:
@@ -102,5 +106,8 @@ void task_two_second (void *parameters)
 		main_reload_internal_wdg ();
 
 		main_two_second_pool_timer = 2000;
+		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
+
 	}
+	// end of while loop
 }

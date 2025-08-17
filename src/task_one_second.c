@@ -9,8 +9,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <task.h>
+#include <event_groups.h>
 
 #include "main.h"
+#include "main_freertos_externs.h"
 #include "rte_main.h"
 
 #include "LedConfig.h"
@@ -33,7 +35,6 @@ void task_one_second (void *parameters)
 {
 	(void)(parameters);
 
-	int32_t ln = 0;
 	srl_context_t *kiss_srl_ctx = main_get_kiss_srl_ctx_ptr ();
 
 	/* Block for 1000ms. */
@@ -41,6 +42,8 @@ void task_one_second (void *parameters)
 
 	while (1) {
 		vTaskDelay (xDelay);
+
+		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 
 		backup_reg_set_monitor (6);
 
@@ -132,6 +135,7 @@ void task_one_second (void *parameters)
 
 		backup_reg_set_monitor (7);
 
-		// main_one_second_pool_timer = 1000;
+		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 	}
+	// end of while loop
 }
