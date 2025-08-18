@@ -120,6 +120,9 @@ void srl_init(
 
 	ctx->srl_rx_kiss_mode = 0;
 	ctx->srl_rx_kiss_escaping_now = 0;
+
+	ctx->srl_rx_done_or_error = 0;
+	ctx->srl_rx_term = 0;
 }
 
 void srl_reset(srl_context_t *ctx) {
@@ -705,6 +708,10 @@ void srl_irq_handler(srl_context_t *ctx) {
 					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RE);
 					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_RXNEIE);
 					ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_IDLEIE);
+
+					if (ctx->srl_rx_done_or_error != 0) {
+						ctx->srl_rx_done_or_error(ctx);
+					}
 				}
 
 				break;
@@ -827,6 +834,12 @@ void srl_irq_handler(srl_context_t *ctx) {
 
 			}
 
+			if (ctx->srl_tx_done != 0) {
+				if (ctx->srl_tx_state == SRL_TX_IDLE) {
+					ctx->srl_tx_done(ctx);
+				}
+			}
+
 			break;
 			default: break;
 		}
@@ -925,4 +938,9 @@ void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable) 
 	if (ctx->srl_rx_timeout_trigger_value_in_msec == 0)
 		ctx->srl_rx_timeout_trigger_value_in_msec = SRL_DEFAULT_RX_TIMEOUT_IN_MS;
 
+}
+
+void srl_set_done_error_callback(srl_context_t *ctx, srl_done_or_error_callback_t rx_callback, srl_done_or_error_callback_t tx_done) {
+	ctx->srl_rx_done_or_error = rx_callback;
+	ctx->srl_tx_done = tx_done;
 }

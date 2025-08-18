@@ -28,6 +28,8 @@
 #define SRL_ECHO_ENABLE		1
 #define SRL_ECHO_DISABLE	0
 
+typedef struct srl_context_t srl_ctx_t;
+
 /**
  * Callback definition which may be called after receiving each byte by an UART
  *
@@ -35,6 +37,12 @@
  * @param rx_bytes_counter receive bytes counter incremented AFTER this callback is processed so it's point to the byte which triggered this call
  */
 typedef uint8_t(*srl_rx_termination_callback_t)(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
+
+/**
+ *
+ * @param context
+ */
+typedef void(*srl_done_or_error_callback_t)(srl_ctx_t * context);
 
 typedef enum srlRxState {
 	SRL_RX_NOT_CONFIG,
@@ -144,13 +152,16 @@ typedef struct srl_context_t {
 	// be continued (if returned 0) or not (if returned 1)
 	srl_rx_termination_callback_t srl_rx_term;
 
+	srl_done_or_error_callback_t srl_rx_done_or_error;
+
+	srl_done_or_error_callback_t srl_tx_done;
+
 	// counters of how many bytes was received and transmitted. This actually
 	// counts how many times the interrupt has been raised because of TXE or RXNE
 	uint32_t total_rx_bytes;
 	uint32_t total_tx_bytes;
 
 }srl_context_t;
-
 
 #define SRL_UNINITIALIZED				127
 #define SRL_OK							0
@@ -206,6 +217,7 @@ void srl_switch_tx_delay(srl_context_t *ctx, uint8_t disable_enable);
 void srl_keep_timeout(srl_context_t *ctx);
 void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value);
 void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable);
+void srl_set_done_error_callback(srl_context_t *ctx, srl_done_or_error_callback_t rx_callback, srl_done_or_error_callback_t tx_done);
 
 #ifdef __cplusplus
 }
