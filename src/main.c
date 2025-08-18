@@ -312,6 +312,12 @@ char main_callsign_with_ssid[10];
 //! data associated with the event group for powersave task sync
 static StaticEventGroup_t main_eventgroup_powersave;
 
+static TaskHandle_t task_powersave_handle = NULL;
+static TaskHandle_t task_main_handle = NULL;
+static TaskHandle_t task_one_sec_handle = NULL;
+static TaskHandle_t task_two_sec_handle = NULL;
+static TaskHandle_t task_ten_sec_handle = NULL;
+
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_powersave;
 
@@ -1346,11 +1352,6 @@ int main(int argc, char* argv[]){
 	///
 
 	const UBaseType_t priority = tskIDLE_PRIORITY + 1;
-	TaskHandle_t task_powersave_handle = NULL;
-	TaskHandle_t task_main_handle = NULL;
-	TaskHandle_t task_one_sec_handle = NULL;
-	TaskHandle_t task_two_sec_handle = NULL;
-	TaskHandle_t task_ten_sec_handle = NULL;
 	BaseType_t create_result = pdFAIL;
 
 	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
@@ -1573,6 +1574,20 @@ configuration_button_function_t main_get_button_one_left()
 configuration_button_function_t main_get_button_two_right()
 {
 	return main_button_two_right;
+}
+
+void main_suspend_task_for_psaving(void)
+{
+	vTaskSuspend(task_one_sec_handle);
+	vTaskSuspend(task_two_sec_handle);
+	vTaskSuspend(task_ten_sec_handle);
+}
+
+void main_resume_task_for_psaving(void)
+{
+	vTaskResume(task_one_sec_handle);
+	vTaskResume(task_two_sec_handle);
+	vTaskResume(task_ten_sec_handle);
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,

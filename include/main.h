@@ -124,6 +124,9 @@ configuration_button_function_t main_get_button_one_left();
 //! function configuration for right button on ParaMETEO
 configuration_button_function_t main_get_button_two_right();
 
+//! Suspend all tasks which shall not run while powersaving task is running
+void main_suspend_task_for_psaving(void);
+
 #if defined(STM32L471xx)
 extern uint32_t rte_main_rx_total;
 extern uint32_t rte_main_tx_total;

@@ -34,6 +34,8 @@ void task_power_save( void * parameters)
 
 		xEventGroupWaitBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_WAIT_FOR, pdTRUE, pdTRUE, xDelay << 2);
 
+		main_suspend_task_for_psaving();
+
 		// get current battery voltage. for non parameteo this will return 0
 		//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
 		rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
@@ -72,6 +74,8 @@ void task_power_save( void * parameters)
 			continue;
 		}
 	#endif
+
+		main_resume_task_for_psaving();
 
 		backup_reg_set_monitor(9);
 	}
