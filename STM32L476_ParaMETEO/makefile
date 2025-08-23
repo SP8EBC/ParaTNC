@@ -29,6 +29,7 @@ RM := rm -rf
 -include system/src/subdir.mk
 -include system/freertos/portable/subdir.mk
 -include system/freertos/subdir.mk
+-include src/tasks/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
 -include src/nvm/subdir.mk
 -include src/kiss_protocol/diagnostics_services/subdir.mk

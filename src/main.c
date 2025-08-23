@@ -1,5 +1,6 @@
 #include "main.h"
 #include "main_gsm_pool_handler.h"
+#include "main_freertos_externs.h"
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x_rcc.h>
@@ -128,11 +129,12 @@
 #include <event_groups.h>
 
 /* FreeRTOS tasks*/
-#include "task_main.h"
-#include "task_one_second.h"
-#include "task_two_second.h"
-#include "task_ten_second.h"
-#include "task_power_save.h"
+#include "tasks/task_main.h"
+#include "tasks/task_one_second.h"
+#include "tasks/task_two_second.h"
+#include "tasks/task_ten_second.h"
+#include "tasks/task_power_save.h"
+#include "tasks/task_event_kiss_rx_done.h"
 
 #define SOH 0x01
 #define MANUAL_RTC_SET
@@ -312,14 +314,21 @@ char main_callsign_with_ssid[10];
 //! data associated with the event group for powersave task sync
 static StaticEventGroup_t main_eventgroup_powersave;
 
+//! data associated with the event group for KISS host pc serial port
+static StaticEventGroup_t main_eventgroup_serial_kiss;
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
 static TaskHandle_t task_two_sec_handle = NULL;
 static TaskHandle_t task_ten_sec_handle = NULL;
+static TaskHandle_t task_ev_serial_kiss_rx_done_handle = NULL;
 
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_powersave;
+
+//! Declare a variable to hold the handle of the created event group.
+EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
 /********************************************************************/
 
@@ -369,24 +378,33 @@ const char main_test_string[11] = "1234556aaa\0";
 
 unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
-const char * post_content = "{\
-  \"main_config_data_basic_callsign\": \"SP8EBC\",\
-  \"main_config_data_basic_ssid\": 8,\
-  \"master_time\": 12345,\
-  \"main_cpu_load\": 50,\
-  \"rx10m\": 30,\
-  \"tx10m\": 20,\
-  \"digi10m\": 50,\
-  \"digidrop10m\": 10,\
-  \"kiss10m\": 5,\
-  \"rte_main_rx_total\": 11,\
-  \"rte_main_tx_total\": 12,\
-  \"rte_main_average_battery_voltage\": 123,\
-  \"rte_main_wakeup_count\": 0,\
-  \"rte_main_going_sleep_count\": 2,\
-  \"rte_main_last_sleep_master_time\": 9}";
-
 //#define SERIAL_TX_TEST_MODE
+
+/********************************************************************/
+/*************************FREE RTOS related**************************/
+
+static void main_callback_serial_kiss_rx_done (srl_ctx_t *context)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	BaseType_t xResult = pdFAIL;
+	if (context->srl_rx_state == SRL_RX_DONE) {
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_kiss,
+											 MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE,
+											 &xHigherPriorityTaskWoken);
+	}
+
+	if (xResult != pdFAIL)
+
+	{
+		/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+		   switch should be requested. The macro used is port specific and will
+		   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+		   the documentation page for the port being used. */
+		portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+	}
+}
+
+/********************************************************************/
 
 static void message_callback(struct AX25Msg *msg) {
 
@@ -503,7 +521,7 @@ int main(int argc, char* argv[]){
 //  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
 //
 //  // set systick interrupt priority
-//  HAL_NVIC_SetPriority(SysTick_IRQn, 5, 0U);
+  HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0U);
 
   // configure timer used as a system timebase instead of SysTick
   TimerTimebaseConfig();
@@ -889,6 +907,7 @@ int main(int argc, char* argv[]){
 
 			  // initializing UART drvier
 			  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+			  srl_set_done_error_callback(main_kiss_srl_ctx_ptr, main_callback_serial_kiss_rx_done, 0);
 
 			  main_usart1_kiss_mode = USART_MODE_KISS;
 		  }
@@ -906,6 +925,7 @@ int main(int argc, char* argv[]){
 	  }
 	  case USART_MODE_KISS: {
 		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
+		  srl_set_done_error_callback(main_kiss_srl_ctx_ptr, main_callback_serial_kiss_rx_done, 0);
 
 		  main_kiss_enabled = 1;
 
@@ -1089,9 +1109,9 @@ int main(int argc, char* argv[]){
 		;	// no internal sensor enabled
 	}
 
- kiss_security_access_init(main_config_data_basic);
+	kiss_security_access_init(main_config_data_basic);
 
- if (main_kiss_enabled == 1) {
+	if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 
@@ -1180,7 +1200,7 @@ int main(int argc, char* argv[]){
 #else
   if (main_kiss_enabled == 1) {
 	  // switching UART to receive mode to be ready for KISS frames from host
-	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 100);
+ 	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 100);
   }
   else {
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
@@ -1331,7 +1351,7 @@ int main(int argc, char* argv[]){
 #endif
    }
 
-  volatile const int8_t event_bootup_result = event_log_sync(
+  (void)event_log_sync(
 		   EVENT_BOOTUP,
 		   EVENT_SRC_MAIN,
 		   EVENTS_MAIN_BOOTUP_COMPLETE,
@@ -1355,6 +1375,8 @@ int main(int argc, char* argv[]){
 	BaseType_t create_result = pdFAIL;
 
 	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
+	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
+
 	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority, &task_main_handle );
 	if (create_result == pdPASS) {
 		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
@@ -1365,8 +1387,11 @@ int main(int argc, char* argv[]){
 				if (create_result == pdPASS) {
 					create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ten_sec_handle );
 					if (create_result == pdPASS) {
-						/* Start the scheduler. */
-						vTaskStartScheduler();
+						create_result = xTaskCreate( task_event_kiss_rx_done, "task_event_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_kiss_rx_done_handle );
+						if (create_result == pdPASS) {
+							/* Start the scheduler. */
+							vTaskStartScheduler();
+						}
 					}
 				}
 			}

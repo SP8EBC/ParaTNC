@@ -101,7 +101,7 @@ void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
 	// systick
 	NVIC_SetPriority(SPI2_IRQn, 6);
-//	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
+	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
 //	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
 	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
 	NVIC_SetPriority(USART2_IRQn, 9);			// wx

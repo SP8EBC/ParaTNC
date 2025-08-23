@@ -32,6 +32,8 @@
  *									MAIN_EVENTGROUP_PWRSAVE_ONE_MIN |	\
  */
 
+#define MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE		(1 << 0)
+
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
 /// ==================================================================================================
@@ -42,6 +44,8 @@
 
 //! Declare a variable to hold the handle of the created event group.
 extern EventGroupHandle_t main_eventgroup_handle_powersave;
+
+extern EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

@@ -80,8 +80,6 @@ uint8_t main_check_adc = 0;
 //!< Used to store an information which telemetry descritpion frame should be sent next
 static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
-static uint8_t main_small_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
-
 #if defined(PARAMETEO)
 //! KISS (diagnostic) request decoded from APRS message
 static uint8_t main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
@@ -306,31 +304,31 @@ void task_main( void * parameters )
 //				}
 				else {
 					// if new KISS message has been received from the host
-					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
-						// parse i ncoming data and then transmit on radio freq
-						ln = kiss_parse_received (srl_get_rx_buffer (kiss_srl_ctx),
-												  srl_get_num_bytes_rxed (main_kiss_srl_ctx_ptr),
-												  &main_ax25,
-												  &main_afsk,
-												  main_small_buffer,
-												  KISS_CONFIG_DIAGNOSTIC_BUFFER_LN,
-												  KISS_TRANSPORT_SERIAL_PORT);
-						if (ln == 0) {
-							kiss10m++; // increase kiss messages counter
-						}
-						else if (ln > 0) {
-							// if a response (ACK) to this KISS frame shall be sent
-
-							// wait for any pending transmission to complete
-							srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
-
-							srl_send_data (main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln,
-										   SRL_INTERNAL);
-						}
-
-						// restart KISS receiving to be ready for next frame
-						srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 120);
-					}
+//					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
+//						// parse i ncoming data and then transmit on radio freq
+//						ln = kiss_parse_received (srl_get_rx_buffer (kiss_srl_ctx),
+//												  srl_get_num_bytes_rxed (main_kiss_srl_ctx_ptr),
+//												  &main_ax25,
+//												  &main_afsk,
+//												  main_small_buffer,
+//												  KISS_CONFIG_DIAGNOSTIC_BUFFER_LN,
+//												  KISS_TRANSPORT_SERIAL_PORT);
+//						if (ln == 0) {
+//							kiss10m++; // increase kiss messages counter
+//						}
+//						else if (ln > 0) {
+//							// if a response (ACK) to this KISS frame shall be sent
+//
+//							// wait for any pending transmission to complete
+//							srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
+//
+//							srl_send_data (main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln,
+//										   SRL_INTERNAL);
+//						}
+//
+//						// restart KISS receiving to be ready for next frame
+//						srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 120);
+//					}
 
 					// if there were an error during receiving frame from host, restart rxing once again
 					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {

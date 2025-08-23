@@ -34,6 +34,7 @@ src/kiss_protocol/diagnostics_services \
 src/kiss_protocol \
 src/nvm \
 src/stored_configuration_nvm \
+src/tasks \
 system/freertos \
 system/freertos/portable \
 system/src/aprs \
