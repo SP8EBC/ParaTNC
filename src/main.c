@@ -515,7 +515,8 @@ int main(int argc, char* argv[]){
   RCC->BDCR |= RCC_BDCR_RTCEN;
 
   /* Set Interrupt Group Priority */
-  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+  //HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+  NVIC_SetPriorityGrouping( 0 );
 
 //  // set systick frequency
 //  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
