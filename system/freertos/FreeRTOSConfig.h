@@ -44,6 +44,8 @@
 
 #include <stm32l4xx.h>
 
+#include "debug_hardfault.h"
+
 /******************************************************************************/
 /* Hardware description related definitions. **********************************/
 /******************************************************************************/
@@ -426,6 +428,7 @@ PRIORITY THAN THIS! (higher priorities are lower numeric values. */
 #define configASSERT( x )         \
     if( ( x ) == 0 )              \
     {                             \
+    	debug_hardfault_freertos_assert_fail(); \
         taskDISABLE_INTERRUPTS(); \
         for( ; ; )                \
         ;                         \

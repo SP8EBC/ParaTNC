@@ -558,7 +558,7 @@ int main(int argc, char* argv[]){
   main_powersave_state_at_bootup = main_powersave_state_at_bootup >> 2;
 
   // initialize nvm logger
-  nvm_event_log_init();
+  //nvm_event_log_init();
 
   if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
 	  	system_set_rtc_date(main_year, main_month, main_day_of_month);

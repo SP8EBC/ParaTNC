@@ -162,6 +162,19 @@ __attribute__((naked)) void BusFault_Handler(void)
     __asm__("LDR R0, =debug_hardfault_stack_pointer_value");
     __asm__("STR R1, [R0]"); // Store PSP into stack_pointer
 
+    debug_hardfault_bfsr = *(uint8_t*)0xE000ED29;
+    if (debug_hardfault_bfsr & 0x80) {
+        // BFARVALID - Bus Fault Address Register is valid
+        //const volatile uint32_t fault_address = *(uint32_t*)0xE000ED38; // BFAR
+        // This contains the address that caused the fault
+    }
+    if (debug_hardfault_bfsr & 0x02) {
+        // PRECISERR - Precise data bus error
+    }
+    if (debug_hardfault_bfsr & 0x04) {
+        // IMPRECISERR - Imprecise data bus error
+    }
+
     DEBUG_STACKFRAME_EXTRACT(debug_hardfault_stack_pointer_value, DEBUG_HARDFAULT_SOURCE_BUSFLT);
 
     DEBUG_STACKFRAME_STORE

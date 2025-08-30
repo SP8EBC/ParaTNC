@@ -106,90 +106,6 @@ STATIC uint32_t nvm_get_highest_event_id(void *area_start, void *area_end)
 }
 
 /**
- * Function which solve a problem, when two consecutive event log entries
- * inside a flash memory page have descending counter_id, what normally
- * is not possible. What this function does is:
- * 	1. Go through all area and finds the highest value of event_counter_id
- *  2. Increment this highest value by 255 (better safe than sorry)
- *  3. Erase memory page next to one in which broken entry is stored
- *  4. Put EVENT_MARKER_BAD as the first entry in this erased flash memory page
- * 
- * @note: if the broken entry is stored in the last flash memory page in the
- * area. This memory page will be erased completely and no EVENT_MARKER_BAD
- * will be put. 
- * 
- * New event will be put just at the next location after EVENT_MARKER_BAD. This 
- * marker has a value of event_counter_id from 2nd point. It's role is to 
- * exclude previous page (this, where faulty entry is) from any other operation,
- * not to retrigger the same error once again. Eventually it will be erased anyway,
- * when the area will wrap up.
- * 
- * @note: This function assumes that broken entry has been written recently, probably
- * as the last event log entry persisted. Neither as a result of a software defect, 
- * and writing malformed event_id with correct CRC, or flash memory corruption which
- * somehow lead to corrupted entry, with the same CRC (LSB of CRC-32). It will not 
- * work well if flash memory starts to fail and some 
- * 
- * @param oldest pointer to the oldest entry found to the point of a fault
- * @param newest pointer to the newest entry, usually this should be the one before current_broken
- * @param area_start a pointer to first byte of an event log area
- * @param area_end a pointer to last byte (not byte after the last one!!!) of event log area
- * @param current_broken pointer to broken entry, which has descending counter_event_id value
- * @param erase_fn function used to erase flash memory page
- * @param page_size
- * @return
- */
-STATIC uint32_t nvm_fix_broken_event_ids (event_log_t **oldest, event_log_t **newest, void *area_start,
-									  void *area_end, event_log_t * current_broken,
-									  FLASH_Status (*erase_fn) (uint32_t), int16_t page_size,
-									  nvm_event_target_ereas_t target_area)
-{
-	uint32_t out = 0;
-
-	// size of single log entry
-	const uint8_t log_entry_size = sizeof (event_log_t);
-
-	// how many entries single memory page fits
-	const uint8_t one_page_capacity = page_size / log_entry_size;
-
-	void* raw_ptr_to_broken = (void*) current_broken; 
-
-	// check if broken entry is in the last flash memory page associated to entry log
-	if (raw_ptr_to_broken + page_size >= area_end) {
-
-		// erase last page of memory
-		erase_fn(raw_ptr_to_broken);
-
-		// set the pointer to virtual & non existent entry after the last
-		// real entry in last real memory page
-		// WARNING! This shall not be dereferenced, as it might even be located
-		// outside existing memory space
-		event_log_t* first_after_end = (event_log_t*)(area_end + 1);
-
-		// set the newest location to 
-		*newest = first_after_end - one_page_capacity;
-	}
-	else {
-		// calculate offset measured by number of pages from start of the event log area
-		uint16_t page_number_offset = NVM_EVENT_GET_PAGENUM_OFFSET(current_broken, area_start, page_size);
-
-		// calculate pointer to first log entry in this memory page
-		const event_log_t *const first_in_faulty_area =
-			(const event_log_t *)(area_start + one_page_capacity * page_number_offset * sizeof(event_log_t));
-
-		// calculate pointer to first entry in next area.
-		const event_log_t * const first_in_next_area = first_in_faulty_area + one_page_capacity;
-
-		// erase next area
-		erase_fn(first_in_next_area);
-
-		out = nvm_get_highest_event_id(area_start, area_end) + 255;
-	}
-
-	return out;
-}
-
-/**
  * Perform pointer arithmetics just before storing new event in target area. It always move 
  * newest pointer to a location at which this new event will be persisted. It also may change 
  * oldest pointer if an end of area is reached, or the area has rounder already, and old logs 
@@ -209,6 +125,11 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest,
 													   int16_t page_size,
 													   uint16_t* area_percentage_use)
 {
+
+	if (nvm_general_state == NVM_UNINITIALIZED)
+	{
+		return;
+	}
 
 	// if memory is initialized but area is empty
 	if (nvm_general_state == NVM_OK_AND_EMPTY) {
@@ -321,6 +242,11 @@ uint16_t nvm_event_get_crc_errors(void)
 nvm_event_result_t nvm_event_log_find_first_oldest_newest (
 	event_log_t **oldest, event_log_t **newest, void *area_start, void *area_end, int16_t page_size, uint16_t* area_percentage_use)
 {
+
+	if (nvm_general_state == NVM_UNINITIALIZED)
+	{
+		return NVM_EVENT_ERROR;
+	}
 
 	nvm_event_result_t res = NVM_EVENT_OK;
 
@@ -482,6 +408,11 @@ nvm_event_result_t nvm_event_log_find_first_oldest_newest (
  */
 nvm_event_result_t nvm_event_log_push_new_event (event_log_t *event)
 {
+	if (nvm_general_state == NVM_UNINITIALIZED)
+	{
+		return NVM_EVENT_ERROR;
+	}
+
 	nvm_event_result_t out = NVM_EVENT_OK;
 
 	// used by the code generated by xmacro
