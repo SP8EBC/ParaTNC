@@ -522,7 +522,7 @@ int main(int argc, char* argv[]){
 //  HAL_SYSTICK_Config(SystemCoreClock / (1000U / (uint32_t)10));
 //
 //  // set systick interrupt priority
-  HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0U);
+  it_handlers_set_priorities();
 
   // configure timer used as a system timebase instead of SysTick
   TimerTimebaseConfig();
@@ -558,7 +558,7 @@ int main(int argc, char* argv[]){
   main_powersave_state_at_bootup = main_powersave_state_at_bootup >> 2;
 
   // initialize nvm logger
-  //nvm_event_log_init();
+  nvm_event_log_init();
 
   if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
 	  	system_set_rtc_date(main_year, main_month, main_day_of_month);
@@ -927,6 +927,7 @@ int main(int argc, char* argv[]){
 	  case USART_MODE_KISS: {
 		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
 		  srl_set_done_error_callback(main_kiss_srl_ctx_ptr, main_callback_serial_kiss_rx_done, 0);
+		  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 100);
 
 		  main_kiss_enabled = 1;
 
@@ -1390,6 +1391,7 @@ int main(int argc, char* argv[]){
 					if (create_result == pdPASS) {
 						create_result = xTaskCreate( task_event_kiss_rx_done, "task_event_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_kiss_rx_done_handle );
 						if (create_result == pdPASS) {
+							event_log_rtos_running = 1;
 							/* Start the scheduler. */
 							vTaskStartScheduler();
 						}
