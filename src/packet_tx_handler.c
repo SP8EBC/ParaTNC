@@ -28,6 +28,11 @@
 #include "./nvm/nvm.h"
 
 #include "gsm/sim800c_gprs.h"
+
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 #endif
 
 #include "main.h"
@@ -296,8 +301,11 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				packet_tx_nvm.wind = wx_get_nvm_record_wind();
 				packet_tx_nvm.timestamp = main_get_nvm_timestamp();
 
+				taskENTER_CRITICAL();
 				// write to NVM if it is enabled
 				nvm_measurement_store(&packet_tx_nvm);
+				taskEXIT_CRITICAL();
+
 			}
 #endif
 

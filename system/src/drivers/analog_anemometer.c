@@ -393,14 +393,14 @@ void analog_anemometer_dma_irq(void) {
 
 	// checking if timer overflowed (raised an iterrupt)
 	if (analog_anemometer_timer_has_been_fired == 1) {
-
+#ifdef EVENTLOG_FROM_ISR
 	    event_log_sync(EVENT_WARNING, EVENT_SRC_DRV_ANEMOMETER,
 	    		  EVENTS_DRV_ANEMOMETER_WARN_NO_PULSES_INT_FIRED,
 				  0, 0, rte_wx_windspeed_pulses,
 				  analog_anemometer_windspeed_pulses_time[0],
 				  analog_anemometer_windspeed_pulses_time[1],
 				  analog_anemometer_windspeed_pulses_time[2]);
-
+#endif
 		rte_wx_windspeed_pulses = 1;
 
 		analog_anemometer_timer_has_been_fired = 0;
@@ -469,13 +469,13 @@ void analog_anemometer_dma_irq(void) {
 
 		// if current inter-pulse time is much longer than previous (some pulse is missing?)
 		if ( diff > slew_rate_limit ) {
-
+#ifdef EVENTLOG_FROM_ISR
 		    event_log_sync(EVENT_WARNING, EVENT_SRC_DRV_ANEMOMETER,
 		    		  EVENTS_DRV_ANEMOMETER_WARN_EXCESIVE_SLEW,
 					  0, 0,
 					  pulse_ln, previous_pulse_ln,
 					  diff, slew_rate_limit);
-
+#endif
 			analog_anemometer_time_between_pulses[i] = previous_pulse_ln + ((uint32_t)slew_rate_limit);
 			analog_anemometer_slew_limit_fired = 1;
 			rte_wx_analog_anemometer_counter_slew_limit_fired++;
@@ -662,14 +662,13 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	// if the value is greater than maximum one just ignore
 	if (current_value > UF_MAXIMUM_FREQUENCY) {
-
 	    event_log_sync(EVENT_ERROR, EVENT_SRC_DRV_ANEMOMETER,
 	    		EVENTS_DRV_ANEMOMETER_ERROR_UF_FREQ_TOO_HI,
 				current_value, 0,
 				analog_anemometer_windspeed_pulses_time[0], analog_anemometer_windspeed_pulses_time[1],
 				analog_anemometer_windspeed_pulses_time[2], analog_anemometer_windspeed_pulses_time[3]);
 
-		// and reinitialize the timer before returning from the function
+	    // and reinitialize the timer before returning from the function
 		analog_anemometer_direction_reset();
 
 		analog_anemometer__direction_freq_too_high++;
@@ -830,6 +829,7 @@ analog_wind_qf_t analog_anemometer_get_qf(void) {
 
 	}
 
+#ifdef EVENTLOG_FROM_ISR
 	if (out != AN_WIND_QF_FULL) {
 	    event_log_sync(EVENT_WARNING, EVENT_SRC_DRV_ANEMOMETER,
 	    		EVENTS_DRV_ANEMOMETER_WARN_QF_NOT_FULL,
@@ -837,7 +837,7 @@ analog_wind_qf_t analog_anemometer_get_qf(void) {
 				analog_anemometer_direction_doesnt_work, 0,
 				0, 0);
 	}
-
+#endif
 	// reseting flags
 	analog_anemometer_slew_limit_fired = 0;
 	analog_anemometer_deboucing_fired = 0;

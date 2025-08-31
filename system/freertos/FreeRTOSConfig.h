@@ -208,7 +208,7 @@
  * system-wide implementations of the necessary stubs. Note that (at the time of
  * writing) the current newlib design implements a system-wide malloc() that must
  * be provided with locks. */
-#define configUSE_NEWLIB_REENTRANT                 0
+#define configUSE_NEWLIB_REENTRANT                 1
 
 /******************************************************************************/
 /* Software timer related definitions. ****************************************/
@@ -312,13 +312,13 @@
 
 /* The lowest interrupt priority that can be used in a call to a "set priority"
 function. */
-#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			0xf
+#define configLIBRARY_LOWEST_INTERRUPT_PRIORITY			15
 
 /* The highest interrupt priority that can be used by any interrupt service
 routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
 INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
 PRIORITY THAN THIS! (higher priorities are lower numeric values. */
-#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	5
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	1
 
 /* configKERNEL_INTERRUPT_PRIORITY sets the priority of the tick and context
  * switch performing interrupts.  Not supported by all FreeRTOS ports.  See
@@ -477,7 +477,7 @@ PRIORITY THAN THIS! (higher priorities are lower numeric values. */
  * prevent unprivileged tasks entering critical sections.  Defaults to 1 if left
  * undefined.  Only used by the FreeRTOS Cortex-M MPU ports, not the standard
  * ARMv7-M Cortex-M port. */
-#define configALLOW_UNPRIVILEGED_CRITICAL_SECTIONS                0
+#define configALLOW_UNPRIVILEGED_CRITICAL_SECTIONS                1
 
 /* FreeRTOS Kernel version 10.6.0 introduced a new v2 MPU wrapper, namely
  * mpu_wrappers_v2.c. Set configUSE_MPU_WRAPPERS_V1 to 0 to use the new v2 MPU

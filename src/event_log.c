@@ -17,7 +17,9 @@
 #include <string.h>
 #include <stdio.h>
 
-
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -36,6 +38,8 @@ static int8_t event_log_fifo_current_depth = 0;
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
+
+uint8_t event_log_rtos_running = 0;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
@@ -123,7 +127,15 @@ int8_t event_log_sync (event_log_severity_t severity,
 	new_event.lparam = lparam;
 	new_event.lparam2 = lparam2;
 
+	if (event_log_rtos_running) {
+		taskENTER_CRITICAL();
+	}
+
 	const nvm_event_result_t res = nvm_event_log_push_new_event(&new_event);
+
+	if (event_log_rtos_running) {
+		taskEXIT_CRITICAL();
+	}
 
 	if (res == NVM_EVENT_OK) {
 		return 0;

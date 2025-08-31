@@ -107,6 +107,7 @@ void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(USART2_IRQn, 9);			// wx
 	NVIC_SetPriority(USART1_IRQn, 10);			// kiss
 	NVIC_SetPriority(I2C1_ER_IRQn, 11);
+	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0U);
 
 }
 
