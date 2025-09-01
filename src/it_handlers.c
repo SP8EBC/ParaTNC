@@ -6,6 +6,7 @@
  */
 
 #include "station_config_target_hw.h"
+#include "it_handlers.h"
 
 #include <delay.h>
 
@@ -42,33 +43,10 @@
 #include "supervisor.h"
 
 #include "rte_main.h"
+#include "main_freertos_externs.h"
 
 #include <stored_configuration_nvm/configuration_handler.h>
 #include "station_config.h"
-
-
-/*
- * INTERRUPT PRIORITIES
- *
- *	TIM2_IRQHandler 			- 1 -> Dallas delay (enable only during dallas comm)
- *	I2C1_EV_IRQHandler 			- 2 -> I2C comm interrupt (active & enable only during communication with i2c sensor)
- *	TIM5_IRQHandler 			- 3 -> APRS softmodem DAC (enable only during tx)
- *	TIM7_IRQHandler 			- 4 -> APRS softmodem ADC
- *	SysTick_Handler 			- 5
- *  SPI2_IRQHandler				- 6 -> SPI bus (PT1000 and sx1262 modem)
- *	----------------------------- 7 -> not used
- *	EXTI4_IRQHandler 			- 8 -> DHT22 sensor GPIO interrupt
- *	USART2_IRQHandler			- 9 -> uart to Modbus RTU sensors
- *  USART1_IRQHandler			- 10 -> uart for kiss communication with pc
- *	I2C1_ER_IRQHandler			- 11 -> I2C error interrupt
- *
- *
- *	 *	TIM1_TRG_COM_TIM17_IRQHandler  	- analog anemometer TIM17 - wind direction
- *	 *	DMA1_Channel5_IRQHandler 		- analog anemometer DMA - windspeed
- *	 USART3_IRQHandler 					-- GSM modem
- *
- */
-
 
 /*
  * TIMERS
@@ -80,33 +58,60 @@
  * TIM17 - TIM1_TRG_COM_TIM17_IRQHandler
  */
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
 /* Zmienne używane do oversamplingu */
-int adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
-unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
-short int AdcValue;
+static int adc_sample_count = 0, adc_sample_c2 = 0;				// Zmienna odliczająca próbki
+static unsigned short int AdcBuffer[4];		// Bufor przechowujący kolejne wartości rejestru DR
+static short int AdcValue;
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
 
 uint8_t it_handlers_cpu_load_pool = 0;
 
 uint8_t it_handlers_inhibit_radiomodem_dcd_led = 0;
 
-// this function will set all iterrupt priorities except systick
+volatile uint32_t it_handlers_freertos_proxy = 0;
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
+/**
+ * Sets interrupt priorities
+ */
 void it_handlers_set_priorities(void) {
 	NVIC_SetPriority(TIM2_IRQn, 1);				// one-wire delay
 	NVIC_SetPriority(I2C1_EV_IRQn, 2);
 #ifdef STM32F10X_MD_VL
 	NVIC_SetPriority(TIM4_IRQn, 3);				// DAC
 #else
-	NVIC_SetPriority(TIM5_IRQn, 3);
+	NVIC_SetPriority(TIM5_IRQn, 3);				// DAC
 #endif
 	NVIC_SetPriority(TIM7_IRQn, 4);				// ADC
-	// systick
-	NVIC_SetPriority(SPI2_IRQn, 6);
-	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 6);	// TX20 anemometer
-//	NVIC_SetPriority(EXTI9_5_IRQn, 7);			// TX20 anemometer
-	NVIC_SetPriority(EXTI4_IRQn, 8);			// DHT22 humidity sensor
-	NVIC_SetPriority(USART2_IRQn, 9);			// wx
-	NVIC_SetPriority(USART1_IRQn, 10);			// kiss
-	NVIC_SetPriority(I2C1_ER_IRQn, 11);
+	NVIC_SetPriority(SPI2_IRQn, 5);
+	NVIC_SetPriority(USART1_IRQn, 6);			// kiss
+	NVIC_SetPriority(USART2_IRQn, 7);			// wx
+	NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 8);	// periodic counters (former Systick)
+	NVIC_SetPriority(EXTI4_IRQn, 9);			// DHT22 humidity sensor
+	NVIC_SetPriority(I2C1_ER_IRQn, 10);
+	NVIC_SetPriority(EXTI0_IRQn, 11);			// FreeRTOS api proxy
 	HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0U);
 
 }
@@ -150,6 +155,35 @@ void RTC_WKUP_IRQHandler(void) {
 
 	// disable access do backup domain
 	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
+}
+
+/**
+ * Interrupt handler used as a proxy to call FreeRTOS interrupt safe functions, from ISR context
+ * at priority higher than a value of configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY
+ */
+void EXTI0_IRQHandler(void) {
+
+	// clear pending interrupt
+	NVIC_ClearPendingIRQ(EXTI0_IRQn);
+
+	if ((IT_HANDLERS_PROXY_KISS_UART_EV & it_handlers_freertos_proxy) != 0)
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+			xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_kiss,
+												 MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE,
+												 &xHigherPriorityTaskWoken);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
 }
 
 void EXTI9_5_IRQHandler(void) {
@@ -233,13 +267,6 @@ void TIM1_UP_TIM16_IRQHandler(void) {
 		led_control_led1_upper(main_ax25.dcd);
 	}
 }
-
-//// Systick interrupt used for time measurements, checking timeouts and SysTick_Handler
-//void SysTick_Handler(void) {
-//
-//
-//
-//}
 
 void USART1_IRQHandler(void) {
 	NVIC_ClearPendingIRQ(USART1_IRQn);

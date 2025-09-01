@@ -385,22 +385,9 @@ unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 static void main_callback_serial_kiss_rx_done (srl_ctx_t *context)
 {
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	BaseType_t xResult = pdFAIL;
 	if (context->srl_rx_state == SRL_RX_DONE) {
-		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_kiss,
-											 MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE,
-											 &xHigherPriorityTaskWoken);
-	}
-
-	if (xResult != pdFAIL)
-
-	{
-		/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		   switch should be requested. The macro used is port specific and will
-		   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
-		   the documentation page for the port being used. */
-		portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_KISS_UART_EV;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
 }
 
@@ -1333,25 +1320,25 @@ int main(int argc, char* argv[]){
    }
 #endif
 
-   if (main_config_data_basic-> beacon_at_bootup == 1) {
-#if defined(PARAMETEO)
-	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
-	main_wait_for_tx_complete();
-
-	// this delay is put in case if beacon is configured to use
-	// any path like WIDE1-1 or WIDE2-1 or another. The delay
-	// will wait for some time to have this beacon digipeated
-	// by the APRS radio network
-	delay_fixed(1500);
-#else
-	   beacon_send_own(0, 0);
-
-#endif
-
-#if defined(PARAMETEO)
-	   status_send_powersave_registers();
-#endif
-   }
+//   if (main_config_data_basic-> beacon_at_bootup == 1) {
+//#if defined(PARAMETEO)
+//	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
+//	main_wait_for_tx_complete();
+//
+//	// this delay is put in case if beacon is configured to use
+//	// any path like WIDE1-1 or WIDE2-1 or another. The delay
+//	// will wait for some time to have this beacon digipeated
+//	// by the APRS radio network
+//	delay_fixed(1500);
+//#else
+//	   beacon_send_own(0, 0);
+//
+//#endif
+//
+//#if defined(PARAMETEO)
+//	   status_send_powersave_registers();
+//#endif
+//   }
 
   (void)event_log_sync(
 		   EVENT_BOOTUP,
@@ -1392,6 +1379,7 @@ int main(int argc, char* argv[]){
 						create_result = xTaskCreate( task_event_kiss_rx_done, "task_event_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_kiss_rx_done_handle );
 						if (create_result == pdPASS) {
 							event_log_rtos_running = 1;
+							NVIC_EnableIRQ(EXTI0_IRQn);
 							/* Start the scheduler. */
 							vTaskStartScheduler();
 						}
@@ -1630,6 +1618,27 @@ void vApplicationGetRandomHeapCanary(portPOINTER_SIZE_TYPE* pxHeapCanary ) {
 	if (pxHeapCanary != NULL) {
 		*pxHeapCanary = main_get_nvm_timestamp();
 	}
+}
+
+BaseType_t xApplicationMemoryPermissions( uint32_t aAddress ) {
+
+	/*
+	 * Return 1 for readable, 2 for writeable, 3 for both.
+	 * Function must be provided by the application.
+	 */
+	BaseType_t out = 0;
+
+	if (variant_validate_is_within_ram(aAddress) == 1) {
+		out = 3;
+	}
+	else if (variant_validate_is_within_flash(aAddress) == 1) {
+		out = 1;
+	}
+	else {
+		;
+	}
+
+	return out;
 }
 
 #pragma GCC diagnostic pop

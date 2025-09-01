@@ -10,6 +10,10 @@
 #include "string.h"
 #include "stdio.h"
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 #ifdef UNIT_TEST
 #define STATIC
 #else
@@ -400,7 +404,8 @@ uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln,
     if( variant_validate_is_within_ram(input) && 
         variant_validate_is_within_ram(output) && 
         output_ln > (MESSAGE_MINIMUM_SENSEFUL_LN + input->content_ln)) {
-        
+		taskENTER_CRITICAL();
+
         // check the lenght of sender (from) callsign
         const uint8_t from_call_ln = (input->from.call[5] != 0x00) ? 6 : strlen(input->from.call);
 
@@ -463,6 +468,7 @@ uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln,
         else {
             current_pos = 0;
         }
+		taskEXIT_CRITICAL();
 
     }
 

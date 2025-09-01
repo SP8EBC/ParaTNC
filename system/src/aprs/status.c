@@ -27,14 +27,20 @@ const char * status_vbatt_unknown		= "VBATT_UNKNOWN";
 #include "gsm/sim800c.h"
 #endif
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 void status_send(void) {
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
+	taskENTER_CRITICAL();
 #ifdef STM32L471xx
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaMETEO firmware %s-%s by SP8EBC - PV powered, fully outdoor, 3in1 APRS device", SW_VER, SW_DATE);
 #else
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">ParaTNC firmware %s-%s by SP8EBC", SW_VER, SW_DATE);
 #endif
- 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	taskEXIT_CRITICAL();
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	WAIT_FOR_CHANNEL_FREE();
 	afsk_txStart(&main_afsk);
 
@@ -89,9 +95,11 @@ void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cuto
 
 	main_wait_for_tx_complete();
 
+	taskENTER_CRITICAL();
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[powersave cutoff change][Vbatt: %dV][previous: %d - %s][currently: %d - %s]", battery_voltage, previous_cutoff, p, current_cutoff, c);
- 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
+	taskEXIT_CRITICAL();
+	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
 	main_wait_for_tx_complete();
@@ -108,6 +116,7 @@ void status_send_powersave_registers(void) {
 
 	main_wait_for_tx_complete();
 
+	taskENTER_CRITICAL();
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = sprintf(
 									main_own_aprs_msg,
@@ -117,6 +126,7 @@ void status_send_powersave_registers(void) {
 									sleep_counter,
 									wakeup_counter,
 									last_monitor);
+	taskEXIT_CRITICAL();
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
 	afsk_txStart(&main_afsk);
@@ -150,11 +160,15 @@ void status_send_gsm(void){
 void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
 	main_wait_for_tx_complete();
 
+	taskENTER_CRITICAL();
+
 	// clear buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 	// create message buffer
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, ">[APRS-IS timeout][aprsis_unsucessfull_conn_counter: %d]", (int)unsuccessfull_conn_cntr);
+
+	taskEXIT_CRITICAL();
 
 	// send message on radio
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);

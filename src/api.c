@@ -17,6 +17,10 @@
 #include "stdint.h"
 #include "aes.h"
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 /**
  * Buffers for generating JSON and URL
  */
@@ -152,9 +156,14 @@ void api_calculate_mac(void) {
 }
 
 void api_send_json_status(void) {
+
+	taskENTER_CRITICAL();
+
 	BEGIN
 	PRINT_ALL_STATUS
 	END
+
+	taskEXIT_CRITICAL();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
 		api_construct_url_status(PARAMETEO_STATUS);
@@ -164,9 +173,14 @@ void api_send_json_status(void) {
 }
 
 void api_send_json_measuremenets(void) {
+
+	taskENTER_CRITICAL();
+
 	BEGIN
 	PRINT_ALL_MEASUREMENTS
 	END
+
+	taskEXIT_CRITICAL();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
 		api_construct_url_status(PARAMETEO_WX);
@@ -176,6 +190,8 @@ void api_send_json_measuremenets(void) {
 }
 
 uint8_t api_send_json_event(const event_log_exposed_t * event) {
+	taskENTER_CRITICAL();
+
 	BEGIN
 	PRINT_STRING(api_station_name, station_name);
 	PRINT_32INT(event->event_master_time, event_master_time);
@@ -190,6 +206,8 @@ uint8_t api_send_json_event(const event_log_exposed_t * event) {
 	PRINT_32INT(event->lparam, lparam);
 	PRINT_32INT(event->lparam2, lparam2);
 	END
+
+	taskEXIT_CRITICAL();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
 		api_construct_url_status(PARAMETEO_EVENT);

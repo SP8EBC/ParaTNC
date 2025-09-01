@@ -20,6 +20,11 @@
 #include <stdio.h>
 #include <string.h>
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
+
 static uint16_t telemetry_counter = 0;
 
 // variables with characters to be inserted to APRS telemetry frame
@@ -53,6 +58,8 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
 	char message_prefix_buffer[9];
+
+	taskENTER_CRITICAL();
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
@@ -168,6 +175,8 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 	out[out_size] = 0;
 
+	taskEXIT_CRITICAL();
+
 	return out_size;
 
 }
@@ -177,9 +186,13 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
 	char message_prefix_buffer[9];
 
+	taskENTER_CRITICAL();
+
 	memset(message_prefix_buffer, 0x00, 0x09);
 
 	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+
+	taskEXIT_CRITICAL();
 
 	while (main_afsk.sending == 1);
 
@@ -272,6 +285,8 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 		telemetry_humidity_qf_navaliable = '0';
 	}
 
+	taskENTER_CRITICAL();
+
 	main_own_aprs_msg_len = sprintf(
 				main_own_aprs_msg,
 				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0",
@@ -289,6 +304,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 				telemetry_anemometer_degradated,
 				telemetry_anemometer_navble);
 
+	taskEXIT_CRITICAL();
 
 	if (telemetry_counter > 999)
 		telemetry_counter = 0;
@@ -509,6 +525,8 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	}
 #endif
 
+	taskENTER_CRITICAL();
+
 	// reset the buffer where the frame will be contructed and stored for transmission
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
@@ -537,6 +555,8 @@ void telemetry_send_values(	uint8_t rx_pkts,
 		#endif
 	}
 #endif
+
+	taskEXIT_CRITICAL();
 
 	// reset the frame counter if it overflowed
 	if (telemetry_counter > 999) {

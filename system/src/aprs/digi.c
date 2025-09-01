@@ -16,6 +16,10 @@
 
 #include "station_config.h"
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 // global variables to store a frame content to be digipeated
 uint8_t digi_msg[CONFIG_AX25_FRAME_BUF_LEN];
 uint16_t digi_msg_len;
@@ -100,7 +104,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 //	if (after_tx_lock == 0) {
 		// if the packet has any path and there is no packed waiting in viscous delay
 		if(msg->rpt_cnt >= 1 && digi_msg_len == 0) {
-
+			taskENTER_CRITICAL();
 			// initialize global variables used to store digipeated packet
 			memset(digi_path, 0x00, sizeof(AX25Call) * 7);
 			memset(digi_msg, 0x00, CONFIG_AX25_FRAME_BUF_LEN);
@@ -216,6 +220,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 //				digi_q = 1;
 //				call_len = 7;
 //			}
+			taskEXIT_CRITICAL();
 
 			if (retval == DIGI_PACKET_DIGIPEATED) {
 

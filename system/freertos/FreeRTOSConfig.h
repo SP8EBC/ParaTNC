@@ -318,7 +318,7 @@ function. */
 routine that makes calls to interrupt safe FreeRTOS API functions.  DO NOT CALL
 INTERRUPT SAFE FREERTOS API FUNCTIONS FROM ANY INTERRUPT THAT HAS A HIGHER
 PRIORITY THAN THIS! (higher priorities are lower numeric values. */
-#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	1
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY	8
 
 /* configKERNEL_INTERRUPT_PRIORITY sets the priority of the tick and context
  * switch performing interrupts.  Not supported by all FreeRTOS ports.  See

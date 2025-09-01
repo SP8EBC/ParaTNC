@@ -17,6 +17,9 @@
 #include <string.h>
 #include <stdio.h>
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
 
 void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection, float temperatura, float cisnienie, uint8_t humidity) {
 
@@ -54,8 +57,10 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 
  	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
- 	// 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
+	taskENTER_CRITICAL();
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+	taskEXIT_CRITICAL();
+
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -98,9 +103,11 @@ void SendWXFrameToKissBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t wi
 
  	pressure = (unsigned)(cisnienie * 10);
 
+	taskENTER_CRITICAL();
 	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
-	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
+	taskEXIT_CRITICAL();
 
+	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
 	output_frame_ln = ax25_sendVia_toBuffer(main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len, buffer, buffer_ln);
 	*output_ln = output_frame_ln;
 
