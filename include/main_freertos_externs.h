@@ -33,6 +33,9 @@
  */
 
 #define MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE		(1 << 0)
+#define MAIN_EVENTGROUP_SERIAL_GSM_RX_DONE		(1 << 1)
+#define MAIN_EVENTGROUP_SERIAL_GSM_TX_DONE		(1 << 2)
+
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -46,6 +49,9 @@
 extern EventGroupHandle_t main_eventgroup_handle_powersave;
 
 extern EventGroupHandle_t main_eventgroup_handle_serial_kiss;
+
+//! Declare a variable to hold the handle of the created event group.
+extern EventGroupHandle_t main_eventgroup_handle_serial_gsm;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

@@ -1,7 +1,7 @@
 /*
- * task_event_serial_gsm_rx_done.c
+ * task_event_serial_gsm_tx_done.c
  *
- *  Created on: Aug 22, 2025
+ *  Created on: Sep 1, 2025
  *      Author: mateusz
  */
 
@@ -16,7 +16,7 @@
 
 #include "gsm/sim800c.h"
 
-void task_event_gsm_rx_done (void *param)
+void task_event_gsm_tx_done (void *param)
 {
 	(void)param;
 
@@ -26,15 +26,15 @@ void task_event_gsm_rx_done (void *param)
 	while (1) {
 		// wait infinite amount of time for event from a serial port indicating that
 		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_serial_gsm,
-															   MAIN_EVENTGROUP_SERIAL_GSM_RX_DONE,
+															   MAIN_EVENTGROUP_SERIAL_GSM_TX_DONE,
 															   pdTRUE,
 															   pdTRUE,
 															   0xFFFFFFFFu);
 
 		// check if the event was really generated
-		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_GSM_RX_DONE) {
-			// receive callback for communicatio with the modem
-			gsm_sim800_rx_done_event_handler(ctx, &main_gsm_state);
+		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_GSM_TX_DONE) {
+			gsm_sim800_tx_done_event_handler(ctx, &main_gsm_state);
+
 		}
 	}
 }

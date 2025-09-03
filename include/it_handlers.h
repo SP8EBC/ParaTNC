@@ -22,7 +22,9 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
-#define IT_HANDLERS_PROXY_KISS_UART_EV	(1 << 0)
+#define IT_HANDLERS_PROXY_KISS_UART_EV	 (1 << 0)
+#define IT_HANDLERS_PROXY_GSM_RX_UART_EV (1 << 1)
+#define IT_HANDLERS_PROXY_GSM_TX_UART_EV (1 << 2)
 
 /// ==================================================================================================
 ///	GLOBAL TYPES
@@ -40,6 +42,6 @@ extern volatile uint32_t it_handlers_freertos_proxy;
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-void it_handlers_set_priorities(void);
+void it_handlers_set_priorities (void);
 
 #endif /* IT_HANDLERS_H_ */

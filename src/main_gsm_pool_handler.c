@@ -72,16 +72,16 @@ void main_gsm_pool_handler(
 
 	int32_t i = 0;
 
-	// if data has been received
-	if (gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+//	// if data has been received
+//	if (gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE || gsm_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+//
+//		// receive callback for communicatio with the modem
+//		gsm_sim800_rx_done_event_handler(gsm_srl_ctx_ptr, gsm_state);
+//	}
 
-		// receive callback for communicatio with the modem
-		gsm_sim800_rx_done_event_handler(gsm_srl_ctx_ptr, gsm_state);
-	}
-
-	if (gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-		gsm_sim800_tx_done_event_handler(gsm_srl_ctx_ptr, gsm_state);
-	}
+//	if (gsm_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
+//		gsm_sim800_tx_done_event_handler(gsm_srl_ctx_ptr, gsm_state);
+//	}
 
 	// if message ACK has been scheduled
 	if (*trigger_message_ack == 1) {
