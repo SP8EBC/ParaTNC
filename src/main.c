@@ -138,6 +138,10 @@
 #include "tasks/task_event_gsm_rx_done.h"
 #include "tasks/task_event_gsm_tx_done.h"
 
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
 #define SOH 0x01
 #define MANUAL_RTC_SET
 
@@ -197,6 +201,10 @@
 
 // ----- main() ---------------------------------------------------------------
 
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
 // used configuration structures
 const config_data_mode_t * main_config_data_mode = 0;
 const config_data_basic_t * main_config_data_basic = 0;
@@ -243,6 +251,44 @@ int16_t main_four_second_pool_timer = 4000;
 //! ten second pool interval
 int16_t main_ten_second_pool_timer = 10000;
 
+//! a pointer to KISS context
+srl_context_t* main_kiss_srl_ctx_ptr;
+
+//! a pointer to wx comms context
+srl_context_t* main_wx_srl_ctx_ptr;
+
+//! a pointer to gsm context
+srl_context_t* main_gsm_srl_ctx_ptr;
+
+//! target USART1 (kiss) baudrate
+uint32_t main_target_kiss_baudrate;
+
+//! target USART2 (wx) baudrate
+uint32_t main_target_wx_baudrate;
+
+//! controls if the KISS modem is enabled
+uint8_t main_kiss_enabled = 1;
+
+uint8_t main_reset_config_to_default = 0;
+
+//! global variables represending the AX25/APRS stack
+AX25Ctx main_ax25;
+Afsk main_afsk;
+
+
+AX25Call main_own_path[3];
+uint8_t main_own_path_ln = 0;
+uint8_t main_own_aprs_msg_len;
+char main_own_aprs_msg[OWN_APRS_MSG_LN];
+
+char main_string_latitude[9];
+char main_string_longitude[9];
+char main_callsign_with_ssid[10];
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
 //! serial context for UART used to KISS
 static srl_context_t main_kiss_srl_ctx;
 
@@ -266,44 +312,10 @@ static configuration_button_function_t main_button_one_left;
 //! function configuration for right button on ParaMETEO
 static configuration_button_function_t main_button_two_right;
 
-//! a pointer to KISS context
-srl_context_t* main_kiss_srl_ctx_ptr;
-
-//! a pointer to wx comms context
-srl_context_t* main_wx_srl_ctx_ptr;
-
-//! a pointer to gsm context
-srl_context_t* main_gsm_srl_ctx_ptr;
-
-//! target USART1 (kiss) baudrate
-uint32_t main_target_kiss_baudrate;
-
-//! target USART2 (wx) baudrate
-uint32_t main_target_wx_baudrate;
-
-//! controls if the KISS modem is enabled
-uint8_t main_kiss_enabled = 1;
-
 //! controls if DAVIS serialprotocol client is enabled by the configuration
 static uint8_t main_davis_serial_enabled = 0;
 
 static uint8_t main_modbus_rtu_master_enabled = 0;
-
-uint8_t main_reset_config_to_default = 0;
-
-//! global variables represending the AX25/APRS stack
-AX25Ctx main_ax25;
-Afsk main_afsk;
-
-
-AX25Call main_own_path[3];
-uint8_t main_own_path_ln = 0;
-uint8_t main_own_aprs_msg_len;
-char main_own_aprs_msg[OWN_APRS_MSG_LN];
-
-char main_string_latitude[9];
-char main_string_longitude[9];
-char main_callsign_with_ssid[10];
 
 #if defined(PARAMETEO)
 
@@ -312,6 +324,9 @@ char main_callsign_with_ssid[10];
 
 /********************************************************************/
 /*************************FREE RTOS related**************************/
+
+//!
+static SemaphoreHandle_t main_mutex_gsm_tcpip;
 
 //! data associated with the event group for powersave task sync
 static StaticEventGroup_t main_eventgroup_powersave;
@@ -390,6 +405,10 @@ unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 //#define SERIAL_TX_TEST_MODE
 
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
+
 /********************************************************************/
 /*************************FREE RTOS related**************************/
 
@@ -424,21 +443,9 @@ static void message_callback(struct AX25Msg *msg) {
 
 }
 
-void main_set_ax25_my_callsign(AX25Call * call) {
-	if (variant_validate_is_within_ram(call)) {
-		strncpy(call->call, main_config_data_basic->callsign, 6);
-		call->ssid = main_config_data_basic->ssid;
-	}
-}
-
-void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
-	if (variant_validate_is_within_ram(to)) {
-		strncpy(to->call, from->call, 6);
-		to->ssid = from->ssid;
-	}
-}
-
-//////////////////////////////////////////////////////////////
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS  -- main()
+/// ==================================================================================================
 
 /**
  * Just a main function
@@ -1395,8 +1402,10 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
 
+	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
+
 	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE * 4, ( void * ) NULL, priority, &task_main_handle );
-	if (create_result == pdPASS) {
+	if ((create_result == pdPASS) && (main_mutex_gsm_tcpip != NULL)) {
 		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
 		if (create_result == pdPASS) {
 			create_result = xTaskCreate( task_one_second, "task_one_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_one_sec_handle );
@@ -1443,6 +1452,24 @@ int main(int argc, char* argv[]){
 
     } // Infinite loop, never return.
 
+}
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
+
+void main_set_ax25_my_callsign(AX25Call * call) {
+	if (variant_validate_is_within_ram(call)) {
+		strncpy(call->call, main_config_data_basic->callsign, 6);
+		call->ssid = main_config_data_basic->ssid;
+	}
+}
+
+void main_copy_ax25_call(AX25Call * to, AX25Call * from) {
+	if (variant_validate_is_within_ram(to)) {
+		strncpy(to->call, from->call, 6);
+		to->ssid = from->ssid;
+	}
 }
 
 /**
@@ -1623,6 +1650,9 @@ configuration_button_function_t main_get_button_two_right()
 	return main_button_two_right;
 }
 
+/********************************************************************/
+/*************************FREE RTOS related**************************/
+
 void main_suspend_task_for_psaving(void)
 {
 	vTaskSuspend(task_one_sec_handle);
@@ -1635,6 +1665,28 @@ void main_resume_task_for_psaving(void)
 	vTaskResume(task_one_sec_handle);
 	vTaskResume(task_two_sec_handle);
 	vTaskResume(task_ten_sec_handle);
+}
+
+/**
+ *
+ * @param what_to_do
+ */
+void main_handle_mutex_gsm_tcpip(uint8_t what_to_do)
+{
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	if (what_to_do == 1)
+	{
+		xSemaphoreTake(main_mutex_gsm_tcpip, portMAX_DELAY);
+	}
+	else
+	{
+		xSemaphoreGive( main_mutex_gsm_tcpip);
+
+		//xSemaphoreGiveFromISR( main_mutex_gsm_tcpip, &xHigherPriorityTaskWoken );
+
+		//portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+	}
 }
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
@@ -1677,6 +1729,9 @@ BaseType_t xApplicationMemoryPermissions( uint32_t aAddress ) {
 
 	return out;
 }
+
+/********************************************************************/
+
 
 #pragma GCC diagnostic pop
 

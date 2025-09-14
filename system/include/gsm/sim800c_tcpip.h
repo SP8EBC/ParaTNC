@@ -94,9 +94,27 @@ sim800_return_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_co
 sim800_return_t gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t force);
 
 void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
-void gsm_sim800_tcpip_tx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
 
-uint8_t gsm_sim800_tcpip_tx_busy(void);
+/**
+ * Callback used from serial port context, to notify that a transmission during active TCP
+ * connection is done Please note that it doesn't mean that a TCP connection is done, so
+ * still a care must be taken, not to mix data from simultaneous connections!
+ * A code defined under a macro @link{GSM_TCPIP_TX_DONE_CALLBACK} might be put inside
+ * a body of this function. This can be used in RTOS environment, to release shared
+ * resource
+ * @param srl_context
+ * @param state
+ */
+void gsm_sim800_tcpip_tx_done_callback (srl_context_t *srl_context, gsm_sim800_state_t *state);
+
+/**
+ * If macro @link{GSM_TCPIP_TX_BUSY_CALLBACK} is not defined it simply returns a value of
+ * @link{gsm_sim800_tcpip_transmitting}. The macro is optionally put before return
+ * statement, what might be used in multitasking environment to signalize a mutex, to protect
+ * a shared resource
+ * @return value of tcpip_transmitting
+ */
+uint8_t gsm_sim800_tcpip_tx_busy (void);
 
 uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
 

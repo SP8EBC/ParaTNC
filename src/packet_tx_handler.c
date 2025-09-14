@@ -170,7 +170,7 @@ void packet_tx_tcp_handler(void) {
 	// client working at the same time
 
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
-		if (gsm_sim800_tcpip_tx_busy() == 0 && aprsis_connected == 1) {
+		if (aprsis_connected == 1) {
 
 				aprsis_send_wx_frame(
 						rte_wx_average_windspeed,

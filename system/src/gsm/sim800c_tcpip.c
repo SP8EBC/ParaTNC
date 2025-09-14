@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#include "etc/gsm_tcpip_config.h"
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -566,11 +568,20 @@ void gsm_sim800_tcpip_rx_done_callback (srl_context_t *srl_context, gsm_sim800_s
 
 void gsm_sim800_tcpip_tx_done_callback (srl_context_t *srl_context, gsm_sim800_state_t *state)
 {
+	(void)srl_context;
+	(void)state;
 	gsm_sim800_tcpip_transmitting = 0;
+#ifdef GSM_TCPIP_TX_DONE_CALLBACK
+	GSM_TCPIP_TX_DONE_CALLBACK
+#endif
 }
 
 uint8_t gsm_sim800_tcpip_tx_busy (void)
 {
+#ifdef GSM_TCPIP_IS_TX_BUSY_CALLBACK
+	GSM_TCPIP_IS_TX_BUSY_CALLBACK
+#endif
+
 	return gsm_sim800_tcpip_transmitting;
 }
 

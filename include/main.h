@@ -13,6 +13,10 @@
 
 #include "software_version.h"
 
+/// ==================================================================================================
+///	GLOBAL DEFINITIONS
+/// ==================================================================================================
+
 #define SYSTICK_TICKS_PER_SECONDS 100
 #define SYSTICK_TICKS_PERIOD 10
 
@@ -33,6 +37,10 @@
 #define MAIN_GET_RTC_MIN	5u
 #define MAIN_GET_RTC_SEC	6u
 
+/// ==================================================================================================
+///	GLOBAL TYPEDEFS
+/// ==================================================================================================
+
 typedef enum main_usart_mode_t {
 	USART_MODE_UNDEF,
 	USART_MODE_KISS,
@@ -44,6 +52,9 @@ typedef enum main_usart_mode_t {
 	USART_MODE_UNINIT
 }main_usart_mode_t;
 
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
 
 extern uint32_t main_flash_log_start;
 extern uint32_t main_flash_log_end;
@@ -100,6 +111,10 @@ extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 extern gsm_sim800_state_t main_gsm_state;
 
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
+
 void main_set_ax25_my_callsign(AX25Call * call);
 
 void main_copy_ax25_call(AX25Call * to, AX25Call * from);
@@ -124,8 +139,6 @@ configuration_button_function_t main_get_button_one_left();
 //! function configuration for right button on ParaMETEO
 configuration_button_function_t main_get_button_two_right();
 
-//! Suspend all tasks which shall not run while powersaving task is running
-void main_suspend_task_for_psaving(void);
 
 #if defined(STM32L471xx)
 extern uint32_t rte_main_rx_total;
@@ -188,6 +201,13 @@ inline void main_ten_second_pool_decremenet_counter(void) {
 	if (main_ten_second_pool_timer > 0)
 		main_ten_second_pool_timer -= SYSTICK_TICKS_PERIOD;
 }
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS  -- FreeRTOS related
+/// ==================================================================================================
+
+//! Suspend all tasks which shall not run while powersaving task is running
+void main_suspend_task_for_psaving(void);
 
 
 #endif
