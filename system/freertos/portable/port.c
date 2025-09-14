@@ -852,8 +852,8 @@ static void vPortEnableVFP( void )
 
     void vPortValidateInterruptPriority( void )
     {
-        uint32_t ulCurrentInterrupt;
-        uint8_t ucCurrentPriority;
+        volatile uint32_t ulCurrentInterrupt;
+        volatile uint8_t ucCurrentPriority;
 
         /* Obtain the number of the currently executing interrupt. */
         __asm volatile ( "mrs %0, ipsr" : "=r" ( ulCurrentInterrupt )::"memory" );

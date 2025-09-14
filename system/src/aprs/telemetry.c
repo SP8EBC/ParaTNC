@@ -63,7 +63,7 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+	snprintf(message_prefix_buffer, 0x09, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	if (variant_validate_is_within_ram((uint32_t)out) == 0) {
 		return out_size;
@@ -190,7 +190,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+	snprintf(message_prefix_buffer, 0x09, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	taskEXIT_CRITICAL();
 
@@ -287,8 +287,9 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 
 	taskENTER_CRITICAL();
 
-	main_own_aprs_msg_len = sprintf(
+	main_own_aprs_msg_len = snprintf(
 				main_own_aprs_msg,
+				OWN_APRS_MSG_LN,
 				"T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c0",
 				telemetry_counter++,
 				rx_pkts,
@@ -365,7 +366,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 
 	memset(message_prefix_buffer, 0x00, 0x09);
 
-	sprintf(message_prefix_buffer, "%s-%d", config_basic->callsign, config_basic->ssid);
+	snprintf(message_prefix_buffer, 0x09, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	// wait for any RF transmission to finish
 	main_wait_for_tx_complete();
@@ -533,10 +534,10 @@ void telemetry_send_values(	uint8_t rx_pkts,
 #ifdef PARAMETEO
 	if (config_mode->digi_viscous == 0) {
 			// generate the telemetry frame from values
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
+			main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, tx_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 	else {
-			main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
+			main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "T#%03d,%03d,%03d,%03d,%03d,%03d,%c%c%c%c%c%c%c%c", telemetry_counter++, rx_pkts, viscous_drop_pkts, digi_pkts, telemetry_scaled_vbatt_voltage, telemetry_scaled_temperature, telemetry_qf, telemetry_degr, telemetry_nav, telemetry_pressure_qf_navaliable, telemetry_humidity_qf_navaliable, telemetry_anemometer_degradated, telemetry_anemometer_navble, telemetry_vbatt_low);
 	}
 #else
 	if (config_mode->digi_viscous == 0) {

@@ -175,6 +175,10 @@ void srl_keep_timeout (srl_context_t *ctx)
 				ctx->srl_rx_state = SRL_RX_ERROR;
 
 				ctx->srl_rx_error_reason = SRL_ERR_TIMEOUT_RECEIVING;
+
+				if (ctx->srl_rx_done_or_error != 0) {
+					ctx->srl_rx_done_or_error (ctx);
+				}
 			}
 		}
 	}
@@ -192,6 +196,10 @@ void srl_keep_timeout (srl_context_t *ctx)
 			ctx->srl_rx_state = SRL_RX_ERROR;
 
 			ctx->srl_rx_error_reason = SRL_ERR_TIMEOUT_WAITING;
+
+			if (ctx->srl_rx_done_or_error != 0) {
+				ctx->srl_rx_done_or_error (ctx);
+			}
 		}
 	}
 }

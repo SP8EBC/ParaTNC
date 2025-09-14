@@ -32,10 +32,10 @@ void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 
 #else
 	if (voltage == 0 && rtc_ok == 0) {
-		  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
+		  main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 	}
 	else {
-		  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s [vbat: %d][rtc_ok: %d]", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment, (int)voltage , (int)rtc_ok);
+		  main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "=%s%c%c%s%c%c %s [vbat: %d][rtc_ok: %d]", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment, (int)voltage , (int)rtc_ok);
 	}
 	taskEXIT_CRITICAL();
 #endif
@@ -47,7 +47,7 @@ void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 
 void beacon_send_on_startup(void) {
 	taskENTER_CRITICAL();
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "> START boot_cnt %#.2x hf_cnt %#.2x", (uint16_t)rte_main_boot_cycles, (uint16_t)rte_main_hard_faults);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "> START boot_cnt %#.2x hf_cnt %#.2x", (uint16_t)rte_main_boot_cycles, (uint16_t)rte_main_hard_faults);
 	taskEXIT_CRITICAL();
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);

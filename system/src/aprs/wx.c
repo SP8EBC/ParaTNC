@@ -58,7 +58,7 @@ void SendWXFrame(uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
  	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 
 	taskENTER_CRITICAL();
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
 	taskEXIT_CRITICAL();
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
@@ -104,7 +104,7 @@ void SendWXFrameToKissBuffer(uint16_t windspeed, uint16_t windgusts, uint16_t wi
  	pressure = (unsigned)(cisnienie * 10);
 
 	taskENTER_CRITICAL();
-	main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
+	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d", main_string_latitude, main_config_data_basic->n_or_s, '/', main_string_longitude, main_config_data_basic->e_or_w, '_', /* kierunek */direction, /* predkosc*/(int)wind_speed_mph, /* porywy */(short)(wind_gusts_mph), /*temperatura */(short)(temperatura*1.8+32), pressure, humidity);
 	taskEXIT_CRITICAL();
 
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;

@@ -419,10 +419,10 @@ uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln,
 
             // check if SSID is set
             if (input->from.ssid > 0 && input->from.ssid < 16) {
-                current_pos += sprintf(output + current_pos, "-%d>AKLPRZ:", input->from.ssid);
+                current_pos += snprintf((char*)(output + current_pos), output_ln, "-%d>AKLPRZ:", input->from.ssid);
             }
             else {
-                current_pos += sprintf(output + current_pos, ">AKLPRZ:");
+                current_pos += snprintf((char*)(output + current_pos), output_ln, ">AKLPRZ:");
             }
         }
 
@@ -435,7 +435,7 @@ uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln,
 
         // and optional SSID
         if (input->to.ssid > 0 && input->to.ssid < 16) {
-            recipient_pos += sprintf(output + current_pos + recipient_pos, "-%d", input->to.ssid);
+            recipient_pos += snprintf((char*)(output + current_pos + recipient_pos), output_ln, "-%d", input->to.ssid);
         }
         else {
             ;            
@@ -452,11 +452,11 @@ uint16_t message_encode(message_t * input, uint8_t * output, uint16_t output_ln,
 
         if (current_pos + input->content_ln  < output_ln) {
             // put message content itself
-            current_pos += sprintf(output + current_pos, ":%s", input->content);
+            current_pos += snprintf((char*)(output + current_pos), output_ln, ":%s", input->content);
 
             // put message counter
             if (current_pos + MESSAGE_COUNTER_MAXLEN < output_ln) {
-                current_pos += sprintf(output + current_pos, "{%x}", message_tx_msg_couter);
+                current_pos += snprintf((char*)(output + current_pos), output_ln, "{%x}", message_tx_msg_couter);
                 message_tx_msg_couter++;
 
                 *(output + current_pos) = 0x00;

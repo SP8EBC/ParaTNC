@@ -403,7 +403,7 @@ static void main_callback_serial_kiss_rx_done (srl_ctx_t *context)
 
 static void main_callback_serial_gsm_rx_done (srl_ctx_t *context)
 {
-	if (context->srl_rx_state == SRL_RX_DONE) {
+	if (context->srl_rx_state == SRL_RX_DONE || context->srl_rx_state == SRL_RX_ERROR) {
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_GSM_RX_UART_EV;
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
@@ -1130,7 +1130,7 @@ int main(int argc, char* argv[]){
 
 	if (main_kiss_enabled == 1) {
 	  // preparing initial beacon which will be sent to host PC using KISS protocol via UART
-	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
+	  main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, "=%s%c%c%s%c%c %s", main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude, main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
 
 	  // terminating the aprs message
 	  main_own_aprs_msg[main_own_aprs_msg_len] = 0;
@@ -1642,7 +1642,13 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 {
 	(void)xTask;
 	(void)pcTaskName;
+	rte_main_reboot_req = 1;
 
+}
+
+void vApplicationMallocFailedHook(void)
+{
+	rte_main_reboot_req = 1;
 }
 
 void vApplicationGetRandomHeapCanary(portPOINTER_SIZE_TYPE* pxHeapCanary ) {
