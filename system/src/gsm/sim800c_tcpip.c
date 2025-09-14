@@ -26,15 +26,15 @@
 static const char *CONNECT_TCP = "AT+CIPSTART=\"TCP\",\0";
 static const char *CONNECT_UDP = "AT+CIPSTART=\"UDP\",\0";
 
-const static char *COMMA = ",\0";
-const static char *QUOTATION_MARK = "\"\0";
-const static char *NEWLINE = "\r\0";
+static const char *COMMA = ",\0";
+static const char *QUOTATION_MARK = "\"\0";
+static const char *NEWLINE = "\r\0";
 
-const static char *CLOSE_TCP = "AT+CIPCLOSE\r\0";
+static const char *CLOSE_TCP = "AT+CIPCLOSE\r\0";
 #define CLOSED_TCP_LN 8
-const static char *CLOSED_TCP = "CLOSE OK\0";
+static const char *CLOSED_TCP = "CLOSE OK\0";
 #define CLOSED_ERROR_LN 5
-const static char *CLOSED_ERROR = "ERROR\0";
+static const char *CLOSED_ERROR = "ERROR\0";
 
 #define CONNECT_LN 15
 static const char *CONNECT = "OK\r\n\r\nCONNECT\r\n\0";
