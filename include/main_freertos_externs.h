@@ -45,12 +45,12 @@
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
-//! Declare a variable to hold the handle of the created event group.
+//! Event group synchronizing powersave task not to run while another tasks are running.
 extern EventGroupHandle_t main_eventgroup_handle_powersave;
 
 extern EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
-//! Declare a variable to hold the handle of the created event group.
+//! Event group blocking GSM 800 driver code until rx or tx from/to GSM modem is complete.
 extern EventGroupHandle_t main_eventgroup_handle_serial_gsm;
 
 /// ==================================================================================================
