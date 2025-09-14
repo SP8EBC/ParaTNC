@@ -1395,7 +1395,7 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
 
-	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority, &task_main_handle );
+	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE * 4, ( void * ) NULL, priority, &task_main_handle );
 	if (create_result == pdPASS) {
 		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
 		if (create_result == pdPASS) {
