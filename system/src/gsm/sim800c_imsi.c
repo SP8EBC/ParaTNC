@@ -7,13 +7,14 @@
  *      Author: mateusz
  */
 
-#include "./gsm/sim800_apn_config_t.h"
 #include "./gsm/sim800c_imsi.h"
+#include "./gsm/sim800_apn_config_t.h"
 #include "preprogrammed_gprs_apn_list.h"
 #include "variant.h"
 
 #include <stdlib.h>
 
+// clang-format off
 /// ==================================================================================================
 ///	X-MACROS
 /// ==================================================================================================
@@ -48,7 +49,7 @@ typedef enum sim800c_imsi_preprogrammed_mcc_codes_t {
  */
 static const sim800_apn_config_t sim800c_imsi_preprogrammed_apns[] = {
 	PREPROGRAMMED_GPRS_APN_LIST (SIM800C_IMSI_GENERATE_PREPROGMD_APN_LIST)};
-
+// clang-format on
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
@@ -76,9 +77,7 @@ static sim800_mcc_t sim800c_imsi_mcc_value_of (const char *mcc_buffer)
  * @param out_mcc
  * @param out_mnc
  */
-int sim800c_imsi_decode (char *imsi_str,
-						 uint8_t imsi_str_ln,
-						 sim800_mcc_t *out_mcc,
+int sim800c_imsi_decode (char *imsi_str, uint8_t imsi_str_ln, sim800_mcc_t *out_mcc,
 						 uint8_t *out_mnc)
 {
 
@@ -106,7 +105,7 @@ int sim800c_imsi_decode (char *imsi_str,
 			mnc_buffer[0] = imsi_str[3];
 			mnc_buffer[1] = imsi_str[4];
 
-			*out_mnc = atoi((const char *)&mnc_buffer);
+			*out_mnc = atoi ((const char *)&mnc_buffer);
 		}
 		else {
 			result = -1;
@@ -132,8 +131,9 @@ const char *sim800c_get_apn (const sim800_mcc_t out_mcc, const uint8_t out_mnc)
 
 	for (int i = 0; i < SIM800C_PREPROGMD_MCC_LAST; i++) {
 
-		const sim800_mcc_t mcc_from_list 		= sim800c_imsi_preprogrammed_apns[i].country_code;
-		const uint8_t network_code_from_list 	= sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
+		const sim800_mcc_t mcc_from_list = sim800c_imsi_preprogrammed_apns[i].country_code;
+		const uint8_t network_code_from_list =
+			sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
 
 		if ((mcc_from_list == out_mcc) && (network_code_from_list == out_mnc)) {
 
@@ -156,8 +156,9 @@ const char *sim800c_get_username (const sim800_mcc_t out_mcc, const uint8_t out_
 
 	for (int i = 0; i < SIM800C_PREPROGMD_MCC_LAST; i++) {
 
-		const sim800_mcc_t mcc_from_list 		= sim800c_imsi_preprogrammed_apns[i].country_code;
-		const uint8_t network_code_from_list 	= sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
+		const sim800_mcc_t mcc_from_list = sim800c_imsi_preprogrammed_apns[i].country_code;
+		const uint8_t network_code_from_list =
+			sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
 
 		if ((mcc_from_list == out_mcc) && (network_code_from_list == out_mnc)) {
 
@@ -180,8 +181,9 @@ const char *sim800c_get_password (const sim800_mcc_t out_mcc, const uint8_t out_
 
 	for (int i = 0; i < SIM800C_PREPROGMD_MCC_LAST; i++) {
 
-		const sim800_mcc_t mcc_from_list 		= sim800c_imsi_preprogrammed_apns[i].country_code;
-		const uint8_t network_code_from_list 	= sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
+		const sim800_mcc_t mcc_from_list = sim800c_imsi_preprogrammed_apns[i].country_code;
+		const uint8_t network_code_from_list =
+			sim800c_imsi_preprogrammed_apns[i].mobile_network_code;
 
 		if ((mcc_from_list == out_mcc) && (network_code_from_list == out_mnc)) {
 

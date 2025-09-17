@@ -357,12 +357,11 @@ sim800_return_t gsm_sim800_tcpip_receive (uint8_t *buffer, uint16_t buffer_size,
 	gsm_sim800_tcpip_async_receive (srl_context, state, rx_callback, timeout, 0);
 
 #ifdef GSM_TCPIP_RTOS_BLOCKING
-	const EventBits_t bits_on_event =
-		xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
-							 GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_RX,
-							 pdTRUE,
-							 pdTRUE,
-							 0xFFFFFFFFu);
+	const EventBits_t bits_on_event = xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
+														   GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_RX,
+														   pdTRUE,
+														   pdTRUE,
+														   0xFFFFFFFFu);
 #else
 	srl_wait_for_rx_completion_or_timeout (srl_context, &waiting_result);
 #endif
