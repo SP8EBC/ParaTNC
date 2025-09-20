@@ -80,17 +80,6 @@ uint8_t main_check_adc = 0;
 //!< Used to store an information which telemetry descritpion frame should be sent next
 static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
-#if defined(PARAMETEO)
-//! KISS (diagnostic) request decoded from APRS message
-static uint8_t main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
-
-static uint8_t main_kiss_from_message_ln = 0;
-
-//! binary response to DID request from APRS message
-static uint8_t main_kiss_response_message[32];
-
-//static io_vbat_state_t main_battery_measurement_res;
-#endif
 
 
 static void message_callback(struct AX25Msg *msg) {
@@ -226,7 +215,7 @@ void task_main( void * parameters )
 		#ifdef PARAMETEO
 				// if GSM communication is enabled
 				if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1) {
-
+/*
 					// pool all stuff related
 					main_gsm_pool_handler(
 											main_gsm_srl_ctx_ptr,			// 1
@@ -250,7 +239,7 @@ void task_main( void * parameters )
 											main_own_aprs_msg,
 											&rte_main_trigger_gsm_event_log,
 											rte_main_exposed_events);
-
+*/
 				}
 		#endif
 

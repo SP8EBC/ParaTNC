@@ -1,0 +1,185 @@
+/*
+ * task_event_apris_msg_triggers.c
+ *
+ *  Created on: Sep 17, 2025
+ *      Author: mateusz
+ */
+
+#include <FreeRTOS.h>
+#include <event_groups.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <task.h>
+
+#include "main.h"
+#include "main_freertos_externs.h"
+
+#include "rte_main.h"
+
+#include "kiss_communication/kiss_communication.h"
+#include "kiss_communication/kiss_communication_aprsmsg.h"
+#include "kiss_communication/kiss_communication_defs.h"
+#include "kiss_communication/kiss_nrc_response.h"
+
+#include "aprsis.h"
+
+#define RECEIVED_MESSAGE		 (&rte_main_received_message)
+#define FROM_MESSAGE			 rte_main_kiss_from_message
+#define FROM_MESSAGE_LN			 rte_main_kiss_from_message_ln
+#define RESPONSE_MESSAGE		 rte_main_kiss_response_message
+#define MESSAGE_FOR_TRANSMITTING (&rte_main_message_for_transmitting)
+
+void task_event_aprsis_msg_trigger (void *param)
+{
+	(void)param;
+
+	int i = 0;
+
+	while (1) {
+		// wait infinite amount of time for event from a serial port indicating that
+		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_aprs_trigger,
+															   MAIN_EVENTGROUP_APRSIS_TRIG,
+															   pdTRUE,
+															   pdFALSE,
+															   0xFFFFFFFFu);
+
+		// check if the event was really generated
+		if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK);
+
+			// if TCP/IP connection is not busy and received message comes from APRS-IS
+			if ((RECEIVED_MESSAGE->source == MESSAGE_SOURCE_APRSIS ||
+				 RECEIVED_MESSAGE->source == MESSAGE_SOURCE_APRSIS_HEXCNTR) &&
+				gsm_sim800_tcpip_tx_busy () == 0) {
+
+				// clear ACK request
+				//*trigger_message_ack = 0;
+
+				// create and send ACK for this message
+				aprsis_send_ack_for_message (RECEIVED_MESSAGE);
+
+				RECEIVED_MESSAGE->source = MESSAGE_SOURCE_UNINITIALIZED;
+
+				// decode message, do it after ACK is scheduled to be sure about right sequence
+				const kiss_communication_transport_t type =
+					kiss_communication_aprsmsg_check_type (RECEIVED_MESSAGE->content,
+														   MESSAGE_MAX_LENGHT);
+
+				// decode HEXSTRING
+				if (type == KISS_TRANSPORT_HEXSTRING) {
+					FROM_MESSAGE_LN = kiss_communication_aprsmsg_decode_hexstring (
+						RECEIVED_MESSAGE->content,
+						RECEIVED_MESSAGE->content_ln,
+						FROM_MESSAGE + 1,
+						MAIN_KISS_FROM_MESSAGE_LEN - 1);
+				}
+				else {
+					// zero message lenght if message cannot be decoded for some reason
+					FROM_MESSAGE_LN = 0;
+				}
+
+				// if KISS request has been parsed from APRS message
+				if (FROM_MESSAGE_LN != 0) {
+					// put artificial FEND at the begining of a buffer to make it compatible with
+					// 'kiss_parse_received'
+					FROM_MESSAGE[0] = FEND;
+
+#define KISS_RESPONSE_MESSAGE_LN i
+
+					// parse KISS request
+					KISS_RESPONSE_MESSAGE_LN = kiss_parse_received (FROM_MESSAGE,
+																	FROM_MESSAGE_LN,
+																	NULL,
+																	NULL,
+																	RESPONSE_MESSAGE,
+																	MAIN_KISS_FROM_MESSAGE_LEN,
+																	type);
+
+					// if a response was generated
+					if (KISS_RESPONSE_MESSAGE_LN > 0) {
+						// check if a beginning and an end of generated response contains FEND.
+						if ((RESPONSE_MESSAGE[0] == FEND) &&
+							(RESPONSE_MESSAGE[1] == NONSTANDARD) &&
+							(RESPONSE_MESSAGE[KISS_RESPONSE_MESSAGE_LN - 1] == FEND)) {
+							// if yes encode the response w/o them
+							MESSAGE_FOR_TRANSMITTING->content_ln =
+								kiss_communication_aprsmsg_encode_hexstring (
+									RESPONSE_MESSAGE + 2,
+									KISS_RESPONSE_MESSAGE_LN - 3,
+									MESSAGE_FOR_TRANSMITTING->content,
+									MESSAGE_MAX_LENGHT);
+						}
+						else {
+							// if response doesn't contain FEND at the begining and the end just
+							MESSAGE_FOR_TRANSMITTING->content_ln =
+								kiss_communication_aprsmsg_encode_hexstring (
+									RESPONSE_MESSAGE,
+									KISS_RESPONSE_MESSAGE_LN,
+									MESSAGE_FOR_TRANSMITTING->content,
+									MESSAGE_MAX_LENGHT);
+						}
+
+						// put source and destination callsign
+						main_set_ax25_my_callsign (&(MESSAGE_FOR_TRANSMITTING->from));
+						main_copy_ax25_call (&(MESSAGE_FOR_TRANSMITTING->to),
+											 &(RECEIVED_MESSAGE->from));
+
+						MESSAGE_FOR_TRANSMITTING->source = MESSAGE_SOURCE_APRSIS;
+
+						// response is done, trigger sending it
+						//*trigger_send_message = 1;
+						xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+											MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
+					}
+					else if (KISS_RESPONSE_MESSAGE_LN == KISS_COMM_RESULT_UNKNOWN_DIAG_SERV) {
+						// assemble a response with NRC 'unknown diagnostics service'
+						KISS_RESPONSE_MESSAGE_LN =
+							kiss_nrc_response_fill_unknown_service (RESPONSE_MESSAGE);
+
+						MESSAGE_FOR_TRANSMITTING->content_ln =
+							kiss_communication_aprsmsg_encode_hexstring (
+								RESPONSE_MESSAGE + 2,
+								KISS_RESPONSE_MESSAGE_LN - 3,
+								MESSAGE_FOR_TRANSMITTING->content,
+								MESSAGE_MAX_LENGHT);
+
+						// put source and destination callsign
+						main_set_ax25_my_callsign (&MESSAGE_FOR_TRANSMITTING->from);
+						main_copy_ax25_call (&MESSAGE_FOR_TRANSMITTING->to,
+											 &RECEIVED_MESSAGE->from);
+
+						MESSAGE_FOR_TRANSMITTING->source = MESSAGE_SOURCE_APRSIS;
+
+						// response is done, trigger sending it
+						//*trigger_send_message = 1;
+						xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+											MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
+					}
+				}
+			}
+			else if (RECEIVED_MESSAGE->source == MESSAGE_SOURCE_RADIO) {
+			}
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES) {
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+		}
+	}
+}

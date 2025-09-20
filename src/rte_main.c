@@ -86,3 +86,14 @@ nvm_event_result_stats_t rte_main_events_extracted_for_api_stat = {0u};
 
 #endif
 
+#if defined(PARAMETEO)
+//! KISS (diagnostic) request decoded from APRS message
+uint8_t rte_main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
+
+uint8_t rte_main_kiss_from_message_ln = 0;
+
+//! binary response to DID request from APRS message
+uint8_t rte_main_kiss_response_message[32];
+
+//static io_vbat_state_t main_battery_measurement_res;
+#endif

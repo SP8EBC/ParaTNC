@@ -9,6 +9,9 @@
 #include "event_log_t.h"
 #include "nvm/nvm_t.h"
 
+//! Lenght of a buffer for KISS diagnostic request
+#define MAIN_KISS_FROM_MESSAGE_LEN		33
+
 //!< Set immediately after waking up in RTC interrupt handler
 #define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT			1u
 
@@ -86,5 +89,12 @@ extern event_log_exposed_t rte_main_exposed_events[MAIN_HOW_MANY_EVENTS_SEND_REP
 
 extern nvm_event_result_stats_t rte_main_events_extracted_for_api_stat;
 
+//! KISS (diagnostic) request decoded from APRS message
+extern uint8_t rte_main_kiss_from_message[MAIN_KISS_FROM_MESSAGE_LEN];
+
+extern uint8_t rte_main_kiss_from_message_ln;
+
+//! binary response to DID request from APRS message
+extern uint8_t rte_main_kiss_response_message[32];
 
 #endif

@@ -1414,9 +1414,9 @@ int main(int argc, char* argv[]){
 				if (create_result == pdPASS) {
 					create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_ten_sec_handle );
 					if (create_result == pdPASS) {
-						create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_kiss_rx_done_handle );
-						create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_gsm_rx_done_handle );
-						create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_serial_gsm_tx_done_handle );
+						create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
+						create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
+						create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
 						if (create_result == pdPASS) {
 							event_log_rtos_running = 1;
 							NVIC_EnableIRQ(EXTI0_IRQn);

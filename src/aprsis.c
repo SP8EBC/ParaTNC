@@ -1275,7 +1275,7 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
 void aprsis_send_ack_for_message(const message_t * const message) {
 	aprsis_packet_tx_message_size = message_create_ack_for((uint8_t*)aprsis_packet_tx_buffer, APRSIS_TX_BUFFER_LN - 1, message);
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
 }
 

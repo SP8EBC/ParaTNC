@@ -4,7 +4,6 @@
 #include <stored_configuration_nvm/config_data.h>
 #include "main_master_time.h"
 
-#include "station_config_target_hw.h"
 #include "stored_configuration_nvm/configuration_handler.h"
 
 #include "aprs/ax25.h"
@@ -26,9 +25,6 @@
 #define PWR_SWITCH_BOTH
 
 #define OWN_APRS_MSG_LN 	255u
-
-//! Lenght of a buffer for KISS diagnostic request
-#define MAIN_KISS_FROM_MESSAGE_LEN		33
 
 #define MAIN_GET_RTC_YEAR	1u
 #define MAIN_GET_RTC_MONTH	2u

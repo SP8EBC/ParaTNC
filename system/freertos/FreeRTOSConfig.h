@@ -110,7 +110,7 @@
 /* configMAX_PRIORITIES Sets the number of available task priorities.  Tasks can
  * be assigned priorities of 0 to (configMAX_PRIORITIES - 1).  Zero is the lowest
  * priority. */
-#define configMAX_PRIORITIES                       6
+#define configMAX_PRIORITIES                       8
 
 /* configMINIMAL_STACK_SIZE defines the size of the stack used by the Idle task
  * (in words, not in bytes!).  The kernel does not use this constant for any other
@@ -120,7 +120,7 @@
 
 /* configMAX_TASK_NAME_LEN sets the maximum length (in characters) of a task's
  * human readable name.  Includes the NULL terminator. */
-#define configMAX_TASK_NAME_LEN                    16
+#define configMAX_TASK_NAME_LEN                    18
 
 /* Time is measured in 'ticks' - which is the number of times the tick interrupt
  * has executed since the RTOS kernel was started.

@@ -163,7 +163,7 @@ void main_gsm_pool_handler(
 
 		}
 
-	}
+	} //trigger_message_ack
 
 	if (gsm_sim800_tcpip_tx_busy() == 0) {
 		if (*trigger_send_message == 1 && message_for_transmitting->source == MESSAGE_SOURCE_APRSIS) {
