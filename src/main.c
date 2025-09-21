@@ -137,6 +137,7 @@
 #include "tasks/task_event_kiss_rx_done.h"
 #include "tasks/task_event_gsm_rx_done.h"
 #include "tasks/task_event_gsm_tx_done.h"
+#include "tasks/task_event_apris_msg_triggers.h"
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -337,6 +338,9 @@ static StaticEventGroup_t main_eventgroup_serial_kiss;
 //! data associated with the event group for KISS host pc serial port
 static StaticEventGroup_t main_eventgroup_serial_gsm;
 
+//! data associated with the event group for KISS host pc serial port
+static StaticEventGroup_t main_eventgroup_aprs_trigger;
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
@@ -345,6 +349,7 @@ static TaskHandle_t task_ten_sec_handle = NULL;
 static TaskHandle_t task_ev_serial_kiss_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_tx_done_handle = NULL;
+static TaskHandle_t task_ev_aprs_trigger_handle = NULL;
 
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_powersave;
@@ -354,6 +359,8 @@ EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_serial_gsm;
+
+EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 
 /********************************************************************/
 
@@ -1401,6 +1408,7 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
+	main_eventgroup_handle_aprs_trigger = xEventGroupCreateStatic( &main_eventgroup_aprs_trigger );
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
 
@@ -1417,6 +1425,7 @@ int main(int argc, char* argv[]){
 						create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
 						create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
 						create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
+						create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ev_aprs_trigger_handle );
 						if (create_result == pdPASS) {
 							event_log_rtos_running = 1;
 							NVIC_EnableIRQ(EXTI0_IRQn);

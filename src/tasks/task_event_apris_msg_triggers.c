@@ -28,6 +28,8 @@
 #define FROM_MESSAGE_LN			 rte_main_kiss_from_message_ln
 #define RESPONSE_MESSAGE		 rte_main_kiss_response_message
 #define MESSAGE_FOR_TRANSMITTING (&rte_main_message_for_transmitting)
+#define OWN_APRS_MESSAGE		main_own_aprs_msg
+#define CALLSIGN_WITH_SSID			main_callsign_with_ssid
 
 void task_event_aprsis_msg_trigger (void *param)
 {
@@ -162,22 +164,35 @@ void task_event_aprsis_msg_trigger (void *param)
 			}
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE) {
+			KISS_RESPONSE_MESSAGE_LN = message_encode(MESSAGE_FOR_TRANSMITTING, (uint8_t*)OWN_APRS_MESSAGE, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
+
+			aprsis_send_any_string_buffer(OWN_APRS_MESSAGE, KISS_RESPONSE_MESSAGE_LN);
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS) {
+			aprsis_send_gsm_status((const char *)CALLSIGN_WITH_SSID);	// done
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS) {
+			aprsis_send_server_comm_counters((const char *)CALLSIGN_WITH_SSID);
+
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING) {
+			aprsis_send_loginstring((const char *)CALLSIGN_WITH_SSID, system_is_rtc_ok(), rte_main_battery_voltage);
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES) {
+			aprsis_send_telemetry(1u, (const char *)CALLSIGN_WITH_SSID);
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
 		}

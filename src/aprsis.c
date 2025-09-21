@@ -17,6 +17,7 @@
 #include "gsm/sim800c_poolers.h"
 
 #include "main.h"
+#include "main_freertos_externs.h"
 #include "rte_main.h"
 
 #include "gsm_comm_state_handler.h"
@@ -453,7 +454,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							aprsis_logged = 1;
 
 							// trigger GSM status APRS-IS packet, when connection is ready
-							rte_main_trigger_gsm_status = 1;
+							//rte_main_trigger_gsm_status = 1;
+							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+									MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS);
 
 							// set current timestamp as last
 							aprsis_last_keepalive_ts = master_time;
@@ -1212,7 +1215,7 @@ void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
 
  	aprsis_last_packet_transmit_ts = main_get_master_time();
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, uint16_t voltage) {
@@ -1265,7 +1268,7 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
 									callsign_with_ssid,
 									aprsis_packet_telemetry_buffer);
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 /**
@@ -1305,7 +1308,7 @@ void aprsis_send_any_string_buffer(const char * const message, const uint16_t ln
 
 	aprsis_packet_tx_message_size = ln + 2;
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 /**

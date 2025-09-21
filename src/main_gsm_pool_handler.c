@@ -172,12 +172,12 @@ void main_gsm_pool_handler(
 			KISS_RESPONSE_MESSAGE_LN = message_encode(message_for_transmitting, (uint8_t*)own_aprs_msg, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
 
 			aprsis_send_any_string_buffer(own_aprs_msg, KISS_RESPONSE_MESSAGE_LN);
-		}
+		} // trigger_send_message
 		else if (*trigger_gsm_status == 1) {
 			*trigger_gsm_status = 0;
 
 			aprsis_send_gsm_status((const char *)callsign_with_ssid);
-		}
+		} // trigger_gsm_status
 		// if GSM status message is triggered and GSM module is not busy transmitting something else
 		else if (*trigger_gsm_aprsis_counters_packet == 1) {
 			*trigger_gsm_aprsis_counters_packet = 0;
