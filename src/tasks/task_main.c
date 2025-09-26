@@ -10,6 +10,7 @@
 
 #include "main.h"
 #include "main_getters_for_task.h"
+#include "main_freertos_externs.h"
 #include "main_gsm_pool_handler.h"
 #include "rte_main.h"
 #include "rte_wx.h"
@@ -548,7 +549,9 @@ void task_main( void * parameters )
 						}
 
 						if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
-							rte_main_trigger_gsm_aprsis_counters_packet = 1;
+							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+									MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
+							//rte_main_trigger_gsm_aprsis_counters_packet = 1;
 						}
 		#endif
 					}	// end of one hour

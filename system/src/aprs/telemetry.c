@@ -7,6 +7,7 @@
 
 #include "aprs/telemetry.h"
 #include "main.h"
+#include "main_freertos_externs.h"
 #include "delay.h"
 #include "backup_registers.h"
 #include "variant.h"
@@ -316,7 +317,9 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 
 	afsk_txStart(&main_afsk);
 #ifdef PARAMETEO
-	rte_main_trigger_gsm_telemetry_values = 1;
+	xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+			MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+	//rte_main_trigger_gsm_telemetry_values = 1;
 #endif
 }
 
@@ -588,8 +591,10 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	afsk_txStart(&main_afsk);
 
 #ifdef PARAMETEO
-	// trigger packet to aprs-is server
-	rte_main_trigger_gsm_telemetry_values = 1;
+	xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+			MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+//	// trigger packet to aprs-is server
+//	rte_main_trigger_gsm_telemetry_values = 1;
 #endif
 
 }

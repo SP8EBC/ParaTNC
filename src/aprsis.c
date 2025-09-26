@@ -119,6 +119,8 @@ uint8_t aprsis_logged = 0;
  */
 uint8_t aprsis_connected = 0;
 
+volatile sim800_return_t aprsis_last_tcpip_write_res;
+
 const char * aprsis_sucessfull_login = "# logresp\0";
 
 static uint8_t aprsis_successfull_conn_counter = 0;
@@ -468,7 +470,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							}
 
 							// trigger GSM status packet
-							rte_main_trigger_gsm_loginstring_packet = 1;
+							//rte_main_trigger_gsm_loginstring_packet = 1;
+							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+									MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
 
 							// set timeout for aprs-is server
 							srl_switch_timeout(aprsis_serial_port, 1, APRSIS_TIMEOUT_MS);
@@ -817,7 +821,7 @@ void aprsis_send_wx_frame(
 
  	aprsis_last_packet_transmit_long_ts = main_get_master_time();
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 /**
@@ -862,10 +866,10 @@ void aprsis_send_beacon(
 	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
 	  if (async > 0) {
-		  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		  aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
 	  else {
-		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		  aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
 
 	  aprsis_last_packet_transmit_ts = main_get_master_time();
@@ -995,10 +999,10 @@ void aprsis_send_telemetry(uint8_t async, const char * callsign_with_ssid) {
 	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
 	  if (async > 0) {
-		  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		  aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
 	  else {
-		 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		  aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	  }
 
 	  aprsis_last_packet_transmit_ts = main_get_master_time();
@@ -1061,10 +1065,10 @@ telemetry_description_t aprsis_send_description_telemetry(uint8_t async,
 	  aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
 	if (async > 0) {
-	  gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	}
 	else {
-		gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+		aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 	}
 
 	return next;
@@ -1160,7 +1164,7 @@ void aprsis_igate_to_aprsis(AX25Msg *msg, const char * callsign_with_ssid) {
 	aprsis_packet_tx_message_size = strlen(aprsis_packet_tx_buffer);
 
 
-	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
 
 }
@@ -1184,7 +1188,7 @@ void aprsis_send_status_send_battery_voltages(const char * callsign_with_ssid, u
 									current,
 									average);
 
- 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
@@ -1215,7 +1219,7 @@ void aprsis_send_server_comm_counters(const char * callsign_with_ssid) {
 
  	aprsis_last_packet_transmit_ts = main_get_master_time();
 
- 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+ 	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, uint16_t voltage) {
@@ -1244,7 +1248,7 @@ void aprsis_send_loginstring(const char * callsign_with_ssid, uint8_t rtc_ok, ui
 									backup_reg_get_register_reset_check_fail(),
 									aprsis_login_string_reveived);
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
 }
 
@@ -1268,7 +1272,7 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
 									callsign_with_ssid,
 									aprsis_packet_telemetry_buffer);
 
- 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 /**
@@ -1278,7 +1282,7 @@ void aprsis_send_gsm_status(const char * callsign_with_ssid) {
 void aprsis_send_ack_for_message(const message_t * const message) {
 	aprsis_packet_tx_message_size = message_create_ack_for((uint8_t*)aprsis_packet_tx_buffer, APRSIS_TX_BUFFER_LN - 1, message);
 
- 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 
 }
 
@@ -1308,7 +1312,7 @@ void aprsis_send_any_string_buffer(const char * const message, const uint16_t ln
 
 	aprsis_packet_tx_message_size = ln + 2;
 
- 	gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 /**
@@ -1338,7 +1342,7 @@ void aprsis_send_any_status(const char * callsign_with_ssid, const char * const 
 									callsign_with_ssid,
 									message);
 
- 	gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 #ifdef UNIT_TEST
