@@ -472,7 +472,7 @@ void task_main( void * parameters )
 						gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
 
 						// send event log each 24 hours, but only once at the top of an hour
-						if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 18) {
+						if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 19) {
 							if (backup_reg_get_event_log_report_sent_aprsis () == 0) {
 								// set status bit in non-volatile backup register not to loop over and over
 								// again in case of a restart
@@ -491,6 +491,9 @@ void task_main( void * parameters )
 								// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
 								// because NVM can contain less events
 								rte_main_trigger_gsm_event_log = events_stat.zz_total;
+
+								xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 							}
 						}
 						else {

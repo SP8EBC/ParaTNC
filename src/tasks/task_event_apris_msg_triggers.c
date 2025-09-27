@@ -130,7 +130,6 @@ void task_event_aprsis_msg_trigger (void *param)
 						MESSAGE_FOR_TRANSMITTING->source = MESSAGE_SOURCE_APRSIS;
 
 						// response is done, trigger sending it
-						//*trigger_send_message = 1;
 						xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
 											MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
 					}
@@ -195,6 +194,29 @@ void task_event_aprsis_msg_trigger (void *param)
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS) {
+			if (rte_main_trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged() == 1) {
+
+				// set a pointer to even in exposed form which will be sent now
+				const event_log_exposed_t * current_exposed_event = &rte_main_exposed_events[(rte_main_trigger_gsm_event_log) - 1];
+
+				// create APRS status content itself
+				const uint16_t str_size = event_exposed_to_string(current_exposed_event, OWN_APRS_MESSAGE, OWN_APRS_MSG_LN);
+
+				rte_main_trigger_gsm_event_log--;
+
+				if (str_size > 0) {
+					aprsis_send_any_status((const char *)CALLSIGN_WITH_SSID, OWN_APRS_MESSAGE ,str_size);
+				}
+
+				if (rte_main_trigger_gsm_event_log > 0)
+				{
+					xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+							MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
+
+				}
+			}
 		}
 	}
 }

@@ -279,7 +279,9 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 						// check if it is for me
 						if (message_is_for_me(aprsis_callsign, aprsis_ssid, &rte_main_received_message) == 0) {
 							// trigger preparing ACK
-							rte_main_trigger_message_ack = 1;
+							//rte_main_trigger_message_ack = 1;
+							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+									MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK);
 						}
 						else {
 							// this message is not for me, so no sense in keeping in longer
@@ -1342,7 +1344,7 @@ void aprsis_send_any_status(const char * callsign_with_ssid, const char * const 
 									callsign_with_ssid,
 									message);
 
-	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write((uint8_t *)aprsis_packet_tx_buffer, aprsis_packet_tx_message_size, aprsis_serial_port, aprsis_gsm_modem_state);
 }
 
 #ifdef UNIT_TEST
