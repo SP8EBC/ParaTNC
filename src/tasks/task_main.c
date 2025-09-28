@@ -213,37 +213,6 @@ void task_main( void * parameters )
 		#endif
 				}
 
-		#ifdef PARAMETEO
-				// if GSM communication is enabled
-				if (main_config_data_mode->gsm == 1  && io_get_cntrl_vbat_g() == 1) {
-/*
-					// pool all stuff related
-					main_gsm_pool_handler(
-											main_gsm_srl_ctx_ptr,			// 1
-											&main_gsm_state,				// 2
-											&rte_main_trigger_message_ack,	// 3
-											&rte_main_received_message,		// 4
-											main_kiss_from_message,			// 5
-											&main_kiss_from_message_ln,		// 6
-											main_kiss_response_message,		// 7
-											&rte_main_message_for_transmitting,
-											&rte_main_trigger_send_message,	// 9
-											&rte_main_trigger_gsm_status,	// 10
-											&rte_main_trigger_gsm_aprsis_counters_packet,
-											&rte_main_trigger_gsm_loginstring_packet,
-											&rte_main_trigger_gsm_telemetry_values,
-											&rte_main_trigger_gsm_telemetry_descriptions,
-											&main_telemetry_description,	// 15
-											main_config_data_mode,			// 16
-											main_config_data_basic,			// 17
-											main_callsign_with_ssid,		// 18
-											main_own_aprs_msg,
-											&rte_main_trigger_gsm_event_log,
-											rte_main_exposed_events);
-*/
-				}
-		#endif
-
 				// if Victron VE.direct client is enabled
 				if (main_config_data_mode->victron == 1) {
 		#ifndef PARAMETEO
@@ -324,10 +293,6 @@ void task_main( void * parameters )
 					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
 						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
 					}
-				}
-
-				if (kiss_current_async_message != 0xFF && main_kiss_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-					srl_start_tx(main_kiss_srl_ctx_ptr, kiss_async_pooler(main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln));
 				}
 
 				// if Davis wx station is enabled and it is alive

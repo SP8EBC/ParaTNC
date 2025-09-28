@@ -53,6 +53,12 @@
 
 uint8_t kiss_async_message_counter = 0;
 
+/**
+ * ID of asynchronous message which is currently transmitteed asynchronously to host PC.
+ * If it is set to 0xFF then no async message is transmitted
+ */
+uint8_t kiss_current_async_message = 0xFF;
+
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================

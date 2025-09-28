@@ -22,9 +22,10 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
-#define IT_HANDLERS_PROXY_KISS_UART_EV	 (1 << 0)
-#define IT_HANDLERS_PROXY_GSM_RX_UART_EV (1 << 1)
-#define IT_HANDLERS_PROXY_GSM_TX_UART_EV (1 << 2)
+#define IT_HANDLERS_PROXY_KISS_UART_EV	  (1 << 0)
+#define IT_HANDLERS_PROXY_KISS_TX_UART_EV (1 << 1)
+#define IT_HANDLERS_PROXY_GSM_RX_UART_EV  (1 << 2)
+#define IT_HANDLERS_PROXY_GSM_TX_UART_EV  (1 << 3)
 
 /// ==================================================================================================
 ///	GLOBAL TYPES

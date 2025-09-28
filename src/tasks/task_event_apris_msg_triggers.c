@@ -23,6 +23,8 @@
 
 #include "aprsis.h"
 
+#include "event_log.h"
+
 #define RECEIVED_MESSAGE		 (&rte_main_received_message)
 #define FROM_MESSAGE			 rte_main_kiss_from_message
 #define FROM_MESSAGE_LN			 rte_main_kiss_from_message_ln
@@ -215,6 +217,11 @@ void task_event_aprsis_msg_trigger (void *param)
 					xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
 							MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 
+				}
+				else
+				{
+					xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+							MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 				}
 			}
 		}

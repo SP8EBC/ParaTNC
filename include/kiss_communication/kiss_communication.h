@@ -25,9 +25,6 @@
 #define KISS_COMM_RESULT_INPUT_TOO_LONG		-3
 #define KISS_COMM_RESULT_UNKNOWN_DIAG_SERV	-4
 
-
-extern uint8_t kiss_current_async_message;
-
   /* C++ detection */
   #ifdef __cplusplus
   extern "C" {

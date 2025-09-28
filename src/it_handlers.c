@@ -188,6 +188,26 @@ void EXTI0_IRQHandler (void)
 		}
 	}
 
+	if ((IT_HANDLERS_PROXY_KISS_TX_UART_EV & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_kiss,
+											 MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
+
 	if ((IT_HANDLERS_PROXY_GSM_RX_UART_EV & it_handlers_freertos_proxy) != 0) {
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 		BaseType_t xResult = pdFAIL;

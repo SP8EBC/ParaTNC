@@ -135,6 +135,7 @@
 #include "tasks/task_ten_second.h"
 #include "tasks/task_power_save.h"
 #include "tasks/task_event_kiss_rx_done.h"
+#include "tasks/task_event_kiss_tx_done.h"
 #include "tasks/task_event_gsm_rx_done.h"
 #include "tasks/task_event_gsm_tx_done.h"
 #include "tasks/task_event_apris_msg_triggers.h"
@@ -347,6 +348,7 @@ static TaskHandle_t task_one_sec_handle = NULL;
 static TaskHandle_t task_two_sec_handle = NULL;
 static TaskHandle_t task_ten_sec_handle = NULL;
 static TaskHandle_t task_ev_serial_kiss_rx_done_handle = NULL;
+static TaskHandle_t task_ev_serial_kiss_tx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_tx_done_handle = NULL;
 static TaskHandle_t task_ev_aprs_trigger_handle = NULL;
@@ -423,6 +425,14 @@ static void main_callback_serial_kiss_rx_done (srl_ctx_t *context)
 {
 	if (context->srl_rx_state == SRL_RX_DONE) {
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_KISS_UART_EV;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+	}
+}
+
+static void main_callback_serial_kiss_tx_done (srl_ctx_t *context)
+{
+	if (context->srl_tx_state == SRL_TX_IDLE) {
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_KISS_TX_UART_EV;
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
 }
@@ -954,7 +964,7 @@ int main(int argc, char* argv[]){
 	  }
 	  case USART_MODE_KISS: {
 		  srl_init(main_kiss_srl_ctx_ptr, USART1, srl_usart1_rx_buffer, RX_BUFFER_1_LN, srl_usart1_tx_buffer, TX_BUFFER_1_LN, main_target_kiss_baudrate, 1);
-		  srl_set_done_error_callback(main_kiss_srl_ctx_ptr, main_callback_serial_kiss_rx_done, 0);
+		  srl_set_done_error_callback(main_kiss_srl_ctx_ptr, main_callback_serial_kiss_rx_done, main_callback_serial_kiss_tx_done);
 		  srl_switch_timeout(main_kiss_srl_ctx_ptr, SRL_TIMEOUT_ENABLE, 100);
 
 		  main_kiss_enabled = 1;
@@ -1422,10 +1432,13 @@ int main(int argc, char* argv[]){
 				if (create_result == pdPASS) {
 					create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_ten_sec_handle );
 					if (create_result == pdPASS) {
-						create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
-						create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
-						create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
 						create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ev_aprs_trigger_handle );
+						if (create_result == pdPASS) {
+							create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
+							create_result = xTaskCreate( task_event_kiss_tx_done, "tev_serial_kiss_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_tx_done_handle );
+							create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
+							create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
+						}
 						if (create_result == pdPASS) {
 							event_log_rtos_running = 1;
 							NVIC_EnableIRQ(EXTI0_IRQn);

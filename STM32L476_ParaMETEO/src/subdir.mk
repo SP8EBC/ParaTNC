@@ -22,7 +22,6 @@ C_SRCS += \
 ../src/io.c \
 ../src/it_handlers.c \
 ../src/main.c \
-../src/main_gsm_pool_handler.c \
 ../src/ntp.c \
 ../src/packet_tx_handler.c \
 ../src/pwr_save.c \
@@ -59,7 +58,6 @@ OBJS += \
 ./src/io.o \
 ./src/it_handlers.o \
 ./src/main.o \
-./src/main_gsm_pool_handler.o \
 ./src/ntp.o \
 ./src/packet_tx_handler.o \
 ./src/pwr_save.o \
@@ -96,7 +94,6 @@ C_DEPS += \
 ./src/io.d \
 ./src/it_handlers.d \
 ./src/main.d \
-./src/main_gsm_pool_handler.d \
 ./src/ntp.d \
 ./src/packet_tx_handler.d \
 ./src/pwr_save.d \
