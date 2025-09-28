@@ -195,7 +195,7 @@ void EXTI0_IRQHandler (void)
 											 MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE,
 											 &xHigherPriorityTaskWoken);
 
-		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE);
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_KISS_TX_UART_EV);
 
 		if (xResult != pdFAIL)
 
