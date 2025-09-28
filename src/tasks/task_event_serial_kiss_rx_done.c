@@ -40,6 +40,11 @@ void task_event_kiss_rx_done (void *param)
 
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE) {
+			// if there were an error during receiving frame from host, restart rxing once again
+			if (ctx->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
+				srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
+			}
+
 			// check if KISS communication with host-PC is enabled
 			if (main_kiss_enabled == 1) {
 				// parse i ncoming data and then transmit on radio freq

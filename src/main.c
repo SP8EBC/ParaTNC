@@ -423,7 +423,7 @@ unsigned short rx10m = 0, tx10m = 0, digi10m = 0, digidrop10m = 0, kiss10m = 0;
 
 static void main_callback_serial_kiss_rx_done (srl_ctx_t *context)
 {
-	if (context->srl_rx_state == SRL_RX_DONE) {
+	if (context->srl_rx_state == SRL_RX_DONE || context->srl_rx_state == SRL_RX_ERROR) {
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_KISS_UART_EV;
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}

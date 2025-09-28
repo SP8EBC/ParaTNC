@@ -251,48 +251,8 @@ void task_main( void * parameters )
 					}
 		#endif
 				}
-//				else if ((main_config_data_mode->wx_dust_sensor & WX_DUST_SDS011_SERIAL) > 0) {
-//					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-//
-//						sds011_get_pms(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, 10, &rte_wx_pm10, &rte_wx_pm2_5);
-//
-//						// restart reception
-//						srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
-//
-//					}
-//				}
 				else {
-					// if new KISS message has been received from the host
-//					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE && main_kiss_enabled == 1) {
-//						// parse i ncoming data and then transmit on radio freq
-//						ln = kiss_parse_received (srl_get_rx_buffer (kiss_srl_ctx),
-//												  srl_get_num_bytes_rxed (main_kiss_srl_ctx_ptr),
-//												  &main_ax25,
-//												  &main_afsk,
-//												  main_small_buffer,
-//												  KISS_CONFIG_DIAGNOSTIC_BUFFER_LN,
-//												  KISS_TRANSPORT_SERIAL_PORT);
-//						if (ln == 0) {
-//							kiss10m++; // increase kiss messages counter
-//						}
-//						else if (ln > 0) {
-//							// if a response (ACK) to this KISS frame shall be sent
-//
-//							// wait for any pending transmission to complete
-//							srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
-//
-//							srl_send_data (main_kiss_srl_ctx_ptr, main_small_buffer, SRL_MODE_DEFLN, ln,
-//										   SRL_INTERNAL);
-//						}
-//
-//						// restart KISS receiving to be ready for next frame
-//						srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 120);
-//					}
 
-					// if there were an error during receiving frame from host, restart rxing once again
-					if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR && main_kiss_enabled == 1) {
-						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
-					}
 				}
 
 				// if Davis wx station is enabled and it is alive
