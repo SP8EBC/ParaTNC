@@ -21,7 +21,6 @@
 #include "etc/serial_config.h"
 #include "etc/misc_config.h"
 #include "etc/kiss_configuation.h"
-#include "etc/dallas_temperature_limits.h"
 
 #include "drivers/max31865.h"
 
@@ -35,13 +34,11 @@
 #include "davis_vantage/davis_parsers.h"
 #include "modbus_rtu/rtu_serial_io.h"
 #include "umb_master/umb_0x26_status.h"
-#include "nvm/nvm_event.h"
 
 #include "supervisor.h"
 #include "backup_registers.h"
 
 #include "pwr_save.h"
-#include "io.h"
 #include "adc.h"
 #include "aprsis.h"
 #include "digi.h"
@@ -50,9 +47,8 @@
 #include "button.h"
 #include "wx_handler.h"
 #include "wx_pwr_switch.h"
-#include "gsm_comm_state_handler.h"
-#include "packet_tx_handler.h"
 #include "ntp.h"
+#include "io.h"
 
 #if defined(PARAMETEO)
 #include <stm32l4xx.h>
@@ -61,17 +57,10 @@
 #include "gsm/sim800c_gprs.h"
 #include "gsm/sim800c_poolers.h"
 #include "gsm/sim800c_engineering.h"
-//#include "gsm/sim800c"
 #endif
 
 #include <FreeRTOS.h>
 #include <task.h>
-
-//! one hour interval incremented inside one minute
-static int8_t main_one_hour_pool_timer = 60;
-
-//! six hour interval incremented inside one hour
-static int8_t main_six_hour_pool_timer = 4;
 
 static uint8_t main_continue_loop = 0;
 
@@ -182,35 +171,35 @@ void task_main( void * parameters )
 				// if new packet has been received from radio channel
 				if(ax25_new_msg_rx_flag == 1) {
 
-					// if serial port is currently not busy on transmission
-					if (main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TXING) {
-						memset(kiss_srl_ctx->srl_tx_buf_pointer, 0x00, kiss_srl_ctx->srl_tx_buf_ln);
-
-						if (main_kiss_enabled == 1) {
-							// convert message to kiss format and send it to host
-							srl_start_tx(main_kiss_srl_ctx_ptr, kiss_send_ax25_to_host(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln));
-						}
-					}
-
-					main_ax25.dcd = false;
-
-					// check this frame against other frame in visvous buffer waiting to be transmitted
-					digi_check_with_viscous(&ax25_rxed_frame);
-
-					// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-					digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
-
-					ax25_new_msg_rx_flag = 0;
-					rx10m++;
-		#ifdef PARAMETEO
-					rte_main_rx_total++;
-
-					// if aprsis is logged
-					if (aprsis_connected == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-						aprsis_igate_to_aprsis(&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
-					}
-
-		#endif
+//					// if serial port is currently not busy on transmission
+//					if (main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TXING) {
+//						memset(kiss_srl_ctx->srl_tx_buf_pointer, 0x00, kiss_srl_ctx->srl_tx_buf_ln);
+//
+//						if (main_kiss_enabled == 1) {
+//							// convert message to kiss format and send it to host
+//							srl_start_tx(main_kiss_srl_ctx_ptr, kiss_send_ax25_to_host(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln));
+//						}
+//					}
+//
+//					main_ax25.dcd = false;
+//
+//					// check this frame against other frame in visvous buffer waiting to be transmitted
+//					digi_check_with_viscous(&ax25_rxed_frame);
+//
+//					// check if this packet needs to be repeated (digipeated) and do it if it is necessary
+//					digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
+//
+//					ax25_new_msg_rx_flag = 0;
+//					rx10m++;
+//		#ifdef PARAMETEO
+//					rte_main_rx_total++;
+//
+//					// if aprsis is logged
+//					if (aprsis_connected == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
+//						aprsis_igate_to_aprsis(&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
+//					}
+//
+//		#endif
 				}
 
 				// if Victron VE.direct client is enabled
@@ -344,265 +333,13 @@ void task_main( void * parameters )
 				 */
 				if (main_one_minute_pool_timer < 10) {
 
-					backup_reg_set_monitor(4);
-
-					//main_nvm_timestamp = main_get_nvm_timestamp();
-
-	#ifdef SX1262_IMPLEMENTATION
-	//				fanet_success_cnt = 0;
-	//				fanet_fail_cnt = 0;
-	//				fanet_tx_success_cnt = 0;
-	#endif
-
-					#ifndef _MUTE_OWN
-					packet_tx_handler(main_config_data_basic, main_config_data_mode);
-					#endif
-
-					backup_reg_set_monitor(5);
-
-					#ifdef STM32L471xx
-					if (main_config_data_mode->gsm == 1 && (io_get_cntrl_vbat_g() == 1)) {
-
-						if (http_client_connection_errors > HTTP_CLIENT_MAX_CONNECTION_ERRORS) {
-							NVIC_SystemReset();
-						}
-
-					}
-
-					// send event log each 24 hours, but only once at the top of an hour
-					if(main_get_rtc_datetime(MAIN_GET_RTC_HOUR) == 21) {
-						if (backup_reg_get_event_log_report_sent_radio() == 0) {
-							// set status bit in non-volatile backup register not to loop over and over again in case of a restart
-							backup_reg_set_event_log_report_sent_radio();
-
-							// extract events from NVM
-							const nvm_event_result_stats_t events_stat = nvm_event_get_last_events_in_exposed(rte_main_exposed_events, MAIN_HOW_MANY_EVENTS_SEND_REPORT, EVENT_WARNING);
-
-							// set a trigger to number of events, which shall be sent
-							// please note that we do not need to check here if APRS-IS
-							// is connected. The check is done within specific APRS-IS functions
-							//
-							// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
-							// because NVM can contain less events
-							rte_main_trigger_radio_event_log = events_stat.zz_total;
-						}
-					}
-					else {
-						// reset flag if the time is not 21:xx
-						backup_reg_reset_event_log_report_sent_radio();
-					}
-
-					if ((main_config_data_gsm->aprsis_enable != 0) &&
-						(main_config_data_mode->gsm == 1) &&
-						gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
-
-						// send event log each 24 hours, but only once at the top of an hour
-						if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 19) {
-							if (backup_reg_get_event_log_report_sent_aprsis () == 0) {
-								// set status bit in non-volatile backup register not to loop over and over
-								// again in case of a restart
-								backup_reg_set_event_log_report_sent_aprsis ();
-
-								// extract events from NVM
-								const nvm_event_result_stats_t events_stat =
-									nvm_event_get_last_events_in_exposed (rte_main_exposed_events,
-																		  MAIN_HOW_MANY_EVENTS_SEND_REPORT,
-																		  EVENT_WARNING);
-
-								// set a trigger to number of events, which shall be sent
-								// please note that we do not need to check here if APRS-IS
-								// is connected. The check is done within specific APRS-IS functions
-								//
-								// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
-								// because NVM can contain less events
-								rte_main_trigger_gsm_event_log = events_stat.zz_total;
-
-								xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
-							}
-						}
-						else {
-							// reset flag if the time is not 18:xx
-							backup_reg_reset_event_log_report_sent_aprsis ();
-						}
-					}
-
-					if ((main_config_data_gsm->aprsis_enable != 0) &&
-						(main_config_data_mode->gsm == 1) &&
-						(pwr_save_is_currently_cutoff () == 0) &&
-						(io_get_cntrl_vbat_g() == 1))
-					{
-						// this checks when APRS-IS was alive last time and when any packet
-						// has been sent to the server.
-						const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive ();
-
-						if (i_am_ok_with_aprsis != 0) {
-
-							// increase counter stored in RTC backup register
-							backup_reg_increment_aprsis_check_reset ();
-
-							// trigger a restart
-							NVIC_SystemReset ();
-						}
-					}
-		#endif
-					if (configuration_get_validate_parameters() == 1) {
-						if (rte_wx_check_weather_measurements() == 0) {
-							backup_reg_increment_weather_measurements_check_reset();
-
-							NVIC_SystemReset();
-						}
-
-						if (rte_wx_dallas_degraded_counter > DALLAS_MAX_LIMIT_OF_DEGRADED) {
-							backup_reg_increment_dallas_degraded_reset();
-
-							rte_main_reboot_req = 1;
-						}
-					}
-
-
-					/**
-					 * ONE HOUR POOLING
-					 */
-					if (--main_one_hour_pool_timer < 0) {
-						main_one_hour_pool_timer = 60;
-
-		#if defined(STM32L471xx)
-						// check if RTC is working correctly
-						if (system_is_rtc_ok() == 0) {
-
-							backup_reg_increment_is_rtc_ok_check_reset();
-
-							rte_main_reboot_req = 1;
-						}
-
-						if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
-							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-									MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
-							//rte_main_trigger_gsm_aprsis_counters_packet = 1;
-						}
-		#endif
-					}	// end of one hour
-
-					/**
-					 * SIX HOUR POOLING
-					 */
-					if (--main_six_hour_pool_timer < 0) {
-						main_six_hour_pool_timer = 6;
-
-					  event_log_sync(
-								  EVENT_INFO_CYCLIC,
-								  EVENT_SRC_MAIN,
-								  EVENTS_MAIN_CYCLIC,
-								  aprsis_get_successfull_conn_counter(),
-								  aprsis_get_unsucessfull_conn_counter(),
-								  aprsis_get_tx_counter(),
-								  rte_main_average_battery_voltage,
-								  rte_main_rx_total, rte_main_tx_total);
-
-					}
-
-
-
-					main_one_minute_pool_timer = 60000;
 				} // end of one minute
 
 				/**
 				 * ONE SECOND POOLING
 				 */
 				if (main_one_second_pool_timer < 10) {
-//
-//					backup_reg_set_monitor(6);
-//
-//					digi_pool_viscous();
-//
-//					button_debounce();
-//
-//					#ifdef SX1262_IMPLEMENTATION
-//					supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
-//					supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
-//
-//
-//					retval = fanet_test();
-//
-//					if (retval != 0)
-//					{
-//						  event_log_sync(
-//									  EVENT_INFO_CYCLIC,
-//									  EVENT_SRC_MAIN,
-//									  EVENTS_MAIN_CYCLIC,
-//									  0, 0,
-//									  0, 0,
-//									  0xDDCCBBAA, retval);
-//					}
-//					#endif
-//
-//					#ifdef PARAMETEO
-//					if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
-//						if (gsm_sim800_tcpip_tx_busy() == 0) {
-//							rte_main_reboot_scheduled_diag = 0;
-//
-//							NVIC_SystemReset();
-//						}
-//					}
-//
-//					// this if cannot be guarded by checking if VBAT_G is enabled
-//					// because VBAT_G itself is controlled by initialization
-//					// pooler
-//					if (main_config_data_mode->gsm == 1) {
-//						gsm_sim800_initialization_pool(main_gsm_srl_ctx_ptr, &main_gsm_state);
-//					}
-//
-//					if ((main_config_data_mode->gsm == 1)  && (io_get_cntrl_vbat_g() == 1) && (rte_main_woken_up == 0)) {
-//
-//						// check if GSM modem must be power-cycled / restarted like after
-//						// waking up from deep sleep or chaning power saving mode
-//						if (rte_main_reset_gsm_modem == 1) {
-//							// rest the flag
-//							rte_main_reset_gsm_modem = 0;
-//
-//							srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
-//
-//							// reset gsm modem
-//							gsm_sim800_reset(&main_gsm_state);
-//
-//							// please remember that a reset might not be performed if
-//							// the GSM modem is inhibited completely, due to current
-//							// power saving mode and few another things. In that case
-//							// the flag will be cleared but modem NOT restarted
-//						}
-//
-//						if (aprsis_get_aprsis_logged() == 1) {
-//							led_control_led1_upper(true);
-//						}
-//						else {
-//							led_control_led1_upper(false);
-//						}
-//
-//						if (gsm_sim800_gprs_ready == 1) {
-//							/***
-//							 *
-//							 * TEST TEST TEST TODO
-//							 */
-//							//retval = http_client_async_get("http://pogoda.cc:8080/meteo_backend/status", strlen("http://pogoda.cc:8080/meteo_backend/status"), 0xFFF0, 0x1, dupa);
-//							//retval = http_client_async_post("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status", strlen("http://pogoda.cc:8080/meteo_backend/parameteo/skrzyczne/status"), post_content, strlen(post_content), 0, dupa);
-//						}
-//
-//						gsm_sim800_poolers_one_second(main_gsm_srl_ctx_ptr, &main_gsm_state, main_config_data_gsm);
-//
-//						if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
-//							aprsis_check_alive();
-//						}
-//					}
-//					#endif
-//
-//					if ((io_get_cntrl_vbat_s() == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
-//						analog_anemometer_direction_handler();
-//					}
-//
-//					backup_reg_set_monitor(7);
-//
-//					main_one_second_pool_timer = 1000;
+
 				}	// end of one second pooler
 				else if (main_one_second_pool_timer < -10) {
 //
@@ -618,67 +355,6 @@ void task_main( void * parameters )
 				 */
 				if (main_two_second_pool_timer < 10) {
 
-//					if (main_config_data_mode->wx != 0) {
-//						// TODO:
-//						if (configuration_get_inhibit_wx_pwr_handle() == 0) {
-//							wx_pwr_switch_periodic_handle();
-//						}
-//
-//						wx_check_force_i2c_reset();
-//					}
-//
-//		#ifdef PARAMETEO
-//					if (main_current_powersave_mode != PWSAVE_AGGRESV) {
-//						if (configuration_get_power_cycle_vbat_r() == 1 && !main_afsk.sending) {
-//							io_pool_vbat_r();
-//						}
-//					}
-//					else {
-//						io_inhibit_pool_vbat_r();
-//					}
-//		#endif
-//
-//		#ifdef PARAMETEO
-//
-//					if (io_get_cntrl_vbat_s() == 1) {
-//						max31865_pool();
-//					}
-//
-//					if (io_get_cntrl_vbat_g () == 1) {
-//						if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
-//							rte_main_woken_up == 0) {
-//								gsm_comm_state_handler (gsm_sim800_engineering_get_is_done(), ntp_done, rte_main_events_extracted_for_api_stat.zz_total, gsm_sim800_gprs_ready);
-//						}
-//
-//						// if GSM module is enabled and GPRS communication state is now on API phase
-//						if (	(main_config_data_mode->gsm == 1) &&
-//								(gsm_comm_state_get_current () == GSM_COMM_API)) {
-//
-//							// if there are any events remaining to push to API
-//							if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
-//								// send current event
-//								const uint8_t api_connection_result = api_send_json_event(&rte_main_exposed_events[rte_main_events_extracted_for_api_stat.zz_total - 1]);
-//
-//								// if TCP connection is established and data is currently sent asynchronously
-//								if (api_connection_result == HTTP_CLIENT_OK) {
-//									// end decrement remaining number of events
-//									rte_main_events_extracted_for_api_stat.zz_total--;
-//								}
-//								else {
-//									// for sake of simplicity break on first connection error
-//									rte_main_events_extracted_for_api_stat.zz_total = 0;
-//								}
-//							}
-//						}
-//
-//						if (gsm_comm_state_get_current() == GSM_COMM_NTP) {
-//							ntp_get_sync();
-//						}
-//					}
-//		#endif
-//					main_reload_internal_wdg();
-//
-//					main_two_second_pool_timer = 2000;
 				}	// end of two second pooling
 
 				/**
@@ -704,115 +380,6 @@ void task_main( void * parameters )
 				 * TEN SECOND POOLING
 				 */
 				if (main_ten_second_pool_timer < 10) {
-
-//					// get current battery voltage. for non parameteo this will return 0
-//					//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
-//					rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
-//					rte_main_average_battery_voltage = io_vbat_meas_average(rte_main_battery_voltage);
-//
-//
-//					// meas average will return 0 if internal buffer isn't filled completely
-//					if (rte_main_average_battery_voltage == 0) {
-//						rte_main_average_battery_voltage = rte_main_battery_voltage;
-//					}
-//
-//					backup_reg_set_monitor(8);
-//
-//					// check if consecutive weather frame has been triggered from 'packet_tx_handler'
-//					if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
-//
-//						packet_tx_send_wx_frame();
-//
-//						rte_main_trigger_wx_packet = 0;
-//					}
-//
-//		#ifdef PARAMETEO
-//
-//					if (main_check_adc == 1) {
-//						AD_Restart();
-//
-//						main_check_adc = 0;
-//					}
-//
-//					// inhibit any power save switching when modem transmits data
-//					if (!main_afsk.sending && rte_main_woken_up == 0 && packet_tx_is_gsm_meteo_pending() == 0) {
-//						rte_main_curret_powersave_mode =
-//								pwr_save_pooling_handler(
-//										main_config_data_mode,
-//										packet_tx_meteo_interval,
-//										packet_tx_get_minutes_to_next_wx(),
-//										rte_main_average_battery_voltage,
-//										rte_main_battery_voltage,
-//										&main_continue_loop);
-//					}
-//
-//					if (main_continue_loop == 0) {
-//						continue;
-//					}
-//		#endif
-//
-//					backup_reg_set_monitor(9);
-//
-//		#ifdef PARAMETEO
-//					if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
-//						rte_main_woken_up == 0) {
-//
-//						gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
-//
-//						if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
-//							packet_tx_tcp_handler ();
-//						}
-//					}
-//		#endif
-//
-//					if (main_config_data_mode->wx_umb == 1) {
-//						umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
-//					}
-//
-//					if (main_config_data_mode->wx_umb == 1) {
-//						rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
-//					}
-//
-//					if (main_config_data_mode->wx_umb == 1) {
-//						const uint8_t umb_watchdog_state = umb_master_watchdog(&rte_wx_umb_context, master_time);
-//
-//						if (umb_watchdog_state == 1) {
-//						  const uint32_t wx_baudrate = main_config_data_umb->serial_speed;
-//
-//						  srl_close(main_wx_srl_ctx_ptr);
-//						  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, wx_baudrate, 1);
-//						  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
-//						}
-//						else if (umb_watchdog_state > 1) {
-//							rte_main_reboot_req = 1;
-//						}
-//						else {
-//							; // everything is ok
-//						}
-//					}
-//
-//					if (main_config_data_mode->wx != 0) {
-//
-//						#ifdef STM32L471xx
-//							if (io_get_cntrl_vbat_s() == 1) {
-//						#else
-//							if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
-//						#endif
-//								// pool anemometer only when power is applied  /// RESET
-//								wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
-//							}
-//					}
-//
-//					if (main_get_main_davis_serial_enabled() == 1) {
-//
-//						// if previous LOOP packet is ready for processing
-//						if (rte_wx_davis_loop_packet_avaliable == 1) {
-//							davis_parsers_loop(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, main_kiss_srl_ctx_ptr->srl_rx_buf_ln, &rte_wx_davis_loop_content);
-//						}
-//
-//						// trigger consecutive LOOP packet
-//						davis_trigger_loop_packet();
-//					}
 
 					main_ten_second_pool_timer = 10000;
 				} 	// end of ten second pooling

@@ -139,6 +139,7 @@
 #include "tasks/task_event_gsm_rx_done.h"
 #include "tasks/task_event_gsm_tx_done.h"
 #include "tasks/task_event_apris_msg_triggers.h"
+#include "tasks/task_event_radio_message.h"
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -342,6 +343,9 @@ static StaticEventGroup_t main_eventgroup_serial_gsm;
 //! data associated with the event group for KISS host pc serial port
 static StaticEventGroup_t main_eventgroup_aprs_trigger;
 
+//! data associated with the event group for new message received from radio network
+static StaticEventGroup_t main_eventgroup_new_radio_message_rx;
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
@@ -352,6 +356,7 @@ static TaskHandle_t task_ev_serial_kiss_tx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_tx_done_handle = NULL;
 static TaskHandle_t task_ev_aprs_trigger_handle = NULL;
+static TaskHandle_t task_ev_radio_message_handle = NULL;
 
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_powersave;
@@ -363,6 +368,8 @@ EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 EventGroupHandle_t main_eventgroup_handle_serial_gsm;
 
 EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
+
+EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 /********************************************************************/
 
@@ -456,8 +463,13 @@ static void main_callback_serial_gsm_tx_done (srl_ctx_t *context)
 
 /********************************************************************/
 
+/**
+ * This is called from interrupt context!
+ * @param msg
+ */
 static void message_callback(struct AX25Msg *msg) {
-
+	it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_NEW_RADIO_MESSAGE_EV;
+    NVIC_SetPendingIRQ(EXTI0_IRQn);
 }
 
 /// ==================================================================================================
@@ -1419,6 +1431,7 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
 	main_eventgroup_handle_aprs_trigger = xEventGroupCreateStatic( &main_eventgroup_aprs_trigger );
+	main_eventgroup_handle_radio_message = xEventGroupCreateStatic( &main_eventgroup_new_radio_message_rx );
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
 
@@ -1432,7 +1445,9 @@ int main(int argc, char* argv[]){
 				if (create_result == pdPASS) {
 					create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_ten_sec_handle );
 					if (create_result == pdPASS) {
-						create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ev_aprs_trigger_handle );
+						create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_ev_aprs_trigger_handle );
+						create_result = xTaskCreate( task_event_radio_message, "tev_radio_message", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ev_radio_message_handle );
+
 						if (create_result == pdPASS) {
 							create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
 							create_result = xTaskCreate( task_event_kiss_tx_done, "tev_serial_kiss_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_tx_done_handle );

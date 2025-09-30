@@ -54,6 +54,8 @@
 										MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES	|	\
 										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS
 
+#define MAIN_EVENTGROUP_RADIO_MESSAGE_RXED		(1 << 0)
+
 // clang-format on
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -73,6 +75,8 @@ extern EventGroupHandle_t main_eventgroup_handle_serial_gsm;
 
 //! Event group blocking GSM 800 driver code until rx or tx from/to GSM modem is complete.
 extern EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
+
+extern EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
