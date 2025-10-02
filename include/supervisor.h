@@ -53,4 +53,9 @@ int supervisor_service(void);
  */
 int supervisor_check_have_postmortem(void);
 
+/**
+ * Starts task monitoring
+ */
+void supervisor_start(void);
+
 #endif /* SUPERVISOR_H_ */

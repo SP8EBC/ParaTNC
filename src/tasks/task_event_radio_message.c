@@ -16,6 +16,7 @@
 
 #include "aprsis.h"
 #include "digi.h"
+#include "supervisor.h"
 
 #include "drivers/serial.h"
 #include "kiss_communication/kiss_communication.h"
@@ -36,6 +37,8 @@ void task_event_radio_message (void *param)
 								   pdTRUE,
 								   pdTRUE,
 								   0xFFFFFFFFu);
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_NEW_RF);
 
 		// if serial port is currently not busy on transmission
 		if (ctx->srl_tx_state != SRL_TXING) {

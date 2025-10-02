@@ -30,6 +30,8 @@
 ///	LOCAL VARIABLES
 /// ==================================================================================================
 
+static uint8_t supervisor_started = 0u;
+
 static uint32_t supervisor_last_im_alive[SUPERVISOR_THREAD_COUNT] = {0u};
 
 const static uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
@@ -106,16 +108,21 @@ int supervisor_service(void)
 {
 	int nok = 0;
 
+	if (supervisor_started == 0)
+	{
+		return nok;
+	}
+
 	// current time since bootup
 	const uint32_t current_time = main_get_master_time();
 
-	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
+	for (volatile int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
 	{
 		// number of miliseconds since last time this library / thread has reported
-		const int32_t since_last_alive = current_time - supervisor_last_im_alive[i];
+		volatile const int32_t since_last_alive = current_time - supervisor_last_im_alive[i];
 
 		// maximum timeout (in seconds!!!!)
-		const uint16_t max_seconds_since = supervisor_timeouts_conf[i];
+		volatile const uint16_t max_seconds_since = supervisor_timeouts_conf[i];
 
 		if (since_last_alive > (int32_t)(max_seconds_since * 1000))
 		{
@@ -154,5 +161,18 @@ int supervisor_check_have_postmortem(void)
 	}
 
 	return have;
+}
+
+void supervisor_start(void)
+{
+	// current time since bootup
+	const uint32_t current_time = main_get_master_time();
+
+	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
+	{
+		supervisor_last_im_alive[i] = current_time;
+	}
+
+	supervisor_started = 1;
 }
 

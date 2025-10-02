@@ -21,6 +21,7 @@
 #include "io.h"
 #include "packet_tx_handler.h"
 #include "wx_handler.h"
+#include "supervisor.h"
 
 #include "gsm/sim800c_poolers.h"
 #include "davis_vantage/davis_parsers.h"
@@ -38,6 +39,8 @@ void task_ten_second( void * parameters )
 		vTaskDelay (xDelay);
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
 
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {

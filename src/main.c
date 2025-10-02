@@ -1421,6 +1421,8 @@ int main(int argc, char* argv[]){
 
 	packet_tx_meteo_counter = main_config_data_basic->wx_transmit_period - 1;
 
+	supervisor_start();
+
 	////////////////////////// FREERTOS       /////////////////////////////////
 	///
 

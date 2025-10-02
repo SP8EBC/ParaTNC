@@ -22,6 +22,7 @@
 #include "digi.h"
 #include "gsm_comm_state_handler.h"
 #include "io.h"
+#include "supervisor.h"
 
 #include "drivers/analog_anemometer.h"
 #include "drivers/serial.h"
@@ -44,6 +45,8 @@ void task_one_second (void *parameters)
 		vTaskDelay (xDelay);
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_SEC);
 
 		backup_reg_set_monitor (6);
 

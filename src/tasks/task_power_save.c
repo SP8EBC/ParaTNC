@@ -13,6 +13,7 @@
 #include "main.h"
 #include "rte_main.h"
 #include "main_freertos_externs.h"
+#include "supervisor.h"
 
 #include "adc.h"
 #include "io.h"
@@ -35,6 +36,8 @@ void task_power_save( void * parameters)
 		xEventGroupWaitBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_WAIT_FOR, pdTRUE, pdTRUE, xDelay << 2);
 
 		main_suspend_task_for_psaving();
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_POWERSAV);
 
 		// get current battery voltage. for non parameteo this will return 0
 		//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);

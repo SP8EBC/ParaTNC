@@ -20,6 +20,7 @@
 #include "ntp.h"
 #include "wx_handler.h"
 #include "wx_pwr_switch.h"
+#include "supervisor.h"
 
 #include "api/api.h"
 #include "drivers/max31865.h"
@@ -38,6 +39,8 @@ void task_two_second (void *parameters)
 		vTaskDelay (xDelay);
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TWO_SEC);
 
 		if (main_config_data_mode->wx != 0) {
 			// TODO:

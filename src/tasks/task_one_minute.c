@@ -20,6 +20,7 @@
 #include "io.h"
 #include "backup_registers.h"
 #include "gsm_comm_state_handler.h"
+#include "supervisor.h"
 
 #include "events_definitions/events_main.h"
 #include "http_client/http_client.h"
@@ -45,7 +46,7 @@ void task_one_minute (void *unused)
 
 		backup_reg_set_monitor (4);
 
-		// main_nvm_timestamp = main_get_nvm_timestamp();
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_MIN);
 
 #ifdef SX1262_IMPLEMENTATION
 //				fanet_success_cnt = 0;
