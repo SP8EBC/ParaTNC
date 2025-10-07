@@ -20,6 +20,8 @@
 #include "kiss_communication/kiss_communication.h"
 #include "kiss_communication/types/kiss_communication_transport_t.h"
 
+#include "supervisor.h"
+
 static uint8_t task_event_kiss_buffer[KISS_CONFIG_DIAGNOSTIC_BUFFER_LN];
 
 void task_event_kiss_rx_done (void *param)
@@ -78,5 +80,6 @@ void task_event_kiss_rx_done (void *param)
 				}
 			}
 		}
-	}
+		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_KISS_RX_DONE);
+	}	// while(1)
 }

@@ -21,6 +21,8 @@
 #include "kiss_communication/kiss_callback.h"
 #include "kiss_communication/types/kiss_communication_transport_t.h"
 
+#include "supervisor.h"
+
 void task_event_kiss_tx_done (void *param)
 {
 	(void)param;
@@ -34,7 +36,6 @@ void task_event_kiss_tx_done (void *param)
 															   pdTRUE,
 															   pdTRUE,
 															   0xFFFFFFFFu);
-
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE) {
 			// running config
@@ -42,5 +43,7 @@ void task_event_kiss_tx_done (void *param)
 				srl_start_tx(ctx, kiss_async_pooler(ctx->srl_tx_buf_pointer, ctx->srl_tx_buf_ln));
 			}
 		}
+
+		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_KISS_TX_DONE);
 	}
 }

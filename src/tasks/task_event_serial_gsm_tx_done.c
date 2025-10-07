@@ -13,6 +13,7 @@
 
 #include "main.h"
 #include "main_freertos_externs.h"
+#include "supervisor.h"
 
 #include "gsm/sim800c.h"
 
@@ -36,5 +37,7 @@ void task_event_gsm_tx_done (void *param)
 			gsm_sim800_tx_done_event_handler(ctx, &main_gsm_state);
 
 		}
+		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_GSM_TX_DONE);
+
 	}
 }

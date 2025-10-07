@@ -84,14 +84,14 @@ void task_main( void * parameters )
 	int32_t ln = 0;
 	srl_context_t*  kiss_srl_ctx = main_get_kiss_srl_ctx_ptr();
 
+	/* Block for 200ms. */
+	const TickType_t xDelay = 200 / portTICK_PERIOD_MS;
+
 	  while (1)
 	    {
-	    //vTaskDelay( xDelay );
+	    vTaskDelay( xDelay );
 
 		backup_reg_set_monitor(-1);
-
-		supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
-
 
 		// system reset may be requested from various places in the application
 		if (rte_main_reboot_req == 1) {
@@ -389,6 +389,8 @@ void task_main( void * parameters )
 	#if defined(PARAMETEO)
 			}	// else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)
 	#endif
+			supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+
 	    } // Infinite loop, never return.
 
 

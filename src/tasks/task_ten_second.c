@@ -40,8 +40,6 @@ void task_ten_second( void * parameters )
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
-
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
 
@@ -110,6 +108,8 @@ void task_ten_second( void * parameters )
 			// trigger consecutive LOOP packet
 			davis_trigger_loop_packet();
 		}
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
+
 		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 	}
 		// end of while loop

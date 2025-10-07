@@ -56,6 +56,12 @@
 
 #define MAIN_EVENTGROUP_RADIO_MESSAGE_RXED		(1 << 0)
 
+#define MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG	(1 << 0)
+#define MAIN_EVENTGROUP_API_NTP_SYNC_TIME		(1 << 1)
+
+#define MAIN_EVENTGROUP_API_NTP		MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG	|	\
+									MAIN_EVENTGROUP_API_NTP_SYNC_TIME
+
 // clang-format on
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -77,6 +83,9 @@ extern EventGroupHandle_t main_eventgroup_handle_serial_gsm;
 extern EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 
 extern EventGroupHandle_t main_eventgroup_handle_radio_message;
+
+extern EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
+
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

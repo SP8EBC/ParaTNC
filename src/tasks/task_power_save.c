@@ -37,8 +37,6 @@ void task_power_save( void * parameters)
 
 		main_suspend_task_for_psaving();
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_POWERSAV);
-
 		// get current battery voltage. for non parameteo this will return 0
 		//main_battery_measurement_res = io_vbat_meas_get(&rte_main_battery_voltage);
 		rte_main_battery_voltage = io_vbat_meas_get_synchro_old();
@@ -80,8 +78,10 @@ void task_power_save( void * parameters)
 
 		main_resume_task_for_psaving();
 
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_POWERSAV);
+
 		backup_reg_set_monitor(9);
-	}
+	}	//  wile(1)
 }
 
 

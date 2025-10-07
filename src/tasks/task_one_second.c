@@ -46,8 +46,6 @@ void task_one_second (void *parameters)
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_SEC);
-
 		backup_reg_set_monitor (6);
 
 		digi_pool_viscous ();
@@ -138,7 +136,9 @@ void task_one_second (void *parameters)
 
 		backup_reg_set_monitor (7);
 
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_SEC);
+
 		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
-	}
+	}	// while(1)
 	// end of while loop
 }

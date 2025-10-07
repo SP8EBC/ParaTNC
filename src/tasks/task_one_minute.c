@@ -46,8 +46,6 @@ void task_one_minute (void *unused)
 
 		backup_reg_set_monitor (4);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_MIN);
-
 #ifdef SX1262_IMPLEMENTATION
 //				fanet_success_cnt = 0;
 //				fanet_fail_cnt = 0;
@@ -201,6 +199,8 @@ void task_one_minute (void *unused)
 
 		main_one_minute_pool_timer = 60000;
 
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_MIN);
+
 		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
-	}
+	}	// while(1)
 }

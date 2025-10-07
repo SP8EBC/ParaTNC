@@ -40,8 +40,6 @@ void task_two_second (void *parameters)
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TWO_SEC);
-
 		if (main_config_data_mode->wx != 0) {
 			// TODO:
 			if (configuration_get_inhibit_wx_pwr_handle () == 0) {
@@ -82,27 +80,30 @@ void task_two_second (void *parameters)
 
 				// if there are any events remaining to push to API
 				if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
-					const uint8_t current_event_index =
-						rte_main_events_extracted_for_api_stat.zz_total - 1;
+					xEventGroupSetBits(main_eventgroup_handle_ntp_and_api_client, MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG);
 
-					// send current event
-					const uint8_t api_connection_result =
-						api_send_json_event (&rte_main_exposed_events[current_event_index]);
-
-					// if TCP connection is established and data is currently sent asynchronously
-					if (api_connection_result == HTTP_CLIENT_OK) {
-						// end decrement remaining number of events
-						rte_main_events_extracted_for_api_stat.zz_total--;
-					}
-					else {
-						// for sake of simplicity break on first connection error
-						rte_main_events_extracted_for_api_stat.zz_total = 0;
-					}
+//					const uint8_t current_event_index =
+//						rte_main_events_extracted_for_api_stat.zz_total - 1;
+//
+//					// send current event
+//					const uint8_t api_connection_result =
+//						api_send_json_event (&rte_main_exposed_events[current_event_index]);
+//
+//					// if TCP connection is established and data is currently sent asynchronously
+//					if (api_connection_result == HTTP_CLIENT_OK) {
+//						// end decrement remaining number of events
+//						rte_main_events_extracted_for_api_stat.zz_total--;
+//					}
+//					else {
+//						// for sake of simplicity break on first connection error
+//						rte_main_events_extracted_for_api_stat.zz_total = 0;
+//					}
 				}
 			}
 
 			if (gsm_comm_state_get_current () == GSM_COMM_NTP) {
-				ntp_get_sync ();
+				//ntp_get_sync ();
+				ntp_done = 1;
 			}
 		}
 #endif
@@ -111,6 +112,8 @@ void task_two_second (void *parameters)
 		main_two_second_pool_timer = 2000;
 		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
 
-	}
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TWO_SEC);
+
+	}	// while(1)
 	// end of while loop
 }

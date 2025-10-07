@@ -38,8 +38,6 @@ void task_event_radio_message (void *param)
 								   pdTRUE,
 								   0xFFFFFFFFu);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_NEW_RF);
-
 		// if serial port is currently not busy on transmission
 		if (ctx->srl_tx_state != SRL_TXING) {
 			memset (ctx->srl_tx_buf_pointer, 0x00, ctx->srl_tx_buf_ln);
@@ -73,5 +71,7 @@ void task_event_radio_message (void *param)
 		}
 
 #endif
-	}
+		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_NEW_RF);
+
+	}	// while(1)
 }
