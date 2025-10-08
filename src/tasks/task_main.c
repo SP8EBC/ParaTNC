@@ -95,6 +95,8 @@ void task_main( void * parameters )
 
 		// system reset may be requested from various places in the application
 		if (rte_main_reboot_req == 1) {
+		    vTaskDelay( xDelay );
+
 			NVIC_SystemReset();
 		}
 		else {

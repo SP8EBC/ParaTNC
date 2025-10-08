@@ -1461,7 +1461,7 @@ int main(int argc, char* argv[]){
 					create_result = xTaskCreate( task_two_second, "task_two_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_two_sec_handle );
 					if (create_result == pdPASS) {
 						create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ten_sec_handle );
-						create_result = xTaskCreate( task_one_minute, "task_one_min", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_one_min_handle );
+						create_result = xTaskCreate( task_one_minute, "task_one_min", configMINIMAL_STACK_SIZE * 2, ( void * ) NULL, priority + 5, &task_one_min_handle );			// stack overflow
 						if (create_result == pdPASS) {
 
 							if (create_result == pdPASS) {
