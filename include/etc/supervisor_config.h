@@ -19,7 +19,6 @@
 	ENTRY(	TASK_TEN_SEC,				15)								\
 	ENTRY(	TASK_POWERSAV,				15)								\
 	ENTRY(	EVENT_NEW_RF,				65530)							\
-	ENTRY(	EVENT_APRSIS_MSG_TRIG,		300)							\
 	ENTRY(	EVENT_SRL_GSM_RX_DONE,		300)							\
 	ENTRY(	EVENT_SRL_GSM_TX_DONE,		300)							\
 	ENTRY(	EVENT_SRL_KISS_RX_DONE,		65530)							\
@@ -29,3 +28,5 @@
 
 
 #endif /* ETC_SUPERVISOR_CONFIG_H_ */
+
+/* ENTRY(	EVENT_APRSIS_MSG_TRIG,		300)							\ */

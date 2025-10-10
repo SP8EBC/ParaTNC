@@ -226,7 +226,7 @@ void task_event_aprsis_msg_trigger (void *param)
 				}
 			}
 		}
-		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
+		//supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
 
 	}	// while (1)
 }
