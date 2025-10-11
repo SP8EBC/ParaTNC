@@ -45,7 +45,7 @@
 #include <stm32l4xx.h>
 
 #include "debug_hardfault.h"
-
+#include "main_master_time.h"
 /******************************************************************************/
 /* Hardware description related definitions. **********************************/
 /******************************************************************************/
@@ -383,7 +383,7 @@ PRIORITY THAN THIS! (higher priorities are lower numeric values. */
  * processing time used by each task.  Set to 0 to not collect the data.  The
  * application writer needs to provide a clock source if set to 1.  Defaults to 0
  * if left undefined.  See https://www.freertos.org/rtos-run-time-stats.html. */
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS           1
 
 /* Set configUSE_TRACE_FACILITY to include additional task structure members
  * are used by trace and visualisation functions and tools.  Set to 0 to exclude
@@ -670,5 +670,8 @@ standard names. */
 #define vPortSVCHandler SVC_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
+
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS	main_get_master_time
+#define portGET_RUN_TIME_COUNTER_VALUE			main_get_master_time
 
 #endif /* FREERTOS_CONFIG_H */
