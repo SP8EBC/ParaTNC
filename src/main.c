@@ -1677,6 +1677,22 @@ uint32_t main_get_nvm_timestamp(void) {
 	return out;
 }
 
+uint32_t main_get_master_time_highres(void)
+{
+	// this is incremented by 10ms, variable resolution is 1ms
+	uint32_t out = master_time;
+
+	// counter runs with frequency of 1kHz (period: 1ms)
+	uint32_t counter = TIM1->CNT;
+
+	// get 1ms counts
+	counter %= 10;
+
+	out += counter;
+
+	return out;
+}
+
 srl_context_t* main_get_kiss_srl_ctx_ptr(void)
 {
 	return main_kiss_srl_ctx_ptr;

@@ -671,7 +671,7 @@ standard names. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS	main_get_master_time
-#define portGET_RUN_TIME_COUNTER_VALUE			main_get_master_time
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS	main_get_master_time_highres
+#define portGET_RUN_TIME_COUNTER_VALUE			main_get_master_time_highres
 
 #endif /* FREERTOS_CONFIG_H */

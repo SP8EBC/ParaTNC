@@ -16,4 +16,6 @@ inline uint32_t main_get_master_time(void) {
 	return master_time;
 }
 
+uint32_t main_get_master_time_highres(void);
+
 #endif /* MAIN_MASTER_TIME_H_ */
