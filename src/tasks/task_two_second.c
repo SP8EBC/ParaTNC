@@ -40,6 +40,8 @@ void task_two_second (void *parameters)
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TWO_SEC);
 
+		main_get_tasks_stats();
+
 		if (main_config_data_mode->wx != 0) {
 			// TODO:
 			if (configuration_get_inhibit_wx_pwr_handle () == 0) {

@@ -25,6 +25,24 @@
 
 #define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
 
+typedef struct rte_main_tasks_load_t
+{
+	uint32_t task_main;
+	uint32_t task_powersave;
+	uint32_t task_one_sec;
+	uint32_t task_two_sec;
+	uint32_t task_ten_sec;
+	uint32_t task_one_min;
+	uint32_t tev_serial_kiss;
+	uint32_t tev_serial_kiss_tx;
+	uint32_t tev_serial_gsm_rx;
+	uint32_t tev_serial_gsm_tx;
+	uint32_t tev_apris_trig;
+	uint32_t tev_ntp_api;
+	uint32_t tev_radio_message;
+	uint32_t idle;
+}rte_main_tasks_cpuload_t;
+
 extern message_t rte_main_received_message;
 
 extern message_t rte_main_message_for_transmitting;
@@ -96,5 +114,7 @@ extern uint8_t rte_main_kiss_from_message_ln;
 
 //! binary response to DID request from APRS message
 extern uint8_t rte_main_kiss_response_message[32];
+
+extern rte_main_tasks_cpuload_t rte_main_load;
 
 #endif

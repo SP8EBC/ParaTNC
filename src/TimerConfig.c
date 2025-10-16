@@ -50,7 +50,7 @@ void TimerTimebaseConfig(void)
 	// It can be changed on the fly as this control register is buffered. The new prescaler ratio is
 	// taken into account at the next update event.
 #ifdef HI_SPEED
-	TIM1->PSC = 47999;		// 24MHz -> 1kHz		// 9
+	TIM1->PSC = 479;		// 48MHz -> 100kHz
 #else
 	TIM1->PSC = 4;
 #endif
@@ -59,7 +59,7 @@ void TimerTimebaseConfig(void)
 	// Refer to the Section 30.3.1: Time-base unit on page 911 for more details about ARR update
 	// and behavior.
 	// The counter is blocked while the auto-reload value is null.
-	TIM1->ARR = 9;		// 1kHz -> 100Hz (period : 10ms)
+	TIM1->ARR = 999;		// 100kHz -> 100Hz (period : 10ms)
 
 	// DIR: Direction
 	// 0: Counter used as upcounter

@@ -7,8 +7,6 @@
 
 #include "rte_main.h"
 
-#include "station_config_target_hw.h"
-
 uint8_t rte_main_reboot_req = 0;
 
 uint8_t rte_main_boot_cycles = 0, rte_main_hard_faults = 0;
@@ -97,3 +95,6 @@ uint8_t rte_main_kiss_response_message[32];
 
 //static io_vbat_state_t main_battery_measurement_res;
 #endif
+
+// tasks load
+rte_main_tasks_cpuload_t rte_main_load;

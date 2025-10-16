@@ -469,8 +469,6 @@ static void main_callback_serial_gsm_tx_done (srl_ctx_t *context)
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
 }
-
-
 /********************************************************************/
 
 /**
@@ -1682,13 +1680,13 @@ uint32_t main_get_master_time_highres(void)
 	// this is incremented by 10ms, variable resolution is 1ms
 	uint32_t out = master_time;
 
-	// counter runs with frequency of 1kHz (period: 1ms)
+	// counter runs with input frequency of 100kHz (period: 10us)
 	uint32_t counter = TIM1->CNT;
 
-	// get 1ms counts
-	counter %= 10;
+	// scale to 10us resolution
+	uint32_t tens_us = out * 100;
 
-	out += counter;
+	out = tens_us + counter;
 
 	return out;
 }
@@ -1735,6 +1733,24 @@ void main_resume_task_for_psaving(void)
 	vTaskResume(task_one_sec_handle);
 	vTaskResume(task_two_sec_handle);
 	vTaskResume(task_ten_sec_handle);
+}
+
+void main_get_tasks_stats()
+{
+	rte_main_load.task_powersave = ulTaskGetRunTimeCounter(task_powersave_handle);
+	rte_main_load.task_main = ulTaskGetRunTimeCounter(task_main_handle);
+	rte_main_load.task_one_sec = ulTaskGetRunTimeCounter(task_one_sec_handle);
+	rte_main_load.task_two_sec = ulTaskGetRunTimeCounter(task_two_sec_handle);
+	rte_main_load.task_ten_sec = ulTaskGetRunTimeCounter(task_ten_sec_handle);
+	rte_main_load.task_one_min = ulTaskGetRunTimeCounter(task_one_min_handle);
+
+	rte_main_load.tev_serial_kiss = ulTaskGetRunTimeCounter(task_ev_serial_kiss_rx_done_handle);
+	rte_main_load.tev_serial_kiss_tx = ulTaskGetRunTimeCounter(task_ev_serial_kiss_tx_done_handle);
+	rte_main_load.tev_serial_gsm_rx = ulTaskGetRunTimeCounter(task_ev_serial_gsm_rx_done_handle);
+	rte_main_load.tev_serial_gsm_tx = ulTaskGetRunTimeCounter(task_ev_serial_gsm_tx_done_handle);
+	rte_main_load.tev_apris_trig = ulTaskGetRunTimeCounter(task_ev_aprs_trigger_handle);
+	rte_main_load.tev_radio_message = ulTaskGetRunTimeCounter(task_ev_radio_message_handle);
+	rte_main_load.tev_ntp_api = ulTaskGetRunTimeCounter(task_ev_ntp_and_api_client);
 }
 
 /**

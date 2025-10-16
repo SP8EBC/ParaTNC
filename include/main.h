@@ -135,6 +135,7 @@ configuration_button_function_t main_get_button_one_left();
 //! function configuration for right button on ParaMETEO
 configuration_button_function_t main_get_button_two_right();
 
+void main_get_tasks_stats();
 
 #if defined(STM32L471xx)
 extern uint32_t rte_main_rx_total;
