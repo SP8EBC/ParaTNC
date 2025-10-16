@@ -19,12 +19,18 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_tim.h>
 #include <stm32l4xx_ll_lptim.h>
+#include <stm32l4xx_ll_dma.h>
+
 #endif
 
 
 #if (_DELAY_BASE > 22)
 #error "Transmit delay shouldn't be longer that 1100msec. Decrease _DELAY_BASE in config below 22"
 #endif
+
+extern unsigned short int AdcBuffer[4];
+
+LL_DMA_InitTypeDef timer_config_DMA_InitStruct;
 
 void TimerTimebaseConfig(void)
 {
@@ -80,6 +86,7 @@ void TimerTimebaseConfig(void)
 
 
 void TimerConfig(void) {
+
 	///////////////////////////////////////////
 	/// konfiguracja TIM2 -- dallas delay 	///
 	///////////////////////////////////////////
@@ -139,8 +146,31 @@ void TimerConfig(void) {
 		TIM7->CR1 |= TIM_CR1_DIR;
 		TIM7->CR1 &= (0xFFFFFFFF ^ TIM_CR1_DIR);
 		TIM7->CR1 |= TIM_CR1_CEN;
-		TIM7->DIER |= 1;
-		NVIC_EnableIRQ( TIM7_IRQn );
+		//TIM7->DIER |= TIM_DIER_UIE;
+		//NVIC_EnableIRQ( TIM7_IRQn );
+		TIM7->DIER |= TIM_DIER_UDE;
+
+		///////////////////////////////////////////
+		/// konfiguracja DMA2 --adc 			///
+		///////////////////////////////////////////
+		timer_config_DMA_InitStruct.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
+		timer_config_DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)AdcBuffer;
+		timer_config_DMA_InitStruct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_HALFWORD;
+		timer_config_DMA_InitStruct.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
+		timer_config_DMA_InitStruct.Mode = LL_DMA_MODE_NORMAL;
+		timer_config_DMA_InitStruct.NbData = 4;
+		timer_config_DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&ADC1->DR;
+		timer_config_DMA_InitStruct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_HALFWORD;
+		timer_config_DMA_InitStruct.PeriphOrM2MSrcIncMode = LL_DMA_MEMORY_NOINCREMENT;
+		timer_config_DMA_InitStruct.PeriphRequest = LL_DMA_REQUEST_3; // LL_DMAMUX_REQ_TIM7_UP
+
+		LL_DMA_Init(DMA2, LL_DMA_CHANNEL_5, &timer_config_DMA_InitStruct);
+
+		LL_DMA_EnableIT_TC(DMA2, LL_DMA_CHANNEL_5);
+
+		LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_5);
+
+		NVIC_EnableIRQ( DMA2_Channel5_IRQn );
 #endif
 }
 

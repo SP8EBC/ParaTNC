@@ -71,7 +71,7 @@
 
 /* Zmienne używane do oversamplingu */
 static int adc_sample_count = 0, adc_sample_c2 = 0; // Zmienna odliczająca próbki
-static unsigned short int AdcBuffer[4]; // Bufor przechowujący kolejne wartości rejestru DR
+unsigned short int AdcBuffer[4]; // Bufor przechowujący kolejne wartości rejestru DR
 static short int AdcValue;
 
 /// ==================================================================================================
@@ -104,7 +104,7 @@ void it_handlers_set_priorities (void)
 #else
 	NVIC_SetPriority (TIM5_IRQn, 3); // DAC
 #endif
-	NVIC_SetPriority (TIM7_IRQn, 4); // ADC
+	NVIC_SetPriority (DMA2_Channel5_IRQn, 4); // ADC dma transfer (was ADC)
 	NVIC_SetPriority (SPI2_IRQn, 5);
 	NVIC_SetPriority (USART1_IRQn, 6);		  // kiss
 	NVIC_SetPriority (USART2_IRQn, 7);		  // wx
@@ -459,31 +459,62 @@ void TIM5_IRQHandler (void)
 }
 #endif
 
-void TIM7_IRQHandler (void)
-{
-	// obsluga przetwarzania analog-cyfra. Wersja z oversamplingiem
-	TIM7->SR &= ~(1 << 0);
-	NVIC_ClearPendingIRQ (TIM7_IRQn);
-#define ASC	 adc_sample_count
-#define ASC2 adc_sample_c2
-	AdcBuffer[ASC] = ADC1->DR;
-	if (ASC == 3) {
-		//		io_ext_watchdog_service();
-		AdcValue = (short int)((AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
-		AFSK_ADC_ISR (&main_afsk, (AdcValue - 4095));
-		ASC = 0;
+extern LL_DMA_InitTypeDef timer_config_DMA_InitStruct;
 
-		if (ASC2++ == 2) {
-			// pooling AX25 musi być tu bo jak z przerwania wyskoczy nadawanie WX, BCN, TELEM przy
-			// dcd == true to bedzie wisialo w nieskonczonosc bo ustawiania dcd jest w srodku
-			// ax25_poll
-			ax25_poll (&main_ax25);
-			ASC2 = 0;
-		}
-		else {
-		}
+void DMA2_Channel5_IRQHandler ()
+{
+#define ASC2 adc_sample_c2
+
+	LL_DMA_ClearFlag_TC5 (DMA2);
+
+	AdcValue = (short int)((AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
+	AFSK_ADC_ISR (&main_afsk, (AdcValue - 4095));
+
+	if (ASC2++ == 2) {
+		// pooling AX25 musi być tu bo jak z przerwania wyskoczy nadawanie WX, BCN, TELEM przy
+		// dcd == true to bedzie wisialo w nieskonczonosc bo ustawiania dcd jest w srodku
+		// ax25_poll
+		ax25_poll (&main_ax25);
+		ASC2 = 0;
 	}
 	else {
-		ASC++;
 	}
+
+	NVIC_ClearPendingIRQ (DMA2_Channel5_IRQn);
+
+	LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_5);
+	LL_DMA_Init(DMA2, LL_DMA_CHANNEL_5, &timer_config_DMA_InitStruct);
+
+	LL_DMA_EnableIT_TC(DMA2, LL_DMA_CHANNEL_5);
+
+	LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_5);
 }
+
+// void TIM7_IRQHandler (void)
+//{
+//	// obsluga przetwarzania analog-cyfra. Wersja z oversamplingiem
+//	TIM7->SR &= ~(1 << 0);
+//	NVIC_ClearPendingIRQ (TIM7_IRQn);
+// #define ASC	 adc_sample_count
+// #define ASC2 adc_sample_c2
+//	AdcBuffer[ASC] = ADC1->DR;
+//	if (ASC == 3) {
+//		//		io_ext_watchdog_service();
+//		AdcValue = (short int)((AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
+//		AFSK_ADC_ISR (&main_afsk, (AdcValue - 4095));
+//		ASC = 0;
+//
+//		if (ASC2++ == 2) {
+//			// pooling AX25 musi być tu bo jak z przerwania wyskoczy nadawanie WX, BCN, TELEM przy
+//			// dcd == true to bedzie wisialo w nieskonczonosc bo ustawiania dcd jest w srodku
+//			// ax25_poll
+//			ax25_poll (&main_ax25);
+//			ASC2 = 0;
+//		}
+//		else {
+//		}
+//	}
+//	else {
+//		ASC++;
+//	}
+// }
