@@ -357,8 +357,8 @@
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="SPRINTF_LONG_LONG"/>
 									<listOptionValue builtIn="false" value="no_EVENTLOG_FROM_ISR"/>
-									<listOptionValue builtIn="false" value="no_SX1262_SHMIDT_NOT_GATE"/>
-									<listOptionValue builtIn="false" value="no_SX1262_IMPLEMENTATION"/>
+									<listOptionValue builtIn="false" value="SX1262_SHMIDT_NOT_GATE"/>
+									<listOptionValue builtIn="false" value="SX1262_IMPLEMENTATION"/>
 									<listOptionValue builtIn="false" value="HI_SPEED"/>
 									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32L471xx"/>
