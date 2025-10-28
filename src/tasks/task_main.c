@@ -62,18 +62,18 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-static uint8_t main_continue_loop = 0;
+//static uint8_t main_continue_loop = 0;
 
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 
 //!< Used to store an information which telemetry descritpion frame should be sent next
-static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
+//static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
 
 
 static void message_callback(struct AX25Msg *msg) {
-
+	(void)msg;
 }
 
 void task_main( void * parameters )
@@ -81,8 +81,8 @@ void task_main( void * parameters )
 
 	(void)(parameters);
 
-	int32_t ln = 0;
-	srl_context_t*  kiss_srl_ctx = main_get_kiss_srl_ctx_ptr();
+	//int32_t ln = 0;
+	//srl_context_t*  kiss_srl_ctx = main_get_kiss_srl_ctx_ptr();
 
 	/* Block for 200ms. */
 	const TickType_t xDelay = 200 / portTICK_PERIOD_MS;

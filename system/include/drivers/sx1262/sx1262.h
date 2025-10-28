@@ -56,6 +56,4 @@ short sx1262_is_busy_flag_active(void);
 
 short sx1262_is_interrrupt_flag_active(void);
 
-void sx1262_set_busy_flag_for_waiting(void);
-
 #endif /* INCLUDE_DRIVERS_SX1262_SX1262_H_ */

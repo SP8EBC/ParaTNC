@@ -94,6 +94,9 @@ static uint8_t gsm_sim800_escape_terminating_callback (uint8_t current_data,
 													   const uint8_t *const rx_buffer,
 													   uint16_t rx_bytes_counter)
 {
+	(void) rx_buffer;
+	(void) rx_bytes_counter;
+
 	if (gsm_sim800_previous == 'O') {
 		if ((char)current_data == 'K') {
 			gsm_sim800_previous = ' ';
@@ -357,11 +360,11 @@ sim800_return_t gsm_sim800_tcpip_receive (uint8_t *buffer, uint16_t buffer_size,
 	gsm_sim800_tcpip_async_receive (srl_context, state, rx_callback, timeout, 0);
 
 #ifdef GSM_TCPIP_RTOS_BLOCKING
-	const EventBits_t bits_on_event = xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
-														   GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_RX,
-														   pdTRUE,
-														   pdTRUE,
-														   0xFFFFFFFFu);
+	(void)xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
+							   GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_RX,
+							   pdTRUE,
+							   pdTRUE,
+							   0xFFFFFFFFu);
 #else
 	srl_wait_for_rx_completion_or_timeout (srl_context, &waiting_result);
 #endif
@@ -442,12 +445,11 @@ sim800_return_t gsm_sim800_tcpip_write (uint8_t *data, uint16_t data_len,
 #ifdef GSM_TCPIP_RTOS_BLOCKING
 		// wait infinite amount of time for event from a serial port indicating that transmission
 		// is done
-		const EventBits_t bits_on_event =
-			xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
-								 GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_TX,
-								 pdTRUE,
-								 pdTRUE,
-								 0xFFFFFFFFu);
+		(void)xEventGroupWaitBits (GSM_TCPIP_RTOS_BLOCKING_EVENT,
+								   GSM_TCPIP_RTOS_BLOCKING_EVENT_BITMASK_TX,
+								   pdTRUE,
+								   pdTRUE,
+								   0xFFFFFFFFu);
 #else
 		srl_wait_for_tx_completion (srl_context);
 #endif

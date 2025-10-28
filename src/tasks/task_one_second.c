@@ -23,6 +23,7 @@
 #include "gsm_comm_state_handler.h"
 #include "io.h"
 #include "supervisor.h"
+#include "fanet_app.h"
 
 #include "drivers/analog_anemometer.h"
 #include "drivers/serial.h"
@@ -32,11 +33,12 @@
 #include "gsm/sim800c_poolers.h"
 #include "gsm/sim800c_tcpip.h"
 
+#include "event_log.h"
+#include "events_definitions/events_main.h"
+
 void task_one_second (void *parameters)
 {
 	(void)(parameters);
-
-	srl_context_t *kiss_srl_ctx = main_get_kiss_srl_ctx_ptr ();
 
 	/* Block for 1000ms. */
 	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
@@ -56,7 +58,7 @@ void task_one_second (void *parameters)
 		supervisor_iam_alive (SUPERVISOR_THREAD_MAIN_LOOP);
 		supervisor_iam_alive (SUPERVISOR_THREAD_SEND_WX);
 
-		retval = fanet_test ();
+		const int retval = fanet_test ();
 
 		if (retval != 0) {
 			event_log_sync (EVENT_INFO_CYCLIC, EVENT_SRC_MAIN, EVENTS_MAIN_CYCLIC, 0, 0, 0, 0,

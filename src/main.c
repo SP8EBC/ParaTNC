@@ -351,6 +351,9 @@ static StaticEventGroup_t main_eventgroup_new_radio_message_rx;
 //! data associated with the event group for new message received from radio network
 static StaticEventGroup_t main_eventgroup_ntp_and_api_client;
 
+//! data associated with the event group used by driver code for sx1262 modem
+static StaticEventGroup_t main_eventgroup_sx1262;
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
@@ -380,6 +383,10 @@ EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
+
+//! a variable to hold the handle of the event group for sx1262 driver.
+EventGroupHandle_t main_eventgroup_handle_sx1262;
+
 
 /********************************************************************/
 
@@ -1288,7 +1295,6 @@ int main(int argc, char* argv[]){
 	sx1262_init();
 
    fanet_test_init();
-   fanet_test();
 #endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
@@ -1443,6 +1449,7 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_aprs_trigger = xEventGroupCreateStatic( &main_eventgroup_aprs_trigger );
 	main_eventgroup_handle_radio_message = xEventGroupCreateStatic( &main_eventgroup_new_radio_message_rx );
 	main_eventgroup_handle_ntp_and_api_client = xEventGroupCreateStatic( &main_eventgroup_ntp_and_api_client );
+	main_eventgroup_handle_sx1262 = xEventGroupCreateStatic( &main_eventgroup_sx1262 );
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
 

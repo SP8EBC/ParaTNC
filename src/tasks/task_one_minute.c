@@ -36,6 +36,7 @@ static int8_t main_six_hour_pool_timer = 4;
 
 void task_one_minute (void *unused)
 {
+	(void) unused;
 	/* Block for 60 seconds. */
 	const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
 

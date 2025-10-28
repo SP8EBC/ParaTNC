@@ -164,8 +164,3 @@ short sx1262_is_interrrupt_flag_active(void)
 	}
 }
 
-void sx1262_set_busy_flag_for_waiting(void)
-{
-	sx1262_busy_flag = SX1262_BUSY_ACTIVE;
-}
-

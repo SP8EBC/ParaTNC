@@ -233,6 +233,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 								humidity_qf_t humid_qf,
 								wind_qf_t anemometer_qf)
 {
+	(void) anemometer_qf;
 	uint8_t scaled_battery_current = 0;
 	uint8_t scaled_battery_voltage = 0;
 	uint8_t scaled_pvcell_volage = 0;

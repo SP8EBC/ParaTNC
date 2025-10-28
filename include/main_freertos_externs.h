@@ -62,6 +62,9 @@
 #define MAIN_EVENTGROUP_API_NTP		MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG	|	\
 									MAIN_EVENTGROUP_API_NTP_SYNC_TIME
 
+#define MAIN_EVENTGROUP_SX1262_ISBUSY			(1 << 0)
+#define MAIN_EVENTGROUP_SX1262_INTERRUPT		(1 << 1)
+
 // clang-format on
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -86,6 +89,8 @@ extern EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 extern EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
 
+//! a variable to hold the handle of the event group for sx1262 driver.
+extern EventGroupHandle_t main_eventgroup_handle_sx1262;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

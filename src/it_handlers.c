@@ -267,6 +267,46 @@ void EXTI0_IRQHandler (void)
 			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
 		}
 	}
+
+	if ((IT_HANDLERS_PROXY_SX1262_ISBUSY & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_sx1262,
+											 MAIN_EVENTGROUP_SX1262_ISBUSY,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
+
+	if ((IT_HANDLERS_PROXY_SX1262_INTERRUPT & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_sx1262,
+											 MAIN_EVENTGROUP_SX1262_INTERRUPT,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
 }
 
 void EXTI9_5_IRQHandler (void)
@@ -277,12 +317,18 @@ void EXTI9_5_IRQHandler (void)
 
 	// // IS BUSY
 	if (current_pending & EXTI_PR1_PIF7) {
-		sx1262_busy_released_callback ();
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_SX1262_ISBUSY;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+
+		//sx1262_busy_released_callback ();
 		EXTI->PR1 |= EXTI_PR1_PIF7;
 	}
 
 	// INTERRUPT
 	if (current_pending & EXTI_PR1_PIF6) {
+		//it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_SX1262_INTERRUPT;
+	    //NVIC_SetPendingIRQ(EXTI0_IRQn);
+
 		sx1262_interrupt_callback ();
 		EXTI->PR1 |= EXTI_PR1_PIF6;
 	}

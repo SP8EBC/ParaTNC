@@ -368,8 +368,8 @@ typedef struct
 #define LL_DMA_REQUEST_0                  0x00000000U /*!< DMA peripheral request 0  */
 #define LL_DMA_REQUEST_1                  0x00000001U /*!< DMA peripheral request 1  */
 #define LL_DMA_REQUEST_2                  0x00000002U /*!< DMA peripheral request 2  */
-#define LL_DMA_REQUEST_3                  0x00000003U /*!< DMA peripheral request 3  */
 #define LL_DMA_REQUEST_4                  0x00000004U /*!< DMA peripheral request 4  */
+#define LL_DMA_REQUEST_3                  0x00000003U /*!< DMA peripheral request 3  */
 #define LL_DMA_REQUEST_5                  0x00000005U /*!< DMA peripheral request 5  */
 #define LL_DMA_REQUEST_6                  0x00000006U /*!< DMA peripheral request 6  */
 #define LL_DMA_REQUEST_7                  0x00000007U /*!< DMA peripheral request 7  */

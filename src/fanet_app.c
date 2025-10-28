@@ -23,6 +23,8 @@
 #include "io.h"
 #include "LedConfig.h"
 
+#include "main_freertos_externs.h"
+
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
@@ -35,9 +37,9 @@
 #define SX1262_FUCK_THIS_AND_WAIT
 
 								//  0x1FFFFE
-#define FANET_DLY_TRANSMIT			0x607d94
-#define FANET_DLY_WRITE				0xFFFFF
-#define FANET_DLY_READ				0xF
+#define FANET_DLY_TRANSMIT			2000
+#define FANET_DLY_WRITE				200
+#define FANET_DLY_READ				100
 
 #define FANET_TURN_OFF()	LL_GPIO_ResetOutputPin(GPIOA, LL_GPIO_PIN_12)
 #define FANET_TURN_ON()		LL_GPIO_SetOutputPin(GPIOA, LL_GPIO_PIN_12);
@@ -122,23 +124,42 @@ volatile uint32_t fanet_last_busy_counter = 0xFFFFFFFFu;
  * 			0xFFFFFFFF 					if the call modem was idle and wait for busy condition timeouted
  * 			0x80000000 < x < 0xFFFFFFFF if at the call modem was idle and then became busy for some time
  */
-static uint32_t fanet_wait_not_busy(int _unused)
+static uint32_t fanet_wait_not_busy(int timeoutMilisecond)
 {
 	uint32_t out = 0;
-	(void)_unused;
+
+	// sane defaults
+	if (timeoutMilisecond <= 0)
+	{
+		timeoutMilisecond = 100;
+	}
 
 #ifdef SX1262_IMPLEMENTATION
 	fanet_last_busy_counter = sx1262_busy_counter;
 
-	while (fanet_last_busy_counter <= sx1262_busy_counter)
-	{
-		out++;
+	EventBits_t bits = xEventGroupWaitBits (main_eventgroup_handle_sx1262,
+											MAIN_EVENTGROUP_SX1262_ISBUSY,
+											pdTRUE,
+											pdTRUE,
+											timeoutMilisecond / portTICK_PERIOD_MS);
 
-		if (out >= 0x3FFFFF)
-		{
-			break;
-		}
+	if (bits == 0)
+	{
+		out = 0xFFFFFFFF;
 	}
+	else
+	{
+		out = (uint32_t) bits;
+	}
+//	while (fanet_last_busy_counter <= sx1262_busy_counter)
+//	{
+//		out++;
+//
+//		if (out >= 0x3FFFFF)
+//		{
+//			break;
+//		}
+//	}
 #endif
 
 	return out;
