@@ -624,6 +624,7 @@ int main(int argc, char* argv[]){
 
   // initialize nvm logger
   nvm_event_log_init();
+  event_log_init();
 
   if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
 	  	system_set_rtc_date(main_year, main_month, main_day_of_month);
@@ -1477,6 +1478,7 @@ int main(int argc, char* argv[]){
 							}
 							if (create_result == pdPASS) {
 								event_log_rtos_running = 1;
+								dallas_rtos_running = 1;
 								NVIC_EnableIRQ(EXTI0_IRQn);
 								/* Start the scheduler. */
 								vTaskStartScheduler();

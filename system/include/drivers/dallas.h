@@ -33,6 +33,8 @@ extern "C" {
 extern volatile int delay_5us;
 extern volatile char timm;
 
+extern uint8_t dallas_rtos_running;
+
 typedef struct dallas_struct_t {
 	GPIO_TypeDef* GPIOx;           /*!< GPIOx port to be used for I/O functions */
 	uint16_t GPIO_Pin;             /*!< GPIO Pin to be used for I/O functions */

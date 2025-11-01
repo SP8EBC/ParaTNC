@@ -21,10 +21,16 @@
 #include "etc/dallas_temperature_limits.h"
 #include <string.h>
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 volatile int delay_5us = 0;
 volatile char timm = 0;
 
 dallas_struct_t dallas;
+
+uint8_t dallas_rtos_running = 0;
 
 static void dallas_delay_stop(void) {
 	TIM2->CR1 &= (0xFFFFFFFF ^ TIM_CR1_CEN);
@@ -202,6 +208,10 @@ float __attribute__((optimize("O0"))) dallas_query(dallas_qf_t *qf) {
 	unsigned temp3;
 	float temperature = 0.0f;
 
+	if (dallas_rtos_running) {
+		taskENTER_CRITICAL();
+	}
+
 	// ENABLE ONEWIRE DELAY TIMER
 	dallas_config_timer();
 
@@ -219,6 +229,10 @@ float __attribute__((optimize("O0"))) dallas_query(dallas_qf_t *qf) {
 
 	// DISABLE ONEWIRE DELAY TIMER
 	dallas_deconfig_timer();
+
+	if (dallas_rtos_running) {
+		taskEXIT_CRITICAL();
+	}
 
 	crc = dallas_calculate_crc8(data, 8);
 

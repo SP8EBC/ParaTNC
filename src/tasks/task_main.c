@@ -331,35 +331,6 @@ void task_main( void * parameters )
 				}
 
 				/**
-				 * ONE MINUTE POOLING
-				 */
-				if (main_one_minute_pool_timer < 10) {
-
-				} // end of one minute
-
-				/**
-				 * ONE SECOND POOLING
-				 */
-				if (main_one_second_pool_timer < 10) {
-
-				}	// end of one second pooler
-				else if (main_one_second_pool_timer < -10) {
-//
-//					if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-//						analog_anemometer_direction_reset();
-//					}
-//
-//					main_one_second_pool_timer = 1000;
-				}
-
-				/**
-				 * TWO SECOND POOLING
-				 */
-				if (main_two_second_pool_timer < 10) {
-
-				}	// end of two second pooling
-
-				/**
 				 * FOUR SECOND POOLING
 				 */
 				if (main_four_second_pool_timer < 10) {
@@ -377,14 +348,6 @@ void task_main( void * parameters )
 					}
 		#endif
 				}	// end of four second pooling
-
-				/**
-				 * TEN SECOND POOLING
-				 */
-				if (main_ten_second_pool_timer < 10) {
-
-					main_ten_second_pool_timer = 10000;
-				} 	// end of ten second pooling
 
 			  backup_reg_set_monitor(10);
 
