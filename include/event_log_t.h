@@ -54,6 +54,7 @@ typedef enum event_log_source_t {
 	EVENT_SRC_DRV_I2C,			 /**< EVENT_SRC_DRV_I2C */
 	EVENT_SRC_DRV_UART,			 /**< EVENT_SRC_DRV_UART */
 	EVENT_SRC_DRV_SPI,			 /**< EVENT_SRC_DRV_SPI */
+	EVENT_SRC_FANET
 } event_log_source_t;
 
 /**

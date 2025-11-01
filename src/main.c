@@ -142,6 +142,7 @@
 #include "tasks/task_event_apris_msg_triggers.h"
 #include "tasks/task_event_radio_message.h"
 #include "tasks/task_event_api_ntp.h"
+#include "tasks/task_fanet.h"
 
 #include "etc/tasks_list.h"
 
@@ -1339,14 +1340,11 @@ int main(int argc, char* argv[]){
 	   pwr_save_switch_mode_to_c0();
    }
 
-#ifdef SX1262_IMPLEMENTATION
 	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
-	supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 
 	sx1262_init();
 
    fanet_test_init();
-#endif
 
    //rte_main_battery_voltage = io_vbat_meas_get_synchro();
 
@@ -1354,13 +1352,6 @@ int main(int argc, char* argv[]){
 
    // sleep a little bit and wait for everything to power up completely
    delay_fixed(1000);
-
-#ifdef SX1262_IMPLEMENTATION
-//   sx1262_status_get(&mode, &command_status);
-//
-//   uint16_t interrupt_mask = 0;
-//   sx1262_irq_dio_get_mask(&interrupt_mask);
-#endif
 
    led_control_led1_upper(true);
    led_control_led2_bottom(false);

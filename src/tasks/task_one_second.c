@@ -54,18 +54,6 @@ void task_one_second (void *parameters)
 
 		button_debounce ();
 
-#ifdef SX1262_IMPLEMENTATION
-		supervisor_iam_alive (SUPERVISOR_THREAD_MAIN_LOOP);
-		supervisor_iam_alive (SUPERVISOR_THREAD_SEND_WX);
-
-		const int retval = fanet_test ();
-
-		if (retval != 0) {
-			event_log_sync (EVENT_INFO_CYCLIC, EVENT_SRC_MAIN, EVENTS_MAIN_CYCLIC, 0, 0, 0, 0,
-							0xDDCCBBAA, retval);
-		}
-#endif
-
 #ifdef PARAMETEO
 		if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
 			if (gsm_sim800_tcpip_tx_busy () == 0) {

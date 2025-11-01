@@ -170,40 +170,6 @@ void task_main( void * parameters )
 
 				backup_reg_set_monitor(11);
 
-				// if new packet has been received from radio channel
-				if(ax25_new_msg_rx_flag == 1) {
-
-//					// if serial port is currently not busy on transmission
-//					if (main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TXING) {
-//						memset(kiss_srl_ctx->srl_tx_buf_pointer, 0x00, kiss_srl_ctx->srl_tx_buf_ln);
-//
-//						if (main_kiss_enabled == 1) {
-//							// convert message to kiss format and send it to host
-//							srl_start_tx(main_kiss_srl_ctx_ptr, kiss_send_ax25_to_host(ax25_rxed_frame.raw_data, (ax25_rxed_frame.raw_msg_len - 2), main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, main_kiss_srl_ctx_ptr->srl_tx_buf_ln));
-//						}
-//					}
-//
-//					main_ax25.dcd = false;
-//
-//					// check this frame against other frame in visvous buffer waiting to be transmitted
-//					digi_check_with_viscous(&ax25_rxed_frame);
-//
-//					// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-//					digi_process(&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
-//
-//					ax25_new_msg_rx_flag = 0;
-//					rx10m++;
-//		#ifdef PARAMETEO
-//					rte_main_rx_total++;
-//
-//					// if aprsis is logged
-//					if (aprsis_connected == 1 && gsm_sim800_tcpip_tx_busy() == 0) {
-//						aprsis_igate_to_aprsis(&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
-//					}
-//
-//		#endif
-				}
-
 				// if Victron VE.direct client is enabled
 				if (main_config_data_mode->victron == 1) {
 		#ifndef PARAMETEO

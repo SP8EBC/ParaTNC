@@ -6,26 +6,44 @@
  */
 
 #include "main.h"
-#include "main_getters_for_task.h"
 #include "main_freertos_externs.h"
-#include "main_gsm_pool_handler.h"
-#include "rte_main.h"
-#include "rte_wx.h"
+#include "main_getters_for_task.h"
+
+#include "fanet_app.h"
 
 #include <FreeRTOS.h>
 #include <task.h>
 
-void task_fanet( void * parameters )
+#include "event_log.h"
+#include "events_definitions/events_fanet.h"
+
+static uint8_t fanet_fail_counter = 0;
+static uint8_t fanet_success_counter = 0;
+
+
+void task_fanet (void *parameters)
 {
+	(void)parameters;
 	while (1) {
 		// wait infinite amount of time for event from a serial port indicating that
-		(void)xEventGroupWaitBits (main_eventgroup_handle_radio_message,
-								   MAIN_EVENTGROUP_RADIO_MESSAGE_RXED,
-								   pdTRUE,
-								   pdTRUE,
-								   0xFFFFFFFFu);
+		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_fanet,
+															   MAIN_EVENTGROUP_FANET_SEND_METEO,
+															   pdTRUE,
+															   pdTRUE,
+															   0xFFFFFFFFu);
 
+		if (bits_on_event == MAIN_EVENTGROUP_FANET_SEND_METEO) {
+
+			const int retval = fanet_test ();
+
+			if (retval != 0) {
+				fanet_fail_counter++;
+							event_log_sync (EVENT_ERROR, EVENT_SRC_FANET, EVENTS_FANET_FAIL_TO_SEND_METEO,
+				0, 0, 0, 0, 							0xDDCCBBAA, retval);
+			}
+			else {
+				fanet_success_counter++;
+			}
+		}
 	}
 }
-
-

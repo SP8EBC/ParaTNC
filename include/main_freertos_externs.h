@@ -65,6 +65,8 @@
 #define MAIN_EVENTGROUP_SX1262_ISBUSY			(1 << 0)
 #define MAIN_EVENTGROUP_SX1262_INTERRUPT		(1 << 1)
 
+#define MAIN_EVENTGROUP_FANET_SEND_METEO		(1 << 0)
+
 // clang-format on
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -88,6 +90,9 @@ extern EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 extern EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 extern EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
+
+//! Declare a variable to hold the handle of the event group for triggering FANET.
+extern EventGroupHandle_t main_eventgroup_handle_fanet;
 
 //! a variable to hold the handle of the event group for sx1262 driver.
 extern EventGroupHandle_t main_eventgroup_handle_sx1262;

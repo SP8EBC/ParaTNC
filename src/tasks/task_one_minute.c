@@ -48,14 +48,11 @@ void task_one_minute (void *unused)
 		backup_reg_set_monitor (4);
 
 #ifdef SX1262_IMPLEMENTATION
-//				fanet_success_cnt = 0;
-//				fanet_fail_cnt = 0;
-//				fanet_tx_success_cnt = 0;
+		xEventGroupSetBits (main_eventgroup_handle_fanet,
+				MAIN_EVENTGROUP_FANET_SEND_METEO);
 #endif
 
-#ifndef _MUTE_OWN
 		packet_tx_handler (main_config_data_basic, main_config_data_mode);
-#endif
 
 		backup_reg_set_monitor (5);
 
