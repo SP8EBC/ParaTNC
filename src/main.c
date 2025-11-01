@@ -143,6 +143,8 @@
 #include "tasks/task_event_radio_message.h"
 #include "tasks/task_event_api_ntp.h"
 
+#include "etc/tasks_list.h"
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -188,6 +190,39 @@
 #define CONFIG_SECOND_RESTORED 				(1 << 3)
 #define CONFIG_SECOND_FAIL_RESTORING	  	(1 << 4)
 #define CONFIG_SECOND_CRC_OK				(1 << 5)
+
+
+// clang-format off
+/// ==================================================================================================
+///	X-MACROS
+/// ==================================================================================================
+
+#define MAIN_CREATE_TASK(task_entry_point, task_name_string, stack_size, params, priority, output_handle) 	\
+														\
+	const BaseType_t task_entry_point##_create_result = \
+					xTaskCreate( 	task_entry_point, 	\
+									task_name_string, 	\
+									(stack_size), 		\
+									( void * ) (params),\
+									priority, 			\
+									&(output_handle) );	\
+	if (task_entry_point##_create_result != pdPASS)			\
+	{														\
+		goto task_creation_failed;							\
+	}														\
+
+
+#define MAIN_EXPAND_TASKS_LIST											\
+								TASKS_LIST(MAIN_CREATE_TASK)			\
+																		\
+								main_scheduler_prestart_callback();		\
+								/* Start the scheduler. */				\
+								vTaskStartScheduler();					\
+	task_creation_failed:												\
+
+
+
+// clang-format on
 
 /**
  * A foreword about '#define' mess. This software is indented to run on at least two
@@ -354,12 +389,17 @@ static StaticEventGroup_t main_eventgroup_ntp_and_api_client;
 //! data associated with the event group used by driver code for sx1262 modem
 static StaticEventGroup_t main_eventgroup_sx1262;
 
+//! data associated with the event group triggering transmission of various FANET frames
+static StaticEventGroup_t main_eventgroup_fanet;
+
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
 static TaskHandle_t task_two_sec_handle = NULL;
 static TaskHandle_t task_ten_sec_handle = NULL;
 static TaskHandle_t task_one_min_handle = NULL;
+static TaskHandle_t task_fanet_handle = NULL;
 static TaskHandle_t task_ev_serial_kiss_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_kiss_tx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
@@ -383,6 +423,9 @@ EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 EventGroupHandle_t main_eventgroup_handle_radio_message;
 
 EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
+
+//! Declare a variable to hold the handle of the event group for triggering FANET.
+EventGroupHandle_t main_eventgroup_handle_fanet;
 
 //! a variable to hold the handle of the event group for sx1262 driver.
 EventGroupHandle_t main_eventgroup_handle_sx1262;
@@ -475,6 +518,13 @@ static void main_callback_serial_gsm_tx_done (srl_ctx_t *context)
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_GSM_TX_UART_EV;
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
+}
+
+static void main_scheduler_prestart_callback(void)
+{
+	event_log_rtos_running = 1;
+	dallas_rtos_running = 1;
+	NVIC_EnableIRQ(EXTI0_IRQn);
 }
 /********************************************************************/
 
@@ -1441,9 +1491,6 @@ int main(int argc, char* argv[]){
 	////////////////////////// FREERTOS       /////////////////////////////////
 	///
 
-	const UBaseType_t priority = tskIDLE_PRIORITY + 1;
-	BaseType_t create_result = pdFAIL;
-
 	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
@@ -1451,44 +1498,48 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_radio_message = xEventGroupCreateStatic( &main_eventgroup_new_radio_message_rx );
 	main_eventgroup_handle_ntp_and_api_client = xEventGroupCreateStatic( &main_eventgroup_ntp_and_api_client );
 	main_eventgroup_handle_sx1262 = xEventGroupCreateStatic( &main_eventgroup_sx1262 );
+	main_eventgroup_handle_fanet = xEventGroupCreateStatic( &main_eventgroup_fanet );
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
 
-	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE * 4, ( void * ) NULL, priority, &task_main_handle );
-	if ((create_result == pdPASS) && (main_mutex_gsm_tcpip != NULL)) {
-		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
-		if (create_result == pdPASS) {
-			create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_aprs_trigger_handle );
-			create_result = xTaskCreate( task_event_api_ntp, "tev_ntp_api", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_ntp_and_api_client );
-			create_result = xTaskCreate( task_event_radio_message, "tev_radio_message", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_radio_message_handle );
-			if (create_result == pdPASS) {
-				create_result = xTaskCreate( task_one_second, "task_one_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_one_sec_handle );
-				if (create_result == pdPASS) {
-					create_result = xTaskCreate( task_two_second, "task_two_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_two_sec_handle );
-					if (create_result == pdPASS) {
-						create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ten_sec_handle );
-						create_result = xTaskCreate( task_one_minute, "task_one_min", configMINIMAL_STACK_SIZE * 2, ( void * ) NULL, priority + 5, &task_one_min_handle );			// stack overflow
-						if (create_result == pdPASS) {
+	MAIN_EXPAND_TASKS_LIST
 
-							if (create_result == pdPASS) {
-								create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
-								create_result = xTaskCreate( task_event_kiss_tx_done, "tev_serial_kiss_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_tx_done_handle );
-								create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
-								create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
-							}
-							if (create_result == pdPASS) {
-								event_log_rtos_running = 1;
-								dallas_rtos_running = 1;
-								NVIC_EnableIRQ(EXTI0_IRQn);
-								/* Start the scheduler. */
-								vTaskStartScheduler();
-							}
-						}
-					}
-				}
-			}
-		}
-    }
+
+//	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE * 4, ( void * ) NULL, priority, &task_main_handle );
+//	if ((create_result == pdPASS) && (main_mutex_gsm_tcpip != NULL)) {
+//		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
+//		if (create_result == pdPASS) {
+//			create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_aprs_trigger_handle );
+//			create_result = xTaskCreate( task_event_api_ntp, "tev_ntp_api", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_ntp_and_api_client );
+//			create_result = xTaskCreate( task_event_radio_message, "tev_radio_message", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_radio_message_handle );
+//			if (create_result == pdPASS) {
+//				create_result = xTaskCreate( task_one_second, "task_one_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_one_sec_handle );
+//				if (create_result == pdPASS) {
+//					create_result = xTaskCreate( task_two_second, "task_two_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_two_sec_handle );
+//					if (create_result == pdPASS) {
+//						create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ten_sec_handle );
+//						create_result = xTaskCreate( task_one_minute, "task_one_min", configMINIMAL_STACK_SIZE * 2, ( void * ) NULL, priority + 5, &task_one_min_handle );			// stack overflow
+//						if (create_result == pdPASS) {
+//
+//							if (create_result == pdPASS) {
+//								create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
+//								create_result = xTaskCreate( task_event_kiss_tx_done, "tev_serial_kiss_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_tx_done_handle );
+//								create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
+//								create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
+//							}
+//							if (create_result == pdPASS) {
+//								event_log_rtos_running = 1;
+//								dallas_rtos_running = 1;
+//								NVIC_EnableIRQ(EXTI0_IRQn);
+//								/* Start the scheduler. */
+//								vTaskStartScheduler();
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//    }
 
 	///
 	///////////////////////////////////////////////////////////////////////////
