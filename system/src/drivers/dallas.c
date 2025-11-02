@@ -53,6 +53,8 @@ static void dallas_delay_start(void) {
 
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, float_average_t* average) {
 
+	(void)GPIO_PinSource;
+
 #ifdef STM32F10X_MD_VL
 	GPIO_InitTypeDef GPIO_input;
 	GPIO_InitTypeDef GPIO_output;
@@ -151,7 +153,10 @@ char dallas_reset(void) {
 		while (delay_5us != 0);
 		return -1;
 	}
-	else;
+	else
+	{
+		;
+	}
 	delay_5us = 100;		// delay 500us
 	while (delay_5us != 0);
 	return 0;

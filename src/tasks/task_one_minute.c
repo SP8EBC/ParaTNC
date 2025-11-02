@@ -16,11 +16,15 @@
 #include "rte_main.h"
 #include "rte_wx.h"
 
+#include "system_stm32l4xx.h"
+
 #include "packet_tx_handler.h"
 #include "io.h"
 #include "backup_registers.h"
 #include "gsm_comm_state_handler.h"
 #include "supervisor.h"
+#include "aprsis.h"
+#include "pwr_save.h"
 
 #include "events_definitions/events_main.h"
 #include "http_client/http_client.h"
@@ -41,11 +45,13 @@ void task_one_minute (void *unused)
 	const TickType_t xDelay = 60000 / portTICK_PERIOD_MS;
 
 	while (1) {
+		SUPERVISOR_MONITOR_CLEAR(TASK_ONE_MIN);
+
 		vTaskDelay (xDelay);
 
-		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 1);
 
-		backup_reg_set_monitor (4);
+		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
 
 #ifdef SX1262_IMPLEMENTATION
 		xEventGroupSetBits (main_eventgroup_handle_fanet,
@@ -54,10 +60,11 @@ void task_one_minute (void *unused)
 
 		packet_tx_handler (main_config_data_basic, main_config_data_mode);
 
-		backup_reg_set_monitor (5);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 2);
 
 #ifdef STM32L471xx
 		if (main_config_data_mode->gsm == 1 && (io_get_cntrl_vbat_g () == 1)) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 3);
 
 			if (http_client_connection_errors > HTTP_CLIENT_MAX_CONNECTION_ERRORS) {
 				NVIC_SystemReset ();
@@ -66,7 +73,11 @@ void task_one_minute (void *unused)
 
 		// send event log each 24 hours, but only once at the top of an hour
 		if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 21) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 4);
+
 			if (backup_reg_get_event_log_report_sent_radio () == 0) {
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 5);
+
 				// set status bit in non-volatile backup register not to loop over and over again in
 				// case of a restart
 				backup_reg_set_event_log_report_sent_radio ();
@@ -84,22 +95,31 @@ void task_one_minute (void *unused)
 				// definition MAIN_HOW_MANY_EVENTS_SEND_REPORT is not used here
 				// because NVM can contain less events
 				rte_main_trigger_radio_event_log = events_stat.zz_total;
+
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 6);
 			}
 		}
 		else {
 			// reset flag if the time is not 21:xx
 			backup_reg_reset_event_log_report_sent_radio ();
+
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 7);
 		}
 
 		if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1) &&
 			gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 8);
 
 			// send event log each 24 hours, but only once at the top of an hour
 			if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 19) {
 				if (backup_reg_get_event_log_report_sent_aprsis () == 0) {
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 9);
+
 					// set status bit in non-volatile backup register not to loop over and over
 					// again in case of a restart
 					backup_reg_set_event_log_report_sent_aprsis ();
+
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 10);
 
 					// extract events from NVM
 					const nvm_event_result_stats_t events_stat =
@@ -117,16 +137,22 @@ void task_one_minute (void *unused)
 
 					xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
 										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
+
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 11);
 				}
 			}
 			else {
 				// reset flag if the time is not 18:xx
 				backup_reg_reset_event_log_report_sent_aprsis ();
+
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 12);
 			}
 		}
 
 		if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1) &&
 			(pwr_save_is_currently_cutoff () == 0) && (io_get_cntrl_vbat_g () == 1)) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 13);
+
 			// this checks when APRS-IS was alive last time and when any packet
 			// has been sent to the server.
 			const int i_am_ok_with_aprsis = aprsis_check_connection_attempt_alive ();
@@ -155,6 +181,8 @@ void task_one_minute (void *unused)
 			}
 		}
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 14);
+
 		/**
 		 * ONE HOUR POOLING
 		 */
@@ -170,7 +198,11 @@ void task_one_minute (void *unused)
 				rte_main_reboot_req = 1;
 			}
 
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 15);
+
 			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 16);
+
 				xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
 									MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
 				// rte_main_trigger_gsm_aprsis_counters_packet = 1;
@@ -178,10 +210,14 @@ void task_one_minute (void *unused)
 #endif
 		} // end of one hour
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 17);
+
 		/**
 		 * SIX HOUR POOLING
 		 */
 		if (--main_six_hour_pool_timer < 0) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 18);
+
 			main_six_hour_pool_timer = 6;
 
 			event_log_sync (EVENT_INFO_CYCLIC,
@@ -194,6 +230,8 @@ void task_one_minute (void *unused)
 							rte_main_rx_total,
 							rte_main_tx_total);
 		}
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 18);
 
 		main_one_minute_pool_timer = 60000;
 

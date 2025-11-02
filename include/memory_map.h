@@ -45,7 +45,7 @@
 #define MEMORY_MAP_SRAM1_HFAULT_LOG_START				(SRAM2_BASE + SRAM2_SIZE - sizeof(uint32_t) * MEMORY_MAP_SRAM1_HFAULT_LOG_32BWORDS_SIZE)
 #define MEMORY_MAP_SRAM1_HFAULT_LOG_END					(SRAM2_BASE + SRAM2_SIZE - sizeof(uint32_t))       // last byte, which could be read and write
 
-#define MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE	18      //!< 16 entries + master time at the moment of failure + crc32
+#define MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE	30      //!< 14 entries (exec monitor and supervisor -> 28 words)  + master time at the moment of failure + crc32
 #define MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START           (MEMORY_MAP_SRAM1_SUPERVISOR_LOG_END - MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE * sizeof(uint32_t))
 #define MEMORY_MAP_SRAM1_SUPERVISOR_LOG_END             MEMORY_MAP_SRAM1_HFAULT_LOG_START - sizeof(uint32_t)
 

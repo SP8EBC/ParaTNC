@@ -211,9 +211,6 @@ void pwr_save_init(config_data_powersave_mode_t mode) {
  */
 void pwr_save_enter_stop2(void) {
 
-	// set 31st monitor bit
-	backup_reg_set_monitor(31);
-
 	// reload internal watchdog
 	main_reload_internal_wdg();
 
@@ -271,13 +268,9 @@ void pwr_save_after_stop2_rtc_wakeup_it(void) {
 
 	// if there is time left to exit from depp sleep
 	if (pwr_save_number_of_sleep_cycles > 0) {
-		backup_reg_set_monitor(15);
-
 		rte_main_woken_up = RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP;
 	}
 	else {
-		backup_reg_set_monitor(14);
-
 		rte_main_woken_up = RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP;
 		rte_main_woken_up_for_telemetry = 1;
 
@@ -323,9 +316,6 @@ void pwr_save_after_stop2_rtc_wakeup_it(void) {
 void pwr_save_exit_after_last_stop2_cycle(void) {
 
 	uint32_t counter = 0;
-
-	// set 30th minitor bit
-	backup_reg_set_monitor(30);
 
 	// unlock access to backup registers
 	pwr_save_unclock_rtc_backup_regs();
@@ -399,8 +389,6 @@ void pwr_save_exit_after_last_stop2_cycle(void) {
 	// reinitialize LEDs when controller goes out from sleep
 	it_handlers_inhibit_radiomodem_dcd_led = 0;
 	led_init();
-
-	backup_reg_set_monitor(29);
 }
 
 
@@ -831,8 +819,6 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	// calculate amount of STOP2 cycles
 	pwr_save_number_of_sleep_cycles = (int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
-	backup_reg_set_monitor(26);
-
 	// turn off leds to save power
 	it_handlers_inhibit_radiomodem_dcd_led = 1;
 	led_control_led1_upper(false);
@@ -898,8 +884,6 @@ void pwr_save_switch_mode_to_l7(uint16_t sleep_time) {
 	pwr_save_sleep_time_in_seconds = sleep_time;
 
 	pwr_save_enter_stop2();
-
-	backup_reg_set_monitor(25);
 }
 
 config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t * config,
@@ -929,8 +913,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	uint8_t schedule_from = 0, schedule_to = 0;
 
-	backup_reg_set_monitor(24);
-
 	// save previous state
 	pwr_save_previously_cutoff = pwr_save_currently_cutoff;
 
@@ -955,28 +937,20 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 	if (vbatt_current > PWR_SAVE_STARTUP_RESTORE_VOLTAGE_DEF) {
 		pwr_save_currently_cutoff = 0;
-
-		backup_reg_set_monitor(23);
 	}
 	else {
 		if (vbatt_current <= PWR_SAVE_CUTOFF_VOLTAGE_DEF && vbatt_average <= (PWR_SAVE_CUTOFF_VOLTAGE_DEF + PWR_SAVE_CUTOFF_AVG_VOLTAGE_MARGIN)) {
-			backup_reg_set_monitor(22);
-
 			// if the battery voltage is below cutoff level and the ParaMETEO controller is currently not cut off
 			pwr_save_currently_cutoff |= CURRENTLY_CUTOFF;
 		}
 		// check if battery voltage is below low voltage level
 		else if (vbatt_average <= PWR_SAVE_AGGRESIVE_POWERSAVE_VOLTAGE) {
-			backup_reg_set_monitor(21);
-
 			// if battery voltage is low swtich to aggressive powersave mode
 			pwr_save_currently_cutoff |= CURRENTLY_VBATT_LOW;
 
 		}
 
 	}
-
-	backup_reg_set_monitor(20);
 
 	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
@@ -985,7 +959,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_CUTOFF) != 0) {
-		backup_reg_set_monitor(19);
 
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
 		PWR_SAVE_PRESLEEP_CALLBACK(vbatt_current, vbatt_average);
@@ -1005,8 +978,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 	}
 
 	if ((pwr_save_currently_cutoff & CURRENTLY_VBATT_LOW) != 0) {
-		backup_reg_set_monitor(18);
-
 		psave_mode = PWSAVE_AGGRESV;
 	}
 
@@ -1187,8 +1158,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					}
 					else {		// WX
 						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
-							backup_reg_set_monitor(17);
-
 							// if there is more than two minutes to send wx packet
 							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
@@ -1240,8 +1209,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					}
 					else {		// WX + GSM (only)
 						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
-							backup_reg_set_monitor(17);
-
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to wx packet
 							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));				// TODO: !!!
 
@@ -1272,8 +1239,6 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 					}
 					else {		// WX
 						if (minutes_to_wx > WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES) {
-							backup_reg_set_monitor(17);
-
 							// if there is more than WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES minutes to send wx packet
 							pwr_save_switch_mode_to_l7((wx_frame_interval * 60) - (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES * 60));
 
@@ -1310,11 +1275,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(	const config_data_mode_t 
 		}
 	}
 
-	backup_reg_set_monitor(16);
-
 	//pwr_save_after_stop2_rtc_wakeup_it();
-
-	backup_reg_set_monitor(13);
 
 	// check if reset request is set to initial value
 	// if yes inhibit any explicit reset, not to spoil startup

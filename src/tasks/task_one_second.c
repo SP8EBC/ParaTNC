@@ -48,8 +48,6 @@ void task_one_second (void *parameters)
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 
-		backup_reg_set_monitor (6);
-
 		digi_pool_viscous ();
 
 		button_debounce ();
@@ -123,8 +121,6 @@ void task_one_second (void *parameters)
 		if ((io_get_cntrl_vbat_s () == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
 			analog_anemometer_direction_handler ();
 		}
-
-		backup_reg_set_monitor (7);
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_SEC);
 

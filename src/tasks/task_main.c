@@ -91,8 +91,6 @@ void task_main( void * parameters )
 	    {
 	    vTaskDelay( xDelay );
 
-		backup_reg_set_monitor(-1);
-
 		// system reset may be requested from various places in the application
 		if (rte_main_reboot_req == 1) {
 		    vTaskDelay( xDelay );
@@ -102,8 +100,6 @@ void task_main( void * parameters )
 		else {
 			;
 		}
-
-		  backup_reg_set_monitor(0);
 
 	#if defined(PARAMETEO)
 		  if (rte_main_woken_up == RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP) {
@@ -162,13 +158,9 @@ void task_main( void * parameters )
 
 				// reinitialize UART used to communicate with GPRS modem
 				srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
-
-		  		backup_reg_set_monitor(1);
 		  	}
 		  	else {
 	#endif
-
-				backup_reg_set_monitor(11);
 
 				// if Victron VE.direct client is enabled
 				if (main_config_data_mode->victron == 1) {
@@ -258,8 +250,6 @@ void task_main( void * parameters )
 
 				button_check_all(main_get_button_one_left(), main_get_button_two_right());
 
-				backup_reg_set_monitor(2);
-
 				// get all meteo measuremenets each 65 seconds. some values may not be
 				// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 				if (main_wx_sensors_pool_timer < 10) {
@@ -291,8 +281,6 @@ void task_main( void * parameters )
 						wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 					}
 
-					backup_reg_set_monitor(3);
-
 					main_wx_sensors_pool_timer = 65500;
 				}
 
@@ -314,8 +302,6 @@ void task_main( void * parameters )
 					}
 		#endif
 				}	// end of four second pooling
-
-			  backup_reg_set_monitor(10);
 
 	#if defined(PARAMETEO)
 			}	// else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)

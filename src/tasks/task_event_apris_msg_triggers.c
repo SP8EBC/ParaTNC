@@ -16,6 +16,8 @@
 
 #include "rte_main.h"
 
+#include "system_stm32l4xx.h"
+
 #include "kiss_communication/kiss_communication.h"
 #include "kiss_communication/kiss_communication_aprsmsg.h"
 #include "kiss_communication/kiss_communication_defs.h"

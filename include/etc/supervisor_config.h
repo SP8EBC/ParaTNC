@@ -18,6 +18,7 @@
 	ENTRY(	TASK_TWO_SEC,				5)								\
 	ENTRY(	TASK_TEN_SEC,				15)								\
 	ENTRY(	TASK_POWERSAV,				15)								\
+	ENTRY(	TASK_FANET,					65530)							\
 	ENTRY(	EVENT_NEW_RF,				65530)							\
 	ENTRY(	EVENT_SRL_GSM_RX_DONE,		300)							\
 	ENTRY(	EVENT_SRL_GSM_TX_DONE,		300)							\

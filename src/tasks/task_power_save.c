@@ -48,8 +48,6 @@ void task_power_save( void * parameters)
 			rte_main_average_battery_voltage = rte_main_battery_voltage;
 		}
 
-		backup_reg_set_monitor(8);
-
 	#ifdef PARAMETEO
 
 		if (rte_main_check_adc == 1) {
@@ -79,8 +77,6 @@ void task_power_save( void * parameters)
 		main_resume_task_for_psaving();
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_POWERSAV);
-
-		backup_reg_set_monitor(9);
 	}	//  wile(1)
 }
 

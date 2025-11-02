@@ -42,6 +42,8 @@ const static uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
+supervisor_tasks_checkpoints_t supervisor_execution_checkpoints = {0u};
+
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
@@ -51,35 +53,47 @@ const static uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
  */
 static void supervisor_store(void)
 {
-	uint32_t * ptr = (uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+	const uint8_t timestamp_idx = 		MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
+	const uint8_t checksum_idx = 		MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
+
+	const uint32_t timestamp = 			main_get_master_time();
+	uint32_t * monitor_checkpoints = 	(uint32_t *)&supervisor_execution_checkpoints;
+	uint32_t * ptr = 					(uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+	uint8_t ptr_it = 0;
 
 	uint32_t checksum = 0;
 
-	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i++)
+	// clear storage
+	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i++)	// currently 30 words
 	{
 		ptr[i] = 0;
 	}
 
-	ptr[0] = main_get_master_time();
-	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++) 
+	// save current supervisor timeout value AND execution checkpoint bitmask
+	// so increment iterator by 2, for each configured entry
+	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
 	{
-		if (i == (MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2))
+		if (i == (timestamp_idx))
 		{
 			break;
 		}
 		else
 		{
-			ptr[i + 1] = supervisor_last_im_alive[i];
+			ptr[ptr_it++] = (timestamp - supervisor_last_im_alive[i]);		// current value in miliseconds
+			ptr[ptr_it++] = monitor_checkpoints[i];
 		}
 	}
 
-	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1; i++)
+	// everything except checksum, stored in last word
+	for (int i = 0; i < checksum_idx; i++)
 	{
 		const uint32_t elem = ptr[i];
 		checksum += elem;
 	}
 
-	ptr[MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1] = 0xFFFFFFFFu - checksum;
+	// save current master time
+	ptr[timestamp_idx] 	= timestamp;
+	ptr[checksum_idx] 	= 0xFFFFFFFFu - checksum;
 }
 
 
@@ -167,6 +181,8 @@ void supervisor_start(void)
 {
 	// current time since bootup
 	const uint32_t current_time = main_get_master_time();
+
+	memset(&supervisor_execution_checkpoints, 0x00, sizeof(supervisor_tasks_checkpoints_t));
 
 	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++)
 	{

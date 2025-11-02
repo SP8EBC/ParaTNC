@@ -16,37 +16,8 @@
 #include <stm32f10x.h>
 #endif
 
-#define REGISTER_MONITOR	RTC->BKP5R
+//#define REGISTER_MONITOR	RTC->BKP5R
 
-/**
- * Inline used to trace an execution flow across main for(;;) loop and some
- * powersaving functions. In case of software fault it's value may help to trace
- * at witch point the crash has occured
- */
-inline void backup_reg_set_monitor(int8_t bit) {
-#ifdef STM32L471xx
-	// enable access to backup domain
-	PWR->CR1 |= PWR_CR1_DBP;
-
-	if (bit >= 0) {
-		REGISTER_MONITOR |= (1 << bit);
-
-	}
-	else {
-		REGISTER_MONITOR = 0;
-	}
-
-	PWR->CR1 &= (0xFFFFFFFF ^ PWR_CR1_DBP);
-#endif
-}
-
-inline uint32_t backup_reg_get_monitor(void) {
-#ifdef STM32L471xx
-	return REGISTER_MONITOR;
-#else
-	return 0;
-#endif
-}
 
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_WX					(1U)
 #define BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_BEACON				(1U << 1U)

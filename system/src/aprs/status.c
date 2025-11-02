@@ -112,7 +112,7 @@ void status_send_powersave_registers(void) {
    const uint32_t last_wakeup = backup_reg_get_last_wakeup_timestamp();
    const uint32_t sleep_counter = backup_reg_get_sleep_counter();
    const uint32_t wakeup_counter = backup_reg_get_wakeup_counter();
-   const uint32_t last_monitor = backup_reg_get_monitor();
+   const uint32_t last_monitor = 0u;
 
 	main_wait_for_tx_complete();
 

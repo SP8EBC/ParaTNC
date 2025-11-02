@@ -180,7 +180,7 @@
 // 2 -> last wakeup rtc time
 // 3 -> controller configuration status
 // 4 -> wakeup events MSB, sleep events LSB
-// 5 -> monitor
+// 5 -> // not used, previously used by monitor
 // 6 -> last sleep time
 // 7 -> weather and telemetry timers & counters
 
@@ -1468,7 +1468,7 @@ int main(int argc, char* argv[]){
 		   (uint8_t)main_powersave_state_at_bootup,
 		   rte_main_battery_voltage,
 		   rte_main_average_battery_voltage,
-		   backup_reg_get_monitor(),
+		   0u,
 		   backup_reg_get_sleep_counter());
 
 	main_nvm_timestamp = main_get_nvm_timestamp();
@@ -1538,7 +1538,6 @@ int main(int argc, char* argv[]){
   // Infinite loop
   while (1)
     {
-		backup_reg_set_monitor(-1);
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 

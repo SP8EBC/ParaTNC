@@ -113,7 +113,7 @@ that the program counter (PC) should be restored to after resuming from the exce
 #define DEBUG_STACKFRAME_CHECKSUM                                                    \
                                                                                      \
 	uint32_t sum = 0;                                                                \
-	for (int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {                      \
+	for (unsigned int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {                      \
 		sum += (*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + i) & 0x7FFFFFFFu); \
 	}                                                                                \
 	*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM) = sum + 9u;

@@ -121,8 +121,6 @@ void RTC_WKUP_IRQHandler (void)
 
 	rte_main_woken_up = RTE_MAIN_WOKEN_UP_RTC_INTERRUPT;
 
-	backup_reg_set_monitor (13);
-
 	main_reload_internal_wdg ();
 
 	// clear pending interrupt
