@@ -36,29 +36,41 @@ void task_ten_second( void * parameters )
 	const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
 
 	while(1) {
+		SUPERVISOR_MONITOR_CLEAR(TASK_TEN_SEC);
+
 		vTaskDelay (xDelay);
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 1);
+
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 2);
 
 			packet_tx_send_wx_frame();
 
 			rte_main_trigger_wx_packet = 0;
 		}
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 3);
+
 	#ifdef PARAMETEO
 		if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
 			rte_main_woken_up == 0) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 4);
 
 			gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
 
 			if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 5);
+
 				packet_tx_tcp_handler ();
 			}
 		}
 	#endif
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 6);
 
 		if (main_config_data_mode->wx_umb == 1) {
 			umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
@@ -68,7 +80,11 @@ void task_ten_second( void * parameters )
 			rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
 		}
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 7);
+
 		if (main_config_data_mode->wx_umb == 1) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 8);
+
 			const uint8_t umb_watchdog_state = umb_master_watchdog(&rte_wx_umb_context, master_time);
 
 			if (umb_watchdog_state == 1) {
@@ -86,6 +102,8 @@ void task_ten_second( void * parameters )
 			}
 		}
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 9);
+
 		if (main_config_data_mode->wx != 0) {
 
 			#ifdef STM32L471xx
@@ -97,6 +115,8 @@ void task_ten_second( void * parameters )
 					wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
 				}
 		}
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 10);
 
 		if (main_get_main_davis_serial_enabled() == 1) {
 

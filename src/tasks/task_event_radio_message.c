@@ -31,12 +31,16 @@ void task_event_radio_message (void *param)
 	srl_context_t *ctx = main_kiss_srl_ctx_ptr;
 
 	while (1) {
+		SUPERVISOR_MONITOR_CLEAR(EVENT_NEW_RF);
+
 		// wait infinite amount of time for event from a serial port indicating that
 		(void)xEventGroupWaitBits (main_eventgroup_handle_radio_message,
 								   MAIN_EVENTGROUP_RADIO_MESSAGE_RXED,
 								   pdTRUE,
 								   pdTRUE,
 								   0xFFFFFFFFu);
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 1);
 
 		// if serial port is currently not busy on transmission
 		if (ctx->srl_tx_state != SRL_TXING) {
@@ -52,6 +56,8 @@ void task_event_radio_message (void *param)
 			}
 		}
 
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 2);
+
 		main_ax25.dcd = false;
 
 		// check this frame against other frame in visvous buffer waiting to be transmitted
@@ -59,6 +65,8 @@ void task_event_radio_message (void *param)
 
 		// check if this packet needs to be repeated (digipeated) and do it if it is necessary
 		digi_process (&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 3);
 
 		ax25_new_msg_rx_flag = 0;
 		rx10m++;
@@ -71,6 +79,8 @@ void task_event_radio_message (void *param)
 		}
 
 #endif
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 4);
+
 		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_NEW_RF);
 
 	}	// while(1)

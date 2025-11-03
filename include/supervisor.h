@@ -93,4 +93,9 @@ int supervisor_check_have_postmortem(void);
  */
 void supervisor_start(void);
 
+/**
+ * @return non zero if supervisor is started
+ */
+int supervisor_is_started(void);
+
 #endif /* SUPERVISOR_H_ */

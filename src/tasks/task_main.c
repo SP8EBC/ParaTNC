@@ -89,7 +89,16 @@ void task_main( void * parameters )
 
 	  while (1)
 	    {
+		  if (supervisor_is_started() == 0)
+		  {
+			 supervisor_start();
+		  }
+
+		SUPERVISOR_MONITOR_CLEAR(MAIN_LOOP);
+
 	    vTaskDelay( xDelay );
+
+		SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 1);
 
 		// system reset may be requested from various places in the application
 		if (rte_main_reboot_req == 1) {
@@ -162,6 +171,8 @@ void task_main( void * parameters )
 		  	else {
 	#endif
 
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 2);
+
 				// if Victron VE.direct client is enabled
 				if (main_config_data_mode->victron == 1) {
 		#ifndef PARAMETEO
@@ -213,7 +224,11 @@ void task_main( void * parameters )
 					davis_rxcheck_packet_pooler();
 				}
 
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 3);
+
 				if (main_config_data_mode->wx_umb == 1) {
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 4);
+
 					// if some UMB data have been received
 					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
 						umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
@@ -230,6 +245,7 @@ void task_main( void * parameters )
 				}
 				// if modbus rtu master is enabled
 				else if (main_get_modbus_rtu_master_enabled() == 1 && io_get_cntrl_vbat_m() == 1) {
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 5);
 
 					if (rte_main_reset_modbus_rtu == 1) {
 						rte_main_reset_modbus_rtu = 0;
@@ -244,9 +260,13 @@ void task_main( void * parameters )
 	//				  rtu_serial_start();
 					}
 					else {
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 6);
+
 						rtu_serial_pool();
 					}
 				}
+
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 7);
 
 				button_check_all(main_get_button_one_left(), main_get_button_two_right());
 
@@ -254,6 +274,7 @@ void task_main( void * parameters )
 				// downloaded from sensors if _METEO and/or _DALLAS_AS_TELEM aren't defined
 				if (main_wx_sensors_pool_timer < 10) {
 					if ((main_config_data_mode->wx & WX_ENABLED) == 1 && (io_get_cntrl_vbat_s() == 1)) {
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 8);
 
 						// notice: UMB-master and Modbus-RTU uses the same UART
 						// so they cannot be enabled both at once
@@ -271,6 +292,8 @@ void task_main( void * parameters )
 							;
 						}
 
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 9);
+
 						// davis serial weather station is connected using UART / RS232 used normally
 						// for KISS communcation between modem and host PC
 						if (main_get_main_davis_serial_enabled() == 1) {
@@ -279,6 +302,8 @@ void task_main( void * parameters )
 
 						// get all measurements from 'internal' sensors (except wind which is handled separately)
 						wx_get_all_measurements(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
+
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 10);
 					}
 
 					main_wx_sensors_pool_timer = 65500;
@@ -289,9 +314,11 @@ void task_main( void * parameters )
 				 */
 				if (main_four_second_pool_timer < 10) {
 					main_four_second_pool_timer = 4000;
+					SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 11);
 
 		#ifdef PARAMETEO
 					if (rte_main_trigger_radio_event_log > 0 && io_get_cntrl_vbat_r() == 1) {
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 12);
 
 						// set a pointer to even in exposed form which will be sent now
 						const event_log_exposed_t * current_exposed_event = &rte_main_exposed_events[rte_main_trigger_radio_event_log - 1];
@@ -302,6 +329,7 @@ void task_main( void * parameters )
 					}
 		#endif
 				}	// end of four second pooling
+				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 13);
 
 	#if defined(PARAMETEO)
 			}	// else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)

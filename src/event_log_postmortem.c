@@ -98,11 +98,15 @@ void event_log_postmortem_checknstore_supervisor(void)
 
 		for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i+=2)
 		{
+			// current time after last call to supervisor in miliseconds
+			const uint32_t time = ptr[i];
+			const uint32_t checkpoints = ptr[i + 1];
+
 			event_log_sync(
 					EVENT_ERROR,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_POSTMORTEM_SUPERVISOR,
-					i, 0, 0, 0, ptr[i], ptr[i + 1]);
+					i, 0, 0, 0, time, checkpoints);
 
 			ptr[i] 		= 0;
 			ptr[i + 1] 	= 0;

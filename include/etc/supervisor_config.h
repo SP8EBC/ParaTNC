@@ -14,7 +14,7 @@
 	ENTRY(	SEND_WX,					180)							\
 	ENTRY(	MAIN_LOOP,					10)								\
 	ENTRY(	TASK_ONE_MIN,				77)								\
-	ENTRY(	TASK_ONE_SEC,				4)								\
+	ENTRY(	TASK_ONE_SEC,				1)								\
 	ENTRY(	TASK_TWO_SEC,				5)								\
 	ENTRY(	TASK_TEN_SEC,				15)								\
 	ENTRY(	TASK_POWERSAV,				15)								\

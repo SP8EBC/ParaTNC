@@ -153,8 +153,6 @@
 #define SOH 0x01
 #define MANUAL_RTC_SET
 
-//#define SX1262_IMPLEMENTATION
-
 #ifdef SX1262_IMPLEMENTATION
 #include "fanet_app.h"
 #endif
@@ -198,6 +196,9 @@
 ///	X-MACROS
 /// ==================================================================================================
 
+/**
+ * An entry creating single task
+ */
 #define MAIN_CREATE_TASK(task_entry_point, task_name_string, stack_size, params, priority, output_handle) 	\
 														\
 	const BaseType_t task_entry_point##_create_result = \
@@ -213,6 +214,9 @@
 	}														\
 
 
+/**
+ * Expands full list of tasks and starts FreeRTOS scheduler
+ */
 #define MAIN_EXPAND_TASKS_LIST											\
 								TASKS_LIST(MAIN_CREATE_TASK)			\
 																		\
@@ -357,11 +361,6 @@ static configuration_button_function_t main_button_two_right;
 static uint8_t main_davis_serial_enabled = 0;
 
 static uint8_t main_modbus_rtu_master_enabled = 0;
-
-#if defined(PARAMETEO)
-
-//static uint8_t main_continue_loop = 0;
-#endif
 
 /********************************************************************/
 /*************************FREE RTOS related**************************/
@@ -1477,8 +1476,6 @@ int main(int argc, char* argv[]){
 
 	packet_tx_meteo_counter = main_config_data_basic->wx_transmit_period - 1;
 
-	supervisor_start();
-
 	////////////////////////// FREERTOS       /////////////////////////////////
 	///
 
@@ -1494,43 +1491,6 @@ int main(int argc, char* argv[]){
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex();
 
 	MAIN_EXPAND_TASKS_LIST
-
-
-//	create_result = xTaskCreate( task_main, "task_main", configMINIMAL_STACK_SIZE * 4, ( void * ) NULL, priority, &task_main_handle );
-//	if ((create_result == pdPASS) && (main_mutex_gsm_tcpip != NULL)) {
-//		create_result = xTaskCreate( task_power_save, "task_powersave", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 1, &task_powersave_handle );
-//		if (create_result == pdPASS) {
-//			create_result = xTaskCreate( task_event_aprsis_msg_trigger, "tev_apris_trig", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_aprs_trigger_handle );
-//			create_result = xTaskCreate( task_event_api_ntp, "tev_ntp_api", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_ntp_and_api_client );
-//			create_result = xTaskCreate( task_event_radio_message, "tev_radio_message", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 2, &task_ev_radio_message_handle );
-//			if (create_result == pdPASS) {
-//				create_result = xTaskCreate( task_one_second, "task_one_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 3, &task_one_sec_handle );
-//				if (create_result == pdPASS) {
-//					create_result = xTaskCreate( task_two_second, "task_two_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 4, &task_two_sec_handle );
-//					if (create_result == pdPASS) {
-//						create_result = xTaskCreate( task_ten_second, "task_ten_sec", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 5, &task_ten_sec_handle );
-//						create_result = xTaskCreate( task_one_minute, "task_one_min", configMINIMAL_STACK_SIZE * 2, ( void * ) NULL, priority + 5, &task_one_min_handle );			// stack overflow
-//						if (create_result == pdPASS) {
-//
-//							if (create_result == pdPASS) {
-//								create_result = xTaskCreate( task_event_kiss_rx_done, "tev_serial_kiss", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_rx_done_handle );
-//								create_result = xTaskCreate( task_event_kiss_tx_done, "tev_serial_kiss_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_kiss_tx_done_handle );
-//								create_result = xTaskCreate( task_event_gsm_rx_done, "tev_serial_gsm_rx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_rx_done_handle );
-//								create_result = xTaskCreate( task_event_gsm_tx_done, "tev_serial_gsm_tx", configMINIMAL_STACK_SIZE, ( void * ) NULL, priority + 6, &task_ev_serial_gsm_tx_done_handle );
-//							}
-//							if (create_result == pdPASS) {
-//								event_log_rtos_running = 1;
-//								dallas_rtos_running = 1;
-//								NVIC_EnableIRQ(EXTI0_IRQn);
-//								/* Start the scheduler. */
-//								vTaskStartScheduler();
-//							}
-//						}
-//					}
-//				}
-//			}
-//		}
-//    }
 
 	///
 	///////////////////////////////////////////////////////////////////////////
