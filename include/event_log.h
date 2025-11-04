@@ -89,6 +89,31 @@ int8_t event_log_sync (event_log_severity_t severity,
 					 uint32_t lparam,
 					 uint32_t lparam2);
 
+/**
+ * Stores an event synchronously to all target areas, version with all wparams
+ * @param severity
+ * @param source
+ * @param event_id
+ * @param param
+ * @param param2
+ * @param wparam
+ * @param wparam2
+ * @param wparam3
+ * @param lparam
+ * @param lparam2
+ * @return
+ */
+int8_t event_log_sync_triple (event_log_severity_t severity,
+		 event_log_source_t source,
+		 uint8_t event_id,
+		 uint8_t param,
+		 uint8_t param2,
+		 uint16_t wparam,
+		 uint16_t wparam2,
+		 uint16_t wparam3,
+		 uint32_t lparam,
+		 uint32_t lparam2);
+
 const char * event_log_severity_to_str(event_log_severity_t severity);
 
 /**

@@ -13,9 +13,17 @@
 
 #include "./events_definitions/events_main.h"
 
+#include <string.h>
+
 #ifdef STM32L471xx
 #include <stm32l4xx.h>
 #endif
+
+/// ==================================================================================================
+///	LOCAL DEFINITIONS
+/// ==================================================================================================
+
+// (wparam1 |= ((task_name_string[2]) << 8u))
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -90,23 +98,102 @@ void event_log_postmortem_checknstore_hardfault(void)
  */
 void event_log_postmortem_checknstore_supervisor(void)
 {
+	// very local (??) helper macro, can be used for 16 and 32 bit ints
+	// make very little sense to use this for 8-bit
+#define _PUT_TASKNAME_INTO_WORD(target, char_from_begining, nibble) \
+	target |= (task_name_string[char_from_begining] << (nibble * 8))
+
+	// check if there is anything stored, by calculating checksum
 	const int have = supervisor_check_have_postmortem();
+
+	// all of those used to store task name
+	uint8_t param1 = 0, param2 = 0;
+	uint16_t wparam1 = 0, wparam2 = 0;
+	uint32_t lparam = 0;
 
 	if (have != 0)
 	{
-		uint32_t * ptr = (uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+		// pointer to the begining of supervisor log SRAM1 area
+		volatile uint32_t * ptr = (volatile uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
 
+		// log in this area is stored in the same order than an enum @link{supervisor_watchlist_t}
 		for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i+=2)
 		{
-			// current time after last call to supervisor in miliseconds
-			const uint32_t time = ptr[i];
+			// time in miliseconds, since last call to the supervisor
+			const uint32_t time = ptr[i] & 0x00FFFFFFu;
+
+			// time since last call to supervisor rescaled to 20ms increment
+			// 1   -> 20ms
+			// 10  -> 200ms
+			// 50  -> 1000ms
+			// 300 -> 6000ms
+			uint16_t scaled_time = 0u;
+
+			// check if it is possible to do a rescale
+			if (time > 1310700u)
+			{
+				// set fied value if time since last call to supervisor
+				// is greater than 1310 seconds ago
+				scaled_time = 65535u;
+			}
+			else
+			{
+				scaled_time = time / 20u;
+			}
+
+			// task id which is stored here
+			const supervisor_watchlist_t task = (supervisor_watchlist_t)((ptr[i] & 0xFF000000u) >> 24);
+
+			// sanity check if this task is valid
+			if (task >= SUPERVISOR_THREAD_COUNT)
+			{
+				continue;
+			}
+
+			// get a name of this task
+			const char * const task_name_string = supervisor_descriptions[task];
+
+			// get length of this name
+			const size_t name_len = strlen (task_name_string);
+
+			// get checkpoints
 			const uint32_t checkpoints = ptr[i + 1];
 
-			event_log_sync(
+			// we can save only 10 characters of the name.
+			// if the name is short, put everything from the begining
+			if (name_len <= 10) {
+				(name_len >= 1) ? (param1 = task_name_string[0]) : (param1 = 0u);
+				(name_len >= 2) ? (param2 = task_name_string[1]) : (param2 = 0u);
+				(name_len >= 3) ? _PUT_TASKNAME_INTO_WORD (wparam1, 2, 1) : have;
+				(name_len >= 4) ? _PUT_TASKNAME_INTO_WORD (wparam1, 3, 0) : have;
+				(name_len >= 5) ? _PUT_TASKNAME_INTO_WORD (wparam2, 4, 1) : have;
+				(name_len >= 6) ? _PUT_TASKNAME_INTO_WORD (wparam2, 5, 0) : have;
+				(name_len >= 7) ? _PUT_TASKNAME_INTO_WORD (lparam, 6, 3) : (uint32_t)have;
+				(name_len >= 8) ? _PUT_TASKNAME_INTO_WORD (lparam, 7, 2) : (uint32_t)have;
+				(name_len >= 9) ? _PUT_TASKNAME_INTO_WORD (lparam, 8, 1) : (uint32_t)have;
+				(name_len >= 10) ? _PUT_TASKNAME_INTO_WORD (lparam, 9, 0) : (uint32_t)have;
+			}
+			else {
+				// if name is longer than 10 characters, use last 10 characters
+				param1 = task_name_string[name_len - 10];
+				param2 = task_name_string[name_len - 9];
+				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 8, 1);
+				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 7, 0);
+				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 6, 1);
+				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 5, 0);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 4, 3);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 3, 2);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 2, 1);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 1, 0);
+			}
+
+			event_log_sync_triple(
 					EVENT_ERROR,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_POSTMORTEM_SUPERVISOR,
-					i, 0, 0, 0, time, checkpoints);
+					param1, param2,						/* prams */
+					wparam1, wparam2, scaled_time,					/* wprams */
+					lparam, checkpoints);			/* lprams */
 
 			ptr[i] 		= 0;
 			ptr[i + 1] 	= 0;

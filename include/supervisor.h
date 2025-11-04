@@ -16,9 +16,15 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
+/**
+ * Create single entry of an enum with all monitored
+ */
 #define SUPERVISOR_MAKE_ENUM_TYPE(thread, timeout)				\
 		SUPERVISOR_THREAD_##thread,								\
 
+/**
+ * Create an single entry of structure with monitor checkpoints
+ */
 #define SUPERVISOR_MAKE_CHECKPOINTS_STRUCT(thread, timeout)	\
 		uint32_t monitor_##thread;				\
 
@@ -52,7 +58,7 @@ typedef enum supervisor_watchlist_t {
  * In case of supervisor fault the value might be somewhat helpful to debug
  * where the task got stuck.
  */
-typedef struct supervisor_tasks_markpoints_t  {
+typedef struct supervisor_tasks_checkpoints_t  {
 	SUPERVISOR_CONFIG(SUPERVISOR_MAKE_CHECKPOINTS_STRUCT)
 }supervisor_tasks_checkpoints_t;
 
@@ -64,6 +70,13 @@ typedef struct supervisor_tasks_markpoints_t  {
  * an instance of the structure with markpoints
  */
 extern supervisor_tasks_checkpoints_t supervisor_execution_checkpoints;
+
+/**
+ * Array of string representing each supervised task.
+ * @note an order of this array resembled the order of supervisor_watchlist_t
+ * @warning because of limited area in single log entry, only 10 last characters are used
+ */
+extern const char * const supervisor_descriptions[];
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

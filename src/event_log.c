@@ -145,6 +145,68 @@ int8_t event_log_sync (event_log_severity_t severity,
 	}
 }
 
+/**
+ * Stores an event synchronously to all targer areas
+ * @param severity
+ * @param source
+ * @param event_id
+ * @param param
+ * @param param2
+ * @param wparam
+ * @param wparam2
+ * @param lparam
+ * @param lparam2
+ * @return
+ */
+int8_t event_log_sync_triple (event_log_severity_t severity,
+					 event_log_source_t source,
+ 					 uint8_t event_id,
+					 uint8_t param,
+					 uint8_t param2,
+					 uint16_t wparam,
+					 uint16_t wparam2,
+					 uint16_t wparam3,
+					 uint32_t lparam,
+					 uint32_t lparam2)
+{
+	event_log_t new_event = {0u};
+
+	// left this to zero, to be automatically set to appropriate value by
+	// pushing function
+	new_event.event_counter_id = 0;
+
+	new_event.event_id = event_id;
+	new_event.event_master_time = main_get_master_time();
+	new_event.event_rtc = main_get_nvm_timestamp();
+	new_event.severity = EVENT_LOG_GET_SEVERITY(severity);
+	new_event.source = EVENT_LOG_GET_SOURCE(source);
+
+	new_event.param = param;
+	new_event.param2 = param2;
+	new_event.wparam = wparam;
+	new_event.wparam2 = wparam2;
+	new_event.wparam3 = wparam3;
+	new_event.lparam = lparam;
+	new_event.lparam2 = lparam2;
+
+	if (event_log_rtos_running) {
+		taskENTER_CRITICAL();
+	}
+
+	const nvm_event_result_t res = nvm_event_log_push_new_event(&new_event);
+
+	if (event_log_rtos_running) {
+		taskEXIT_CRITICAL();
+	}
+
+	if (res == NVM_EVENT_OK) {
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
 const char * event_log_severity_to_str(event_log_severity_t severity) {
 
 	switch (severity) {
