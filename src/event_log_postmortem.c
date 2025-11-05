@@ -23,8 +23,6 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
-// (wparam1 |= ((task_name_string[2]) << 8u))
-
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
 /// ==================================================================================================
@@ -101,7 +99,13 @@ void event_log_postmortem_checknstore_supervisor(void)
 	// very local (??) helper macro, can be used for 16 and 32 bit ints
 	// make very little sense to use this for 8-bit
 #define _PUT_TASKNAME_INTO_WORD(target, char_from_begining, nibble) \
-	target |= (task_name_string[char_from_begining] << (nibble * 8))
+	(target |= (task_name_string[char_from_begining] << (nibble * 8)))
+
+#define _PUT_UNDERSCORE_INTO_WORD(target, nibble) \
+	(target |= ('_' << (nibble * 8)))
+
+	const uint8_t timestamp_idx = 		MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
+	const uint8_t checksum_idx = 		MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
 
 	// check if there is anything stored, by calculating checksum
 	const int have = supervisor_check_have_postmortem();
@@ -119,6 +123,22 @@ void event_log_postmortem_checknstore_supervisor(void)
 		// log in this area is stored in the same order than an enum @link{supervisor_watchlist_t}
 		for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i+=2)
 		{
+			// last two 32-bit words contain a master time at the moment of sup fail and the checksum
+			if (i == timestamp_idx)
+			{
+				const uint32_t master_time_at_fail = ptr[i];
+
+				event_log_sync_triple(
+					EVENT_ERROR,
+					EVENT_SRC_MAIN,
+					EVENTS_MAIN_POSTMORTEM_SUPERVISOR,
+					0xFFu, 0xFFu,						/* prams */
+					0xDEADu, 0xBEEFu, 0x00u,					/* wprams */
+					master_time_at_fail, 0x00u);			/* lprams */
+				// no sense to store checksum
+				break;
+			}
+
 			// time in miliseconds, since last call to the supervisor
 			const uint32_t time = ptr[i] & 0x00FFFFFFu;
 
@@ -164,27 +184,27 @@ void event_log_postmortem_checknstore_supervisor(void)
 			if (name_len <= 10) {
 				(name_len >= 1) ? (param1 = task_name_string[0]) : (param1 = 0u);
 				(name_len >= 2) ? (param2 = task_name_string[1]) : (param2 = 0u);
-				(name_len >= 3) ? _PUT_TASKNAME_INTO_WORD (wparam1, 2, 1) : have;
-				(name_len >= 4) ? _PUT_TASKNAME_INTO_WORD (wparam1, 3, 0) : have;
-				(name_len >= 5) ? _PUT_TASKNAME_INTO_WORD (wparam2, 4, 1) : have;
-				(name_len >= 6) ? _PUT_TASKNAME_INTO_WORD (wparam2, 5, 0) : have;
-				(name_len >= 7) ? _PUT_TASKNAME_INTO_WORD (lparam, 6, 3) : (uint32_t)have;
-				(name_len >= 8) ? _PUT_TASKNAME_INTO_WORD (lparam, 7, 2) : (uint32_t)have;
-				(name_len >= 9) ? _PUT_TASKNAME_INTO_WORD (lparam, 8, 1) : (uint32_t)have;
-				(name_len >= 10) ? _PUT_TASKNAME_INTO_WORD (lparam, 9, 0) : (uint32_t)have;
+				(name_len >= 3) ? _PUT_TASKNAME_INTO_WORD (wparam1, 2, 0) : _PUT_UNDERSCORE_INTO_WORD(wparam1, 0);
+				(name_len >= 4) ? _PUT_TASKNAME_INTO_WORD (wparam1, 3, 1) : _PUT_UNDERSCORE_INTO_WORD(wparam1, 1);
+				(name_len >= 5) ? _PUT_TASKNAME_INTO_WORD (wparam2, 4, 0) : _PUT_UNDERSCORE_INTO_WORD(wparam2, 0);
+				(name_len >= 6) ? _PUT_TASKNAME_INTO_WORD (wparam2, 5, 1) : _PUT_UNDERSCORE_INTO_WORD(wparam2, 1);
+				(name_len >= 7) ? _PUT_TASKNAME_INTO_WORD (lparam, 6, 0) : _PUT_UNDERSCORE_INTO_WORD(lparam, 0);
+				(name_len >= 8) ? _PUT_TASKNAME_INTO_WORD (lparam, 7, 1) : _PUT_UNDERSCORE_INTO_WORD(lparam, 1);
+				(name_len >= 9) ? _PUT_TASKNAME_INTO_WORD (lparam, 8, 2) : _PUT_UNDERSCORE_INTO_WORD(lparam, 2);
+				(name_len >= 10) ? _PUT_TASKNAME_INTO_WORD (lparam, 9, 3) : _PUT_UNDERSCORE_INTO_WORD(lparam, 3);
 			}
 			else {
 				// if name is longer than 10 characters, use last 10 characters
 				param1 = task_name_string[name_len - 10];
 				param2 = task_name_string[name_len - 9];
-				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 8, 1);
-				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 7, 0);
-				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 6, 1);
-				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 5, 0);
-				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 4, 3);
-				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 3, 2);
-				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 2, 1);
-				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 1, 0);
+				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 8, 0);
+				_PUT_TASKNAME_INTO_WORD (wparam1, name_len - 7, 1);
+				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 6, 0);
+				_PUT_TASKNAME_INTO_WORD (wparam2, name_len - 5, 1);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 4, 0);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 3, 1);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 2, 2);
+				_PUT_TASKNAME_INTO_WORD (lparam, name_len - 1, 3);
 			}
 
 			event_log_sync_triple(
@@ -197,6 +217,11 @@ void event_log_postmortem_checknstore_supervisor(void)
 
 			ptr[i] 		= 0;
 			ptr[i + 1] 	= 0;
+
+			// clear local variables before next use
+			wparam1 = 0;
+			wparam2 = 0;
+			lparam = 0;
 
 		}
 
