@@ -52,6 +52,8 @@ typedef enum main_usart_mode_t {
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
+extern uint8_t main_rtos_is_runing;
+
 extern uint32_t main_flash_log_start;
 extern uint32_t main_flash_log_end;
 

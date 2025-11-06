@@ -40,6 +40,11 @@ void task_ten_second( void * parameters )
 
 		vTaskDelay (xDelay);
 
+		// connecting to aprs-is synchronously (in gsm_sim800_poolers_ten_seconds)
+		// may last longer than one second, so the supervisor must be reset
+		// just after the wait
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
+
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 1);
@@ -128,7 +133,6 @@ void task_ten_second( void * parameters )
 			// trigger consecutive LOOP packet
 			davis_trigger_loop_packet();
 		}
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
 
 		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 	}

@@ -365,6 +365,8 @@ static uint8_t main_modbus_rtu_master_enabled = 0;
 /********************************************************************/
 /*************************FREE RTOS related**************************/
 
+uint8_t main_rtos_is_runing = 0;
+
 //!
 static SemaphoreHandle_t main_mutex_gsm_tcpip;
 
@@ -522,6 +524,7 @@ static void main_callback_serial_gsm_tx_done (srl_ctx_t *context)
 
 static void main_scheduler_prestart_callback(void)
 {
+	main_rtos_is_runing = 1;
 	event_log_rtos_running = 1;
 	dallas_rtos_running = 1;
 	NVIC_EnableIRQ(EXTI0_IRQn);

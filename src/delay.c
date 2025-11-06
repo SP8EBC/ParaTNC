@@ -7,6 +7,10 @@
 
 #include "main.h"
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 int32_t preset_delay_msecs = 0;
 uint8_t preset_use_random = 0;
 
@@ -17,7 +21,17 @@ void delay_fixed(int32_t delay_in_msecs) {
 
 	delay_cnt = delay_in_msecs;
 
-	while(delay_cnt > 0);
+	/* Block for 60 seconds. */
+	const TickType_t xDelay = delay_in_msecs / portTICK_PERIOD_MS;
+
+	if (main_rtos_is_runing == 0)
+	{
+		while(delay_cnt > 0);
+	}
+	else
+	{
+		vTaskDelay (xDelay);
+	}
 
 	return;
 
@@ -29,8 +43,18 @@ uint32_t delay_fixed_with_count(int32_t delay_in_msecs) {
 
 	delay_cnt = delay_in_msecs;
 
-	while(delay_cnt > 0) {
-		ret++;
+	/* Block for 60 seconds. */
+	const TickType_t xDelay = delay_in_msecs / portTICK_PERIOD_MS;
+
+	if (main_rtos_is_runing == 0)
+	{
+		while(delay_cnt > 0) {
+			ret++;
+		}
+	}
+	else
+	{
+		vTaskDelay (xDelay);
 	}
 
 	return ret;

@@ -20,7 +20,6 @@
 static uint8_t fanet_fail_counter = 0;
 static uint8_t fanet_success_counter = 0;
 
-
 void task_fanet (void *parameters)
 {
 	(void)parameters;
@@ -38,8 +37,15 @@ void task_fanet (void *parameters)
 
 			if (retval != 0) {
 				fanet_fail_counter++;
-							event_log_sync (EVENT_ERROR, EVENT_SRC_FANET, EVENTS_FANET_FAIL_TO_SEND_METEO,
-				0, 0, 0, 0, 							0xDDCCBBAA, retval);
+				event_log_sync (EVENT_ERROR,
+								EVENT_SRC_FANET,
+								EVENTS_FANET_FAIL_TO_SEND_METEO,
+								fanet_fail_counter,
+								fanet_success_counter,
+								0,
+								0,
+								0xDDCCBBAA,
+								retval);
 			}
 			else {
 				fanet_success_counter++;
