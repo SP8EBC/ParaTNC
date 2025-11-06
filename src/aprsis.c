@@ -457,11 +457,6 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 						if (retval == 0) {
 							aprsis_logged = 1;
 
-							// trigger GSM status APRS-IS packet, when connection is ready
-							//rte_main_trigger_gsm_status = 1;
-							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-									MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS);
-
 							// set current timestamp as last
 							aprsis_last_keepalive_ts = master_time;
 
