@@ -8,8 +8,6 @@
 #include "station_config.h"
 #include "station_config_target_hw.h"
 
-#if defined(_ANEMOMETER_ANALOGUE_SPARKFUN) || defined(_ANEMOMETER_ANALOGUE)
-
 #define WIND_DEBUG
 
 #include "drivers/analog_anemometer.h"
@@ -108,11 +106,10 @@ uint8_t analog_anemometer__direction_freq_too_high = 0;
 
 #ifdef _ANEMOMETER_ANALOGUE
 int8_t  analog_anemometer_direction_mode = DIRECTION_REGULAR;
+#else
+int8_t  analog_anemometer_direction_mode = DIRECTION_OFF;
 #endif
 
-#ifdef _ANEMOMETER_ANALOGUE_SPARKFUN
-int8_t  analog_anemometer_direction_mode = DIRECTION_SPARKFUN;
-#endif
 
 // this array consists voltage ranges to calculate
 const int16_t analog_anemometer_direction_sparkfun_ranges[16][3] = {
@@ -846,5 +843,3 @@ analog_wind_qf_t analog_anemometer_get_qf(void) {
 	return out;
 
 }
-
-#endif

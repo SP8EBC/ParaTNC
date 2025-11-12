@@ -28,6 +28,7 @@ extern "C"
 {
 #endif
 
+uint8_t digi_is_enabled();
 void digi_init(const config_data_mode_t* const config_data_mode);
 uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const config, const config_data_mode_t* const config_mode);
 uint8_t digi_check_with_viscous(struct AX25Msg *msg);

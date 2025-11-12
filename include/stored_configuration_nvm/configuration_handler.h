@@ -55,6 +55,7 @@ const uint32_t * configuration_get_address(configuration_handler_region_t region
 
 int configuration_get_disable_dallas(void);
 int configuration_get_validate_parameters(void);
+int configuration_get_analog_anemometer_enabled(void);
 
 int configuration_get_inhibit_wx_pwr_handle(void);
 int configuration_get_early_tx_assert(void);

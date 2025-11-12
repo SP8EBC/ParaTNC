@@ -804,6 +804,19 @@ int configuration_get_validate_parameters(void) {
 	return out;
 }
 
+int configuration_get_analog_anemometer_enabled (void)
+{
+	int out = 0;
+
+	if (main_config_data_mode != 0) {
+		if (main_config_data_mode->wx_anemometer_pulses_constant != 0) {
+			out = 1;
+		}
+	}
+
+	return out;
+}
+
 int configuration_get_inhibit_wx_pwr_handle(void) {
 
 	int out = 0;

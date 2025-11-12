@@ -316,16 +316,16 @@ void EXTI9_5_IRQHandler (void)
 	// // IS BUSY
 	if (current_pending & EXTI_PR1_PIF7) {
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_SX1262_ISBUSY;
-	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+		NVIC_SetPendingIRQ (EXTI0_IRQn);
 
-		//sx1262_busy_released_callback ();
+		// sx1262_busy_released_callback ();
 		EXTI->PR1 |= EXTI_PR1_PIF7;
 	}
 
 	// INTERRUPT
 	if (current_pending & EXTI_PR1_PIF6) {
-		//it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_SX1262_INTERRUPT;
-	    //NVIC_SetPendingIRQ(EXTI0_IRQn);
+		// it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_SX1262_INTERRUPT;
+		// NVIC_SetPendingIRQ(EXTI0_IRQn);
 
 		sx1262_interrupt_callback ();
 		EXTI->PR1 |= EXTI_PR1_PIF6;
@@ -444,9 +444,9 @@ void TIM1_TRG_COM_TIM17_IRQHandler (void)
 	NVIC_ClearPendingIRQ (TIM1_TRG_COM_TIM17_IRQn);
 	TIM17->SR &= ~(1 << 0);
 
-#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-	analog_anemometer_timer_irq ();
-#endif
+	if (configuration_get_analog_anemometer_enabled () != 0) {
+		analog_anemometer_timer_irq ();
+	}
 }
 
 #ifdef STM32F10X_MD_VL
@@ -465,9 +465,9 @@ void DMA1_Channel5_IRQHandler ()
 	LL_DMA_ClearFlag_TC5 (DMA1);
 #endif
 
-#if defined(_ANEMOMETER_ANALOGUE) || defined(_ANEMOMETER_ANALOGUE_SPARKFUN)
-	analog_anemometer_dma_irq ();
-#endif
+	if (configuration_get_analog_anemometer_enabled () != 0) {
+		analog_anemometer_dma_irq ();
+	}
 }
 
 #ifdef STM32F10X_MD_VL
@@ -526,12 +526,12 @@ void DMA2_Channel5_IRQHandler ()
 
 	NVIC_ClearPendingIRQ (DMA2_Channel5_IRQn);
 
-	LL_DMA_DeInit(DMA2, LL_DMA_CHANNEL_5);
-	LL_DMA_Init(DMA2, LL_DMA_CHANNEL_5, &timer_config_DMA_InitStruct);
+	LL_DMA_DeInit (DMA2, LL_DMA_CHANNEL_5);
+	LL_DMA_Init (DMA2, LL_DMA_CHANNEL_5, &timer_config_DMA_InitStruct);
 
-	LL_DMA_EnableIT_TC(DMA2, LL_DMA_CHANNEL_5);
+	LL_DMA_EnableIT_TC (DMA2, LL_DMA_CHANNEL_5);
 
-	LL_DMA_EnableChannel(DMA2, LL_DMA_CHANNEL_5);
+	LL_DMA_EnableChannel (DMA2, LL_DMA_CHANNEL_5);
 }
 
 // void TIM7_IRQHandler (void)

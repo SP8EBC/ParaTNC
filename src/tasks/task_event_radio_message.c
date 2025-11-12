@@ -60,12 +60,13 @@ void task_event_radio_message (void *param)
 
 		main_ax25.dcd = false;
 
-		// check this frame against other frame in visvous buffer waiting to be transmitted
-		digi_check_with_viscous (&ax25_rxed_frame);
+		if (digi_is_enabled() != 0) {
+			// check this frame against other frame in visvous buffer waiting to be transmitted
+			digi_check_with_viscous (&ax25_rxed_frame);
 
-		// check if this packet needs to be repeated (digipeated) and do it if it is necessary
-		digi_process (&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
-
+			// check if this packet needs to be repeated (digipeated) and do it if it is necessary
+			digi_process (&ax25_rxed_frame, main_config_data_basic, main_config_data_mode);
+		}
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 3);
 
 		ax25_new_msg_rx_flag = 0;

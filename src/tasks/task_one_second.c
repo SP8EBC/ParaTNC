@@ -52,7 +52,9 @@ void task_one_second (void *parameters)
 
 		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 
-		digi_pool_viscous ();
+		if (digi_is_enabled() != 0) {
+			digi_pool_viscous ();
+		}
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 2);
 

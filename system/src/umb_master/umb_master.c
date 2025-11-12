@@ -17,6 +17,8 @@
 #include "event_log.h"
 #include "events_definitions/events_umb.h"
 
+#include "integers.h"
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -189,6 +191,11 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 	frame->lenght 			= serial_buffer[6] - 2;
 
 	if (serial_buffer[7] != STX) {
+		const uint32_t lparam1 = integers_dword_from_arr(serial_buffer, 0);
+		const uint32_t lparam2 = integers_dword_from_arr(serial_buffer, 4);
+		const uint16_t wparam1 = integers_word_from_arr(serial_buffer, 8);
+		const uint16_t wparam2 = integers_word_from_arr(serial_buffer, 10);
+
 		out = UMB_NOT_VALID_FRAME;
 
 		event_log_sync(
@@ -196,8 +203,8 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 				  EVENT_SRC_UMB,
 				  EVENTS_UMB_WARN_RECEIVED_FRAME_MALFORMED,
 				  0, serial_buffer[7],
-				  0, 0,
-				  0, 0);
+				  wparam1, wparam2,
+				  lparam1, lparam2);
 	}
 	else {
 
@@ -206,15 +213,20 @@ umb_retval_t umb_parse_serial_buffer_to_frame(uint8_t* serial_buffer, uint16_t b
 
 		// checking if payload isn't too big to fit into structure
 		if (frame->lenght >= UMB_FRAME_MAX_PAYLOAD_LN) {
+			const uint32_t lparam1 = integers_dword_from_arr(serial_buffer, 0);
+			const uint32_t lparam2 = integers_dword_from_arr(serial_buffer, 4);
+			const uint16_t wparam1 = integers_word_from_arr(serial_buffer, 8);
+			const uint16_t wparam2 = integers_word_from_arr(serial_buffer, 10);
+
 			out = UMB_RECV_FRAME_TOO_LONG;
 
 			event_log_sync(
 					  EVENT_WARNING,
 					  EVENT_SRC_UMB,
-					  EVENTS_UMB_WARN_RECEIVED_FRAME_MALFORMED,
+					  EVENTS_UMB_WARN_RECEIVED_FRAME_TOO_LONG,
 					  frame->lenght, 0,
-					  0, 0,
-					  0, 0);
+					  lparam1, lparam2,
+					  wparam1, wparam2);
 		}
 		else {
 			// Copying payload of the frame from a serial buffer
@@ -409,13 +421,20 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 
 				ctx->time_of_last_comms_timeout = master_time;
 
+				uint8_t * serial_buffer = srl_get_rx_buffer(ctx->serial_context);
+
+				const uint32_t lparam1 = integers_dword_from_arr(serial_buffer, 0);
+				const uint32_t lparam2 = integers_dword_from_arr(serial_buffer, 4);
+				const uint16_t wparam1 = integers_word_from_arr(serial_buffer, 8);
+				const uint16_t wparam2 = integers_word_from_arr(serial_buffer, 10);
+
 				event_log_sync(
 						  EVENT_ERROR,
 						  EVENT_SRC_UMB,
 						  EVENTS_UMB_ERROR_RECEIVING,
-						  0, 0,
-						  0, 0,
-						  0, 0);
+						  ctx->serial_context->srl_rx_error_reason, (uint8_t)(ctx->serial_context->srl_rx_bytes_req & 0xFFu),
+						  lparam1, lparam2,
+						  wparam1, wparam2);
 
 			}
 			break;

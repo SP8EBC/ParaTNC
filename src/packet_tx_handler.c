@@ -151,7 +151,7 @@ inline void packet_tx_multi_per_call_handler(void) {
 		main_wait_for_tx_complete();
 
 		// wait for any possible retransmission to kick in
-		delay_fixed(2000);
+		vTaskDelay (2000 / portTICK_PERIOD_MS);
 
 	   // reload watchdog counter
 		main_reload_internal_wdg();

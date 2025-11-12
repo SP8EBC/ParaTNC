@@ -27,11 +27,19 @@ AX25Call digi_path[7];
 uint8_t digi_call_len = 0;
 
 // digipeater working mode
-digi_mode_t digi_mode;
+static digi_mode_t digi_mode;
 
 uint8_t digi_viscous_delay_sec;
 uint8_t digi_viscous_counter_sec;
 
+uint8_t digi_is_enabled() {
+	if (digi_mode != DIGI_OFF) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
 
 void digi_init(const config_data_mode_t* const config_data_mode) {
 	digi_viscous_counter_sec = 0;
@@ -63,30 +71,6 @@ void digi_init(const config_data_mode_t* const config_data_mode) {
 	}
 
 	digi_viscous_delay_sec = config_data_mode->digi_viscous_delay_sec;
-
-//#ifdef _DIGI_VISCOUS
-//
-//	#ifdef _DIGI_ONLY_789
-//		digi_mode = DIGI_VISCOUS_SSID_WIDE1;
-//	#else
-//		digi_mode = DIGI_VISCOUS_ALL_WIDE1;
-//	#endif
-//
-//#else
-//
-//	#ifdef _DIGI_ONLY_789
-//		digi_mode = DIGI_ON_SSID_WIDE1;
-//	#else
-//		digi_mode = DIGI_ON_ALL_WIDE1;
-//	#endif
-//
-//#endif
-
-//#ifdef _DIGI_VISCOUS_DEALY
-//		digi_viscous_delay_sec =_DIGI_VISCOUS_DEALY;
-//#else
-//		digi_viscous_delay_sec = 3;
-//#endif
 }
 
 uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const config, const config_data_mode_t* const config_mode) {

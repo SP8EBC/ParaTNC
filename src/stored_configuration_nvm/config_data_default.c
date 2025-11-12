@@ -76,12 +76,6 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 		.wx_modbus = 0,
 #endif
 
-#ifdef _MODBUS_RTU
-		.wx_modbus = 1,
-#else
-		.wx_modbus = 0,
-#endif
-
 #ifdef _UMB_MASTER
 		.wx_umb = 1,
 #else
@@ -112,7 +106,11 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 		.wx_ms5611_or_bme = 0xFFu,
 #endif
 
+#ifdef _ANEMOMETER_ANALOGUE
 		.wx_anemometer_pulses_constant = _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED,
+#else
+		.wx_anemometer_pulses_constant = 0,
+#endif
 
 #ifdef _DIGI_ONLY_789
 		.digi_only_ssids = 1,

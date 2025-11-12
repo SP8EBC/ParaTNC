@@ -49,6 +49,9 @@ void task_one_minute (void *unused)
 
 		vTaskDelay (xDelay);
 
+		// must report twice because 'packet_tx_handler' has a call to vTaskDelay inside
+		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_MIN);
+
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_MIN, 1);
 
 		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
