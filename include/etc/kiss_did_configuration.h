@@ -82,7 +82,8 @@ extern char did_dummy_data;
 		ENTRY(0x2100U, aprsis_logged, aprsis_connected, aprsis_unsucessfull_conn_counter)	\
 		ENTRY(0x2200U, packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_telemetry_counter)	\
 		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
-		ENTRY(0x3000U, max31865_raw_result, max31865_physical_result, max31865_current_fault_status)	\
+		ENTRY(0x3000U, max31865_raw_result, max31865_merasurements_error_counter, max31865_current_fault_status)	\
+		ENTRY(0x3001U, max31865_measurements_counter, max31865_merasurements_error_counter, DID_EMPTY)	\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF000U, config_running_pgm_counter, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xFF00U, main_flash_log_start, main_flash_log_end, DID_EMPTY)	\

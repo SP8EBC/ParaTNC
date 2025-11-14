@@ -28,6 +28,9 @@ extern uint16_t max31865_raw_result;
 
 extern uint16_t max31865_physical_result;
 
+extern uint8_t max31865_measurements_counter;
+extern uint8_t max31865_merasurements_error_counter;
+
 void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index);
 void max31865_init_average(void);
 void max31865_pool(void);
