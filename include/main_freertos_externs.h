@@ -36,6 +36,13 @@
 #define MAIN_EVENTGROUP_SERIAL_GSM_RX_DONE		(1 << 1)
 #define MAIN_EVENTGROUP_SERIAL_GSM_TX_DONE		(1 << 2)
 #define MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE		(1 << 3)
+#define MAIN_EVENTGROUP_SERIAL_WX_RX_DONE		(1 << 4)
+#define MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR		(1 << 5)
+#define MAIN_EVENTGROUP_SERIAL_WX_TX_DONE		(1 << 6)
+
+#define MAIN_EVENTGROUP_SERIAL_WX	(MAIN_EVENTGROUP_SERIAL_WX_RX_DONE | \
+									MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR | \
+									MAIN_EVENTGROUP_SERIAL_WX_TX_DONE)
 
 #define MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK			(1 << 0)
 #define MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE		(1 << 1)
@@ -83,6 +90,8 @@ extern EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
 //! Event group blocking GSM 800 driver code until rx or tx from/to GSM modem is complete.
 extern EventGroupHandle_t main_eventgroup_handle_serial_gsm;
+
+extern EventGroupHandle_t main_eventgroup_handle_serial_sensor;
 
 //! Event group blocking GSM 800 driver code until rx or tx from/to GSM modem is complete.
 extern EventGroupHandle_t main_eventgroup_handle_aprs_trigger;

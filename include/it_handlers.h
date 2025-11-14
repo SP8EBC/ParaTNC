@@ -29,6 +29,9 @@
 #define IT_HANDLERS_PROXY_NEW_RADIO_MESSAGE_EV (1 << 4)
 #define IT_HANDLERS_PROXY_SX1262_INTERRUPT	   (1 << 5)
 #define IT_HANDLERS_PROXY_SX1262_ISBUSY		   (1 << 6)
+#define IT_HANDLERS_PROXY_WX_RX_UART_EV		   (1 << 7)
+#define IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV  (1 << 8)
+#define IT_HANDLERS_PROXY_WX_TX_UART_EV		   (1 << 9)
 
 /// ==================================================================================================
 ///	GLOBAL TYPES

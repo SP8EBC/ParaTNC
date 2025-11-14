@@ -97,13 +97,13 @@ void task_main( void * parameters )
 		SUPERVISOR_MONITOR_CLEAR(MAIN_LOOP);
 
 		// TODO: fixme please :)
-	    //vTaskDelay( xDelay );
+	    vTaskDelay( xDelay );
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 1);
 
 		// system reset may be requested from various places in the application
 		if (rte_main_reboot_req == 1) {
-		    vTaskDelay( xDelay );
+		    //vTaskDelay( xDelay );
 
 			NVIC_SystemReset();
 		}
@@ -230,22 +230,23 @@ void task_main( void * parameters )
 				if (main_config_data_mode->wx_umb == 1) {
 					SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 4);
 
-					// if some UMB data have been received
-					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
-						umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
-
-						if (rte_wx_umb_context.state == UMB_STATUS_RESPONSE_AVALIABLE) {
-							led_blink_led2_botoom();
-						}
-					}
-
-					// if there were an error during receiving frame from host, restart rxing once again
-					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-						umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
-					}
-
+//					// if some UMB data have been received
+//					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
+//						umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
+//
+//						if (rte_wx_umb_context.state == UMB_STATUS_RESPONSE_AVALIABLE) {
+//							led_blink_led2_botoom();
+//						}
+//					}
+//
+//					// if there were an error during receiving frame from host, restart rxing once again
+//					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+//						umb_pooling_handler(&rte_wx_umb_context, REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
+//					}
+//
 					if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
-						umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, main_config_data_umb);
+						xEventGroupSetBits(main_eventgroup_handle_serial_sensor, MAIN_EVENTGROUP_SERIAL_WX_TX_DONE);
+						//umb_pooling_handler(&rte_wx_umb_context, REASON_TRANSMIT_IDLE, master_time, main_config_data_umb);
 					}
 				}
 				// if modbus rtu master is enabled

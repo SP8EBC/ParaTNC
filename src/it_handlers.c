@@ -305,6 +305,69 @@ void EXTI0_IRQHandler (void)
 			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
 		}
 	}
+
+	// serial WX
+	if ((IT_HANDLERS_PROXY_WX_RX_UART_EV & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_sensor,
+											 MAIN_EVENTGROUP_SERIAL_WX_RX_DONE,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
+
+	// serial WX
+	if ((IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_sensor,
+											MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
+
+	// serial WX
+	if ((IT_HANDLERS_PROXY_WX_TX_UART_EV & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_sensor,
+											 MAIN_EVENTGROUP_SERIAL_WX_TX_DONE,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+	}
 }
 
 void EXTI9_5_IRQHandler (void)

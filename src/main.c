@@ -142,6 +142,7 @@
 #include "tasks/task_event_apris_msg_triggers.h"
 #include "tasks/task_event_radio_message.h"
 #include "tasks/task_event_api_ntp.h"
+#include "tasks/task_event_serial_sensor.h"
 #include "tasks/task_fanet.h"
 
 #include "etc/tasks_list.h"
@@ -376,8 +377,10 @@ static StaticEventGroup_t main_eventgroup_powersave;
 //! data associated with the event group for KISS host pc serial port
 static StaticEventGroup_t main_eventgroup_serial_kiss;
 
-//! data associated with the event group for KISS host pc serial port
+//! data associated with the event group for UART communication with GSM module
 static StaticEventGroup_t main_eventgroup_serial_gsm;
+
+static StaticEventGroup_t main_eventgroup_serial_sensor;
 
 //! data associated with the event group for KISS host pc serial port
 static StaticEventGroup_t main_eventgroup_aprs_trigger;
@@ -406,9 +409,11 @@ static TaskHandle_t task_ev_serial_kiss_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_kiss_tx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_tx_done_handle = NULL;
+static TaskHandle_t task_ev_serial_sensor_handle = NULL;
 static TaskHandle_t task_ev_aprs_trigger_handle = NULL;
 static TaskHandle_t task_ev_radio_message_handle = NULL;
 static TaskHandle_t task_ev_ntp_and_api_client = NULL;
+static TaskHandle_t task_ev_aprsis_trigger = NULL;
 
 
 //! Declare a variable to hold the handle of the created event group.
@@ -419,6 +424,9 @@ EventGroupHandle_t main_eventgroup_handle_serial_kiss;
 
 //! Declare a variable to hold the handle of the created event group.
 EventGroupHandle_t main_eventgroup_handle_serial_gsm;
+
+//! Declare a variable to hold the handle of the created event group.
+EventGroupHandle_t main_eventgroup_handle_serial_sensor;
 
 EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 
@@ -518,6 +526,28 @@ static void main_callback_serial_gsm_tx_done (srl_ctx_t *context)
 {
 	if (context->srl_tx_state == SRL_TX_IDLE) {
 		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_GSM_TX_UART_EV;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+	}
+}
+
+static void main_callback_serial_sensor_rx_done (srl_ctx_t *context)
+{
+	if (context->srl_rx_state == SRL_RX_DONE) {
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_WX_RX_UART_EV;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+	}
+
+	if (context->srl_rx_state == SRL_RX_ERROR) {
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV;
+	    NVIC_SetPendingIRQ(EXTI0_IRQn);
+	}
+
+}
+
+static void main_callback_serial_sensor_tx_done (srl_ctx_t *context)
+{
+	if (context->srl_tx_state == SRL_TX_IDLE) {
+		it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_WX_TX_UART_EV;
 	    NVIC_SetPendingIRQ(EXTI0_IRQn);
 	}
 }
@@ -1093,6 +1123,8 @@ int main(int argc, char* argv[]){
 		  break;
   }
 
+  srl_set_done_error_callback(main_wx_srl_ctx_ptr, main_callback_serial_sensor_rx_done, main_callback_serial_sensor_tx_done);
+
 #if defined(PARATNC)
   main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
@@ -1485,6 +1517,7 @@ int main(int argc, char* argv[]){
 	main_eventgroup_handle_powersave = xEventGroupCreateStatic( &main_eventgroup_powersave );
 	main_eventgroup_handle_serial_kiss = xEventGroupCreateStatic( &main_eventgroup_serial_kiss );
 	main_eventgroup_handle_serial_gsm = xEventGroupCreateStatic( &main_eventgroup_serial_gsm );
+	main_eventgroup_handle_serial_sensor = xEventGroupCreateStatic( &main_eventgroup_serial_sensor );
 	main_eventgroup_handle_aprs_trigger = xEventGroupCreateStatic( &main_eventgroup_aprs_trigger );
 	main_eventgroup_handle_radio_message = xEventGroupCreateStatic( &main_eventgroup_new_radio_message_rx );
 	main_eventgroup_handle_ntp_and_api_client = xEventGroupCreateStatic( &main_eventgroup_ntp_and_api_client );
