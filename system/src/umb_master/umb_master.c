@@ -413,6 +413,9 @@ umb_retval_t umb_pooling_handler(umb_context_t* ctx, umb_call_reason_t r, uint32
 					else
 						ctx->state = UMB_STATUS_ERROR;
 				}
+				else {
+					ctx->state = UMB_STATUS_ERROR;
+				}
 
 
 			}
