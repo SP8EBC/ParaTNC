@@ -45,6 +45,12 @@ void task_event_serial_sensor (void *param)
 
 				if (rte_wx_umb_context.state == UMB_STATUS_RESPONSE_AVALIABLE) {
 					led_blink_led2_botoom ();
+
+					// one more call to move state machine from UMB_STATUS_RESPONSE_AVALIABLE
+					umb_pooling_handler (&rte_wx_umb_context,
+										 REASON_RECEIVE_IDLE,
+										 master_time,
+										 main_config_data_umb);
 				}
 			}
 		}
