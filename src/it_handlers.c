@@ -293,7 +293,7 @@ void EXTI0_IRQHandler (void)
 											 MAIN_EVENTGROUP_SX1262_INTERRUPT,
 											 &xHigherPriorityTaskWoken);
 
-		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_INTERRUPT);
 
 		if (xResult != pdFAIL)
 
@@ -314,7 +314,7 @@ void EXTI0_IRQHandler (void)
 											 MAIN_EVENTGROUP_SERIAL_WX_RX_DONE,
 											 &xHigherPriorityTaskWoken);
 
-		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_WX_RX_UART_EV);
 
 		if (xResult != pdFAIL)
 
@@ -335,7 +335,7 @@ void EXTI0_IRQHandler (void)
 											MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR,
 											 &xHigherPriorityTaskWoken);
 
-		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV);
 
 		if (xResult != pdFAIL)
 
@@ -356,7 +356,7 @@ void EXTI0_IRQHandler (void)
 											 MAIN_EVENTGROUP_SERIAL_WX_TX_DONE,
 											 &xHigherPriorityTaskWoken);
 
-		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_SX1262_ISBUSY);
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_WX_TX_UART_EV);
 
 		if (xResult != pdFAIL)
 
