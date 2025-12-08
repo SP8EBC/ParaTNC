@@ -28,6 +28,10 @@
 
 #include "backup_registers.h"
 
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -58,6 +62,14 @@ uint8_t kiss_async_message_counter = 0;
  * If it is set to 0xFF then no async message is transmitted
  */
 uint8_t kiss_current_async_message = 0xFF;
+
+/**
+ * How many blocks of confgiguration data have been programmed by
+ * @link{kiss_callback_program_startup}
+ */
+uint8_t kiss_program_startup_counter = 0;
+
+uint8_t kiss_program_last_response[6] = {0u};
 
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
@@ -225,6 +237,7 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 #define ERASE_STARTUP_LN	6
 
 	if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
+		taskENTER_CRITICAL();
 
 		kiss_communication_nrc_t result = configuration_handler_erase_startup();
 
@@ -243,6 +256,7 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 
 		response_buffer[4] = (uint8_t)result;
 		response_buffer[5] = FEND;
+		taskEXIT_CRITICAL();
 
 		return ERASE_STARTUP_LN;
 	}
@@ -283,6 +297,8 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 	uint16_t config_block_offset = *(input_frame_from_host + 3) | (*(input_frame_from_host + 4) << 8);
 	
 	if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
+		taskENTER_CRITICAL();
+
 		result = configuration_handler_program_startup(data_ptr, data_size, config_block_offset);
 
 		// construct a response
@@ -296,11 +312,17 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 		}
 		else {
 			response_buffer[3] = KISS_NEGATIVE_RESPONSE_SERVICE;
-
 		}
 
 		response_buffer[4] = (uint8_t)result;
 		response_buffer[5] = FEND;
+
+		kiss_program_startup_counter++;
+		if (config_block_offset != 0)
+		{
+			memcpy(kiss_program_last_response, response_buffer, 6);
+		}
+		taskEXIT_CRITICAL();
 
 		return PROGRAM_STARTUP_LN;
 	}
