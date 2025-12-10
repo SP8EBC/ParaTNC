@@ -5,18 +5,21 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/kiss_protocol/diagnostics_services/kiss_did.c \
+../src/kiss_protocol/diagnostics_services/kiss_program_startup.c \
 ../src/kiss_protocol/diagnostics_services/kiss_read_memory.c \
 ../src/kiss_protocol/diagnostics_services/kiss_routine_control.c \
 ../src/kiss_protocol/diagnostics_services/kiss_security_access.c 
 
 OBJS += \
 ./src/kiss_protocol/diagnostics_services/kiss_did.o \
+./src/kiss_protocol/diagnostics_services/kiss_program_startup.o \
 ./src/kiss_protocol/diagnostics_services/kiss_read_memory.o \
 ./src/kiss_protocol/diagnostics_services/kiss_routine_control.o \
 ./src/kiss_protocol/diagnostics_services/kiss_security_access.o 
 
 C_DEPS += \
 ./src/kiss_protocol/diagnostics_services/kiss_did.d \
+./src/kiss_protocol/diagnostics_services/kiss_program_startup.d \
 ./src/kiss_protocol/diagnostics_services/kiss_read_memory.d \
 ./src/kiss_protocol/diagnostics_services/kiss_routine_control.d \
 ./src/kiss_protocol/diagnostics_services/kiss_security_access.d 

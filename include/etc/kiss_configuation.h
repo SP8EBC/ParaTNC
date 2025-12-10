@@ -15,6 +15,9 @@
 //! Simply maximum size of a response to a request
 #define KISS_CONFIG_DIAGNOSTIC_BUFFER_LN	38
 
+#define KISS_CONFIG_PROGRAM_STARTUP_BUFLN	128
+
+#define KISS_CONFIG_RECEIVE_SIZE	KISS_CONFIG_PROGRAM_STARTUP_BUFLN + 8
 
 
 #endif /* ETC_KISS_CONFIGUATION_H_ */

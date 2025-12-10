@@ -55,7 +55,7 @@ void task_event_kiss_rx_done (void *param)
 				if (ctx->srl_rx_state == SRL_RX_ERROR) {
 					SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 3);
 
-					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
+					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
 				}
 
 				else if (ctx->srl_rx_state == SRL_RX_DONE) {
@@ -73,6 +73,9 @@ void task_event_kiss_rx_done (void *param)
 					SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 5);
 					if (ln == 0) {
 						kiss10m++; // increase kiss messages counter
+
+						// restart KISS receiving to be ready for next frame
+						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
 					}
 					else if (ln > 0) {
 						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 6);
@@ -89,11 +92,35 @@ void task_event_kiss_rx_done (void *param)
 									   ln,
 									   SRL_INTERNAL);
 
+						// restart KISS receiving to be ready for next frame
+						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
+
 						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 8);
 					}
+					else {
+						// negative value means that restarting of serial port reception was done
+						// inside KISS protocol handling callback, so here only the response
+						// shall be send
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 10);
 
-					// restart KISS receiving to be ready for next frame
-					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, 120);
+						// real length of data to be returned
+						const uint32_t real_ln = -ln;
+
+						// wait for any pending transmission to complete
+						srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
+
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 11);
+
+						srl_send_data (main_kiss_srl_ctx_ptr,
+									   task_event_kiss_buffer,
+									   SRL_MODE_DEFLN,
+									   real_ln,
+									   SRL_INTERNAL);
+
+						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 12);
+
+					}
+
 				}
 
 				SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 9);

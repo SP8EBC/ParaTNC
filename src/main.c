@@ -1354,7 +1354,7 @@ int main(int argc, char* argv[]){
 #else
   if (main_kiss_enabled == 1) {
 	  // switching UART to receive mode to be ready for KISS frames from host
- 	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, 100);
+ 	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
   }
   else {
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
