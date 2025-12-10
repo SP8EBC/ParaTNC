@@ -21,8 +21,6 @@
 
 #include "supervisor.h"
 
-static uint8_t kiss_program_startup_buffer[KISS_CONFIG_PROGRAM_STARTUP_BUFLN];
-
 /**
  * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
  * what it receives and program. It is up to host PC to provide senseful configuration with properly calculated checksum as this isn't
