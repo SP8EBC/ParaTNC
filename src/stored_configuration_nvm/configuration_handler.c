@@ -14,6 +14,9 @@
 #include "main.h"
 
 #include "memory_map.h"
+#include "event_log.h"
+
+#include "events_definitions/events_main.h"
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
@@ -384,6 +387,14 @@ uint32_t configuration_handler_check_crc(void) {
 	if (crc_expected == crc_current) {
 		out |= 0x01;
 	}
+	else {
+		(void)event_log_sync (EVENT_ERROR,
+							  EVENT_SRC_MAIN,
+							  EVENTS_MAIN_CONFIG_FIRST_CRC_FAIL,
+							  0u, 0u,
+							  0u, 0u,
+							  crc_expected, crc_current);
+	}
 
 	// and do the same but for second section
 	crc_current = calcCRC32std(config_section_second_start, CRC_OFFSET - 4, 0x04C11DB7, 0xFFFFFFFF, 0, 0, 0);
@@ -394,6 +405,14 @@ uint32_t configuration_handler_check_crc(void) {
 	// check if calculated CRC value match value stored in flash memory
 	if (crc_expected == crc_current) {
 		out |= 0x02;
+	}
+	else {
+		(void)event_log_sync (EVENT_ERROR,
+							  EVENT_SRC_MAIN,
+							  EVENTS_MAIN_CONFIG_SECOND_CRC_FAIL,
+							  0u, 0u,
+							  0u, 0u,
+							  crc_expected, crc_current);
 	}
 	return out;
 }
@@ -481,11 +500,24 @@ uint32_t configuration_handler_restore_default_first(void) {
 				// quit from the
 				out = -1;
 
+				(void)event_log_sync (EVENT_ERROR,
+									  EVENT_SRC_MAIN,
+									  EVENTS_MAIN_CONFIG_FIRST_RESTORE,
+									  1u, 0u,
+									  0u, 0u,
+									  0u, 0u);
+
 				return out;
 			}
 		}
 	}
 	else {
+		(void)event_log_sync (EVENT_ERROR,
+							  EVENT_SRC_MAIN,
+							  EVENTS_MAIN_CONFIG_FIRST_RESTORE,
+							  2u, 0u,
+							  0u, 0u,
+							  0u, 0u);
 		return -2;
 	}
 
@@ -504,6 +536,13 @@ uint32_t configuration_handler_restore_default_first(void) {
 
 	// lock the memory back
 	FLASH_Lock();
+
+	(void)event_log_sync (EVENT_WARNING,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_CONFIG_FIRST_RESTORE,
+						  0u, 0u,
+						  0u, 0u,
+						  target_crc_value, 0u);
 
 	return out;
 
@@ -591,11 +630,25 @@ uint32_t configuration_handler_restore_default_second(void) {
 				// quit from the
 				out = -1;
 
+				(void)event_log_sync (EVENT_ERROR,
+									  EVENT_SRC_MAIN,
+									  EVENTS_MAIN_CONFIG_SECOND_RESTORE,
+									  1u, 0u,
+									  0u, 0u,
+									  0u, 0u);
+
 				return out;
 			}
 		}
 	}
 	else {
+		(void)event_log_sync (EVENT_ERROR,
+							  EVENT_SRC_MAIN,
+							  EVENTS_MAIN_CONFIG_SECOND_RESTORE,
+							  2u, 0u,
+							  0u, 0u,
+							  0u, 0u);
+
 		return -2;
 	}
 
@@ -609,11 +662,19 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 	out = configuration_handler_program_crc(target_crc_value, 2);
 
+
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
 
 	// lock the memory back
 	FLASH_Lock();
+
+	(void)event_log_sync (EVENT_WARNING,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_CONFIG_SECOND_RESTORE,
+						  0u, 0u,
+						  0u, 0u,
+						  target_crc_value, 0u);
 
 	return out;
 }

@@ -27,6 +27,9 @@
 #include <variant.h>
 
 #include "backup_registers.h"
+#include "event_log.h"
+
+#include "./events_definitions/events_kiss.h"
 
 /* FreeRTOS includes. */
 #include <FreeRTOS.h>
@@ -233,6 +236,13 @@ int32_t kiss_callback_erase_startup(uint8_t* input_frame_from_host, uint16_t inp
 		taskENTER_CRITICAL();
 
 		kiss_communication_nrc_t result = configuration_handler_erase_startup();
+
+		(void)event_log_sync (EVENT_WARNING,
+							  EVENT_SRC_KISS,
+							  EVENTS_DEFINITIONS_KISS_WARN_ERASING_STARTUP,
+							  result, 0u,
+							  0u, 0u,
+							  0u, 0u);
 
 		response_buffer[0] = FEND;
 		response_buffer[1] = NONSTANDARD;

@@ -20,6 +20,9 @@
 #include "etc/kiss_configuation.h"
 
 #include "supervisor.h"
+#include "event_log.h"
+
+#include "./events_definitions/events_kiss.h"
 
 /**
  * Callback which program configuration data block received from the Host PC. Please bear in mind that the TNC doesn't really take care
@@ -56,6 +59,13 @@ int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t i
 		taskENTER_CRITICAL();
 
 		result = configuration_handler_program_startup(data_ptr, data_size, config_block_offset);
+
+		(void)event_log_sync (EVENT_WARNING,
+							  EVENT_SRC_KISS,
+							  EVENTS_DEFINITIONS_KISS_WARN_FLASHING_STARTUP,
+							  result, data_size,
+							  config_block_offset, 0u,
+							  0u, 0u);
 
 		// construct a response
 		response_buffer[0] = FEND;
