@@ -73,6 +73,11 @@ void task_one_minute (void *unused)
 				NVIC_SystemReset ();
 			}
 		}
+		else {
+			// to make supervisor happy if GSM is not enabled by configuration
+			supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_GSM_RX_DONE);
+			supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_GSM_TX_DONE);
+		}
 
 		// send event log each 24 hours, but only once at the top of an hour
 		if (main_get_rtc_datetime (MAIN_GET_RTC_HOUR) == 21) {

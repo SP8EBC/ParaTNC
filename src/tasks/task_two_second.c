@@ -58,6 +58,10 @@ void task_two_second (void *parameters)
 
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TWO_SEC, 3);
 		}
+		else {
+			// make supervisor happy if weather station mode is not enabled
+			supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
+		}
 
 #ifdef PARAMETEO
 		if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
