@@ -19,6 +19,7 @@
 #include "io.h"
 #include "backup_registers.h"
 #include "packet_tx_handler.h"
+#include "pwr_save.h"
 
 void task_power_save( void * parameters)
 {

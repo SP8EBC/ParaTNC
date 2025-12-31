@@ -50,6 +50,8 @@ void task_event_aprsis_msg_trigger (void *param)
 															   pdFALSE,
 															   0xFFFFFFFFu);
 
+		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
+
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK) {
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
@@ -229,6 +231,8 @@ void task_event_aprsis_msg_trigger (void *param)
 			}
 		}
 		//supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
+
+		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
 
 	}	// while (1)
 }

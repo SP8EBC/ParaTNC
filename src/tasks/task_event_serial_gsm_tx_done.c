@@ -38,9 +38,13 @@ void task_event_gsm_tx_done (void *param)
 
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_GSM_TX_DONE) {
+			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_GSM_TX);
+
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_GSM_TX_DONE, 2);
 
 			gsm_sim800_tx_done_event_handler(ctx, &main_gsm_state);
+
+			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_GSM_TX);
 
 		}
 		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_GSM_TX_DONE);

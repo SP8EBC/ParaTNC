@@ -1772,6 +1772,18 @@ void main_suspend_task_for_psaving(void)
 	vTaskSuspend(task_one_sec_handle);
 	vTaskSuspend(task_two_sec_handle);
 	vTaskSuspend(task_ten_sec_handle);
+	vTaskSuspend(task_one_min_handle);
+	//vTaskSuspend(task_main_handle);
+	vTaskSuspend(task_fanet_handle);
+	vTaskSuspend(task_ev_serial_kiss_rx_done_handle);
+	vTaskSuspend(task_ev_serial_kiss_tx_done_handle);
+	vTaskSuspend(task_ev_serial_gsm_rx_done_handle);
+	vTaskSuspend(task_ev_serial_gsm_tx_done_handle);
+	vTaskSuspend(task_ev_serial_sensor_handle);
+	vTaskSuspend(task_ev_aprs_trigger_handle);
+	vTaskSuspend(task_ev_radio_message_handle);
+	vTaskSuspend(task_ev_aprsis_trigger);
+
 }
 
 void main_resume_task_for_psaving(void)
@@ -1779,6 +1791,17 @@ void main_resume_task_for_psaving(void)
 	vTaskResume(task_one_sec_handle);
 	vTaskResume(task_two_sec_handle);
 	vTaskResume(task_ten_sec_handle);
+	vTaskResume(task_one_min_handle);
+	vTaskResume(task_main_handle);
+	//vTaskResume(task_fanet_handle);
+	vTaskResume(task_ev_serial_kiss_rx_done_handle);
+	vTaskResume(task_ev_serial_kiss_tx_done_handle);
+	vTaskResume(task_ev_serial_gsm_rx_done_handle);
+	vTaskResume(task_ev_serial_gsm_tx_done_handle);
+	vTaskResume(task_ev_serial_sensor_handle);
+	vTaskResume(task_ev_aprs_trigger_handle);
+	vTaskResume(task_ev_radio_message_handle);
+	vTaskResume(task_ev_aprsis_trigger);
 }
 
 void main_get_tasks_stats()
@@ -1814,10 +1837,6 @@ void main_handle_mutex_gsm_tcpip(uint8_t what_to_do)
 	else
 	{
 		xSemaphoreGive( main_mutex_gsm_tcpip);
-
-		//xSemaphoreGiveFromISR( main_mutex_gsm_tcpip, &xHigherPriorityTaskWoken );
-
-		//portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 	}
 }
 

@@ -245,6 +245,6 @@ void task_one_minute (void *unused)
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_MIN);
 
-		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
+		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
 	}	// while(1)
 }

@@ -47,6 +47,7 @@ void task_event_kiss_rx_done (void *param)
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 2);
+			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
 
 			// check if KISS communication with host-PC is enabled
 			if (main_kiss_enabled == 1) {
@@ -124,8 +125,10 @@ void task_event_kiss_rx_done (void *param)
 				}
 
 				SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 9);
-			}
-		}
+			}	// if (main_kiss_enabled == 1) {
+			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
+
+		} // 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE)
 		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_KISS_RX_DONE);
 	}	// while(1)
 }

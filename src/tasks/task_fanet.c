@@ -32,6 +32,7 @@ void task_fanet (void *parameters)
 															   0xFFFFFFFFu);
 
 		if (bits_on_event == MAIN_EVENTGROUP_FANET_SEND_METEO) {
+			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
 
 			const int retval = fanet_test ();
 
@@ -50,6 +51,8 @@ void task_fanet (void *parameters)
 			else {
 				fanet_success_counter++;
 			}
+			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
+
 		}
 	}
 }

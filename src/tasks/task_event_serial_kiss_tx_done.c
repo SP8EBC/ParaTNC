@@ -44,6 +44,7 @@ void task_event_kiss_tx_done (void *param)
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 2);
+			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
 
 			// running config
 			if (kiss_current_async_message != 0xFF) {
@@ -52,8 +53,10 @@ void task_event_kiss_tx_done (void *param)
 				SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 3);
 			}
 
+			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
+
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 4);
-		}
+		}	// 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 5);
 

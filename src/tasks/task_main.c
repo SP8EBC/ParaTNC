@@ -89,23 +89,44 @@ void task_main( void * parameters )
 
 	  while (1)
 	    {
-		  if (supervisor_is_started() == 0)
-		  {
-			 supervisor_start();
+		  if (supervisor_is_started () == 0) {
+			  // start the supervisor
+			  supervisor_start ();
+
+			  // and also set all events for 'main_eventgroup_handle_powersave'
+			  // in case that some options like GPRS/GSM modem or Modbus-RTU is disabled
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_GSM_RX);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_GSM_TX);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_SENSOR);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
+			  xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
+
+			  // this is required because task powersave will trip the supervisor before 1 minute
+			  // task will execute
+			  xEventGroupSetBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
 		  }
 
-		SUPERVISOR_MONITOR_CLEAR(MAIN_LOOP);
+		  SUPERVISOR_MONITOR_CLEAR (MAIN_LOOP);
 
-		// TODO: fixme please :)
-	    vTaskDelay( xDelay );
+		  // TODO: fixme please :)
+		  vTaskDelay (xDelay);
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 1);
+		  SUPERVISOR_MONITOR_SET_CHECKPOINT (MAIN_LOOP, 1);
 
-		// system reset may be requested from various places in the application
-		if (rte_main_reboot_req == 1) {
-		    //vTaskDelay( xDelay );
+		  // system reset may be requested from various places in the application
+		  if (rte_main_reboot_req == 1) {
+			  // vTaskDelay( xDelay );
 
-			NVIC_SystemReset();
+			  NVIC_SystemReset ();
 		}
 		else {
 			;
@@ -173,6 +194,7 @@ void task_main( void * parameters )
 	#endif
 
 				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 2);
+				xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_MAIN);
 
 				// if Victron VE.direct client is enabled
 				if (main_config_data_mode->victron == 1) {
@@ -336,6 +358,7 @@ void task_main( void * parameters )
 		#endif
 				}	// end of four second pooling
 				SUPERVISOR_MONITOR_SET_CHECKPOINT(MAIN_LOOP, 13);
+				xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_MAIN);
 
 	#if defined(PARAMETEO)
 			}	// else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)
