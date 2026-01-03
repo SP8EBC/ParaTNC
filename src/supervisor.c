@@ -4,7 +4,6 @@
  *  Created on: Mar 10, 2025
  *      Author: mateusz
  */
-
 #include "supervisor.h"
 #include <stdint.h>
 
@@ -186,7 +185,7 @@ int supervisor_service(void)
 		if (since_last_alive > (int32_t)(max_seconds_since * 1000))
 		{
 			supervisor_store((supervisor_watchlist_t)i);
-			nok = 1;
+			//nok = 1;
 			break;
 		}
 	}

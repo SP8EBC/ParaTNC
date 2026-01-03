@@ -31,6 +31,7 @@
 #define BACKUP_REG_ASSERT_GENERAL_FAIL_FROM_NVM_EVENT				(1U << 9U)
 #define BACKUP_REG_ASSERT_GET_VBAT_SYNCHRONOUS_TOO_LONG				(1U << 10U)
 #define BACKUP_REG_ASSERT_GPRS_CONFIG								(1U << 12U)
+#define BACKUP_REG_ASSERT_TASK_NULL									(1U << 13U)
 
 uint32_t backup_reg_get_configuration(void);
 void  backup_reg_set_configuration(uint32_t value);

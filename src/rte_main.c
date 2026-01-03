@@ -98,3 +98,6 @@ uint8_t rte_main_kiss_response_message[32];
 
 // tasks load
 rte_main_tasks_cpuload_t rte_main_load;
+
+// task state
+rte_main_tasks_state_t rte_main_state;

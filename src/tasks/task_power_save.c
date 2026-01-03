@@ -42,6 +42,8 @@ void task_power_save( void * parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_POWERSAV, 2);
 
+		main_get_tasks_stats();
+
 		main_suspend_task_for_psaving();
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_POWERSAV, 3);

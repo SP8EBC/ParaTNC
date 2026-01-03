@@ -363,6 +363,8 @@ void task_main( void * parameters )
 	#if defined(PARAMETEO)
 			}	// else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)
 	#endif
+			main_get_tasks_stats();
+
 			supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
 	    } // Infinite loop, never return.

@@ -230,6 +230,10 @@ void task_event_aprsis_msg_trigger (void *param)
 				}
 			}
 		}
+		else {
+			xEventGroupClearBits (bits_on_event,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+		}
 		//supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
 
 		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);

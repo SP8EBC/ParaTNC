@@ -9,6 +9,9 @@
 #include "event_log_t.h"
 #include "nvm/nvm_t.h"
 
+#include <FreeRTOS.h>
+#include <task.h>
+
 //! Lenght of a buffer for KISS diagnostic request
 #define MAIN_KISS_FROM_MESSAGE_LEN		33
 
@@ -42,6 +45,25 @@ typedef struct rte_main_tasks_load_t
 	uint32_t tev_radio_message;
 	uint32_t idle;
 }rte_main_tasks_cpuload_t;
+
+typedef struct rte_main_tasks_state_t
+{
+	uint32_t master_time;
+	eTaskState task_main;
+	eTaskState task_powersave;
+	eTaskState task_one_sec;
+	eTaskState task_two_sec;
+	eTaskState task_ten_sec;
+	eTaskState task_one_min;
+	eTaskState tev_serial_kiss;
+	eTaskState tev_serial_kiss_tx;
+	eTaskState tev_serial_gsm_rx;
+	eTaskState tev_serial_gsm_tx;
+	eTaskState tev_apris_trig;
+	eTaskState tev_ntp_api;
+	eTaskState tev_radio_message;
+	eTaskState idle;
+}rte_main_tasks_state_t;
 
 extern message_t rte_main_received_message;
 
@@ -116,5 +138,7 @@ extern uint8_t rte_main_kiss_from_message_ln;
 extern uint8_t rte_main_kiss_response_message[32];
 
 extern rte_main_tasks_cpuload_t rte_main_load;
+
+extern rte_main_tasks_state_t rte_main_state;
 
 #endif
