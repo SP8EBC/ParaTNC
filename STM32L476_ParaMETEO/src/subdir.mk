@@ -32,6 +32,7 @@ C_SRCS += \
 ../src/rte_wx.c \
 ../src/software_version.c \
 ../src/supervisor.c \
+../src/trace.c \
 ../src/variant_parameteo.c \
 ../src/wx_handler.c \
 ../src/wx_handler_humidity.c \
@@ -68,6 +69,7 @@ OBJS += \
 ./src/rte_wx.o \
 ./src/software_version.o \
 ./src/supervisor.o \
+./src/trace.o \
 ./src/variant_parameteo.o \
 ./src/wx_handler.o \
 ./src/wx_handler_humidity.o \
@@ -104,6 +106,7 @@ C_DEPS += \
 ./src/rte_wx.d \
 ./src/software_version.d \
 ./src/supervisor.d \
+./src/trace.d \
 ./src/variant_parameteo.d \
 ./src/wx_handler.d \
 ./src/wx_handler_humidity.d \

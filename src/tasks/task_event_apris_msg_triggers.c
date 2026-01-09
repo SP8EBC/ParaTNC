@@ -46,7 +46,7 @@ void task_event_aprsis_msg_trigger (void *param)
 		// wait infinite amount of time for event from a serial port indicating that
 		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_aprs_trigger,
 															   MAIN_EVENTGROUP_APRSIS_TRIG,
-															   pdTRUE,
+															   pdFALSE,
 															   pdFALSE,
 															   0xFFFFFFFFu);
 
@@ -231,8 +231,8 @@ void task_event_aprsis_msg_trigger (void *param)
 			}
 		}
 		else {
-			xEventGroupClearBits (bits_on_event,
-								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+					bits_on_event);
 		}
 		//supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
 

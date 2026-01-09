@@ -21,12 +21,15 @@
 #include "packet_tx_handler.h"
 #include "pwr_save.h"
 
+volatile EventBits_t last_waiting_state = 0;
+
 void task_power_save( void * parameters)
 {
 	(void)parameters;
 
 	/* Block for 10000ms -> ten seconds */
 	const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
+	const TickType_t xTimeout = 99000 / portTICK_PERIOD_MS;
 
 	int main_continue_loop = 0;
 
@@ -38,7 +41,7 @@ void task_power_save( void * parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_POWERSAV, 1);
 
-		xEventGroupWaitBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_WAIT_FOR, pdTRUE, pdTRUE, xDelay << 2);
+		last_waiting_state = xEventGroupWaitBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_WAIT_FOR, pdTRUE, pdTRUE, xTimeout);
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_POWERSAV, 2);
 
