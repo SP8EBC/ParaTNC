@@ -13,6 +13,7 @@
 
 #include "main_master_time.h"
 #include "memory_map.h"
+#include "rte_main.h"
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
@@ -171,6 +172,13 @@ int supervisor_service(void)
 		return nok;
 	}
 
+	// inhibit supervisor if the controller has been woken up intermediately
+	// while sleeping
+	if (rte_main_woken_up != 0)
+	{
+		return nok;
+	}
+
 	// current time since bootup
 	const uint32_t current_time = main_get_master_time();
 
@@ -185,7 +193,7 @@ int supervisor_service(void)
 		if (since_last_alive > (int32_t)(max_seconds_since * 1000))
 		{
 			supervisor_store((supervisor_watchlist_t)i);
-			//nok = 1;
+			nok = 1;
 			break;
 		}
 	}

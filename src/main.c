@@ -1777,201 +1777,31 @@ configuration_button_function_t main_get_button_two_right()
 
 void main_suspend_task_for_psaving(void)
 {
-	if (task_one_sec_handle != NULL)
-	{
-		vTaskSuspend(task_one_sec_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_one_sec_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
 
-	if (task_two_sec_handle != NULL)
-	{
-		vTaskSuspend(task_two_sec_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_two_sec_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ten_sec_handle != NULL)
-	{
-		vTaskSuspend(task_ten_sec_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ten_sec_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_one_min_handle != NULL)
-	{
-		vTaskSuspend(task_one_min_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_one_min_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
+	vTaskSuspend (task_one_sec_handle);
+	vTaskSuspend (task_two_sec_handle);
+	vTaskSuspend (task_ten_sec_handle);
+	vTaskSuspend (task_one_min_handle);
 	// not suspended on purpose! keep this commented
-	//vTaskSuspend(task_main_handle);
+	// vTaskSuspend(task_main_handle);
+	vTaskSuspend (task_fanet_handle);
 
-	if (task_fanet_handle != NULL)
-	{
-		vTaskSuspend(task_fanet_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_fanet_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_serial_kiss_rx_done_handle != NULL)
-	{
-		vTaskSuspend(task_ev_serial_kiss_rx_done_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_serial_kiss_rx_done_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_serial_kiss_tx_done_handle != NULL)
-	{
-		vTaskSuspend(task_ev_serial_kiss_tx_done_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_serial_kiss_tx_done_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_serial_gsm_rx_done_handle != NULL)
-	{
-		vTaskSuspend(task_ev_serial_gsm_rx_done_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_serial_gsm_rx_done_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_serial_gsm_tx_done_handle != NULL)
-	{
-		vTaskSuspend(task_ev_serial_gsm_tx_done_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_serial_gsm_tx_done_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_serial_sensor_handle != NULL)
-	{
-		vTaskSuspend(task_ev_serial_sensor_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_serial_sensor_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_radio_message_handle != NULL)
-	{
-		vTaskSuspend(task_ev_radio_message_handle);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_radio_message_handle,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
-	if (task_ev_aprsis_trigger!= NULL)
-	{
-		vTaskSuspend(task_ev_aprsis_trigger);
-	}
-	else
-	{
-		  (void)event_log_sync(
-				   EVENT_ERROR,
-				   EVENT_SRC_MAIN,
-				   EVENTS_MAIN_ERROR_TASK_HANDLE_NULL,
-				   1u, T_task_ev_aprsis_trigger,
-				   0u, 0u,
-				   0u, 0u);
-		  backup_assert(BACKUP_REG_ASSERT_TASK_NULL);
-	}
-
+	/*
+	 * TODO: There is a bug related to serial port got stuck
+	 * because of these two (mainly rx) tasks being suspended.
+	 * What happens (probably): When the task is suspended in the middle
+	 * of data reception, an RX_DONE event is not serviced by the task.
+	 * After the task is resumed, it for some reason forgot that an event
+	 * is set in the event group, so RX_DONE is never serviced and KISS
+	 * diagnostics and KISS modem interface doesn't work.
+	 */
+//	vTaskSuspend (task_ev_serial_kiss_rx_done_handle);
+//	vTaskSuspend (task_ev_serial_kiss_tx_done_handle);
+	vTaskSuspend (task_ev_serial_gsm_rx_done_handle);
+	vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
+	vTaskSuspend (task_ev_serial_sensor_handle);
+	vTaskSuspend (task_ev_radio_message_handle);
+	vTaskSuspend (task_ev_aprsis_trigger);
 }
 
 void main_resume_task_for_psaving(void)
@@ -1981,9 +1811,9 @@ void main_resume_task_for_psaving(void)
 	vTaskResume(task_ten_sec_handle);
 	vTaskResume(task_one_min_handle);
 	//vTaskResume(task_main_handle);
-	//vTaskResume(task_fanet_handle);
-	vTaskResume(task_ev_serial_kiss_rx_done_handle);
-	vTaskResume(task_ev_serial_kiss_tx_done_handle);
+	vTaskResume(task_fanet_handle);
+//	vTaskResume(task_ev_serial_kiss_rx_done_handle);
+//	vTaskResume(task_ev_serial_kiss_tx_done_handle);
 	vTaskResume(task_ev_serial_gsm_rx_done_handle);
 	vTaskResume(task_ev_serial_gsm_tx_done_handle);
 	vTaskResume(task_ev_serial_sensor_handle);
@@ -2020,6 +1850,7 @@ void main_get_tasks_stats()
 	rte_main_state.tev_serial_gsm_tx = eTaskGetState(task_ev_serial_gsm_tx_done_handle);
 	rte_main_state.tev_radio_message = eTaskGetState(task_ev_radio_message_handle);
 	rte_main_state.tev_ntp_api = eTaskGetState(task_ev_ntp_and_api_client);
+	rte_main_state.tev_apris_trig = eTaskGetState(task_ev_aprsis_trigger);
 
 	rte_main_state.master_time = master_time;
 }

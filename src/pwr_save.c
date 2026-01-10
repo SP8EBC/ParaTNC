@@ -266,6 +266,13 @@ void pwr_save_after_stop2_rtc_wakeup_it(void) {
 	// decrement stop2 cycles for current L7 or L6 powersave mode
 	pwr_save_number_of_sleep_cycles--;
 
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_PWR_SAVE,
+					EVENTS_PWR_SAVE_WOKEN_UP_RTC_INTERRUPT,
+					pwr_save_number_of_sleep_cycles, 0,
+					0, 0,
+					0, 0);
+
 	// if there is time left to exit from depp sleep
 	if (pwr_save_number_of_sleep_cycles > 0) {
 		rte_main_woken_up = RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP;
