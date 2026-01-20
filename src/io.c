@@ -13,11 +13,6 @@
 #include "io.h"
 #include "backup_registers.h"
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x.h>
-#include <drivers/f1/gpio_conf_stm32f1x.h>
-#endif
-#ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
@@ -49,11 +44,8 @@ typedef enum io_pool_vbat_r_state_t {
 	POOL_VBAT_R_WAIT,			//!< VBAT_R was turned off but wait
 	POOL_VBAT_R_DONT_SWITCH		//!< more or less than 2 minutes to wx packet or VBAT_R was restarted already
 }io_pool_vbat_r_state_t;
-#endif
 
 #include "station_config.h"
-
-#if defined(PARAMETEO)
 
 /// ==================================================================================================
 ///	LOCAL VARIABLES
@@ -83,29 +75,10 @@ int16_t io_vbat_a_coeff = 0, io_vbat_b_coeff = 0;
 //! An instance of VBAT_R pooler internal state
 io_pool_vbat_r_state_t io_vbat_r_state = POOL_VBAT_R_DONT_SWITCH;
 
-#endif
-
 /**
  * Initializes I/O pins used by all UARTs
  */
 void io_uart_init(void) {
-
-#if defined(STM32F10X_MD_VL)
-
-  // Configure I/O pins for USART1 (Kiss modem)
-  Configure_GPIO(GPIOA,10,PUD_INPUT);		// RX
-  Configure_GPIO(GPIOA,9,AFPP_OUTPUT_2MHZ);	// TX
-
-  // Configure I/O pins for USART2 (wx meteo comm)
-  Configure_GPIO(GPIOA,3,PUD_INPUT);		// RX
-  Configure_GPIO(GPIOA,2,AFPP_OUTPUT_2MHZ);	// TX
-
-#endif
-
-#if defined(STM32F10X_MD_VL)
-  Configure_GPIO(GPIOA,8,GPPP_OUTPUT_2MHZ);	// re/te
-  GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-#endif
 
 #if defined(STM32L471xx)
   	// USART1 - KISS
@@ -186,15 +159,6 @@ void io_uart_init(void) {
  * Initializes open collector output
  */
 void io_oc_init(void) {
-#ifdef STM32F10X_MD_VL
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-#endif
-
-#if defined(STM32L471xx)
 	// PA7 - GPRS power key
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -203,55 +167,22 @@ void io_oc_init(void) {
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
-
-#endif
 }
 
 /**
  * SEts open collector output to active (low) states
  */
 void io_oc_output_low(void) {
-#ifdef STM32F10X_MD_VL
-
-	GPIO_SetBits(GPIOA, GPIO_Pin_11);
-#endif
 }
 
 /**
  * Sets open collector output to inactive (high-impedance) state
  */
 void io_oc_output_hiz(void) {
-#ifdef STM32F10X_MD_VL
-
-	GPIO_ResetBits(GPIOA, GPIO_Pin_11);
-#endif
 }
 
 
 void io_pwr_init(void) {
-#if defined(PARATNC)
-
-			// RELAY_CNTRL
-			GPIO_InitTypeDef GPIO_InitStructure;
-			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-			GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-			GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-			GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-			// +12V PWR_CNTRL
-			GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-			GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-			wx_pwr_state = WX_PWR_OFF;
-
-			GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-
-			// +12V_SW PWR_CNTRL
-			GPIO_ResetBits(GPIOA, GPIO_Pin_6);
-
-#endif
-
-#if defined(PARAMETEO)
 			// PC13 - UC_CNTRL_VS
 			GPIO_InitTypeDef.Mode = LL_GPIO_MODE_OUTPUT;
 			GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -302,33 +233,17 @@ void io_pwr_init(void) {
 			io___cntrl_vbat_c_disable();
 			io___cntrl_vbat_s_disable();
 			io___cntrl_vbat_m_disable();
-#endif
 }
 
 
 void io_ext_watchdog_config(void) {
-#ifdef PARATNC
-	  // initialize Watchdog output
-	  Configure_GPIO(GPIOA,12,GPPP_OUTPUT_50MHZ);
-#endif
 
 }
 
 void io_ext_watchdog_service(void) {
-#ifdef PARATNC
-	if ((GPIOA->ODR & GPIO_ODR_ODR12) == 0) {
-		// set high
-		GPIOA->BSRR |= GPIO_BSRR_BS12;
-	}
-	else {
-		// set low
-		GPIOA->BSRR |= GPIO_BSRR_BR12;
-	}
-#endif
 }
 
 void io_buttons_init(void){
-#ifdef PARAMETEO
 
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
@@ -345,7 +260,6 @@ void io_buttons_init(void){
 	GPIO_InitTypeDef.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 	GPIO_InitTypeDef.Alternate = LL_GPIO_AF_7;
 	LL_GPIO_Init(GPIOA, &GPIO_InitTypeDef);
-#endif
 }
 
 /**
@@ -355,7 +269,6 @@ void io_buttons_init(void){
  */
 void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 
-#ifdef PARAMETEO
 	if (a_coeff != io_vbat_a_coeff || b_coeff != io_vbat_b_coeff) {
 		io_vbat_a_coeff = a_coeff;
 		io_vbat_b_coeff = b_coeff;
@@ -374,8 +287,6 @@ void io_vbat_meas_init(int16_t a_coeff, int16_t b_coeff) {
 	LL_GPIO_EnablePinAnalogControl(GPIOC, LL_GPIO_PIN_5);
 
 	io_vbat_meas_enable();
-
-#endif
 }
 
 /**
@@ -413,8 +324,6 @@ void io_vbat_meas_fill(uint16_t * last, uint16_t * average) {
 io_vbat_state_t io_vbat_meas_get(uint16_t * result) {
 
 	io_vbat_state_t out = io_vbatt_state;
-
-#ifdef PARAMETEO
 
 	float temp = 0.0f, temp2 = 0.0f;
 
@@ -478,10 +387,6 @@ io_vbat_state_t io_vbat_meas_get(uint16_t * result) {
 		io_vbatt_state = IO_VBAT_ADC_DISABLE;
 	}
 #endif
-
-
-
-#endif
 	out = io_vbatt_state;
 
 	return out;
@@ -528,8 +433,6 @@ uint16_t io_vbat_meas_get_synchro(void) {
 uint16_t io_vbat_meas_get_synchro_old() {
 
 	uint16_t out = 0;
-
-#ifdef PARAMETEO
 
 	float temp = 0.0f;
 
@@ -580,7 +483,6 @@ uint16_t io_vbat_meas_get_synchro_old() {
 
 	out = (uint16_t) (temp * (float)io_vbat_a_coeff + (float)io_vbat_b_coeff);
 
-#endif
 	return out;
 }
 
@@ -593,7 +495,6 @@ uint16_t io_vbat_meas_get_synchro_old() {
 uint16_t io_vbat_meas_average(uint16_t sample) {
 
 	uint16_t out = 0;
-#ifdef PARAMETEO
 
 	int i = 0;
 
@@ -626,11 +527,9 @@ uint16_t io_vbat_meas_average(uint16_t sample) {
 		out = (uint16_t)(average_acc / VBATT_HISTORY_LN);
 	}
 
-#endif
 	return out;
 }
 
-#ifdef PARAMETEO
 /**
  * This function has to be called before switching to IDLE state to turn off the ADC
  */
@@ -771,5 +670,4 @@ uint8_t io_reset_vbat_r(void) {
 	return out;
 }
 
-#endif
 

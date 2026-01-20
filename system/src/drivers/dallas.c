@@ -7,15 +7,8 @@
 
 #include "station_config_target_hw.h"
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x.h>
-#include <stm32f10x_gpio.h>
-#endif
-
-#ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
-#endif
 
 #include "drivers/dallas.h"
 #include "etc/dallas_temperature_limits.h"
@@ -54,28 +47,7 @@ static void dallas_delay_start(void) {
 void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource, float_average_t* average) {
 
 	(void)GPIO_PinSource;
-
-#ifdef STM32F10X_MD_VL
-	GPIO_InitTypeDef GPIO_input;
-	GPIO_InitTypeDef GPIO_output;
-
-	GPIO_output.GPIO_Mode = GPIO_Mode_Out_OD;
-	GPIO_output.GPIO_Pin = GPIO_Pin;
-	GPIO_output.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOx, &GPIO_output);
-	GPIO_SetBits(GPIOx, GPIO_Pin);
-
-	GPIO_input.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_input.GPIO_Pin = GPIO_Pin << 1;
-	GPIO_input.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOx, &GPIO_input);
-
-	dallas.GPIOx = GPIOx;
-	dallas.GPIO_Pin = GPIO_Pin;
-	dallas.GPIO_Pin_input = GPIO_Pin << 1;
-#endif
-
-#ifdef STM32L471xx
+	
 	LL_GPIO_InitTypeDef GPIO_input, GPIO_output;
 
 	GPIO_output.Pin = GPIO_Pin;
@@ -98,8 +70,6 @@ void dallas_init(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t GPIO_PinSource
 	dallas.GPIOx = GPIOx;
 	dallas.GPIO_Pin = GPIO_Pin;
 	dallas.GPIO_Pin_input = GPIO_Pin << 1;
-
-#endif
 
 	for (int i = 0; i < FLOAT_AVERAGE_LN; i++) {
 		average->values[i] = FLOAT_INIT_VALUE;

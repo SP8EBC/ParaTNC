@@ -24,17 +24,10 @@
 #include <event_log.h>
 #include <events_definitions/events_drv_anemometer.h>
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x_tim.h>
-#include <stm32f10x_dma.h>
-#include <drivers/f1/gpio_conf_stm32f1x.h>
-#endif
-#ifdef STM32L471xx
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_tim.h>
 #include <stm32l4xx_ll_dma.h>
 #include <stm32l4xx_ll_gpio.h>
-#endif
 
 #define MINUM_PULSE_LN 15
 #define MAXIMUM_PULSE_SLEW_RATE 4000
@@ -42,10 +35,6 @@
 #define UF_MAXIMUM_FREQUENCY 8280//32767
 #define UPSCALED_MAX_ANGLE 		(360 * 100)
 #define UPSCALED_MAX_ANGLE_2 	(360 * 10)
-
-#ifdef STM32F10X_MD_VL
-	DMA_InitTypeDef DMA_InitStruct;
-#endif
 
 #ifdef STM32L471xx
 	LL_DMA_InitTypeDef DMA_InitStruct;
@@ -134,21 +123,15 @@ const int16_t analog_anemometer_direction_sparkfun_ranges[16][3] = {
 void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer_lower_boundary,
 		uint8_t anemometer_upper_boundary, uint8_t direction_polarity) {
 
-#ifdef STM32F10X_MD_VL
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
-#endif
-
-#ifdef STM32L471xx
 	LL_TIM_InitTypeDef TIM_InitTypeDef;
 	LL_TIM_IC_InitTypeDef TIM_IC_InitTypeDef;
 	LL_GPIO_InitTypeDef GPIO_InitTypeDef;
-#endif
 
 	analog_anemometer_pulses_per_m_s_constant = pulses_per_meter_second;
 
-	// Solving the linear equation to find 'a' and 'b' coefficient needed to rescale the wind direction
-	// from raw value calculated from an input frequency, to physical value which includes the lower and
-	// the higher value of anemometer resistance / frequency
+	// Solving the linear equation to find 'a' and 'b' coefficient, needed to rescale the wind direction
+	// from raw value (input frequency), to physical one. This include the lowest and
+	// the highest value of anemometer resistance -> lo/hi output frequency from U/f converter 
 	// * 100
 	analog_anemometer_a_coeff = ((10000 * -UPSCALED_MAX_ANGLE) / (UPSCALED_MAX_ANGLE * anemometer_lower_boundary - UPSCALED_MAX_ANGLE * anemometer_upper_boundary));
 	// * 10
@@ -164,85 +147,6 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	memset(analog_anemometer_direction_timer_values, 0x00, ANALOG_ANEMOMETER_SPEED_PULSES_N);
 #endif
 
-#ifdef STM32F10X_MD_VL
-	// enabling the clock for TIM17
-	RCC->APB2ENR |= RCC_APB2ENR_TIM17EN;
-	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
-
-	// Configuring a pin where pulses from anemometer are connected
-	Configure_GPIO(GPIOB,9,FLOATING_INPUT);
-
-	// resetting the timer to defaults
-	TIM_DeInit(TIM17);
-
-	// initializing structure with default values
-	TIM_TimeBaseStructInit(&TIM_TimeBaseInitStruct);
-
-	TIM_TimeBaseInitStruct.TIM_Prescaler = 23999;					// PSC 23999
-	TIM_TimeBaseInitStruct.TIM_Period = 60000;					// ARR
-	TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
-
-	// Configuring basics of thr timer
-	TIM_TimeBaseInit(TIM17, &TIM_TimeBaseInitStruct);
-
-	// Enabling capture input
-	TIM_TIxExternalClockConfig(TIM17, TIM_TIxExternalCLK1Source_TI1, TIM_ICPolarity_Rising, 0);
-
-	// Starting timer
-	TIM_Cmd(TIM17, ENABLE);
-
-	// Enabling a DMA request signal from first capture-compare channel
-	TIM_DMACmd(TIM17, TIM_DMA_CC1, ENABLE);
-
-	// Enabling an interrupt
-	TIM_ITConfig(TIM17, TIM_IT_Update, ENABLE);
-	NVIC_EnableIRQ( TIM1_TRG_COM_TIM17_IRQn );
-
-	// Initializing the struct with DMA configuration
-	DMA_StructInit(&DMA_InitStruct);
-
-	// De initializing DMA1
-	DMA_DeInit(DMA1_Channel7);
-
-	DMA_InitStruct.DMA_BufferSize = ANALOG_ANEMOMETER_SPEED_PULSES_N;
-	DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralSRC;
-	DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
-	DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)analog_anemometer_windspeed_pulses_time;
-	DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
-	DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&TIM17->CCR1;
-	DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
-	DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-
-	dma_helper_start_ch7(&DMA_InitStruct);
-
-	NVIC_EnableIRQ( DMA1_Channel7_IRQn );
-
-	// Initializing direction
-
-	// Configuring PD2 as an input for TIM3_ETR
-	Configure_GPIO(GPIOD,2,FLOATING_INPUT);
-
-	// initializing structure with default values
-	TIM_TimeBaseStructInit(&TIM_TimeBaseInitStruct);
-
-	// using default values of InitStruct
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
-
-	// enabling an external trigger to the TIM3
-	TIM_ETRClockMode2Config(TIM3, TIM_ExtTRGPSC_OFF, TIM_ExtTRGPolarity_Inverted, 0);
-
-	// Starting timer
-	TIM_Cmd(TIM3, ENABLE);
-
-	// disable an interrupt from TIMER3
-	NVIC_DisableIRQ(TIM3_IRQn);
-
-#endif
-
-
-#ifdef STM32L471xx
 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_9;
@@ -332,7 +236,6 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 	LL_TIM_EnableCounter(TIM3);
 
 	NVIC_EnableIRQ( TIM3_IRQn );
-#endif
 
 	analog_anemometer_timer_has_been_fired = 0;
 
@@ -344,7 +247,6 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
  * in windspeed
  */
 void analog_anemometer_deinit(void) {
-#ifdef STM32L471xx
 	// disable interrupt generated by DMA channel used for windspeed
 	LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_5);
 
@@ -358,7 +260,6 @@ void analog_anemometer_deinit(void) {
 	LL_TIM_DisableCounter(TIM4);
 
 	LL_TIM_DisableCounter(TIM3);
-#endif
 }
 
 /**
@@ -536,7 +437,7 @@ void analog_anemometer_dma_irq(void) {
 
 	}
 
-	// calculating the target inter-pulse duration
+	// calculating target inter-pulse duration
 	rte_wx_windspeed_pulses = (uint16_t)((previous_maximum_pulse_ln + previous_minimum_pulse_ln) / 2);
 
 	// resetting the timer
@@ -550,26 +451,11 @@ void analog_anemometer_dma_irq(void) {
 
 	dma_helper_start_ch7(&DMA_InitStruct);
 
-#ifdef STM32F10X_MD_VL
-	// Stopping timer
-	TIM_Cmd(TIM17, DISABLE);
-
-	// Resetting the counter
-	TIM_SetCounter(TIM17, 0);
-
-	// Enabling counter once again
-	TIM_Cmd(TIM17, ENABLE);
-#endif
-
-#ifdef STM32L471xx
-
 	LL_TIM_DisableCounter(TIM4);
 
 	LL_TIM_SetCounter(TIM4, 0);
 
 	LL_TIM_EnableCounter(TIM4);
-
-#endif
 
 	return;
 }
@@ -596,34 +482,10 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	uint16_t downscaled_angle = 0;
 
-#ifdef STM32F10X_MD_VL
-	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0) {
-
-#else
 	if (io_get_cntrl_vbat_c() == 0) {
-#endif
 		return rte_wx_winddirection_last;
 	}
-
-#ifdef STM32F10X_MD_VL
-	TIM_Cmd(TIM3, DISABLE);
-
-	// getting current counter value
-	uint16_t current_value = TIM_GetCounter(TIM3);
-
-	// if the counter value is zero it means that probably U/f converter isn't running
-	if (current_value == 0) {
-		TIM_SetCounter(TIM3, 0);
-
-		TIM_Cmd(TIM3, ENABLE);
-
-		analog_anemometer_direction_doesnt_work = 1;
-
-		return rte_wx_winddirection_last;
-	}
-#endif
-
-#ifdef STM32L471xx
+	
 	LL_TIM_DisableCounter(TIM3);
 
 	// getting current counter value
@@ -647,8 +509,6 @@ int16_t analog_anemometer_direction_handler(void) {
 
 		return rte_wx_winddirection_last;
 	}
-
-#endif
 
 	// update the last
 	wx_last_good_wind_time = main_get_master_time();
@@ -715,17 +575,9 @@ int16_t analog_anemometer_direction_handler(void) {
 		led_control_led2_bottom(false);
 	}
 
-#ifdef STM32F10X_MD_VL
-	TIM_SetCounter(TIM3, 0);
-
-	TIM_Cmd(TIM3, ENABLE);
-#endif
-
-#ifdef STM32L471xx
 	LL_TIM_SetCounter(TIM3, 0);
 
 	LL_TIM_EnableCounter(TIM3);
-#endif
 
 	return downscaled_angle;
 }
@@ -754,24 +606,11 @@ int16_t analog_anemometer_direction_sparkfun(uint32_t timer_value) {
 
 void analog_anemometer_direction_reset(void) {
 
-#ifdef STM32F10X_MD_VL
-	// stopping the timer
-	TIM_Cmd(TIM3, DISABLE);
-
-	// resetting it
-	TIM_SetCounter(TIM3, 0);
-
-	// end then restarting once again
-	TIM_Cmd(TIM3, ENABLE);
-#endif
-
-#ifdef STM32L471xx
 	LL_TIM_DisableCounter(TIM3);
 
 	LL_TIM_SetCounter(TIM3, 0);
 
 	LL_TIM_EnableCounter(TIM3);
-#endif
 }
 
 analog_wind_qf_t analog_anemometer_get_qf(void) {

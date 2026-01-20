@@ -21,7 +21,6 @@
 
 #include "../include/etc/rtu_configuration.h"
 
-#ifdef STM32L471xx
 #include "aprsis.h"
 #include "api/api.h"
 #include "pwr_save.h"
@@ -32,8 +31,6 @@
 /* FreeRTOS includes. */
 #include <FreeRTOS.h>
 #include <task.h>
-
-#endif
 
 #include "main.h"
 #include "delay.h"
@@ -66,7 +63,6 @@ uint8_t packet_tx_modbus_status = (uint8_t)(_TELEM_DESCR_INTERVAL - _WX_INTERVAL
 
 uint8_t packet_tx_more_than_one = 0;
 
-#ifdef PARAMETEO
 uint8_t packet_tx_trigger_tcp = 0;
 
 uint8_t packet_tx_meteo_gsm_interval = 2;
@@ -84,7 +80,6 @@ nvm_measurement_t packet_tx_nvm;
 
 //!< Flag set to one after the gsm status message is sent over radio.
 uint8_t packet_tx_gsm_status_sent = 0;
-#endif
 
 void packet_tx_send_wx_frame(void) {
 	main_wait_for_tx_complete();
@@ -120,9 +115,7 @@ void packet_tx_init(uint8_t meteo_interval, uint8_t aggressive_meteo_interval, u
 		packet_tx_beacon_interval = 15;
 	}
 
-#ifdef PARAMETEO
 	backup_reg_get_packet_counters(&packet_tx_beacon_counter, &packet_tx_meteo_counter, &packet_tx_meteo_gsm_counter);
-#endif
 
 	if (powersave == PWSAVE_AGGRESV) {
 		// if user selected aggressive powersave mode the meteo counter must be set back to zero
@@ -164,7 +157,6 @@ inline void packet_tx_multi_per_call_handler(void) {
 
 // this shall be called in 10 seconds interval
 void packet_tx_tcp_handler(void) {
-#ifdef STM32L471xx
 
 	// TODO: fixme currently there is no way to have APRS-IS and rest api
 	// client working at the same time
@@ -247,7 +239,6 @@ void packet_tx_tcp_handler(void) {
 		// sent
 		packet_tx_meteo_gsm_has_been_sent = 0;
 	}
-#endif
 }
 
 // this shall be called in 60 seconds intervals
@@ -272,9 +263,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// increase these counters only when WX is enabled
 		packet_tx_meteo_counter++;
 		packet_tx_meteo_kiss_counter++;
-#ifdef PARAMETEO
 		packet_tx_meteo_gsm_counter++;
-#endif
 	}
 
 	// check if there is a time to send own beacon
@@ -295,7 +284,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		// check if there is a time to send meteo packet through RF
 		if (packet_tx_meteo_counter >= packet_tx_meteo_interval && packet_tx_meteo_interval != 0) {
 
-#ifdef STM32L471xx
 			if (config_mode->nvm_logger != 0) {
 				packet_tx_nvm.temperature_humidity = wx_get_nvm_record_temperature();
 				packet_tx_nvm.wind = wx_get_nvm_record_wind();
@@ -307,7 +295,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				taskEXIT_CRITICAL();
 
 			}
-#endif
 
 			// this function is required if more than one RF frame will be send from this function at once
 			// it waits for transmission completion and add some delay to let digipeaters do theris job
@@ -352,7 +339,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 // there is no sense to include support for Victron VE.Direct in parameteo
 // which has its own charging controller
-#ifndef PARAMETEO
 		// check if Victron VE.Direct serial protocol client is enabled and it is
 		// a time to send the status message
 		if (config_mode->victron == 1 &&
@@ -364,9 +350,7 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			telemetry_send_status_pv(&rte_pv_average, &rte_pv_last_error, rte_pv_struct.system_state, master_time, rte_pv_messages_count, rte_pv_corrupted_messages_count);
 
 		}
-#endif
 
-#ifdef PARAMETEO
 		if (packet_tx_meteo_gsm_counter >= packet_tx_meteo_gsm_interval && gsm_sim800_gprs_ready == 1) {
 			if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
 				// and trigger API wx packet transmission
@@ -381,7 +365,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 			packet_tx_meteo_gsm_counter = 0;
 		}
-#endif
 
 		// send wx frame to KISS host once every two minutes
 		if (packet_tx_meteo_kiss_counter >= packet_tx_meteo_kiss_interval && main_kiss_enabled == 1) {

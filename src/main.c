@@ -2,13 +2,6 @@
 #include "main_gsm_pool_handler.h"
 #include "main_freertos_externs.h"
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x_rcc.h>
-#include <stm32f10x_iwdg.h>
-#include <stm32f10x.h>
-#include <drivers/f1/gpio_conf_stm32f1x.h>
-#endif
-
 #ifdef STM32L471xx		/////////
 #include <stm32l4xx_hal_cortex.h>
 #include <stm32l4xx.h>
@@ -260,9 +253,7 @@ const config_data_basic_t * main_config_data_basic = 0;
 const config_data_wx_sources_t * main_config_data_wx_sources = 0;
 const config_data_umb_t * main_config_data_umb = 0;
 const config_data_rtu_t * main_config_data_rtu = 0;
-#ifdef PARAMETEO
 const config_data_gsm_t * main_config_data_gsm = 0;
-#endif
 
 uint32_t main_flash_log_start = MEMORY_MAP_EVENT_LOG_START;
 uint32_t main_flash_log_end = MEMORY_MAP_EVENT_LOG_END;
@@ -344,10 +335,8 @@ static srl_context_t main_kiss_srl_ctx;
 //! serial context for UART used for comm with wx sensors
 static srl_context_t main_wx_srl_ctx;
 
-#if defined(PARAMETEO)
 //! serial context for communication with GSM module
 static srl_context_t main_gsm_srl_ctx;
-#endif
 
 //! operation mode of USART1 (RS232 on RJ45 socket)
 static main_usart_mode_t main_usart1_kiss_mode = USART_MODE_UNDEF;
@@ -466,7 +455,6 @@ umb_retval_t main_umb_retval = UMB_UNINITIALIZED;
 //! result of CRC calculation
 uint32_t main_crc_result = 0;
 
-#if defined(PARAMETEO)
 LL_GPIO_InitTypeDef GPIO_InitTypeDef;
 
 gsm_sim800_state_t main_gsm_state;
@@ -475,14 +463,10 @@ uint32_t rte_main_rx_total = 0;
 uint32_t rte_main_tx_total = 0;
 
 volatile int i = 0;
-#endif
 
-#if defined(PARAMETEO)
 //!< Value of backup_reg_get_powersave_state() at the powerup. Will be != 0 only when this is a restart
 //! or powerup if RTC coin cell battery is put into a holder.
 static uint16_t main_powersave_state_at_bootup = 0;
-
-#endif
 
 #if defined (MANUAL_RTC_SET)
 uint16_t main_year = 0; uint8_t main_month = 0; uint8_t main_day_of_month = 0;
@@ -603,52 +587,7 @@ int main(int argc, char* argv[]){
 
   main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
   main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
-#if defined(PARAMETEO)
   main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
-#endif
-
-#if defined(STM32F10X_MD_VL)
-  RCC->APB1ENR |= (RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN | RCC_APB1ENR_TIM7EN | RCC_APB1ENR_TIM4EN);
-  RCC->APB2ENR |= (RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN | RCC_APB2ENR_TIM1EN);
-  RCC->AHBENR |= RCC_AHBENR_CRCEN;
-
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
-
-  // choosing the signal source for the SysTick timer.
-  SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-
-  // Configuring the SysTick timer to generate interrupt 100x per second (one interrupt = 10ms)
-  SysTick_Config(SystemCoreClock / SYSTICK_TICKS_PER_SECONDS);
-
-  // setting an Systick interrupt priority
-  NVIC_SetPriority(SysTick_IRQn, 5);
-
-  // enable access to BKP registers
-  RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
-  PWR->CR |= PWR_CR_DBP;
-
-  // read current number of boot cycles
-  rte_main_boot_cycles = (uint8_t)(BKP->DR2 & 0xFF);
-
-  // read current number of hard faults
-  rte_main_hard_faults = (uint8_t)((BKP->DR2 & 0xFF00) >> 8);
-
-  // increase boot cycles count
-  rte_main_boot_cycles++;
-
-  // erasing old value from backup registers
-  BKP->DR2 &= (0xFFFF ^ 0xFF);
-
-  // storing increased value
-  BKP->DR2 |= rte_main_boot_cycles;
-
-  BKP->DR3 = 0;
-  BKP->DR4 = 0;
-  BKP->DR5 = 0;
-  BKP->DR6 = 0;
-#endif
-
-#if defined(STM32L471xx)
 
   system_clock_update_l4();
 
@@ -703,8 +642,6 @@ int main(int argc, char* argv[]){
  ADC123_COMMON->CCR |= ADC_CCR_CKMODE_0;
 #endif
 
-#endif
-
   rte_main_reboot_req = 0;
 
   // get powersave status after power up
@@ -751,10 +688,7 @@ int main(int argc, char* argv[]){
 
 	  backup_reg_set_configuration(0);
 
-#if defined(PARAMETEO)
-
 //	  nvm_test_prefill();
-#endif
   }
 
   //nvm_event_log_find_first_oldest();
@@ -869,12 +803,6 @@ int main(int argc, char* argv[]){
   // initialie telemetry frames counter
   telemetry_init();
 
-#if defined(STM32F10X_MD_VL)
-  // disabling access to BKP registers
-  RCC->APB1ENR &= (0xFFFFFFFF ^ (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN));
-  PWR->CR &= (0xFFFFFFFF ^ PWR_CR_DBP);
-#endif
-
   // converting latitude into string
   memset(main_string_latitude, 0x00, sizeof(main_string_latitude));
   float_to_string(main_config_data_basic->latitude, main_string_latitude, sizeof(main_string_latitude), 2, 2);
@@ -927,7 +855,6 @@ int main(int argc, char* argv[]){
 
 #endif
 
-#if defined(PARAMETEO)
   if (main_button_one_left != BUTTON_DISABLED || main_button_two_right != BUTTON_DISABLED) {
 	  // initializing GPIO used for buttons
 	  io_buttons_init();
@@ -941,7 +868,6 @@ int main(int argc, char* argv[]){
 
   // initialize B+ measurement
   io_vbat_meas_init(configuration_get_vbat_a_coeff(), configuration_get_vbat_b_coeff());
-#endif
 
   // initalizing separated Open Collector output
   io_oc_init();
@@ -955,7 +881,6 @@ int main(int argc, char* argv[]){
   // call periodic handle to wait for 1 second and then switch on voltage
   wx_pwr_switch_periodic_handle();
 
-#if defined(PARAMETEO)
   // clear all previous powersave indication bits
   backup_reg_reset_all_powersave_states();
 
@@ -966,23 +891,14 @@ int main(int argc, char* argv[]){
 
   delay_fixed(300);
 
-#endif
-
   // waiting for 1 second to count number of ticks when the CPU is idle
   main_idle_cpu_ticks = delay_fixed_with_count(1000);
 
   // initializing UART gpio pins
   io_uart_init();
 
-#if defined(STM32F10X_MD_VL)
-  // enabling the clock for both USARTs
-  RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
-  RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-#endif
-
   main_target_kiss_baudrate = 9600u;
 
-#ifndef PARAMETEO
   // if Victron VE-direct protocol is enabled set the baudrate to the 19200u
   if (main_config_data_mode->victron == 1) {
     main_target_kiss_baudrate = 19200u;
@@ -990,7 +906,6 @@ int main(int argc, char* argv[]){
     // and disable the kiss TNC option as it shares the same port
     main_kiss_enabled = 0;
   }
-#endif
 
   // get target working mode of USART1
   if (main_config_data_mode->wx_davis == 1) {
@@ -1133,11 +1048,6 @@ int main(int argc, char* argv[]){
 
   srl_set_done_error_callback(main_wx_srl_ctx_ptr, main_callback_serial_sensor_rx_done, main_callback_serial_sensor_tx_done);
 
-#if defined(PARATNC)
-  main_wx_srl_ctx_ptr->te_pin = GPIO_Pin_8;
-  main_wx_srl_ctx_ptr->te_port = GPIOA;
-#endif
-#if defined(PARAMETEO)
   main_wx_srl_ctx_ptr->te_pin = LL_GPIO_PIN_8;
   main_wx_srl_ctx_ptr->te_port = GPIOA;
   main_wx_srl_ctx_ptr->early_tx_assert = configuration_get_early_tx_assert();		// TODO: was 1
@@ -1145,7 +1055,6 @@ int main(int argc, char* argv[]){
   // initialize UART used to communicate with GPRS modem
   srl_init(main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN, srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
   srl_set_done_error_callback(main_gsm_srl_ctx_ptr, main_callback_serial_gsm_rx_done, main_callback_serial_gsm_tx_done);
-#endif
 
   // initialize APRS path with zeros
   memset (main_own_path, 0x00, sizeof(main_own_path));
@@ -1154,27 +1063,6 @@ int main(int argc, char* argv[]){
   main_own_path_ln = ConfigPath(main_own_path, main_config_data_basic);
 
 #ifdef INTERNAL_WATCHDOG
-#if defined(STM32F10X_MD_VL)
-  // enable write access to watchdog registers
-  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-
-  // Set watchdog prescaler
-  IWDG_SetPrescaler(IWDG_Prescaler_128);
-
-  // Set the counter value to program watchdog for about 13 seconds
-  IWDG_SetReload(0xFFF);
-
-  // enable the watchdog
-  IWDG_Enable();
-
-  // do not disable the watchdog when the core is halted on a breakpoint
-  DBGMCU_Config(DBGMCU_IWDG_STOP, ENABLE);
-
-  // reload watchdog counter
-  IWDG_ReloadCounter();
-#endif
-
-#if defined(STM32L471xx)
   // enable watchdog
   LL_IWDG_Enable(IWDG);
 
@@ -1202,12 +1090,10 @@ int main(int argc, char* argv[]){
   DBGMCU->APB1FZR1 &= (0xFFFFFFFF ^ DBGMCU_APB1FZR1_DBG_IWDG_STOP);
 
 #endif
-#endif
 
   // initialize i2c controller
   i2cConfigure();
-
-#if defined(PARAMETEO)
+  
   // initialize SPI
   spi_init_full_duplex_pio(SPI_MASTER_MOTOROLA, CLOCK_NORMAL_RISING, SPI_SPEED_DIV256, SPI_ENDIAN_MSB);
 
@@ -1216,8 +1102,6 @@ int main(int argc, char* argv[]){
 
   // initialize MAX RDT amplifier
   max31865_init(main_config_data_mode->wx_pt_sensor & 0x3, (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
-
-#endif
 
   // initialize GPIO pins leds are connecting to
   led_init();
@@ -1234,16 +1118,10 @@ int main(int argc, char* argv[]){
   digi_init(main_config_data_mode);
 
   if ((main_config_data_mode->wx & WX_ENABLED) == 1) {
-#if defined(PARATNC)
-	  dallas_init(GPIOC, GPIO_Pin_11, GPIO_PinSource11, &rte_wx_dallas_average);
-#endif
-
-#if defined(PARAMETEO)
 	  if (configuration_get_disable_dallas() == 0) {
 		  // initialize dallas one-wire driver for termometer
 		  dallas_init(GPIOC, LL_GPIO_PIN_11, 0x0, &rte_wx_dallas_average);
 	  }
-#endif
 
 	  if ((main_config_data_mode->wx & WX_INTERNAL_SPARKFUN_WIND) == 0) {
 		  analog_anemometer_init(main_config_data_mode->wx_anemometer_pulses_constant, 38, 100, 1);
@@ -1341,7 +1219,6 @@ int main(int argc, char* argv[]){
 
 	}
 
-#ifndef PARAMETEO
   // start serial port i/o transaction depending on station configuration
   if (main_config_data_mode->victron == 1) {
 	  // initializing protocol parser
@@ -1359,22 +1236,11 @@ int main(int argc, char* argv[]){
 	  // switching UART to receive mode to be ready for KISS frames from host
 	  srl_receive_data(main_kiss_srl_ctx_ptr, 100, FEND, FEND, 0, 0, 0);
   }
-#else
-  if (main_kiss_enabled == 1) {
-	  // switching UART to receive mode to be ready for KISS frames from host
- 	  srl_receive_data_kiss_protocol(main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
-  }
-  else {
-	  srl_receive_data(main_kiss_srl_ctx_ptr, 10, 0xAA, 0, 0, 0, 0);
-  }
-#endif
 
   io_oc_output_low();
 
   led_control_led1_upper(false);
   led_control_led2_bottom(false);
-
-#if defined(PARAMETEO)
 
   io_vbat_meas_fill(&rte_main_battery_voltage, &rte_main_average_battery_voltage);
 
@@ -1413,9 +1279,7 @@ int main(int argc, char* argv[]){
    led_control_led1_upper(false);
    led_control_led2_bottom(false);
 
-#endif
-
-	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
+   supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
   // configuring system timers
   TimerConfig();
@@ -1430,8 +1294,6 @@ int main(int argc, char* argv[]){
 
    // reload external watchdog in case it is installed
    io_ext_watchdog_service();
-
-#ifdef PARAMETEO
 
    // initialize NVM logger if it is enabled
    if (main_config_data_mode->nvm_logger != 0) {
@@ -1480,27 +1342,19 @@ int main(int argc, char* argv[]){
 		  backup_reg_reset_inhibit_log_report_send_api();
 	   }
    }
-#endif
 
-//   if (main_config_data_basic-> beacon_at_bootup == 1) {
-//#if defined(PARAMETEO)
-//	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
-//	main_wait_for_tx_complete();
-//
-//	// this delay is put in case if beacon is configured to use
-//	// any path like WIDE1-1 or WIDE2-1 or another. The delay
-//	// will wait for some time to have this beacon digipeated
-//	// by the APRS radio network
-//	delay_fixed(1500);
-//#else
-//	   beacon_send_own(0, 0);
-//
-//#endif
-//
-//#if defined(PARAMETEO)
-//	   status_send_powersave_registers();
-//#endif
-//   }
+   if (main_config_data_basic-> beacon_at_bootup == 1) {
+	beacon_send_own(rte_main_battery_voltage, system_is_rtc_ok());
+	main_wait_for_tx_complete();
+
+	// this delay is put in case if beacon is configured to use
+	// any path like WIDE1-1 or WIDE2-1 or another. The delay
+	// will wait for some time to have this beacon digipeated
+	// by the APRS radio network
+	delay_fixed(1500);
+
+	   status_send_powersave_registers();
+   }
 
   (void)event_log_sync(
 		   EVENT_BOOTUP,
@@ -1604,15 +1458,7 @@ void main_service_cpu_load_ticks(void) {
 }
 
 void main_reload_internal_wdg(void){
-#ifdef STM32F10X_MD_VL
-
-	  // reload watchdog counter
-	  IWDG_ReloadCounter();
-
-#endif
-#ifdef STM32L471xx
 	  LL_IWDG_ReloadCounter(IWDG);
-#endif
 }
 
 uint16_t main_get_rtc_datetime(uint16_t param) {
@@ -1651,8 +1497,6 @@ uint32_t main_get_nvm_timestamp(void) {
 	 *	bit 16 - bit 24 === days from new year (max 356)
 	 *	bit 25 - bit 31 === years (from 00 to 99, from 2000 up to 2099)
 	 */
-
-#ifdef STM32L471xx
 
 	uint16_t temp = 0;
 
@@ -1723,8 +1567,6 @@ uint32_t main_get_nvm_timestamp(void) {
 			 1 * ((RTC->DR & RTC_DR_YU) >> RTC_DR_YU_Pos);
 
 	out = out | ((temp & 0x7F) << 25);
-
-#endif
 
 	return out;
 }

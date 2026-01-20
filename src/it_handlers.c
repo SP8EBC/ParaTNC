@@ -10,10 +10,6 @@
 
 #include <delay.h>
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x.h>
-#endif
-#ifdef STM32L471xx
 #include "cmsis/stm32l4xx/system_stm32l4xx.h"
 #include "drivers/sx1262/sx1262.h"
 #include "pwr_save.h"
@@ -21,7 +17,6 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_dma.h>
 #include <stm32l4xx_ll_tim.h>
-#endif
 
 #include "LedConfig.h"
 #include "aprs/beacon.h"
@@ -99,11 +94,7 @@ void it_handlers_set_priorities (void)
 {
 	NVIC_SetPriority (TIM2_IRQn, 1); // one-wire delay
 	NVIC_SetPriority (I2C1_EV_IRQn, 2);
-#ifdef STM32F10X_MD_VL
-	NVIC_SetPriority (TIM4_IRQn, 3); // DAC
-#else
 	NVIC_SetPriority (TIM5_IRQn, 3); // DAC
-#endif
 	NVIC_SetPriority (DMA2_Channel5_IRQn, 4); // ADC dma transfer (was ADC)
 	NVIC_SetPriority (SPI2_IRQn, 5);
 	NVIC_SetPriority (USART1_IRQn, 6);		  // kiss
@@ -115,7 +106,6 @@ void it_handlers_set_priorities (void)
 	HAL_NVIC_SetPriority (SysTick_IRQn, 15, 0U);
 }
 
-#ifdef STM32L471xx
 void RTC_WKUP_IRQHandler (void)
 {
 
@@ -402,8 +392,6 @@ void SPI2_IRQHandler (void)
 	spi_irq_handler ();
 }
 
-#endif
-
 // TIM1_UP_TIM16_IRQn
 void TIM1_UP_TIM16_IRQHandler (void)
 {
@@ -473,14 +461,11 @@ void USART2_IRQHandler (void)
 	srl_irq_handler (main_wx_srl_ctx_ptr);
 }
 
-#ifdef STM32L471xx
 void USART3_IRQHandler ()
 {
 	NVIC_ClearPendingIRQ (USART3_IRQn);
 	srl_irq_handler (main_gsm_srl_ctx_ptr);
 }
-
-#endif
 
 void I2C1_EV_IRQHandler (void)
 {
@@ -512,46 +497,15 @@ void TIM1_TRG_COM_TIM17_IRQHandler (void)
 	}
 }
 
-#ifdef STM32F10X_MD_VL
-void DMA1_Channel7_IRQHandler ()
-{ // DMA1_Channel7_IRQn
-#else
 void DMA1_Channel5_IRQHandler ()
-{ // DMA1_Channel7_IRQn
-#endif
-#ifdef STM32F10X_MD_VL
-	NVIC_ClearPendingIRQ (DMA1_Channel7_IRQn);
-	DMA_ClearITPendingBit (DMA1_IT_GL7);
-#endif
-
-#ifdef STM32L471xx
+{ 
 	LL_DMA_ClearFlag_TC5 (DMA1);
-#endif
 
 	if (configuration_get_analog_anemometer_enabled () != 0) {
 		analog_anemometer_dma_irq ();
 	}
 }
 
-#ifdef STM32F10X_MD_VL
-void TIM4_IRQHandler (void)
-{
-	// obsluga przerwania cyfra-analog
-	TIM4->SR &= ~(1 << 0);
-
-	DAC->DHR8R1 = AFSK_DAC_ISR (&main_afsk);
-	DAC->SWTRIGR |= 1;
-
-#ifdef STM32L471xx
-	DAC->DHR8R2 = AFSK_DAC_ISR (&main_afsk);
-	DAC->SWTRIGR |= 2;
-#endif
-
-	if ((main_config_data_mode->wx & WX_ENABLED) == 0) {
-		led_control_led2_bottom (main_afsk.sending);
-	}
-}
-#else
 void TIM5_IRQHandler (void)
 {
 	// obsluga przerwania cyfra-analog
@@ -564,7 +518,6 @@ void TIM5_IRQHandler (void)
 		led_control_led2_bottom (main_afsk.sending);
 	}
 }
-#endif
 
 extern LL_DMA_InitTypeDef timer_config_DMA_InitStruct;
 
@@ -597,31 +550,3 @@ void DMA2_Channel5_IRQHandler ()
 	LL_DMA_EnableChannel (DMA2, LL_DMA_CHANNEL_5);
 }
 
-// void TIM7_IRQHandler (void)
-//{
-//	// obsluga przetwarzania analog-cyfra. Wersja z oversamplingiem
-//	TIM7->SR &= ~(1 << 0);
-//	NVIC_ClearPendingIRQ (TIM7_IRQn);
-// #define ASC	 adc_sample_count
-// #define ASC2 adc_sample_c2
-//	AdcBuffer[ASC] = ADC1->DR;
-//	if (ASC == 3) {
-//		//		io_ext_watchdog_service();
-//		AdcValue = (short int)((AdcBuffer[0] + AdcBuffer[1] + AdcBuffer[2] + AdcBuffer[3]) >> 1);
-//		AFSK_ADC_ISR (&main_afsk, (AdcValue - 4095));
-//		ASC = 0;
-//
-//		if (ASC2++ == 2) {
-//			// pooling AX25 musi być tu bo jak z przerwania wyskoczy nadawanie WX, BCN, TELEM przy
-//			// dcd == true to bedzie wisialo w nieskonczonosc bo ustawiania dcd jest w srodku
-//			// ax25_poll
-//			ax25_poll (&main_ax25);
-//			ASC2 = 0;
-//		}
-//		else {
-//		}
-//	}
-//	else {
-//		ASC++;
-//	}
-// }
