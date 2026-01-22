@@ -499,7 +499,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		}
 		else {
 
-#ifdef PARAMETEO
 			// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
 			//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf, rte_wx_umb_qf);
 			if (config_mode->wx == 1) {
@@ -512,27 +511,12 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
 				telemetry_send_values(rx10m, tx10m, digi10m, rte_main_average_battery_voltage, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, pwr_save_currently_cutoff, config_mode);
 			}
-#else
-				// if _DALLAS_AS_TELEM will be enabled the fifth channel will be set to temperature measured by DS12B20
-				//telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, rte_wx_temperature_dallas_valid, dallas_qf, rte_wx_ms5611_qf, rte_wx_dht_valid.qf, rte_wx_umb_qf);
-			if (config_mode->wx == 1) {
-
-				// if _METEO will be enabled, but without _DALLAS_AS_TELEM the fifth channel will be used to transmit temperature from MS5611
-				// which may be treated then as 'rack/cabinet internal temperature'. Dallas DS12B10 will be used for ragular WX frames
-				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, digidrop10m, rte_wx_temperature_internal_valid, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
-			}
-			else {
-				// if user will disable both _METEO and _DALLAS_AS_TELEM value will be zeroed internally anyway
-				telemetry_send_values(rx10m, tx10m, digi10m, kiss10m, digidrop10m, 0.0f, dallas_qf, pressure_qf, humidity_qf, wind_qf, config_mode);
-			}
-#endif
 		}
 		packet_tx_telemetry_counter = 0;
 
 		// service external watchdog while sending telemetry
 		io_ext_watchdog_service();
 
-#ifdef PARAMETEO
 		aprsis_prepare_telemetry(
 							telemetry_get_counter(),
 							rx10m,
@@ -550,7 +534,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 							telemetry_anemometer_navble,
 							telemetry_vbatt_low,
 							config_mode);
-#endif
 
 		if (rx10m == 0) {
 			main_wait_for_tx_complete();
@@ -563,10 +546,8 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 
 	if (packet_tx_telemetry_descr_counter >= packet_tx_telemetry_descr_interval) {
 
-#ifdef PARAMETEO
 		rte_main_trigger_gsm_telemetry_descriptions = 1;
 		status_send_powersave_registers();
-#endif
 
 		packet_tx_multi_per_call_handler();
 
@@ -598,7 +579,6 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 			umb_clear_error_history(&rte_wx_umb_context);
 		}
 
-		#ifdef STM32L471xx
 		if (main_config_data_gsm->aprsis_enable == 0 && main_config_data_gsm->api_enable == 1) {
 			// and trigger API wx packet transmission
 			packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
@@ -606,43 +586,13 @@ void packet_tx_handler(const config_data_basic_t * const config_basic, const con
 		else {
 			packet_tx_trigger_tcp = 0;
 		}
-		#endif
 
 		packet_tx_telemetry_descr_counter = 0;
 	}
 
-#ifdef PARAMETEO
 	// store counters in backup registers
 	backup_reg_set_packet_counters(packet_tx_beacon_counter, packet_tx_meteo_counter, packet_tx_meteo_gsm_counter);
-#else
-	// store counters in backup registers
-	backup_reg_set_packet_counters(packet_tx_beacon_counter, packet_tx_meteo_counter, 0);
-#endif
 
-#ifdef STM32L471xx
-	// if powersave mode allow to sent extensive status messages
-	if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
-		// if gsm modem is enabled
-		if (main_config_data_mode->gsm != 0) {
-			// if gprs is connected
-			if (gsm_sim800_gprs_ready == 1) {
-				// if no gsm status packet has been sent so far
-				if (packet_tx_gsm_status_sent == 0) {
-
-					// send a status
-					status_send_gsm();
-
-					// network parameters are not queries while APRS-IS connection is pending
-					// so no sense to send status more than once after the initialization
-					packet_tx_gsm_status_sent = 1;
-				}
-			}
-			else {
-				packet_tx_gsm_status_sent = 0;
-			}
-		}
-	}
-#endif
 
 
 }
@@ -652,9 +602,7 @@ void packet_tx_get_current_counters(packet_tx_counter_values_t * out) {
 	if (out != 0x00) {
 		out->beacon_counter = packet_tx_beacon_counter;
 		out->wx_counter = packet_tx_meteo_counter;
-#ifdef PARAMETEO
 		out->gsm_wx_counter = packet_tx_meteo_gsm_counter;
-#endif
 		out->telemetry_counter = packet_tx_telemetry_counter;
 		out->telemetry_desc_counter = packet_tx_telemetry_descr_counter;
 		out->kiss_counter = packet_tx_meteo_kiss_counter;
@@ -679,17 +627,13 @@ void packet_tx_set_current_counters(packet_tx_counter_values_t * in) {
 		if (in->kiss_counter != 0)
 			packet_tx_meteo_kiss_counter = in->kiss_counter;
 
-#ifdef PARAMETEO
 		if (in->gsm_wx_counter != 0)
 			packet_tx_meteo_gsm_counter = in->gsm_wx_counter;
-#endif
 	}
 	else {
 		packet_tx_beacon_counter = 0;
 		packet_tx_meteo_counter = 2;
-#ifdef PARAMETEO
 		packet_tx_meteo_gsm_counter = 0;
-#endif
 		packet_tx_telemetry_counter = 0;
 		packet_tx_telemetry_descr_counter = 10;
 		packet_tx_meteo_kiss_counter = 0;
@@ -721,7 +665,6 @@ int16_t packet_tx_get_minutes_to_next_wx(void) {
  */
 uint8_t packet_tx_is_gsm_meteo_pending(void) {
 	uint8_t out = 0;
-#ifdef STM32L471xx
 
 	if (gsm_sim800_gprs_ready == 1 && (packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		out = 1;
@@ -730,15 +673,12 @@ uint8_t packet_tx_is_gsm_meteo_pending(void) {
 	if (packet_tx_meteo_gsm_has_been_sent != 0) {
 		out = 1;
 	}
-#endif
 
 	return out;
 }
 
 void packet_tx_force_gsm_status(void) {
-#ifdef STM32L471xx
 	packet_tx_gsm_status_sent = 0;
-#endif
 }
 
 /**
@@ -772,13 +712,6 @@ uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressiv
 
 	packet_tx_meteo_counter = 0;
 	packet_tx_telemetry_counter = 0;
-//	if (packet_tx_meteo_counter > packet_tx_meteo_interval) {
-//		packet_tx_meteo_counter = packet_tx_meteo_interval - 1;
-//	}
-//
-//	if (packet_tx_telemetry_counter > packet_tx_telemetry_interval) {
-//		packet_tx_telemetry_counter = packet_tx_telemetry_interval - 1;
-//	}
 
 	return packet_tx_meteo_interval;
 }
@@ -790,3 +723,4 @@ uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressiv
 uint8_t packet_tx_get_meteo_counter(void) {
 	return packet_tx_meteo_counter;
 }
+

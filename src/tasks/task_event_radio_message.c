@@ -71,7 +71,6 @@ void task_event_radio_message (void *param)
 
 		ax25_new_msg_rx_flag = 0;
 		rx10m++;
-#ifdef PARAMETEO
 		rte_main_rx_total++;
 
 		// if aprsis is logged
@@ -79,7 +78,6 @@ void task_event_radio_message (void *param)
 			aprsis_igate_to_aprsis (&ax25_rxed_frame, (const char *)&main_callsign_with_ssid);
 		}
 
-#endif
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_NEW_RF, 4);
 
 		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_NEW_RF);

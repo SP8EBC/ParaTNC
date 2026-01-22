@@ -18,17 +18,9 @@
 
 #include "events_definitions/events_main.h"
 
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x.h>
-#include <stm32f10x_crc.h>
-#include <stm32f10x_flash.h>
-#endif
-
-#ifdef STM32L471xx
 #include "./drivers/l4/flash_stm32l4x.h"
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_crc.h>
-#endif
 
 /**		EBxx
  * STM32L476RE, 512KB flash mem, last flash memory page
@@ -52,15 +44,9 @@
  *
  */
 
-#ifdef STM32L471xx
 #define CONFIG_SECTION_FIRST_START 		MEMORY_MAP_CONFIG_SECTION_FIRST_START 	//0x0803F000
 #define CONFIG_SECTION_SECOND_START		MEMORY_MAP_CONFIG_SECTION_SECOND_START	//0x0803F800
 #define CONFIG_SECTION_DEFAULT_START	MEMORY_MAP_CONFIG_SECTION_DEFAULT_START	//0x08040000
-#else
-#define CONFIG_SECTION_FIRST_START 		0x0801E800 	//0x0801E800
-#define CONFIG_SECTION_SECOND_START		0x0801F000	//0x0801F000
-#define CONFIG_SECTION_DEFAULT_START	0x0801E000	//0x0801E000
-#endif
 
 #define CONFIG_MODE_PGM_CNTR	0x0
 #define CONFIG_MODE_OFSET		0x20			//	Current size: 0x14, free: 0x0C
@@ -81,11 +67,8 @@ const uint32_t * const config_section_default_start = 		(const uint32_t *)CONFIG
 uint8_t config_engineering_1 = 0xFFU;
 uint8_t config_engineering_2 = 0xFFU;
 
-#ifdef PARAMETEO
 #define STRUCT_COUNT 6
-#endif
 
-#ifdef STM32L471xx
 const uint16_t * config_data_pgm_cntr_first_ptr		= (uint16_t*)(CONFIG_SECTION_FIRST_START + CONFIG_MODE_PGM_CNTR);
 const uint16_t * config_data_pgm_cntr_second_ptr	= (uint16_t*)(CONFIG_SECTION_SECOND_START + CONFIG_MODE_PGM_CNTR);
 
@@ -104,28 +87,6 @@ const config_data_rtu_t * config_data_rtu_second_ptr						= (const config_data_r
 const config_data_gsm_t * config_data_gsm_second_ptr						= (const config_data_gsm_t *)		(CONFIG_SECTION_SECOND_START + CONFIG_GSM_OFFSET);
 
 const config_data_gsm_t * config_data_gsm_default_ptr = (const config_data_gsm_t *)&config_data_gsm_default;
-
-#endif
-
-#ifdef STM32F10X_MD_VL
-
-#define STRUCT_COUNT 5
-const uint16_t * config_data_pgm_cntr_first_ptr		= &config_data_pgm_cntr_first;
-const uint16_t * config_data_pgm_cntr_second_ptr	= &config_data_pgm_cntr_second;
-
-const config_data_mode_t * config_data_mode_first_ptr 				= &config_data_mode_first;
-const config_data_basic_t * config_data_basic_first_ptr 			= &config_data_basic_first;
-const config_data_wx_sources_t * config_data_wx_sources_first_ptr 	= &config_data_wx_sources_first;
-const config_data_umb_t * config_data_umb_first_ptr					= &config_data_umb_first;
-const config_data_rtu_t * config_data_rtu_first_ptr					= &config_data_rtu_first;
-
-const config_data_mode_t * config_data_mode_second_ptr 						= &config_data_mode_second;
-const config_data_basic_t * config_data_basic_second_ptr 					= &config_data_basic_second;
-const config_data_wx_sources_t * config_data_wx_sources_second_ptr			= &config_data_wx_sources_second;
-const config_data_umb_t * config_data_umb_second_ptr 						= &config_data_umb_second;
-const config_data_rtu_t * config_data_rtu_second_ptr						= &config_data_rtu_second;
-
-#endif
 
 #define CRC_OFFSET				0x7F8
 #define CRC_16B_WORD_OFFSET		CRC_OFFSET / 2
@@ -182,21 +143,6 @@ static int configuration_handler_program_counter(uint16_t counter, int8_t bank) 
 	// enable programming
 	FLASH->CR |= FLASH_CR_PG;
 
-#ifdef STM32F10X_MD_VL
-	if (bank == 1) {
-		// set programming counter. If second region is also screwed the first one will be used as a source
-		// if second is OK it will be used instead (if its programming counter has value three or more).
-		*(uint16_t*)&config_data_pgm_cntr_first = counter;
-	}
-	else {
-		// set programming counter. If second region is also screwed the first one will be used as a source
-		// if second is OK it will be used instead (if its programming counter has value three or more).
-		*(uint16_t*)&config_data_pgm_cntr_second = counter;
-	}
-
-#endif
-
-#ifdef STM32L471xx
 	if (bank == 1) {
 		// set programming counter. If second region is also screwed the first one will be used as a source
 		// if second is OK it will be used instead (if its programming counter has value three or more).
@@ -217,7 +163,7 @@ static int configuration_handler_program_counter(uint16_t counter, int8_t bank) 
 		WAIT_FOR_PGM_COMPLETION
 
 	}
-#endif
+	
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
 
@@ -240,29 +186,6 @@ static int configuration_handler_program_crc(uint32_t crc, int8_t bank) {
 	// enable programming
 	FLASH->CR |= FLASH_CR_PG;
 
-#ifdef STM32F10X_MD_VL
-	uint16_t * dst = 0;
-
-	if (bank == 1) {
-		dst = (uint16_t *)(config_section_first_start) + CRC_16B_WORD_OFFSET;
-	}
-	else if (bank == 2) {
-		dst = (uint16_t *)(config_section_second_start) + CRC_16B_WORD_OFFSET;
-	}
-
-	// program the CRC value
-	*dst = (uint16_t)(crc & 0xFFFF);
-	WAIT_FOR_PGM_COMPLETION
-	*(dst + 1) = (uint16_t)((crc & 0xFFFF0000) >> 16);
-
-	flash_status = FLASH_GetBank1Status();
-
-	if (flash_status != FLASH_COMPLETE) {
-		out = -2;	// exit from the loop in case of programming error
-	}
-#endif
-
-#ifdef STM32L471xx
 	if (bank == 1) {
 		// program the CRC value
 		*(uint32_t*)((uint32_t *)config_section_first_start + CRC_32B_WORD_OFFSET) = (uint32_t)(crc);
@@ -282,9 +205,6 @@ static int configuration_handler_program_crc(uint32_t crc, int8_t bank) {
 	else {
 		out = -3;
 	}
-
-
-#endif
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
@@ -307,18 +227,6 @@ static int configuration_handler_program_data(volatile void * source, volatile v
 	// unlock flash memory
 	FLASH_Unlock();
 
-#ifdef STM32F10X_MD_VL
-	// source pointer
-	volatile uint16_t * src = (uint16_t *)source;
-
-	// destination pointer for flash reprogramming
-	volatile uint16_t * dst = (uint16_t *)destination;
-
-	// amount of 16 bit words to copy across the memory
-	uint16_t siz = size / 2;
-#endif
-
-#ifdef STM32L471xx
 	// source pointer
 	volatile uint32_t * src = (uint32_t *)source;
 
@@ -327,7 +235,6 @@ static int configuration_handler_program_data(volatile void * source, volatile v
 
 	// amount of 32 bit words to copy across the memory
 	uint16_t siz = size / 4;
-#endif
 
 	// enable programming
 	FLASH->CR |= FLASH_CR_PG;
@@ -341,7 +248,6 @@ static int configuration_handler_program_data(volatile void * source, volatile v
 		WAIT_FOR_PGM_COMPLETION
 	}
 
-#ifdef STM32L471xx
 	// this family supports only 64 bit aligned in-application flash programming
 	if ((siz % 2) != 0) {
 		// if size is an odd number pad with extra 0xFFFFFF
@@ -350,7 +256,6 @@ static int configuration_handler_program_data(volatile void * source, volatile v
 		// check current status
 		flash_status = FLASH_GetBank1Status();
 	}
-#endif
 
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
@@ -441,10 +346,6 @@ uint32_t configuration_handler_restore_default_first(void) {
 
 	int comparision_result = 0;
 
-#ifdef STM32F10X_MD_VL
-	FLASH_Unlock();
-#endif
-
 	// erase first page
 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start);
 	flash_status = FLASH_ErasePage((uint32_t)config_section_first_start + 0x400);
@@ -481,13 +382,11 @@ uint32_t configuration_handler_restore_default_first(void) {
 					target = (void *) config_data_rtu_first_ptr;
 					size = sizeof(config_data_rtu_t);
 					break;
-#ifdef PARAMETEO
 				case 5:
 					source = (void *) &config_data_gsm_default;
 					target = (void *) config_data_gsm_first_ptr;
 					size = sizeof(config_data_gsm_t);
 					break;
-#endif
 			}
 
 			// program data
@@ -571,10 +470,6 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 	int comparision_result = 0;
 
-#ifdef STM32F10X_MD_VL
-	FLASH_Unlock();
-#endif
-
 	// erase first page
 	flash_status = FLASH_ErasePage((uint32_t)config_section_second_start);
 	flash_status = FLASH_ErasePage((uint32_t)config_section_second_start + 0x400);
@@ -611,13 +506,11 @@ uint32_t configuration_handler_restore_default_second(void) {
 					target = (void *) config_data_rtu_second_ptr;
 					size = sizeof(config_data_rtu_t);
 					break;
-#ifdef PARAMETEO
 				case 5:
 					source = (void *) &config_data_gsm_default;
 					target = (void *) config_data_gsm_second_ptr;
 					size = sizeof(config_data_gsm_t);
 					break;
-#endif
 			}
 
 			// program data
@@ -681,7 +574,6 @@ uint32_t configuration_handler_restore_default_second(void) {
 
 void configuration_handler_load_configuration(configuration_handler_region_t region) {
 
-#ifdef STM32L471xx
 	if (region == REGION_DEFAULT) {
 		main_config_data_gsm = config_data_gsm_default_ptr;
 	}
@@ -694,7 +586,6 @@ void configuration_handler_load_configuration(configuration_handler_region_t reg
 	else {
 		;
 	}
-#endif
 
 	if (region == REGION_DEFAULT) {
 		main_config_data_mode = &config_data_mode_default;
@@ -747,11 +638,6 @@ kiss_communication_nrc_t configuration_handler_erase_startup(void) {
 	else {
 		return NRC_UPLOAD_DOWNLOAD_NOT_ACCEPTED;
 	}
-
-
-#ifdef STM32F10X_MD_VL
-	FLASH_Unlock();
-#endif
 
 	// erase page
 	flash_status = FLASH_ErasePage((uint32_t)page_address);

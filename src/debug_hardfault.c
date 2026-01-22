@@ -9,9 +9,6 @@
 #include "variant.h"
 
 #include <stdio.h>
-
-#ifdef STM32L471xx
-
 #include <stm32l4xx.h>
 
 /// ==================================================================================================
@@ -230,4 +227,3 @@ void debug_hardfault_freertos_assert_fail(void)
 	debug_hardfault_stack_pointer_value = 0xFFFFFFFFu;
 }
 
-#endif

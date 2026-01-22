@@ -7,8 +7,6 @@
 
 #include "fanet_app.h"
 
-#ifdef STM32L471xx
-
 #include "drivers/sx1262/sx1262_modes.h"
 #include "drivers/sx1262/sx1262_status.h"
 #include "drivers/sx1262/sx1262_rf.h"
@@ -434,5 +432,4 @@ choćby 0x31 0x32 0x33 co oznacza 123
  *
  */
 
-#endif
 

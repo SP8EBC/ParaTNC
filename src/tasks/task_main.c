@@ -130,7 +130,6 @@ void task_main (void *parameters)
 			;
 		}
 
-#if defined(PARAMETEO)
 		if (rte_main_woken_up == RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP) {
 			event_log_sync (EVENT_INFO,
 							EVENT_SRC_PWR_SAVE,
@@ -223,60 +222,12 @@ void task_main (void *parameters)
 					  1);
 		}
 		else {
-#endif
 
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (MAIN_LOOP, 2);
 			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_MAIN);
 
 			// if Victron VE.direct client is enabled
 			if (main_config_data_mode->victron == 1) {
-#ifndef PARAMETEO
-				// if new KISS message has been received from the host
-				if (main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE ||
-					main_kiss_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
-
-					// cutting received string to Checksum, everything after will be skipped
-					ve_direct_cut_to_checksum (srl_get_rx_buffer (main_kiss_srl_ctx_ptr),
-											   TX_BUFFER_1_LN,
-											   &buffer_len);
-
-					// checking if this frame is ok
-					ve_direct_validate_checksum (srl_get_rx_buffer (main_kiss_srl_ctx_ptr),
-												 buffer_len,
-												 &retval);
-
-					if (retval == 1) {
-						// parsing data from input serial buffer to
-						retval = ve_direct_parse_to_raw_struct (
-							srl_get_rx_buffer (main_kiss_srl_ctx_ptr),
-							buffer_len,
-							&rte_pv_struct);
-
-						if (retval == 0) {
-							ve_direct_add_to_average (&rte_pv_struct, &rte_pv_average);
-
-							ve_direct_get_averages (&rte_pv_average,
-													&rte_pv_battery_current,
-													&rte_pv_battery_voltage,
-													&rte_pv_cell_voltage,
-													&rte_pv_load_current);
-
-							ve_direct_set_sys_voltage (&rte_pv_struct, &rte_pv_sys_voltage);
-
-							ve_direct_store_errors (&rte_pv_struct, &rte_pv_last_error);
-
-							rte_pv_messages_count++;
-						}
-					}
-					else {
-						rte_pv_corrupted_messages_count++;
-					}
-
-					// memset(srl_get_rx_buffer(main_kiss_srl_ctx_ptr), 0x00, TX_BUFFER_1_LN);
-
-					srl_receive_data (main_kiss_srl_ctx_ptr, VE_DIRECT_MAX_FRAME_LN, 0, 0, 0, 0, 0);
-				}
-#endif
 			}
 			else {
 			}
@@ -401,7 +352,6 @@ void task_main (void *parameters)
 				main_four_second_pool_timer = 4000;
 				SUPERVISOR_MONITOR_SET_CHECKPOINT (MAIN_LOOP, 11);
 
-#ifdef PARAMETEO
 				if (rte_main_trigger_radio_event_log > 0 && io_get_cntrl_vbat_r () == 1) {
 					SUPERVISOR_MONITOR_SET_CHECKPOINT (MAIN_LOOP, 12);
 
@@ -413,14 +363,11 @@ void task_main (void *parameters)
 
 					rte_main_trigger_radio_event_log--;
 				}
-#endif
 			} // end of four second pooling
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (MAIN_LOOP, 13);
 			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_MAIN);
 
-#if defined(PARAMETEO)
 		} // else under if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED)
-#endif
 		main_get_tasks_stats ();
 
 		supervisor_iam_alive (SUPERVISOR_THREAD_MAIN_LOOP);

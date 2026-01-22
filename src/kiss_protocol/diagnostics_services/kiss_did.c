@@ -14,15 +14,7 @@
 #include "variant.h"
 
 #include <string.h>
-
-#ifdef STM32F10X_MD_VL
-#include <stm32f10x.h>
-#define SRAM1_SIZE_MAX	(0x00002000UL) /*!< maximum SRAM1 size (up to 96 KBytes) */
-#endif
-
-#ifdef STM32L471xx
 #include <stm32l4xx.h>
-#endif
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS

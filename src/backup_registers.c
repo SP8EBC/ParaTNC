@@ -22,13 +22,6 @@
 #define REGISTER_PERSISTENT_STATUS	RTC->BKP11R
 #endif
 
-//#if defined(STM32F10X_MD_VL)
-//#define REGISTER_COUNTERS			BKP->DR4
-//#define REGISTER_PACKET_COUNTERS	BKP->DR
-//#define REGISTER_RESET_CHECK_FAIL	RTC->BKP8R
-//#define REGISTER_ASSERT				RTC->BKP9R
-//#endif
-
 #define BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H 	1u
 #define BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK 		(0xFFu << 2)
 
@@ -79,24 +72,13 @@
 //		msb
 
 static void backup_reg_unclock(void) {
-#ifdef PARAMETEO
 	// enable access to backup domain
 	PWR->CR1 |= PWR_CR1_DBP;
-#endif
 
-#ifdef PARATNC
-	PWR->CR |= PWR_CR_DBP;
-#endif
 }
 
 static void backup_reg_lock(void) {
-#ifdef PARAMETEO
 	PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
-#endif
-
-#ifdef PARATNC
-	PWR->CR &= (0xFFFFFFFFu ^ PWR_CR_DBP);
-#endif
 }
 
 /**
@@ -154,14 +136,7 @@ uint32_t backup_reg_get_configuration(void) {
 
 	uint32_t out = 0;
 
-#ifdef PARATNC
-	out = BKP->DR3;
-#endif
-
-#ifdef PARAMETEO
 	out = RTC->BKP3R;
-
-#endif
 
 	return out;
 }
@@ -175,13 +150,7 @@ uint32_t backup_reg_get_configuration(void) {
 void  backup_reg_set_configuration(uint32_t value) {
 	backup_reg_unclock();
 
-#ifdef PARATNC
-	BKP->DR3 = value;
-#endif
-
-#ifdef PARAMETEO
 	RTC->BKP3R = value;
-#endif
 
 	backup_reg_lock();
 
@@ -193,19 +162,12 @@ void  backup_reg_set_configuration(uint32_t value) {
  * @param value
  */
 void backup_reg_set_bits_configuration(uint32_t value) {
-#ifdef PARATNC
-	BKP->DR3 |= value;
-#endif
-
-#ifdef PARAMETEO
 	// enable access to backup domain
 	backup_reg_unclock();
 
 	RTC->BKP3R |= value;
 
 	backup_reg_lock();
-
-#endif
 }
 
 /**
@@ -218,13 +180,7 @@ void backup_reg_clear_bits_configuration(uint32_t value) {
 	// enable access to backup domain
 	backup_reg_unclock();
 
-#ifdef PARATNC
-	BKP->DR3 &= (0xFFFF ^ value);
-#endif
-
-#ifdef PARAMETEO
 	RTC->BKP3R &= (0xFFFFFFFFu ^ value);
-#endif
 
 	backup_reg_lock();
 
@@ -237,9 +193,7 @@ void backup_reg_reset_all_powersave_states(void) {
 
 	backup_reg_unclock();
 
-#ifdef PARAMETEO
 	REGISTER &= 0xFFFFFFFFu ^ BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK;
-#endif
 
 	backup_reg_lock();
 
@@ -253,12 +207,10 @@ void backup_reg_reset_all_powersave_states(void) {
  */
 int backup_reg_is_in_powersave_state(uint32_t state) {
 	int out = 0;
-#ifdef PARAMETEO
 
 	if ((REGISTER & BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK) == state) {
 		out = 1;
 	}
-#endif
 	return out;
 }
 
@@ -268,13 +220,11 @@ int backup_reg_is_in_powersave_state(uint32_t state) {
  * @param state
  */
 void backup_reg_set_powersave_state(uint32_t state) {
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER |= state;
 
 	backup_reg_lock();
-#endif
 }
 
 /**
@@ -284,9 +234,7 @@ void backup_reg_set_powersave_state(uint32_t state) {
 uint16_t backup_reg_get_powersave_state(void) {
 	int out = 0;
 
-#ifdef PARAMETEO
 	out = (uint16_t)(REGISTER & BACKUP_REG_ALL_PWRSAVE_STATES_BITMASK);
-#endif
 
 	return out;
 }
@@ -299,9 +247,7 @@ uint32_t backup_reg_get_wakeup_counter(void) {
 
 	uint32_t out = 0;
 
-#ifdef PARAMETEO
 	out = (uint32_t)((REGISTER_COUNTERS & 0xFFFF0000u) >> 16);
-#endif
 
 	return out;
 }
@@ -313,9 +259,7 @@ uint32_t backup_reg_get_wakeup_counter(void) {
 void backup_reg_set_wakeup_counter(uint32_t in) {
 	backup_reg_unclock();
 
-#ifdef PARAMETEO
 	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0x0000FFFFu) | ((in & 0xFFFFu) << 16);
-#endif
 
 	backup_reg_lock();
 }
@@ -327,9 +271,7 @@ void backup_reg_set_wakeup_counter(uint32_t in) {
 uint32_t backup_reg_get_sleep_counter(void) {
 	uint32_t out = 0;
 
-#ifdef PARAMETEO
 	out = (uint16_t)(REGISTER_COUNTERS & 0xFFFFu);
-#endif
 
 	return out;
 }
@@ -341,9 +283,7 @@ uint32_t backup_reg_get_sleep_counter(void) {
 void backup_reg_set_sleep_counter(uint32_t in) {
 	backup_reg_unclock();
 
-#ifdef PARAMETEO
 	REGISTER_COUNTERS = (REGISTER_COUNTERS & 0xFFFF0000u) | (uint16_t)(in & 0xFFFFu);
-#endif
 
 	backup_reg_lock();
 }
@@ -356,9 +296,7 @@ uint32_t backup_reg_get_last_sleep_timestamp(void) {
 
 	uint32_t out = 0;
 
-#ifdef PARAMETEO
 	out = REGISTER_LAST_SLEEP;
-#endif
 
 	return out;
 }
@@ -368,13 +306,11 @@ uint32_t backup_reg_get_last_sleep_timestamp(void) {
  */
 void backup_reg_set_last_sleep_timestamp(void) {
 
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER_LAST_SLEEP = RTC->TR;
 
 	backup_reg_lock();
-#endif
 
 }
 
@@ -385,9 +321,7 @@ void backup_reg_set_last_sleep_timestamp(void) {
 void backup_reg_reset_inhibit_periodic_pwr_switch(void) {
 	backup_reg_unclock();
 
-#ifdef PARAMETEO
 	REGISTER &= 0xFFFFFFFFu ^ BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H;
-#endif
 
 	backup_reg_lock();
 }
@@ -399,9 +333,7 @@ void backup_reg_reset_inhibit_periodic_pwr_switch(void) {
 void backup_reg_inhibit_periodic_pwr_switch(void) {
 	backup_reg_unclock();
 
-#ifdef PARAMETEO
 	REGISTER |= BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H;
-#endif
 
 	backup_reg_lock();
 
@@ -414,12 +346,10 @@ void backup_reg_inhibit_periodic_pwr_switch(void) {
 uint32_t backup_reg_is_periodic_pwr_switch_inhibited(void) {
 
 	int out = 0;
-#ifdef PARAMETEO
 
 	if ((REGISTER & BACKUP_REG_INHIBIT_PWR_SWITCH_PERIODIC_H) != 0) {
 		out = 1u;
 	}
-#endif
 	return out;
 }
 
@@ -430,9 +360,7 @@ uint32_t backup_reg_is_periodic_pwr_switch_inhibited(void) {
 uint32_t backup_reg_get_last_wakeup_timestamp(void) {
 
 	uint32_t out = 0;
-#ifdef PARAMETEO
 	out = REGISTER_LAST_WKUP;
-#endif
 	return out;
 }
 
@@ -441,13 +369,11 @@ uint32_t backup_reg_get_last_wakeup_timestamp(void) {
  */
 void backup_reg_set_last_wakeup_timestamp(void) {
 
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER_LAST_WKUP = RTC->TR;
 
 	backup_reg_lock();
-#endif
 }
 
 /**
@@ -457,9 +383,7 @@ void backup_reg_set_last_wakeup_timestamp(void) {
 uint32_t backup_reg_get_last_sleep_duration(void) {
 	uint32_t out = 0;
 
-#ifdef PARAMETEO
 	out = REGISTER_LAST_SLTIM;
-#endif
 
 	return out;
 }
@@ -469,13 +393,11 @@ uint32_t backup_reg_get_last_sleep_duration(void) {
  * @param in
  */
 void backup_reg_set_last_sleep_duration(uint32_t in) {
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER_LAST_SLTIM = in;
 
 	backup_reg_lock();
-#endif
 }
 
 /**
@@ -483,13 +405,11 @@ void backup_reg_set_last_sleep_duration(uint32_t in) {
  * is reset to default
  */
 void backup_reg_reset_counters(void) {
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER_PACKET_COUNTERS = 0u;
 
 	backup_reg_lock();
-#endif
 }
 
 /**
@@ -499,8 +419,6 @@ void backup_reg_reset_counters(void) {
 uint8_t backup_reg_get_telemetry(void) {
 
 	uint8_t out = 0u;
-
-#ifdef PARAMETEO
 
 	uint32_t reg_value = REGISTER_PACKET_COUNTERS;
 
@@ -517,8 +435,6 @@ uint8_t backup_reg_get_telemetry(void) {
 		; // return zero if checksum is wrong
 	}
 
-#endif
-
 	return out;
 }
 
@@ -533,8 +449,6 @@ void backup_reg_set_telemetry(uint16_t in) {
 	}
 
 	const uint8_t narrowed_in = (uint8_t)(in & 0xFFu);
-
-#ifdef PARAMETEO
 
 	// get current value
 	uint32_t reg_value = REGISTER_PACKET_COUNTERS;
@@ -552,7 +466,6 @@ void backup_reg_set_telemetry(uint16_t in) {
 	backup_reg_set_checksum(&reg_value, new_checksum);
 
 	REGISTER_PACKET_COUNTERS = reg_value;
-#endif
 
 	backup_reg_lock();
 
@@ -565,7 +478,6 @@ void backup_reg_set_telemetry(uint16_t in) {
  * @param meteo_gsm_counter
  */
 void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_counter, uint8_t * meteo_gsm_counter) {
-#ifdef PARAMETEO
 	uint32_t reg_value = REGISTER_PACKET_COUNTERS;
 
 	// calculate checksum from register value
@@ -588,7 +500,6 @@ void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_co
 		// and save it back into backup register
 		backup_reg_set_packet_counters(*beacon_counter, *meteo_counter, *meteo_gsm_counter);
 	}
-#endif
 }
 
 /**
@@ -598,7 +509,6 @@ void backup_reg_get_packet_counters(uint8_t * beacon_counter, uint8_t * meteo_co
  * @param meteo_gsm_counter
  */
 void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counter, uint8_t meteo_gsm_counter) {
-#ifdef PARAMETEO
 	volatile uint32_t reg_value = REGISTER_PACKET_COUNTERS;
 
 	// clear existing content
@@ -627,12 +537,9 @@ void backup_reg_set_packet_counters(uint8_t beacon_counter, uint8_t meteo_counte
 	REGISTER_PACKET_COUNTERS = reg_value;
 
 	backup_reg_lock();
-
-#endif
 }
 
 void backup_reg_increment_aprsis_check_reset(void) {
-#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -653,11 +560,9 @@ void backup_reg_increment_aprsis_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
-#endif
 }
 
 void backup_reg_increment_weather_measurements_check_reset(void) {
-#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -678,11 +583,9 @@ void backup_reg_increment_weather_measurements_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
-#endif
 }
 
 void backup_reg_increment_dallas_degraded_reset(void) {
-#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -703,11 +606,9 @@ void backup_reg_increment_dallas_degraded_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
-#endif
 }
 
 void backup_reg_increment_is_rtc_ok_check_reset(void) {
-#ifdef PARAMETEO
 	// REGISTER_RESET_CHECK_FAIL
 	volatile uint32_t reg_value = REGISTER_RESET_CHECK_FAIL;
 
@@ -728,20 +629,14 @@ void backup_reg_increment_is_rtc_ok_check_reset(void) {
 	REGISTER_RESET_CHECK_FAIL = reg_value;
 
 	backup_reg_lock();
-#endif
 }
 
 uint32_t backup_reg_get_register_reset_check_fail(void)
 {
-#ifdef PARAMETEO
 	return REGISTER_RESET_CHECK_FAIL;
-#else
-	return 0;
-#endif
 }
 
 void backup_assert(uint32_t assert) {
-#ifdef PARAMETEO
 	backup_reg_unclock();
 
 	REGISTER_ASSERT |= assert;
@@ -749,7 +644,6 @@ void backup_assert(uint32_t assert) {
 	backup_reg_lock();
 
 	NVIC_SystemReset();
-#endif
 }
 
 uint32_t backup_reg_get_last_restart_date(void) {

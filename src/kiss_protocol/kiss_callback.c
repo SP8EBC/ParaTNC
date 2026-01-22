@@ -202,11 +202,7 @@ int32_t kiss_callback_get_version_id(uint8_t* input_frame_from_host, uint16_t in
 
 	uint8_t config_payload_size = 0;
 
-#ifdef PARAMETEO
 	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "METEO-%s-%s", SW_VER, SW_KISS_PROTO);
-#else
-	config_payload_size = snprintf((char *)response_buffer + 4, buffer_size, "TNC-%s-%s", SW_VER, SW_KISS_PROTO);
-#endif
 
 	// construct a response
 	response_buffer[0] = FEND;

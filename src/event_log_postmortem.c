@@ -14,10 +14,7 @@
 #include "./events_definitions/events_main.h"
 
 #include <string.h>
-
-#ifdef STM32L471xx
 #include <stm32l4xx.h>
-#endif
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS

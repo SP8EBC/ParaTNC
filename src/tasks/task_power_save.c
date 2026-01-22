@@ -85,8 +85,6 @@ void task_power_save (void *parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_POWERSAV, 5);
 
-#ifdef PARAMETEO
-
 		if (rte_main_check_adc == 1) {
 			AD_Restart ();
 
@@ -113,7 +111,6 @@ void task_power_save (void *parameters)
 		if (main_continue_loop == 0) {
 			continue;
 		}
-#endif
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_POWERSAV, 9);
 

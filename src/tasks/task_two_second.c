@@ -63,7 +63,6 @@ void task_two_second (void *parameters)
 			supervisor_iam_alive(SUPERVISOR_THREAD_SEND_WX);
 		}
 
-#ifdef PARAMETEO
 		if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TWO_SEC, 4);
 
@@ -74,9 +73,6 @@ void task_two_second (void *parameters)
 		else {
 			io_inhibit_pool_vbat_r ();
 		}
-#endif
-
-#ifdef PARAMETEO
 
 		if (io_get_cntrl_vbat_s () == 1) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TWO_SEC, 5);
@@ -114,7 +110,6 @@ void task_two_second (void *parameters)
 		}
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TWO_SEC, 9);
-#endif
 		main_reload_internal_wdg ();
 
 		main_two_second_pool_timer = 2000;

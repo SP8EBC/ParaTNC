@@ -62,7 +62,6 @@ void task_one_second (void *parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 3);
 
-#ifdef PARAMETEO
 		if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
 			if (gsm_sim800_tcpip_tx_busy () == 0) {
 				rte_main_reboot_scheduled_diag = 0;
@@ -124,7 +123,6 @@ void task_one_second (void *parameters)
 				aprsis_check_alive ();
 			}
 		}
-#endif
 
 		if ((io_get_cntrl_vbat_s () == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 10);
