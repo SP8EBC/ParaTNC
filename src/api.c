@@ -8,14 +8,14 @@
  *      19 maja, Krszystof Binek, miedy 12 a 13
  */
 
+#include "etc/api_configuration.h"
 #include <api/api.h>
 #include <api/api_content.h>
-#include "etc/api_configuration.h"
 
 #include "http_client/http_client.h"
 
-#include "stdint.h"
 #include "aes.h"
+#include "stdint.h"
 
 /* FreeRTOS includes. */
 #include <FreeRTOS.h>
@@ -24,9 +24,9 @@
 /**
  * Buffers for generating JSON and URL
  */
-#define API_BUFFER_LN	640
+#define API_BUFFER_LN 640
 char api_buffer[API_BUFFER_LN];
-#define URL_BUFFER_LN	96
+#define URL_BUFFER_LN 96
 char api_url_buffer[URL_BUFFER_LN];
 
 /**
@@ -65,69 +65,81 @@ const uint8_t api_iv[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
  * appears on the same call to `api_pooler` function. For code simplicity only one
  * API request is possible in the single 'api_pooler' cycle
  */
-#define API_TRIGGER_STATUS			(1 << 1)
-#define API_TRIGGER_MEASUREMENTS	(1 << 2)
+#define API_TRIGGER_STATUS		 (1 << 1)
+#define API_TRIGGER_MEASUREMENTS (1 << 2)
 int8_t api_retrigger_api_call = 0;
 
 /**
  * Pointers to base url and station name (stored within flash)
  */
-const char * api_base_url;
-const char * api_station_name;
+const char *api_base_url;
+const char *api_station_name;
 
-typedef enum api_endpoint{
+typedef enum api_endpoint {
 
 	PARAMETEO_STATUS,
 	PARAMETEO_WX,
 	PARAMETEO_EVENT
 } api_endpoint_t;
 
-#define	LN	api_buffer_idx
+#define LN	api_buffer_idx
 #define OUT api_buffer
 
-static void api_construct_url_status(api_endpoint_t endpoint) {
+static void api_construct_url_status (api_endpoint_t endpoint)
+{
 
 	if (api_base_url != 0x00 && api_station_name != 0x00) {
-		memset(api_url_buffer, 0x00, URL_BUFFER_LN);
+		memset (api_url_buffer, 0x00, URL_BUFFER_LN);
 
 		switch (endpoint) {
 		case PARAMETEO_STATUS:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/status/v1", api_base_url, api_station_name);
+			snprintf (api_url_buffer,
+					  URL_BUFFER_LN - 1,
+					  "%s/parameteo/%s/status/v1",
+					  api_base_url,
+					  api_station_name);
 			break;
 		case PARAMETEO_WX:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/measurements/v1", api_base_url, api_station_name);
+			snprintf (api_url_buffer,
+					  URL_BUFFER_LN - 1,
+					  "%s/parameteo/%s/measurements/v1",
+					  api_base_url,
+					  api_station_name);
 			break;
 		case PARAMETEO_EVENT:
-			snprintf(api_url_buffer, URL_BUFFER_LN - 1, "%s/parameteo/%s/event/v1", api_base_url, api_station_name);
+			snprintf (api_url_buffer,
+					  URL_BUFFER_LN - 1,
+					  "%s/parameteo/%s/event/v1",
+					  api_base_url,
+					  api_station_name);
 			break;
 		}
 	}
-
 }
 
-static void api_callback(uint16_t http_code, char * content, uint16_t content_lenght) {
+static void api_callback (uint16_t http_code, char *content, uint16_t content_lenght)
+{
 
-	http_client_close();
-
-
+	http_client_close ();
 }
 
-void api_init(const char * api_base, const char * station_name) {
+void api_init (const char *api_base, const char *station_name)
+{
 	api_base_url = api_base;
 	api_station_name = station_name;
-	AES_init_ctx_iv(&api_aes_context, api_shared_secret, api_iv);
-	memset(api_mac, 0x00, 33);
-	memset(api_mac, '0', 32);
+	AES_init_ctx_iv (&api_aes_context, api_shared_secret, api_iv);
+	memset (api_mac, 0x00, 33);
+	memset (api_mac, '0', 32);
 }
 
-
-void api_calculate_mac(void) {
+void api_calculate_mac (void)
+{
 
 	// iterators used during conversion to hex string after encryption
 	int i = 0, j = 0;
 
-	memset(api_aes_mac_buffer, 0x00, 16);
-	memset(api_mac, 0x00, 33);
+	memset (api_aes_mac_buffer, 0x00, 16);
+	memset (api_mac, 0x00, 33);
 
 	api_aes_mac_buffer[0] = (uint8_t)((master_time & 0xFF));
 	api_aes_mac_buffer[1] = (uint8_t)((master_time & 0xFF00) >> 8);
@@ -146,76 +158,91 @@ void api_calculate_mac(void) {
 	api_aes_mac_buffer[14] = (uint8_t)((rte_wx_temperature_average_dallas & 0xFF));
 	api_aes_mac_buffer[15] = (uint8_t)((rte_wx_temperature_average_dallas & 0xFF00) >> 8);
 
-	AES_CBC_encrypt_buffer(&api_aes_context, api_aes_mac_buffer, 16);
+	AES_CBC_encrypt_buffer (&api_aes_context, api_aes_mac_buffer, 16);
 
 	for (i = 0; i < 16; i++) {
-		snprintf(api_mac + j, 3, "%02X", api_aes_mac_buffer[i]);
+		snprintf (api_mac + j, 3, "%02X", api_aes_mac_buffer[i]);
 		j += 2;
 	}
-
 }
 
-void api_send_json_status(void) {
+void api_send_json_status (void)
+{
 
-	taskENTER_CRITICAL();
+	taskENTER_CRITICAL ();
 
 	BEGIN
 	PRINT_ALL_STATUS
 	END
 
-	taskEXIT_CRITICAL();
+	taskEXIT_CRITICAL ();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
-		api_construct_url_status(PARAMETEO_STATUS);
+		api_construct_url_status (PARAMETEO_STATUS);
 
-		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
+		api_retval = http_client_async_post (api_url_buffer,
+											 strlen (api_url_buffer),
+											 OUT,
+											 strlen (OUT),
+											 0,
+											 api_callback);
 	}
 }
 
-void api_send_json_measuremenets(void) {
+void api_send_json_measuremenets (void)
+{
 
-	taskENTER_CRITICAL();
+	taskENTER_CRITICAL ();
 
 	BEGIN
 	PRINT_ALL_MEASUREMENTS
 	END
 
-	taskEXIT_CRITICAL();
+	taskEXIT_CRITICAL ();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
-		api_construct_url_status(PARAMETEO_WX);
+		api_construct_url_status (PARAMETEO_WX);
 
-		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
+		api_retval = http_client_async_post (api_url_buffer,
+											 strlen (api_url_buffer),
+											 OUT,
+											 strlen (OUT),
+											 0,
+											 api_callback);
 	}
 }
 
-uint8_t api_send_json_event(const event_log_exposed_t * event) {
-	taskENTER_CRITICAL();
+uint8_t api_send_json_event (const event_log_exposed_t *event)
+{
+	taskENTER_CRITICAL ();
 
 	BEGIN
-	PRINT_STRING(api_station_name, station_name);
-	PRINT_32INT(event->event_master_time, event_master_time);
-	PRINT_32INT(event->event_counter_id, event_counter_id);
-	PRINT_STRING(event->severity_str, severity);
-	PRINT_STRING(event->source_str_name, source);
-	PRINT_STRING(event->event_str_name, event);
-	PRINT_16INT(event->param, param);
-	PRINT_16INT(event->param2, param2);
-	PRINT_16INT(event->wparam, wparam);
-	PRINT_16INT(event->wparam2, wparam2);
-	PRINT_32INT(event->lparam, lparam);
-	PRINT_32INT(event->lparam2, lparam2);
+	PRINT_STRING (api_station_name, station_name);
+	PRINT_32INT (event->event_master_time, event_master_time);
+	PRINT_32INT (event->event_counter_id, event_counter_id);
+	PRINT_STRING (event->severity_str, severity);
+	PRINT_STRING (event->source_str_name, source);
+	PRINT_STRING (event->event_str_name, event);
+	PRINT_16INT (event->param, param);
+	PRINT_16INT (event->param2, param2);
+	PRINT_16INT (event->wparam, wparam);
+	PRINT_16INT (event->wparam2, wparam2);
+	PRINT_32INT (event->lparam, lparam);
+	PRINT_32INT (event->lparam2, lparam2);
 	END
 
-	taskEXIT_CRITICAL();
+	taskEXIT_CRITICAL ();
 
 	if (api_buffer_idx < API_BUFFER_LN) {
-		api_construct_url_status(PARAMETEO_EVENT);
+		api_construct_url_status (PARAMETEO_EVENT);
 
-		api_retval = http_client_async_post(api_url_buffer, strlen(api_url_buffer), OUT, strlen(OUT), 0, api_callback);
+		api_retval = http_client_async_post (api_url_buffer,
+											 strlen (api_url_buffer),
+											 OUT,
+											 strlen (OUT),
+											 0,
+											 api_callback);
 	}
 
 	return api_retval;
 }
-
-

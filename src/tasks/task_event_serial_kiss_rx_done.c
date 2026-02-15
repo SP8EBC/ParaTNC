@@ -33,7 +33,7 @@ void task_event_kiss_rx_done (void *param)
 	srl_context_t *ctx = main_kiss_srl_ctx_ptr;
 
 	while (1) {
-		SUPERVISOR_MONITOR_CLEAR(EVENT_SRL_KISS_RX_DONE);
+		SUPERVISOR_MONITOR_CLEAR (EVENT_SRL_KISS_RX_DONE);
 
 		// wait infinite amount of time for event from a serial port indicating that
 		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_serial_kiss,
@@ -42,25 +42,27 @@ void task_event_kiss_rx_done (void *param)
 															   pdTRUE,
 															   0xFFFFFFFFu);
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 1);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 1);
 
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 2);
-			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 2);
+			xEventGroupClearBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
 
 			// check if KISS communication with host-PC is enabled
 			if (main_kiss_enabled == 1) {
 
 				// if there were an error during receiving frame from host, restart rxing once again
 				if (ctx->srl_rx_state == SRL_RX_ERROR) {
-					SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 3);
+					SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 3);
 
-					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
+					srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr,
+													KISS_CONFIG_RECEIVE_SIZE);
 				}
 
 				else if (ctx->srl_rx_state == SRL_RX_DONE) {
-					SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 4);
+					SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 4);
 
 					// parse i ncoming data and then transmit on radio freq
 					const int ln = kiss_parse_received (srl_get_rx_buffer (ctx),
@@ -71,21 +73,22 @@ void task_event_kiss_rx_done (void *param)
 														KISS_CONFIG_DIAGNOSTIC_BUFFER_LN,
 														KISS_TRANSPORT_SERIAL_PORT);
 
-					SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 5);
+					SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 5);
 					if (ln == 0) {
 						kiss10m++; // increase kiss messages counter
 
 						// restart KISS receiving to be ready for next frame
-						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
+						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr,
+														KISS_CONFIG_RECEIVE_SIZE);
 					}
 					else if (ln > 0) {
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 6);
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 6);
 						// if a response (ACK) to this KISS frame shall be sent
 
 						// wait for any pending transmission to complete
 						srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
 
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 7);
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 7);
 
 						srl_send_data (main_kiss_srl_ctx_ptr,
 									   task_event_kiss_buffer,
@@ -94,15 +97,16 @@ void task_event_kiss_rx_done (void *param)
 									   SRL_INTERNAL);
 
 						// restart KISS receiving to be ready for next frame
-						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr, KISS_CONFIG_RECEIVE_SIZE);
+						srl_receive_data_kiss_protocol (main_kiss_srl_ctx_ptr,
+														KISS_CONFIG_RECEIVE_SIZE);
 
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 8);
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 8);
 					}
 					else {
 						// negative value means that restarting of serial port reception was done
 						// inside KISS protocol handling callback, so here only the response
 						// shall be send
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 10);
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 10);
 
 						// real length of data to be returned
 						const uint32_t real_ln = -ln;
@@ -110,7 +114,7 @@ void task_event_kiss_rx_done (void *param)
 						// wait for any pending transmission to complete
 						srl_wait_for_tx_completion (main_kiss_srl_ctx_ptr);
 
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 11);
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 11);
 
 						srl_send_data (main_kiss_srl_ctx_ptr,
 									   task_event_kiss_buffer,
@@ -118,17 +122,16 @@ void task_event_kiss_rx_done (void *param)
 									   real_ln,
 									   SRL_INTERNAL);
 
-						SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 12);
-
+						SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 12);
 					}
-
 				}
 
-				SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_RX_DONE, 9);
-			}	// if (main_kiss_enabled == 1) {
-			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
+				SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_RX_DONE, 9);
+			} // if (main_kiss_enabled == 1) {
+			xEventGroupSetBits (main_eventgroup_handle_powersave,
+								MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_RX);
 
 		} // 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_RX_DONE)
-		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_KISS_RX_DONE);
-	}	// while(1)
+		supervisor_iam_alive (SUPERVISOR_THREAD_EVENT_SRL_KISS_RX_DONE);
+	} // while(1)
 }

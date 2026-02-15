@@ -7,8 +7,8 @@
 
 #include "button.h"
 
-#include "main.h"
 #include "./gsm/sim800c.h"
+#include "main.h"
 
 #include "aprsis.h"
 #include "beacon.h"
@@ -24,8 +24,8 @@ uint8_t button_left_previous_state = 1;
 
 uint8_t button_right_previous_state = 1;
 
-
-void button_check_all(configuration_button_function_t left, configuration_button_function_t right) {
+void button_check_all (configuration_button_function_t left, configuration_button_function_t right)
+{
 
 	/**
 	 * Naming convention: There are two buttons on the PCB. Lets call it
@@ -41,10 +41,10 @@ void button_check_all(configuration_button_function_t left, configuration_button
 	 */
 
 	// current state of right button
-	const uint32_t state_right = LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_3);
+	const uint32_t state_right = LL_GPIO_IsInputPinSet (GPIOC, LL_GPIO_PIN_3);
 
 	// current state of left button
-	const uint32_t state_left = LL_GPIO_IsInputPinSet(GPIOA, LL_GPIO_PIN_0);
+	const uint32_t state_left = LL_GPIO_IsInputPinSet (GPIOA, LL_GPIO_PIN_0);
 
 	volatile int res = 123;
 
@@ -55,22 +55,15 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		switch (left) {
 		case BUTTON_SEND_BEACON:
 #ifdef SX1262_IMPLEMENTATION
-			res = fanet_test();
+			res = fanet_test ();
 #else
-			beacon_send_own(0,0);
+			beacon_send_own (0, 0);
 #endif
 			break;
-		case BUTTON_RECONNECT_APRSIS:
-			aprsis_disconnect();
-			break;
-		case BUTTON_RESET_GSM_GPRS:
-			gsm_sim800_reset(&main_gsm_state);
-			break;
-		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT:
-			aprsis_debug_set_simulate_timeout();
-			break;
-		default:
-			break;
+		case BUTTON_RECONNECT_APRSIS: aprsis_disconnect (); break;
+		case BUTTON_RESET_GSM_GPRS: gsm_sim800_reset (&main_gsm_state); break;
+		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT: aprsis_debug_set_simulate_timeout (); break;
+		default: break;
 		}
 	}
 
@@ -81,33 +74,25 @@ void button_check_all(configuration_button_function_t left, configuration_button
 		switch (right) {
 		case BUTTON_SEND_BEACON:
 #ifdef SX1262_IMPLEMENTATION
-			res = fanet_test();
+			res = fanet_test ();
 #else
-			beacon_send_own(0,0);
+			beacon_send_own (0, 0);
 #endif
 			break;
-		case BUTTON_RECONNECT_APRSIS:
-			aprsis_disconnect();
-			break;
-		case BUTTON_RESET_GSM_GPRS:
-			gsm_sim800_reset(&main_gsm_state);
-			break;
-		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT:
-			aprsis_debug_set_simulate_timeout();
-			break;
-		default:
-			break;
+		case BUTTON_RECONNECT_APRSIS: aprsis_disconnect (); break;
+		case BUTTON_RESET_GSM_GPRS: gsm_sim800_reset (&main_gsm_state); break;
+		case BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT: aprsis_debug_set_simulate_timeout (); break;
+		default: break;
 		}
 	}
 
-	if (res == 0)
-	{
+	if (res == 0) {
 		button_left_previous_state = 0;
 	}
-
 }
 
-void button_debounce(void) {
+void button_debounce (void)
+{
 	button_left_previous_state = 1;
 
 	button_right_previous_state = 1;

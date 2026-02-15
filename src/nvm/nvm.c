@@ -7,16 +7,16 @@
 
 #include "./nvm/nvm.h"
 #include "./nvm/nvm_internals.h"
-#include "nvm_configuration.h"
-#include "memory_map.h"
 #include "backup_registers.h"
+#include "memory_map.h"
+#include "nvm_configuration.h"
 
 #define KB *1024
 
 #ifdef STM32L471xx
-//#include <stm32l4xx_hal_cortex.h>
-#include <stm32l4xx.h>
+// #include <stm32l4xx_hal_cortex.h>
 #include "./drivers/l4/flash_stm32l4x.h"
+#include <stm32l4xx.h>
 
 #else
 
@@ -27,18 +27,19 @@
 /// ==================================================================================================
 
 //!< Size of NVM data logger in pages
-//#define NVM_MEASUREMENT_PAGES_USED		96
+// #define NVM_MEASUREMENT_PAGES_USED		96
 
 //!< Size of NVM data logger in bytes
-#define NVM_MEASUREMENT_MAXIMUM_SIZ		(NVM_PAGE_SIZE * nvm_measurement_page_used)
+#define NVM_MEASUREMENT_MAXIMUM_SIZ (NVM_PAGE_SIZE * nvm_measurement_page_used)
 
 //!< A macro to calculate start address of last page for NVM data logger
-#define START_OF_LAST_NVM_PAGE			(nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
+#define START_OF_LAST_NVM_PAGE \
+	(nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ - NVM_PAGE_SIZE)
 
 //!< Base address of NVM data logger for device with 1MB of Flash
-#define LOGGER_BASE_ADDRESS_1MB_DEVICE	MEMORY_MAP_MEASUREMENT_1M_START	// Page 256 from 352
+#define LOGGER_BASE_ADDRESS_1MB_DEVICE MEMORY_MAP_MEASUREMENT_1M_START // Page 256 from 352
 
-#define LOGGER_BASE_ADDRESS_512K_DEVICE	MEMORY_MAP_MEASUREMENT_512K_START	// Page 130 from 178
+#define LOGGER_BASE_ADDRESS_512K_DEVICE MEMORY_MAP_MEASUREMENT_512K_START // Page 130 from 178
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -55,7 +56,7 @@ uint8_t nvm_measurement_page_used = 0;
 /**
  * Pointer to
  */
-uint8_t * nvm_data_ptr = 0;
+uint8_t *nvm_data_ptr = 0;
 
 /// ==================================================================================================
 ///	LOCAL VARIABLES
@@ -70,7 +71,8 @@ static nvm_state_after_last_oper_t nvm_general_state = NVM_UNINITIALIZED;
 /**
  *
  */
-void nvm_measurement_init(void) {
+void nvm_measurement_init (void)
+{
 
 	uint8_t data = 0;
 
@@ -97,25 +99,27 @@ void nvm_measurement_init(void) {
 	}
 
 	// find the first non-erased page
-	for (uint32_t i = nvm_measurement_base_address; i < (nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ); i += NVM_PAGE_SIZE) {
+	for (uint32_t i = nvm_measurement_base_address;
+		 i < (nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ);
+		 i += NVM_PAGE_SIZE) {
 		// get the content of first byte
-		data = *((uint8_t*) i);
+		data = *((uint8_t *)i);
 
 		// check if data is in erased state
 		if (data == 0xFF) {
 			// first byte is erased, set data pointer to start of this page
-			nvm_data_ptr = (uint8_t*) i;
+			nvm_data_ptr = (uint8_t *)i;
 
 			// and break from the loop
 			break;
 		}
 
 		// get the last byte of flash memory page
-		data = *(((uint8_t*) i + NVM_PAGE_SIZE - 1));
+		data = *(((uint8_t *)i + NVM_PAGE_SIZE - 1));
 
 		if (data == 0xFF) {
 			// last byte is not erased
-			nvm_data_ptr = (uint8_t*) i;
+			nvm_data_ptr = (uint8_t *)i;
 
 			break;
 		}
@@ -139,15 +143,15 @@ void nvm_measurement_init(void) {
 
 		// program initialization mark
 		// unlock flash memory
-		FLASH_Unlock();
+		FLASH_Unlock ();
 
 		// enable programming
 		FLASH->CR |= FLASH_CR_PG;
 
-		*((uint32_t*)(nvm_data_ptr)) = 0xDEADBEEFu;
+		*((uint32_t *)(nvm_data_ptr)) = 0xDEADBEEFu;
 		WAIT_FOR_PGM_COMPLETION
 
-		*((uint32_t*)(nvm_data_ptr)+ 1) = 0x00000000u;
+		*((uint32_t *)(nvm_data_ptr) + 1) = 0x00000000u;
 		WAIT_FOR_PGM_COMPLETION
 
 		if (nvm_general_state != NVM_PGM_ERROR) {
@@ -159,7 +163,7 @@ void nvm_measurement_init(void) {
 		// disable programming
 		FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
 
-		FLASH_Lock();
+		FLASH_Lock ();
 	}
 	else {
 		// ig no there is no space on the flash memory
@@ -173,13 +177,14 @@ void nvm_measurement_init(void) {
  * @param data
  * @return
  */
-nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
+nvm_state_after_last_oper_t nvm_measurement_store (nvm_measurement_t *data)
+{
 
 	nvm_state_after_last_oper_t out = NVM_OK;
 
 #if defined(STM32L471xx)
 
-	volatile uint32_t * src = (uint32_t *)data;
+	volatile uint32_t *src = (uint32_t *)data;
 
 	uint32_t next_page_addr = 0;
 
@@ -190,9 +195,9 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 	if (nvm_general_state == NVM_NO_SPACE_LEFT) {
 		// erase first page of NVM flash area
 
-		nvm_data_ptr = (uint8_t*)nvm_measurement_base_address;
+		nvm_data_ptr = (uint8_t *)nvm_measurement_base_address;
 
-		flash_status = FLASH_ErasePage((uint32_t)nvm_data_ptr);
+		flash_status = FLASH_ErasePage ((uint32_t)nvm_data_ptr);
 
 		if (flash_status == FLASH_COMPLETE) {
 			nvm_general_state = NVM_OK;
@@ -200,7 +205,6 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 		else {
 			nvm_general_state = NVM_PGM_ERROR;
 		}
-
 	}
 	else {
 		// check if currently last page is used
@@ -213,7 +217,7 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 				// a start of next flash page
 				next_page_addr = (next_page_addr / NVM_PAGE_SIZE) * NVM_PAGE_SIZE;
 
-				flash_status = FLASH_ErasePage(next_page_addr);
+				flash_status = FLASH_ErasePage (next_page_addr);
 
 				if (flash_status != FLASH_COMPLETE) {
 					nvm_general_state = NVM_PGM_ERROR;
@@ -222,7 +226,7 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 		}
 	}
 
-	FLASH_Unlock();
+	FLASH_Unlock ();
 
 	// check if NVM has been initialized and it is ready to work
 	if (nvm_general_state != NVM_UNINITIALIZED) {
@@ -233,8 +237,8 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 			FLASH->CR |= FLASH_CR_PG;
 
 			// progam this measurement
-			for (int i = 0 ; i < NVM_RECORD_SIZE / 4; i++) {
-				*((uint32_t*)(nvm_data_ptr) + i) = *(src + i);
+			for (int i = 0; i < NVM_RECORD_SIZE / 4; i++) {
+				*((uint32_t *)(nvm_data_ptr) + i) = *(src + i);
 				WAIT_FOR_PGM_COMPLETION
 
 				if (flash_status != FLASH_COMPLETE) {
@@ -246,7 +250,8 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 			nvm_data_ptr += NVM_WRITE_BYTE_ALIGN;
 
 			// and check if an end has
-			if ((uint32_t)nvm_data_ptr < nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ) {
+			if ((uint32_t)nvm_data_ptr <
+				nvm_measurement_base_address + NVM_MEASUREMENT_MAXIMUM_SIZ) {
 				;
 			}
 			else {
@@ -256,11 +261,10 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 
 			// disable programming
 			FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
-
 		}
 	}
 
-	FLASH_Lock();
+	FLASH_Lock ();
 
 #endif
 	return out;
@@ -269,12 +273,13 @@ nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data) {
 /**
  *
  */
-void nvm_erase_all(void) {
+void nvm_erase_all (void)
+{
 #if defined(STM32L471xx)
 
 	uint32_t base_address = 0;
 
-	FLASH_Unlock();
+	FLASH_Unlock ();
 
 	// check current flash size
 	if (FLASH_SIZE == 1024 KB) {
@@ -290,25 +295,26 @@ void nvm_erase_all(void) {
 	}
 
 	for (int i = 0; i < nvm_measurement_page_used; i++) {
-		FLASH_ErasePage(base_address + (i * NVM_PAGE_SIZE));
+		FLASH_ErasePage (base_address + (i * NVM_PAGE_SIZE));
 	}
 
-	FLASH_Lock();
+	FLASH_Lock ();
 #endif
 }
 
 /**
  *
  */
-void nvm_test_prefill(void) {
+void nvm_test_prefill (void)
+{
 #if defined(STM32L471xx)
 
-	uint32_t * base_address = 0;
+	uint32_t *base_address = 0;
 
 	// flash operation result
 	FLASH_Status flash_status = 0;
 
-	FLASH_Unlock();
+	FLASH_Unlock ();
 
 	// enable programming
 	FLASH->CR |= FLASH_CR_PG;
@@ -364,7 +370,7 @@ void nvm_test_prefill(void) {
 	// disable programming
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);
 
-	FLASH_Lock();
+	FLASH_Lock ();
 
 #endif
 }

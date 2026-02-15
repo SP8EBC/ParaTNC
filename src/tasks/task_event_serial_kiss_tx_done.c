@@ -17,8 +17,8 @@
 #include "drivers/serial.h"
 #include "etc/kiss_configuation.h"
 
-#include "kiss_communication/kiss_communication.h"
 #include "kiss_communication/kiss_callback.h"
+#include "kiss_communication/kiss_communication.h"
 #include "kiss_communication/types/kiss_communication_transport_t.h"
 
 #include "supervisor.h"
@@ -31,7 +31,7 @@ void task_event_kiss_tx_done (void *param)
 	srl_context_t *ctx = main_kiss_srl_ctx_ptr;
 
 	while (1) {
-		SUPERVISOR_MONITOR_CLEAR(EVENT_SRL_KISS_TX_DONE);
+		SUPERVISOR_MONITOR_CLEAR (EVENT_SRL_KISS_TX_DONE);
 
 		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_serial_kiss,
 															   MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE,
@@ -39,27 +39,29 @@ void task_event_kiss_tx_done (void *param)
 															   pdTRUE,
 															   0xFFFFFFFFu);
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 1);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_TX_DONE, 1);
 
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 2);
-			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_TX_DONE, 2);
+			xEventGroupClearBits (main_eventgroup_handle_powersave,
+								  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
 
 			// running config
 			if (kiss_current_async_message != 0xFF) {
-				srl_start_tx(ctx, kiss_async_pooler(ctx->srl_tx_buf_pointer, ctx->srl_tx_buf_ln));
+				srl_start_tx (ctx, kiss_async_pooler (ctx->srl_tx_buf_pointer, ctx->srl_tx_buf_ln));
 
-				SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 3);
+				SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_TX_DONE, 3);
 			}
 
-			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
+			xEventGroupSetBits (main_eventgroup_handle_powersave,
+								MAIN_EVENTGROUP_PWRSAVE_EV_SRL_KISS_TX);
 
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 4);
-		}	// 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE)
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_TX_DONE, 4);
+		} // 		if (bits_on_event == MAIN_EVENTGROUP_SERIAL_KISS_TX_DONE)
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(EVENT_SRL_KISS_TX_DONE, 5);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_SRL_KISS_TX_DONE, 5);
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_SRL_KISS_TX_DONE);
+		supervisor_iam_alive (SUPERVISOR_THREAD_EVENT_SRL_KISS_TX_DONE);
 	}
 }

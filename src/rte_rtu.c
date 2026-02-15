@@ -31,8 +31,8 @@ uint32_t rte_rtu_last_modbus_exception_timestamp;
 uint32_t rte_rtu_last_modbus_rx_error_timestamp;
 rtu_pool_queue_t rte_rtu_pool_queue;
 
-
-void rte_rtu_init(void) {
+void rte_rtu_init (void)
+{
 	rte_rtu_last_modbus_exception_timestamp = 0;
 	rte_rtu_last_modbus_rx_error_timestamp = 0;
 	rte_rtu_last_modbus_exception = RTU_EXCEPTION_OK;

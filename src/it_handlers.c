@@ -94,7 +94,7 @@ void it_handlers_set_priorities (void)
 {
 	NVIC_SetPriority (TIM2_IRQn, 1); // one-wire delay
 	NVIC_SetPriority (I2C1_EV_IRQn, 2);
-	NVIC_SetPriority (TIM5_IRQn, 3); // DAC
+	NVIC_SetPriority (TIM5_IRQn, 3);		  // DAC
 	NVIC_SetPriority (DMA2_Channel5_IRQn, 4); // ADC dma transfer (was ADC)
 	NVIC_SetPriority (SPI2_IRQn, 5);
 	NVIC_SetPriority (USART1_IRQn, 6);		  // kiss
@@ -322,7 +322,7 @@ void EXTI0_IRQHandler (void)
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 		BaseType_t xResult = pdFAIL;
 		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_serial_sensor,
-											MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR,
+											 MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR,
 											 &xHigherPriorityTaskWoken);
 
 		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV);
@@ -498,7 +498,7 @@ void TIM1_TRG_COM_TIM17_IRQHandler (void)
 }
 
 void DMA1_Channel5_IRQHandler ()
-{ 
+{
 	LL_DMA_ClearFlag_TC5 (DMA1);
 
 	if (configuration_get_analog_anemometer_enabled () != 0) {
@@ -549,4 +549,3 @@ void DMA2_Channel5_IRQHandler ()
 
 	LL_DMA_EnableChannel (DMA2, LL_DMA_CHANNEL_5);
 }
-

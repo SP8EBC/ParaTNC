@@ -6,8 +6,8 @@
  */
 
 #include "kiss_communication/diagnostics_services/kiss_security_access.h"
-#include "kiss_communication/types/kiss_communication_service_ids.h"
 #include "backup_registers.h"
+#include "kiss_communication/types/kiss_communication_service_ids.h"
 #include "system_stm32l4xx.h"
 
 #include "memory_map.h"
@@ -17,20 +17,20 @@
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
-#define KISS_SECURITY_READ_DID						(1 << 0)
-#define KISS_SECURITY_READ_MEM_RESTRICTED			(1 << 1)
-#define KISS_SECURITY_READ_MEM_UNRESTRICTED			(1 << 2)
-#define KISS_SECURITY_RESTART_RESET					(1 << 3)
-#define KISS_SECURITY_CONFIG_RESET					(1 << 4)
-#define KISS_SECURITY_WRITE_MEM						(1 << 5)
-#define KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF	(1 << 6)
-#define KISS_SECURITY_GET_RUNNING_CONF				(1 << 7)
-#define KISS_SECURITY_FILE_DATA_TRANSFER			(1 << 8)
-#define KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK		(1 << 30)
-#define KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK_NEG	(1 << 31)
+#define KISS_SECURITY_READ_DID					   (1 << 0)
+#define KISS_SECURITY_READ_MEM_RESTRICTED		   (1 << 1)
+#define KISS_SECURITY_READ_MEM_UNRESTRICTED		   (1 << 2)
+#define KISS_SECURITY_RESTART_RESET				   (1 << 3)
+#define KISS_SECURITY_CONFIG_RESET				   (1 << 4)
+#define KISS_SECURITY_WRITE_MEM					   (1 << 5)
+#define KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF   (1 << 6)
+#define KISS_SECURITY_GET_RUNNING_CONF			   (1 << 7)
+#define KISS_SECURITY_FILE_DATA_TRANSFER		   (1 << 8)
+#define KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK	   (1 << 30)
+#define KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK_NEG (1 << 31)
 
-#define KISS_SECURITY_CHECK_SERIAL(x)	((kiss_security_access_config & (x)) 		!= 0) 	? 1 : 0
-#define KISS_SECURITY_CHECK_MESSAGE(x)	((kiss_security_access_config & (x << 16)) 	!= 0) 	? 1 : 0
+#define KISS_SECURITY_CHECK_SERIAL(x)  ((kiss_security_access_config & (x)) != 0) ? 1 : 0
+#define KISS_SECURITY_CHECK_MESSAGE(x) ((kiss_security_access_config & (x << 16)) != 0) ? 1 : 0
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -115,16 +115,16 @@ static uint8_t kiss_security_access_unlocked_aprsmessage = 0U;
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-
 /**
  * Initializes security aceess subsystem with current configuration
  * @param config
  */
-void kiss_security_access_init(config_data_basic_t * config) {
+void kiss_security_access_init (config_data_basic_t *config)
+{
 	kiss_security_access_config = config->uds_diagnostics_security_access;
 
 	if ((kiss_security_access_config & KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK) != 0 &&
-			(kiss_security_access_config & KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK_NEG) == 0	) {
+		(kiss_security_access_config & KISS_SECURITY_ENCRYPTED_DEFAULT_UNLOCK_NEG) == 0) {
 
 		// every message sent via encrypted HEX string
 		kiss_security_access_encrypted_unclock = 1;
@@ -139,118 +139,116 @@ void kiss_security_access_init(config_data_basic_t * config) {
  * @param lparam optional, per service specific parameter used for verification.
  * @return zero if service doesn't require unlocking and can be executed right now.
  */
-uint8_t kiss_security_check_service_req_unlocking(uint8_t service_id, kiss_communication_transport_t transport_media, uint32_t lparam) {
+uint8_t kiss_security_check_service_req_unlocking (uint8_t service_id,
+												   kiss_communication_transport_t transport_media,
+												   uint32_t lparam)
+{
 
 	uint8_t out = 1;
 
-	if (transport_media == KISS_TRANSPORT_ENCRYPTED_HEXSTRING && kiss_security_access_encrypted_unclock == 1) {
-			out = 0;
+	if (transport_media == KISS_TRANSPORT_ENCRYPTED_HEXSTRING &&
+		kiss_security_access_encrypted_unclock == 1) {
+		out = 0;
 	}
-	else if ((transport_media == KISS_TRANSPORT_ENCRYPTED_HEXSTRING && kiss_security_access_encrypted_unclock == 0) ||
-			transport_media == KISS_TRANSPORT_HEXSTRING) {
+	else if ((transport_media == KISS_TRANSPORT_ENCRYPTED_HEXSTRING &&
+			  kiss_security_access_encrypted_unclock == 0) ||
+			 transport_media == KISS_TRANSPORT_HEXSTRING) {
 		switch (service_id) {
-			case KISS_RESTART:
-				if (lparam == KISS_RESET_SOFT) {
-					if (system_get_rtc_date() != backup_reg_get_last_restart_date()) {
-						// one restart per day is always allowed
-						out = 0;
-					}
-					else {
-						out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_RESTART_RESET);
-					}
-				}
-				break;
-			case KISS_GET_VERSION_AND_ID:
-			case KISS_SECURITY_ACCESS:
-				// these two are always allowed to be used
-				out = 0;
-				break;
-			case KISS_READ_DID:
-				out = 0;	// temporary always allowed
-				//out = KISS_SECURITY_CHECK_MESSAGE(KISS_READ_DID);
-				break;
-			case KISS_READ_MEM_ADDR:
-				if (variant_validate_is_within_flash_logger_events((void*)lparam) == 1) {
-					out = 0;	// temporary always allowed
-					//out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_READ_MEM_RESTRICTED);
+		case KISS_RESTART:
+			if (lparam == KISS_RESET_SOFT) {
+				if (system_get_rtc_date () != backup_reg_get_last_restart_date ()) {
+					// one restart per day is always allowed
+					out = 0;
 				}
 				else {
-					// it is assumed that DID handler checks if address to be read
-					// is located within area
-					out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_READ_MEM_UNRESTRICTED);
+					out = KISS_SECURITY_CHECK_MESSAGE (KISS_SECURITY_RESTART_RESET);
 				}
-				break;
-			case KISS_ERASE_STARTUP_CFG:
-			case KISS_PROGRAM_STARTUP_CFG:
-				out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF);
-				break;
-			case KISS_GET_RUNNING_CONFIG:
-				out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_GET_RUNNING_CONF);
-				break;
-			default:
-				break;
 			}
-
+			break;
+		case KISS_GET_VERSION_AND_ID:
+		case KISS_SECURITY_ACCESS:
+			// these two are always allowed to be used
+			out = 0;
+			break;
+		case KISS_READ_DID:
+			out = 0; // temporary always allowed
+			// out = KISS_SECURITY_CHECK_MESSAGE(KISS_READ_DID);
+			break;
+		case KISS_READ_MEM_ADDR:
+			if (variant_validate_is_within_flash_logger_events ((void *)lparam) == 1) {
+				out = 0; // temporary always allowed
+						 // out = KISS_SECURITY_CHECK_MESSAGE(KISS_SECURITY_READ_MEM_RESTRICTED);
+			}
+			else {
+				// it is assumed that DID handler checks if address to be read
+				// is located within area
+				out = KISS_SECURITY_CHECK_MESSAGE (KISS_SECURITY_READ_MEM_UNRESTRICTED);
+			}
+			break;
+		case KISS_ERASE_STARTUP_CFG:
+		case KISS_PROGRAM_STARTUP_CFG:
+			out = KISS_SECURITY_CHECK_MESSAGE (KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF);
+			break;
+		case KISS_GET_RUNNING_CONFIG:
+			out = KISS_SECURITY_CHECK_MESSAGE (KISS_SECURITY_GET_RUNNING_CONF);
+			break;
+		default: break;
+		}
 	}
 	else if (transport_media == KISS_TRANSPORT_SERIAL_PORT) {
 		switch (service_id) {
-			case KISS_RESTART:
-				if (lparam == KISS_RESET_HARD) {
-					if (system_get_rtc_date() != backup_reg_get_last_restart_date()) {
-						// one restart per day is always allowed
-						out = 0;
-					}
-					else {
-						out = KISS_SECURITY_CHECK_SERIAL(KISS_RESTART);
-					}
-				}
-				break;
-			case KISS_GET_VERSION_AND_ID:
-			case KISS_SECURITY_ACCESS:
-				// these two are always allowed to be used
-				out = 0;
-				break;
-			case KISS_READ_DID:
-				out = KISS_SECURITY_CHECK_SERIAL(KISS_READ_DID);
-				break;
-			case KISS_READ_MEM_ADDR:
-				if (variant_validate_is_within_flash_logger_events((void*)lparam) == 1) {
-					out = KISS_SECURITY_CHECK_SERIAL(KISS_SECURITY_READ_MEM_RESTRICTED);
+		case KISS_RESTART:
+			if (lparam == KISS_RESET_HARD) {
+				if (system_get_rtc_date () != backup_reg_get_last_restart_date ()) {
+					// one restart per day is always allowed
+					out = 0;
 				}
 				else {
-					// it is assumed that DID handler checks if address to be read
-					// is located within area
-					out = KISS_SECURITY_CHECK_SERIAL(KISS_SECURITY_READ_MEM_UNRESTRICTED);
+					out = KISS_SECURITY_CHECK_SERIAL (KISS_RESTART);
 				}
-				break;
-			case KISS_ERASE_STARTUP_CFG:
-			case KISS_PROGRAM_STARTUP_CFG:
-				out = KISS_SECURITY_CHECK_SERIAL(KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF);
-				break;
-			case KISS_GET_RUNNING_CONFIG:
-				out = KISS_SECURITY_CHECK_SERIAL(KISS_SECURITY_GET_RUNNING_CONF);
-				break;
-			default:
-				break;
 			}
-
+			break;
+		case KISS_GET_VERSION_AND_ID:
+		case KISS_SECURITY_ACCESS:
+			// these two are always allowed to be used
+			out = 0;
+			break;
+		case KISS_READ_DID: out = KISS_SECURITY_CHECK_SERIAL (KISS_READ_DID); break;
+		case KISS_READ_MEM_ADDR:
+			if (variant_validate_is_within_flash_logger_events ((void *)lparam) == 1) {
+				out = KISS_SECURITY_CHECK_SERIAL (KISS_SECURITY_READ_MEM_RESTRICTED);
+			}
+			else {
+				// it is assumed that DID handler checks if address to be read
+				// is located within area
+				out = KISS_SECURITY_CHECK_SERIAL (KISS_SECURITY_READ_MEM_UNRESTRICTED);
+			}
+			break;
+		case KISS_ERASE_STARTUP_CFG:
+		case KISS_PROGRAM_STARTUP_CFG:
+			out = KISS_SECURITY_CHECK_SERIAL (KISS_SECURITY_ERASE_PROGRAM_STARTUP_CONF);
+			break;
+		case KISS_GET_RUNNING_CONFIG:
+			out = KISS_SECURITY_CHECK_SERIAL (KISS_SECURITY_GET_RUNNING_CONF);
+			break;
+		default: break;
+		}
 	}
 
 	return out;
-
 }
 
-uint8_t kiss_security_access_get_access_unlocked_serial(void)
+uint8_t kiss_security_access_get_access_unlocked_serial (void)
 {
 	return kiss_security_access_unlocked_serial;
 }
 
-uint8_t kiss_security_access_get_access_unlocked_aprsmessage(void)
+uint8_t kiss_security_access_get_access_unlocked_aprsmessage (void)
 {
 	return kiss_security_access_unlocked_aprsmessage;
 }
 
-uint8_t kiss_security_access_get_unlocked_per_transport(kiss_communication_transport_t transport)
+uint8_t kiss_security_access_get_unlocked_per_transport (kiss_communication_transport_t transport)
 {
 	if (transport == KISS_TRANSPORT_SERIAL_PORT) {
 		return kiss_security_access_unlocked_serial;

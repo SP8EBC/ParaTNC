@@ -16,8 +16,8 @@
 
 #include "rte_main.h"
 
-#include "http_client/http_client.h"
 #include "api/api.h"
+#include "http_client/http_client.h"
 
 void task_event_api_ntp (void *param)
 {
@@ -61,5 +61,5 @@ void task_event_api_ntp (void *param)
 			xEventGroupClearBits (main_eventgroup_handle_ntp_and_api_client,
 								  MAIN_EVENTGROUP_API_NTP_SYNC_TIME);
 		}
-	}	// while(1)
+	} // while(1)
 }

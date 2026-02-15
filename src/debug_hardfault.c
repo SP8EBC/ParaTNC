@@ -222,8 +222,7 @@ uint16_t debug_hardfault_assemble_info_string (debug_hardfault_postmortem_stackf
 	return ouput_ln;
 }
 
-void debug_hardfault_freertos_assert_fail(void)
+void debug_hardfault_freertos_assert_fail (void)
 {
 	debug_hardfault_stack_pointer_value = 0xFFFFFFFFu;
 }
-

@@ -10,19 +10,19 @@
 #include "wx_handler_pressure.h"
 #include "wx_handler_temperature.h"
 
-#include <rte_wx.h>
-#include <rte_rtu.h>
-#include <rte_main.h>
 #include <math.h>
+#include <rte_main.h>
+#include <rte_rtu.h>
+#include <rte_wx.h>
 
 #ifdef STM32F10X_MD_VL
 #include <stm32f10x.h>
 #endif
 
 #ifdef STM32L471xx
+#include "drivers/max31865.h"
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
-#include "drivers/max31865.h"
 #endif
 #include "drivers/analog_anemometer.h"
 
@@ -31,12 +31,12 @@
 #include "modbus_rtu/rtu_getters.h"
 #include "modbus_rtu/rtu_return_values.h"
 
-#include "io.h"
 #include "delay.h"
-#include "telemetry.h"
+#include "io.h"
 #include "main.h"
+#include "telemetry.h"
 
-#define WX_WATCHDOG_PERIOD (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
+#define WX_WATCHDOG_PERIOD		   (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 90)
 #define WX_WATCHDOG_RESET_DURATION (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 3)
 
 uint32_t wx_last_good_wind_time = 0;
@@ -44,66 +44,77 @@ uint32_t wx_last_good_temperature_time = 0;
 uint32_t wx_wind_pool_call_counter = 0;
 uint8_t wx_force_i2c_sensor_reset = 0;
 
-static const float direction_constant = M_PI/180.0f;
-static const config_data_wx_sources_t internal = {
-		.temperature = WX_SOURCE_INTERNAL,
-		.pressure = WX_SOURCE_INTERNAL,
-		.humidity = WX_SOURCE_INTERNAL,
-		.wind = WX_SOURCE_INTERNAL
-};
+static const float direction_constant = M_PI / 180.0f;
+static const config_data_wx_sources_t internal = {.temperature = WX_SOURCE_INTERNAL,
+												  .pressure = WX_SOURCE_INTERNAL,
+												  .humidity = WX_SOURCE_INTERNAL,
+												  .wind = WX_SOURCE_INTERNAL};
 
-#define MODBUS_QF_TEMPERATURE_FULL		1
-#define MODBUS_QF_TEMPERATURE_DEGR		(1 << 1)
-#define MODBUS_QF_TEMPERATURE_NAVB		(1 << 2)
-#define MODBUS_QF_HUMIDITY_FULL 		(1 << 3)
-#define MODBUS_QF_HUMIDITY_DEGR 		(1 << 4)
-#define MODBUS_QF_PRESSURE_FULL			(1 << 5)
-#define MODBUS_QF_PRESSURE_DEGR			(1 << 6)
+#define MODBUS_QF_TEMPERATURE_FULL 1
+#define MODBUS_QF_TEMPERATURE_DEGR (1 << 1)
+#define MODBUS_QF_TEMPERATURE_NAVB (1 << 2)
+#define MODBUS_QF_HUMIDITY_FULL	   (1 << 3)
+#define MODBUS_QF_HUMIDITY_DEGR	   (1 << 4)
+#define MODBUS_QF_PRESSURE_FULL	   (1 << 5)
+#define MODBUS_QF_PRESSURE_DEGR	   (1 << 6)
 
-
-void wx_check_force_i2c_reset(void) {
+void wx_check_force_i2c_reset (void)
+{
 
 	if (wx_force_i2c_sensor_reset == 1) {
 		wx_force_i2c_sensor_reset = 0;
 
 #ifdef STM32L471xx
-		max31865_init(main_config_data_mode->wx_pt_sensor & 0x3, (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
+		max31865_init (main_config_data_mode->wx_pt_sensor & 0x3,
+					   (main_config_data_mode->wx_pt_sensor & 0xFC) >> 2);
 #endif
 
 		if (main_config_data_mode->wx_ms5611_or_bme == 0) {
-		 ms5611_reset(&rte_wx_ms5611_qf);
-		 ms5611_read_calibration(SensorCalData, &rte_wx_ms5611_qf);
-		 ms5611_trigger_measure(0, 0);
+			ms5611_reset (&rte_wx_ms5611_qf);
+			ms5611_read_calibration (SensorCalData, &rte_wx_ms5611_qf);
+			ms5611_trigger_measure (0, 0);
 		}
 		else if (main_config_data_mode->wx_ms5611_or_bme == 1) {
-		 bme280_reset(&rte_wx_bme280_qf);
-		 bme280_setup();
-		 bme280_read_calibration(bme280_calibration_data);
+			bme280_reset (&rte_wx_bme280_qf);
+			bme280_setup ();
+			bme280_read_calibration (bme280_calibration_data);
 		}
 		else {
 			;
 		}
 	}
-
 }
 
-void wx_get_all_measurements(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
+void wx_get_all_measurements (const config_data_wx_sources_t *const config_sources,
+							  const config_data_mode_t *const config_mode,
+							  const config_data_umb_t *const config_umb,
+							  const config_data_rtu_t *const config_rtu)
+{
 
-	int32_t parameter_result = 0;						// stores which parameters have been retrieved successfully. this is used for failsafe handling
-	int32_t backup_parameter_result = 0;				// uses during retrieving backup
+	int32_t parameter_result = 0; // stores which parameters have been retrieved successfully. this
+								  // is used for failsafe handling
+	int32_t backup_parameter_result = 0; // uses during retrieving backup
 
-	if (io_get_5v_isol_sw___cntrl_vbat_s() == 0 && io_get_cntrl_vbat_s() == 0) {
+	if (io_get_5v_isol_sw___cntrl_vbat_s () == 0 && io_get_cntrl_vbat_s () == 0) {
 		// inhibit any measurement when power is not applied to sensors
 		return;
 	}
 
-	parameter_result |= wx_get_temperature_measurement(config_sources, config_mode, config_umb, config_rtu, &rte_wx_temperature_average_external_valid);
-	parameter_result |= wx_get_pressure_measurement(config_sources, config_mode, config_umb, config_rtu);
-	parameter_result |= wx_get_humidity_measurement(config_sources, config_mode, config_umb, config_rtu);
+	parameter_result |= wx_get_temperature_measurement (config_sources,
+														config_mode,
+														config_umb,
+														config_rtu,
+														&rte_wx_temperature_average_external_valid);
+	parameter_result |=
+		wx_get_pressure_measurement (config_sources, config_mode, config_umb, config_rtu);
+	parameter_result |=
+		wx_get_humidity_measurement (config_sources, config_mode, config_umb, config_rtu);
 
 	// check if all parameters (except wind) were collected successfully
-	if (parameter_result == (WX_HANDLER_PARAMETER_RESULT_TEMPERATURE | WX_HANDLER_PARAMETER_RESULT_PRESSURE | WX_HANDLER_PARAMETER_RESULT_HUMIDITY | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL)) {
-		;	// if everything were OK do nothing
+	if (parameter_result ==
+		(WX_HANDLER_PARAMETER_RESULT_TEMPERATURE | WX_HANDLER_PARAMETER_RESULT_PRESSURE |
+		 WX_HANDLER_PARAMETER_RESULT_HUMIDITY | WX_HANDLER_PARAMETER_RESULT_TEMP_INTERNAL)) {
+		; // if everything were OK do nothing
 	}
 	else {
 		// if not check what was faulty and backup with an internal sensor
@@ -112,7 +123,12 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 			// check what is the primary source of temperature
 			if (config_sources->temperature != WX_SOURCE_INTERNAL) {
 				// if this is something different than an internal source use the internal sensor
-				backup_parameter_result |= wx_get_temperature_measurement(&internal, config_mode, config_umb, config_rtu, &rte_wx_temperature_average_external_valid);
+				backup_parameter_result |=
+					wx_get_temperature_measurement (&internal,
+													config_mode,
+													config_umb,
+													config_rtu,
+													&rte_wx_temperature_average_external_valid);
 			}
 			else {
 				; //
@@ -122,22 +138,26 @@ void wx_get_all_measurements(const config_data_wx_sources_t * const config_sourc
 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_PRESSURE) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
-				backup_parameter_result |= wx_get_pressure_measurement(&internal, config_mode, config_umb, config_rtu);
+				backup_parameter_result |=
+					wx_get_pressure_measurement (&internal, config_mode, config_umb, config_rtu);
 			}
 		}
 
 		if ((parameter_result & WX_HANDLER_PARAMETER_RESULT_HUMIDITY) == 0) {
 
 			if (config_sources->pressure != WX_SOURCE_INTERNAL) {
-				backup_parameter_result |= wx_get_humidity_measurement(&internal, config_mode, config_umb, config_rtu);
+				backup_parameter_result |=
+					wx_get_humidity_measurement (&internal, config_mode, config_umb, config_rtu);
 			}
 		}
 	}
-
-
 }
 
-void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, const config_data_mode_t * const config_mode, const config_data_umb_t * const config_umb, const config_data_rtu_t * const config_rtu) {
+void wx_pool_anemometer (const config_data_wx_sources_t *const config_sources,
+						 const config_data_mode_t *const config_mode,
+						 const config_data_umb_t *const config_umb,
+						 const config_data_rtu_t *const config_rtu)
+{
 
 	// locals
 	uint32_t average_windspeed = 0;
@@ -155,53 +175,51 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 
 	(void)(config_mode);
 
-
 	wx_wind_pool_call_counter++;
 
 	// internal sensors
 	if (config_sources->wind == WX_SOURCE_INTERNAL) {
 		// this windspeed is scaled * 10. Example: 0.2 meters per second is stored as 2
-		scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
+		scaled_windspeed = analog_anemometer_get_ms_from_pulse (rte_wx_windspeed_pulses);
 	}
 
 	else if (config_sources->wind == WX_SOURCE_UMB) {
-		rte_wx_average_winddirection = umb_get_winddirection(config_umb);
-		rte_wx_average_windspeed = umb_get_windspeed(config_umb);
-		rte_wx_max_windspeed = umb_get_windgusts(config_umb);
+		rte_wx_average_winddirection = umb_get_winddirection (config_umb);
+		rte_wx_average_windspeed = umb_get_windspeed (config_umb);
+		rte_wx_max_windspeed = umb_get_windgusts (config_umb);
 	}
 
 	else if (config_sources->wind == WX_SOURCE_RTU) {
 		// get the value from modbus registers
-		modbus_retval = rtu_get_wind_speed(&scaled_windspeed, config_rtu);
+		modbus_retval = rtu_get_wind_speed (&scaled_windspeed, config_rtu);
 
 		// check if this value has been processed w/o errors
 		if (modbus_retval == MODBUS_RET_OK) {
 			// if yes continue to further processing
-			modbus_retval = rtu_get_wind_direction(&rte_wx_winddirection_last, config_rtu);
-
+			modbus_retval = rtu_get_wind_direction (&rte_wx_winddirection_last, config_rtu);
 		}
 
 		// the second IF to check if the return value was the same for wind direction
 		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
-			// if the value is not available (like modbus is not configured as a source
-			// for wind data) get the value from internal sensors..
-			#ifdef _INTERNAL_AS_BACKUP
-				// .. if they are configured
-				scaled_windspeed = analog_anemometer_get_ms_from_pulse(rte_wx_windspeed_pulses);
-			#endif
+// if the value is not available (like modbus is not configured as a source
+// for wind data) get the value from internal sensors..
+#ifdef _INTERNAL_AS_BACKUP
+			// .. if they are configured
+			scaled_windspeed = analog_anemometer_get_ms_from_pulse (rte_wx_windspeed_pulses);
+#endif
 		}
 	}
 
 	else if (config_sources->wind == WX_SOURCE_FULL_RTU) {
 		// get the value from modbus registers
-		modbus_retval = rtu_get_wind_direction((uint16_t*)(&rte_wx_average_winddirection), config_rtu);
+		modbus_retval =
+			rtu_get_wind_direction ((uint16_t *)(&rte_wx_average_winddirection), config_rtu);
 
 		// check if this value has been processed w/o errors
 		if (modbus_retval == MODBUS_RET_OK || modbus_retval == MODBUS_RET_DEGRADED) {
 			// if yes continue to further processing
-			modbus_retval = rtu_get_wind_gusts(&rte_wx_max_windspeed, config_rtu);
-			modbus_retval = rtu_get_wind_speed(&rte_wx_winddirection_last, config_rtu);
-
+			modbus_retval = rtu_get_wind_gusts (&rte_wx_max_windspeed, config_rtu);
+			modbus_retval = rtu_get_wind_speed (&rte_wx_winddirection_last, config_rtu);
 		}
 	}
 	else {
@@ -263,13 +281,12 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 			dir_temp = (float)rte_wx_winddirection[i];
 
 			// split the wind direction into x and y component
-			wind_direction_x = (int16_t)(100.0f * cosf(dir_temp * direction_constant));
-			wind_direction_y = (int16_t)(100.0f * sinf(dir_temp * direction_constant));
+			wind_direction_x = (int16_t)(100.0f * cosf (dir_temp * direction_constant));
+			wind_direction_y = (int16_t)(100.0f * sinf (dir_temp * direction_constant));
 
 			// adding components to calculate average
 			wind_direction_x_avg += wind_direction_x;
 			wind_direction_y_avg += wind_direction_y;
-
 		}
 
 		// dividing to get average of x and y componen
@@ -277,31 +294,30 @@ void wx_pool_anemometer(const config_data_wx_sources_t * const config_sources, c
 		wind_direction_y_avg /= average_ln;
 
 		// converting x & y component of wind direction back to an angle
-		arctan_value = atan2f(wind_direction_y_avg , wind_direction_x_avg);
+		arctan_value = atan2f (wind_direction_y_avg, wind_direction_x_avg);
 
-		rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f/M_PI));
+		rte_wx_average_winddirection = (int16_t)(arctan_value * (180.0f / M_PI));
 
 		if (rte_wx_average_winddirection < 0)
 			rte_wx_average_winddirection += 360;
-
 	}
 
 	rte_wx_wind_qf = AN_WIND_QF_NOT_AVALIABLE;
 
 	if (config_sources->wind == WX_SOURCE_UMB) {
-		rte_wx_wind_qf = umb_get_current_qf(&rte_wx_umb_context, main_get_master_time());
+		rte_wx_wind_qf = umb_get_current_qf (&rte_wx_umb_context, main_get_master_time ());
 	}
-
-
 }
 
-uint16_t wx_get_nvm_record_temperature(void) {
+uint16_t wx_get_nvm_record_temperature (void)
+{
 
 	uint16_t out = 0;
 	uint16_t scaled_temperature = 0;
 	uint16_t scaled_humidity = 0;
 
-	if (rte_wx_temperature_average_external_valid > -50.0f && rte_wx_temperature_average_external_valid < 50.0f) {
+	if (rte_wx_temperature_average_external_valid > -50.0f &&
+		rte_wx_temperature_average_external_valid < 50.0f) {
 		scaled_temperature = (uint16_t)((rte_wx_temperature_average_external_valid + 50.0f) * 5.0f);
 	}
 
@@ -312,7 +328,8 @@ uint16_t wx_get_nvm_record_temperature(void) {
 	return out;
 }
 
-uint16_t wx_get_nvm_record_wind(void) {
+uint16_t wx_get_nvm_record_wind (void)
+{
 
 	uint16_t out = 0;
 
@@ -322,7 +339,8 @@ uint16_t wx_get_nvm_record_wind(void) {
 
 	scaled_average_windspeed = rte_wx_average_windspeed / 2;
 	if ((rte_wx_max_windspeed - scaled_average_windspeed) < 52) {
-		scaled_windgusts = (uint8_t)lroundf((rte_wx_max_windspeed - scaled_average_windspeed) / 3.0f);
+		scaled_windgusts =
+			(uint8_t)lroundf ((rte_wx_max_windspeed - scaled_average_windspeed) / 3.0f);
 	}
 
 	if (wind_direction <= 11 || wind_direction >= 349)
@@ -361,8 +379,7 @@ uint16_t wx_get_nvm_record_wind(void) {
 		;
 	}
 
-	out = (scaled_average_windspeed | (scaled_windgusts & 0xF) << 8 | (wind_direction & 0xF) << 12 );
+	out = (scaled_average_windspeed | (scaled_windgusts & 0xF) << 8 | (wind_direction & 0xF) << 12);
 
 	return out;
 }
-

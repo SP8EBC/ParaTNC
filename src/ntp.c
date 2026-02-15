@@ -23,9 +23,9 @@
 
 #define NTP_PACKET_SIZE 48
 
-#define NTP_TXTM_S_OFFSET 		(NTP_PACKET_SIZE - sizeof (uint32_t) * 2)
+#define NTP_TXTM_S_OFFSET (NTP_PACKET_SIZE - sizeof (uint32_t) * 2)
 
-#define NTP_MAXIMUM_ERRORS		(3U)
+#define NTP_MAXIMUM_ERRORS (3U)
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -98,8 +98,7 @@ uint8_t ntp_done = 0;
 ///	LOCAL FUNCTIONS
 /// ==================================================================================================
 
-static uint8_t ntp_rx_done_callback (uint8_t current_data,
-									 const uint8_t *const rx_buffer,
+static uint8_t ntp_rx_done_callback (uint8_t current_data, const uint8_t *const rx_buffer,
 									 uint16_t rx_bytes_counter)
 {
 	if (rx_bytes_counter == NTP_PACKET_SIZE) {
@@ -126,8 +125,6 @@ void ntp_init (srl_context_t *context, gsm_sim800_state_t *gsm_modem_state)
 	ntp_gsm_modem_state = gsm_modem_state;
 
 	ntp_packet_buffer = (uint8_t *)&ntp_packet;
-
-
 }
 
 /**
@@ -137,8 +134,7 @@ void ntp_init (srl_context_t *context, gsm_sim800_state_t *gsm_modem_state)
 void ntp_get_sync (void)
 {
 	// check if too many connection errors has been detected before
-	if (ntp_synchro_errors_cnt > NTP_MAXIMUM_ERRORS)
-	{
+	if (ntp_synchro_errors_cnt > NTP_MAXIMUM_ERRORS) {
 		ntp_done = 2u;
 		return;
 	}
@@ -156,20 +152,29 @@ void ntp_get_sync (void)
 	ntp_packet_buffer[14] = 49;
 	ntp_packet_buffer[15] = 52;
 
-	const sim800_return_t connect_status =
-		gsm_sim800_tcpip_connect ("tempus1.gum.gov.pl", strlen ("tempus1.gum.gov.pl"), "123", 3,
-								  ntp_serial_context, ntp_gsm_modem_state, 1);
+	const sim800_return_t connect_status = gsm_sim800_tcpip_connect ("tempus1.gum.gov.pl",
+																	 strlen ("tempus1.gum.gov.pl"),
+																	 "123",
+																	 3,
+																	 ntp_serial_context,
+																	 ntp_gsm_modem_state,
+																	 1);
 
 	if (SIM800_OK == connect_status) {
-		const sim800_return_t write_result = gsm_sim800_tcpip_write (
-			ntp_packet_buffer, NTP_PACKET_SIZE, ntp_serial_context, ntp_gsm_modem_state);
+		const sim800_return_t write_result = gsm_sim800_tcpip_write (ntp_packet_buffer,
+																	 NTP_PACKET_SIZE,
+																	 ntp_serial_context,
+																	 ntp_gsm_modem_state);
 
 		if (SIM800_OK == write_result) {
 			memset (ntp_packet_buffer, 0x00, NTP_PACKET_SIZE);
 
-			const sim800_return_t receive_result =
-				gsm_sim800_tcpip_receive (ntp_packet_buffer, NTP_PACKET_SIZE, ntp_serial_context,
-										  ntp_gsm_modem_state, ntp_rx_done_callback, 2048);
+			const sim800_return_t receive_result = gsm_sim800_tcpip_receive (ntp_packet_buffer,
+																			 NTP_PACKET_SIZE,
+																			 ntp_serial_context,
+																			 ntp_gsm_modem_state,
+																			 ntp_rx_done_callback,
+																			 2048);
 
 			gsm_sim800_tcpip_close (ntp_serial_context, ntp_gsm_modem_state, 0);
 
@@ -177,7 +182,7 @@ void ntp_get_sync (void)
 				// NTP server returns data in big-endian format, so it is needed t convert it to le
 				const uint32_t le_ntp_timestamp = ntp_packet_buffer[NTP_TXTM_S_OFFSET] << 24 |
 												  ntp_packet_buffer[NTP_TXTM_S_OFFSET + 1] << 16 |
-												  ntp_packet_buffer[NTP_TXTM_S_OFFSET + 2] << 8  |
+												  ntp_packet_buffer[NTP_TXTM_S_OFFSET + 2] << 8 |
 												  ntp_packet_buffer[NTP_TXTM_S_OFFSET + 3];
 
 				const uint32_t epoch = (le_ntp_timestamp - 2208988800UL);
@@ -197,54 +202,59 @@ void ntp_get_sync (void)
 				// enable access to backup domain
 				PWR->CR1 |= PWR_CR1_DBP;
 
-				LL_RTC_DATE_Init(RTC, LL_RTC_FORMAT_BIN, &ntp_rtc_date);
-				LL_RTC_TIME_Init(RTC, LL_RTC_FORMAT_BIN, &ntp_rtc_time);
+				LL_RTC_DATE_Init (RTC, LL_RTC_FORMAT_BIN, &ntp_rtc_date);
+				LL_RTC_TIME_Init (RTC, LL_RTC_FORMAT_BIN, &ntp_rtc_time);
 
 				PWR->CR1 &= (0xFFFFFFFFu ^ PWR_CR1_DBP);
 
 				ntp_done = 1;
 
-				event_log_sync(
-						  EVENT_TIMESYNC,
-						  EVENT_SRC_MAIN,
-						  EVENTS_MAIN_TIMESYNC_NTP,
-						  ntp_rtc_date.Day,
-						  ntp_rtc_date.Month,
-						  ntp_rtc_date.Year,
-						  ntp_rtc_time.Hours,
-						  ntp_rtc_time.Minutes,
-						  ntp_rtc_time.Seconds);
+				event_log_sync (EVENT_TIMESYNC,
+								EVENT_SRC_MAIN,
+								EVENTS_MAIN_TIMESYNC_NTP,
+								ntp_rtc_date.Day,
+								ntp_rtc_date.Month,
+								ntp_rtc_date.Year,
+								ntp_rtc_time.Hours,
+								ntp_rtc_time.Minutes,
+								ntp_rtc_time.Seconds);
 			}
 			else {
 				ntp_synchro_errors_cnt++;
-				event_log_sync(
-						  EVENT_ERROR,
-						  EVENT_SRC_MAIN,
-						  EVENTS_MAIN_TIMESYNC_NTP,
-						  receive_result, 0,
-						  0, 0,
-						  0, 0);
+				event_log_sync (EVENT_ERROR,
+								EVENT_SRC_MAIN,
+								EVENTS_MAIN_TIMESYNC_NTP,
+								receive_result,
+								0,
+								0,
+								0,
+								0,
+								0);
 			}
 		}
 		else {
 			ntp_synchro_errors_cnt++;
-			event_log_sync(
-					  EVENT_ERROR,
-					  EVENT_SRC_MAIN,
-					  EVENTS_MAIN_TIMESYNC_NTP,
-					  0, write_result,
-					  0, 0,
-					  0, 0);
+			event_log_sync (EVENT_ERROR,
+							EVENT_SRC_MAIN,
+							EVENTS_MAIN_TIMESYNC_NTP,
+							0,
+							write_result,
+							0,
+							0,
+							0,
+							0);
 		}
 	}
 	else {
 		ntp_synchro_errors_cnt++;
-		event_log_sync(
-				  EVENT_ERROR,
-				  EVENT_SRC_MAIN,
-				  EVENTS_MAIN_TIMESYNC_NTP,
-				  0, 0,
-				  connect_status, 0,
-				  0, 0);
+		event_log_sync (EVENT_ERROR,
+						EVENT_SRC_MAIN,
+						EVENTS_MAIN_TIMESYNC_NTP,
+						0,
+						0,
+						connect_status,
+						0,
+						0,
+						0);
 	}
 }

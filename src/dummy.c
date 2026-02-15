@@ -5,5 +5,4 @@
  *      Author: mateusz
  */
 
-const int __attribute__((section(".config_section_third"))) dummy = 0xDDDDDDDD;
-
+const int __attribute__ ((section (".config_section_third"))) dummy = 0xDDDDDDDD;

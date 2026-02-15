@@ -93,7 +93,7 @@ uint8_t rte_main_kiss_from_message_ln = 0;
 //! binary response to DID request from APRS message
 uint8_t rte_main_kiss_response_message[32];
 
-//static io_vbat_state_t main_battery_measurement_res;
+// static io_vbat_state_t main_battery_measurement_res;
 #endif
 
 // tasks load

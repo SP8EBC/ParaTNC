@@ -6,10 +6,10 @@
  */
 
 #include <FreeRTOS.h>
+#include <event_groups.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <task.h>
-#include <event_groups.h>
 
 #include "main.h"
 #include "main_freertos_externs.h"
@@ -20,10 +20,10 @@
 #include "backup_registers.h"
 #include "button.h"
 #include "digi.h"
+#include "fanet_app.h"
 #include "gsm_comm_state_handler.h"
 #include "io.h"
 #include "supervisor.h"
-#include "fanet_app.h"
 
 #include "drivers/analog_anemometer.h"
 #include "drivers/serial.h"
@@ -44,23 +44,23 @@ void task_one_second (void *parameters)
 	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
 	while (1) {
-		SUPERVISOR_MONITOR_CLEAR(TASK_ONE_SEC);
+		SUPERVISOR_MONITOR_CLEAR (TASK_ONE_SEC);
 
 		vTaskDelay (xDelay);
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 1);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 1);
 
-		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
+		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 
-		if (digi_is_enabled() != 0) {
+		if (digi_is_enabled () != 0) {
 			digi_pool_viscous ();
 		}
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 2);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 2);
 
 		button_debounce ();
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 3);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 3);
 
 		if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
 			if (gsm_sim800_tcpip_tx_busy () == 0) {
@@ -74,27 +74,33 @@ void task_one_second (void *parameters)
 		// because VBAT_G itself is controlled by initialization
 		// pooler
 		if (main_config_data_mode->gsm == 1) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 4);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 4);
 
 			gsm_sim800_initialization_pool (main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 5);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 5);
 		}
 
 		if ((main_config_data_mode->gsm == 1) && (io_get_cntrl_vbat_g () == 1) &&
 			(rte_main_woken_up == 0)) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 6);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 6);
 
 			// check if GSM modem must be power-cycled / restarted like after
 			// waking up from deep sleep or chaning power saving mode
 			if (rte_main_reset_gsm_modem == 1) {
-				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 7);
+				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 7);
 
 				// rest the flag
 				rte_main_reset_gsm_modem = 0;
 
-				srl_init (main_gsm_srl_ctx_ptr, USART3, srl_usart3_rx_buffer, RX_BUFFER_3_LN,
-						  srl_usart3_tx_buffer, TX_BUFFER_3_LN, 115200, 1);
+				srl_init (main_gsm_srl_ctx_ptr,
+						  USART3,
+						  srl_usart3_rx_buffer,
+						  RX_BUFFER_3_LN,
+						  srl_usart3_tx_buffer,
+						  TX_BUFFER_3_LN,
+						  115200,
+						  1);
 
 				// reset gsm modem
 				gsm_sim800_reset (&main_gsm_state);
@@ -112,12 +118,13 @@ void task_one_second (void *parameters)
 				led_control_led1_upper (false);
 			}
 
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 8);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 8);
 
-			gsm_sim800_poolers_one_second (main_gsm_srl_ctx_ptr, &main_gsm_state,
+			gsm_sim800_poolers_one_second (main_gsm_srl_ctx_ptr,
+										   &main_gsm_state,
 										   main_config_data_gsm);
 
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 9);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 9);
 
 			if (gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
 				aprsis_check_alive ();
@@ -125,14 +132,14 @@ void task_one_second (void *parameters)
 		}
 
 		if ((io_get_cntrl_vbat_s () == 1) && (main_config_data_mode->wx & WX_ENABLED) == 1) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_ONE_SEC, 10);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 10);
 
 			analog_anemometer_direction_handler ();
 		}
 
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_ONE_SEC);
+		supervisor_iam_alive (SUPERVISOR_THREAD_TASK_ONE_SEC);
 
-		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
-	}	// while(1)
+		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
+	} // while(1)
 	// end of while loop
 }

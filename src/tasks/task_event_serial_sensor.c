@@ -36,7 +36,8 @@ void task_event_serial_sensor (void *param)
 															   pdFALSE,
 															   0xFFFFFFFFu);
 
-		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_SENSOR);
+		xEventGroupClearBits (main_eventgroup_handle_powersave,
+							  MAIN_EVENTGROUP_PWRSAVE_EV_SRL_SENSOR);
 
 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_DONE) != 0) {
 			if (main_config_data_mode->wx_umb == 1) {
@@ -55,7 +56,7 @@ void task_event_serial_sensor (void *param)
 										 main_config_data_umb);
 				}
 			}
-		}	// 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_DONE) != 0)
+		} // 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_DONE) != 0)
 
 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR) != 0) {
 			if (main_config_data_mode->wx_umb == 1) {
@@ -64,7 +65,7 @@ void task_event_serial_sensor (void *param)
 									 master_time,
 									 main_config_data_umb);
 			}
-		}	// 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR) != 0)
+		} // 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_RX_ERROR) != 0)
 
 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_TX_DONE) != 0) {
 			if (main_config_data_mode->wx_umb == 1) {
@@ -73,8 +74,9 @@ void task_event_serial_sensor (void *param)
 									 master_time,
 									 main_config_data_umb);
 			}
-		}	// 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_TX_DONE) != 0)
+		} // 		if ((bits_on_event & MAIN_EVENTGROUP_SERIAL_WX_TX_DONE) != 0)
 
-		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_SRL_SENSOR);
+		xEventGroupSetBits (main_eventgroup_handle_powersave,
+							MAIN_EVENTGROUP_PWRSAVE_EV_SRL_SENSOR);
 	}
 }

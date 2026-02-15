@@ -8,21 +8,21 @@
  *      Author: mateusz
  */
 
-#include <etc/kiss_did_configuration.h>
 #include <etc/kiss_configuation.h>
+#include <etc/kiss_did_configuration.h>
 
 #include "variant.h"
 
-#include <string.h>
 #include <stm32l4xx.h>
+#include <string.h>
 
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
 
-#define KISS_DID_SIZE_MAPPING_INT8		1
-#define KISS_DID_SIZE_MAPPING_INT16		2
-#define KISS_DID_SIZE_MAPPING_INT32		3
+#define KISS_DID_SIZE_MAPPING_INT8	1
+#define KISS_DID_SIZE_MAPPING_INT16 2
+#define KISS_DID_SIZE_MAPPING_INT32 3
 
 /// ==================================================================================================
 ///	LOCAL DATA TYPES
@@ -31,13 +31,13 @@
 //!< Structure to define a DID which return numeric data
 typedef struct kiss_did_numeric_definition_t {
 	uint16_t identifier;
-	void* first_data;
+	void *first_data;
 	uint8_t first_data_size;
-	void* second_data;
+	void *second_data;
 	uint8_t second_data_size;
-	void* third_data;
+	void *third_data;
 	uint8_t third_data_size;
-}kiss_did_numeric_definition_t;
+} kiss_did_numeric_definition_t;
 
 /// ==================================================================================================
 ///	LOCAL VARIABLES
@@ -45,18 +45,17 @@ typedef struct kiss_did_numeric_definition_t {
 
 //!< Definition of all DIDs with numeric data
 const static kiss_did_numeric_definition_t kiss_did_def[] = {
-		DIDS_STRING(DID_NUMERIC_STRING_DEFINITION_EXPANDER)
-		DIDS_FLOAT(DID_NUMERIC_FLOAT_DEFINITION_EXPANDER)
-		DIDS_NUMERIC(DID_NUMERIC_DEFINITION_EXPANDER)
-};
+	DIDS_STRING (DID_NUMERIC_STRING_DEFINITION_EXPANDER)
+		DIDS_FLOAT (DID_NUMERIC_FLOAT_DEFINITION_EXPANDER)
+			DIDS_NUMERIC (DID_NUMERIC_DEFINITION_EXPANDER)};
 
 //!< Mapping between a result of sizeof operator and a value of sizebyte
 const static uint8_t kiss_did_sizeof_to_sizebyte_mapping[5] = {
-		0,// nothing
-		KISS_DID_SIZE_MAPPING_INT8,		// int8_t	-> 1
-		KISS_DID_SIZE_MAPPING_INT16,	// int16_t	-> 2
-		0,	// nothing
-		KISS_DID_SIZE_MAPPING_INT32		// int32_t	-> 3
+	0,							 // nothing
+	KISS_DID_SIZE_MAPPING_INT8,	 // int8_t	-> 1
+	KISS_DID_SIZE_MAPPING_INT16, // int16_t	-> 2
+	0,							 // nothing
+	KISS_DID_SIZE_MAPPING_INT32	 // int32_t	-> 3
 };
 
 /// ==================================================================================================
@@ -75,7 +74,8 @@ char did_dummy_data;
  * @param definition
  * @return
  */
-static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition) {
+static uint8_t kiss_did_how_much_data (kiss_did_numeric_definition_t *definition)
+{
 
 	int out = 0;
 
@@ -110,12 +110,14 @@ static uint8_t kiss_did_how_much_data(kiss_did_numeric_definition_t * definition
  * @param definition
  * @return
  */
-static int kiss_did_validate_is_float(kiss_did_numeric_definition_t * definition) {
+static int kiss_did_validate_is_float (kiss_did_numeric_definition_t *definition)
+{
 	int out = 0;
 
 	if (definition != 0) {
-		if (kiss_did_how_much_data(definition) >= 1) {
-			if (definition->first_data_size == 0 && definition->second_data_size == 0 && definition->third_data_size == 0) {
+		if (kiss_did_how_much_data (definition) >= 1) {
+			if (definition->first_data_size == 0 && definition->second_data_size == 0 &&
+				definition->third_data_size == 0) {
 				out = 1;
 			}
 		}
@@ -129,12 +131,14 @@ static int kiss_did_validate_is_float(kiss_did_numeric_definition_t * definition
  * @param definition
  * @return
  */
-static int kiss_did_validate_is_string(kiss_did_numeric_definition_t * definition) {
+static int kiss_did_validate_is_string (kiss_did_numeric_definition_t *definition)
+{
 	int out = 0;
 
 	if (definition != 0) {
-		if (kiss_did_how_much_data(definition) == 3) {
-			if (definition->second_data == (void*)0xDEADBEEFu && definition->third_data == (void*)0xDEADBEEFu) {
+		if (kiss_did_how_much_data (definition) == 3) {
+			if (definition->second_data == (void *)0xDEADBEEFu &&
+				definition->third_data == (void *)0xDEADBEEFu) {
 				out = 1;
 			}
 		}
@@ -148,7 +152,8 @@ static int kiss_did_validate_is_string(kiss_did_numeric_definition_t * definitio
  * @param definition
  * @return
  */
-static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t * amount) {
+static int kiss_did_validate (kiss_did_numeric_definition_t *definition, uint8_t *amount)
+{
 
 	int out = 0;
 
@@ -158,16 +163,16 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 	if (definition != 0) {
 
 		// check how many variables will be returned by this DID
-		amount_of_data = kiss_did_how_much_data(definition);
+		amount_of_data = kiss_did_how_much_data (definition);
 
 		// if first DID is defined
 		if (amount_of_data > 0) {
 
 			// check if DID data size an address is correct
-			if 	((definition->first_data_size == sizeof(int8_t) ||
-				definition->first_data_size == sizeof(int16_t) ||
-				definition->first_data_size == sizeof(int32_t)) &&
-						variant_validate_is_within_ram(definition->first_data)) {
+			if ((definition->first_data_size == sizeof (int8_t) ||
+				 definition->first_data_size == sizeof (int16_t) ||
+				 definition->first_data_size == sizeof (int32_t)) &&
+				variant_validate_is_within_ram (definition->first_data)) {
 
 				// valid
 				out = 1;
@@ -175,10 +180,10 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 				// if second did is also defined
 				if (amount_of_data > 1) {
 					// check if DID data size is correct
-					if 	((definition->first_data_size == sizeof(int8_t) ||
-						definition->first_data_size == sizeof(int16_t) ||
-						definition->first_data_size == sizeof(int32_t)) &&
-							variant_validate_is_within_ram(definition->second_data)) {
+					if ((definition->first_data_size == sizeof (int8_t) ||
+						 definition->first_data_size == sizeof (int16_t) ||
+						 definition->first_data_size == sizeof (int32_t)) &&
+						variant_validate_is_within_ram (definition->second_data)) {
 
 						// valid
 						out = 1;
@@ -187,10 +192,10 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 						if (amount_of_data > 2) {
 
 							// check third DID source data size
-							if 	((definition->first_data_size == sizeof(int8_t) ||
-								definition->first_data_size == sizeof(int16_t) ||
-								definition->first_data_size == sizeof(int32_t)) &&
-									variant_validate_is_within_ram(definition->third_data)) {
+							if ((definition->first_data_size == sizeof (int8_t) ||
+								 definition->first_data_size == sizeof (int16_t) ||
+								 definition->first_data_size == sizeof (int32_t)) &&
+								variant_validate_is_within_ram (definition->third_data)) {
 
 								// valid
 								out = 1;
@@ -200,7 +205,7 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 							}
 						}
 						else {
-							;	// third data source doesn't need to be defined
+							; // third data source doesn't need to be defined
 						}
 					}
 					else {
@@ -209,8 +214,8 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 					}
 				}
 				else {
-					;	// second did source doesn't need to be defined
-						// so do nothing here
+					; // second did source doesn't need to be defined
+					  // so do nothing here
 				}
 			}
 			else {
@@ -218,15 +223,14 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
 			}
 		}
 		else {
-			;	// at least one DID must be defined
-				// keep out set to zero
+			; // at least one DID must be defined
+			  // keep out set to zero
 		}
-
 	}
 
 	// special case for float DIDs
 	if (out == 0) {
-		if (kiss_did_validate_is_float(definition) != 0) {
+		if (kiss_did_validate_is_float (definition) != 0) {
 			out = 1;
 		}
 	}
@@ -255,7 +259,8 @@ static int kiss_did_validate(kiss_did_numeric_definition_t * definition, uint8_t
  * @param buffer_ln	a size of this buffer, please be aware of note about available buffer!
  * @return Zero if DID hasn't been found in definitions, otherwise total data lenght
  */
-uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t buffer_ln) {
+uint8_t kiss_did_response (uint16_t identifier, uint8_t *output_buffer, uint16_t buffer_ln)
+{
 
 	uint8_t out = 0;
 
@@ -306,13 +311,13 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 	} while (kiss_did_def[i].identifier != 0xFFFFU);
 
 	// check is valid
-	const int is_valid = kiss_did_validate(&found, &number_of_data_source);
+	const int is_valid = kiss_did_validate (&found, &number_of_data_source);
 
 	// check if this is string did
-	const int is_string = kiss_did_validate_is_string(&found);
+	const int is_string = kiss_did_validate_is_string (&found);
 
 	// check if this is float number did
-	const int is_float = kiss_did_validate_is_float(&found);
+	const int is_float = kiss_did_validate_is_float (&found);
 
 	// if something has been found and it is valid
 	if (found.identifier != 0xFFFFu && is_valid == 1 && is_float == 0) {
@@ -346,35 +351,34 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// and for DID value itself
 		out += 2;
 
-		//append first data source
-		memcpy(output_buffer, found.first_data, found.first_data_size);
+		// append first data source
+		memcpy (output_buffer, found.first_data, found.first_data_size);
 
-		//move forward a poiner to response buffer
+		// move forward a poiner to response buffer
 		output_buffer += found.first_data_size;
 
 		// room for first value returned by DID
 		out += found.first_data_size;
 
 		if (number_of_data_source > 1) {
-			//append second data source
-			memcpy(output_buffer, found.second_data, found.second_data_size);
+			// append second data source
+			memcpy (output_buffer, found.second_data, found.second_data_size);
 
-			//move forward a poiner to response buffer
+			// move forward a poiner to response buffer
 			output_buffer += found.second_data_size;
 
 			out += found.second_data_size;
 		}
 
 		if (number_of_data_source > 2) {
-			//append third data source
-			memcpy(output_buffer, found.third_data, found.third_data_size);
+			// append third data source
+			memcpy (output_buffer, found.third_data, found.third_data_size);
 
-			//move forward a poitner to response buffer
+			// move forward a poitner to response buffer
 			output_buffer += found.third_data_size;
 
 			out += found.third_data_size;
 		}
-
 	}
 	else if (found.identifier != 0xFFFFu && is_valid == 1 && is_float == 1) {
 
@@ -398,34 +402,33 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		// room for DID number in output buffer
 		out += 2;
 
-		//append first data source
-		memcpy(output_buffer, found.first_data, sizeof(float));
+		// append first data source
+		memcpy (output_buffer, found.first_data, sizeof (float));
 
-		//move forward a poiner to response buffer
-		output_buffer += sizeof(float);
+		// move forward a poiner to response buffer
+		output_buffer += sizeof (float);
 
-		out += sizeof(float);
+		out += sizeof (float);
 
 		if (number_of_data_source > 1) {
-			//append second data source
-			memcpy(output_buffer, found.second_data, sizeof(float));
+			// append second data source
+			memcpy (output_buffer, found.second_data, sizeof (float));
 
-			//move forward a poiner to response buffer
-			output_buffer += sizeof(float);
+			// move forward a poiner to response buffer
+			output_buffer += sizeof (float);
 
-			out += sizeof(float);
+			out += sizeof (float);
 		}
 
 		if (number_of_data_source > 2) {
-			//append third data source
-			memcpy(output_buffer, found.third_data, sizeof(float));
+			// append third data source
+			memcpy (output_buffer, found.third_data, sizeof (float));
 
-			//move forward a poitner to response buffer
-			output_buffer += sizeof(float);
+			// move forward a poitner to response buffer
+			output_buffer += sizeof (float);
 
-			out += sizeof(float);
+			out += sizeof (float);
 		}
-
 	}
 	else if (found.identifier != 0xFFFFu && is_string == 1) {
 
@@ -437,31 +440,29 @@ uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t
 		output_buffer += 2;
 
 		// if this is a string DID
-		const void * str = (void *)found.first_data;
+		const void *str = (void *)found.first_data;
 
 		const size_t str_len = found.first_data_size;
 
-		memset(output_buffer, 0x00, buffer_ln - 2);
+		memset (output_buffer, 0x00, buffer_ln - 2);
 
 		if (str_len - 2 > buffer_ln) {
-			memcpy(output_buffer, str, buffer_ln - 2);
+			memcpy (output_buffer, str, buffer_ln - 2);
 
 			out = buffer_ln - 2;
 		}
 		else {
-			memcpy(output_buffer, str, str_len);
+			memcpy (output_buffer, str, str_len);
 
 			out = str_len;
 		}
 
 		// include DID number itself
 		out += 2;
-
 	}
 	else {
 		out = 0;
 	}
 
 	return out;
-
 }

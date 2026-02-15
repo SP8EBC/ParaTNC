@@ -5,9 +5,10 @@
  *      Author: mateusz
  */
 
-// this file contains default configuration used if both first and second config_data section doesn't contains valid
-// configuration data (CRC32 calculated from both sections is wrong). In such case the software erases both sections and
-// reprogram it from the default set stored somewhere within .code section
+// this file contains default configuration used if both first and second config_data section
+// doesn't contains valid configuration data (CRC32 calculated from both sections is wrong). In such
+// case the software erases both sections and reprogram it from the default set stored somewhere
+// within .code section
 
 #include <stored_configuration_nvm/config_data.h>
 #include <stored_configuration_nvm/config_data_ptsensor.h>
@@ -16,48 +17,47 @@
 
 #include "station_config.h"
 
-
 #ifndef _RTU_SLAVE_LENGHT_1
-	#define _RTU_SLAVE_LENGHT_1 0x1
+#define _RTU_SLAVE_LENGHT_1 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_2
-	#define _RTU_SLAVE_LENGHT_2 0x1
+#define _RTU_SLAVE_LENGHT_2 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_3
-	#define _RTU_SLAVE_LENGHT_3 0x1
+#define _RTU_SLAVE_LENGHT_3 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_4
-	#define _RTU_SLAVE_LENGHT_4 0x1
+#define _RTU_SLAVE_LENGHT_4 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_5
-	#define _RTU_SLAVE_LENGHT_5 0x1
+#define _RTU_SLAVE_LENGHT_5 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_6
-	#define _RTU_SLAVE_LENGHT_6 0x1
+#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
-
 #ifdef _METEO_DISABLE_DALLAS
-#define _METEO_DEF_DISABLE_DALLAS 		WX_INTERNAL_DISABLE_DALLAS
+#define _METEO_DEF_DISABLE_DALLAS WX_INTERNAL_DISABLE_DALLAS
 #else
-#define _METEO_DEF_DISABLE_DALLAS		(0u)
+#define _METEO_DEF_DISABLE_DALLAS (0u)
 #endif
 
 #ifdef _METEO_VALIDATE_PARAMETERS
-#define	_METEO_DEF_VALIDATE_PARAMS		WX_CHECK_VALIDATE_PARAMS
+#define _METEO_DEF_VALIDATE_PARAMS WX_CHECK_VALIDATE_PARAMS
 #else
-#define _METEO_DEF_VALIDATE_PARAMS		(0u)
+#define _METEO_DEF_VALIDATE_PARAMS (0u)
 #endif
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_default.mode"))) config_data_mode_default = {
+const config_data_mode_t
+	__attribute__ ((section (".config_section_default.mode"))) config_data_mode_default = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -83,9 +83,10 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 #endif
 
 #if ((!defined _PT_SENSOR_REFERENCE_RES) && (!defined _PT_SENSOR_TYPE))
-		.wx_pt_sensor = 0x00,		// TODO: index 28 (4k1 reference resistor), 4-wire sensor
+		.wx_pt_sensor = 0x00, // TODO: index 28 (4k1 reference resistor), 4-wire sensor
 #else
-		.wx_pt_sensor = CONFIG_DATA_PTSENSOR_ASSEMBLE_CONFIG(_PT_SENSOR_TYPE, _PT_SENSOR_REFERENCE_RES),
+		.wx_pt_sensor =
+			CONFIG_DATA_PTSENSOR_ASSEMBLE_CONFIG (_PT_SENSOR_TYPE, _PT_SENSOR_REFERENCE_RES),
 #endif
 
 #ifdef _DUST_SDS011_SERIAL
@@ -177,7 +178,8 @@ const config_data_mode_t __attribute__((section(".config_section_default.mode"))
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_default.basic"))) config_data_basic_default = {
+const config_data_basic_t
+	__attribute__ ((section (".config_section_default.basic"))) config_data_basic_default = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -288,7 +290,8 @@ const config_data_basic_t __attribute__((section(".config_section_default.basic"
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_default.sources"))) config_data_wx_sources_default = {
+const config_data_wx_sources_t
+	__attribute__ ((section (".config_section_default.sources"))) config_data_wx_sources_default = {
 
 		.temperature_telemetry = WX_SOURCE_INTERNAL,
 
@@ -308,7 +311,6 @@ const config_data_wx_sources_t __attribute__((section(".config_section_default.s
 		.temperature = WX_SOURCE_INTERNAL_PT100,
 #endif
 
-
 #ifdef _PRESSURE_INTERNAL
 		.pressure = WX_SOURCE_INTERNAL,
 #endif
@@ -321,7 +323,6 @@ const config_data_wx_sources_t __attribute__((section(".config_section_default.s
 #ifdef _PRESSURE_DAVIS
 		.pressure = WX_SOURCE_DAVIS_SERIAL,
 #endif
-
 
 #ifdef _HUMIDITY_INTERNAL
 		.humidity = WX_SOURCE_INTERNAL,
@@ -336,29 +337,28 @@ const config_data_wx_sources_t __attribute__((section(".config_section_default.s
 		.humidity = WX_SOURCE_DAVIS_SERIAL,
 #endif
 
-
-
 #ifdef _WIND_INTERNAL
 		.wind = WX_SOURCE_INTERNAL
 #endif
 #ifdef _WIND_UMB
-		.wind = WX_SOURCE_UMB
+					.wind = WX_SOURCE_UMB
 #endif
 #ifdef _WIND_RTU
-		.wind = WX_SOURCE_RTU
+								.wind = WX_SOURCE_RTU
 #endif
 #ifdef _WIND_FULL_RTU
-		.wind = WX_SOURCE_FULL_RTU
+											.wind = WX_SOURCE_FULL_RTU
 #endif
 #ifdef _WIND_DAVIS
-		.wind = WX_SOURCE_DAVIS_SERIAL
+														.wind = WX_SOURCE_DAVIS_SERIAL
 #endif
 };
 
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_default.umb"))) config_data_umb_default = {
+const config_data_umb_t
+	__attribute__ ((section (".config_section_default.umb"))) config_data_umb_default = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -371,7 +371,7 @@ const config_data_umb_t __attribute__((section(".config_section_default.umb"))) 
 		.slave_class = 0,
 #endif
 
-#if defined (_UMB_SLAVE_ID) && defined (_UMB_SLAVE_CLASS)
+#if defined(_UMB_SLAVE_ID) && defined(_UMB_SLAVE_CLASS)
 		.channel_windspeed = _UMB_CHANNEL_WINDSPEED,
 		.channel_wingsusts = _UMB_CHANNEL_WINDGUSTS,
 		.channel_winddirection = _UMB_CHANNEL_WINDDIRECTION,
@@ -385,14 +385,13 @@ const config_data_umb_t __attribute__((section(".config_section_default.umb"))) 
 		.channel_qfe = 0xFFFF,
 #endif
 
-		.serial_speed = 19200
-};
-
+		.serial_speed = 19200};
 
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) config_data_rtu_default = {
+const config_data_rtu_t
+	__attribute__ ((section (".config_section_default.rtu"))) config_data_rtu_default = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
@@ -405,7 +404,7 @@ const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) 
 		.use_full_wind_data = 0,
 #endif
 
-		// sources
+// sources
 #ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 		.temperature_source = _RTU_SLAVE_TEMPERATURE_SOURCE,
 #else
@@ -459,7 +458,7 @@ const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) 
 
 		.slave_1_scaling_d = _RTU_SLAVE_SCALING_D_1,
 
-		.slave_1_unsigned_signed = 0,		// 0 - unsigned
+		.slave_1_unsigned_signed = 0, // 0 - unsigned
 
 		// channel 2
 		.slave_2_bus_address = _RTU_SLAVE_ID_2,
@@ -554,15 +553,15 @@ const config_data_rtu_t __attribute__((section(".config_section_default.rtu"))) 
 
 		.slave_6_scaling_d = _RTU_SLAVE_SCALING_D_6,
 
-		.slave_6_unsigned_signed = 0
-};
+		.slave_6_unsigned_signed = 0};
 
 #ifdef PARAMETEO
 
-const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) config_data_gsm_default = {
+const config_data_gsm_t
+	__attribute__ ((section (".config_section_default.gsm"))) config_data_gsm_default = {
 		.pin = "\0\0\0\0\0",
 
-		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
+		.apn = _GSM_APN_NAME, // PlusGSM  - abonament
 		//.apn = "plus\0",				// PlusGSM  - karta
 		//.apn = "virgin-internet\0",			// Virgin Mobile
 
@@ -578,7 +577,7 @@ const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) 
 
 		// 78.88.56.14
 		//.api_base_url = "http://78.88.56.14:8080/",
-		.api_base_url = _GSM_API_BASE_URL,		// 22910
+		.api_base_url = _GSM_API_BASE_URL, // 22910
 		//.api_base_url = "http://193.33.111.22:8080/meteo_backend",
 
 		.api_station_name = _GSM_API_STATION_NAME,
@@ -593,18 +592,16 @@ const config_data_gsm_t __attribute__((section(".config_section_default.gsm"))) 
 
 		.aprsis_server_port = _GSM_APRSIS_PORT,
 
-		.aprsis_server_address = _GSM_APRSIS_ADDRES
-};
+		.aprsis_server_address = _GSM_APRSIS_ADDRES};
 #endif
 
-
-const config_data_compatibility_version_t __attribute__((section(".config_section_default.compat"))) config_data_compatibility_default = {
-		.mode_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.basic_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.sources_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.umb_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.rtu_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.gsm_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
-		.seventh_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL,
-		.eight_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL
-};
+const config_data_compatibility_version_t __attribute__ ((
+	section (".config_section_default.compat"))) config_data_compatibility_default = {
+	.mode_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.basic_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.sources_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.umb_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.rtu_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.gsm_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
+	.seventh_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL,
+	.eight_block_compatibility_number = 0xFFFFFFFFFFFFFFFFULL};

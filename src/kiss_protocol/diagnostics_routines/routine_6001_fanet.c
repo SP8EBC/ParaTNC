@@ -37,15 +37,14 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-uint8_t routine_6001_start(uint32_t lparam, uint16_t wparam)
+uint8_t routine_6001_start (uint32_t lparam, uint16_t wparam)
 {
-	fanet_test();
+	fanet_test ();
 }
 
 // this doesn't have stop function, because it is synchronous
 
-
-uint16_t routine_6001_get_result(void)
+uint16_t routine_6001_get_result (void)
 {
 	return 0;
 }

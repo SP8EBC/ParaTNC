@@ -14,13 +14,14 @@
  *                              outside this file by @link{kiss_callback_routine_control}
  *
  * NRC_REQUEST_SEQUENCE_ERROR - will be returned if stop request will be sent for routine which
- *                              is not running, or starting async routine which is running now. 
- *                              it is also returned for get result request for routine which either 
- *                              hasn't been started yet, or it has been started and currently running.
+ *                              is not running, or starting async routine which is running now.
+ *                              it is also returned for get result request for routine which either
+ *                              hasn't been started yet, or it has been started and currently
+ * running.
  *
  * NRC_INCORRECT_MESSAGE_LENGTH_OR_FORMAT - will be returned if parameters values are wrong, so
  *                                          routine refuses to start
- * 
+ *
  * NRC_SUBFUNCTION_NOT_SUPPORTED - will be returned for any stop request for synchronous routine
  *
  *  Created on: Sep 8, 2024
@@ -60,8 +61,7 @@ typedef struct kiss_routine_status_t {
 
 //!< Enum definition used to count all definitions
 typedef enum kiss_routine_enum_t {
-	KISS_ROUTINES (KISS_DIAGNOSTIC_ROUTINE_ENUM_EXPAND) 
-    KISS_ROUTINE_NUMBER_COUNT
+	KISS_ROUTINES (KISS_DIAGNOSTIC_ROUTINE_ENUM_EXPAND) KISS_ROUTINE_NUMBER_COUNT
 } kiss_routine_enum_t;
 
 /// ==================================================================================================
@@ -70,13 +70,10 @@ typedef enum kiss_routine_enum_t {
 
 //!< Const definitions of all routine diagnostics
 static const kiss_routine_control_t kiss_routine_definitions[] = {
-	KISS_ROUTINES (KISS_ROUTINE_DEF_EXPAND)
-};
+	KISS_ROUTINES (KISS_ROUTINE_DEF_EXPAND)};
 
 //!< Array of current status structures for all routines defined
-static kiss_routine_status_t kiss_routine_status[] = {
-    KISS_ROUTINES (KISS_ROUTINE_STATUS_EXPAND)
-};
+static kiss_routine_status_t kiss_routine_status[] = {KISS_ROUTINES (KISS_ROUTINE_STATUS_EXPAND)};
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -186,31 +183,29 @@ uint8_t kiss_routine_control_check_routine_id (uint16_t id)
  */
 uint8_t kiss_routine_control_start_routine (uint16_t id, uint16_t wparam, uint32_t lparam)
 {
-    // this should be always amended either here or within start_fn
-    uint8_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
+	// this should be always amended either here or within start_fn
+	uint8_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
 
-    const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
+	const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
 	kiss_routine_status_t *status = kiss_routine_get_status_by_id (id);
 
-    if (routine != 0 && status != 0) {
-        if (status->running == 0) {
-            // this shall return one of codes mentioned in the doxygen comment 
-            out = routine->start_fn(lparam, wparam);
+	if (routine != 0 && status != 0) {
+		if (status->running == 0) {
+			// this shall return one of codes mentioned in the doxygen comment
+			out = routine->start_fn (lparam, wparam);
 
-            // set running flag only for asynchronous flag
-            if (routine->asynchronous == KISS_ROUTINE_CONTROL_ASYNCHRONOUS ||
-                routine->asynchronous == KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP) 
-                {
-                    status->running = 1;
-                }
-        }
-        else {
-            out = KISS_ROUTINE_RETVAL_ALREADY_STARTED;
-        }
+			// set running flag only for asynchronous flag
+			if (routine->asynchronous == KISS_ROUTINE_CONTROL_ASYNCHRONOUS ||
+				routine->asynchronous == KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP) {
+				status->running = 1;
+			}
+		}
+		else {
+			out = KISS_ROUTINE_RETVAL_ALREADY_STARTED;
+		}
+	}
 
-    }
-
-    return out;
+	return out;
 }
 
 /**
@@ -219,29 +214,27 @@ uint8_t kiss_routine_control_start_routine (uint16_t id, uint16_t wparam, uint32
  */
 uint8_t kiss_routine_control_stop_routine (uint16_t id)
 {
-    uint8_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
+	uint8_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
 
-    const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
+	const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
 	kiss_routine_status_t *status = kiss_routine_get_status_by_id (id);
 
-    if (routine != 0 && status != 0) {
-        if (routine->asynchronous == KISS_ROUTINE_CONTROL_SYNCHRO) 
-        {  
-            out = KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE;
-        }   
-        else
-        {
-            if (status->running == 0) {
-                out = KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING;
-            }
-            else {
-                routine->stop_fn();
-                out = KISS_ROUTINE_RETVAL_SUCCESS;
-            }
-        }  
-    }
+	if (routine != 0 && status != 0) {
+		if (routine->asynchronous == KISS_ROUTINE_CONTROL_SYNCHRO) {
+			out = KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE;
+		}
+		else {
+			if (status->running == 0) {
+				out = KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING;
+			}
+			else {
+				routine->stop_fn ();
+				out = KISS_ROUTINE_RETVAL_SUCCESS;
+			}
+		}
+	}
 
-    return out;
+	return out;
 }
 
 /**
@@ -250,13 +243,13 @@ uint8_t kiss_routine_control_stop_routine (uint16_t id)
  */
 uint16_t kiss_routine_control_get_result_routine (uint16_t id)
 {
-    uint16_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
+	uint16_t out = KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR;
 
-    const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
+	const kiss_routine_control_t *routine = kiss_routine_get_by_id (id);
 
-    if (routine != 0) {
-        out = routine->get_result_fn();
-    }
+	if (routine != 0) {
+		out = routine->get_result_fn ();
+	}
 
-    return out;
-}   
+	return out;
+}

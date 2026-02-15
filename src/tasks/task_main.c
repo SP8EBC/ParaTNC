@@ -134,9 +134,12 @@ void task_main (void *parameters)
 			event_log_sync (EVENT_INFO,
 							EVENT_SRC_PWR_SAVE,
 							EVENTS_PWR_SAVE_GO_TO_INTERMEDIATE_SLEEP,
-							0, 0,
-							0, 0,
-							0, 0);
+							0,
+							0,
+							0,
+							0,
+							0,
+							0);
 
 			// this sleep is used by @link{pwr_save_after_stop2_rtc_wakeup_it} to
 			// go to the intermediate sleep in L4 powersave mode, when xxx seconds
@@ -156,9 +159,12 @@ void task_main (void *parameters)
 			event_log_sync (EVENT_INFO,
 							EVENT_SRC_PWR_SAVE,
 							EVENTS_PWR_SAVE_WOKEN_UP_AFTER_LAST_SLEEP,
-							0, 0,
-							0, 0,
-							0, 0);
+							0,
+							0,
+							0,
+							0,
+							0,
+							0);
 
 			system_clock_configure_l4 ();
 
@@ -178,9 +184,12 @@ void task_main (void *parameters)
 			event_log_sync (EVENT_INFO,
 							EVENT_SRC_PWR_SAVE,
 							EVENTS_PWR_SAVE_WOKEN_UP_EXITED,
-							0, 0,
-							rte_main_battery_voltage, rte_main_average_battery_voltage,
-							0, 0);
+							0,
+							0,
+							rte_main_battery_voltage,
+							rte_main_average_battery_voltage,
+							0,
+							0);
 
 			// meas average will return 0 if internal buffer isn't filled completely
 			if (rte_main_average_battery_voltage == 0) {
@@ -227,8 +236,7 @@ void task_main (void *parameters)
 			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_MAIN);
 
 			// if Victron VE.direct client is enabled
-			if (main_config_data_mode->victron == 1) {
-			}
+			if (main_config_data_mode->victron == 1) {}
 			else {
 			}
 
@@ -249,17 +257,18 @@ void task_main (void *parameters)
 				//					// if some UMB data have been received
 				//					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_DONE) {
 				//						umb_pooling_handler(&rte_wx_umb_context,
-				//REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
+				// REASON_RECEIVE_IDLE, master_time, main_config_data_umb);
 				//
 				//						if (rte_wx_umb_context.state ==
-				//UMB_STATUS_RESPONSE_AVALIABLE) { 							led_blink_led2_botoom();
+				// UMB_STATUS_RESPONSE_AVALIABLE) { led_blink_led2_botoom();
 				//						}
 				//					}
 				//
 				//					// if there were an error during receiving frame from host,
-				//restart rxing once again 					if (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
+				// restart rxing once again 					if
+				// (main_wx_srl_ctx_ptr->srl_rx_state == SRL_RX_ERROR) {
 				//						umb_pooling_handler(&rte_wx_umb_context,
-				//REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
+				// REASON_RECEIVE_ERROR, master_time, main_config_data_umb);
 				//					}
 				//
 				if (main_wx_srl_ctx_ptr->srl_tx_state == SRL_TX_IDLE) {
@@ -277,13 +286,13 @@ void task_main (void *parameters)
 					rte_main_reset_modbus_rtu = 0;
 
 					//				  rtu_serial_init(&rte_rtu_pool_queue, 1, main_wx_srl_ctx_ptr,
-					//main_config_data_rtu);
+					// main_config_data_rtu);
 					//
 					//				  main_target_wx_baudrate = main_config_data_rtu->slave_speed;
 					//
 					//				  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer,
-					//RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, main_target_wx_baudrate,
-					//main_config_data_rtu->slave_stop_bits);
+					// RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN,
+					// main_target_wx_baudrate, main_config_data_rtu->slave_stop_bits);
 					//				  srl_switch_tx_delay(main_wx_srl_ctx_ptr, 1);
 					//
 					//				  rtu_serial_start();

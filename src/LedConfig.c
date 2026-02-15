@@ -21,7 +21,8 @@
 uint8_t led_blinking_led2 = 0u;
 uint8_t led_blinking_led1 = 0u;
 
-void led_init(void) {
+void led_init (void)
+{
 	/**
 	 * 	GPIO_InitTypeDef.Mode = LL_GPIO_MODE_INPUT;
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_2;
@@ -37,43 +38,37 @@ void led_init(void) {
 	GPIO_InitTypeDef.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitTypeDef.Pull = LL_GPIO_PULL_NO;
 
-	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+	LL_GPIO_Init (GPIOC, &GPIO_InitTypeDef);
 
 	GPIO_InitTypeDef.Pin = LL_GPIO_PIN_8;
-	LL_GPIO_Init(GPIOC, &GPIO_InitTypeDef);
+	LL_GPIO_Init (GPIOC, &GPIO_InitTypeDef);
 
-	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_9);
-	LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_8);
-
+	LL_GPIO_SetOutputPin (GPIOC, LL_GPIO_PIN_9);
+	LL_GPIO_SetOutputPin (GPIOC, LL_GPIO_PIN_8);
 }
 
-void led_deinit(void) {
+void led_deinit (void)
+{
 }
 
-void led_service_blink(void) {
+void led_service_blink (void)
+{
 
 	if (led_blinking_led1 > 0) {
 		led_blinking_led1 -= BLINK_MSEC_PER_SVC_CALL;
-
 	}
 
 	if (led_blinking_led2 > 0) {
 		led_blinking_led2 -= BLINK_MSEC_PER_SVC_CALL;
 	}
 
-
-
 	if (led_blinking_led1 == BLINK_MSEC_PER_SVC_CALL) {
-		led_flip_led1_upper();
+		led_flip_led1_upper ();
 		led_blinking_led1 = 0;
 	}
 
 	if (led_blinking_led2 == BLINK_MSEC_PER_SVC_CALL) {
-		led_flip_led2_bottom();
+		led_flip_led2_bottom ();
 		led_blinking_led2 = 0;
 	}
-
-
-
 }
-

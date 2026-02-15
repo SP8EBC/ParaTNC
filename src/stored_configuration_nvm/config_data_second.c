@@ -5,57 +5,60 @@
  *      Author: mateusz
  */
 
-#include <stored_configuration_nvm/config_data.h>
 #include "io_default_vbat_scaling.h"
+#include <stored_configuration_nvm/config_data.h>
 
 #include "station_config.h"
 
 #ifndef STM32L471xx
 
 #ifndef _RTU_SLAVE_LENGHT_1
-	#define _RTU_SLAVE_LENGHT_1 0x1
+#define _RTU_SLAVE_LENGHT_1 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_2
-	#define _RTU_SLAVE_LENGHT_2 0x1
+#define _RTU_SLAVE_LENGHT_2 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_3
-	#define _RTU_SLAVE_LENGHT_3 0x1
+#define _RTU_SLAVE_LENGHT_3 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_4
-	#define _RTU_SLAVE_LENGHT_4 0x1
+#define _RTU_SLAVE_LENGHT_4 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_5
-	#define _RTU_SLAVE_LENGHT_5 0x1
+#define _RTU_SLAVE_LENGHT_5 0x1
 #endif
 
 #ifndef _RTU_SLAVE_LENGHT_6
-	#define _RTU_SLAVE_LENGHT_6 0x1
+#define _RTU_SLAVE_LENGHT_6 0x1
 #endif
 
 #ifdef _METEO_DISABLE_DALLAS
-#define _METEO_DEF_DISABLE_DALLAS 		WX_INTERNAL_DISABLE_DALLAS
+#define _METEO_DEF_DISABLE_DALLAS WX_INTERNAL_DISABLE_DALLAS
 #else
-#define _METEO_DEF_DISABLE_DALLAS		(0u)
+#define _METEO_DEF_DISABLE_DALLAS (0u)
 #endif
 
 #ifdef _METEO_VALIDATE_PARAMETERS
-#define	_METEO_DEF_VALIDATE_PARAMS		WX_CHECK_VALIDATE_PARAMS
+#define _METEO_DEF_VALIDATE_PARAMS WX_CHECK_VALIDATE_PARAMS
 #else
-#define _METEO_DEF_VALIDATE_PARAMS		(0u)
+#define _METEO_DEF_VALIDATE_PARAMS (0u)
 #endif
 
-const uint16_t __attribute__((section(".config_section_second"))) config_data_pgm_cntr_second = 0x2;
+const uint16_t __attribute__ ((section (".config_section_second"))) config_data_pgm_cntr_second =
+	0x2;
 
-const uint32_t __attribute__((section(".config_section_second.crc"))) config_data_crc_val_second = 0xDEADBEEF;
+const uint32_t __attribute__ ((section (".config_section_second.crc"))) config_data_crc_val_second =
+	0xDEADBEEF;
 
 /**
  *
  */
-const config_data_mode_t __attribute__((section(".config_section_second.mode"))) config_data_mode_second = {
+const config_data_mode_t
+	__attribute__ ((section (".config_section_second.mode"))) config_data_mode_second = {
 #ifdef _DIGI
 		.digi = 1,
 #else
@@ -147,10 +150,11 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 #endif
 
 #if (defined _AGGRESIVE_SCHEDULE_START)
-		// only for ParaMETEO
-		.powersave_aggresive_schedule_start = _AGGRESIVE_SCHEDULE_START,
+												 // only for ParaMETEO
+												 .powersave_aggresive_schedule_start =
+			_AGGRESIVE_SCHEDULE_START,
 #else
-		.powersave_aggresive_schedule_start = 100,
+												 .powersave_aggresive_schedule_start = 100,
 #endif
 
 #if (defined _AGGRESIVE_SCHEDULE_STOP)
@@ -171,7 +175,8 @@ const config_data_mode_t __attribute__((section(".config_section_second.mode")))
 /**
  *
  */
-const config_data_basic_t __attribute__((section(".config_section_second.basic"))) config_data_basic_second = {
+const config_data_basic_t
+	__attribute__ ((section (".config_section_second.basic"))) config_data_basic_second = {
 		.callsign = _CALL,
 		.ssid = _SSID,
 		.latitude = _LAT,
@@ -221,7 +226,6 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
 
 		.beacon_transmit_period = _BCN_INTERVAL,
 
-
 #ifdef _BCN_ON_STARTUP
 		.beacon_at_bootup = 1,
 #else
@@ -241,14 +245,14 @@ const config_data_basic_t __attribute__((section(".config_section_second.basic")
 #endif
 
 		.battery_scalling_a = VBAT_MEAS_A_COEFF,
-		.battery_scalling_b = VBAT_MEAS_B_COEFF
-};
+		.battery_scalling_b = VBAT_MEAS_B_COEFF};
 
 /**
  * Data sources for different parameters
  *
  */
-const config_data_wx_sources_t __attribute__((section(".config_section_second.sources"))) config_data_wx_sources_second = {
+const config_data_wx_sources_t
+	__attribute__ ((section (".config_section_second.sources"))) config_data_wx_sources_second = {
 
 		.temperature_telemetry = WX_SOURCE_INTERNAL,
 
@@ -265,8 +269,6 @@ const config_data_wx_sources_t __attribute__((section(".config_section_second.so
 		.temperature = WX_SOURCE_DAVIS_SERIAL,
 #endif
 
-
-
 #ifdef _PRESSURE_INTERNAL
 		.pressure = WX_SOURCE_INTERNAL,
 #endif
@@ -279,7 +281,6 @@ const config_data_wx_sources_t __attribute__((section(".config_section_second.so
 #ifdef _PRESSURE_DAVIS
 		.pressure = WX_SOURCE_DAVIS_SERIAL,
 #endif
-
 
 #ifdef _HUMIDITY_INTERNAL
 		.humidity = WX_SOURCE_INTERNAL,
@@ -294,29 +295,28 @@ const config_data_wx_sources_t __attribute__((section(".config_section_second.so
 		.humidity = WX_SOURCE_DAVIS_SERIAL,
 #endif
 
-
-
 #ifdef _WIND_INTERNAL
 		.wind = WX_SOURCE_INTERNAL
 #endif
 #ifdef _WIND_UMB
-		.wind = WX_SOURCE_UMB
+					.wind = WX_SOURCE_UMB
 #endif
 #ifdef _WIND_RTU
-		.wind = WX_SOURCE_RTU
+								.wind = WX_SOURCE_RTU
 #endif
 #ifdef _WIND_FULL_RTU
-		.wind = WX_SOURCE_FULL_RTU
+											.wind = WX_SOURCE_FULL_RTU
 #endif
 #ifdef _WIND_DAVIS
-		.wind = WX_SOURCE_DAVIS_SERIAL
+														.wind = WX_SOURCE_DAVIS_SERIAL
 #endif
 };
 
 /**
  *
  */
-const config_data_umb_t __attribute__((section(".config_section_second.umb"))) config_data_umb_second = {
+const config_data_umb_t
+	__attribute__ ((section (".config_section_second.umb"))) config_data_umb_second = {
 #ifdef _UMB_SLAVE_ID
 		.slave_id = _UMB_SLAVE_ID,
 #else
@@ -329,7 +329,7 @@ const config_data_umb_t __attribute__((section(".config_section_second.umb"))) c
 		.slave_class = 0,
 #endif
 
-#if defined (_UMB_SLAVE_ID) && defined (_UMB_SLAVE_CLASS)
+#if defined(_UMB_SLAVE_ID) && defined(_UMB_SLAVE_CLASS)
 		.channel_windspeed = _UMB_CHANNEL_WINDSPEED,
 		.channel_wingsusts = _UMB_CHANNEL_WINDGUSTS,
 		.channel_winddirection = _UMB_CHANNEL_WINDDIRECTION,
@@ -344,11 +344,11 @@ const config_data_umb_t __attribute__((section(".config_section_second.umb"))) c
 #endif
 };
 
-
 /**
  *
  */
-const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) config_data_rtu_second = {
+const config_data_rtu_t
+	__attribute__ ((section (".config_section_second.rtu"))) config_data_rtu_second = {
 		.slave_speed = _RTU_SLAVE_SPEED,
 
 		.slave_parity = _RTU_SLAVE_PARITY,
@@ -361,7 +361,7 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 		.use_full_wind_data = 0,
 #endif
 
-		// sources
+// sources
 #ifdef _RTU_SLAVE_TEMPERATURE_SOURCE
 		.temperature_source = _RTU_SLAVE_TEMPERATURE_SOURCE,
 #else
@@ -415,7 +415,7 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 
 		.slave_1_scaling_d = _RTU_SLAVE_SCALING_D_1,
 
-		.slave_1_unsigned_signed = 0,		// 0 - unsigned
+		.slave_1_unsigned_signed = 0, // 0 - unsigned
 
 		// channel 2
 		.slave_2_bus_address = _RTU_SLAVE_ID_2,
@@ -510,13 +510,12 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 
 		.slave_6_scaling_d = _RTU_SLAVE_SCALING_D_6,
 
-		.slave_6_unsigned_signed = 0
-};
+		.slave_6_unsigned_signed = 0};
 
 #ifdef PARAMETEO
 
-//const config_data_gsm_t __attribute__((section(".config_section_second.gsm"))) config_data_gsm_second = {
-//		.pin = "\0\0\0\0\0",
+// const config_data_gsm_t __attribute__((section(".config_section_second.gsm")))
+// config_data_gsm_second = { 		.pin = "\0\0\0\0\0",
 //
 //		.apn = _GSM_APN_NAME,				// PlusGSM  - abonament
 //		//.apn = "plus\0",				// PlusGSM  - karta
@@ -526,11 +525,11 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 //
 //		.password = _GSM_APN_PASS,
 //
-//#ifdef _GSM_API_ENABLE
+// #ifdef _GSM_API_ENABLE
 //		.api_enable = 1,
-//#else
+// #else
 //		.api_enable = 0,
-//#endif
+// #endif
 //
 //		// 78.88.56.14
 //		//.api_base_url = "http://78.88.56.14:8080/",
@@ -539,22 +538,23 @@ const config_data_rtu_t __attribute__((section(".config_section_second.rtu"))) c
 //
 //		.api_station_name = _GSM_API_STATION_NAME,
 //
-//#ifdef _GSM_APRSIS_ENABLE
+// #ifdef _GSM_APRSIS_ENABLE
 //		.aprsis_enable = 1,
-//#else
+// #else
 //		.aprsis_enable = 0,
-//#endif
+// #endif
 //
 //		.aprsis_passcode = _GSM_APRSIS_PASSCODE,
 //
 //		.aprsis_server_port = _GSM_APRSIS_PORT,
 //
 //		.aprsis_server_address = _GSM_APRSIS_ADDRES
-//};
+// };
 
 #endif
 
-const config_data_compatibility_version_t __attribute__((section(".config_section_second.compat"))) config_data_compatibility_second = {
+const config_data_compatibility_version_t
+	__attribute__ ((section (".config_section_second.compat"))) config_data_compatibility_second = {
 		.mode_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
 		.basic_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
 		.sources_block_compatiblity_number = 0xFFFFFFFFFFFFFFFFULL,
@@ -567,4 +567,3 @@ const config_data_compatibility_version_t __attribute__((section(".config_sectio
 };
 
 #endif
-

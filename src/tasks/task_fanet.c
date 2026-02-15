@@ -52,7 +52,6 @@ void task_fanet (void *parameters)
 				fanet_success_counter++;
 			}
 			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
-
 		}
 	}
 }

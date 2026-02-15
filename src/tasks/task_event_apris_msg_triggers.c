@@ -33,8 +33,8 @@
 #define FROM_MESSAGE_LN			 rte_main_kiss_from_message_ln
 #define RESPONSE_MESSAGE		 rte_main_kiss_response_message
 #define MESSAGE_FOR_TRANSMITTING (&rte_main_message_for_transmitting)
-#define OWN_APRS_MESSAGE		main_own_aprs_msg
-#define CALLSIGN_WITH_SSID			main_callsign_with_ssid
+#define OWN_APRS_MESSAGE		 main_own_aprs_msg
+#define CALLSIGN_WITH_SSID		 main_callsign_with_ssid
 
 void task_event_aprsis_msg_trigger (void *param)
 {
@@ -50,7 +50,8 @@ void task_event_aprsis_msg_trigger (void *param)
 															   pdFALSE,
 															   0xFFFFFFFFu);
 
-		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
+		xEventGroupClearBits (main_eventgroup_handle_powersave,
+							  MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
 
 		// check if the event was really generated
 		if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_MESSAGE_ACK) {
@@ -108,8 +109,7 @@ void task_event_aprsis_msg_trigger (void *param)
 					// if a response was generated
 					if (KISS_RESPONSE_MESSAGE_LN > 0) {
 						// check if a beginning and an end of generated response contains FEND.
-						if ((RESPONSE_MESSAGE[0] == FEND) &&
-							(RESPONSE_MESSAGE[1] == NONSTANDARD) &&
+						if ((RESPONSE_MESSAGE[0] == FEND) && (RESPONSE_MESSAGE[1] == NONSTANDARD) &&
 							(RESPONSE_MESSAGE[KISS_RESPONSE_MESSAGE_LN - 1] == FEND)) {
 							// if yes encode the response w/o them
 							MESSAGE_FOR_TRANSMITTING->content_ln =
@@ -170,73 +170,78 @@ void task_event_aprsis_msg_trigger (void *param)
 			}
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE) {
-			KISS_RESPONSE_MESSAGE_LN = message_encode(MESSAGE_FOR_TRANSMITTING, (uint8_t*)OWN_APRS_MESSAGE, OWN_APRS_MSG_LN, MESSAGE_SOURCE_APRSIS);
+			KISS_RESPONSE_MESSAGE_LN = message_encode (MESSAGE_FOR_TRANSMITTING,
+													   (uint8_t *)OWN_APRS_MESSAGE,
+													   OWN_APRS_MSG_LN,
+													   MESSAGE_SOURCE_APRSIS);
 
-			aprsis_send_any_string_buffer(OWN_APRS_MESSAGE, KISS_RESPONSE_MESSAGE_LN);
+			aprsis_send_any_string_buffer (OWN_APRS_MESSAGE, KISS_RESPONSE_MESSAGE_LN);
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_SEND_MESSAGE);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS) {
-			aprsis_send_gsm_status((const char *)CALLSIGN_WITH_SSID);	// done
+			aprsis_send_gsm_status ((const char *)CALLSIGN_WITH_SSID); // done
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_GSM_STATUS);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS) {
-			aprsis_send_server_comm_counters((const char *)CALLSIGN_WITH_SSID);
-
+			aprsis_send_server_comm_counters ((const char *)CALLSIGN_WITH_SSID);
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING) {
-			aprsis_send_loginstring((const char *)CALLSIGN_WITH_SSID, system_is_rtc_ok(), rte_main_battery_voltage);
+			aprsis_send_loginstring ((const char *)CALLSIGN_WITH_SSID,
+									 system_is_rtc_ok (),
+									 rte_main_battery_voltage);
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES) {
-			aprsis_send_telemetry(1u, (const char *)CALLSIGN_WITH_SSID);
+			aprsis_send_telemetry (1u, (const char *)CALLSIGN_WITH_SSID);
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS) {
-			if (rte_main_trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged() == 1) {
+			if (rte_main_trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged () == 1) {
 
 				// set a pointer to even in exposed form which will be sent now
-				const event_log_exposed_t * current_exposed_event = &rte_main_exposed_events[(rte_main_trigger_gsm_event_log) - 1];
+				const event_log_exposed_t *current_exposed_event =
+					&rte_main_exposed_events[(rte_main_trigger_gsm_event_log)-1];
 
 				// create APRS status content itself
-				const uint16_t str_size = event_exposed_to_string(current_exposed_event, OWN_APRS_MESSAGE, OWN_APRS_MSG_LN);
+				const uint16_t str_size = event_exposed_to_string (current_exposed_event,
+																   OWN_APRS_MESSAGE,
+																   OWN_APRS_MSG_LN);
 
 				rte_main_trigger_gsm_event_log--;
 
 				if (str_size > 0) {
-					aprsis_send_any_status((const char *)CALLSIGN_WITH_SSID, OWN_APRS_MESSAGE ,str_size);
+					aprsis_send_any_status ((const char *)CALLSIGN_WITH_SSID,
+											OWN_APRS_MESSAGE,
+											str_size);
 				}
 
-				if (rte_main_trigger_gsm_event_log > 0)
-				{
+				if (rte_main_trigger_gsm_event_log > 0) {
 					xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-							MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
-
+										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 				}
-				else
-				{
+				else {
 					xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
-							MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
+										  MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 				}
 			}
 		}
 		else {
-			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
-					bits_on_event);
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger, bits_on_event);
 		}
-		//supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
+		// supervisor_iam_alive(SUPERVISOR_THREAD_EVENT_APRSIS_MSG_TRIG);
 
 		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_EV_APRS_TRIG);
 
-	}	// while (1)
+	} // while (1)
 }

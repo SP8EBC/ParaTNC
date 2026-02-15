@@ -5,12 +5,11 @@
  *      Author: mateusz
  */
 
-
 #include <FreeRTOS.h>
+#include <event_groups.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <task.h>
-#include <event_groups.h>
 
 #include "main.h"
 #include "main_freertos_externs.h"
@@ -20,84 +19,92 @@
 #include "gsm_comm_state_handler.h"
 #include "io.h"
 #include "packet_tx_handler.h"
-#include "wx_handler.h"
 #include "supervisor.h"
+#include "wx_handler.h"
 
-#include "gsm/sim800c_poolers.h"
-#include "davis_vantage/davis_parsers.h"
 #include "davis_vantage/davis.h"
-#include "umb_master/umb_channel_pool.h"
+#include "davis_vantage/davis_parsers.h"
 #include "drivers/serial.h"
+#include "gsm/sim800c_poolers.h"
+#include "umb_master/umb_channel_pool.h"
 
-void task_ten_second( void * parameters )
+void task_ten_second (void *parameters)
 {
-	(void) parameters;
+	(void)parameters;
 	/* Block for 10000ms. */
 	const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
 
-	while(1) {
-		SUPERVISOR_MONITOR_CLEAR(TASK_TEN_SEC);
+	while (1) {
+		SUPERVISOR_MONITOR_CLEAR (TASK_TEN_SEC);
 
 		vTaskDelay (xDelay);
 
 		// connecting to aprs-is synchronously (in gsm_sim800_poolers_ten_seconds)
 		// may last longer than one second, so the supervisor must be reset
 		// just after the wait
-		supervisor_iam_alive(SUPERVISOR_THREAD_TASK_TEN_SEC);
+		supervisor_iam_alive (SUPERVISOR_THREAD_TASK_TEN_SEC);
 
-		xEventGroupClearBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
+		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 1);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 1);
 
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
-		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r() == 1) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 2);
+		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r () == 1) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 2);
 
-			packet_tx_send_wx_frame();
+			packet_tx_send_wx_frame ();
 
 			rte_main_trigger_wx_packet = 0;
 		}
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 3);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 3);
 
-	#ifdef PARAMETEO
+#ifdef PARAMETEO
 		if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
 			rte_main_woken_up == 0) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 4);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 4);
 
 			gsm_sim800_poolers_ten_seconds (main_gsm_srl_ctx_ptr, &main_gsm_state);
 
-			if (gsm_comm_state_get_current() == GSM_COMM_APRSIS) {
-				SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 5);
+			if (gsm_comm_state_get_current () == GSM_COMM_APRSIS) {
+				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 5);
 
 				packet_tx_tcp_handler ();
 			}
 		}
-	#endif
+#endif
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 6);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 6);
 
 		if (main_config_data_mode->wx_umb == 1) {
-			umb_channel_pool(&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
+			umb_channel_pool (&rte_wx_umb, &rte_wx_umb_context, main_config_data_umb);
 		}
 
 		if (main_config_data_mode->wx_umb == 1) {
-			rte_wx_umb_qf = umb_get_current_qf(&rte_wx_umb_context, master_time);
+			rte_wx_umb_qf = umb_get_current_qf (&rte_wx_umb_context, master_time);
 		}
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 7);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 7);
 
 		if (main_config_data_mode->wx_umb == 1) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 8);
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 8);
 
-			const uint8_t umb_watchdog_state = umb_master_watchdog(&rte_wx_umb_context, master_time);
+			const uint8_t umb_watchdog_state =
+				umb_master_watchdog (&rte_wx_umb_context, master_time);
 
 			if (umb_watchdog_state == 1) {
-			  const uint32_t wx_baudrate = main_config_data_umb->serial_speed;
+				const uint32_t wx_baudrate = main_config_data_umb->serial_speed;
 
-			  srl_close(main_wx_srl_ctx_ptr);
-			  srl_init(main_wx_srl_ctx_ptr, USART2, srl_usart2_rx_buffer, RX_BUFFER_2_LN, srl_usart2_tx_buffer, TX_BUFFER_2_LN, wx_baudrate, 1);
-			  umb_master_init(&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
+				srl_close (main_wx_srl_ctx_ptr);
+				srl_init (main_wx_srl_ctx_ptr,
+						  USART2,
+						  srl_usart2_rx_buffer,
+						  RX_BUFFER_2_LN,
+						  srl_usart2_tx_buffer,
+						  TX_BUFFER_2_LN,
+						  wx_baudrate,
+						  1);
+				umb_master_init (&rte_wx_umb_context, main_wx_srl_ctx_ptr, main_config_data_umb);
 			}
 			else if (umb_watchdog_state > 1) {
 				rte_main_reboot_req = 1;
@@ -107,36 +114,39 @@ void task_ten_second( void * parameters )
 			}
 		}
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 9);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 9);
 
 		if (main_config_data_mode->wx != 0) {
 
-			#ifdef STM32L471xx
-				if (io_get_cntrl_vbat_s() == 1) {
-			#else
-				if (io_get_5v_isol_sw___cntrl_vbat_s() == 1) {
-			#endif
-					// pool anemometer only when power is applied  /// RESET
-					wx_pool_anemometer(main_config_data_wx_sources, main_config_data_mode, main_config_data_umb, main_config_data_rtu);
-				}
+#ifdef STM32L471xx
+			if (io_get_cntrl_vbat_s () == 1) {
+#else
+			if (io_get_5v_isol_sw___cntrl_vbat_s () == 1) {
+#endif
+				// pool anemometer only when power is applied  /// RESET
+				wx_pool_anemometer (main_config_data_wx_sources,
+									main_config_data_mode,
+									main_config_data_umb,
+									main_config_data_rtu);
+			}
 		}
 
-		SUPERVISOR_MONITOR_SET_CHECKPOINT(TASK_TEN_SEC, 10);
+		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 10);
 
-		if (main_get_main_davis_serial_enabled() == 1) {
+		if (main_get_main_davis_serial_enabled () == 1) {
 
 			// if previous LOOP packet is ready for processing
 			if (rte_wx_davis_loop_packet_avaliable == 1) {
-				davis_parsers_loop(main_kiss_srl_ctx_ptr->srl_rx_buf_pointer, main_kiss_srl_ctx_ptr->srl_rx_buf_ln, &rte_wx_davis_loop_content);
+				davis_parsers_loop (main_kiss_srl_ctx_ptr->srl_rx_buf_pointer,
+									main_kiss_srl_ctx_ptr->srl_rx_buf_ln,
+									&rte_wx_davis_loop_content);
 			}
 
 			// trigger consecutive LOOP packet
-			davis_trigger_loop_packet();
+			davis_trigger_loop_packet ();
 		}
 
-		xEventGroupSetBits(main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
+		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_TEN_SEC);
 	}
-		// end of while loop
+	// end of while loop
 }
-
-

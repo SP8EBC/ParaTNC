@@ -35,7 +35,6 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-
 /**
  *
  * @param address
@@ -44,11 +43,13 @@
  * @param buffer_ln
  * @return
  */
-uint8_t kiss_read_memory_response(uint32_t address, uint8_t size, uint8_t * output_buffer, uint16_t buffer_ln) {
+uint8_t kiss_read_memory_response (uint32_t address, uint8_t size, uint8_t *output_buffer,
+								   uint16_t buffer_ln)
+{
 
 	uint8_t out;
 
-	const uint8_t* pointer = (const uint8_t*)address;
+	const uint8_t *pointer = (const uint8_t *)address;
 	uint16_t output_buffer_iterator = 0;
 
 	for (int i = 0; i < size; i++) {
@@ -59,5 +60,3 @@ uint8_t kiss_read_memory_response(uint32_t address, uint8_t size, uint8_t * outp
 
 	return out;
 }
-
-

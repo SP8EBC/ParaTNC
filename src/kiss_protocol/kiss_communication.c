@@ -213,7 +213,7 @@ int32_t kiss_parse_received (uint8_t *input_frame_from_host,
 					afsk_txStart(a);
 				}
 			} break;
-
+// clang-format off
 			case KISS_GET_RUNNING_CONFIG: {
 				output = kiss_callback_get_running_config(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 			} break;
@@ -250,7 +250,7 @@ int32_t kiss_parse_received (uint8_t *input_frame_from_host,
 				output = kiss_callback_reset(input_frame_from_host, input_len, response_buffer, resp_buf_ln, transport_media);
 				break;
 			}
-
+			// clang-format on
 
 			default: {
 				// unknown service
