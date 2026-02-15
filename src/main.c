@@ -2,7 +2,6 @@
 #include "main_gsm_pool_handler.h"
 #include "main_freertos_externs.h"
 
-#ifdef STM32L471xx		/////////
 #include <stm32l4xx_hal_cortex.h>
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_iwdg.h>
@@ -35,7 +34,6 @@
 #include "gsm_comm_state_handler.h"
 
 #include "./etc/pwr_save_configuration.h"
-#endif				////////
 
 #include <delay.h>
 #include <LedConfig.h>
@@ -315,6 +313,7 @@ uint8_t main_reset_config_to_default = 0;
 AX25Ctx main_ax25;
 Afsk main_afsk;
 
+volatile NVIC_Type* main_nvic = (volatile NVIC_Type      *)NVIC_BASE;
 
 AX25Call main_own_path[3];
 uint8_t main_own_path_ln = 0;
@@ -1248,6 +1247,11 @@ int main(int argc, char* argv[]){
 	   pwr_save_switch_mode_to_c0();
    }
 
+   if (NVIC_GetEnableIRQ(TIM1_UP_TIM16_IRQn) == 0U)
+   {
+	   backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER);
+   }
+
 	supervisor_iam_alive(SUPERVISOR_THREAD_MAIN_LOOP);
 
 	sx1262_init();
@@ -1341,6 +1345,12 @@ int main(int argc, char* argv[]){
 	   else {
 		  backup_reg_reset_inhibit_log_report_send_api();
 	   }
+   }
+
+
+   if (NVIC_GetEnableIRQ(TIM1_UP_TIM16_IRQn) == 0U)
+   {
+	   backup_assert(BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER);
    }
 
    if (main_config_data_basic-> beacon_at_bootup == 1) {
