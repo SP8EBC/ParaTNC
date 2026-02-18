@@ -11,6 +11,7 @@
 #include "delay.h"
 #include "backup_registers.h"
 #include "variant.h"
+#include "aprsis.h"
 #include "rte_main.h"
 
 #include "ve_direct_protocol/parser.h"
@@ -591,12 +592,13 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
 
-#ifdef PARAMETEO
-	xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-			MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+	if (aprsis_logged == 1)
+	{
+		xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+				MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+	}
 //	// trigger packet to aprs-is server
 //	rte_main_trigger_gsm_telemetry_values = 1;
-#endif
 
 }
 

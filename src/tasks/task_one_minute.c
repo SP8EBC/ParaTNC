@@ -207,7 +207,7 @@ void task_one_minute (void *unused)
 
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 15);
 
-			if ((main_config_data_gsm->aprsis_enable != 0) && (main_config_data_mode->gsm == 1)) {
+			if (aprsis_logged == 1) {
 				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 16);
 
 				xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,

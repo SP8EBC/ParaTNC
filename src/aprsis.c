@@ -861,7 +861,7 @@ void aprsis_send_beacon (uint8_t async, const char *callsign_with_ssid, const ch
 											  config_data_basic->comment);
 	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
-	if (async > 0) {
+	if (async > 0) { // not used at this moment
 		aprsis_last_tcpip_write_res =
 			gsm_sim800_tcpip_async_write ((uint8_t *)aprsis_packet_tx_buffer,
 										  aprsis_packet_tx_message_size,
@@ -1063,7 +1063,7 @@ aprsis_send_description_telemetry (uint8_t async, const telemetry_description_t 
 											  main_own_aprs_msg);
 	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
 
-	if (async > 0) {
+	if (async > 0) { // not used at this moment
 		aprsis_last_tcpip_write_res =
 			gsm_sim800_tcpip_async_write ((uint8_t *)aprsis_packet_tx_buffer,
 										  aprsis_packet_tx_message_size,
@@ -1190,10 +1190,10 @@ void aprsis_igate_to_aprsis (AX25Msg *msg, const char *callsign_with_ssid)
 
 	aprsis_packet_tx_message_size = strlen (aprsis_packet_tx_buffer);
 
-	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_async_write ((uint8_t *)aprsis_packet_tx_buffer,
-																aprsis_packet_tx_message_size,
-																aprsis_serial_port,
-																aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write ((uint8_t *)aprsis_packet_tx_buffer,
+														  aprsis_packet_tx_message_size,
+														  aprsis_serial_port,
+														  aprsis_gsm_modem_state);
 }
 
 void aprsis_send_status_send_battery_voltages (const char *callsign_with_ssid, uint16_t current,
