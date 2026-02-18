@@ -28,6 +28,17 @@
 
 #define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
 
+// clang-format off
+#define RTE_MAIN_GET_FOR_ASSERT()	(rte_main_trigger_message_ack & 0x1u) | \
+									((rte_main_trigger_send_message & 0x1u) << 1) | \
+									((rte_main_trigger_gsm_aprsis_counters_packet & 0x1u) << 2) | \
+									((rte_main_trigger_gsm_loginstring_packet & 0x1u) << 3) | \
+									((rte_main_trigger_gsm_status & 0x1u) << 4) | \
+									((rte_main_trigger_gsm_event_log & 0x1u) << 5) | \
+									((rte_main_trigger_radio_event_log & 0x1u) << 6) | \
+									((rte_main_trigger_wx_packet & 0x1u) << 7) \
+// clang-format on
+
 typedef struct rte_main_tasks_load_t
 {
 	uint32_t task_main;

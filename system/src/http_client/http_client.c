@@ -319,8 +319,18 @@ uint8_t http_client_async_post(char * url, uint8_t url_ln, char * data_to_post, 
 	else if (split_point == 0xFFFF) {
 		out = HTTP_CLIENT_RET_WRONG_URL;
 	}
-	else if (http_client_state != HTTP_CLIENT_READY) {
+	else if ((http_client_state == HTTP_CLIENT_WAITING_POST) || (http_client_state == HTTP_CLIENT_WAITING_GET)) {
+		out = HTTP_CLIENT_RET_TCPIP_BSY;
+	}
+	else if (http_client_state == HTTP_CLIENT_UNITIALIZED) {
 		out = HTTP_CLIENT_RET_UNITIALIZED;
+	}
+	else {
+		;	// in theory should not go here at all
+	}
+
+	if (out != HTTP_CLIENT_OK) {
+		return out;
 	}
 
 	// check if module is busy on other TCP/IP connection

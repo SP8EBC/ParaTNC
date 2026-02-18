@@ -773,9 +773,9 @@ void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t wind
 	temp = ((float)windspeed / 10.0f);
 	max_wind_speed = ((float)windgusts / 10.0f);
 
-	temp /= 0.45; // Konwersja na mile na godzine
-	max_wind_speed /= 0.45;
-	if ((temp - (short)temp) >= 0.5) // Zaokraglanie wartosci
+	temp /= 0.45F; // Konwersja na mile na godzine
+	max_wind_speed /= 0.45F;
+	if ((temp - (short)temp) >= 0.5F) // Zaokraglanie wartosci
 		/* Odejmuje od wartosci zmiennoprzecinkowej w milach nad godzine wartosc
 			 po zrzutowaniu na typ short czyli z odcienta czescia po przecinku.
 			 Jezeli wynik jest wiekszy albo rowny 0.5 to trzeba zaokraglic w gore */
@@ -783,7 +783,7 @@ void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t wind
 	else
 		/* A jezeli jest mniejsza niz 0.5 to zaokraglamy w dol */
 		wind_speed_mph = (short)temp;
-	if ((max_wind_speed - (short)max_wind_speed) >= 0.5)
+	if ((max_wind_speed - (short)max_wind_speed) >= 0.5F)
 		/* Analogiczna procedura ma miejsce dla porywow wiatru*/
 		wind_gusts_mph = (short)max_wind_speed + 1;
 	else

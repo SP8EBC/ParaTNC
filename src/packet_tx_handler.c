@@ -65,7 +65,7 @@ uint8_t packet_tx_modbus_status =
 
 uint8_t packet_tx_more_than_one = 0;
 
-uint8_t packet_tx_trigger_tcp = 0;
+static uint8_t packet_tx_trigger_tcp = 0;
 
 uint8_t packet_tx_meteo_gsm_interval = 2;
 uint8_t packet_tx_meteo_gsm_counter = 0;
@@ -784,4 +784,9 @@ uint8_t packet_tx_changed_powersave_callback (uint8_t non_aggressive_or_aggressi
 uint8_t packet_tx_get_meteo_counter (void)
 {
 	return packet_tx_meteo_counter;
+}
+
+uint8_t packet_tx_get_trigger_tcp(void)
+{
+	return packet_tx_trigger_tcp;
 }

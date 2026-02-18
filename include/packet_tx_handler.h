@@ -54,5 +54,6 @@ uint8_t packet_tx_is_gsm_meteo_pending(void);
 void packet_tx_force_gsm_status(void);
 uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive);
 uint8_t packet_tx_get_meteo_counter(void);
+uint8_t packet_tx_get_trigger_tcp(void);
 
 #endif /* PACKET_TX_HANDLER_H_ */

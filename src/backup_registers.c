@@ -9,6 +9,11 @@
 
 #include "variant.h"
 
+#include "./event_log.h"
+#include "./events_definitions/events_main.h"
+#include "packet_tx_handler.h"
+#include "rte_main.h"
+
 #ifdef STM32L471xx
 #define REGISTER				   RTC->BKP0R
 #define REGISTER_LAST_SLEEP		   RTC->BKP1R
@@ -671,6 +676,18 @@ void backup_assert (uint32_t assert)
 	REGISTER_ASSERT |= assert;
 
 	backup_reg_lock ();
+
+	const uint8_t state = RTE_MAIN_GET_FOR_ASSERT ();
+
+	(void)event_log_sync (EVENT_ASSERT,
+						  EVENT_SRC_MAIN,
+						  EVENTS_MAIN_ASSERT_FAIL,
+						  packet_tx_get_trigger_tcp(),
+						  state,
+						  0xDEAD,
+						  rte_main_average_battery_voltage,
+						  assert,
+						  REGISTER_ASSERT);
 
 	NVIC_SystemReset ();
 }
