@@ -1718,6 +1718,7 @@ configuration_button_function_t main_get_button_two_right ()
 
 void main_suspend_task_for_psaving (void)
 {
+	supervisor_suspend();
 
 	vTaskSuspend (task_one_sec_handle);
 	vTaskSuspend (task_two_sec_handle);
@@ -1747,6 +1748,8 @@ void main_suspend_task_for_psaving (void)
 
 void main_resume_task_for_psaving (void)
 {
+	supervisor_resume();
+
 	vTaskResume (task_one_sec_handle);
 	vTaskResume (task_two_sec_handle);
 	vTaskResume (task_ten_sec_handle);

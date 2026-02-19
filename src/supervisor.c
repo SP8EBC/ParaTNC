@@ -39,6 +39,8 @@
 
 static uint8_t supervisor_started = 0u;
 
+static uint8_t supervisor_suspended = 0u;
+
 /**
  * master time at which each task reported to supervisor. main structure used
  * to control if task is responsive or not
@@ -159,6 +161,10 @@ int supervisor_service (void)
 		return nok;
 	}
 
+	if (supervisor_suspended == 1) {
+		return nok;
+	}
+
 	// inhibit supervisor if the controller has been woken up intermediately
 	// while sleeping
 	if (rte_main_woken_up != 0) {
@@ -225,6 +231,16 @@ void supervisor_start (void)
 	}
 
 	supervisor_started = 1;
+}
+
+void supervisor_suspend(void)
+{
+	supervisor_suspended = 1;
+}
+
+void supervisor_resume(void)
+{
+	supervisor_suspended = 0;
 }
 
 int supervisor_is_started (void)

@@ -106,6 +106,10 @@ int supervisor_check_have_postmortem(void);
  */
 void supervisor_start(void);
 
+void supervisor_suspend(void);
+
+void supervisor_resume(void);
+
 /**
  * @return non zero if supervisor is started
  */
