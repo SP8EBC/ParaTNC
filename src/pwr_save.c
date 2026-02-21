@@ -47,11 +47,11 @@
 #define MINIMUM_SENSEFUL_VBATT_VOLTAGE 678u
 
 /**
- * How long a controller should be woken up in aggressive powersaving mode
- * before it will send a frame to APRS-IS and go sleep once again. This should
- * be long enought to connect to APRS server and go sleep once again
+ * How many minutes, a controller should be woken up in aggressive powersaving mode
+ * before it will send a frame to APRS-IS, and go sleep once again. This should
+ * be long enough to connect to the APRS server and go sleep once again
  */
-#define WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES 2
+#define WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES 3
 
 #if defined(STM32L471xx)
 
@@ -413,6 +413,8 @@ int pwr_save_switch_mode_to_c0 (void)
 	}
 	// backup_reg_is_in_powersave_state
 
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_C0, 0, 0, 0, 0, 0, 0);
+
 	// turn ON +5V_S
 	io___cntrl_vbat_s_enable ();
 
@@ -452,6 +454,8 @@ int pwr_save_switch_mode_to_c1 (void)
 	if (backup_reg_is_in_powersave_state (IN_C0_STATE) != 0) {
 		return 0;
 	}
+
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_C1, 0, 0, 0, 0, 0, 0);
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect ();
@@ -503,6 +507,8 @@ void pwr_save_switch_mode_to_c2 (void)
 		return;
 	}
 
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_C2, 0, 0, 0, 0, 0, 0);
+
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect ();
 
@@ -548,6 +554,8 @@ void pwr_save_switch_mode_to_c3 (void)
 		return;
 	}
 
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_C3, 0, 0, 0, 0, 0, 0);
+
 	// turn OFF +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_disable ();
 
@@ -584,6 +592,8 @@ int pwr_save_switch_mode_to_m4 (void)
 	if (backup_reg_is_in_powersave_state (IN_M4_STATE) != 0) {
 		return 0;
 	}
+
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_M4, 0, 0, 0, 0, 0, 0);
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect ();
@@ -632,6 +642,8 @@ int pwr_save_switch_mode_to_m4a (void)
 		return 0;
 	}
 
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_M4A, 0, 0, 0, 0, 0, 0);
+
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable ();
 
@@ -670,6 +682,8 @@ void pwr_save_switch_mode_to_i5 (void)
 	if (backup_reg_is_in_powersave_state (IN_I5_STATE) != 0) {
 		return;
 	}
+
+	event_log_sync (EVENT_INFO, EVENT_SRC_PWR_SAVE, EVENTS_PWR_SAVE_STATE_I5, 0, 0, 0, 0, 0, 0);
 
 	// disconnect APRS-IS connection if it is established
 	aprsis_disconnect ();
@@ -1128,14 +1142,14 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 				// if digipeater is enabled
 				if (config->digi == 1) { // DIGI + WX + GSM
 										 // if weather packets are send 5 minutes or less often
-										 //						if (timers->wx_transmit_period >= 5) {
-										 //							if (minutes_to_wx > 1) {
-										 //								pwr_save_switch_mode_to_c2();
+										 //						if (timers->wx_transmit_period >= 5)
+										 //{ 							if (minutes_to_wx > 1) { 								pwr_save_switch_mode_to_c2();
 										 //
 										 //								//reinit_gprs = 1;
 										 //							}
 										 //							else {
-										 //								reinit_sensors = pwr_save_switch_mode_to_c0();
+										 //								reinit_sensors =
+										 //pwr_save_switch_mode_to_c0();
 										 //							}
 										 //						}
 										 //						else {

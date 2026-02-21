@@ -313,6 +313,39 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 		if (event_id == EVENTS_PWR_SAVE_BATT_LOW_GOING_SLEEP) {
 			out = event_log_str_pwr_save_going_sleep;
 		}
+		else if (event_id == EVENTS_PWR_SAVE_GO_TO_INTERMEDIATE_SLEEP) {
+			out = event_log_str_pwr_save_goto_intermediate_sleep;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_WOKEN_UP_RTC_INTERRUPT) {
+			out = event_log_str_pwr_save_wokenup_rtc_it;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_WOKEN_UP_AFTER_LAST_SLEEP) {
+			out = event_log_str_pwr_save_wokenup_after_last;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_WOKEN_UP_EXITED) {
+			out = event_log_str_pwr_save_wokenup_exited;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_C0) {
+			out = event_log_str_pwr_save_state_c0;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_C1) {
+			out = event_log_str_pwr_save_state_c1;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_C2) {
+			out = event_log_str_pwr_save_state_c2;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_C3) {
+			out = event_log_str_pwr_save_state_c3;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_M4) {
+			out = event_log_str_pwr_save_state_m4;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_M4A) {
+			out = event_log_str_pwr_save_state_m4a;
+		}
+		else if (event_id == EVENTS_PWR_SAVE_STATE_I5) {
+			out = event_log_str_pwr_save_state_i5;
+		}
 		break;
 	case EVENT_SRC_PACKET_TX_HANDLER: break;
 	case EVENT_SRC_APRSIS: {
@@ -373,6 +406,12 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 			out = event_log_str_tcpip_bootup_imsi;
 		}
 		else if (event_id == EVENTS_GSM_GPRS_IP_ADDRESS) {
+			out = event_log_str_tcpip_bootup_ip_address;
+		}
+		else if (event_id == EVENTS_GSM_GPRS_HANDSHAKING) {
+			out = event_log_str_tcpip_bootup_ip_address;
+		}
+		else if (event_id == EVENTS_GSM_GPRS_POWERED_ON) {
 			out = event_log_str_tcpip_bootup_ip_address;
 		}
 		/**

@@ -389,6 +389,13 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 
 		// give GSM module some time for its bootup to complete
 		*state = SIM800_NOT_YET_COMM;
+
+		event_log_sync (EVENT_INFO,
+						EVENT_SRC_GSM_GPRS,
+						EVENTS_GSM_GPRS_POWERED_ON,
+						0, 0,
+						0, 0,
+						0, 0);
 	}
 	else if (*state == SIM800_NOT_YET_COMM) {
 		// configure rx timeout - give some more time
@@ -415,6 +422,13 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 
 		// record when the handshake has been sent
 		gsm_time_of_last_command_send_to_module = main_get_master_time ();
+
+		event_log_sync (EVENT_INFO,
+						EVENT_SRC_GSM_GPRS,
+						EVENTS_GSM_GPRS_HANDSHAKING,
+						gsm_sim800_handshaking_errors, 0xFFU,
+						0, 0,
+						0, 0);
 
 		gsm_at_command_sent_last = 0;
 	}
@@ -840,6 +854,9 @@ uint8_t gsm_sim800_rx_terminating_callback (uint8_t current_data, const uint8_t 
 void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_state_t *state)
 {
 
+	static uint16_t srl_rx_error_cnt = 0;
+	static uint16_t handler_calls_cnt = 0;
+
 	int comparision_result = 123;
 
 	uint8_t second_line, third_line, fourth_line;
@@ -852,7 +869,9 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 
 	if (srl_context->srl_rx_state == SRL_RX_ERROR) {
 		gsm_receive_newline_counter = 0;
+		srl_rx_error_cnt++;
 	}
+	handler_calls_cnt++;
 
 	// check how many lines of text
 	newlines = gsm_sim800_check_for_extra_newlines (srl_context->srl_rx_buf_pointer +
@@ -894,8 +913,7 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 						EVENTS_GSM_GPRS_WARN_ASYNC_MSG_DETECTED,
 						0,
 						0,
-						0,
-						0,
+						srl_rx_error_cnt, handler_calls_cnt,
 						0,
 						0);
 
@@ -909,10 +927,25 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 
 		// if 'OK' has been received from the module
 		if (comparision_result == 0) {
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_GSM_GPRS,
+							EVENTS_GSM_GPRS_HANDSHAKING,
+							gsm_sim800_handshaking_errors, 0,
+							srl_rx_error_cnt, handler_calls_cnt,
+							0, 0);
+
 			*state = SIM800_INITIALIZING;
 		}
 		else {
 			gsm_sim800_handshaking_errors++;
+
+			event_log_sync (EVENT_WARNING,
+							EVENT_SRC_GSM_GPRS,
+							EVENTS_GSM_GPRS_HANDSHAKING,
+							gsm_sim800_handshaking_errors, 0,
+							srl_rx_error_cnt, handler_calls_cnt,
+							EVENT_LOG_PACK_ARR_TO_UINT32(srl_context->srl_rx_buf_pointer, 0),
+							EVENT_LOG_PACK_ARR_TO_UINT32(srl_context->srl_rx_buf_pointer, 4));
 
 			if (gsm_sim800_handshaking_errors > SIM800_MAX_HANDSHAKE_ERRORS) {
 				*state = SIM800_UNKNOWN;
@@ -999,8 +1032,7 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 									EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS,
 									0,
 									0,
-									0,
-									0,
+									srl_rx_error_cnt, handler_calls_cnt,
 									0,
 									0);
 				}
@@ -1026,8 +1058,7 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 									EVENTS_GSM_GPRS_WARN_NOT_REGISTERED_TO_NETWORK,
 									0,
 									0,
-									0,
-									0,
+									srl_rx_error_cnt, handler_calls_cnt,
 									0,
 									0);
 				}

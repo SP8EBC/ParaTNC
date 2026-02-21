@@ -22,6 +22,9 @@
 #define EVENT_LOG_SET_SEVERITY_SOURCE(severity, source) \
 	(((uint8_t)severity & 0xF) << 4) | ((uint8_t)source & 0xF)
 
+#define EVENT_LOG_PACK_ARR_TO_UINT32(arr, offset) 		\
+		(uint32_t)(arr[offset] | (arr[offset + 1] << 8U) | (arr[offset + 2] << 16U) | (arr[offset + 3] << 24U))	\
+
 /// ==================================================================================================
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================

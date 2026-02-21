@@ -240,6 +240,13 @@ void supervisor_suspend(void)
 
 void supervisor_resume(void)
 {
+	// current time since bootup
+	const uint32_t current_time = main_get_master_time ();
+
+	for (int i = 0; i < SUPERVISOR_THREAD_COUNT; i++) {
+		supervisor_last_im_alive[i] = current_time;
+	}
+
 	supervisor_suspended = 0;
 }
 
