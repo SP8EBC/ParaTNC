@@ -78,6 +78,13 @@ void task_one_second (void *parameters)
 
 			gsm_sim800_initialization_pool (main_gsm_srl_ctx_ptr, &main_gsm_state);
 
+			const uint8_t watchdog_nok = gsm_sim800_rx_done_watchdog(main_gsm_srl_ctx_ptr, &main_gsm_state);
+
+			if (watchdog_nok != 0U)
+			{
+				gsm_sim800_rx_done_event_handler(main_gsm_srl_ctx_ptr, &main_gsm_state);
+			}
+
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 5);
 		}
 

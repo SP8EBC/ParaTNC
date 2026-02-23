@@ -748,6 +748,16 @@ void pwr_save_switch_mode_to_l6 (uint16_t sleep_time)
 	pwr_save_number_of_sleep_cycles =
 		(int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
 
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_PWR_SAVE,
+					EVENTS_PWR_SAVE_STATE_L6,
+					pwr_save_number_of_sleep_cycles,
+					0,
+					sleep_time,
+					0,
+					0,
+					0);
+
 	backup_reg_set_monitor (28);
 
 	// turn off leds to save power
@@ -849,6 +859,16 @@ void pwr_save_switch_mode_to_l7 (uint16_t sleep_time)
 	// calculate amount of STOP2 cycles
 	pwr_save_number_of_sleep_cycles =
 		(int8_t)(sleep_time / PWR_SAVE_STOP2_CYCLE_LENGHT_SEC) & 0x7Fu;
+
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_PWR_SAVE,
+					EVENTS_PWR_SAVE_STATE_L7,
+					pwr_save_number_of_sleep_cycles,
+					0,
+					sleep_time,
+					0,
+					0,
+					0);
 
 	// turn off leds to save power
 	it_handlers_inhibit_radiomodem_dcd_led = 1;
@@ -1046,8 +1066,8 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 
 	// check if powersave mode has changed because of battery voltage or a schedule
 	if (pwr_save_previous_mode !=
-		PWSAVE_NULL) { // this check might be retundand as pwr_save_previous_mode
-					   // is nitialized in @link{pwr_save_init}
+		PWSAVE_NULL) { // this check might be redundant as pwr_save_previous_mode
+					   // is initialized in @link{pwr_save_init}
 		if (psave_mode != pwr_save_previous_mode) {
 			if (psave_mode == PWSAVE_AGGRESV) {
 				wx_frame_interval = packet_tx_changed_powersave_callback (1);
@@ -1057,6 +1077,15 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 				wx_frame_interval = packet_tx_changed_powersave_callback (0);
 				minutes_to_wx = wx_frame_interval - packet_tx_get_meteo_counter ();
 			}
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_PWR_SAVE,
+							EVENTS_PWR_SAVE_SWITCHING_MODE,
+							wx_frame_interval,
+							packet_tx_get_meteo_counter (),
+							minutes_to_wx,
+							psave_mode,
+							0,
+							0);
 		}
 	}
 
@@ -1084,6 +1113,7 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 		PWSAVE_NORMAL = 1,
 		PWSAVE_AGGRESV = 3
 	 */
+	case PWSAVE_NULL:
 	case PWSAVE_NONE: {
 
 		// if weather station is enabled
@@ -1143,13 +1173,14 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 				if (config->digi == 1) { // DIGI + WX + GSM
 										 // if weather packets are send 5 minutes or less often
 										 //						if (timers->wx_transmit_period >= 5)
-										 //{ 							if (minutes_to_wx > 1) { 								pwr_save_switch_mode_to_c2();
+										 //{ 							if (minutes_to_wx > 1) {
+										 // pwr_save_switch_mode_to_c2();
 										 //
 										 //								//reinit_gprs = 1;
 										 //							}
 										 //							else {
 										 //								reinit_sensors =
-										 //pwr_save_switch_mode_to_c0();
+										 // pwr_save_switch_mode_to_c0();
 										 //							}
 										 //						}
 										 //						else {

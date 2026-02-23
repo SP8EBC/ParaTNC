@@ -50,6 +50,7 @@
 #include "pwr_save.h"
 #include "wx_handler.h"
 #include "wx_pwr_switch.h"
+#include "packet_tx_handler.h"
 
 #if defined(PARAMETEO)
 #include "gsm/sim800c_engineering.h"
@@ -70,6 +71,9 @@ uint8_t main_check_adc = 0;
 
 //!< Used to store an information which telemetry descritpion frame should be sent next
 // static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
+
+// packet tx timers values
+packet_tx_counter_values_t timers;
 
 static void message_callback (struct AX25Msg *msg)
 {
@@ -156,21 +160,24 @@ void task_main (void *parameters)
 			pwr_save_after_stop2_rtc_wakeup_it ();
 		}
 		else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP) {
-			event_log_sync (EVENT_INFO,
-							EVENT_SRC_PWR_SAVE,
-							EVENTS_PWR_SAVE_WOKEN_UP_AFTER_LAST_SLEEP,
-							0,
-							0,
-							0,
-							0,
-							0,
-							0);
-
 			system_clock_configure_l4 ();
 
 			pwr_save_exit_after_last_stop2_cycle ();
 
 			rte_main_woken_up = RTE_MAIN_WOKEN_UP_EXITED;
+
+			// get all timers values
+			packet_tx_get_current_counters (&timers);
+
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_PWR_SAVE,
+							EVENTS_PWR_SAVE_WOKEN_UP_AFTER_LAST_SLEEP,
+							timers.wx_counter,
+							timers.gsm_wx_counter,
+							packet_tx_get_minutes_to_next_wx (),
+							packet_tx_meteo_interval,
+							0,
+							0);
 		}
 		else if (rte_main_woken_up == RTE_MAIN_WOKEN_UP_EXITED) {
 
@@ -219,6 +226,16 @@ void task_main (void *parameters)
 			rte_main_reset_gsm_modem = 1;
 
 			main_check_adc = 1;
+
+			uint8_t main_continue_loop = 0;
+
+			rte_main_curret_powersave_mode =
+				pwr_save_pooling_handler (main_config_data_mode,
+										  packet_tx_meteo_interval,
+										  packet_tx_get_minutes_to_next_wx (),
+										  rte_main_average_battery_voltage,
+										  rte_main_battery_voltage,
+										  &main_continue_loop);
 
 			// reinitialize UART used to communicate with GPRS modem
 			srl_init (main_gsm_srl_ctx_ptr,
