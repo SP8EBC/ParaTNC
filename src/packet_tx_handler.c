@@ -28,6 +28,9 @@
 
 #include "gsm/sim800c_gprs.h"
 
+#include "event_log.h"
+#include "events_definitions/events_packet_tx_handler.h"
+
 /* FreeRTOS includes. */
 #include <FreeRTOS.h>
 #include <task.h>
@@ -114,7 +117,7 @@ void packet_tx_init (uint8_t meteo_interval, uint8_t aggressive_meteo_interval,
 		packet_tx_meteo_aggresive_interval = aggressive_meteo_interval;
 	}
 	else {
-		packet_tx_meteo_aggresive_interval = 0;
+		packet_tx_meteo_aggresive_interval = 10;
 	}
 
 	// check if values are set reasonable
@@ -264,18 +267,6 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 	// telemetry)
 	packet_tx_more_than_one = 0;
 
-	// increase beacon transmit counters
-	packet_tx_beacon_counter++;
-	packet_tx_error_status_counter++;
-	packet_tx_telemetry_counter++;
-	packet_tx_telemetry_descr_counter++;
-	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
-		// increase these counters only when WX is enabled
-		packet_tx_meteo_counter++;
-		packet_tx_meteo_kiss_counter++;
-		packet_tx_meteo_gsm_counter++;
-	}
-
 	// check if there is a time to send own beacon
 	if (packet_tx_beacon_counter >= packet_tx_beacon_interval && packet_tx_beacon_interval != 0) {
 
@@ -327,6 +318,16 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 
 			// service external watchdog while sending weather frame
 			io_ext_watchdog_service ();
+
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_PACKET_TX_HANDLER,
+							EVENTS_TX_HANDLER_INFO_SENDING_WXFRAME,
+							packet_tx_meteo_counter,
+							packet_tx_meteo_interval,
+							rte_wx_average_windspeed,
+							rte_wx_max_windspeed,
+							(uint32_t)rte_wx_average_winddirection,
+							(uint32_t) * ((uint32_t *)&rte_wx_temperature_average_external_valid));
 
 			// check if user want's to send two wx packets one after another
 			if (main_config_data_basic->wx_double_transmit == 1) {
@@ -652,6 +653,21 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 									packet_tx_meteo_gsm_counter);
 }
 
+void packet_tx_handler_increment_counters(void)
+{
+	// increase beacon transmit counters
+	packet_tx_beacon_counter++;
+	packet_tx_error_status_counter++;
+	packet_tx_telemetry_counter++;
+	packet_tx_telemetry_descr_counter++;
+	if ((main_config_data_mode->wx & WX_ENABLED) == WX_ENABLED) {
+		// increase these counters only when WX is enabled
+		packet_tx_meteo_counter++;
+		packet_tx_meteo_kiss_counter++;
+		packet_tx_meteo_gsm_counter++;
+	}
+}
+
 void packet_tx_get_current_counters (packet_tx_counter_values_t *out)
 {
 
@@ -695,6 +711,16 @@ void packet_tx_set_current_counters (packet_tx_counter_values_t *in)
 		packet_tx_telemetry_descr_counter = 10;
 		packet_tx_meteo_kiss_counter = 0;
 	}
+
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_PACKET_TX_HANDLER,
+					EVENTS_TX_HANDLER_INFO_SET_CURRENT_COUNTERS,
+					packet_tx_beacon_counter,
+					packet_tx_meteo_counter,
+					packet_tx_meteo_gsm_counter,
+					packet_tx_telemetry_counter,
+					packet_tx_telemetry_descr_counter,
+					packet_tx_meteo_kiss_counter);
 }
 
 /**
@@ -754,20 +780,13 @@ uint8_t packet_tx_changed_powersave_callback (uint8_t non_aggressive_or_aggressi
 		packet_tx_telemetry_interval = 10;
 	}
 	else {
-		if ((packet_tx_meteo_aggresive_interval > packet_tx_meteo_non_aggresive_interval) &&
-			(packet_tx_meteo_aggresive_interval < 60)) {
-			packet_tx_meteo_interval = packet_tx_meteo_aggresive_interval;
+		packet_tx_meteo_interval = packet_tx_meteo_aggresive_interval;
 
-			if (packet_tx_meteo_aggresive_interval < 10) {
-				packet_tx_telemetry_interval = 2 * packet_tx_meteo_aggresive_interval;
-			}
-			else {
-				packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
-			}
+		if (packet_tx_meteo_aggresive_interval < 10) {
+			packet_tx_telemetry_interval = 2 * packet_tx_meteo_aggresive_interval;
 		}
 		else {
-			packet_tx_meteo_interval = packet_tx_meteo_non_aggresive_interval;
-			packet_tx_telemetry_interval = 10;
+			packet_tx_telemetry_interval = packet_tx_meteo_aggresive_interval;
 		}
 	}
 
@@ -786,7 +805,7 @@ uint8_t packet_tx_get_meteo_counter (void)
 	return packet_tx_meteo_counter;
 }
 
-uint8_t packet_tx_get_trigger_tcp(void)
+uint8_t packet_tx_get_trigger_tcp (void)
 {
 	return packet_tx_trigger_tcp;
 }

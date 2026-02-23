@@ -47,6 +47,7 @@ void packet_tx_init(uint8_t meteo_interval, uint8_t aggressive_meteo_interval, u
 void packet_tx_restore_from_backupregs(void);
 void packet_tx_tcp_handler(void);
 void packet_tx_handler(const config_data_basic_t * const config_basic, const config_data_mode_t * const config_mode);
+void packet_tx_handler_increment_counters(void);		//!< call this every 60 seconds!
 void packet_tx_get_current_counters(packet_tx_counter_values_t * out);
 void packet_tx_set_current_counters(packet_tx_counter_values_t * in);
 int16_t packet_tx_get_minutes_to_next_wx(void);

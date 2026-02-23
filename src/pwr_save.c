@@ -1260,6 +1260,16 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 				// if digipeater is enabled
 				if (config->digi == 1) { // DIGI + WX + GSM
 					if (minutes_to_wx > (WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1)) {
+						event_log_sync (EVENT_INFO,
+										EVENT_SRC_PWR_SAVE,
+										EVENTS_PWR_SAVE_GO_TO_SLEEP,
+										wx_frame_interval,
+										packet_tx_get_meteo_counter (),
+										minutes_to_wx,
+										psave_mode,
+										0,
+										0);
+
 						pwr_save_switch_mode_to_l7 (
 							(wx_frame_interval * 60) -
 							((WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES + 1) * 60));

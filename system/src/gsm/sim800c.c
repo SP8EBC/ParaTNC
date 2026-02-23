@@ -56,6 +56,8 @@
 
 //!< It was tested that SIM800C module needs up to 2..3 seconds to be responsive over UART
 #define SIM800_MAX_HANDSHAKE_ERRORS 								(4u)
+
+#define SIM800_RX_DONE_WATCHDOG_CNT_MAX								(2u)
 // clang-format on
 /// ==================================================================================================
 ///	LOCAL VARIABLES
@@ -136,6 +138,8 @@ static uint8_t gsm_sim800_mnc_from_imsi;
 
 static uint8_t gsm_sim800_handshaking_errors = 0;
 
+static uint8_t gsm_sim800_rx_done_watchdog_cnt = 0;
+
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
@@ -194,10 +198,6 @@ inline static void gsm_sim800_depress_pwr_button (void)
 	io___cntrl_gprs_pwrkey_release ();
 }
 
-/// ==================================================================================================
-///	GLOBAL FUNCTIONS
-/// ==================================================================================================
-
 /**
  * Detect async messages which are not a response to AT commands, but a status
  * sent by GSM module on it's own when some event is detected. If async message
@@ -207,8 +207,8 @@ inline static void gsm_sim800_depress_pwr_button (void)
  * @param offset
  * @return	Type of async message detected or unknown if nothing has been found
  */
-sim800_async_message_t gsm_sim800_check_for_async_messages (uint8_t *ptr, uint16_t size,
-															uint16_t *offset)
+static sim800_async_message_t gsm_sim800_check_for_async_messages (uint8_t *ptr, uint16_t size,
+																   uint16_t *offset)
 {
 	// offset is a pointer to variable where this function will store a position of first response
 	// character after the async message
@@ -298,7 +298,7 @@ sim800_async_message_t gsm_sim800_check_for_async_messages (uint8_t *ptr, uint16
  * @param size
  * @return
  */
-uint32_t gsm_sim800_check_for_extra_newlines (uint8_t *ptr, uint16_t size)
+static uint32_t gsm_sim800_check_for_extra_newlines (uint8_t *ptr, uint16_t size)
 {
 
 	// this bitmask stores positions of first four lines of text in input buffer
@@ -337,6 +337,10 @@ uint32_t gsm_sim800_check_for_extra_newlines (uint8_t *ptr, uint16_t size)
 
 	return output_bitmask;
 }
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 void gsm_sim800_init (gsm_sim800_state_t *state, uint8_t enable_echo)
 {
@@ -393,9 +397,12 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 		event_log_sync (EVENT_INFO,
 						EVENT_SRC_GSM_GPRS,
 						EVENTS_GSM_GPRS_POWERED_ON,
-						0, 0,
-						0, 0,
-						0, 0);
+						0,
+						0,
+						0,
+						0,
+						0,
+						0);
 	}
 	else if (*state == SIM800_NOT_YET_COMM) {
 		// configure rx timeout - give some more time
@@ -426,9 +433,12 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 		event_log_sync (EVENT_INFO,
 						EVENT_SRC_GSM_GPRS,
 						EVENTS_GSM_GPRS_HANDSHAKING,
-						gsm_sim800_handshaking_errors, 0xFFU,
-						0, 0,
-						0, 0);
+						gsm_sim800_handshaking_errors,
+						0xFFU,
+						0,
+						0,
+						0,
+						0);
 
 		gsm_at_command_sent_last = 0;
 	}
@@ -849,6 +859,34 @@ uint8_t gsm_sim800_rx_terminating_callback (uint8_t current_data, const uint8_t 
 }
 
 /**
+ * This is a watchdog function, which is TODO: a workaround a problem with aggressive powersave and
+ * GSM. After the micro wakes up from the deep sleep, an UART is reinitialized, modem is powered up,
+ * but for some reason RX_DONE (or timeout in this case) either isn't serviced or isn't raised at
+ * all.
+ * @param srl_context
+ * @param state
+ * @return
+ */
+uint8_t gsm_sim800_rx_done_watchdog (srl_context_t *srl_context, gsm_sim800_state_t *state)
+{
+	if (*state == SIM800_HANDSHAKING) {
+		if (srl_context->srl_rx_state == SRL_RX_ERROR &&
+			srl_context->srl_rx_error_reason == SRL_ERR_TIMEOUT_RECEIVING) {
+			if (gsm_sim800_rx_done_watchdog_cnt > SIM800_RX_DONE_WATCHDOG_CNT_MAX) {
+				gsm_sim800_rx_done_watchdog_cnt = 0;
+				return 1U;
+			}
+			else {
+				gsm_sim800_rx_done_watchdog_cnt++;
+				return 0U;
+			}
+		}
+	}
+
+	return 0U;
+}
+
+/**
  *	This is a main callback invoked, when any data has been received from GSM modem
  */
 void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_state_t *state)
@@ -913,7 +951,8 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 						EVENTS_GSM_GPRS_WARN_ASYNC_MSG_DETECTED,
 						0,
 						0,
-						srl_rx_error_cnt, handler_calls_cnt,
+						srl_rx_error_cnt,
+						handler_calls_cnt,
 						0,
 						0);
 
@@ -930,9 +969,12 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 			event_log_sync (EVENT_INFO,
 							EVENT_SRC_GSM_GPRS,
 							EVENTS_GSM_GPRS_HANDSHAKING,
-							gsm_sim800_handshaking_errors, 0,
-							srl_rx_error_cnt, handler_calls_cnt,
-							0, 0);
+							gsm_sim800_handshaking_errors,
+							0,
+							srl_rx_error_cnt,
+							handler_calls_cnt,
+							0,
+							0);
 
 			*state = SIM800_INITIALIZING;
 		}
@@ -942,10 +984,12 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 			event_log_sync (EVENT_WARNING,
 							EVENT_SRC_GSM_GPRS,
 							EVENTS_GSM_GPRS_HANDSHAKING,
-							gsm_sim800_handshaking_errors, 0,
-							srl_rx_error_cnt, handler_calls_cnt,
-							EVENT_LOG_PACK_ARR_TO_UINT32(srl_context->srl_rx_buf_pointer, 0),
-							EVENT_LOG_PACK_ARR_TO_UINT32(srl_context->srl_rx_buf_pointer, 4));
+							gsm_sim800_handshaking_errors,
+							0,
+							srl_rx_error_cnt,
+							handler_calls_cnt,
+							EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 0),
+							EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 4));
 
 			if (gsm_sim800_handshaking_errors > SIM800_MAX_HANDSHAKE_ERRORS) {
 				*state = SIM800_UNKNOWN;
@@ -1032,7 +1076,8 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 									EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS,
 									0,
 									0,
-									srl_rx_error_cnt, handler_calls_cnt,
+									srl_rx_error_cnt,
+									handler_calls_cnt,
 									0,
 									0);
 				}
@@ -1058,7 +1103,8 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 									EVENTS_GSM_GPRS_WARN_NOT_REGISTERED_TO_NETWORK,
 									0,
 									0,
-									srl_rx_error_cnt, handler_calls_cnt,
+									srl_rx_error_cnt,
+									handler_calls_cnt,
 									0,
 									0);
 				}
@@ -1233,6 +1279,16 @@ void gsm_sim800_reset (gsm_sim800_state_t *state)
 	if (gsm_reset_counter < GSM_RESET_COUNTER_INCREMENT * 3) {
 		gsm_reset_counter += GSM_RESET_COUNTER_INCREMENT;
 	}
+
+	event_log_sync (EVENT_WARNING,
+					EVENT_SRC_GSM_GPRS,
+					EVENTS_GSM_GPRS_WARN_RESET_SERIAL,
+					0,
+					0,
+					gsm_reset_counter,
+					0,
+					0,
+					0);
 }
 
 void gsm_sim800_create_status (char *buffer, int ln)

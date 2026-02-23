@@ -38,6 +38,9 @@ static int8_t main_one_hour_pool_timer = 60;
 //! six hour interval incremented inside one hour
 static int8_t main_six_hour_pool_timer = 4;
 
+//! how many times one minute task has been executed
+uint16_t main_one_minute_task_couter = 0;
+
 void task_one_minute (void *unused)
 {
 	(void)unused;
@@ -48,6 +51,8 @@ void task_one_minute (void *unused)
 		SUPERVISOR_MONITOR_CLEAR (TASK_ONE_MIN);
 
 		vTaskDelay (xDelay);
+
+		main_one_minute_task_couter++;
 
 		// must report twice because 'packet_tx_handler' has a call to vTaskDelay inside
 		supervisor_iam_alive (SUPERVISOR_THREAD_TASK_ONE_MIN);

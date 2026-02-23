@@ -65,9 +65,11 @@
 /// ==================================================================================================
 
 /* Zmienne używane do oversamplingu */
-static int adc_sample_count = 0, adc_sample_c2 = 0; // Zmienna odliczająca próbki
+static int adc_sample_c2 = 0; // Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4]; // Bufor przechowujący kolejne wartości rejestru DR
 static short int AdcValue;
+
+static uint16_t it_handlers_60sec_counter_for_increment_counters = 0;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -401,6 +403,7 @@ void TIM1_UP_TIM16_IRQHandler (void)
 
 	// systick interrupt is generated every 10ms
 	master_time += SYSTICK_TICKS_PERIOD;
+	it_handlers_60sec_counter_for_increment_counters += SYSTICK_TICKS_PERIOD;
 
 	if (master_time > SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 86400) {
 		if (configuration_get_reboot_after_24_hours () == 1) {
@@ -417,6 +420,12 @@ void TIM1_UP_TIM16_IRQHandler (void)
 
 	if (supervisor_service () != 0) {
 		NVIC_SystemReset ();
+	}
+
+	if (it_handlers_60sec_counter_for_increment_counters >= (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 60U)) {
+		it_handlers_60sec_counter_for_increment_counters = 0;
+
+		packet_tx_handler_increment_counters();
 	}
 
 	// decrementing a timer to trigger meteo measuremenets

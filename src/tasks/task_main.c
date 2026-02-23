@@ -229,13 +229,13 @@ void task_main (void *parameters)
 
 			uint8_t main_continue_loop = 0;
 
-			rte_main_curret_powersave_mode =
-				pwr_save_pooling_handler (main_config_data_mode,
-										  packet_tx_meteo_interval,
-										  packet_tx_get_minutes_to_next_wx (),
-										  rte_main_average_battery_voltage,
-										  rte_main_battery_voltage,
-										  &main_continue_loop);
+//			rte_main_curret_powersave_mode =
+//				pwr_save_pooling_handler (main_config_data_mode,
+//										  packet_tx_meteo_interval,
+//										  packet_tx_get_minutes_to_next_wx (),
+//										  rte_main_average_battery_voltage,
+//										  rte_main_battery_voltage,
+//										  &main_continue_loop);
 
 			// reinitialize UART used to communicate with GPRS modem
 			srl_init (main_gsm_srl_ctx_ptr,
