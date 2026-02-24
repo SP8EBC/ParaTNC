@@ -398,7 +398,7 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 						EVENT_SRC_GSM_GPRS,
 						EVENTS_GSM_GPRS_POWERED_ON,
 						0,
-						0,
+						gsm_sim800_rx_done_watchdog_cnt,
 						0,
 						0,
 						0,
@@ -435,7 +435,7 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 						EVENTS_GSM_GPRS_HANDSHAKING,
 						gsm_sim800_handshaking_errors,
 						0xFFU,
-						0,
+						gsm_sim800_rx_done_watchdog_cnt,
 						0,
 						0,
 						0);
@@ -468,6 +468,16 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 
 			// record when the command has been sent
 			gsm_time_of_last_command_send_to_module = main_get_master_time ();
+
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_GSM_GPRS,
+							EVENTS_GSM_GPRS_INITIALIZING_GET_PIN_STATUS,
+							0,
+							gsm_sim800_rx_done_watchdog_cnt,
+							0,
+							0,
+							0,
+							0);
 		}
 		else if (gsm_at_command_sent_last == GET_PIN_STATUS) {
 			// no command has been send so far
@@ -493,6 +503,16 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 
 			// record when the command has been sent
 			gsm_time_of_last_command_send_to_module = main_get_master_time ();
+
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_GSM_GPRS,
+							EVENTS_GSM_GPRS_INITIALIZING_GET_IMSI,
+							0,
+							gsm_sim800_rx_done_watchdog_cnt,
+							0,
+							0,
+							0,
+							0);
 		}
 		else if (gsm_at_command_sent_last == GET_IMSI) {
 			// wait for some time to be sure that GSM module is registered into network
@@ -523,6 +543,16 @@ void gsm_sim800_initialization_pool (srl_context_t *srl_context, gsm_sim800_stat
 
 				// record when the command has been sent
 				gsm_time_of_last_command_send_to_module = main_get_master_time ();
+
+				event_log_sync (EVENT_INFO,
+								EVENT_SRC_GSM_GPRS,
+								EVENTS_GSM_GPRS_INITIALIZING_GET_NETWORK_REGISTR,
+								0,
+								gsm_sim800_rx_done_watchdog_cnt,
+								0,
+								0,
+								0,
+								0);
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
@@ -869,9 +899,13 @@ uint8_t gsm_sim800_rx_terminating_callback (uint8_t current_data, const uint8_t 
  */
 uint8_t gsm_sim800_rx_done_watchdog (srl_context_t *srl_context, gsm_sim800_state_t *state)
 {
-	if (*state == SIM800_HANDSHAKING) {
-		if (srl_context->srl_rx_state == SRL_RX_ERROR &&
-			srl_context->srl_rx_error_reason == SRL_ERR_TIMEOUT_RECEIVING) {
+	const srl_rx_state_t rx_state = srl_context->srl_rx_state;
+	const srl_error_reason_t error = srl_context->srl_rx_error_reason;
+
+	if ((rx_state == SRL_RX_ERROR && error == SRL_ERR_TIMEOUT_RECEIVING) ||
+		rx_state == SRL_RX_DONE ) {
+
+		if (*state == SIM800_HANDSHAKING || *state == SIM800_INITIALIZING) {
 			if (gsm_sim800_rx_done_watchdog_cnt > SIM800_RX_DONE_WATCHDOG_CNT_MAX) {
 				gsm_sim800_rx_done_watchdog_cnt = 0;
 				return 1U;
@@ -961,8 +995,9 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 
 	// if the library expects to receive a handshake from gsm module
 	if (*state == SIM800_HANDSHAKING) {
+		const char * compare_from = (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx);
 		comparision_result =
-			strcmp (OK, (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx));
+			strncmp (OK, compare_from, 2);
 
 		// if 'OK' has been received from the module
 		if (comparision_result == 0) {
@@ -1002,10 +1037,9 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 	}
 	else if (*state == SIM800_INITIALIZING) {
 		if (gsm_at_command_sent_last == GET_NETWORK_REGISTRATION) {
-			comparision_result =
-				strncmp (NETWORK_REGISTRATION,
-						 (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx),
-						 5);
+			const char * compare_from = (const char *)(srl_context->srl_rx_buf_pointer + gsm_response_start_idx);
+
+			comparision_result = strncmp (NETWORK_REGISTRATION, compare_from, 5);
 
 			if (comparision_result == 0) {
 				comparision_result = atoi (
@@ -1014,6 +1048,27 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 				if (comparision_result >= 0 && comparision_result < 6) {
 					gsm_sim800_registration_status = (int8_t)comparision_result;
 				}
+
+				event_log_sync (EVENT_INFO,
+								EVENT_SRC_GSM_GPRS,
+								EVENTS_GSM_GPRS_INITIALIZING_GET_NETWORK_REGISTR_DONE,
+								gsm_sim800_registration_status,
+								gsm_sim800_rx_done_watchdog_cnt,
+								srl_rx_error_cnt,
+								handler_calls_cnt,
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 0),
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 4));
+			}
+			else {
+				event_log_sync (EVENT_WARNING,
+								EVENT_SRC_GSM_GPRS,
+								EVENTS_GSM_GPRS_WARN_GET_NETWORK_REGISTRATION,
+								comparision_result,
+								0,
+								srl_rx_error_cnt,
+								handler_calls_cnt,
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 0),
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 4));
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_IMSI) {
@@ -1059,6 +1114,16 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 				text_replace_space_with_null (gsm_sim800_simcard_status_string, SIM_STATUS_LENGHT);
 
 				gsm_sim800_simcard_status = SIMCARD_READY;
+
+				event_log_sync (EVENT_INFO,
+								EVENT_SRC_GSM_GPRS,
+								EVENTS_GSM_GPRS_INITIALIZING_GET_NETWORK_REGISTR_DONE,
+								gsm_sim800_simcard_status,
+								gsm_sim800_rx_done_watchdog_cnt,
+								srl_rx_error_cnt,
+								handler_calls_cnt,
+								EVENT_LOG_PACK_ARR_TO_UINT32 (gsm_sim800_simcard_status_string, 0),
+								EVENT_LOG_PACK_ARR_TO_UINT32 (gsm_sim800_simcard_status_string, 4));
 			}
 			else {
 				// check ERROR conditions which may be caused by faulty or no
@@ -1070,17 +1135,16 @@ void gsm_sim800_rx_done_event_handler (srl_context_t *srl_context, gsm_sim800_st
 
 				if (comparision_result == 0) {
 					gsm_sim800_simcard_status = SIMCARD_ERROR;
-
-					event_log_sync (EVENT_ERROR,
-									EVENT_SRC_GSM_GPRS,
-									EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS,
-									0,
-									0,
-									srl_rx_error_cnt,
-									handler_calls_cnt,
-									0,
-									0);
 				}
+				event_log_sync (EVENT_ERROR,
+								EVENT_SRC_GSM_GPRS,
+								EVENTS_GSM_GPRS_ERR_SIM_CARD_STATUS,
+								gsm_sim800_simcard_status,
+								0,
+								srl_rx_error_cnt,
+								handler_calls_cnt,
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 0),
+								EVENT_LOG_PACK_ARR_TO_UINT32 (srl_context->srl_rx_buf_pointer, 4));
 			}
 		}
 		else if (gsm_at_command_sent_last == GET_REGISTERED_NETWORK) {
