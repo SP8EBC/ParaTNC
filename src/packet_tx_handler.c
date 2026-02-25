@@ -75,7 +75,7 @@ uint8_t packet_tx_meteo_gsm_counter = 0;
 
 //!< Flag set to one after weather packet has been just send to APRS-IS via GPRS modem and the modem
 //!< is probably transmitting now
-uint8_t packet_tx_meteo_gsm_has_been_sent = 0;
+uint8_t packet_tx_meteo_gsm_pending = 0;
 
 #define API_TRIGGER_STATUS	 (1 << 1)
 #define API_TRIGGER_METEO	 (1 << 2)
@@ -85,7 +85,7 @@ uint8_t packet_tx_meteo_gsm_has_been_sent = 0;
 nvm_measurement_t packet_tx_nvm;
 
 //!< Flag set to one after the gsm status message is sent over radio.
-uint8_t packet_tx_gsm_status_sent = 0;
+//uint8_t packet_tx_gsm_status_sent = 0;
 
 void packet_tx_send_wx_frame (void)
 {
@@ -177,6 +177,16 @@ void packet_tx_tcp_handler (void)
 	if ((packet_tx_trigger_tcp & APRSIS_TRIGGER_METEO) != 0) {
 		if (aprsis_connected == 1) {
 
+			event_log_sync (EVENT_INFO,
+							EVENT_SRC_PACKET_TX_HANDLER,
+							EVENTS_TX_HANDLER_INFO_SENDING_WXFRAME_APRSIS,
+							packet_tx_meteo_counter,
+							packet_tx_meteo_interval,
+							rte_wx_average_windspeed,
+							rte_wx_max_windspeed,
+							(uint32_t)rte_wx_average_winddirection,
+							(uint32_t) * ((uint32_t *)&rte_wx_temperature_average_external_valid));
+
 			aprsis_send_wx_frame (rte_wx_average_windspeed,
 								  rte_wx_max_windspeed,
 								  rte_wx_average_winddirection,
@@ -195,7 +205,14 @@ void packet_tx_tcp_handler (void)
 			// for a while (10 seconds) when GPRS modem is communicating
 			// with the GSM radio network and sending the data independently
 			// from the controller
-			packet_tx_meteo_gsm_has_been_sent = 1;
+			packet_tx_meteo_gsm_pending = 1;
+
+			// GSM/GPRS modem will start to send data through network
+			// only after the micro will send this data completely
+			// Wait some time, as this usually will last non-constant
+			// amount of time (depending on GSM signal level an few more)
+			vTaskDelay (999 / portTICK_PERIOD_MS);
+
 		}
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
@@ -247,7 +264,7 @@ void packet_tx_tcp_handler (void)
 	else {
 		// after 10 second from setting this flag the packet should be
 		// sent
-		packet_tx_meteo_gsm_has_been_sent = 0;
+		packet_tx_meteo_gsm_pending = 0;
 	}
 }
 
@@ -640,9 +657,9 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 			// and trigger API wx packet transmission
 			packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
 		}
-		else {
-			packet_tx_trigger_tcp = 0;
-		}
+//		else {
+//			packet_tx_trigger_tcp = 0;
+//		}
 
 		packet_tx_telemetry_descr_counter = 0;
 	}
@@ -755,16 +772,11 @@ uint8_t packet_tx_is_gsm_meteo_pending (void)
 		out = 1;
 	}
 
-	if (packet_tx_meteo_gsm_has_been_sent != 0) {
+	if (packet_tx_meteo_gsm_pending != 0) {
 		out = 1;
 	}
 
 	return out;
-}
-
-void packet_tx_force_gsm_status (void)
-{
-	packet_tx_gsm_status_sent = 0;
 }
 
 /**
@@ -808,4 +820,12 @@ uint8_t packet_tx_get_meteo_counter (void)
 uint8_t packet_tx_get_trigger_tcp (void)
 {
 	return packet_tx_trigger_tcp;
+}
+
+/**
+ * @brief forces weather packet to be sent directly to APRS-IS via GPRS
+ */
+void packet_tx_set_trigger_tcp_weather(void)
+{
+	packet_tx_trigger_tcp = APRSIS_TRIGGER_METEO;
 }

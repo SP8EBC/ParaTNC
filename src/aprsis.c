@@ -400,6 +400,16 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 
 		int offset = 0;
 
+		event_log_sync (EVENT_INFO,
+						EVENT_SRC_APRSIS,
+						EVENTS_APRSIS_INFO_CONNECTING_APRSIS,
+						aprsis_successfull_conn_counter,
+						aprsis_unsucessfull_conn_counter,
+						0,
+						0,
+						0,
+						0);
+
 		aprsis_tx_counter = 0;
 
 		aprsis_keepalive_received_counter = 0;

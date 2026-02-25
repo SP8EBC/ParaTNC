@@ -580,6 +580,10 @@ int main (int argc, char *argv[])
 
 	memset (&rte_main_events_extracted_for_api_stat, 0x00, sizeof (nvm_event_result_stats_t));
 
+	memset(&main_gsm_srl_ctx, 0x00, sizeof(srl_context_t));
+	memset(&main_wx_srl_ctx, 0x00, sizeof(srl_context_t));
+	memset(&main_kiss_srl_ctx, 0x00, sizeof(srl_context_t));
+
 	main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
 	main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 	main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
@@ -1739,8 +1743,8 @@ void main_suspend_task_for_psaving (void)
 	 */
 	//	vTaskSuspend (task_ev_serial_kiss_rx_done_handle);
 	//	vTaskSuspend (task_ev_serial_kiss_tx_done_handle);
-	vTaskSuspend (task_ev_serial_gsm_rx_done_handle);
-	vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
+	//vTaskSuspend (task_ev_serial_gsm_rx_done_handle);
+	//vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
 	vTaskSuspend (task_ev_serial_sensor_handle);
 	vTaskSuspend (task_ev_radio_message_handle);
 	vTaskSuspend (task_ev_aprsis_trigger);
@@ -1758,8 +1762,8 @@ void main_resume_task_for_psaving (void)
 	vTaskResume (task_fanet_handle);
 	//	vTaskResume(task_ev_serial_kiss_rx_done_handle);
 	//	vTaskResume(task_ev_serial_kiss_tx_done_handle);
-	vTaskResume (task_ev_serial_gsm_rx_done_handle);
-	vTaskResume (task_ev_serial_gsm_tx_done_handle);
+	//vTaskResume (task_ev_serial_gsm_rx_done_handle);
+	//vTaskResume (task_ev_serial_gsm_tx_done_handle);
 	vTaskResume (task_ev_serial_sensor_handle);
 	vTaskResume (task_ev_radio_message_handle);
 	vTaskResume (task_ev_aprsis_trigger);

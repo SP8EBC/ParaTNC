@@ -113,7 +113,7 @@ void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint
 	ctx->srl_rx_kiss_mode = 0;
 	ctx->srl_rx_kiss_escaping_now = 0;
 
-	ctx->srl_rx_done_or_error = 0;
+	//ctx->srl_rx_done_or_error = 0;
 	ctx->srl_rx_term = 0;
 }
 

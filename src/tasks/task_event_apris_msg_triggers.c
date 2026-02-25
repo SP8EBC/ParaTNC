@@ -197,6 +197,8 @@ void task_event_aprsis_msg_trigger (void *param)
 									 system_is_rtc_ok (),
 									 rte_main_battery_voltage);
 
+			packet_tx_set_trigger_tcp_weather();
+
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
 		}

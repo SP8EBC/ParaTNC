@@ -52,9 +52,9 @@ void packet_tx_get_current_counters(packet_tx_counter_values_t * out);
 void packet_tx_set_current_counters(packet_tx_counter_values_t * in);
 int16_t packet_tx_get_minutes_to_next_wx(void);
 uint8_t packet_tx_is_gsm_meteo_pending(void);
-void packet_tx_force_gsm_status(void);
 uint8_t packet_tx_changed_powersave_callback(uint8_t non_aggressive_or_aggressive);
 uint8_t packet_tx_get_meteo_counter(void);
-uint8_t packet_tx_get_trigger_tcp(void);
+uint8_t packet_tx_get_trigger_tcp(void);	//!< return current value of flags triggering sending via GPRS (api, aprs-is...)
+void packet_tx_set_trigger_tcp_weather(void);	//!< forces weather packet to be sent directly to APRS-IS via GPRS
 
 #endif /* PACKET_TX_HANDLER_H_ */

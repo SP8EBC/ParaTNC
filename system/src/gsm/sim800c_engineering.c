@@ -299,7 +299,6 @@ void gsm_sim800_engineering_pool (srl_context_t *srl_context, gsm_sim800_state_t
 		break;
 	}
 	case GSM_SIM800_ENGINEERING_SUCCEEDED_DISABLED: {
-		packet_tx_force_gsm_status ();
 		break;
 	}
 	case GSM_SIM800_ENGINEERING_FAILED: {
