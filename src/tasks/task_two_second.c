@@ -82,33 +82,45 @@ void task_two_second (void *parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 6);
 
-		if (io_get_cntrl_vbat_g () == 1) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 7);
+		// everything here should be inhibited if controller is in aggressive powersaving mode
+		// we do not want to mess up with the NTP and the rest of stuff then. Simply send
+		// bare minimum -> weather packet
+		if (pwr_save_is_currently_in_aggressive() == 0) {
+			if (io_get_cntrl_vbat_g () == 1) {
+				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 7);
 
-			if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
-				rte_main_woken_up == 0) {
-				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 8);
+				if (main_config_data_mode->gsm == 1 && io_get_cntrl_vbat_g () == 1 &&
+					rte_main_woken_up == 0) {
+					SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 8);
 
-				gsm_comm_state_handler (gsm_sim800_engineering_get_is_done (),
-										ntp_done,
-										rte_main_events_extracted_for_api_stat.zz_total,
-										gsm_sim800_gprs_ready);
-			}
+					gsm_comm_state_handler (gsm_sim800_engineering_get_is_done (),
+											ntp_done,
+											rte_main_events_extracted_for_api_stat.zz_total,
+											gsm_sim800_gprs_ready);
+				}
 
-			// if GSM module is enabled and GPRS communication state is now on API phase
-			if ((main_config_data_mode->gsm == 1) &&
-				(gsm_comm_state_get_current () == GSM_COMM_API)) {
+				// if GSM module is enabled and GPRS communication state is now on API phase
+				if ((main_config_data_mode->gsm == 1) &&
+					(gsm_comm_state_get_current () == GSM_COMM_API)) {
 
-				// if there are any events remaining to push to API
-				if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
-					xEventGroupSetBits (main_eventgroup_handle_ntp_and_api_client,
-										MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG);
+					// if there are any events remaining to push to API
+					if (rte_main_events_extracted_for_api_stat.zz_total > 0) {
+						xEventGroupSetBits (main_eventgroup_handle_ntp_and_api_client,
+											MAIN_EVENTGROUP_API_NTP_SEND_EVENT_LOG);
+					}
+				}
+
+				if (gsm_comm_state_get_current () == GSM_COMM_NTP) {
+					ntp_done = 1;
 				}
 			}
-
-			if (gsm_comm_state_get_current () == GSM_COMM_NTP) {
-				ntp_done = 1;
-			}
+		}
+		else {
+			// this call will cheat the connection state handler that ntp
+			// synchronization was done already, and an events queue has been sent
+			// to the api. This is to be sure that even in aggressive powersave
+			// controller will not waste time, and will instantly reconnect to APRS-IS
+			gsm_comm_state_handler(1, 1, 0, 1);
 		}
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 9);

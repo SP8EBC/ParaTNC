@@ -237,6 +237,12 @@ void task_main (void *parameters)
 //										  rte_main_battery_voltage,
 //										  &main_continue_loop);
 
+			// this call will cheat the connection state handler that ntp
+			// synchronization was done already, and an events queue has been sent
+			// to the api. This is to be sure that even in aggressive powersave
+			// controller will not waste time, and will instantly reconnect to APRS-IS
+			gsm_comm_state_handler(1, 1, 0, 1);
+
 			// reinitialize UART used to communicate with GPRS modem
 			srl_init (main_gsm_srl_ctx_ptr,
 					  USART3,

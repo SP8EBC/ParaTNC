@@ -138,6 +138,7 @@ config_data_powersave_mode_t pwr_save_pooling_handler(
 											uint8_t * continue_loop);		// this should be called from 10 seconds pooler
 
 int pwr_save_is_currently_cutoff(void);
+int pwr_save_is_currently_in_aggressive(void);	//!< return one if controller is now in PWSAVE_AGGRESV
 #endif
 
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void);

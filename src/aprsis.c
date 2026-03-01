@@ -7,8 +7,10 @@
 
 #include "aprsis.h"
 #include "backup_registers.h"
+#include "delay.h"
 #include "etc/aprsis_config.h"
 #include "text.h"
+#include "packet_tx_handler.h"
 
 #include "aprs/message.h"
 #include "aprs/status.h"
@@ -34,6 +36,8 @@
 #define STATIC static
 #endif
 
+#define CALLSIGN_WITH_SSID		 main_callsign_with_ssid
+
 srl_context_t *aprsis_serial_port;
 
 /**
@@ -47,9 +51,16 @@ gsm_sim800_state_t *aprsis_gsm_modem_state;
 #define APRSIS_TX_BUFFER_LN 512
 
 /**
+ * Size of weather transmit buffer
+ */
+#define APRSIS_WX_TX_BUFFER_LN 96
+
+/**
  * Buffer for sending packet to aprs-is
  */
 static char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
+
+static char aprsis_weather_packet_tx_buffer[APRSIS_WX_TX_BUFFER_LN];
 
 /**
  * Lenght of buffer
@@ -67,6 +78,11 @@ char aprsis_packet_telemetry_buffer[APRSIS_TELEMETRY_BUFFER_LN];
  *
  */
 uint16_t aprsis_packet_tx_message_size = 0;
+
+/**
+ *
+ */
+uint16_t aprsis_weather_packet_tx_message_size = 0;
 
 /**
  * Passocde to APRS-IS server
@@ -474,13 +490,15 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							aprsis_last_keepalive_long_ts = aprsis_last_keepalive_ts;
 
 							if (auto_send_beacon != 0) {
-								aprsis_send_beacon(0, aprsis_callsign_with_ssid, main_string_latitude, main_symbol_f, main_string_longitude, main_symbol_s, main_config_data_basic);
+								//aprsis_send_beacon(0, aprsis_callsign_with_ssid, main_string_latitude, main_symbol_f, main_string_longitude, main_symbol_s, main_config_data_basic);
+								aprsis_send_loginstring ((const char *)CALLSIGN_WITH_SSID,
+														 system_is_rtc_ok (),
+														 rte_main_battery_voltage);
+
+								delay_fixed(1234);
 							}
 
-							// trigger GSM status packet
-							//rte_main_trigger_gsm_loginstring_packet = 1;
-							xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-									MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
+							packet_tx_set_trigger_tcp_weather ();
 
 							// set timeout for aprs-is server
 							srl_switch_timeout(aprsis_serial_port, 1, APRSIS_TIMEOUT_MS);
@@ -585,6 +603,18 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 		}
 
 	}
+	else {
+	    event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_APRSIS,
+				  EVENTS_APRSIS_WARN_GPRS_NOT_READY,
+				  *aprsis_gsm_modem_state,
+				  0,
+				  0,
+				  0,
+				  0,
+				  0);
+	}
 
 	return out;
 
@@ -631,67 +661,70 @@ void aprsis_check_alive (void)
 
 	uint8_t dead = 0;
 
-	if (aprsis_debug_simulate_timeout == 1) {
-		dead = 1;
-	}
+	if (aprsis_connected == 1) {
 
-	if (aprsis_successfull_conn_counter > 0) {
-		if (timestamp > (aprsis_last_keepalive_ts + APRSIS_TIMEOUT_MS)) {
-			event_log_sync (EVENT_WARNING,
-							EVENT_SRC_APRSIS,
-							EVENTS_APRSIS_WARN_DEAD_KEEPALIVE,
-							aprsis_successfull_conn_counter,
-							0,
-							0,
-							0,
-							timestamp,
-							aprsis_last_keepalive_ts);
-
+		if (aprsis_debug_simulate_timeout == 1) {
 			dead = 1;
 		}
 
-		if (timestamp > (aprsis_last_packet_transmit_ts + APRSIS_TIMEOUT_MS * 3)) {
-			event_log_sync (EVENT_WARNING,
-							EVENT_SRC_APRSIS,
-							EVENTS_APRSIS_WARN_DEAD_TRANSMIT,
-							aprsis_successfull_conn_counter,
-							0,
-							0,
-							0,
-							timestamp,
-							aprsis_last_packet_transmit_ts);
+		if (aprsis_successfull_conn_counter > 0) {
+			if (timestamp > (aprsis_last_keepalive_ts + APRSIS_TIMEOUT_MS)) {
+				event_log_sync (EVENT_WARNING,
+								EVENT_SRC_APRSIS,
+								EVENTS_APRSIS_WARN_DEAD_KEEPALIVE,
+								aprsis_successfull_conn_counter,
+								0,
+								0,
+								0,
+								timestamp,
+								aprsis_last_keepalive_ts);
 
-			dead = 1;
-		}
-	}
+				dead = 1;
+			}
 
-	// check if connection is alive
-	if (dead == 1) {
-		// reset the flag
-		aprsis_logged = 0;
+			if (timestamp > (aprsis_last_packet_transmit_ts + APRSIS_TIMEOUT_MS * 3)) {
+				event_log_sync (EVENT_WARNING,
+								EVENT_SRC_APRSIS,
+								EVENTS_APRSIS_WARN_DEAD_TRANSMIT,
+								aprsis_successfull_conn_counter,
+								0,
+								0,
+								0,
+								timestamp,
+								aprsis_last_packet_transmit_ts);
 
-		aprsis_connected = 0;
-
-		aprsis_debug_simulate_timeout = 0;
-
-		aprsis_last_keepalive_ts = master_time;
-
-		aprsis_last_packet_transmit_ts = master_time;
-
-		if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
-			// send a status message that APRS-IS connectios is gone
-			status_send_aprsis_timeout (aprsis_unsucessfull_conn_counter);
+				dead = 1;
+			}
 		}
 
-		// check if it is intended to reset GSM modem in case of timeout
-		if (aprsis_reset_on_timeout == 0) {
-			// close connection with force flag as it is uncertain if a remote server
-			// finished connection explicitly, or the connection is stuck for
-			// some other reason
-			gsm_sim800_tcpip_close (aprsis_serial_port, aprsis_gsm_modem_state, 1);
-		}
-		else {
-			gsm_sim800_reset (aprsis_gsm_modem_state);
+		// check if connection is alive
+		if (dead == 1) {
+			// reset the flag
+			aprsis_logged = 0;
+
+			aprsis_connected = 0;
+
+			aprsis_debug_simulate_timeout = 0;
+
+			aprsis_last_keepalive_ts = master_time;
+
+			aprsis_last_packet_transmit_ts = master_time;
+
+			if (rte_main_curret_powersave_mode != PWSAVE_AGGRESV) {
+				// send a status message that APRS-IS connectios is gone
+				status_send_aprsis_timeout (aprsis_unsucessfull_conn_counter);
+			}
+
+			// check if it is intended to reset GSM modem in case of timeout
+			if (aprsis_reset_on_timeout == 0) {
+				// close connection with force flag as it is uncertain if a remote server
+				// finished connection explicitly, or the connection is stuck for
+				// some other reason
+				gsm_sim800_tcpip_close (aprsis_serial_port, aprsis_gsm_modem_state, 1);
+			}
+			else {
+				gsm_sim800_reset (aprsis_gsm_modem_state);
+			}
 		}
 	}
 }
@@ -801,13 +834,14 @@ void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t wind
 
 	pressure = (unsigned)(cisnienie * 10);
 
-	memset (aprsis_packet_tx_buffer, 0x00, sizeof (aprsis_packet_tx_buffer));
+	taskENTER_CRITICAL ();
+	memset (aprsis_weather_packet_tx_buffer, 0x00, APRSIS_WX_TX_BUFFER_LN);
 	// 	  main_own_aprs_msg_len = sprintf(main_own_aprs_msg, "=%s%c%c%s%c%c %s",
 	// main_string_latitude, main_config_data_basic->n_or_s, main_symbol_f, main_string_longitude,
 	// main_config_data_basic->e_or_w, main_symbol_s, main_config_data_basic->comment);
-	aprsis_packet_tx_message_size =
-		snprintf (aprsis_packet_tx_buffer,
-				  APRSIS_TX_BUFFER_LN,
+	aprsis_weather_packet_tx_message_size =
+		snprintf (aprsis_weather_packet_tx_buffer,
+				  APRSIS_WX_TX_BUFFER_LN,
 				  "%s>AKLPRZ,qAR,%s:!%s%c%c%s%c%c%03d/%03dg%03dt%03dr...p...P...b%05ldh%02d\r\n",
 				  callsign_with_ssid,
 				  callsign_with_ssid,
@@ -823,16 +857,17 @@ void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t wind
 				  /*temperatura */ (short)(temperatura * 1.8 + 32),
 				  pressure,
 				  humidity);
-	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
+	taskEXIT_CRITICAL ();
 
 	aprsis_last_packet_transmit_ts = main_get_master_time ();
 
 	aprsis_last_packet_transmit_long_ts = main_get_master_time ();
 
-	aprsis_last_tcpip_write_res = gsm_sim800_tcpip_write ((uint8_t *)aprsis_packet_tx_buffer,
-														  aprsis_packet_tx_message_size,
-														  aprsis_serial_port,
-														  aprsis_gsm_modem_state);
+	aprsis_last_tcpip_write_res =
+		gsm_sim800_tcpip_write ((uint8_t *)aprsis_weather_packet_tx_buffer,
+								aprsis_weather_packet_tx_message_size,
+								aprsis_serial_port,
+								aprsis_gsm_modem_state);
 }
 
 /**

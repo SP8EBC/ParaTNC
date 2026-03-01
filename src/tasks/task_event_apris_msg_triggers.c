@@ -25,6 +25,7 @@
 
 #include "aprsis.h"
 #include "supervisor.h"
+#include "delay.h"
 
 #include "event_log.h"
 
@@ -193,49 +194,70 @@ void task_event_aprsis_msg_trigger (void *param)
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_COUNTERS);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING) {
+			// this will send a status message like that
+			//  >[rtc_ok: 1][vbat: 1206][register_reset_check_fail: 0x3][aprsis]# aprsc 2.1.20-gdaa359f
+			// this is not a login string. This is a status message, which is send after connecting
 			aprsis_send_loginstring ((const char *)CALLSIGN_WITH_SSID,
 									 system_is_rtc_ok (),
 									 rte_main_battery_voltage);
 
-			packet_tx_set_trigger_tcp_weather();
+			// wait a little while to be sure that loginstring will be sent
+			// before triggering weather packet
+			delay_fixed(2345);
+
+			// this call is added to be sure that weather frame will be *always* send
+			// to aprs-is in aggressive powersave mode after the connection
+			// to aprs-is is established,
+			packet_tx_set_trigger_tcp_weather ();
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES) {
-			aprsis_send_telemetry (1u, (const char *)CALLSIGN_WITH_SSID);
+
+			// do not send telemetry at all while controller is in aggresive powersave
+			if (pwr_save_is_currently_in_aggressive () == 0) {
+				aprsis_send_telemetry (1u, (const char *)CALLSIGN_WITH_SSID);
+			}
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS) {
-			if (rte_main_trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged () == 1) {
+			// do not send any events while the controller is in aggressive powersaving mode
+			if (pwr_save_is_currently_in_aggressive () == 0) {
+				if (rte_main_trigger_gsm_event_log > 0 && aprsis_get_aprsis_logged () == 1) {
 
-				// set a pointer to even in exposed form which will be sent now
-				const event_log_exposed_t *current_exposed_event =
-					&rte_main_exposed_events[(rte_main_trigger_gsm_event_log)-1];
+					// set a pointer to even in exposed form which will be sent now
+					const event_log_exposed_t *current_exposed_event =
+						&rte_main_exposed_events[(rte_main_trigger_gsm_event_log)-1];
 
-				// create APRS status content itself
-				const uint16_t str_size = event_exposed_to_string (current_exposed_event,
-																   OWN_APRS_MESSAGE,
-																   OWN_APRS_MSG_LN);
+					// create APRS status content itself
+					const uint16_t str_size = event_exposed_to_string (current_exposed_event,
+																	   OWN_APRS_MESSAGE,
+																	   OWN_APRS_MSG_LN);
 
-				rte_main_trigger_gsm_event_log--;
+					rte_main_trigger_gsm_event_log--;
 
-				if (str_size > 0) {
-					aprsis_send_any_status ((const char *)CALLSIGN_WITH_SSID,
-											OWN_APRS_MESSAGE,
-											str_size);
+					if (str_size > 0) {
+						aprsis_send_any_status ((const char *)CALLSIGN_WITH_SSID,
+												OWN_APRS_MESSAGE,
+												str_size);
+					}
+
+					if (rte_main_trigger_gsm_event_log > 0) {
+						xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+											MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
+					}
+					else {
+						xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+											  MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
+					}
 				}
-
-				if (rte_main_trigger_gsm_event_log > 0) {
-					xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-										MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
-				}
-				else {
-					xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
-										  MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
-				}
+			}
+			else {
+				xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+									  MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS);
 			}
 		}
 		else {

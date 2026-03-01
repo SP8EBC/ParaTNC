@@ -154,23 +154,18 @@
 // Niebieska dioda -> DCD
 // Zielona dioda -> anemometr albo TX
 
-// backup registers (ParaTNC)
-// 0 ->
-// 2 -> boot and hard fault count
-// 3 -> controller configuration status
-// 4 ->
-// 5 ->
-// 6 -> weather and telemetry timers & counters
-
-// backup registers (ParaMETEO)
-// 0 -> powersave status
-// 1 -> last sleep rtc time
-// 2 -> last wakeup rtc time
-// 3 -> controller configuration status
-// 4 -> wakeup events MSB, sleep events LSB
-// 5 -> // not used, previously used by monitor
-// 6 -> last sleep time
-// 7 -> weather and telemetry timers & counters
+/**
+ * Where vTaskDelay is used in the project:
+ * -> all periodic tasks, like task_one_minute, to trigger it every XYZ seconds
+ * -> functions: delay_fixed and delay_fixed_with_count
+ * -> packet_tx_multi_per_call_handler to delay radio transmission of consecutive frames
+ * -> packet_tx_tcp_handler to put 1 sec delay after sending weather frame to APRS-IS, or
+ * 		in practice to the GSM/GPRS modem. Only after UART transmission to the modem will finish,
+ * 		the modem will start transmission over a TCP connection. There is no mechanism to
+ * 		signalize a micro that GPRS transmission is done, so a simple delay is the only
+ * 		simple solution.
+ * -> aprsis_connect_and_login after optional sending beacon
+ */
 
 #define CONFIG_FIRST_RESTORED		(1)
 #define CONFIG_FIRST_FAIL_RESTORING (1 << 1)

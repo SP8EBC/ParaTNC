@@ -1405,6 +1405,18 @@ int pwr_save_is_currently_cutoff (void)
 	return out;
 }
 
+int pwr_save_is_currently_in_aggressive(void)
+{
+	int out = 0;
+
+	if (pwr_save_previous_mode == PWSAVE_AGGRESV)
+	{
+		out = 1;
+	}
+
+	return out;
+}
+
 uint8_t pwr_save_get_inhibit_pwr_switch_periodic (void)
 {
 
