@@ -894,8 +894,6 @@ int main (int argc, char *argv[])
 
 	rte_main_reset_gsm_modem = 0;
 
-	delay_fixed (300);
-
 	// waiting for 1 second to count number of ticks when the CPU is idle
 	main_idle_cpu_ticks = delay_fixed_with_count (1000);
 

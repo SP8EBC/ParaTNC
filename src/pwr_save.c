@@ -53,6 +53,8 @@
  */
 #define WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES 3
 
+#define MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE (100u)
+
 #if defined(STM32L471xx)
 
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
@@ -418,13 +420,21 @@ int pwr_save_switch_mode_to_c0 (void)
 	// turn ON +5V_S
 	io___cntrl_vbat_s_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	io___cntrl_vbat_m_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	// turn ON +4V_G
 	io___cntrl_vbat_g_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
@@ -468,16 +478,24 @@ int pwr_save_switch_mode_to_c1 (void)
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	io___cntrl_vbat_m_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn OFF +4V_G
 	io___cntrl_vbat_g_disable ();
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// inhibit GSM modem
 	gsm_sim800_inhibit (1);
@@ -525,11 +543,15 @@ void pwr_save_switch_mode_to_c2 (void)
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	// turn OFF +4V_G
 	io___cntrl_vbat_g_disable ();
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// inhibit GSM modem
 	gsm_sim800_inhibit (1);
@@ -564,11 +586,17 @@ void pwr_save_switch_mode_to_c3 (void)
 	// turn ON +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	// turn ON +4V_G
 	io___cntrl_vbat_g_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// deinhibit GSM modem
 	gsm_sim800_inhibit (0);
@@ -606,7 +634,11 @@ int pwr_save_switch_mode_to_m4 (void)
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	io___cntrl_vbat_m_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable ();
@@ -616,6 +648,8 @@ int pwr_save_switch_mode_to_m4 (void)
 
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// inhibit GSM modem
 	gsm_sim800_inhibit (1);
@@ -647,7 +681,11 @@ int pwr_save_switch_mode_to_m4a (void)
 	// turn ON +5V_S (and internal VHF radio module in HW-RevB)
 	io___cntrl_vbat_s_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	io___cntrl_vbat_m_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// turn OFF +5V_R and VBATT_SW_R
 	io___cntrl_vbat_r_disable ();
@@ -655,8 +693,12 @@ int pwr_save_switch_mode_to_m4a (void)
 	// turn OFF +4V_G
 	io___cntrl_vbat_g_enable ();
 
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
+
 	// turn ON +5V_C (SD card, PT100 interface and Op Amplifier)
 	io___cntrl_vbat_c_enable ();
+
+	delay_fixed (MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE);
 
 	// deinhibit GSM modem
 	gsm_sim800_inhibit (0);
@@ -1405,12 +1447,11 @@ int pwr_save_is_currently_cutoff (void)
 	return out;
 }
 
-int pwr_save_is_currently_in_aggressive(void)
+int pwr_save_is_currently_in_aggressive (void)
 {
 	int out = 0;
 
-	if (pwr_save_previous_mode == PWSAVE_AGGRESV)
-	{
+	if (pwr_save_previous_mode == PWSAVE_AGGRESV) {
 		out = 1;
 	}
 

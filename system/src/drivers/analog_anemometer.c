@@ -32,6 +32,8 @@
 #define MINUM_PULSE_LN 15
 #define MAXIMUM_PULSE_SLEW_RATE 4000
 
+#define UF_MINIMUM_FREQUENCY	10
+
 #define UF_MAXIMUM_FREQUENCY 8280//32767
 #define UPSCALED_MAX_ANGLE 		(360 * 100)
 #define UPSCALED_MAX_ANGLE_2 	(360 * 10)
@@ -492,7 +494,7 @@ int16_t analog_anemometer_direction_handler(void) {
 	volatile uint16_t current_value = LL_TIM_GetCounter(TIM3);//TIM_GetCounter(TIM3);
 
 	// if the counter value is zero it means that probably U/f converter isn't running
-	if (current_value == 0) {
+	if (current_value < UF_MINIMUM_FREQUENCY) {
 	    event_log_sync(EVENT_ERROR, EVENT_SRC_DRV_ANEMOMETER,
 	    		  EVENTS_DRV_ANEMOMETER_ERROR_UF_CONV_NOT_WORKING,
 				  analog_anemometer_timer_has_been_fired, analog_anemometer_slew_limit_fired,
