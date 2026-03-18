@@ -237,7 +237,7 @@ void analog_anemometer_init(uint16_t pulses_per_meter_second, uint8_t anemometer
 
 	LL_TIM_EnableCounter(TIM3);
 
-	NVIC_EnableIRQ( TIM3_IRQn );
+	//NVIC_EnableIRQ( TIM3_IRQn );
 
 	analog_anemometer_timer_has_been_fired = 0;
 
@@ -495,11 +495,12 @@ int16_t analog_anemometer_direction_handler(void) {
 
 	// if the counter value is zero it means that probably U/f converter isn't running
 	if (current_value < UF_MINIMUM_FREQUENCY) {
-	    event_log_sync(EVENT_ERROR, EVENT_SRC_DRV_ANEMOMETER,
-	    		  EVENTS_DRV_ANEMOMETER_ERROR_UF_CONV_NOT_WORKING,
-				  analog_anemometer_timer_has_been_fired, analog_anemometer_slew_limit_fired,
-				  analog_anemometer_windspeed_pulses_time[0], analog_anemometer_windspeed_pulses_time[1],
-				  analog_anemometer_windspeed_pulses_time[2], analog_anemometer_windspeed_pulses_time[3]);
+		// TODO
+//	    event_log_sync(EVENT_ERROR, EVENT_SRC_DRV_ANEMOMETER,
+//	    		  EVENTS_DRV_ANEMOMETER_ERROR_UF_CONV_NOT_WORKING,
+//				  analog_anemometer_timer_has_been_fired, analog_anemometer_slew_limit_fired,
+//				  analog_anemometer_windspeed_pulses_time[0], analog_anemometer_windspeed_pulses_time[1],
+//				  analog_anemometer_windspeed_pulses_time[2], analog_anemometer_windspeed_pulses_time[3]);
 
 		LL_TIM_SetCounter(TIM3, 0);
 

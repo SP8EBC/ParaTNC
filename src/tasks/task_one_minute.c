@@ -210,6 +210,16 @@ void task_one_minute (void *unused)
 				rte_main_reboot_req = 1;
 			}
 
+			event_log_sync (EVENT_INFO_CYCLIC,
+							EVENT_SRC_MAIN,
+							EVENTS_MAIN_CYCLIC,
+							aprsis_get_successfull_conn_counter (),
+							aprsis_get_unsucessfull_conn_counter (),
+							aprsis_get_tx_counter (),
+							rte_main_average_battery_voltage,
+							rte_main_rx_total,
+							rte_main_tx_total);
+
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 15);
 
 			if (aprsis_logged == 1) {
@@ -223,27 +233,6 @@ void task_one_minute (void *unused)
 		} // end of one hour
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 17);
-
-		/**
-		 * SIX HOUR POOLING
-		 */
-		if (--main_six_hour_pool_timer < 0) {
-			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 18);
-
-			main_six_hour_pool_timer = 6;
-
-			event_log_sync (EVENT_INFO_CYCLIC,
-							EVENT_SRC_MAIN,
-							EVENTS_MAIN_CYCLIC,
-							aprsis_get_successfull_conn_counter (),
-							aprsis_get_unsucessfull_conn_counter (),
-							aprsis_get_tx_counter (),
-							rte_main_average_battery_voltage,
-							rte_main_rx_total,
-							rte_main_tx_total);
-		}
-
-		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 18);
 
 		main_one_minute_pool_timer = 60000;
 
