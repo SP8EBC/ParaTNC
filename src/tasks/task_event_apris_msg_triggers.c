@@ -24,8 +24,8 @@
 #include "kiss_communication/kiss_nrc_response.h"
 
 #include "aprsis.h"
-#include "supervisor.h"
 #include "delay.h"
+#include "supervisor.h"
 
 #include "event_log.h"
 
@@ -195,7 +195,8 @@ void task_event_aprsis_msg_trigger (void *param)
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_APRSIS_LOGINSTRING) {
 			// this will send a status message like that
-			//  >[rtc_ok: 1][vbat: 1206][register_reset_check_fail: 0x3][aprsis]# aprsc 2.1.20-gdaa359f
+			//  >[rtc_ok: 1][vbat: 1206][register_reset_check_fail: 0x3][aprsis]#
+			//  aprsc 2.1.20-gdaa359f
 			// this is not a login string. This is a status message, which is send after connecting
 			aprsis_send_loginstring ((const char *)CALLSIGN_WITH_SSID,
 									 system_is_rtc_ok (),
@@ -203,7 +204,7 @@ void task_event_aprsis_msg_trigger (void *param)
 
 			// wait a little while to be sure that loginstring will be sent
 			// before triggering weather packet
-			delay_fixed(2345);
+			delay_fixed (2345);
 
 			// this call is added to be sure that weather frame will be *always* send
 			// to aprs-is in aggressive powersave mode after the connection
@@ -217,11 +218,64 @@ void task_event_aprsis_msg_trigger (void *param)
 
 			// do not send telemetry at all while controller is in aggresive powersave
 			if (pwr_save_is_currently_in_aggressive () == 0) {
+
+				delay_fixed (100);
+
 				aprsis_send_telemetry (1u, (const char *)CALLSIGN_WITH_SSID);
 			}
 
 			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
 								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+		}
+		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_DESCR) {
+
+			// do not send telemetry at all while controller is in aggressive powersave
+			// calls to delay_fixed is required as a some kind of a workaround around SIM800C
+			// transmit buffer delay. SIM800C gprs modem has some internal delay, after witch
+			// it "closes" internal transmit buffer and sends that data.
+			// for more information refer to:
+			//		3.2.2 How to Configure Transparent Mode
+			// in:
+			//		SIM800 Series_TCPIP_Application Note_V1.03
+			if (pwr_save_is_currently_in_aggressive () == 0) {
+				delay_fixed (100u + (main_get_master_time () % 100u));
+				if (main_config_data_mode->digi_viscous == 0) {
+					// viscous digipeater disabled
+					aprsis_send_description_telemetry (0,
+													   TELEMETRY_NORMAL_PARAM,
+													   main_config_data_basic,
+													   main_config_data_mode,
+													   (const char *)CALLSIGN_WITH_SSID);
+					delay_fixed (974u + (main_get_master_time () % 100u));
+				}
+				else {
+					// viscous digipeater enabled
+					aprsis_send_description_telemetry (0,
+													   TELEMETRY_VISCOUS_PARAM,
+													   main_config_data_basic,
+													   main_config_data_mode,
+													   (const char *)CALLSIGN_WITH_SSID);
+					delay_fixed (974u + (main_get_master_time () % 100u));
+				}
+
+				// TELEMETRY_NORMAL_UNIT is basically exact the same than TELEMETRY_VISCOUS_UNIT
+				aprsis_send_description_telemetry (0,
+												   TELEMETRY_NORMAL_UNIT,
+												   main_config_data_basic,
+												   main_config_data_mode,
+												   (const char *)CALLSIGN_WITH_SSID);
+				delay_fixed (857 + (main_get_master_time () % 100u));
+
+				aprsis_send_description_telemetry (0,
+												   TELEMETRY_NORMAL_EQNS,
+												   main_config_data_basic,
+												   main_config_data_mode,
+												   (const char *)CALLSIGN_WITH_SSID);
+				delay_fixed (944 + (main_get_master_time () % 100u));
+			}
+
+			xEventGroupClearBits (main_eventgroup_handle_aprs_trigger,
+								  MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_DESCR);
 		}
 		else if (bits_on_event == MAIN_EVENTGROUP_APRSIS_TRIG_EVENTS) {
 			// do not send any events while the controller is in aggressive powersaving mode

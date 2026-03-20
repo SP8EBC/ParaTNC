@@ -506,6 +506,8 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 							// wait for consecutive data
 							gsm_sim800_tcpip_async_receive(aprsis_serial_port, aprsis_gsm_modem_state, 0, 61000, aprsis_receive_callback);
 
+							xTimerStart(main_timer_aprsis_telemetry_descr, 0xFFFFFFFFu);
+
 							out = APRSIS_OK;
 
 						}
@@ -1017,6 +1019,13 @@ void aprsis_send_telemetry (uint8_t async, const char *callsign_with_ssid)
 
 	// exit if message is empty
 	if (*aprsis_packet_telemetry_buffer == 0) {
+	    event_log_sync(
+				  EVENT_WARNING,
+				  EVENT_SRC_APRSIS,
+				  EVENTS_APRSIS_TELEMETRY_NOT_PREPARED,
+				  0, 0,
+				  0, 0,
+				  0, aprsis_last_packet_transmit_ts);
 		return;
 	}
 
@@ -1100,6 +1109,7 @@ aprsis_send_description_telemetry (uint8_t async, const telemetry_description_t 
 
 	aprsis_tx_counter++;
 
+	taskENTER_CRITICAL ();
 	aprsis_packet_tx_message_size = snprintf (aprsis_packet_tx_buffer,
 											  APRSIS_TX_BUFFER_LN,
 											  "%s>AKLPRZ,qAR,%s:%s\r\n",
@@ -1107,6 +1117,7 @@ aprsis_send_description_telemetry (uint8_t async, const telemetry_description_t 
 											  callsign_with_ssid,
 											  main_own_aprs_msg);
 	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
+	taskEXIT_CRITICAL();
 
 	if (async > 0) { // not used at this moment
 		aprsis_last_tcpip_write_res =

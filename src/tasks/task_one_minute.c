@@ -35,9 +35,6 @@
 //! one hour interval incremented inside one minute
 static int8_t main_one_hour_pool_timer = 60;
 
-//! six hour interval incremented inside one hour
-static int8_t main_six_hour_pool_timer = 4;
-
 //! how many times one minute task has been executed
 uint16_t main_one_minute_task_couter = 0;
 

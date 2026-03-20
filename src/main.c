@@ -423,6 +423,8 @@ EventGroupHandle_t main_eventgroup_handle_fanet;
 //! a variable to hold the handle of the event group for sx1262 driver.
 EventGroupHandle_t main_eventgroup_handle_sx1262;
 
+TimerHandle_t main_timer_aprsis_telemetry_descr;
+
 /********************************************************************/
 
 char main_symbol_f = '/';
@@ -539,6 +541,19 @@ static void main_scheduler_prestart_callback (void)
 	dallas_rtos_running = 1;
 	NVIC_EnableIRQ (EXTI0_IRQn);
 }
+
+static void main_callback_timer_aprsis_descr (TimerHandle_t xTimer)
+{
+	(void) xTimer;
+	// the idea is to send telemetry descriptions only once after the powerup
+	if (master_time < 611000U)
+	{
+		xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+							MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_DESCR);
+	}
+
+}
+
 /********************************************************************/
 
 /**
@@ -575,9 +590,9 @@ int main (int argc, char *argv[])
 
 	memset (&rte_main_events_extracted_for_api_stat, 0x00, sizeof (nvm_event_result_stats_t));
 
-	memset(&main_gsm_srl_ctx, 0x00, sizeof(srl_context_t));
-	memset(&main_wx_srl_ctx, 0x00, sizeof(srl_context_t));
-	memset(&main_kiss_srl_ctx, 0x00, sizeof(srl_context_t));
+	memset (&main_gsm_srl_ctx, 0x00, sizeof (srl_context_t));
+	memset (&main_wx_srl_ctx, 0x00, sizeof (srl_context_t));
+	memset (&main_kiss_srl_ctx, 0x00, sizeof (srl_context_t));
 
 	main_kiss_srl_ctx_ptr = &main_kiss_srl_ctx;
 	main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
@@ -632,8 +647,8 @@ int main (int argc, char *argv[])
 	// 		Section 6: Reset and clock control (RCC))
 	// 	01: HCLK/1 (Synchronous clock mode). This configuration must be enabled only if the AHB
 	// 		clock prescaler is set to 1 (HPRE[3:0] = 0xxx in RCC_CFGR register) and if the system
-	// clock 		has a 50% duty cycle. 	10: HCLK/2 (Synchronous clock mode) 	11: HCLK/4 (Synchronous clock
-	// mode)
+	// clock 		has a 50% duty cycle. 	10: HCLK/2 (Synchronous clock mode) 	11: HCLK/4
+	// (Synchronous clock mode)
 	//
 
 	ADC123_COMMON->CCR |= ADC_CCR_CKMODE_1;
@@ -1485,6 +1500,12 @@ int main (int argc, char *argv[])
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex ();
 
+	main_timer_aprsis_telemetry_descr = xTimerCreate ("APRSIS_TRIG",
+													  pdMS_TO_TICKS (61234U),
+													  pdFALSE,
+													  NULL,
+													  main_callback_timer_aprsis_descr);
+
 	MAIN_EXPAND_TASKS_LIST
 
 	///
@@ -1715,7 +1736,7 @@ configuration_button_function_t main_get_button_two_right ()
 
 void main_suspend_task_for_psaving (void)
 {
-	supervisor_suspend();
+	supervisor_suspend ();
 
 	vTaskSuspend (task_one_sec_handle);
 	vTaskSuspend (task_two_sec_handle);
@@ -1736,8 +1757,8 @@ void main_suspend_task_for_psaving (void)
 	 */
 	//	vTaskSuspend (task_ev_serial_kiss_rx_done_handle);
 	//	vTaskSuspend (task_ev_serial_kiss_tx_done_handle);
-	//vTaskSuspend (task_ev_serial_gsm_rx_done_handle);
-	//vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
+	// vTaskSuspend (task_ev_serial_gsm_rx_done_handle);
+	// vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
 	vTaskSuspend (task_ev_serial_sensor_handle);
 	vTaskSuspend (task_ev_radio_message_handle);
 	vTaskSuspend (task_ev_aprsis_trigger);
@@ -1745,7 +1766,7 @@ void main_suspend_task_for_psaving (void)
 
 void main_resume_task_for_psaving (void)
 {
-	supervisor_resume();
+	supervisor_resume ();
 
 	vTaskResume (task_one_sec_handle);
 	vTaskResume (task_two_sec_handle);
@@ -1755,8 +1776,8 @@ void main_resume_task_for_psaving (void)
 	vTaskResume (task_fanet_handle);
 	//	vTaskResume(task_ev_serial_kiss_rx_done_handle);
 	//	vTaskResume(task_ev_serial_kiss_tx_done_handle);
-	//vTaskResume (task_ev_serial_gsm_rx_done_handle);
-	//vTaskResume (task_ev_serial_gsm_tx_done_handle);
+	// vTaskResume (task_ev_serial_gsm_rx_done_handle);
+	// vTaskResume (task_ev_serial_gsm_tx_done_handle);
 	vTaskResume (task_ev_serial_sensor_handle);
 	vTaskResume (task_ev_radio_message_handle);
 	vTaskResume (task_ev_aprsis_trigger);

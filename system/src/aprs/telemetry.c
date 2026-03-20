@@ -7,7 +7,6 @@
 
 #include "aprs/telemetry.h"
 #include "main.h"
-#include "main_freertos_externs.h"
 #include "delay.h"
 #include "backup_registers.h"
 #include "variant.h"
@@ -59,13 +58,13 @@ int telemetry_create_description_string(const config_data_basic_t * const config
 	int out_size = 0;
 
 	// a buffer to assembly the 'call-ssid' string at the begining of the frame
-	char message_prefix_buffer[9];
+	char message_prefix_buffer[10];
 
 	taskENTER_CRITICAL();
 
-	memset(message_prefix_buffer, 0x00, 0x09);
+	memset(message_prefix_buffer, 0x00, 10);
 
-	snprintf(message_prefix_buffer, 0x09, "%s-%d", config_basic->callsign, config_basic->ssid);
+	snprintf(message_prefix_buffer, 10, "%s-%d", config_basic->callsign, config_basic->ssid);
 
 	if (variant_validate_is_within_ram((uint32_t)out) == 0) {
 		return out_size;
@@ -318,11 +317,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 	WAIT_FOR_CHANNEL_FREE();
 
 	afsk_txStart(&main_afsk);
-#ifdef PARAMETEO
-	xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-			MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
-	//rte_main_trigger_gsm_telemetry_values = 1;
-#endif
+
 }
 
 void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_reason* last_error, ve_direct_system_state state, uint32_t master_time, uint16_t messages_count, uint16_t corrupted_messages_count) {
@@ -592,11 +587,6 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	// key up a transmitter and start transmission
 	afsk_txStart(&main_afsk);
 
-	if (aprsis_logged == 1)
-	{
-		xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-				MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
-	}
 //	// trigger packet to aprs-is server
 //	rte_main_trigger_gsm_telemetry_values = 1;
 

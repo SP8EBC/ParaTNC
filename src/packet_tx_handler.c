@@ -35,6 +35,8 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
+#include "main_freertos_externs.h"
+
 #include "delay.h"
 #include "io.h"
 #include "main.h"
@@ -538,6 +540,23 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 			rte_wx_wind_qf = AN_WIND_QF_UNKNOWN;
 		}
 
+		aprsis_prepare_telemetry (telemetry_get_counter (),
+								  rx10m,
+								  tx10m,
+								  digi10m,
+								  telemetry_scaled_vbatt_voltage,
+								  digidrop10m,
+								  telemetry_scaled_temperature,
+								  telemetry_qf,
+								  telemetry_degr,
+								  telemetry_nav,
+								  telemetry_pressure_qf_navaliable,
+								  telemetry_humidity_qf_navaliable,
+								  telemetry_anemometer_degradated,
+								  telemetry_anemometer_navble,
+								  telemetry_vbatt_low,
+								  config_mode);
+
 		if (config_mode->victron == 1) {
 			telemetry_send_values_pv (rx10m,
 									  digi10m,
@@ -594,25 +613,14 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 		}
 		packet_tx_telemetry_counter = 0;
 
+		if (aprsis_logged == 1)
+		{
+			xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
+					MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+		}
+
 		// service external watchdog while sending telemetry
 		io_ext_watchdog_service ();
-
-		aprsis_prepare_telemetry (telemetry_get_counter (),
-								  rx10m,
-								  tx10m,
-								  digi10m,
-								  telemetry_scaled_vbatt_voltage,
-								  digidrop10m,
-								  telemetry_scaled_temperature,
-								  telemetry_qf,
-								  telemetry_degr,
-								  telemetry_nav,
-								  telemetry_pressure_qf_navaliable,
-								  telemetry_humidity_qf_navaliable,
-								  telemetry_anemometer_degradated,
-								  telemetry_anemometer_navble,
-								  telemetry_vbatt_low,
-								  config_mode);
 
 		if (rx10m == 0) {
 			main_wait_for_tx_complete ();

@@ -118,6 +118,8 @@ extern EventGroupHandle_t main_eventgroup_handle_fanet;
 //! a variable to hold the handle of the event group for sx1262 driver.
 extern EventGroupHandle_t main_eventgroup_handle_sx1262;
 
+extern TimerHandle_t main_timer_aprsis_telemetry_descr;
+
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
