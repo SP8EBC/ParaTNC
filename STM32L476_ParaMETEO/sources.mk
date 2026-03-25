@@ -35,6 +35,9 @@ src/kiss_protocol \
 src/nvm \
 src/stored_configuration_nvm \
 src/tasks \
+system/3rd_party/src/fatfs \
+system/3rd_party/src/newlib \
+system/3rd_party/src/stm32l4-hal-driver \
 system/freertos \
 system/freertos/portable \
 system/src/aprs \
@@ -46,12 +49,10 @@ system/src/drivers \
 system/src/drivers/l4 \
 system/src/drivers/sx1262 \
 system/src/dust_sensor \
-system/src/fatfs \
 system/src/gsm \
 system/src/http_client \
 system/src/modbus_rtu \
 system/src/skytrax_fanet \
-system/src/stm32l4-hal-driver \
 system/src/tiny-aes \
 system/src/tm \
 system/src/umb_master \

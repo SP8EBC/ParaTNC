@@ -12,12 +12,10 @@ RM := rm -rf
 -include system/src/umb_master/subdir.mk
 -include system/src/tm/subdir.mk
 -include system/src/tiny-aes/subdir.mk
--include system/src/stm32l4-hal-driver/subdir.mk
 -include system/src/skytrax_fanet/subdir.mk
 -include system/src/modbus_rtu/subdir.mk
 -include system/src/http_client/subdir.mk
 -include system/src/gsm/subdir.mk
--include system/src/fatfs/subdir.mk
 -include system/src/dust_sensor/subdir.mk
 -include system/src/drivers/sx1262/subdir.mk
 -include system/src/drivers/l4/subdir.mk
@@ -29,6 +27,9 @@ RM := rm -rf
 -include system/src/subdir.mk
 -include system/freertos/portable/subdir.mk
 -include system/freertos/subdir.mk
+-include system/3rd_party/src/stm32l4-hal-driver/subdir.mk
+-include system/3rd_party/src/newlib/subdir.mk
+-include system/3rd_party/src/fatfs/subdir.mk
 -include src/tasks/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
 -include src/nvm/subdir.mk
@@ -101,7 +102,7 @@ main-build: ParaTNC.elf secondary-outputs
 ParaTNC.elf: $(OBJS) $(USER_OBJS) makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross ARM C++ Linker'
-	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -Wuninitialized -Wall -Wextra -Wlogical-op -Waggregate-return -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-g++ -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Og -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -ffreestanding -fno-move-loop-invariants -Wuninitialized -Wall -Wextra -Wlogical-op -Waggregate-return -g3 -T STM32L471RETx_FLASH.ld -Xlinker --gc-sections -L"../ldscripts/stm32l476" -L"../system/3rd_party/src/dsp" -Wl,-Map,"ParaTNC.map" -Xlinker --cref --specs=nano.specs --specs=nosys.specs -o "ParaTNC.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
