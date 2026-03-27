@@ -36,7 +36,6 @@ src/nvm \
 src/stored_configuration_nvm \
 src/tasks \
 system/3rd_party/src/fatfs \
-system/3rd_party/src/newlib \
 system/3rd_party/src/stm32l4-hal-driver \
 system/freertos \
 system/freertos/portable \

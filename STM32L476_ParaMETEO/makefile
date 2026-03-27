@@ -28,7 +28,6 @@ RM := rm -rf
 -include system/freertos/portable/subdir.mk
 -include system/freertos/subdir.mk
 -include system/3rd_party/src/stm32l4-hal-driver/subdir.mk
--include system/3rd_party/src/newlib/subdir.mk
 -include system/3rd_party/src/fatfs/subdir.mk
 -include src/tasks/subdir.mk
 -include src/stored_configuration_nvm/subdir.mk
