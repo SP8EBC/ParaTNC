@@ -1,31 +1,28 @@
-# ParaTNC and ParaMETEO firmware version EA20, April 2023
+# ParaMETEO (formerly ParaTNC) firmware for weather station
 
 // Please look into 'doc' directory for more documentation and user manuals
 // WARNING: This readme could be sligtly outdated due to my lack of time :)
 
 #### INTRODUCTION 
 
-ParaTNC and ParaMETEO is a two APRS controller which has sligtly different target and different features. Source code in this repository called ParaTNC is a firmware to both of them. The name comes from the fact that ParaTNC was the first project. 
+ParaMETEO (and formerly ParaTNC) are two APRS weather station controllers. Both of them has common set of available features: AFSK 1200bd DSP modem, weather station controller, APRS radio network digipeater, RS232 interface to communication to/from host PC using KISS protocol (a.k.a. KISS modem).
  
-__ParaTNC__   supports key elements of what good APRS device should have:
-   - Two directional KISS TNC (no init strings required).
-   - WIDE1-1 digipeater, with an option to limit digipeating only to SSIDs 7, 8 and 9.
-   - Weather station with support for various meteo sensors. Full list od supported devices in point section below.
-   - Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
-   - Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
-   - Support for UMB Binary porotocol as a mater.
-   - Support for Modbus RTU
-   - Three different grounds separated one from the another (Controller, weather sensors, analog interface to FM radio)
+__ParaTNC__ was first platform, with roots coming as far as 2012. Currently, this platform is no longer supported and has been deprecated. It was using STM32F100 micro, which has too many limitations, to support all new features.
 
-__ParaMETEO__   is full outdoor and easy to install, complete APRS device which can be supplied with power either from mains and PV system.. It supports the same list of feature than ParaTNC and:
-   - integrated MPPT charger for 12V / 9Ah AGM battery enclosed in the same case. 
-   - integrated GSM module and support for APRS-IS communication (can run RX-igate)
-   - support for MAX31865 amplifier for 2, 3 or 4-wire PT100/PT1000 temperature sensor
-   - 7.5V dc converter to supply HT radio installed in the case for APRS radio network
+__ParaMETEO__   is full outdoor and easy to install, complete APRS device which can be supplied with power either from mains and PV system. The most important software feature, which was also the main reason to abandon ParaTNC/STM32F100 target, is moving from bare-metal-NoRTOS software to FreeRTOS. Starting from FA00 version, the ParaMETEO firmware is an embedded application runing on top of FreeRTOS kernel. 
 
-***Please remember than ParaTNC firmware no longer runs on STM32VLDSICOVERY board!***
-
-ParaTNC PCB could be manufactured used a set of generber files locates in ./hardware/ directory a long with schematics and layout renders (top and bottom layer). 
+Current feature set:
+ - Two directional KISS TNC (no init strings required).
+ - WIDE1-1 digipeater, with an option to limit digipeating only to SSIDs 7, 8 and 9.
+ - Weather station with support for various meteo sensors. Full list of supported devices in point section below.
+ - Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
+ - Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
+ - Support for UMB Binary porotocol as a mater.
+ - Support for Modbus RTU
+ - integrated MPPT charger for 12V AGM battery enclosed in the same case.
+ - integrated GSM module and support for APRS-IS communication (can run RX-igate)
+ - support for MAX31865 amplifier for 2, 3 or 4-wire PT100/PT1000 temperature sensor
+ - 7.5V dc converter to supply HT radio installed in the case for APRS radio network
 
 #### LICENSING
 
@@ -51,72 +48,10 @@ ParaTNC software and hardware are licensed under terms included to the source co
      - Bosh BMP280
      - Any Modbus-RTU sensor (F&F MB-AHT1 is recommended)
 
-
-#### SUPPORTED FEATURES OF VE.Direct PROTOCOL
-Most of Victron devices have a support both for binary and text serial protocol. By default the text procol (VE.Direct) is 
-always enabled and a device will send from its own telegrams each couple of seconds. The communication via VE.Direct is 
-avaliable through dedicated socket on the charging controller which is just 3.3V TTL levels UART, so no external ICs is 
-required to connect the PV controller to an evaluation board. In the MPPT series the comm socket is located on the bottom 
-side of the charging controller below the fuse holder.
-
-Exact pinout of the VE.Direct comm socket is as follows, assuming that terminal screws are facing down:
- + Ground
- + TX, data from host to the PV controller
- + RX, data from PV controller to the host
-
-The controller sends a lot of different data which cannot be completely transmitted through APRS network due to radioprotocol 
-limitations. Only these parameters are transmitted:
- + Battery Current (charging as positive, discharging as negative) in third channel of telemetry.
- + Battery Voltage as fourth telemetry channel.
- + PV cell Voltage as fifth telemetry channel.
- + Charging Controller status (like current charging mode) and minimum/maximum battery current in last 10 minutes.   
- + Error Codes if any (short circuit, overheat, overvoltage on PV or battery input)
-
-*** Please note that VE.Direct is supported only in ParaTNC. In theory it is possible to connect any Victron Energy controller to ParaMETEO, but it has no sense in practice. ParaMETEO has it's own integrated chaging controller. ***
-
 #### TELEMETRY
-If the VE.Direct protocol suppot is disabled the ParaTNC uses telemetry packets to send internal statistics and
-general information about communication with sensors. Telemetry works in 10 minutes cycle, which means that packets are sent
-every 10 minutes and they represents a state for the time between one and another. 
-
-Analog channels (ParaTNC):
-
-  - 1st Channel: Number of packets received in 10 minutes.
-  - 2nd Channel: Number of packets transmitted in 10 minutes (digi-ed + generated internally by the controller)
-  - 3rd Channel: Number of digipeated packets in 10 minutes.
-  - 4th Channel: Number of packet received from Host by KISS protocol
-  - 5th Channel: Optional temperature from Dalls One Wire sensor.
-
-
-Digital Channels (ParaTNC):
-  1. DS_QF_FULL	- Quality Factor for One Wire temperature sensor is FULL
-  2. DS_QF_DEGRAD	- Quality Factor for One Wire temperature sensor is DEGRADATED
-  3. DS_QF_NAVBLE	- Quality Factor for One Wire temperature sensor is NOT AVALIABLE
-  4. MS_QF_NAVBLE	- Quality Factor for MS5611 pressure sensor ins NOT AVALIABLE
-  5. DHT_QF_NAVBLE	- Quality Factor for DHT22 humidity & temperature is NOT AVALIABLE
-  6. WIND_QF_DEGR	- LaCrosse TX20 anemometer driver dropped at least one measuremenet due to excesive slew rate.
-  7. WIND_QF_NAVB	- 
-
-Explantion of Quality Factors: 
-
-Each measuremenets signal is kept along with the Quality Factor which represents the sensor condition
-and value validity. If the QF is set to FULL it means that no communication problems happened between one telemetry cycle and another
-DEGRADATED is set if at least once the communication problem happened (CRC calculation fail, timeout etc). NOT AVALIABLE is set
-if all communication atempts failed and no valid measuremenet value is avaliable. By default each Quality Factor is set to 
-NOT AVALIABLE after the telemetry packets are sent.  
+TBD 
 
 #### CONFIGURATION
-At this point ParaTNC is delivered in form of source code which needs to be manually compiled by the user. Most options are configured by #define in './include/station_config.h' and then hard-coded by the C preprocessor during compilation. An example file consist a lot of comments which explains what is what, but generally an user can choose there which mode should be enabled:
-	
-		Hardware Revision B & C:
-	-> KISS TNC
-	-> KISS TNC + DIGI
-	-> KISS TNC + DIGI + METEO
-	-> KISS TNC + VICTRON + DIGI + METEO
-	-> KISS TNC + VICTRON + DIGI
-	-> KISS TNC + UMB-MASTER + DIGI + METEO
-	
-
 Harcoded values from station_config.h are then used as defaults. Normally firmware loads config from separate sections in flash memory. Configuration is stored twice in two section, to enable easy and safe configuration change from host pc. Each section has a programming counter and CRC value. Software calculates checksum and use last good configuration. 
 
 			-> Defaults (only ParaTNC): 0x0801E000
@@ -128,7 +63,7 @@ trasmit channels values each 10 minutes and full channel descriptions each 70 mi
 
  
 #### TOOLCHAIN
-To build the ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler, gdb debugger, linker, HEX generator and set of libraries. ParaTNC is developed in Xubuntu 16.04LTS,  20.04LTS and 22.04 using toolchain in version 2018-q2. Please take note that You have to use 64-bit version of the operation system as the 32-bit variant of the toolchain is not avaliable. 
+To build the ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler, gdb debugger, linker, HEX generator and set of libraries. ParaTNC is/was developed in Xubuntu 16.04LTS,  20.04LTS, 22.04 and 24.04LTS using toolchain in version 2018-q2. Please take note that You have to use 64-bit version of the operation system as the 32-bit variant of the toolchain is not avaliable. 
 
 ***This firmware is developed using Eclipse IDE for Embedded C/C++ Developers in Version: 2023-03 (4.27.0)***
 
@@ -191,10 +126,9 @@ application which doesn't works exactly as it should because of optimalization c
 
 #### LOADING THE HEX FILE USING THE SERIAL BOOTLOADER
 
-If You don't have a JTAG programmer/debugger or You just not want to or can't use it for any reason, You can choose
-Internal Serial Bootloader provided by STMicroelectronics. It's code is stored in mask ROM within microcontroler
-and can be used anytime, and in scope of ParaTNC it practically cannot be disabled or locked. Please remember that
-this option is avaliable only if You're using ParaTNC PCB as STM32VLDISCOVERY board doesn't have TTL-RS232 converter.
+If You don't have a JTAG programmer/debugger, or You just not want to or can't use it for any reason, You can choose
+Internal Serial Bootloader provided by STMicroelectronics. It's code is stored in a mask ROM within microcontroler
+and can be used anytime, and in case of ParaTNC it cannot be disabled or locked.
 
 To use serial bootloader You need:
   - RJ45 to DB9 Cisco style RS232 cable
@@ -202,46 +136,19 @@ To use serial bootloader You need:
   
 The required software can be downloaded from this link: https://www.st.com/en/development-tools/flasher-stm32.html
 It is advised to read the user manual for this tool before proceding further. To jump to the bootloader You shall 
-disconect power to ParaTNC, then use something to short the jumper located at the left of JTAG connector (top-left
-corner of PCB) and with jumper shorted reconnect the power supply. If procedure success You shall NOT hear 
-relay clicking and LEDs blinking for a short while. After the power supply is connected and micro stays in bootloader
-you can disconnect the jumper and start the FlashLoader software to download the HEX file to micro. After process is done
-you should do a cold reset without jumper shorter. 
+disconnect power to ParaMETEO, then use something to short the jumper located by the JTAG connector and with jumper
+shorted, reconnect the power supply. If procedure success You shall NOT se LEDs blinking for a short while. 
+After the power supply is connected and micro stays in bootloader, you can disconnect the jumper and start 
+the FlashLoader software to download the HEX file to micro. After process is done you should do a  power reset 
+without jumper shorter. 
 
-#### LOADING THE HEX FILE INTO STM32VLDISCOVERY BOARD
-The STM32VLDISCOVERY board has an ST-Link/V1 programmer-debugger on board which can be used to load a HEX file.
-This ST-Link appears normally as a mass storage device which makes in unusable to be used by HEX loadin software
-in Linux (as the device will be 'blocked' by the mass-storage driver). To workaround this problem, a configuration
-of modprobe daemon should be changed to ignore the ST-Link and not load any driver for it.
-
-This is done by invoking a command:
- 'sudo echo "options usb-storage quirks=483:3744:i" >> /etc/modprobe.d/stlink_v1.conf'
-What will create a new file called 'stlink_v1.conf' in modprobe directory. After the system reboot changes should
-be applied and the programmer should be free to go. The kernel log should looks somehow like this below
-
-	[90639.895886] usb 2-1.1: new full-speed USB device number 13 using ehci-pci
-	[90639.990288] usb 2-1.1: New USB device found, idVendor=0483, idProduct=3744
-	[90639.990294] usb 2-1.1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-	[90639.990296] usb 2-1.1: Product: STM32 STLink
-	[90639.990298] usb 2-1.1: Manufacturer: STMicroelectronics
-	[90639.990300] usb 2-1.1: SerialNumber: Qÿr\xffffff86RV%X\xffffffc2\xffffff87
-	[90639.990796] usb-storage 2-1.1:1.0: USB Mass Storage device detected
-	[90639.992973] usb-storage 2-1.1:1.0: device ignored
-
-The next step is to install texane-stlink which supports the ST-Link/V1 programmer and can be used to read an write
-the flash memory. Installation is quite straight forward
+#### LOADING THE HEX FILE INTO ParaTNC or ParaMETEO TARGET USING STLINK/V2
 
 	'git clone git://github.com/texane/stlink.git'
 	'cd stlink.git'
 	'make'
 	'cd build/Relase'
 	'sudo cp st-* /usr/bin'
-
-At the end the HEX file can be loaded into the microcontroler by typing a command
-
-	'sudo st-flash --format ihex write /dev/sr0 ParaTNC.hex' 
-
- #### LOADING THE HEX FILE INTO ParaTNC or ParaMETEO TARGET USING STLINK/V2
 
 	mateusz@mateusz-ThinkCentre-M720q:~/Documents/___STM32/ParaTNC/STM32L476_ParaMETEO$ st-flash erase
 	st-flash 1.7.0-120-gbeffed4
@@ -267,6 +174,9 @@ At the end the HEX file can be loaded into the microcontroler by typing a comman
 	2023-11-17T07:44:52 INFO common.c: Flash written and verified! jolly good!
 
  #### LOADING THE HEX FILE INTO ParaTNC or ParaMETEO TARGET USING ROM BOOTLOADER AND STM32FLASH software
+
+stm32flash is a part of the reporistory for Ubuntu/Xubuntu 24.04 and Debian 12. It should be also available 
+in sligtly older versions of both distros
 
  Examples:
         Get device information:

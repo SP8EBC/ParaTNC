@@ -10,3 +10,11 @@ cd $DIR/include
 echo $(pwd)
 find . -type f -name "*.h" -exec clang-format -i {} \;
 
+cd $DIR/system/src
+echo $(pwd)
+find . -type f -name "*.h" -exec clang-format -i {} \;
+
+cd $DIR/system/include
+echo $(pwd)
+find . -type f -name "*.h" -exec clang-format -i {} \;
+

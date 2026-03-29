@@ -1,3 +1,141 @@
+// clang-format off
+/**
+   \mainpage ParaMETEO (formerly ParaTNC) firmware for weather station
+   *
+   * Introduction
+   * ------------
+   *
+   * ParaMETEO (and formerly ParaTNC) are two APRS weather station controllers. Both of them has
+   * common set of available features: AFSK 1200bd DSP modem, weather station controller,
+   * APRS radio network digipeater, RS232 interface to communication to/from host PC using
+   * KISS protocol (a.k.a. KISS modem).
+   *
+   * __ParaTNC__ was first platform, with roots coming as far as 2012. Currently, this platform is no
+   * longer supported and has been deprecated. It was using STM32F100 micro, which has too many
+   * limitations, to support all new features.
+   *
+   * __ParaMETEO__   is full outdoor and easy to install, complete APRS device which can be supplied
+   * with power either from mains and PV system. The most important software feature, which was also
+   * the main reason to abandon ParaTNC/STM32F100 target, is moving from bare-metal-NoRTOS software
+   * to FreeRTOS. Starting from FA00 version, the ParaMETEO firmware is an embedded application runing on top of FreeRTOS kernel.
+   *
+   * **This repo is still named ParaTNC, even if the source code no longer support ParaTNC hardware**
+   *
+   * Current feature set:
+   * - Two directional KISS TNC (no init strings required).
+   * - WIDE1-1 digipeater, with an option to limit digipeating only to SSIDs 7, 8 and 9.
+   * - Weather station with support for various meteo sensors. Full list of supported devices in point section below.
+   * - Extensive telemetry with an information about the count of receved, transmitted and digipeated frames plus status of weather sensors.
+   * - Support for VE.Direct serial protocol used in Victron PV charging controllers. The data about currents and voltages in the PV system are transmitted using APRS telemetry.
+   * - Support for UMB Binary porotocol as a mater.
+   * - Support for Modbus RTU
+   * - integrated MPPT charger for 12V AGM battery enclosed in the same case.
+   * - integrated GSM module and support for APRS-IS communication (can run RX-igate)
+   * - support for MAX31865 amplifier for 2, 3 or 4-wire PT100/PT1000 temperature sensor
+   * - 7.5V dc converter to supply HT radio installed in the case for APRS radio network
+   *
+   * <hr>
+   *
+   * Supported weather sensors
+   * --------------------------
+   * + Wind sensors:
+   *   - Davis 6410 or any another analogue anemometer with resisntance as a direction output and impulses as a windspeed
+   *   - Lufft V200A/Ventus or any other UMB compatible device.
+   *   - Any Modbus-RTU sensor
+   * + Pressure Sensors:
+   *   - MS5611
+   *   - Bosh BMP280
+   *   - Any UMB protocol compatible device
+   *   - Any Modbus-RTU sensor
+   * + Temperature sensors:
+   *  - Dallas One wire DS18B20
+   *  - Two, three or four wire PT100/PT1000
+   *  - Any UMB protocol compatible device
+   *  - Any Modbus-RTU sensor
+   * + Humidity Sensors:
+   *  - DHT22
+   *  - Bosh BMP280
+   *  - Any Modbus-RTU sensor (F&F MB-AHT1 is recommended)
+   *
+   * <hr>
+   *
+   * Source code structure
+   * ---------------------
+   *
+   * |File/Folder                              |Content                                                                                                                          |
+   * |-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+   * |\b src					               | Main application source directory. All RTOS tasks, handlers for meteo sensors and data transmission, APRS-IS and NTP clients    |
+   * |\b src/kiss_protocol		               | Source files located directly here handles KISS proto communication via serial port and APRS messages and calls to/from diagnostics    |
+   * |\b src/kiss_protocol/diagnostics_services| Handler for KISS diagnostics services, like: read DID, read memory, routine control etc.                                        |
+   * |\b src/kiss_protocol/diagnostics_routines| Implementation of all diagnostics routines. All of those match common interface with start/stop/status                          |
+   * |\b src/tasks                             | Implementation of all application FreeRTOS tasks. Both "regular" tasks and event handlers                                       |
+   * |\b include					           | Main application include directory                                                                                              |
+   * |\b system/freertos	                   | Source code for the FreeRTOS kernel + portable implementation (V11.1.0). FreeRTOSConfig.h is here                               |
+   * |\b system/3rd_party                      | 3rd_party code used in the project. ST Hardware Abstraction Layer & Low-Level drivers, FatFS, ST DSP library for Cortex-M4F     |
+   * |\b system/include                        | Directories with headers, matching subdirs in system/src                                                                        |
+   * |\b system/src/aprs                       | AFSK 1200bd radiomodem DSP code and AX25/APRS protocol stack                                                                    |
+   * |\b system/src/cmsis/stm32l4xx            | Despite the name, there is the startup code, handlers for HardFault and another exceptions, plus PLL clock & RTC code           |
+   * |\b system/src/davis_vantage              | Parser for protocol used in Davis Vantage weather stations                                                                      |
+   * |\b system/src/drivers                    | Drivers for UARTs, I2C and SPI controllers, also for sensors connected to these buses. Drivers writes to registers directly or sometimes uses STM low-level drivers  |
+   * |\b system/src/dust_sensor                | Code to decode data sent by SDS011 PM dust sensors                                                                              |
+   * |\b system/src/gsm                        | Simcom SIM800C drivers. Handling AT commands, initialization and engineering data. Also GPRS and TCP/IP stack                   |
+   * |\b system/src/http_client                | As name suggests this is the HTTP client. Currently it supports HTTP1.1 and POST and GET methods to exchange JSON payloads      |
+   * |\b system/src/modbus_rtu                 | Modbus-RTU code with I/O handling. It supports only functions 3 (Read Holding Registers) and 4 (Read Input Registers )          |
+   * |\b system/src/sxytrax_fanet              | C-remimplementation of official Skytraxx FANET stack https://github.com/3s1d/fanet-stm32                                        |
+   * |\b system/src/tiny-aes                   | AES128 and AES256 implementation. Should be rather moved do 3rd_party                                                           |
+   * |\b system/src/tm                         | highly modified Tilen MAJERLE to set and get RTC date and time                                                                  |
+   * |\b system/src/umb_master                 | UMB master code, which can use service 0x23 and 0x26                                                                            |
+   *
+   *
+   * <hr>
+   *
+   *
+   * Toolchain
+   * ---------
+   *
+   * To build the ParaTNC software 'GNU ARM Embedded Toolchain' is required. This set contains gcc-arm-none-eabi compiler, gdb debugger, linker, HEX generator and set of libraries. ParaTNC is/was developed in Xubuntu 16.04LTS,  20.04LTS, 22.04 and 24.04LTS using toolchain in version 2018-q2. Please take note that You have to use 64-bit version of the operation system as the 32-bit variant of the toolchain is not avaliable.
+   *
+   * ***This firmware is developed using Eclipse IDE for Embedded C/C++ Developers in Version: 2023-03 (4.27.0)***
+   *
+   * Exact GCC version is 7.3.1 and it present itself with a string like this below
+   * gcc version 7.3.1 20180622 (release) [ARM/embedded-7-branch revision 261907] (GNU Tools for Arm Embedded Processors 7-2018-q2-update)
+   *
+   *	Self conatined TAR.BZ2 archive with all required tools can be found here:
+   *	https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
+   *	in 'What's new in 7-2018-q2-update' section pulled down from the list located in the middle of this site.
+   * 	Alternatively You can use this link: http://pogoda.cc/d/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+   *
+   *	After download the content of this archive has to be uncompressed into: /usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/
+   *	so the structure should looks like this
+   *
+   *		mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$ ls -la
+   *		total 24
+   *		drwxrwxr-x 6 mateusz mateusz 4096 paź 10 08:35 .
+   *		drwxr-xr-x 7 root    root    4096 paź 10 18:06 ..
+   *		drwxr-xr-x 6 mateusz mateusz 4096 cze 22  2018 arm-none-eabi
+   *		drwxr-xr-x 2 mateusz mateusz 4096 cze 22  2018 bin
+   *		drwxr-xr-x 3 mateusz mateusz 4096 cze 22  2018 lib
+   *		drwxr-xr-x 4 mateusz mateusz 4096 cze 22  2018 share
+   *		mateusz@mateusz-ThinkCentre-M720q:/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update$
+   *
+   *	Both a makefile and an Eclipse project are configured to look for toolchain in this directory. In some cases to perform a debugging in Elipse You will have to install libncurses5 library which is required to start GDB. To check if this is a case try to start the debugger manually by issuing such command in the prompt
+   *
+   *	 '/usr/local/bin/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gdb --version'
+   *
+   *	If such result will be printed in the console, libncurses5 must be installed, prefferably using system package manager like aptitude in Debian/Ubuntu
+   *
+   *	 'libraries: libncurses.so.5: cannot open shared object file: No such file or directory'
+   *
+   *	To start debugging session in Eclipse you must create new 'GDB OpenOCD Debugging' configuration and set paths to OpenOCD and GDB in 'Debugger' tab. OpenOCD usually sits in '/usr/bin/openocd', the path to GDB is shown in the paragraph before. Remember to set 'Config Options:' to tell the OpenOCD what JTAG adapter/debugger is used in Your setup. If You're using ST-Link/V2 paste '-f interface/stlink-v2.cfg -f target/stm32f1x_stlink.cfg'
+   *
+   *
+   * Flashing HEX file into ParaMETEO hardware
+   * ------------------------------------------
+   * Please refer to \ref README.md file
+   */
+
+// clang-format on
+
 #include "main.h"
 #include "main_freertos_externs.h"
 #include "main_gsm_pool_handler.h"
