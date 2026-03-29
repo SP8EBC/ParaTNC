@@ -10,6 +10,7 @@ Release/
 /temp/
 *.bin
 *.log
+/doc/doxygen/*
 
 /STM32F100/
 /STM32F100_ParaTNC/
