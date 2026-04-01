@@ -8,6 +8,7 @@
 #ifndef ETC_SUPERVISOR_CONFIG_H_
 #define ETC_SUPERVISOR_CONFIG_H_
 
+// clang-format off
 
 #define SUPERVISOR_CONFIG(ENTRY)										\
 			/* Thread or library,		timeout seconds - max 65535 */	\
@@ -25,7 +26,7 @@
 	ENTRY(	EVENT_SRL_KISS_RX_DONE,		65530)							\
 	ENTRY(	EVENT_SRL_KISS_TX_DONE,		65530)							\
 
-
+// clang-format on
 
 
 #endif /* ETC_SUPERVISOR_CONFIG_H_ */

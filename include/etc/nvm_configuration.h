@@ -3,6 +3,8 @@
 
 #include "./drivers/l4/flash_stm32l4x.h"
 
+// clang-format off
+
 /**
  * Configuration of all event logger targets
  *
@@ -52,5 +54,7 @@
 #define NVM_CONFIG_DISABLE_PGM                              \
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);                \
 	FLASH_Lock();                                           
+
+// clang-format on
 
 #endif /* A829659A_5A6C_450A_B678_DF44F9CAFB9B */

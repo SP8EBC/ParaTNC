@@ -8,6 +8,7 @@
 #ifndef ETC_TASKS_LIST_H_
 #define ETC_TASKS_LIST_H_
 
+// clang-format off
 
 #define TASKS_LIST(ENTRY)																			\
 		/* 	task_entry_point, 				task_name_string, 	stack_size, 					params, priority, 				output_handle */	\
@@ -26,5 +27,7 @@
 	ENTRY(	task_event_kiss_tx_done,		"tev_serial_kiss_tx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_kiss_tx_done_handle)	\
 	ENTRY(	task_event_gsm_rx_done,			"tev_serial_gsm_rx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_gsm_rx_done_handle)	\
 	ENTRY(	task_event_gsm_tx_done,			"tev_serial_gsm_tx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_gsm_tx_done_handle)	\
+
+// clang-format on
 
 #endif /* ETC_TASKS_LIST_H_ */

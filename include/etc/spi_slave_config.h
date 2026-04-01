@@ -17,6 +17,7 @@
 
 #define PRINT_SLAVE(id, gpio, pin)	{id, (uint32_t)gpio, pin},
 
+// clang-format off
 
 #define EVAL_SLAVE_ARR	\
 	uint32_t spi_slaves_cfg[3][9] = {	\
@@ -32,6 +33,6 @@
 
 #endif
 
-
+// clang-format on
 
 #endif /* ETC_SPI_SLAVE_CONFIG_H_ */

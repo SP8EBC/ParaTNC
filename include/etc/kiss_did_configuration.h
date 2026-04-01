@@ -34,6 +34,8 @@
 #include "memory_map.h"
 #include "drivers/max31865.h"
 
+// clang-format off
+
 //!< Dummy variable used only as end of definition marker in tables
 extern char did_dummy_data;
 
@@ -117,5 +119,7 @@ extern char did_dummy_data;
 		ENTRY(0xFFFFU, did_dummy_data, did_dummy_data, did_dummy_data)	\
 
 #endif
+
+// clang-format on
 
 #endif /* KISS_DID_CONFIGURATION_H_ */

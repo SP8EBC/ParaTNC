@@ -12,12 +12,14 @@
 #define MNC_POLSKA_ORANGE									3u
 #define MNC_POLSKA_PLAY									6u
 
+// clang-format off
+
 #define PREPROGRAMMED_GPRS_APN_LIST(ENTRY)							\
 	/* MCC (country code), 	MNC (network code), 		APN name, 	user, 		password */				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLUS_POLKOMTEL, 	"internet", "internet", "internet")				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_ORANGE, 	"internet", "internet", "internet")				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLAY, 			"internet", "", 		"")						\
 
-
+// clang-format on
 
 #endif /* ETC_PREPROGRAMMED_GPRS_APN_LIST_H_ */
