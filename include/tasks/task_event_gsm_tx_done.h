@@ -8,9 +8,6 @@
 #ifndef TASKS_TASK_EVENT_GSM_TX_DONE_H_
 #define TASKS_TASK_EVENT_GSM_TX_DONE_H_
 
-
-
 void task_event_gsm_tx_done (void *param);
-
 
 #endif /* TASKS_TASK_EVENT_GSM_TX_DONE_H_ */

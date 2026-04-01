@@ -19,13 +19,12 @@
  */
 #define CONFIG_AFSK_RXTIMEOUT 0
 
-
 /**
  * AFSK Preamble length in [ms], before starting transmissions.
  * $WIZ$ type = "int"
  * $WIZ$ min = 1
  */
-#define CONFIG_AFSK_PREAMBLE_LEN 400UL			/// 300
+#define CONFIG_AFSK_PREAMBLE_LEN 400UL /// 300
 
 /**
  * AFSK Trailer length in [ms], before stopping transmissions.
@@ -33,6 +32,5 @@
  * $WIZ$ min = 1
  */
 #define CONFIG_AFSK_TRAILER_LEN 50UL
-
 
 #endif /* CONFIG_H_ */

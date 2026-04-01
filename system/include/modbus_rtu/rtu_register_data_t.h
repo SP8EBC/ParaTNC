@@ -22,8 +22,8 @@ typedef struct rtu_register_data {
 
 	uint16_t registers_values[MODBUS_RTU_MAX_REGISTERS_AT_ONCE];
 
-	//uint32_t last_update_timestamp;
+	// uint32_t last_update_timestamp;
 
-}rtu_register_data_t;
+} rtu_register_data_t;
 
 #endif /* INCLUDE_MODBUS_RTU_RTU_REGISTER_DATA_T_H_ */

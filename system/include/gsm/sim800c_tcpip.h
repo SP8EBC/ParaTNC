@@ -8,8 +8,8 @@
 #ifndef INCLUDE_GSM_SIM800C_TCPIP_H_
 #define INCLUDE_GSM_SIM800C_TCPIP_H_
 
-#define TEST_IP 	"euro.aprs2.net\0"
-#define TEST_PORT	"14580\0"
+#define TEST_IP	  "euro.aprs2.net\0"
+#define TEST_PORT "14580\0"
 
 #include <stdint.h>
 
@@ -18,11 +18,11 @@
 #include "gsm/sim800_return_t.h"
 #include "gsm/sim800_state_t.h"
 
-extern const char * TCP2;
-extern const char * TCP3;
-extern const char * TCP4;
+extern const char *TCP2;
+extern const char *TCP3;
+extern const char *TCP4;
 
-typedef void(*gsm_sim800_tcpip_receive_callback_t)(srl_context_t*);
+typedef void (*gsm_sim800_tcpip_receive_callback_t) (srl_context_t *);
 
 /**
  * Starts TCP connection or UDP session
@@ -35,7 +35,9 @@ typedef void(*gsm_sim800_tcpip_receive_callback_t)(srl_context_t*);
  * @param tcp_or_udp zero if TCP connection shall be established, non zero value for udp
  * @return
  */
-sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t address_ln, char * port, uint8_t port_ln, srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t tcp_or_udp);
+sim800_return_t gsm_sim800_tcpip_connect (char *ip_or_dns_address, uint8_t address_ln, char *port,
+										  uint8_t port_ln, srl_context_t *srl_context,
+										  gsm_sim800_state_t *state, uint8_t tcp_or_udp);
 
 /**
  *
@@ -46,7 +48,10 @@ sim800_return_t gsm_sim800_tcpip_connect(char * ip_or_dns_address, uint8_t addre
  * @param rx_done_callback
  * @return
  */
-sim800_return_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout, gsm_sim800_tcpip_receive_callback_t rx_done_callback);
+sim800_return_t
+gsm_sim800_tcpip_async_receive (srl_context_t *srl_context, gsm_sim800_state_t *state,
+								srl_rx_termination_callback_t rx_callback, uint32_t timeout,
+								gsm_sim800_tcpip_receive_callback_t rx_done_callback);
 
 /**
  *
@@ -58,7 +63,10 @@ sim800_return_t gsm_sim800_tcpip_async_receive(srl_context_t * srl_context, gsm_
  * @param timeout
  * @return
  */
-sim800_return_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size, srl_context_t * srl_context, gsm_sim800_state_t * state, srl_rx_termination_callback_t rx_callback, uint32_t timeout);
+sim800_return_t gsm_sim800_tcpip_receive (uint8_t *buffer, uint16_t buffer_size,
+										  srl_context_t *srl_context, gsm_sim800_state_t *state,
+										  srl_rx_termination_callback_t rx_callback,
+										  uint32_t timeout);
 
 /**
  *
@@ -68,7 +76,9 @@ sim800_return_t gsm_sim800_tcpip_receive(uint8_t * buffer, uint16_t buffer_size,
  * @param state
  * @return
  */
-sim800_return_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state);
+sim800_return_t gsm_sim800_tcpip_async_write (uint8_t *data, uint16_t data_len,
+											  srl_context_t *srl_context,
+											  gsm_sim800_state_t *state);
 
 /**
  *
@@ -78,7 +88,8 @@ sim800_return_t gsm_sim800_tcpip_async_write(uint8_t * data, uint16_t data_len, 
  * @param state
  * @return
  */
-sim800_return_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_context_t * srl_context, gsm_sim800_state_t * state);
+sim800_return_t gsm_sim800_tcpip_write (uint8_t *data, uint16_t data_len,
+										srl_context_t *srl_context, gsm_sim800_state_t *state);
 
 /**
  * Closes established TCP connection
@@ -91,9 +102,10 @@ sim800_return_t gsm_sim800_tcpip_write(uint8_t * data, uint16_t data_len, srl_co
  *			SIM800_TCP_CLOSE_UNCERTAIN no valid response was received from gprs module on disconnect
  *request SIM800_WRONG_STATE_TO_CLOSE no connection has been
  */
-sim800_return_t gsm_sim800_tcpip_close(srl_context_t * srl_context, gsm_sim800_state_t * state, uint8_t force);
+sim800_return_t gsm_sim800_tcpip_close (srl_context_t *srl_context, gsm_sim800_state_t *state,
+										uint8_t force);
 
-void gsm_sim800_tcpip_rx_done_callback(srl_context_t * srl_context, gsm_sim800_state_t * state);
+void gsm_sim800_tcpip_rx_done_callback (srl_context_t *srl_context, gsm_sim800_state_t *state);
 
 /**
  * Callback used from serial port context, to notify that a transmission during active TCP
@@ -116,9 +128,11 @@ void gsm_sim800_tcpip_tx_done_callback (srl_context_t *srl_context, gsm_sim800_s
  */
 uint8_t gsm_sim800_tcpip_tx_busy (void);
 
-uint8_t gsm_sim800_newline_terminating_callback(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
+uint8_t gsm_sim800_newline_terminating_callback (uint8_t current_data,
+												 const uint8_t *const rx_buffer,
+												 uint16_t rx_bytes_counter);
 
-void gsm_sim800_tcpip_reset(void);
+void gsm_sim800_tcpip_reset (void);
 
 // uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter
 

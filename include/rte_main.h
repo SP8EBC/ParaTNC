@@ -2,31 +2,31 @@
 #ifndef RTE_MAIN_H_
 #define RTE_MAIN_H_
 
-#include <stdint.h>
-#include "stored_configuration_nvm/config_data.h"
-#include "message.h"
 #include "etc/misc_config.h"
 #include "event_log_t.h"
+#include "message.h"
 #include "nvm/nvm_t.h"
+#include "stored_configuration_nvm/config_data.h"
+#include <stdint.h>
 
 #include <FreeRTOS.h>
 #include <task.h>
 
 //! Lenght of a buffer for KISS diagnostic request
-#define MAIN_KISS_FROM_MESSAGE_LEN		33
+#define MAIN_KISS_FROM_MESSAGE_LEN 33
 
 //!< Set immediately after waking up in RTC interrupt handler
-#define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT			1u
+#define RTE_MAIN_WOKEN_UP_RTC_INTERRUPT 1u
 
 //!< Set after exiting from RTC interrupt, but before reinitializing clocks
-#define RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP		2u
+#define RTE_MAIN_WOKEN_UP_AFTER_LAST_SLEEP 2u
 
 //!< Set after everything was reinitialized from
-#define RTE_MAIN_WOKEN_UP_EXITED				4u
+#define RTE_MAIN_WOKEN_UP_EXITED 4u
 
-#define RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP		8u
+#define RTE_MAIN_GO_TO_INTERMEDIATE_SLEEP 8u
 
-#define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG	1u
+#define RTE_MAIN_REBOOT_SCHEDULED_APRSMSG 1u
 
 // clang-format off
 #define RTE_MAIN_GET_FOR_ASSERT()	(rte_main_trigger_message_ack & 0x1u) | \
@@ -36,11 +36,9 @@
 									((rte_main_trigger_gsm_status & 0x1u) << 4) | \
 									((rte_main_trigger_gsm_event_log & 0x1u) << 5) | \
 									((rte_main_trigger_radio_event_log & 0x1u) << 6) | \
-									((rte_main_trigger_wx_packet & 0x1u) << 7) \
-// clang-format on
+									((rte_main_trigger_wx_packet & 0x1u) << 7) // clang-format on
 
-typedef struct rte_main_tasks_load_t
-{
+typedef struct rte_main_tasks_load_t {
 	uint32_t task_main;
 	uint32_t task_powersave;
 	uint32_t task_one_sec;
@@ -55,10 +53,9 @@ typedef struct rte_main_tasks_load_t
 	uint32_t tev_ntp_api;
 	uint32_t tev_radio_message;
 	uint32_t idle;
-}rte_main_tasks_cpuload_t;
+} rte_main_tasks_cpuload_t;
 
-typedef struct rte_main_tasks_state_t
-{
+typedef struct rte_main_tasks_state_t {
 	uint32_t master_time;
 	eTaskState task_main;
 	eTaskState task_powersave;
@@ -74,7 +71,7 @@ typedef struct rte_main_tasks_state_t
 	eTaskState tev_ntp_api;
 	eTaskState tev_radio_message;
 	eTaskState idle;
-}rte_main_tasks_state_t;
+} rte_main_tasks_state_t;
 
 extern message_t rte_main_received_message;
 

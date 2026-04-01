@@ -8,9 +8,6 @@
 #ifndef TASKS_TASK_EVENT_KISS_TX_DONE_H_
 #define TASKS_TASK_EVENT_KISS_TX_DONE_H_
 
-
 void task_event_kiss_tx_done (void *param);
-
-
 
 #endif /* TASKS_TASK_EVENT_KISS_TX_DONE_H_ */

@@ -10,8 +10,7 @@
 
 #include <stdint.h>
 
-uint8_t kiss_read_memory_response(uint32_t address, uint8_t size, uint8_t * output_buffer, uint16_t buffer_ln);
-
-
+uint8_t kiss_read_memory_response (uint32_t address, uint8_t size, uint8_t *output_buffer,
+								   uint16_t buffer_ln);
 
 #endif /* KISS_COMMUNICATION_KISS_READ_MEMORY_H_ */

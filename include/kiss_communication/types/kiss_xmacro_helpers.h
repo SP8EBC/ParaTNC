@@ -8,7 +8,7 @@
 #ifndef KISS_XMACRO_HELPERS_H_
 #define KISS_XMACRO_HELPERS_H_
 
-#define DID_EMPTY	did_dummy_data
+#define DID_EMPTY did_dummy_data
 
 // clang-format off
 /// ==================================================================================================

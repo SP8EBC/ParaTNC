@@ -8,21 +8,20 @@
 #ifndef NVM_H_
 #define NVM_H_
 
-#include <stdint.h>
 #include "nvm_t.h"
+#include <stdint.h>
 
 /// ==================================================================================================
 ///	GLOBAL DEFINES
 /// ==================================================================================================
 
-#define NVM_RECORD_SIZE		8		// in bytes!!
-
+#define NVM_RECORD_SIZE 8 // in bytes!!
 
 /// ==================================================================================================
 ///	GLOBAL TYPES
 /// ==================================================================================================
 
-typedef struct __attribute__((packed)) nvm_measurement_t {
+typedef struct __attribute__ ((packed)) nvm_measurement_t {
 	/**
 	 * Date-time timestamp in timezone local for a place where station is installed.
 	 * Mixture of BCD and integer format, this is just sligtly processed RTC registers
@@ -50,32 +49,29 @@ typedef struct __attribute__((packed)) nvm_measurement_t {
 	 */
 	uint16_t wind;
 
-}nvm_measurement_t;
-
-
+} nvm_measurement_t;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-
 /**
  *
  */
-void nvm_measurement_init(void);
+void nvm_measurement_init (void);
 
 /**
  *
  * @param data
  * @return
  */
-nvm_state_after_last_oper_t nvm_measurement_store(nvm_measurement_t * data);
+nvm_state_after_last_oper_t nvm_measurement_store (nvm_measurement_t *data);
 
 /**
  *
  */
-void nvm_erase_all(void);
+void nvm_erase_all (void);
 
-void nvm_test_prefill(void);	///<! Only for test purposes!
+void nvm_test_prefill (void); ///<! Only for test purposes!
 
 #endif /* NVM_H_ */

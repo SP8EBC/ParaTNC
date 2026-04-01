@@ -20,6 +20,6 @@ typedef struct rtu_frame_t {
 	uint8_t data[RTU_MAXIMUM_DATA_LN];
 
 	uint16_t crc;
-}rtu_frame_t;
+} rtu_frame_t;
 
 #endif /* INCLUDE_MODBUS_RTU_RTU_FRAME_T_H_ */

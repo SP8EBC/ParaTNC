@@ -12,9 +12,8 @@
 
 #include <stdint.h>
 
-int32_t kiss_callback_program_startup(uint8_t* input_frame_from_host, uint16_t input_len, uint8_t* response_buffer, uint16_t buffer_size, kiss_communication_transport_t transport_media);
-
-
-
+int32_t kiss_callback_program_startup (uint8_t *input_frame_from_host, uint16_t input_len,
+									   uint8_t *response_buffer, uint16_t buffer_size,
+									   kiss_communication_transport_t transport_media);
 
 #endif /* KISS_COMMUNICATION_DIAGNOSTICS_SERVICES_KISS_PROGRAM_STARTUP_H_ */

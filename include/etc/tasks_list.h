@@ -26,7 +26,7 @@
 	ENTRY(	task_event_kiss_rx_done,		"tev_serial_kiss",	configMINIMAL_STACK_SIZE, 		NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_kiss_rx_done_handle)	\
 	ENTRY(	task_event_kiss_tx_done,		"tev_serial_kiss_tx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_kiss_tx_done_handle)	\
 	ENTRY(	task_event_gsm_rx_done,			"tev_serial_gsm_rx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_gsm_rx_done_handle)	\
-	ENTRY(	task_event_gsm_tx_done,			"tev_serial_gsm_tx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_gsm_tx_done_handle)	\
+	ENTRY(	task_event_gsm_tx_done,			"tev_serial_gsm_tx",	configMINIMAL_STACK_SIZE, 	NULL,	tskIDLE_PRIORITY + 8, 	task_ev_serial_gsm_tx_done_handle)
 
 // clang-format on
 

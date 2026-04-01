@@ -10,8 +10,6 @@
 
 #include <stdint.h>
 
-uint8_t kiss_did_response(uint16_t identifier, uint8_t * output_buffer, uint16_t buffer_ln);
-
-
+uint8_t kiss_did_response (uint16_t identifier, uint8_t *output_buffer, uint16_t buffer_ln);
 
 #endif /* KISS_COMMUNICATION_KISS_DID_H_ */

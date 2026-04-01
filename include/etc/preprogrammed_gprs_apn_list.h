@@ -8,9 +8,9 @@
 #ifndef ETC_PREPROGRAMMED_GPRS_APN_LIST_H_
 #define ETC_PREPROGRAMMED_GPRS_APN_LIST_H_
 
-#define MNC_POLSKA_PLUS_POLKOMTEL						10
-#define MNC_POLSKA_ORANGE									3u
-#define MNC_POLSKA_PLAY									6u
+#define MNC_POLSKA_PLUS_POLKOMTEL 10
+#define MNC_POLSKA_ORANGE		  3u
+#define MNC_POLSKA_PLAY			  6u
 
 // clang-format off
 
@@ -18,7 +18,7 @@
 	/* MCC (country code), 	MNC (network code), 		APN name, 	user, 		password */				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLUS_POLKOMTEL, 	"internet", "internet", "internet")				\
 	ENTRY(MCC_POLSKA, 		MNC_POLSKA_ORANGE, 	"internet", "internet", "internet")				\
-	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLAY, 			"internet", "", 		"")						\
+	ENTRY(MCC_POLSKA, 		MNC_POLSKA_PLAY, 			"internet", "", 		"")
 
 // clang-format on
 

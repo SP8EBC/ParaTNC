@@ -14,6 +14,6 @@ typedef enum umb_call_reason_t {
 	REASON_RECEIVE_IDLE,
 	REASON_RECEIVE_ERROR,
 	REASON_IDLE
-}umb_call_reason_t;
+} umb_call_reason_t;
 
 #endif /* INCLUDE_UMB_MASTER_UMB_CALL_REASON_H_ */

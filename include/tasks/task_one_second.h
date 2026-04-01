@@ -8,8 +8,6 @@
 #ifndef TASK_ONE_SECOND_H_
 #define TASK_ONE_SECOND_H_
 
-
 void task_one_second (void *parameters);
-
 
 #endif /* TASK_ONE_SECOND_H_ */

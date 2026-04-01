@@ -34,7 +34,7 @@ typedef struct fanet_wx_input_t {
 	uint16_t wind_gusts;
 	int8_t humidity;
 	uint16_t qnh;
-}fanet_wx_input_t;
+} fanet_wx_input_t;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES

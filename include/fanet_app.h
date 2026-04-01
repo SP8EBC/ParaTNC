@@ -32,11 +32,11 @@ extern int fanet_tx_success_cnt;
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-void fanet_test_init(void);
+void fanet_test_init (void);
 
 /**
  * Only a test
  */
-int fanet_test(void);
+int fanet_test (void);
 
 #endif /* FANET_APP_H_ */

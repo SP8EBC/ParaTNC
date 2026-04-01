@@ -14,13 +14,14 @@
  *                              outside this file by @link{kiss_callback_routine_control}
  *
  * NRC_REQUEST_SEQUENCE_ERROR - will be returned if stop request will be sent for routine which
- *                              is not running, or starting async routine which is running now. 
- *                              it is also returned for get result request for routine which either 
- *                              hasn't been started yet, or it has been started and currently running.
+ *                              is not running, or starting async routine which is running now.
+ *                              it is also returned for get result request for routine which either
+ *                              hasn't been started yet, or it has been started and currently
+ * running.
  *
  * NRC_INCORRECT_MESSAGE_LENGTH_OR_FORMAT - will be returned if parameters values are wrong, so
  *                                          routine refuses to start
- * 
+ *
  * NRC_SUBFUNCTION_NOT_SUPPORTED - will be returned for any stop request for synchronous routine
  *
  *  Created on: Sep 8, 2024
@@ -41,61 +42,61 @@
 /// ==================================================================================================
 
 //!< Diagnostic routine runs asynchronously but it doesn't stops on its own
-#define KISS_ROUTINE_CONTROL_ASYNCHRONOUS           (1u)
+#define KISS_ROUTINE_CONTROL_ASYNCHRONOUS (1u)
 
-//!< Routine runs asynchronously and it stops automatically 
-#define KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP  (2u)
+//!< Routine runs asynchronously and it stops automatically
+#define KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP (2u)
 
 //!< Routine has blocking I/O and ends automatically after starting
-#define KISS_ROUTINE_CONTROL_SYNCHRO                (3u)
+#define KISS_ROUTINE_CONTROL_SYNCHRO (3u)
 
 //!< Value of subfunction in diagnostic frame to start routine
-#define KISS_ROUTINE_CONTROL_SUBFUNC_START                  (1u)
+#define KISS_ROUTINE_CONTROL_SUBFUNC_START (1u)
 
 //!< Value of subfunction in diagnostic frame to stop routine
-//!< Valid only for KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP 
+//!< Valid only for KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP
 //!< or KISS_ROUTINE_CONTROL_ASYNCHRONOUS. Synchronous routine
 //!< will always stop itself
-#define KISS_ROUTINE_CONTROL_SUBFUNC_STOP                   (2u)
+#define KISS_ROUTINE_CONTROL_SUBFUNC_STOP (2u)
 
-//!< Value of subfunction in diagnostic frame to request for returning 
-#define KISS_ROUTINE_CONTROL_SUBFUNC_RESULT                 (3u)
+//!< Value of subfunction in diagnostic frame to request for returning
+#define KISS_ROUTINE_CONTROL_SUBFUNC_RESULT (3u)
 
 //!< General success
-#define KISS_ROUTINE_RETVAL_SUCCESS                          (0u)
+#define KISS_ROUTINE_RETVAL_SUCCESS (0u)
 
 //!< Values of all parameters have been validated by a routine and it decides to start
-#define KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED             (1u)
+#define KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED (1u)
 
-#define KISS_ROUTINE_RETVAL_NOT_FOUND                        (2u)
+#define KISS_ROUTINE_RETVAL_NOT_FOUND (2u)
 
 //!< May be returned by start function if incorrect parameters was submitted in a request
-#define KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES              (3u)
+#define KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES (3u)
 
 //!< A request for starting a routine was sent while this routine is already started
-#define KISS_ROUTINE_RETVAL_ALREADY_STARTED                  (4u)
+#define KISS_ROUTINE_RETVAL_ALREADY_STARTED (4u)
 
 //!< Synchronous routines cannot be stopped by diagnostics request. they simply starts, blocks
 //!< io and ends on theirs now. Then a positive response to routine start request is send back
-#define KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE         (5u)
+#define KISS_ROUTINE_RETVAL_STOP_FOR_SYNCHRO_ROUTINE (5u)
 
-//!< Stop request has been sent but the routine is not running 
-#define KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING             (6u)
+//!< Stop request has been sent but the routine is not running
+#define KISS_ROUTINE_RETVAL_STOP_FOR_NOT_RUNNING (6u)
 
-#define KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR       (255u)
+#define KISS_ROUTINE_RETVAL_GENERAL_CATASTROPHIC_ERROR (255u)
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
 /// ==================================================================================================
 
-//!< Routine control start function 
-typedef uint8_t(*kiss_routine_control_start_t)(uint32_t lparam, uint16_t wparam);
+//!< Routine control start function
+typedef uint8_t (*kiss_routine_control_start_t) (uint32_t lparam, uint16_t wparam);
 
-//!< Routine control stop function 
-typedef void(*kiss_routine_control_stop_t)(void);
+//!< Routine control stop function
+typedef void (*kiss_routine_control_stop_t) (void);
 
 //!< Routine control get result function
-typedef uint16_t(*kiss_routine_control_getresult_t)(void);
+typedef uint16_t (*kiss_routine_control_getresult_t) (void);
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -106,27 +107,27 @@ typedef uint16_t(*kiss_routine_control_getresult_t)(void);
 /// ==================================================================================================
 
 /**
- * Callback, which must be used by all routines defined as KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP
- * after the operation is done 
+ * Callback, which must be used by all routines defined as
+ * KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP after the operation is done
  */
-void kiss_routine_control_done_callback(uint16_t routine_id);
+void kiss_routine_control_done_callback (uint16_t routine_id);
 
 /**
  * Checks if routine with given id exists and returns it's type
  * @param id of routine to check
- * @returns zero if routine doesn't exists or KISS_ROUTINE_CONTROL_ASYNCHRONOUS or 
+ * @returns zero if routine doesn't exists or KISS_ROUTINE_CONTROL_ASYNCHRONOUS or
  *          KISS_ROUTINE_CONTROL_ASYNCHRONOUS_AUTOSTOP or KISS_ROUTINE_CONTROL_SYNCHRO depends on
  *          routine configuration
  */
-uint8_t kiss_routine_control_check_routine_id(uint16_t id);
+uint8_t kiss_routine_control_check_routine_id (uint16_t id);
 
 /**
- * This checks if routine result is available or not. It is required because any value returned 
- * from @link{kiss_routine_control_get_result_routine} may be right and correct value. This is 
+ * This checks if routine result is available or not. It is required because any value returned
+ * from @link{kiss_routine_control_get_result_routine} may be right and correct value. This is
  * not C++ so we don't have std::optional handy
- * @returns zero if result is not available 
+ * @returns zero if result is not available
  */
-uint8_t kiss_routine_control_check_result_available(uint16_t id);
+uint8_t kiss_routine_control_check_result_available (uint16_t id);
 
 /**
  * Start given diagnostic routine by using a function hardcoded in @link{kiss_routine_definitions}
@@ -135,20 +136,20 @@ uint8_t kiss_routine_control_check_result_available(uint16_t id);
  * @param lparam longer parameter to a routine
  * @returns KISS_ROUTINE_RETVAL_SUCCESSFULLY_STARTED if parameters are OK and routine is started
  *          KISS_ROUTINE_RETVAL_WRONG_PARAMS_VALUES routine is not started
- *  
+ *
  */
-uint8_t kiss_routine_control_start_routine(uint16_t id, uint16_t wparam, uint32_t lparam);
+uint8_t kiss_routine_control_start_routine (uint16_t id, uint16_t wparam, uint32_t lparam);
 
 /**
  * Stops routine by using a function hardcoded in @link{kiss_routine_definitions}
  * @param id of routine to stop
  */
-uint8_t kiss_routine_control_stop_routine(uint16_t id);
+uint8_t kiss_routine_control_stop_routine (uint16_t id);
 
 /**
  * Return a result of a routine
  * @param id of routine to get result for
  */
-uint16_t kiss_routine_control_get_result_routine(uint16_t id);
+uint16_t kiss_routine_control_get_result_routine (uint16_t id);
 
 #endif /* KISS_COMMUNICATION_KISS_ROUTINE_CONTROL_H_ */

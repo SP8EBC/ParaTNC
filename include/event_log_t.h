@@ -18,8 +18,8 @@
  * TYpe used to distinguish between event of different severity
  */
 typedef enum event_log_severity_t {
-	EVENT_DEBUG, 	/**< EVENT_DEBUG */
-	EVENT_INFO,	 	/**< EVENT_INFO */
+	EVENT_DEBUG, /**< EVENT_DEBUG */
+	EVENT_INFO,	 /**< EVENT_INFO */
 	EVENT_INFO_CYCLIC,
 	EVENT_WARNING,	/**< EVENT_WARNING */
 	EVENT_ERROR,	/**< EVENT_ERROR */
@@ -63,24 +63,24 @@ typedef enum event_log_source_t {
  * used to store 16 character wide string
  */
 #ifdef UNIT_TEST
-typedef struct __attribute__((packed)) event_log_t {
+typedef struct __attribute__ ((packed)) event_log_t {
 #else
 typedef struct __attribute__ ((packed)) event_log_t {
 #endif
-	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
-	uint32_t event_rtc;			 //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
-	uint32_t event_master_time;	 //!< value of maser time at the moment an event is generated
-	uint8_t severity; 			 //!< severity level defined by @link{event_log_severity_t}.
-	uint8_t source;			     //!< event source defined by @link{event_log_source_t}
-	uint8_t event_id;			 //!< event id, unique across different sources & severity level
-	uint8_t param;				 //!< Optional single-byte data, specific per event
-	uint8_t param2;				 //!< Optional single-byte data, specific per event
-	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
-	uint16_t wparam2;			 //!< Optional 2-byte data, specific per event
-	uint16_t wparam3;			 //!< Optional 2-byte data, specific per event
-	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
-	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
-	uint8_t crc_checksum;		 //!< less significant byte of CRC32 checksum of this entry
+	uint32_t event_counter_id; //!< counter used to check which event is the oldest and newest one
+	uint32_t event_rtc; //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
+	uint32_t event_master_time; //!< value of maser time at the moment an event is generated
+	uint8_t severity;			//!< severity level defined by @link{event_log_severity_t}.
+	uint8_t source;				//!< event source defined by @link{event_log_source_t}
+	uint8_t event_id;			//!< event id, unique across different sources & severity level
+	uint8_t param;				//!< Optional single-byte data, specific per event
+	uint8_t param2;				//!< Optional single-byte data, specific per event
+	uint16_t wparam;			//!< Optional 2-byte data, specific per event
+	uint16_t wparam2;			//!< Optional 2-byte data, specific per event
+	uint16_t wparam3;			//!< Optional 2-byte data, specific per event
+	uint32_t lparam;			//!< Optional 4-byte data, specific per event
+	uint32_t lparam2;			//!< Optional 4-byte data, specific per event
+	uint8_t crc_checksum;		//!< less significant byte of CRC32 checksum of this entry
 } event_log_t;
 
 /**
@@ -89,25 +89,24 @@ typedef struct __attribute__ ((packed)) event_log_t {
  * HTTP rest service query, etc.
  */
 typedef struct event_log_exposed_t {
-	uint32_t event_counter_id;	 //!< counter used to check which event is the oldest and newest one
-	uint32_t event_master_time;	 //!< value of master time at the moment an event is generated
-	uint32_t event_rtc;			 //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
+	uint32_t event_counter_id;	//!< counter used to check which event is the oldest and newest one
+	uint32_t event_master_time; //!< value of master time at the moment an event is generated
+	uint32_t event_rtc; //!< RTC date and time in format returned by @link{main_get_nvm_timestamp}
 	event_log_severity_t severity;
-	const char * severity_str;
+	const char *severity_str;
 	event_log_source_t source;
-	const char * source_str_name;//!< string representation of source name
+	const char *source_str_name; //!< string representation of source name
 	uint8_t event_id;			 //!< event id, unique across different sources & severity level
-	const char * event_str_name; //!< string representation of the event
+	const char *event_str_name;	 //!< string representation of the event
 	uint8_t param;				 //!< Optional single-byte data, specific per event
 	uint8_t param2;				 //!< Optional single-byte data, specific per event
 	uint16_t wparam;			 //!< Optional 2-byte data, specific per event
 	uint16_t wparam2;			 //!< Optional 2-byte data, specific per event
 	uint16_t wparam3;
-	uint32_t lparam;			 //!< Optional 4-byte data, specific per event
-	uint32_t lparam2;			 //!< Optional 4-byte data, specific per event
+	uint32_t lparam;  //!< Optional 4-byte data, specific per event
+	uint32_t lparam2; //!< Optional 4-byte data, specific per event
 	uint8_t crc8_from_frame;
 	uint8_t crc8_calculated;
-}event_log_exposed_t;
-
+} event_log_exposed_t;
 
 #endif /* EVENT_LOG_T_H_ */

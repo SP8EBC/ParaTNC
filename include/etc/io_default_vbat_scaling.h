@@ -11,6 +11,4 @@
 #define VBAT_MEAS_A_COEFF 1000
 #define VBAT_MEAS_B_COEFF 95
 
-
-
 #endif /* IO_DEFAULT_VBAT_SCALING_H_ */

@@ -15,7 +15,7 @@
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
-#define PRINT_SLAVE(id, gpio, pin)	{id, (uint32_t)gpio, pin},
+#define PRINT_SLAVE(id, gpio, pin) {id, (uint32_t)gpio, pin},
 
 // clang-format off
 

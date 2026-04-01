@@ -12,12 +12,10 @@
 ///	GLOBAL DEFINITIONS
 /// ==================================================================================================
 
-
 /**
  * Port of 'constrain' function used in uint16_t Frame::coord2payload_compressed(float deg) method
  */
 #define FANET_CONSTRAIN(x, lo, hi) ((x < lo) ? (lo) : (x > hi ? hi : x))
-
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -45,6 +43,5 @@ uint16_t fanet_coordinates_compressed (float deg);
  * @param buf
  */
 void fanet_coordinates_absolute (float lat, float lon, uint8_t *buf);
-
 
 #endif /* AD35B09D_9436_422E_8BCE_F5A54CC73588 */

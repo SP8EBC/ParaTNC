@@ -25,10 +25,10 @@ typedef enum rtu_exception {
 	RTU_EXCEPTION_GW_NAVAIBLE,
 	RTU_EXCEPTION_GW_TARGET_NAVAIBLE
 
-
 } rtu_exception_t;
 
-inline rtu_exception_t rtu_exception_from_frame_data(uint8_t in) {
+inline rtu_exception_t rtu_exception_from_frame_data (uint8_t in)
+{
 
 	rtu_exception_t out = RTU_EXCEPTION_OK;
 

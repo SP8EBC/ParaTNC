@@ -10,6 +10,6 @@
 
 #include <stdint.h>
 
-int sds011_get_pms(uint8_t * data, uint16_t data_ln, uint16_t * pm_10, uint16_t * pm_2_5);
+int sds011_get_pms (uint8_t *data, uint16_t data_ln, uint16_t *pm_10, uint16_t *pm_2_5);
 
 #endif /* INCLUDE_DUST_SENSOR_SDS011_H_ */

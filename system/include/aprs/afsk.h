@@ -2,9 +2,9 @@
 #define AFSK_H_
 
 //
-//#ifndef CCC
-//#include "stm32f10x_conf.h"
-//#endif
+// #ifndef CCC
+// #include "stm32f10x_conf.h"
+// #endif
 
 #include <ax25_config.h>
 #include <stdbool.h>
@@ -12,61 +12,49 @@
 #include "cfifo.h"
 #include "macros.h"
 
-
-
 #define FREQ_MARK  1200
 #define FREQ_SPACE 2200
 
 #define SAMPLERATE 9600
-#define BITRATE    1200
+#define BITRATE	   1200
 
-#define PHASE_BIT    8
-#define PHASE_INC    1
-
+#define PHASE_BIT 8
+#define PHASE_INC 1
 
 #define SAMPLEPERBIT (SAMPLERATE / BITRATE)
 
-#define PHASE_MAX    (SAMPLEPERBIT * PHASE_BIT)
-#define PHASE_THRES  (PHASE_MAX / 2)
+#define PHASE_MAX	(SAMPLEPERBIT * PHASE_BIT)
+#define PHASE_THRES (PHASE_MAX / 2)
 
 // Modulator constants
-#define SIN_LEN 512 ///< Full wave length
-#define	BIT_STUFF_LEN 5
+#define SIN_LEN		  512 ///< Full wave length
+#define BIT_STUFF_LEN 5
 
-
-
-#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)FREQ_MARK, SAMPLERATE))
-#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)FREQ_SPACE, SAMPLERATE))
-
-
+#define MARK_INC  (uint16_t) (DIV_ROUND (SIN_LEN * (uint32_t)FREQ_MARK, SAMPLERATE))
+#define SPACE_INC (uint16_t) (DIV_ROUND (SIN_LEN * (uint32_t)FREQ_SPACE, SAMPLERATE))
 
 /**
  * RX FIFO buffer full error.
  */
-#define AFSK_RXFIFO_OVERRUN BV(0)
-
-
+#define AFSK_RXFIFO_OVERRUN BV (0)
 
 /**
  * HDLC (High-Level Data Link Control) context.
  * Maybe to be moved in a separate HDLC module one day.
  */
-typedef struct Hdlc
-{
+typedef struct Hdlc {
 
 	uint8_t demod_bits; ///< Bitstream from the demodulator.
-	uint8_t bit_idx;    ///< Current received bit.
-	uint8_t currchar;   ///< Current received character.
-	bool rxstart;       ///< True if an HDLC_FLAG char has been found in the bitstream.
+	uint8_t bit_idx;	///< Current received bit.
+	uint8_t currchar;	///< Current received character.
+	bool rxstart;		///< True if an HDLC_FLAG char has been found in the bitstream.
 	bool raw_dcd;
 	bool s;
 	bool raw_mode;
 
 } Hdlc;
 
-typedef struct Afsk
-{
-
+typedef struct Afsk {
 
 	uint16_t max_value;
 
@@ -149,28 +137,26 @@ typedef struct Afsk
 	 */
 	uint16_t trailer_len;
 
-
 } Afsk;
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /*********************************************************************************************************************/
-void AFSK_ADC_ISR(Afsk *afsk, int16_t curr_sample);
+void AFSK_ADC_ISR (Afsk *afsk, int16_t curr_sample);
 /*********************************************************************************************************************/
 
-void afsk_txStart(Afsk *af);
+void afsk_txStart (Afsk *af);
 
 /*********************************************************************************************************************/
-uint8_t AFSK_DAC_ISR(Afsk *afsk);
+uint8_t AFSK_DAC_ISR (Afsk *afsk);
 /*********************************************************************************************************************/
 
 /*********************************************************************************************************************/
-void AFSK_Init(Afsk *afsk);
+void AFSK_Init (Afsk *afsk);
 /*********************************************************************************************************************/
 #ifdef __cplusplus
 }
-#endif	
+#endif
 
 #endif /* AFSK_H_ */

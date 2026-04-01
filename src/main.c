@@ -682,14 +682,12 @@ static void main_scheduler_prestart_callback (void)
 
 static void main_callback_timer_aprsis_descr (TimerHandle_t xTimer)
 {
-	(void) xTimer;
+	(void)xTimer;
 	// the idea is to send telemetry descriptions only once after the powerup
-	if (master_time < 611000U)
-	{
+	if (master_time < 611000U) {
 		xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
 							MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_DESCR);
 	}
-
 }
 
 /********************************************************************/

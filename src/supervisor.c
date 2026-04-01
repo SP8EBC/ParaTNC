@@ -233,12 +233,12 @@ void supervisor_start (void)
 	supervisor_started = 1;
 }
 
-void supervisor_suspend(void)
+void supervisor_suspend (void)
 {
 	supervisor_suspended = 1;
 }
 
-void supervisor_resume(void)
+void supervisor_resume (void)
 {
 	// current time since bootup
 	const uint32_t current_time = main_get_master_time ();

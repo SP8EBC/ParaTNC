@@ -9,8 +9,8 @@
 #include "backup_registers.h"
 #include "delay.h"
 #include "etc/aprsis_config.h"
-#include "text.h"
 #include "packet_tx_handler.h"
+#include "text.h"
 
 #include "aprs/message.h"
 #include "aprs/status.h"
@@ -36,7 +36,7 @@
 #define STATIC static
 #endif
 
-#define CALLSIGN_WITH_SSID		 main_callsign_with_ssid
+#define CALLSIGN_WITH_SSID main_callsign_with_ssid
 
 srl_context_t *aprsis_serial_port;
 
@@ -1019,13 +1019,15 @@ void aprsis_send_telemetry (uint8_t async, const char *callsign_with_ssid)
 
 	// exit if message is empty
 	if (*aprsis_packet_telemetry_buffer == 0) {
-	    event_log_sync(
-				  EVENT_WARNING,
-				  EVENT_SRC_APRSIS,
-				  EVENTS_APRSIS_TELEMETRY_NOT_PREPARED,
-				  0, 0,
-				  0, 0,
-				  0, aprsis_last_packet_transmit_ts);
+		event_log_sync (EVENT_WARNING,
+						EVENT_SRC_APRSIS,
+						EVENTS_APRSIS_TELEMETRY_NOT_PREPARED,
+						0,
+						0,
+						0,
+						0,
+						0,
+						aprsis_last_packet_transmit_ts);
 		return;
 	}
 
@@ -1117,7 +1119,7 @@ aprsis_send_description_telemetry (uint8_t async, const telemetry_description_t 
 											  callsign_with_ssid,
 											  main_own_aprs_msg);
 	aprsis_packet_tx_buffer[aprsis_packet_tx_message_size] = 0;
-	taskEXIT_CRITICAL();
+	taskEXIT_CRITICAL ();
 
 	if (async > 0) { // not used at this moment
 		aprsis_last_tcpip_write_res =

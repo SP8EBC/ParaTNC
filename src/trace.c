@@ -23,7 +23,7 @@ void Watchpoint_00001917_At_2000B438_Init (void)
 	/* -------- Comparator 0: address 0x2000B438 -------- */
 	DWT->COMP0 = 0x2000B438UL;
 	DWT->MASK0 = 0; /* no masking → watch exactly one word (aligned) */
-	/* Leave FUNCTION0 = 0: it is used only as an address filter for comp1 */
+					/* Leave FUNCTION0 = 0: it is used only as an address filter for comp1 */
 
 	/* -------- Comparator 1: data value 0x00001917 (32‑bit word) -------- */
 #undef COMP1

@@ -22,7 +22,7 @@ typedef struct rtu_pool_queue {
 
 	uint8_t function_id[RTU_POOL_QUEUE_LENGHT];
 
-	void* function_parameter[RTU_POOL_QUEUE_LENGHT];
+	void *function_parameter[RTU_POOL_QUEUE_LENGHT];
 
 	uint32_t last_successfull_call_to_function[RTU_POOL_QUEUE_LENGHT];
 

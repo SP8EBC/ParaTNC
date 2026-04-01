@@ -8,9 +8,6 @@
 #ifndef TASKS_TASK_FANET_H_
 #define TASKS_TASK_FANET_H_
 
-
-void task_fanet( void * parameters );
-
-
+void task_fanet (void *parameters);
 
 #endif /* TASKS_TASK_FANET_H_ */

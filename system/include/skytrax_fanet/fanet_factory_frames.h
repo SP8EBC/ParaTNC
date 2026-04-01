@@ -41,7 +41,7 @@
  * @return
  */
 uint32_t fanet_factory_frames_tracking (fanet_aircraft_t type, fanet_aircraft_stv_t *state_vector,
-									fanet_frame_t *out);
+										fanet_frame_t *out);
 
 /**
  *
@@ -51,7 +51,7 @@ uint32_t fanet_factory_frames_tracking (fanet_aircraft_t type, fanet_aircraft_st
  * @param out
  */
 void fanet_factory_frames_ground (float latitude, float longitude, uint8_t online,
-		fanet_frame_t *out);
+								  fanet_frame_t *out);
 
 /**
  * Assemble fanet frame with weather information. Data are put
@@ -61,6 +61,7 @@ void fanet_factory_frames_ground (float latitude, float longitude, uint8_t onlin
  * @param out
  * @return lenght  of
  */
-uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_input_t *weather_data, fanet_frame_t *out);
+uint8_t fanet_factory_frames_weather (float latitude, float longitude,
+									  fanet_wx_input_t *weather_data, fanet_frame_t *out);
 
 #endif /* SKYTRAX_FANET_FANET_FACTORY_FRAMES_H_ */

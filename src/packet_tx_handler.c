@@ -87,7 +87,7 @@ uint8_t packet_tx_meteo_gsm_pending = 0;
 nvm_measurement_t packet_tx_nvm;
 
 //!< Flag set to one after the gsm status message is sent over radio.
-//uint8_t packet_tx_gsm_status_sent = 0;
+// uint8_t packet_tx_gsm_status_sent = 0;
 
 void packet_tx_send_wx_frame (void)
 {
@@ -214,7 +214,6 @@ void packet_tx_tcp_handler (void)
 			// Wait some time, as this usually will last non-constant
 			// amount of time (depending on GSM signal level an few more)
 			vTaskDelay (999 / portTICK_PERIOD_MS);
-
 		}
 	}
 	else if ((packet_tx_trigger_tcp & API_TRIGGER_STATUS) != 0) {
@@ -613,10 +612,9 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 		}
 		packet_tx_telemetry_counter = 0;
 
-		if (aprsis_logged == 1)
-		{
+		if (aprsis_logged == 1) {
 			xEventGroupSetBits (main_eventgroup_handle_aprs_trigger,
-					MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
+								MAIN_EVENTGROUP_APRSIS_TRIG_TELEMETRY_VALUES);
 		}
 
 		// service external watchdog while sending telemetry
@@ -665,9 +663,9 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 			// and trigger API wx packet transmission
 			packet_tx_trigger_tcp |= API_TRIGGER_STATUS;
 		}
-//		else {
-//			packet_tx_trigger_tcp = 0;
-//		}
+		//		else {
+		//			packet_tx_trigger_tcp = 0;
+		//		}
 
 		packet_tx_telemetry_descr_counter = 0;
 	}
@@ -678,7 +676,7 @@ void packet_tx_handler (const config_data_basic_t *const config_basic,
 									packet_tx_meteo_gsm_counter);
 }
 
-void packet_tx_handler_increment_counters(void)
+void packet_tx_handler_increment_counters (void)
 {
 	// increase beacon transmit counters
 	packet_tx_beacon_counter++;
@@ -833,7 +831,7 @@ uint8_t packet_tx_get_trigger_tcp (void)
 /**
  * @brief forces weather packet to be sent directly to APRS-IS via GPRS
  */
-void packet_tx_set_trigger_tcp_weather(void)
+void packet_tx_set_trigger_tcp_weather (void)
 {
 	packet_tx_trigger_tcp = APRSIS_TRIGGER_METEO;
 }

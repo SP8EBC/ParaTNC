@@ -19,14 +19,14 @@
 #define SRL_INTERNAL 0
 #define SRL_EXTERNAL 1
 
-#define SRL_MODE_ZERO	0
-#define SRL_MODE_DEFLN	1
+#define SRL_MODE_ZERO  0
+#define SRL_MODE_DEFLN 1
 
-#define SRL_NO_START_CHR	0
-#define SRL_NO_STOP_CHR		0
+#define SRL_NO_START_CHR 0
+#define SRL_NO_STOP_CHR	 0
 
-#define SRL_ECHO_ENABLE		1
-#define SRL_ECHO_DISABLE	0
+#define SRL_ECHO_ENABLE	 1
+#define SRL_ECHO_DISABLE 0
 
 typedef struct srl_context_t srl_ctx_t;
 
@@ -34,15 +34,18 @@ typedef struct srl_context_t srl_ctx_t;
  * Callback definition which may be called after receiving each byte by an UART
  *
  * @param current_data	received byte
- * @param rx_bytes_counter receive bytes counter incremented AFTER this callback is processed so it's point to the byte which triggered this call
+ * @param rx_bytes_counter receive bytes counter incremented AFTER this callback is processed so
+ * it's point to the byte which triggered this call
  */
-typedef uint8_t(*srl_rx_termination_callback_t)(uint8_t current_data, const uint8_t * const rx_buffer, uint16_t rx_bytes_counter);
+typedef uint8_t (*srl_rx_termination_callback_t) (uint8_t current_data,
+												  const uint8_t *const rx_buffer,
+												  uint16_t rx_bytes_counter);
 
 /**
  *
  * @param context
  */
-typedef void(*srl_done_or_error_callback_t)(srl_ctx_t * context);
+typedef void (*srl_done_or_error_callback_t) (srl_ctx_t *context);
 
 typedef enum srlRxState {
 	SRL_RX_NOT_CONFIG,
@@ -51,7 +54,7 @@ typedef enum srlRxState {
 	SRL_RXING,
 	SRL_RX_DONE,
 	SRL_RX_ERROR
-}srl_rx_state_t;
+} srl_rx_state_t;
 
 typedef enum srlTxState {
 	SRL_TX_NOT_CONFIG,
@@ -59,13 +62,13 @@ typedef enum srlTxState {
 	SRL_TX_WAITING,
 	SRL_TXING,
 	SRL_TX_ERROR
-}srl_tx_state_t;
+} srl_tx_state_t;
 
 typedef enum srl_timeout_mode {
 	SRL_TIMEOUT_OFF,
 	SRL_TIMEOUT_INSTANT,
 	SRL_TIMEOUT_TRIGGERED
-}srl_timeout_mode_t;
+} srl_timeout_mode_t;
 
 typedef enum srl_error_reason {
 	SRL_ERR_NONE,
@@ -80,7 +83,7 @@ typedef struct srl_context_t {
 	uint32_t port_baurate;
 	uint8_t port_stopbits;
 
-	GPIO_TypeDef* te_port;
+	GPIO_TypeDef *te_port;
 	uint16_t te_pin;
 	uint16_t early_tx_assert;
 
@@ -122,9 +125,10 @@ typedef struct srl_context_t {
 	uint32_t srl_rx_start_time;
 	uint32_t srl_rx_waiting_start_time;
 
-	// this is a time when srl_start_tx or srl_send_data initiated the transfer. If this is set to 0xFFFFFFFF
-	// the transmission will start immediately. If it is set to any other value the transmission
-	// (first and any consecutive byte) will be delayed by value defined by 'SRL_TX_DELAY_IN_MS'.
+	// this is a time when srl_start_tx or srl_send_data initiated the transfer. If this is set to
+	// 0xFFFFFFFF the transmission will start immediately. If it is set to any other value the
+	// transmission (first and any consecutive byte) will be delayed by value defined by
+	// 'SRL_TX_DELAY_IN_MS'.
 	//
 	// This is a workaround of garbage occurring on RS485 bus when TE/RE pin of MAX485 is switched.
 	// A delay will separate this artificial 0xFF (when TE/RE are switched) from the rest of data
@@ -161,15 +165,15 @@ typedef struct srl_context_t {
 	uint32_t total_rx_bytes;
 	uint32_t total_tx_bytes;
 
-}srl_context_t;
+} srl_context_t;
 
-#define SRL_UNINITIALIZED				127
-#define SRL_OK							0
-#define SRL_DATA_TOO_LONG 				1
-#define SRL_BUSY						2
-#define SRL_WRONG_BUFFER_PARAM 			3
-#define SRL_WRONG_PARAMS_COMBINATION	4
-#define SRL_TIMEOUT						5
+#define SRL_UNINITIALIZED			 127
+#define SRL_OK						 0
+#define SRL_DATA_TOO_LONG			 1
+#define SRL_BUSY					 2
+#define SRL_WRONG_BUFFER_PARAM		 3
+#define SRL_WRONG_PARAMS_COMBINATION 4
+#define SRL_TIMEOUT					 5
 
 #ifdef SEPARATE_TX_BUFF
 extern uint8_t srl_usart1_tx_buffer[TX_BUFFER_1_LN];
@@ -192,36 +196,38 @@ extern uint8_t srl_usart3_tx_buffer[TX_BUFFER_3_LN];
 extern uint8_t srl_usart3_rx_buffer[RX_BUFFER_3_LN];
 #endif
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-void srl_init(srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t baudrate, uint8_t stop_bits);
-void srl_reset(srl_context_t *ctx);
-void srl_close(srl_context_t *ctx);
-uint8_t srl_send_data(srl_context_t *ctx, const uint8_t* data, uint8_t mode, uint16_t leng, uint8_t internal_external);
-uint8_t srl_start_tx(srl_context_t *ctx, short leng);
-void srl_wait_for_tx_completion(srl_context_t *ctx);
-uint8_t srl_wait_for_rx_completion_or_timeout(srl_context_t *ctx, uint8_t* output);
-void srl_irq_handler(srl_context_t *ctx);
-uint8_t srl_receive_data(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
-uint8_t srl_receive_data_kiss_protocol(srl_context_t *ctx, int num);
-uint8_t srl_receive_data_with_instant_timeout(srl_context_t *ctx, int num, char start, char stop, char echo, char len_addr, char len_modifier);
-uint8_t srl_receive_data_with_callback(srl_context_t *ctx, srl_rx_termination_callback_t cbk);
-uint16_t srl_get_num_bytes_rxed(srl_context_t *ctx);
-uint8_t* srl_get_rx_buffer(srl_context_t *ctx);
-void srl_keep_tx_delay(srl_context_t *ctx);
-void srl_switch_tx_delay(srl_context_t *ctx, uint8_t disable_enable);
-void srl_keep_timeout(srl_context_t *ctx);
-void srl_switch_timeout(srl_context_t *ctx, uint8_t disable_enable, uint32_t value);
-void srl_switch_timeout_for_waiting(srl_context_t *ctx, uint8_t disable_enable);
-void srl_set_done_error_callback(srl_context_t *ctx, srl_done_or_error_callback_t rx_callback, srl_done_or_error_callback_t tx_done);
+void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size,
+			   uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t baudrate, uint8_t stop_bits);
+void srl_reset (srl_context_t *ctx);
+void srl_close (srl_context_t *ctx);
+uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, uint16_t leng,
+					   uint8_t internal_external);
+uint8_t srl_start_tx (srl_context_t *ctx, short leng);
+void srl_wait_for_tx_completion (srl_context_t *ctx);
+uint8_t srl_wait_for_rx_completion_or_timeout (srl_context_t *ctx, uint8_t *output);
+void srl_irq_handler (srl_context_t *ctx);
+uint8_t srl_receive_data (srl_context_t *ctx, int num, char start, char stop, char echo,
+						  char len_addr, char len_modifier);
+uint8_t srl_receive_data_kiss_protocol (srl_context_t *ctx, int num);
+uint8_t srl_receive_data_with_instant_timeout (srl_context_t *ctx, int num, char start, char stop,
+											   char echo, char len_addr, char len_modifier);
+uint8_t srl_receive_data_with_callback (srl_context_t *ctx, srl_rx_termination_callback_t cbk);
+uint16_t srl_get_num_bytes_rxed (srl_context_t *ctx);
+uint8_t *srl_get_rx_buffer (srl_context_t *ctx);
+void srl_keep_tx_delay (srl_context_t *ctx);
+void srl_switch_tx_delay (srl_context_t *ctx, uint8_t disable_enable);
+void srl_keep_timeout (srl_context_t *ctx);
+void srl_switch_timeout (srl_context_t *ctx, uint8_t disable_enable, uint32_t value);
+void srl_switch_timeout_for_waiting (srl_context_t *ctx, uint8_t disable_enable);
+void srl_set_done_error_callback (srl_context_t *ctx, srl_done_or_error_callback_t rx_callback,
+								  srl_done_or_error_callback_t tx_done);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif

@@ -8,12 +8,12 @@
 #ifndef PWR_SAVE_H_
 #define PWR_SAVE_H_
 
-#include <stored_configuration_nvm/config_data.h>
 #include "station_config_target_hw.h"
+#include <stored_configuration_nvm/config_data.h>
 
 /**
- * This header file defines all functions related to powersaving, switching between different power states,
- * stopping cpu core etc. Generally they are few power states as below
+ * This header file defines all functions related to powersaving, switching between different power
+ *states, stopping cpu core etc. Generally they are few power states as below
  *
  * /-------------------------------------------------------------------------\
  * | State |  CPU  |   +5V_S  	| +7V5_R and VBATT_SW_R  |  +4V_G  |  +5V_C  |
@@ -79,24 +79,27 @@
  *
  *
  *  Transitions between states depends on configuration and value of config_data_powersave_mode_t.
- *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will switch to modem M4a instead of M4
+ *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will switch to modem M4a
+ *instead of M4
  *
  *  ====================================================================================================================================|
- *  |   Mode                |   Powersave Mode  |                                                                                       |
+ *  |   Mode                |   Powersave Mode  | |
  *  |=======================|===================|=======================================================================================|
- *  |   DIGI                |   don't care      |   Always stays in C2 no matter of how config_data_powersave_mode_t is set             |
- *  |   DIGI + WX           |   PWSAVE_NONE     |       C1                                                                              |
- *  |   DIGI + WX           |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C1 -> M4                                  |
- *  |   DIGI + WX           |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C1 -> L7                                  |
- *  |   DIGI + WX + GSM     |   PWSAVE_NONE     |       C0                                                                              |
- *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C0 -> M4									|
- *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C0 -> L7 									|
- *  |   WX + GSM            |   PWSAVE_NONE     |       C0                                                                              |
- *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute before WX frame)---> C0 -> M4                                  |
- *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7									|
- *  |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 -> M4                                  |
- *  |   WX                  |   PWSAVE_NORMAL   |       L7 --- (2 minute before WX frame)---> C1 -> L7                                  |
- *  |   WX                  |   PWSAVE_AGGRESV  |       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |
+ *  |   DIGI                |   don't care      |   Always stays in C2 no matter of how
+ *config_data_powersave_mode_t is set             | |   DIGI + WX           |   PWSAVE_NONE     | C1
+ *| |   DIGI + WX           |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C1 ->
+ *M4                                  | |   DIGI + WX           |   PWSAVE_AGGRESV  |       L7 ---
+ *(3 minute before WX frame)---> C1 -> L7                                  | |   DIGI + WX + GSM |
+ *PWSAVE_NONE     |       C0 | |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       M4 --- (3 minute
+ *before WX frame)---> C0 -> M4									| |   DIGI + WX + GSM     |
+ *PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C0 -> L7 | |   WX + GSM            |
+ *PWSAVE_NONE     |       C0 | |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute
+ *before WX frame)---> C0 -> M4                                  | |   WX + GSM (only)     |
+ *PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7
+ *| |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 ->
+ *M4                                  | |   WX                  |   PWSAVE_NORMAL   |       L7 ---
+ *(2 minute before WX frame)---> C1 -> L7                                  | |   WX | PWSAVE_AGGRESV
+ *|       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |
  *  ====================================================================================================================================|
  *
  * Note from October 31st. State machine has been changed sligtly for
@@ -107,41 +110,38 @@
  * (like GPRS will die for some reason, or a SIM card will stop working)
  */
 
-
-#define CURRENTLY_CUTOFF 		0x1
-#define CURRENTLY_VBATT_LOW		0x8
+#define CURRENTLY_CUTOFF	0x1
+#define CURRENTLY_VBATT_LOW 0x8
 
 #if defined(STM32L471xx)
 
 extern int8_t pwr_save_currently_cutoff;
 
-void pwr_save_init(config_data_powersave_mode_t mode);
-void pwr_save_enter_stop2(void);
-void pwr_save_after_stop2_rtc_wakeup_it(void);
-int pwr_save_check_stop2_cycles(void);
-void pwr_save_exit_after_last_stop2_cycle(void);
-int pwr_save_switch_mode_to_c0(void);
-int pwr_save_switch_mode_to_c1(void);
-void pwr_save_switch_mode_to_c2(void);
-void pwr_save_switch_mode_to_c3(void);
-int pwr_save_switch_mode_to_m4(void);
-int pwr_save_switch_mode_to_m4a(void);
-void pwr_save_switch_mode_to_i5(void);
-void pwr_save_switch_mode_to_l6(uint16_t sleep_time);
-void pwr_save_switch_mode_to_l7(uint16_t sleep_time);
-config_data_powersave_mode_t pwr_save_pooling_handler(
-											const config_data_mode_t * config,
-											uint8_t minutes_between_wx_frames,
-											int16_t minutes_left_to_wx,
-											uint16_t vbatt_average,
-											uint16_t vbatt_current,
-											uint8_t * continue_loop);		// this should be called from 10 seconds pooler
+void pwr_save_init (config_data_powersave_mode_t mode);
+void pwr_save_enter_stop2 (void);
+void pwr_save_after_stop2_rtc_wakeup_it (void);
+int pwr_save_check_stop2_cycles (void);
+void pwr_save_exit_after_last_stop2_cycle (void);
+int pwr_save_switch_mode_to_c0 (void);
+int pwr_save_switch_mode_to_c1 (void);
+void pwr_save_switch_mode_to_c2 (void);
+void pwr_save_switch_mode_to_c3 (void);
+int pwr_save_switch_mode_to_m4 (void);
+int pwr_save_switch_mode_to_m4a (void);
+void pwr_save_switch_mode_to_i5 (void);
+void pwr_save_switch_mode_to_l6 (uint16_t sleep_time);
+void pwr_save_switch_mode_to_l7 (uint16_t sleep_time);
+config_data_powersave_mode_t
+pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_between_wx_frames,
+						  int16_t minutes_left_to_wx, uint16_t vbatt_average,
+						  uint16_t vbatt_current,
+						  uint8_t *continue_loop); // this should be called from 10 seconds pooler
 
-int pwr_save_is_currently_cutoff(void);
-int pwr_save_is_currently_in_aggressive(void);	//!< return one if controller is now in PWSAVE_AGGRESV
+int pwr_save_is_currently_cutoff (void);
+int pwr_save_is_currently_in_aggressive (
+	void); //!< return one if controller is now in PWSAVE_AGGRESV
 #endif
 
-uint8_t pwr_save_get_inhibit_pwr_switch_periodic(void);
-
+uint8_t pwr_save_get_inhibit_pwr_switch_periodic (void);
 
 #endif /* PWR_SAVE_H_ */

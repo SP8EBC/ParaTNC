@@ -12,5 +12,4 @@
 
 typedef
 
-
 #endif /* RTU_PWR_H_ */

@@ -19,11 +19,11 @@
  * connected push buttons and then, depending on configuration, takes
  * an appropriate action.
  */
-void button_check_all(configuration_button_function_t left, configuration_button_function_t right);
+void button_check_all (configuration_button_function_t left, configuration_button_function_t right);
 
 /**
  * Resets debouncing inhibiter which enables button key presses back
  */
-void button_debounce(void);
+void button_debounce (void);
 
 #endif /* BUTTON_H_ */

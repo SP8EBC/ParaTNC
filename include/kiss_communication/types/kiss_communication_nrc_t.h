@@ -10,7 +10,7 @@
 #ifndef KISS_COMMUNICATION_KISS_COMMUNICATION_NRC_T_H_
 #define KISS_COMMUNICATION_KISS_COMMUNICATION_NRC_T_H_
 
-//#define KISS_COMMUNICATION_NRC_SERVICE		KISS_NEGATIVE_RESPONSE_SERVICE
+// #define KISS_COMMUNICATION_NRC_SERVICE		KISS_NEGATIVE_RESPONSE_SERVICE
 
 typedef enum kiss_communication_nrc_t {
 	NRC_POSITIVE = 0x00,
@@ -166,9 +166,6 @@ typedef enum kiss_communication_nrc_t {
 	 */
 	NRC_SERVICE_NOT_SUPPORTED_IN_ACTIVE_SESSION = 0x7F
 
-
-
-}kiss_communication_nrc_t;
-
+} kiss_communication_nrc_t;
 
 #endif /* KISS_COMMUNICATION_KISS_COMMUNICATION_NRC_T_H_ */

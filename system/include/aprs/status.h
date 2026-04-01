@@ -10,20 +10,20 @@
 
 #include <stdint.h>
 
-void status_send(void);
+void status_send (void);
 
-void status_send_raw_values_modbus(void);
+void status_send_raw_values_modbus (void);
 
-void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
-void status_send_powersave_registers(void);
+void status_send_powersave_cutoff (uint16_t battery_voltage, int8_t vbatt_low, int8_t cutoff);
+void status_send_powersave_registers (void);
 
-void status_send_gsm(void);
-void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr);
+void status_send_gsm (void);
+void status_send_aprsis_timeout (uint8_t unsuccessfull_conn_cntr);
 
 #ifdef PARAMETEO
 #include "event_log.h"
 
-void status_send_from_exposed_eveny_log(const event_log_exposed_t * const event);
+void status_send_from_exposed_eveny_log (const event_log_exposed_t *const event);
 #endif
 
 #endif /* INCLUDE_APRS_STATUS_H_ */

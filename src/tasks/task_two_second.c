@@ -85,7 +85,7 @@ void task_two_second (void *parameters)
 		// everything here should be inhibited if controller is in aggressive powersaving mode
 		// we do not want to mess up with the NTP and the rest of stuff then. Simply send
 		// bare minimum -> weather packet
-		if (pwr_save_is_currently_in_aggressive() == 0) {
+		if (pwr_save_is_currently_in_aggressive () == 0) {
 			if (io_get_cntrl_vbat_g () == 1) {
 				SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 7);
 
@@ -120,7 +120,7 @@ void task_two_second (void *parameters)
 			// synchronization was done already, and an events queue has been sent
 			// to the api. This is to be sure that even in aggressive powersave
 			// controller will not waste time, and will instantly reconnect to APRS-IS
-			gsm_comm_state_handler(1, 1, 0, 1);
+			gsm_comm_state_handler (1, 1, 0, 1);
 		}
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TWO_SEC, 9);

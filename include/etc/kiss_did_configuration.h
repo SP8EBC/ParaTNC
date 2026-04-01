@@ -19,20 +19,20 @@
 #ifndef KISS_DID_CONFIGURATION_H_
 #define KISS_DID_CONFIGURATION_H_
 
-#include "kiss_communication/types/kiss_xmacro_helpers.h"
-#include "rte_main.h"
-#include "rte_wx.h"
-#include "rte_rtu.h"
-#include "main_master_time.h"
-#include "main.h"
 #include "aprsis.h"
-#include "gsm/sim800c.h"
-#include "packet_tx_handler.h"
-#include "nvm/nvm_event_externs.h"
-#include <stored_configuration_nvm/config_data_externs.h>
-#include "software_version.h"
-#include "memory_map.h"
 #include "drivers/max31865.h"
+#include "gsm/sim800c.h"
+#include "kiss_communication/types/kiss_xmacro_helpers.h"
+#include "main.h"
+#include "main_master_time.h"
+#include "memory_map.h"
+#include "nvm/nvm_event_externs.h"
+#include "packet_tx_handler.h"
+#include "rte_main.h"
+#include "rte_rtu.h"
+#include "rte_wx.h"
+#include "software_version.h"
+#include <stored_configuration_nvm/config_data_externs.h>
 
 // clang-format off
 

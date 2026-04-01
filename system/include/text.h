@@ -20,60 +20,56 @@
  *    			uint32_t out = text_get_uint_from_string(test, 4);
  *
  *    			printf("out: 0x%X", out);
- * 
+ *
  * Output:
  * 	ASM generation compiler returned: 0
  *	Execution build compiler returned: 0
  *	Program returned: 0
  *	out: 0x44555041
- * 
+ *
  * @param str
  * @param str_ln
  * @return
  */
-inline static uint32_t text_get_uint32_from_string(char *str, uint8_t str_ln) {
+inline static uint32_t text_get_uint32_from_string (char *str, uint8_t str_ln)
+{
 
 	uint32_t out = 0u;
 
-	if (str_ln > 3)
-	{
+	if (str_ln > 3) {
 		out |= (*(str + 3));
 	}
-	if (str_ln > 2)
-	{
+	if (str_ln > 2) {
 		out |= (*(str + 2) << 8);
 	}
-	if (str_ln > 1)
-	{
+	if (str_ln > 1) {
 		out |= (*(str + 1) << 16);
 	}
-	if (str_ln > 0)
-	{
+	if (str_ln > 0) {
 		out |= (*(str + 0) << 24);
 	}
-	//out = (*(str + 3)) | (*(str + 2) << 8) | (*(str + 1) << 16) | (*(str + 0) << 24);
+	// out = (*(str + 3)) | (*(str + 2) << 8) | (*(str + 1) << 16) | (*(str + 0) << 24);
 
 	return out;
 }
 
 /**
  * Converts first four character of a string to uint32_t which is returned.
- * Example:     
+ * Example:
  * 			uint32_t out = text_get_uint_from_string(test, 4);
  * @param str
  * @param str_ln
  * @return
  */
-inline static uint16_t text_get_uint16_from_string(char *str, uint8_t str_ln) {
+inline static uint16_t text_get_uint16_from_string (char *str, uint8_t str_ln)
+{
 
 	uint16_t out = 0u;
 
-	if (str_ln > 1)
-	{
+	if (str_ln > 1) {
 		out |= (*(str + 3));
 	}
-	if (str_ln > 0)
-	{
+	if (str_ln > 0) {
 		out |= (*(str + 2) << 8);
 	}
 
@@ -86,7 +82,8 @@ inline static uint16_t text_get_uint16_from_string(char *str, uint8_t str_ln) {
  * @param str	pointer to a string to be modified
  * @param size	its size
  */
-inline static void text_replace_non_printable_with_space(char * str, uint16_t size) {
+inline static void text_replace_non_printable_with_space (char *str, uint16_t size)
+{
 	for (int i = 0; i < size; i++) {
 		// currently processed character
 		char current = *(str + i);
@@ -110,7 +107,8 @@ inline static void text_replace_non_printable_with_space(char * str, uint16_t si
  * @param str
  * @param size
  */
-inline static void text_replace_space_with_null(char * str, uint16_t size) {
+inline static void text_replace_space_with_null (char *str, uint16_t size)
+{
 
 	// it goes from the end of a buffer towards its begining
 	for (int i = size - 1; i > 0; i--) {
@@ -138,11 +136,12 @@ inline static void text_replace_space_with_null(char * str, uint16_t size) {
  * 			if the text starts from printable character zero is returned.
  * 			if null is detected before first printable character negative is returned.
  */
-inline static int text_fast_forward_to_first_printable(char * str, uint16_t size) {
+inline static int text_fast_forward_to_first_printable (char *str, uint16_t size)
+{
 
 	int out = 0;
 
-	uint8_t* ptr = (uint8_t*)(str);
+	uint8_t *ptr = (uint8_t *)(str);
 
 	// check if input pointer is set to something
 	if (str != 0) {
@@ -171,11 +170,12 @@ inline static int text_fast_forward_to_first_printable(char * str, uint16_t size
 	return out;
 }
 
-inline static int text_rewind_front_end_till_first_printable(char * str, uint16_t size) {
+inline static int text_rewind_front_end_till_first_printable (char *str, uint16_t size)
+{
 
 	int out = size;
 
-	uint8_t* ptr = (uint8_t*)(str);
+	uint8_t *ptr = (uint8_t *)(str);
 
 	if (str != 0) {
 

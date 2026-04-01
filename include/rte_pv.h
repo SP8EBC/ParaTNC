@@ -8,9 +8,9 @@
 #ifndef RTE_PV_H_
 #define RTE_PV_H_
 
-#include <stdint.h>
 #include "./ve_direct_protocol/average_struct.h"
 #include "./ve_direct_protocol/raw_struct.h"
+#include <stdint.h>
 
 extern ve_direct_average_struct rte_pv_average;
 extern uint8_t rte_pv_sys_voltage;

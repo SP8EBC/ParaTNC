@@ -20,7 +20,7 @@
 #define SEPARATE_RX_BUFF
 #define SEPARATE_TX_BUFF
 
-#define SRL_TX_DELAY_IN_MS	30
+#define SRL_TX_DELAY_IN_MS			 30
 #define SRL_DEFAULT_RX_TIMEOUT_IN_MS 1200
 
 #endif /* SERIAL_CONFIG_H_ */

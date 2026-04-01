@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-void float_to_string(float in, char * out, uint8_t ln, int8_t precision, int8_t integer_ln);
-
+void float_to_string (float in, char *out, uint8_t ln, int8_t precision, int8_t integer_ln);
 
 #endif /* FLOAT_TO_STRING_H_ */

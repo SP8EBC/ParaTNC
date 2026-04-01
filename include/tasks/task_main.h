@@ -8,8 +8,6 @@
 #ifndef TASK_MAIN_H_
 #define TASK_MAIN_H_
 
-
-void task_main( void * parameters );
-
+void task_main (void *parameters);
 
 #endif /* TASK_MAIN_H_ */

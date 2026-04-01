@@ -7,27 +7,24 @@
 
 extern const uint16_t crc_ccitt_tab[256];
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 /*********************************************************************************************************************/
-static uint16_t updcrc_ccitt(uint8_t c, uint16_t oldcrc) {
-/*********************************************************************************************************************/
+static uint16_t updcrc_ccitt (uint8_t c, uint16_t oldcrc)
+{
+	/*********************************************************************************************************************/
 
-	return (oldcrc >> 8) ^ pgm_read16(&crc_ccitt_tab[(oldcrc ^ c) & 0xff]);
+	return (oldcrc >> 8) ^ pgm_read16 (&crc_ccitt_tab[(oldcrc ^ c) & 0xff]);
 }
-
 
 /** CRC-CCITT init value */
 #define CRC_CCITT_INIT_VAL ((uint16_t)0xFFFF)
 
-
 /*********************************************************************************************************************/
-extern uint16_t crc_ccitt(uint16_t crc, const void *buffer, uint16_t len);
+extern uint16_t crc_ccitt (uint16_t crc, const void *buffer, uint16_t len);
 /*********************************************************************************************************************/
 #ifdef __cplusplus
 }
-#endif	
-
+#endif
 
 #endif /* CRC_H_ */

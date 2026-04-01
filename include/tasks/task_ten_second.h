@@ -8,8 +8,6 @@
 #ifndef TASK_TEN_SECOND_H_
 #define TASK_TEN_SECOND_H_
 
-
-void task_ten_second( void * parameters );
-
+void task_ten_second (void *parameters);
 
 #endif /* TASK_TEN_SECOND_H_ */

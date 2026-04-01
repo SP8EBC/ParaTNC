@@ -53,7 +53,7 @@
 
 #define NVM_CONFIG_DISABLE_PGM                              \
 	FLASH->CR &= (0xFFFFFFFF ^ FLASH_CR_PG);                \
-	FLASH_Lock();                                           
+	FLASH_Lock();
 
 // clang-format on
 

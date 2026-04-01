@@ -10,11 +10,10 @@
 
 #include "events_definitions/events_aprs_rf.h"
 #include "events_definitions/events_aprsis.h"
+#include "events_definitions/events_drv_anemometer.h"
 #include "events_definitions/events_drv_i2c.h"
 #include "events_definitions/events_drv_spi.h"
 #include "events_definitions/events_drv_uart.h"
-#include "events_definitions/events_drv_anemometer.h"
-#include "events_definitions/events_umb.h"
 #include "events_definitions/events_gsm_gprs.h"
 #include "events_definitions/events_http_client.h"
 #include "events_definitions/events_kiss.h"
@@ -23,122 +22,123 @@
 #include "events_definitions/events_packet_tx_handler.h"
 #include "events_definitions/events_pwr_save.h"
 #include "events_definitions/events_tcpip.h"
+#include "events_definitions/events_umb.h"
 #include "events_definitions/events_wx_handler.h"
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
 
-static const char * event_log_default						= "__DEFAULT\0";
+static const char *event_log_default = "__DEFAULT\0";
 
 /**
  * Strings for different event sources
  */
-static const char * event_log_str_src_main 				= "MAIN\0";
-static const char * event_log_str_src_wx_handler 			= "WX_HANDLER\0";
-static const char * event_log_str_src_pwr_save 			= "PWR_SAVE\0";
-static const char * event_log_str_src_packet_tx_handler 	= "PKT_TX_HNDL\0";
-static const char * event_log_str_src_aprsis 				= "APRSIS\0";
-static const char * event_log_str_src_kiss 				= "KISS\0";
-static const char * event_log_str_src_aprs_rf 				= "APRS_RF\0";
-static const char * event_log_str_src_gsm_gprs				= "GSM_GPRS\0";
-static const char * event_log_str_src_tcpip 				= "TCPIP\0";
-static const char * event_log_str_src_http_client 			= "HTTP\0";
-static const char * event_log_str_src_modbus 				= "RTU\0";
-static const char * event_log_str_src_umb 					= "UMB\0";
-static const char * event_log_str_src_drv_anemometer 		= "ANEMOMETER\0";
-static const char * event_log_str_src_drv_i2c 				= "I2C\0";
-static const char * event_log_str_src_drv_uart 			= "UART\0";
-static const char * event_log_str_src_drv_spi 				= "SPI\0";
+static const char *event_log_str_src_main = "MAIN\0";
+static const char *event_log_str_src_wx_handler = "WX_HANDLER\0";
+static const char *event_log_str_src_pwr_save = "PWR_SAVE\0";
+static const char *event_log_str_src_packet_tx_handler = "PKT_TX_HNDL\0";
+static const char *event_log_str_src_aprsis = "APRSIS\0";
+static const char *event_log_str_src_kiss = "KISS\0";
+static const char *event_log_str_src_aprs_rf = "APRS_RF\0";
+static const char *event_log_str_src_gsm_gprs = "GSM_GPRS\0";
+static const char *event_log_str_src_tcpip = "TCPIP\0";
+static const char *event_log_str_src_http_client = "HTTP\0";
+static const char *event_log_str_src_modbus = "RTU\0";
+static const char *event_log_str_src_umb = "UMB\0";
+static const char *event_log_str_src_drv_anemometer = "ANEMOMETER\0";
+static const char *event_log_str_src_drv_i2c = "I2C\0";
+static const char *event_log_str_src_drv_uart = "UART\0";
+static const char *event_log_str_src_drv_spi = "SPI\0";
 
 /**
  * Strings for different severity
  *
  */
-static const char * event_log_str_severity_debug 			= "DEBUG\0";
-static const char * event_log_str_severity_info 			= "INFO\0";
-static const char * event_log_str_severity_info_cyclic 		= "INFOC\0";
-static const char * event_log_str_severity_warning 			= "WARN\0";
-static const char * event_log_str_severity_error 			= "ERROR\0";
-static const char * event_log_str_severity_assert 			= "ASSRT\0";
-static const char * event_log_str_severity_bootup 			= "BOOT\0";
-static const char * event_log_str_severity_timesync 		= "TS\0";
+static const char *event_log_str_severity_debug = "DEBUG\0";
+static const char *event_log_str_severity_info = "INFO\0";
+static const char *event_log_str_severity_info_cyclic = "INFOC\0";
+static const char *event_log_str_severity_warning = "WARN\0";
+static const char *event_log_str_severity_error = "ERROR\0";
+static const char *event_log_str_severity_assert = "ASSRT\0";
+static const char *event_log_str_severity_bootup = "BOOT\0";
+static const char *event_log_str_severity_timesync = "TS\0";
 
 /**
  * Strings for hardfault records
  */
-static const char * event_log_str_hardfault_lr		= "LR\0";
-static const char * event_log_str_hardfault_pc		= "PC\0";
-static const char * event_log_str_hardfault_r0		= "R0\0";
-static const char * event_log_str_hardfault_r1		= "R1\0";
-static const char * event_log_str_hardfault_r2		= "R2\0";
-static const char * event_log_str_hardfault_r3		= "R3\0";
-static const char * event_log_str_hardfault_r12		= "R12\0";
-static const char * event_log_str_hardfault_src		= "SRC\0";
-static const char * event_log_str_hardfault_xpsr		= "XPSR\0";
-static const char * event_log_str_hardfault_cfsr		= "CFSR\0";
-static const char * event_log_str_hardfault_usage		= "USAGE\0";
-static const char * event_log_str_hardfault_bus		= "BUS\0";
-static const char * event_log_str_hardfault_hf		= "HARDFLT\0";
-static const char * event_log_str_hardfault_mmu		= "MMU\0";
+static const char *event_log_str_hardfault_lr = "LR\0";
+static const char *event_log_str_hardfault_pc = "PC\0";
+static const char *event_log_str_hardfault_r0 = "R0\0";
+static const char *event_log_str_hardfault_r1 = "R1\0";
+static const char *event_log_str_hardfault_r2 = "R2\0";
+static const char *event_log_str_hardfault_r3 = "R3\0";
+static const char *event_log_str_hardfault_r12 = "R12\0";
+static const char *event_log_str_hardfault_src = "SRC\0";
+static const char *event_log_str_hardfault_xpsr = "XPSR\0";
+static const char *event_log_str_hardfault_cfsr = "CFSR\0";
+static const char *event_log_str_hardfault_usage = "USAGE\0";
+static const char *event_log_str_hardfault_bus = "BUS\0";
+static const char *event_log_str_hardfault_hf = "HARDFLT\0";
+static const char *event_log_str_hardfault_mmu = "MMU\0";
 
 #ifdef PARAMETEO
 
 /**
  * Strings for events generated by "main" sources
  */
-static const char * event_log_str_main_bootup_complete		= "BOOTUP_COMPLETE\0";
-static const char * event_log_str_main_timesync_bootup		= "TS_BOOTUP\0";
-static const char * event_log_str_main_timesync_periodic	= "TS_PERIODIC\0";
-static const char * event_log_str_main_timesync_ntp		= "TS_NTP\0";
-static const char * event_log_str_main_info_cyclic			= "CYCLIC\0";
-static const char * event_log_str_main_info_hardault			= "HARDFAULT\0";
-static const char * event_log_str_main_info_supervisor			= "SUPERVISOR\0";
+static const char *event_log_str_main_bootup_complete = "BOOTUP_COMPLETE\0";
+static const char *event_log_str_main_timesync_bootup = "TS_BOOTUP\0";
+static const char *event_log_str_main_timesync_periodic = "TS_PERIODIC\0";
+static const char *event_log_str_main_timesync_ntp = "TS_NTP\0";
+static const char *event_log_str_main_info_cyclic = "CYCLIC\0";
+static const char *event_log_str_main_info_hardault = "HARDFAULT\0";
+static const char *event_log_str_main_info_supervisor = "SUPERVISOR\0";
 
 /**
  * Strings for events generated by "drv_anemometer" sources
  *
  */
-static const char * event_log_str_drv_anemometer_no_pulses_int_fired = "NO_PULSES_INT_FIRED\0";
-static const char * event_log_str_drv_anemometer_excesive_slew_rate = "EXCESIVE_SLEW\0";
-static const char * event_log_str_drv_anemometer_uf_conv_not_working = "UF_CONV_NOT_WRKNG\0";
-static const char * event_log_str_drv_anemometer_uf_freq_to_hi = "UF_FREQ_TOO_HI\0";
-static const char * event_log_str_drv_anemometer_qf_not_full = "QF_NOT_FULL\0";
+static const char *event_log_str_drv_anemometer_no_pulses_int_fired = "NO_PULSES_INT_FIRED\0";
+static const char *event_log_str_drv_anemometer_excesive_slew_rate = "EXCESIVE_SLEW\0";
+static const char *event_log_str_drv_anemometer_uf_conv_not_working = "UF_CONV_NOT_WRKNG\0";
+static const char *event_log_str_drv_anemometer_uf_freq_to_hi = "UF_FREQ_TOO_HI\0";
+static const char *event_log_str_drv_anemometer_qf_not_full = "QF_NOT_FULL\0";
 
 /**
  * Strings for events generated by "gsm gprs"
  */
-static const char * event_log_str_tcpip_error_apn_config_missing = "NO_APN_CONFIG\0";
-static const char * event_log_str_tcpip_warn_async_msg_detected = "ASYNC_MSG_DETECT\0";
-static const char * event_log_str_tcpip_error_sim_card_status = "SIMCARD_ERROR\0";
-static const char * event_log_str_tcpip_warn_not_registered_to_nework = "NOT_REG_TO_NETWORK\0";
-static const char * event_log_str_tcpip_bootup_registered_network = "NETWORK_NAME\0";
-static const char * event_log_str_tcpip_bootup_signal_level = "SIGNAL_LEVEL_AND_FREQ\0";
-static const char * event_log_str_tcpip_bootup_imsi = "IMSI\0";
-static const char * event_log_str_tcpip_bootup_ip_address = "IP_ADDR\0";
-static const char * event_log_str_tcpip_handshaking = "HANDSHAKING\0";
-static const char * event_log_str_tcpip_powered_on = "POWERED_ON\0";
+static const char *event_log_str_tcpip_error_apn_config_missing = "NO_APN_CONFIG\0";
+static const char *event_log_str_tcpip_warn_async_msg_detected = "ASYNC_MSG_DETECT\0";
+static const char *event_log_str_tcpip_error_sim_card_status = "SIMCARD_ERROR\0";
+static const char *event_log_str_tcpip_warn_not_registered_to_nework = "NOT_REG_TO_NETWORK\0";
+static const char *event_log_str_tcpip_bootup_registered_network = "NETWORK_NAME\0";
+static const char *event_log_str_tcpip_bootup_signal_level = "SIGNAL_LEVEL_AND_FREQ\0";
+static const char *event_log_str_tcpip_bootup_imsi = "IMSI\0";
+static const char *event_log_str_tcpip_bootup_ip_address = "IP_ADDR\0";
+static const char *event_log_str_tcpip_handshaking = "HANDSHAKING\0";
+static const char *event_log_str_tcpip_powered_on = "POWERED_ON\0";
 
 /**
  * Strings for events generated by "pwr_save"
  */
-static const char * event_log_str_pwr_save_going_sleep = "B+LOW_GOING_SLEEP\0";
-static const char * event_log_str_pwr_save_goto_intermediate_sleep = "GOTO_IM_SLEEP\0";
-static const char * event_log_str_pwr_save_wokenup_rtc_it = "WOKENUP_RTC_IT\0";
-static const char * event_log_str_pwr_save_wokenup_after_last = "WOKENUP_AFTER_LAST\0";
-static const char * event_log_str_pwr_save_wokenup_exited = "WOKENUP_EXITED\0";
-static const char * event_log_str_pwr_save_state_c0 = "C0\0";
-static const char * event_log_str_pwr_save_state_c1 = "C1\0";
-static const char * event_log_str_pwr_save_state_c2 = "C2\0";
-static const char * event_log_str_pwr_save_state_c3 = "C3\0";
-static const char * event_log_str_pwr_save_state_m4 = "M4\0";
-static const char * event_log_str_pwr_save_state_m4a = "M4A\0";
-static const char * event_log_str_pwr_save_state_i5 = "I5\0";
+static const char *event_log_str_pwr_save_going_sleep = "B+LOW_GOING_SLEEP\0";
+static const char *event_log_str_pwr_save_goto_intermediate_sleep = "GOTO_IM_SLEEP\0";
+static const char *event_log_str_pwr_save_wokenup_rtc_it = "WOKENUP_RTC_IT\0";
+static const char *event_log_str_pwr_save_wokenup_after_last = "WOKENUP_AFTER_LAST\0";
+static const char *event_log_str_pwr_save_wokenup_exited = "WOKENUP_EXITED\0";
+static const char *event_log_str_pwr_save_state_c0 = "C0\0";
+static const char *event_log_str_pwr_save_state_c1 = "C1\0";
+static const char *event_log_str_pwr_save_state_c2 = "C2\0";
+static const char *event_log_str_pwr_save_state_c3 = "C3\0";
+static const char *event_log_str_pwr_save_state_m4 = "M4\0";
+static const char *event_log_str_pwr_save_state_m4a = "M4A\0";
+static const char *event_log_str_pwr_save_state_i5 = "I5\0";
 /**
  * Strings for events generated by "tcpip"
  */
-static const char * event_log_str_tcpip_error_connecting = "ERR_CONNECTING\0";
-static const char * event_log_str_tcpip_error_connecting_no_modem_resp = "ERR_CONN_NO_RESP\0";
+static const char *event_log_str_tcpip_error_connecting = "ERR_CONNECTING\0";
+static const char *event_log_str_tcpip_error_connecting_no_modem_resp = "ERR_CONN_NO_RESP\0";
 
 /**
  * Strings for events generated by "wx_handler" sources
@@ -153,44 +153,46 @@ static const char * event_log_str_tcpip_error_connecting_no_modem_resp = "ERR_CO
  *
  *
  */
-static const char * event_log_str_wx_handler_temperature_int_failed = "TEMP_INT_FAIL\0";
-static const char * event_log_str_wx_handler_temperature_dallas_degraded = "DALLAS_DEGR\0";
-static const char * event_log_str_wx_handler_temperature_dallas_not_avble = "DALLAS_NVBLE\0";
-static const char * event_log_str_wx_handler_temperature_excesive_slew = "EXCSVE_SLEW\0";
-static const char * event_log_str_wx_handler_temperature_pressure_fail = "PRESSURE_FL\0";
-static const char * event_log_str_wx_handler_temperature_humidity_fail = "HUMID_FL\0";
+static const char *event_log_str_wx_handler_temperature_int_failed = "TEMP_INT_FAIL\0";
+static const char *event_log_str_wx_handler_temperature_dallas_degraded = "DALLAS_DEGR\0";
+static const char *event_log_str_wx_handler_temperature_dallas_not_avble = "DALLAS_NVBLE\0";
+static const char *event_log_str_wx_handler_temperature_excesive_slew = "EXCSVE_SLEW\0";
+static const char *event_log_str_wx_handler_temperature_pressure_fail = "PRESSURE_FL\0";
+static const char *event_log_str_wx_handler_temperature_humidity_fail = "HUMID_FL\0";
 
-static const char * event_log_str_wx_handler_error_rte_check_anem_timer_has_been_fired = "CHECK_ANEM_TMR_FIRED\0";
-static const char * event_log_str_wx_handler_error_rte_check_slew_limit = "CHECK_SLEW_LIMIT\0";
-static const char * event_log_str_wx_handler_error_rte_check_debouncing = "CHECK_DEBOUNCING\0";
-static const char * event_log_str_wx_handler_error_rte_check_uf_converter_fail = "CHECK_UF_CONVRTR\0";
-static const char * event_log_str_wx_handler_error_rte_check_windspeed_buffers = "CHECK_WINDSPEED_BUFRS\0";
+static const char *event_log_str_wx_handler_error_rte_check_anem_timer_has_been_fired =
+	"CHECK_ANEM_TMR_FIRED\0";
+static const char *event_log_str_wx_handler_error_rte_check_slew_limit = "CHECK_SLEW_LIMIT\0";
+static const char *event_log_str_wx_handler_error_rte_check_debouncing = "CHECK_DEBOUNCING\0";
+static const char *event_log_str_wx_handler_error_rte_check_uf_converter_fail =
+	"CHECK_UF_CONVRTR\0";
+static const char *event_log_str_wx_handler_error_rte_check_windspeed_buffers =
+	"CHECK_WINDSPEED_BUFRS\0";
 
 /**
  * Strings for events generated by "aprsis" sources
  */
-static const char * event_log_str_aprsis_im_not_ok_last_keepalive = "LAST_KEEPALIVE\0";
-static const char * event_log_str_aprsis_im_not_ok_last_transmit = "LAST_TRANSMIT\0";
-static const char * event_log_str_aprsis_warn_auth_failed = "AUTH_FAILED\0";
-static const char * event_log_str_aprsis_warn_timeout_waiting_auth = "TIMEOUT_AUTH\0";
-static const char * event_log_str_aprsis_warn_no_hello_message = "NO_HELLO_MSG\0";
-static const char * event_log_str_aprsis_warn_timeout_waiting_hello_msg = "TIMEOUT_HELLO\0";
-static const char * event_log_str_aprsis_warn_connect_failed = "CONN_FAIL\0";
-static const char * event_log_str_aprsis_warn_wrong_state = "WRONG_STATE_TO_CONN\0";
-static const char * event_log_str_aprsis_warn_dead_keepalive = "DEAD_KEEPALV\0";
-static const char * event_log_str_aprsis_warn_dead_transmit = "DEAD_TRANSMIT\0";
+static const char *event_log_str_aprsis_im_not_ok_last_keepalive = "LAST_KEEPALIVE\0";
+static const char *event_log_str_aprsis_im_not_ok_last_transmit = "LAST_TRANSMIT\0";
+static const char *event_log_str_aprsis_warn_auth_failed = "AUTH_FAILED\0";
+static const char *event_log_str_aprsis_warn_timeout_waiting_auth = "TIMEOUT_AUTH\0";
+static const char *event_log_str_aprsis_warn_no_hello_message = "NO_HELLO_MSG\0";
+static const char *event_log_str_aprsis_warn_timeout_waiting_hello_msg = "TIMEOUT_HELLO\0";
+static const char *event_log_str_aprsis_warn_connect_failed = "CONN_FAIL\0";
+static const char *event_log_str_aprsis_warn_wrong_state = "WRONG_STATE_TO_CONN\0";
+static const char *event_log_str_aprsis_warn_dead_keepalive = "DEAD_KEEPALV\0";
+static const char *event_log_str_aprsis_warn_dead_transmit = "DEAD_TRANSMIT\0";
 
 /**
  * Strings for events generated by "UMB" sources
  */
-static const char * event_log_str_umb_warn_crc_failed_in_received_frame = "CRC_FAIL\0";
-static const char * event_log_str_umb_warn_received_frame_malformed = "MALFORMED_FRM\0";
-static const char * event_log_str_umb_warn_nok_sensor_status_in_get_status_data = "NOK_SENSOR_ST\0";
-static const char * event_log_str_umb_warn_nok_sensor_status_in_offline_data = "NOK_SENSOR_STS\0";
-static const char * event_log_str_umb_error_receiving = "ERR_RECEIVING\0";
-static const char * event_log_str_umb_error_unexp_routine_id = "UNEXP_ROUTINE_ID\0";
-static const char * event_log_str_umb_error_quality_factor_not_avail = "QF_NOT_AVAIL\0";
-
+static const char *event_log_str_umb_warn_crc_failed_in_received_frame = "CRC_FAIL\0";
+static const char *event_log_str_umb_warn_received_frame_malformed = "MALFORMED_FRM\0";
+static const char *event_log_str_umb_warn_nok_sensor_status_in_get_status_data = "NOK_SENSOR_ST\0";
+static const char *event_log_str_umb_warn_nok_sensor_status_in_offline_data = "NOK_SENSOR_STS\0";
+static const char *event_log_str_umb_error_receiving = "ERR_RECEIVING\0";
+static const char *event_log_str_umb_error_unexp_routine_id = "UNEXP_ROUTINE_ID\0";
+static const char *event_log_str_umb_error_quality_factor_not_avail = "QF_NOT_AVAIL\0";
 
 #else
 
@@ -199,60 +201,67 @@ static const char * event_log_str_umb_error_quality_factor_not_avail = "QF_NOT_A
 /**
  * Strings for events generated by "main" sources
  */
-static const char * event_log_str_main_bootup_complete		= "Bootup complete\0";
-static const char * event_log_str_main_timesync_bootup		= "Current RTC time, bootup\0";
-static const char * event_log_str_main_timesync_periodic	= "Current RTC time\0";
-static const char * event_log_str_main_timesync_ntp			= "Current RTC time after NTP sync\0";
-static const char * event_log_str_main_info_cyclic			= "CYCLIC\0";
+static const char *event_log_str_main_bootup_complete = "Bootup complete\0";
+static const char *event_log_str_main_timesync_bootup = "Current RTC time, bootup\0";
+static const char *event_log_str_main_timesync_periodic = "Current RTC time\0";
+static const char *event_log_str_main_timesync_ntp = "Current RTC time after NTP sync\0";
+static const char *event_log_str_main_info_cyclic = "CYCLIC\0";
 
 /**
  * Strings for events generated by "drv_anemometer" sources
  *
  */
-static const char * event_log_str_drv_anemometer_no_pulses_int_fired = "No windspeed pulses from anemometer\0";
-static const char * event_log_str_drv_anemometer_excesive_slew_rate = "Excessive slew rate in windspeed pulses\0";
-static const char * event_log_str_drv_anemometer_uf_conv_not_working = "U/f converter for winddir not working\0";
-static const char * event_log_str_drv_anemometer_uf_freq_to_hi = "U/f converter frequency too high\0";
-static const char * event_log_str_drv_anemometer_qf_not_full = "Quality Factor not null\0";
+static const char *event_log_str_drv_anemometer_no_pulses_int_fired =
+	"No windspeed pulses from anemometer\0";
+static const char *event_log_str_drv_anemometer_excesive_slew_rate =
+	"Excessive slew rate in windspeed pulses\0";
+static const char *event_log_str_drv_anemometer_uf_conv_not_working =
+	"U/f converter for winddir not working\0";
+static const char *event_log_str_drv_anemometer_uf_freq_to_hi =
+	"U/f converter frequency too high\0";
+static const char *event_log_str_drv_anemometer_qf_not_full = "Quality Factor not null\0";
 
 /**
  * Strings for events generated by "gsm gprs"
  */
-static const char * event_log_str_tcpip_error_apn_config_missing = "APN not configured and not auto detected\0";
-static const char * event_log_str_tcpip_warn_async_msg_detected = "Asynchronous message from GPRS modem\0";
-static const char * event_log_str_tcpip_error_sim_card_status = "Can't communicate with SIM card\0";
-static const char * event_log_str_tcpip_warn_not_registered_to_nework = "Not registered to GSM network\0";
-static const char * event_log_str_tcpip_bootup_registered_network = "GSM network name\0";
-static const char * event_log_str_tcpip_bootup_signal_level = "Freq and Signal level in dBm\0";
-static const char * event_log_str_tcpip_bootup_imsi = "IMSI\0";
-static const char * event_log_str_tcpip_bootup_ip_address = "GPRS IP Address\0";
-static const char * event_log_str_tcpip_handshaking = "Handshaking with a modem\0";
-static const char * event_log_str_tcpip_powered_on = "Modem powered on\0";
-
+static const char *event_log_str_tcpip_error_apn_config_missing =
+	"APN not configured and not auto detected\0";
+static const char *event_log_str_tcpip_warn_async_msg_detected =
+	"Asynchronous message from GPRS modem\0";
+static const char *event_log_str_tcpip_error_sim_card_status = "Can't communicate with SIM card\0";
+static const char *event_log_str_tcpip_warn_not_registered_to_nework =
+	"Not registered to GSM network\0";
+static const char *event_log_str_tcpip_bootup_registered_network = "GSM network name\0";
+static const char *event_log_str_tcpip_bootup_signal_level = "Freq and Signal level in dBm\0";
+static const char *event_log_str_tcpip_bootup_imsi = "IMSI\0";
+static const char *event_log_str_tcpip_bootup_ip_address = "GPRS IP Address\0";
+static const char *event_log_str_tcpip_handshaking = "Handshaking with a modem\0";
+static const char *event_log_str_tcpip_powered_on = "Modem powered on\0";
 
 /**
  * Strings for events generated by "pwr_save"
  */
-static const char * event_log_str_pwr_save_going_sleep = "B+ critically low, going to sleep\0";
-static const char * event_log_str_pwr_save_goto_intermediate_sleep = "Going to immediate sleep\0";
-static const char * event_log_str_pwr_save_wokenup_rtc_it = "Wokenup - RTC interrupt\0";
-static const char * event_log_str_pwr_save_wokenup_after_last = "Wokenup - after last one\0";
-static const char * event_log_str_pwr_save_wokenup_exited = "Wokeunp - exited\0";
-static const char * event_log_str_pwr_save_state_c0 = "Switched to state C0\0";
-static const char * event_log_str_pwr_save_state_c1 = "Switched to state C1\0";
-static const char * event_log_str_pwr_save_state_c2 = "Switched to state C2\0";
-static const char * event_log_str_pwr_save_state_c3 = "Switched to state C3\0";
-static const char * event_log_str_pwr_save_state_m4 = "Switched to state M4\0";
-static const char * event_log_str_pwr_save_state_m4a = "Switched to state M4A\0";
-static const char * event_log_str_pwr_save_state_i5 = "Switched to state I5\0";
+static const char *event_log_str_pwr_save_going_sleep = "B+ critically low, going to sleep\0";
+static const char *event_log_str_pwr_save_goto_intermediate_sleep = "Going to immediate sleep\0";
+static const char *event_log_str_pwr_save_wokenup_rtc_it = "Wokenup - RTC interrupt\0";
+static const char *event_log_str_pwr_save_wokenup_after_last = "Wokenup - after last one\0";
+static const char *event_log_str_pwr_save_wokenup_exited = "Wokeunp - exited\0";
+static const char *event_log_str_pwr_save_state_c0 = "Switched to state C0\0";
+static const char *event_log_str_pwr_save_state_c1 = "Switched to state C1\0";
+static const char *event_log_str_pwr_save_state_c2 = "Switched to state C2\0";
+static const char *event_log_str_pwr_save_state_c3 = "Switched to state C3\0";
+static const char *event_log_str_pwr_save_state_m4 = "Switched to state M4\0";
+static const char *event_log_str_pwr_save_state_m4a = "Switched to state M4A\0";
+static const char *event_log_str_pwr_save_state_i5 = "Switched to state I5\0";
 
 /**
  * Strings for events generated by "tcpip"
  */
-static const char * event_log_str_tcpip_error_connecting = "Connection failure\0";
-static const char * event_log_str_tcpip_error_connecting_no_modem_resp = "No response from modem while connecting\0";
-static const char * event_log_str_tcpip_handshaking = "HANDSHAKING\0";
-static const char * event_log_str_tcpip_powered_on = "Modem powered on\0";
+static const char *event_log_str_tcpip_error_connecting = "Connection failure\0";
+static const char *event_log_str_tcpip_error_connecting_no_modem_resp =
+	"No response from modem while connecting\0";
+static const char *event_log_str_tcpip_handshaking = "HANDSHAKING\0";
+static const char *event_log_str_tcpip_powered_on = "Modem powered on\0";
 
 /**
  * Strings for events generated by "wx_handler" sources
@@ -260,47 +269,71 @@ static const char * event_log_str_tcpip_powered_on = "Modem powered on\0";
  *
  *
  */
-static const char * event_log_str_wx_handler_temperature_int_failed = "Internal temperature sensor fail\0";
-static const char * event_log_str_wx_handler_temperature_dallas_degraded = "Dallas sensor QF degraded\0";
-static const char * event_log_str_wx_handler_temperature_dallas_not_avble = "Dallas sensor QF not available\0";
-static const char * event_log_str_wx_handler_temperature_excesive_slew = "Dallas sensor exscesive slew\0";
-static const char * event_log_str_wx_handler_temperature_pressure_fail = "Pressure sensor comms failure\0";
-static const char * event_log_str_wx_handler_temperature_humidity_fail = "Humidity pressure comms failure\0";
+static const char *event_log_str_wx_handler_temperature_int_failed =
+	"Internal temperature sensor fail\0";
+static const char *event_log_str_wx_handler_temperature_dallas_degraded =
+	"Dallas sensor QF degraded\0";
+static const char *event_log_str_wx_handler_temperature_dallas_not_avble =
+	"Dallas sensor QF not available\0";
+static const char *event_log_str_wx_handler_temperature_excesive_slew =
+	"Dallas sensor exscesive slew\0";
+static const char *event_log_str_wx_handler_temperature_pressure_fail =
+	"Pressure sensor comms failure\0";
+static const char *event_log_str_wx_handler_temperature_humidity_fail =
+	"Humidity pressure comms failure\0";
 
-static const char * event_log_str_wx_handler_error_rte_check_anem_timer_has_been_fired = "RTE anemometer timer event counter failed\0";
-static const char * event_log_str_wx_handler_error_rte_check_slew_limit = "RTE slew limiting event counter failed\0";
-static const char * event_log_str_wx_handler_error_rte_check_debouncing = "RTE debouncing event counter failed\0";
-static const char * event_log_str_wx_handler_error_rte_check_uf_converter_fail = "RTE u/f converter malfnc event counter failed\0";
-static const char * event_log_str_wx_handler_error_rte_check_windspeed_buffers = "RTE windspeed and winddir buffers check failed\0";
+static const char *event_log_str_wx_handler_error_rte_check_anem_timer_has_been_fired =
+	"RTE anemometer timer event counter failed\0";
+static const char *event_log_str_wx_handler_error_rte_check_slew_limit =
+	"RTE slew limiting event counter failed\0";
+static const char *event_log_str_wx_handler_error_rte_check_debouncing =
+	"RTE debouncing event counter failed\0";
+static const char *event_log_str_wx_handler_error_rte_check_uf_converter_fail =
+	"RTE u/f converter malfnc event counter failed\0";
+static const char *event_log_str_wx_handler_error_rte_check_windspeed_buffers =
+	"RTE windspeed and winddir buffers check failed\0";
 
 /**
  * Strings for events generated by "aprsis" sources
  */
-static const char * event_log_str_aprsis_im_not_ok_last_keepalive = "Communication critical fail, no keepalive\0";
-static const char * event_log_str_aprsis_im_not_ok_last_transmit = "Communication critical fail, no transmission\0";
-static const char * event_log_str_aprsis_warn_auth_failed = "Passcode authorization fail\0";
-static const char * event_log_str_aprsis_warn_timeout_waiting_auth = "Timeout while waiting for auth\0";
-static const char * event_log_str_aprsis_warn_no_hello_message = "Unexpected message while waiting for hello\0";
-static const char * event_log_str_aprsis_warn_timeout_waiting_hello_msg = "Timeout while waiting for hello\0";
-static const char * event_log_str_aprsis_warn_connect_failed = "Connection to server fail\0";
-static const char * event_log_str_aprsis_warn_wrong_state = "Wrong TCPIP state to connect to server\0";
-static const char * event_log_str_aprsis_warn_dead_keepalive = "Connection stalled, no keepalive rcvd\0";
-static const char * event_log_str_aprsis_warn_dead_transmit = "Connection stalled, cannot transmit\0";
+static const char *event_log_str_aprsis_im_not_ok_last_keepalive =
+	"Communication critical fail, no keepalive\0";
+static const char *event_log_str_aprsis_im_not_ok_last_transmit =
+	"Communication critical fail, no transmission\0";
+static const char *event_log_str_aprsis_warn_auth_failed = "Passcode authorization fail\0";
+static const char *event_log_str_aprsis_warn_timeout_waiting_auth =
+	"Timeout while waiting for auth\0";
+static const char *event_log_str_aprsis_warn_no_hello_message =
+	"Unexpected message while waiting for hello\0";
+static const char *event_log_str_aprsis_warn_timeout_waiting_hello_msg =
+	"Timeout while waiting for hello\0";
+static const char *event_log_str_aprsis_warn_connect_failed = "Connection to server fail\0";
+static const char *event_log_str_aprsis_warn_wrong_state =
+	"Wrong TCPIP state to connect to server\0";
+static const char *event_log_str_aprsis_warn_dead_keepalive =
+	"Connection stalled, no keepalive rcvd\0";
+static const char *event_log_str_aprsis_warn_dead_transmit =
+	"Connection stalled, cannot transmit\0";
 
 /**
  * Strings for events generated by "UMB" sources
  */
-static const char * event_log_str_umb_warn_crc_failed_in_received_frame = "CRC failure in received frame\0";
-static const char * event_log_str_umb_warn_received_frame_malformed = "Frame has malformed struct\0";
-static const char * event_log_str_umb_warn_nok_sensor_status_in_get_status_data = "Error status returned from sensr by status routine\0";
-static const char * event_log_str_umb_warn_nok_sensor_status_in_offline_data = "Error status returned by sensor\0";
-static const char * event_log_str_umb_error_receiving = "RS-485 error while receiving data from sensor\0";
-static const char * event_log_str_umb_error_unexp_routine_id = "Response for unexpected routine id\0";
-static const char * event_log_str_umb_error_quality_factor_not_avail = "Quality Factor not available\0";
+static const char *event_log_str_umb_warn_crc_failed_in_received_frame =
+	"CRC failure in received frame\0";
+static const char *event_log_str_umb_warn_received_frame_malformed = "Frame has malformed struct\0";
+static const char *event_log_str_umb_warn_nok_sensor_status_in_get_status_data =
+	"Error status returned from sensr by status routine\0";
+static const char *event_log_str_umb_warn_nok_sensor_status_in_offline_data =
+	"Error status returned by sensor\0";
+static const char *event_log_str_umb_error_receiving =
+	"RS-485 error while receiving data from sensor\0";
+static const char *event_log_str_umb_error_unexp_routine_id =
+	"Response for unexpected routine id\0";
+static const char *event_log_str_umb_error_quality_factor_not_avail =
+	"Quality Factor not available\0";
 
 #endif
 
 #pragma GCC diagnostic pop
-
 
 #endif /* B203942E_D692_4A26_B619_FC9FD8E636F0 */

@@ -8,6 +8,8 @@
 #ifndef INCLUDE_DAVIS_VANTAGE_DAVIS_LOOP_T_H_
 #define INCLUDE_DAVIS_VANTAGE_DAVIS_LOOP_T_H_
 
+#include <stdint.h>
+
 /**
  * This type holds information parsed from incoming LOOP packet. Due to memory constraints
  * it doesn't hold all information from original packet sent from the WX station base. It
@@ -50,6 +52,6 @@ typedef struct davis_loop {
 	// crc is sent after newline '\n\r'
 	uint16_t crc;
 
-}davis_loop_t;
+} davis_loop_t;
 
 #endif /* INCLUDE_DAVIS_VANTAGE_DAVIS_LOOP_T_H_ */

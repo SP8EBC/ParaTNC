@@ -50,6 +50,6 @@ int16_t fanet_serialize (fanet_frame_t *input, uint8_t *output, uint8_t output_s
  * @param output
  * @return
  */
-int32_t fanet_deserialize(uint8_t * input, uint8_t input_size, fanet_frame_t * output);
+int32_t fanet_deserialize (uint8_t *input, uint8_t input_size, fanet_frame_t *output);
 
 #endif /* SKYTRAX_FANET_FANET_SERIALIZATION_H_ */

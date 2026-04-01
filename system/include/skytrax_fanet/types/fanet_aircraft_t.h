@@ -29,7 +29,7 @@ typedef enum fanet_aircraft_t {
 	FANET_AIRCRAFT_POWERED_AIRCRAFT = 5,
 	FANET_AIRCRAFT_HELICOPTER = 6,
 	FANET_AIRCRAFT_UAV = 7,
-}fanet_aircraft_t;
+} fanet_aircraft_t;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -38,7 +38,5 @@ typedef enum fanet_aircraft_t {
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
-
-
 
 #endif /* SKYTRAX_FANET_TYPES_FANET_AIRCRAFT_T_H_ */

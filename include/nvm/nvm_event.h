@@ -11,7 +11,7 @@
 // clang-format off
 
 #define NVM_EVENT_GET_PAGENUM_OFFSET(event_address, area_start, page_size)							\
-		((void*) event_address - (void*)area_start)	/ (uint32_t)page_size										\
+		((void*) event_address - (void*)area_start)	/ (uint32_t)page_size
 
 // clang-format on
 /// ==================================================================================================
@@ -43,10 +43,8 @@ uint16_t nvm_event_get_crc_errors (void);
  * percentage usage
  */
 nvm_event_result_t nvm_event_log_find_first_oldest_newest (event_log_t **oldest,
-														   event_log_t **newest, 
-                                                           void *area_start,
-														   void *area_end, 
-                                                           int16_t page_size,
+														   event_log_t **newest, void *area_start,
+														   void *area_end, int16_t page_size,
 														   uint16_t *area_percentage_use);
 
 /**

@@ -57,11 +57,11 @@ int32_t wx_get_pressure_measurement (const config_data_wx_sources_t *const confi
 			//			// get internal temperature
 			//			if (config_mode->wx_ms5611_or_bme == 1) {
 			//				measurement_retval =
-			//wx_get_temperature_bme280(&rte_wx_temperature_internal);
+			// wx_get_temperature_bme280(&rte_wx_temperature_internal);
 			//			}
 			//			else {
 			//				measurement_retval =
-			//wx_get_temperature_ms5611(&rte_wx_temperature_internal);
+			// wx_get_temperature_ms5611(&rte_wx_temperature_internal);
 			//			}
 
 			// incrementing iterator over pressure history
@@ -142,7 +142,7 @@ int32_t wx_get_pressure_measurement (const config_data_wx_sources_t *const confi
 		//
 		//		// check
 		//		if (measurement_retval == MODBUS_RET_OK || measurement_retval ==
-		//MODBUS_RET_DEGRADED) {
+		// MODBUS_RET_DEGRADED) {
 		//
 		//			// set the flag that external temperature is available
 		//			output |= WX_HANDLER_PARAMETER_RESULT_HUMIDITY;

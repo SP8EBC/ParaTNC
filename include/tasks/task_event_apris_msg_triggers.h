@@ -8,9 +8,6 @@
 #ifndef TASKS_TASK_EVENT_APRIS_MSG_TRIGGERS_H_
 #define TASKS_TASK_EVENT_APRIS_MSG_TRIGGERS_H_
 
-
 void task_event_aprsis_msg_trigger (void *param);
-
-
 
 #endif /* TASKS_TASK_EVENT_APRIS_MSG_TRIGGERS_H_ */

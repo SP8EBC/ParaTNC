@@ -7,23 +7,23 @@
  * @ide     Keil uVision
  * @license GNU GPL v3
  * @brief   Onewire library for STM32F4 devices
- *	
+ *
 @verbatim
    ----------------------------------------------------------------------
-    Copyright (C) Tilen Majerle, 2015
-    
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    any later version.
-     
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	Copyright (C) Tilen Majerle, 2015
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
    ----------------------------------------------------------------------
 @endverbatim
  */
@@ -42,21 +42,25 @@ extern "C" {
 
 /**
  * @defgroup TM_ONEWIRE
- * @brief    Onewire library for STM32F4 devices - http://stm32f4-discovery.com/2014/05/library-12-onewire-library-for-stm43f4xx/
+ * @brief    Onewire library for STM32F4 devices -
+http://stm32f4-discovery.com/2014/05/library-12-onewire-library-for-stm43f4xx/
  * @{
  *
- * As of version 2.0 you can now use more than just one one-wire "port" on STM32F4. This allows you to group devices to separate ports.
- * 
- * Because if you have a loot devices on one port, if one device fail, everything is failed. You can prevent this by use more than just one port.
+ * As of version 2.0 you can now use more than just one one-wire "port" on STM32F4. This allows you
+to group devices to separate ports.
  *
- * To set your port and pin for OneWire protocol, you can do this when calling @ref TM_OneWire_Init function.
+ * Because if you have a loot devices on one port, if one device fail, everything is failed. You can
+prevent this by use more than just one port.
+ *
+ * To set your port and pin for OneWire protocol, you can do this when calling @ref TM_OneWire_Init
+function.
  *
  * \par Changelog
  *
 @verbatim
  Version 2.1
   - March 10, 2015
-  - Added support for new GPIO library 
+  - Added support for new GPIO library
 
  Version 2.0
   - January 04, 2015
@@ -66,7 +70,7 @@ extern "C" {
  Version 1.1
   - December 06, 2014
   - Added 8-bit CRC calculation for 1-Wire devices, algorithm from Dallas
- 
+
  Version 1.0
   - First release
 @endverbatim
@@ -82,12 +86,12 @@ extern "C" {
  - TM GPIO
 @endverbatim
  */
+#include "defines.h"
 #include <stm32f10x.h>
 #include <stm32f10x_gpio.h>
 #include <stm32f10x_rcc.h>
-#include "defines.h"
-//#include "tm_stm32f4_delay.h"
-//#include "tm_stm32f4_gpio.h"
+// #include "tm_stm32f4_delay.h"
+// #include "tm_stm32f4_gpio.h"
 
 /**
  * @defgroup TM_ONEWIRE_Macros
@@ -96,29 +100,29 @@ extern "C" {
  */
 
 /* OneWire delay */
-#define ONEWIRE_DELAY(x)				Delay(x)
+#define ONEWIRE_DELAY(x) Delay (x)
 
 /* Pin settings */
-#define ONEWIRE_LOW(structure)			TM_GPIO_SetPinLow((structure)->GPIOx, (structure)->GPIO_Pin)
-#define ONEWIRE_HIGH(structure)			TM_GPIO_SetPinHigh((structure)->GPIOx, (structure)->GPIO_Pin)
-#define ONEWIRE_INPUT(structure)		TM_GPIO_SetPinAsInput(structure->GPIOx, (structure)->GPIO_Pin)
-#define ONEWIRE_OUTPUT(structure)		TM_GPIO_SetPinAsOutput(structure->GPIOx, (structure)->GPIO_Pin)
+#define ONEWIRE_LOW(structure)	  TM_GPIO_SetPinLow ((structure)->GPIOx, (structure)->GPIO_Pin)
+#define ONEWIRE_HIGH(structure)	  TM_GPIO_SetPinHigh ((structure)->GPIOx, (structure)->GPIO_Pin)
+#define ONEWIRE_INPUT(structure)  TM_GPIO_SetPinAsInput (structure->GPIOx, (structure)->GPIO_Pin)
+#define ONEWIRE_OUTPUT(structure) TM_GPIO_SetPinAsOutput (structure->GPIOx, (structure)->GPIO_Pin)
 
 /* OneWire commands */
-#define ONEWIRE_CMD_RSCRATCHPAD			0xBE
-#define ONEWIRE_CMD_WSCRATCHPAD			0x4E
-#define ONEWIRE_CMD_CPYSCRATCHPAD		0x48
-#define ONEWIRE_CMD_RECEEPROM			0xB8
-#define ONEWIRE_CMD_RPWRSUPPLY			0xB4
-#define ONEWIRE_CMD_SEARCHROM			0xF0
-#define ONEWIRE_CMD_READROM				0x33
-#define ONEWIRE_CMD_MATCHROM			0x55
-#define ONEWIRE_CMD_SKIPROM				0xCC
+#define ONEWIRE_CMD_RSCRATCHPAD	  0xBE
+#define ONEWIRE_CMD_WSCRATCHPAD	  0x4E
+#define ONEWIRE_CMD_CPYSCRATCHPAD 0x48
+#define ONEWIRE_CMD_RECEEPROM	  0xB8
+#define ONEWIRE_CMD_RPWRSUPPLY	  0xB4
+#define ONEWIRE_CMD_SEARCHROM	  0xF0
+#define ONEWIRE_CMD_READROM		  0x33
+#define ONEWIRE_CMD_MATCHROM	  0x55
+#define ONEWIRE_CMD_SKIPROM		  0xCC
 
 /**
  * @}
  */
- 
+
 /**
  * @defgroup TM_ONEWIRE_Typedefs
  * @brief    Library Typedefs
@@ -141,23 +145,19 @@ typedef enum {
 	READ_COMPLETE
 } transfer_states;
 
-typedef enum {
-	IDL,
-	RD,
-	WRI
-} bus_direction;
+typedef enum { IDL, RD, WRI } bus_direction;
 
 /**
  * @brief  OneWire working struct
  * @note   Except ROM_NO member, everything is fully private and should not be touched by user
  */
 typedef struct {
-	GPIO_TypeDef* GPIOx;           /*!< GPIOx port to be used for I/O functions */
-	uint16_t GPIO_Pin;             /*!< GPIO Pin to be used for I/O functions */
-	uint8_t LastDiscrepancy;       /*!< Search private */
+	GPIO_TypeDef *GPIOx;		   /*!< GPIOx port to be used for I/O functions */
+	uint16_t GPIO_Pin;			   /*!< GPIO Pin to be used for I/O functions */
+	uint8_t LastDiscrepancy;	   /*!< Search private */
 	uint8_t LastFamilyDiscrepancy; /*!< Search private */
-	uint8_t LastDeviceFlag;        /*!< Search private */
-	uint8_t ROM_NO[8];             /*!< 8-bytes address of last search device */
+	uint8_t LastDeviceFlag;		   /*!< Search private */
+	uint8_t ROM_NO[8];			   /*!< 8-bytes address of last search device */
 	transfer_states eStates;
 	bus_direction eBusDir;
 	uint8_t DataTRX;
@@ -165,7 +165,6 @@ typedef struct {
 	uint8_t Bit;
 	uint8_t Reset;
 } TM_OneWire_t;
-
 
 /**
  * @}
@@ -195,8 +194,8 @@ typedef struct {
 	unsigned char current_crc;
 } Dallas;
 
-void Dallas_Pool(Dallas* ds, TM_OneWire_t* onewire);
-void Dallas_Init(Dallas* ds);
+void Dallas_Pool (Dallas *ds, TM_OneWire_t *onewire);
+void Dallas_Init (Dallas *ds);
 
 /**
  * @defgroup TM_ONEWIRE_Functions
@@ -211,23 +210,23 @@ void Dallas_Init(Dallas* ds);
  * @param  GPIO_Pin: GPIO Pin on specific GPIOx to be used for onewire channel
  * @retval None
  */
-void TM_OneWire_Init(TM_OneWire_t* OneWireStruct, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+void TM_OneWire_Init (TM_OneWire_t *OneWireStruct, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
 
 /**
  * @brief  Resets OneWire bus
- * 
+ *
  * @note   Sends reset command for OneWire
  * @param  *OneWireStruct: Pointer to @ref TM_OneWire_t working onewire structure
  * @retval None
  */
-uint8_t TM_OneWire_Reset(TM_OneWire_t* OneWireStruct, char pool);
+uint8_t TM_OneWire_Reset (TM_OneWire_t *OneWireStruct, char pool);
 
 /**
  * @brief  Reads byte from one wire bus
  * @param  *OneWireStruct: Pointer to @ref TM_OneWire_t working onewire structure
  * @retval Byte from read operation
  */
-uint8_t TM_OneWire_ReadByte(TM_OneWire_t* OneWireStruct, char pool);
+uint8_t TM_OneWire_ReadByte (TM_OneWire_t *OneWireStruct, char pool);
 
 /**
  * @brief  Writes byte to bus
@@ -235,7 +234,7 @@ uint8_t TM_OneWire_ReadByte(TM_OneWire_t* OneWireStruct, char pool);
  * @param  byte: 8-bit value to write over OneWire protocol
  * @retval None
  */
-void TM_OneWire_WriteByte(TM_OneWire_t* OneWireStruct, uint8_t byte, char pool);
+void TM_OneWire_WriteByte (TM_OneWire_t *OneWireStruct, uint8_t byte, char pool);
 
 /**
  * @brief  Writes single bit to onewire bus
@@ -243,7 +242,7 @@ void TM_OneWire_WriteByte(TM_OneWire_t* OneWireStruct, uint8_t byte, char pool);
  * @param  bit: Bit value to send, 1 or 0
  * @retval None
  */
-void TM_OneWire_WriteBit(TM_OneWire_t* OneWireStruct, uint8_t bit);
+void TM_OneWire_WriteBit (TM_OneWire_t *OneWireStruct, uint8_t bit);
 
 /**
  * @brief  Reads single bit from one wire bus
@@ -252,7 +251,7 @@ void TM_OneWire_WriteBit(TM_OneWire_t* OneWireStruct, uint8_t bit);
  *            - 0: Bit is low (zero)
  *            - > 0: Bit is high (one)
  */
-uint8_t TM_OneWire_ReadBit(TM_OneWire_t* OneWireStruct);
+uint8_t TM_OneWire_ReadBit (TM_OneWire_t *OneWireStruct);
 
 /**
  * @brief  Searches for OneWire devices on specific Onewire port
@@ -262,18 +261,19 @@ uint8_t TM_OneWire_ReadBit(TM_OneWire_t* OneWireStruct);
  *            - 0: No devices detected
  *            - > 0: Device detected
  */
-//uint8_t TM_OneWire_Search(TM_OneWire_t* OneWireStruct, uint8_t command);
+// uint8_t TM_OneWire_Search(TM_OneWire_t* OneWireStruct, uint8_t command);
 
 /**
  * @brief  Resets search states
  * @param  *OneWireStruct: Pointer to @ref TM_OneWire_t working onewire where to reset search values
  * @retval None
  */
-//void TM_OneWire_ResetSearch(TM_OneWire_t* OneWireStruct);
+// void TM_OneWire_ResetSearch(TM_OneWire_t* OneWireStruct);
 
 /**
  * @brief  Starts search, reset states first
- * @note   When you want to search for ALL devices on one onewire port, you should first use this function.
+ * @note   When you want to search for ALL devices on one onewire port, you should first use this
+function.
 @verbatim
 /...Initialization before
 status = TM_OneWire_First(&OneWireStruct);
@@ -289,7 +289,7 @@ while (status) {
  *            - 0: No devices detected
  *            - > 0: Device detected
  */
-//uint8_t TM_OneWire_First(TM_OneWire_t* OneWireStruct);
+// uint8_t TM_OneWire_First(TM_OneWire_t* OneWireStruct);
 
 /**
  * @brief  Reads next device
@@ -299,23 +299,25 @@ while (status) {
  *            - 0: No devices detected any more
  *            - > 0: New device detected
  */
-//uint8_t TM_OneWire_Next(TM_OneWire_t* OneWireStruct);
+// uint8_t TM_OneWire_Next(TM_OneWire_t* OneWireStruct);
 
 /**
  * @brief  Gets ROM number from device from search
  * @param  *OneWireStruct: Pointer to @ref TM_OneWire_t working onewire
- * @param  index: Because each device has 8-bytes long ROm address, you have to call this 8 times, to get ROM bytes from 0 to 7
+ * @param  index: Because each device has 8-bytes long ROm address, you have to call this 8 times,
+ * to get ROM bytes from 0 to 7
  * @reetval ROM byte for index (0 to 7) at current found device
  */
-//uint8_t TM_OneWire_GetROM(TM_OneWire_t* OneWireStruct, uint8_t index);
+// uint8_t TM_OneWire_GetROM(TM_OneWire_t* OneWireStruct, uint8_t index);
 
 /**
  * @brief  Gets all 8 bytes ROM value from device from search
  * @param  *OneWireStruct: Pointer to @ref TM_OneWire_t working onewire
- * @param  *firstIndex: Pointer to first location for first byte, other bytes are automatically incremented
+ * @param  *firstIndex: Pointer to first location for first byte, other bytes are automatically
+ * incremented
  * @retval None
  */
-//void TM_OneWire_GetFullROM(TM_OneWire_t* OneWireStruct, uint8_t *firstIndex);
+// void TM_OneWire_GetFullROM(TM_OneWire_t* OneWireStruct, uint8_t *firstIndex);
 
 /**
  * @brief  Selects specific slave on bus
@@ -323,7 +325,7 @@ while (status) {
  * @param  *addr: Pointer to first location of 8-bytes long ROM address
  * @retval None
  */
-//void TM_OneWire_Select(TM_OneWire_t* OneWireStruct, uint8_t* addr);
+// void TM_OneWire_Select(TM_OneWire_t* OneWireStruct, uint8_t* addr);
 
 /**
  * @brief  Selects specific slave on bus with pointer address
@@ -331,7 +333,7 @@ while (status) {
  * @param  *ROM: Pointer to first byte of ROM address
  * @retval None
  */
-//void TM_OneWire_SelectWithPointer(TM_OneWire_t* OneWireStruct, uint8_t* ROM);
+// void TM_OneWire_SelectWithPointer(TM_OneWire_t* OneWireStruct, uint8_t* ROM);
 
 /**
  * @brief  Calculates 8-bit CRC for 1-wire devices
@@ -340,24 +342,23 @@ while (status) {
  *
  * @retval Calculated CRC from input data
  */
-uint8_t TM_OneWire_CRC8(uint8_t* addr, uint8_t len);
+uint8_t TM_OneWire_CRC8 (uint8_t *addr, uint8_t len);
 
 /**
  * @}
  */
- 
+
 /**
  * @}
  */
- 
+
 /**
  * @}
  */
- 
+
 /* C++ detection */
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

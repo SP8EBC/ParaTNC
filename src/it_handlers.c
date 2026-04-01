@@ -65,7 +65,7 @@
 /// ==================================================================================================
 
 /* Zmienne używane do oversamplingu */
-static int adc_sample_c2 = 0; // Zmienna odliczająca próbki
+static int adc_sample_c2 = 0;	 // Zmienna odliczająca próbki
 unsigned short int AdcBuffer[4]; // Bufor przechowujący kolejne wartości rejestru DR
 static short int AdcValue;
 
@@ -422,10 +422,11 @@ void TIM1_UP_TIM16_IRQHandler (void)
 		NVIC_SystemReset ();
 	}
 
-	if (it_handlers_60sec_counter_for_increment_counters >= (SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 60U)) {
+	if (it_handlers_60sec_counter_for_increment_counters >=
+		(SYSTICK_TICKS_PER_SECONDS * SYSTICK_TICKS_PERIOD * 60U)) {
 		it_handlers_60sec_counter_for_increment_counters = 0;
 
-		packet_tx_handler_increment_counters();
+		packet_tx_handler_increment_counters ();
 	}
 
 	// decrementing a timer to trigger meteo measuremenets

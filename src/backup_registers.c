@@ -682,7 +682,7 @@ void backup_assert (uint32_t assert)
 	(void)event_log_sync (EVENT_ASSERT,
 						  EVENT_SRC_MAIN,
 						  EVENTS_MAIN_ASSERT_FAIL,
-						  packet_tx_get_trigger_tcp(),
+						  packet_tx_get_trigger_tcp (),
 						  state,
 						  0xDEAD,
 						  rte_main_average_battery_voltage,

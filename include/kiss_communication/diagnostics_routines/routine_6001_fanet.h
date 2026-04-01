@@ -30,14 +30,10 @@
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-
-uint8_t routine_6001_start(uint32_t lparam, uint16_t wparam);
+uint8_t routine_6001_start (uint32_t lparam, uint16_t wparam);
 
 // this doesn't have stop function, because it is synchronous
 
-
-uint16_t routine_6001_get_result(void);
-
-
+uint16_t routine_6001_get_result (void);
 
 #endif /* KISS_COMMUNICATION_DIAGNOSTICS_ROUTINES_ROUTINE_6001_FANET_H_ */

@@ -16,7 +16,8 @@
  */
 
 /**
- * This enum is used to configure how the ParaMETEO controller will switch to different powersave modes
+ * This enum is used to configure how the ParaMETEO controller will switch to different powersave
+ * modes
  */
 typedef enum config_data_powersave_mode_t {
 
@@ -29,25 +30,24 @@ typedef enum config_data_powersave_mode_t {
 	PWSAVE_NONE = 0,
 	PWSAVE_NORMAL = 1,
 	PWSAVE_AGGRESV = 3,
-	PWSAVE_NULL	= 0xFF
+	PWSAVE_NULL = 0xFF
 
-	//PWSAVE_
+	// PWSAVE_
 
+} config_data_powersave_mode_t;
 
-}config_data_powersave_mode_t;
+typedef struct __attribute__ ((aligned (4))) config_data_mode_t {
 
-typedef struct __attribute__((aligned (4))) config_data_mode_t {
+#define WX_ENABLED				   (1)
+#define WX_INTERNAL_AS_BACKUP	   (1 << 1)
+#define WX_INTERNAL_SPARKFUN_WIND  (1 << 2)
+#define WX_INTERNAL_DISABLE_DALLAS (1 << 3)
+#define WX_CHECK_VALIDATE_PARAMS   (1 << 4)
 
-#define WX_ENABLED 					(1)
-#define WX_INTERNAL_AS_BACKUP 		(1 << 1)
-#define WX_INTERNAL_SPARKFUN_WIND	(1 << 2)
-#define WX_INTERNAL_DISABLE_DALLAS	(1 << 3)
-#define WX_CHECK_VALIDATE_PARAMS	(1 << 4)
+#define WX_MODBUS_DEBUG (1 << 1)
 
-#define WX_MODBUS_DEBUG				(1 << 1)
-
-#define WX_DUST_SDS011_PWM			(1 << 1)
-#define WX_DUST_SDS011_SERIAL		(1 << 2)
+#define WX_DUST_SDS011_PWM	  (1 << 1)
+#define WX_DUST_SDS011_SERIAL (1 << 2)
 
 	uint8_t digi;
 
@@ -59,9 +59,10 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 	uint8_t wx_davis;
 
-	uint8_t wx_ms5611_or_bme;		// set to one to choose bme, zero to ms5611
+	uint8_t wx_ms5611_or_bme; // set to one to choose bme, zero to ms5611
 
-	uint8_t wx_anemometer_pulses_constant;		// #define _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
+	uint8_t wx_anemometer_pulses_constant; // #define
+										   // _ANEMOMETER_PULSES_IN_10SEC_PER_ONE_MS_OF_WINDSPEED 10
 
 	uint8_t wx_dust_sensor;
 
@@ -81,7 +82,7 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 	uint8_t digi_viscous_delay_sec;
 
-	uint8_t digi_delay_100msec;		// in 100msec increments
+	uint8_t digi_delay_100msec; // in 100msec increments
 
 	// only for ParaMETEO
 	config_data_powersave_mode_t powersave;
@@ -103,16 +104,16 @@ typedef struct __attribute__((aligned (4))) config_data_mode_t {
 
 } config_data_mode_t;
 
-typedef struct __attribute__((aligned (4))) config_data_basic_t {
+typedef struct __attribute__ ((aligned (4))) config_data_basic_t {
 
-	#define ENGINEERING1						(1)
-	#define ENGINEERING1_INH_WX_PWR_HNDL		(1 << 1)
-	#define ENGINEERING1_EARLY_TX_ASSERT		(1 << 2)
-	#define ENGINEERING1_PWRCYCLE_GSM_ON_NOCOMM	(1 << 2)
+#define ENGINEERING1						(1)
+#define ENGINEERING1_INH_WX_PWR_HNDL		(1 << 1)
+#define ENGINEERING1_EARLY_TX_ASSERT		(1 << 2)
+#define ENGINEERING1_PWRCYCLE_GSM_ON_NOCOMM (1 << 2)
 
-	#define ENGINEERING2					(1)
-	#define ENGINEERING2_REBOOT_AFTER_24	(1 << 1)
-	#define ENGINEERING2_POWER_CYCLE_R		(1 << 2)
+#define ENGINEERING2				 (1)
+#define ENGINEERING2_REBOOT_AFTER_24 (1 << 1)
+#define ENGINEERING2_POWER_CYCLE_R	 (1 << 2)
 
 	char callsign[7];
 
@@ -131,11 +132,11 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 	char comment[128];
 
 	// 0 - _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
-	// 1 - _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit 1 overlaid)
-	// 2 - _SYMBOL_HOUSE			// uncomment if you want house symbol
-	// 3 - _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
-	// 4 - _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
-	// 5 - _SYMBOL_SAILBOAT
+	// 1 - _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit
+	// 1 overlaid) 2 - _SYMBOL_HOUSE			// uncomment if you want house symbol 3 -
+	// _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R) 4 -
+	// _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I) 5 -
+	// _SYMBOL_SAILBOAT
 	uint8_t symbol;
 
 	// 0 - no path
@@ -178,34 +179,33 @@ typedef struct __attribute__((aligned (4))) config_data_basic_t {
 
 	uint16_t battery_scalling_b;
 
-	/**
-	 * 	BUTTON_SEND_WX = 1,
-	BUTTON_SEND_WX_INTERNET = 2,
-	BUTTON_SEND_BEACON = 3,
-	BUTTON_FORCE_UART_KISS = 4,
-	BUTTON_FORCE_UART_LOG = 5,
-	BUTTON_RESET_GSM_GPRS = 6,
-		BUTTON_RECONNECT_APRSIS = 7,
-	 */
-	#define BUTTON_FUNCTION_SEND_WX					1U
-	#define BUTTON_FUNCTION_SEND_WX_INET			2U
-	#define BUTTON_FUNCTION_SEND_BEACON				3U
-	#define BUTTON_FUNCTION_UART_KISS				4U
-	#define BUTTON_FUNCTION_UART_LOG				5U
-	#define BUTTON_FUNCION_RESET_GSM_GPRS			6U
-	#define BUTTON_FUNCTION_RECONNECT_APRSIS		7U
-	#define BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT	8U
-
+/**
+ * 	BUTTON_SEND_WX = 1,
+BUTTON_SEND_WX_INTERNET = 2,
+BUTTON_SEND_BEACON = 3,
+BUTTON_FORCE_UART_KISS = 4,
+BUTTON_FORCE_UART_LOG = 5,
+BUTTON_RESET_GSM_GPRS = 6,
+	BUTTON_RECONNECT_APRSIS = 7,
+ */
+#define BUTTON_FUNCTION_SEND_WX					1U
+#define BUTTON_FUNCTION_SEND_WX_INET			2U
+#define BUTTON_FUNCTION_SEND_BEACON				3U
+#define BUTTON_FUNCTION_UART_KISS				4U
+#define BUTTON_FUNCTION_UART_LOG				5U
+#define BUTTON_FUNCION_RESET_GSM_GPRS			6U
+#define BUTTON_FUNCTION_RECONNECT_APRSIS		7U
+#define BUTTON_FUNCTION_SIMULATE_APRSIS_TIMEOUT 8U
 
 	uint8_t button_one_left;
 
 	uint8_t button_two_right;
 
-	#define CONFIGURATION_SEC_ROUTINE_READ_OFFSET	1U
-	#define CONFIGURATION_SEC_ROUTINE_ELSE_OFFSET	3U
-	#define CONFIGURATION_SEC_MEDIUM_APRSIS	1U
-	#define CONFIGURATION_SEC_MEDIUM_RADIO	2U
-	#define CONFIGURATION_SEC_MEDIUM_KISS	4U
+#define CONFIGURATION_SEC_ROUTINE_READ_OFFSET 1U
+#define CONFIGURATION_SEC_ROUTINE_ELSE_OFFSET 3U
+#define CONFIGURATION_SEC_MEDIUM_APRSIS		  1U
+#define CONFIGURATION_SEC_MEDIUM_RADIO		  2U
+#define CONFIGURATION_SEC_MEDIUM_KISS		  4U
 	/**
 	 * Configuration of how UDS diagnostics are secured access different
 	 * mediums. GET_VERSION_AND_ID and SECURITY_ACCESS are never locked.
@@ -288,7 +288,7 @@ typedef enum config_data_wx_sources_enum_t {
 	WX_SOURCE_DAVIS_SERIAL = 5
 } config_data_wx_sources_enum_t;
 
-typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {
+typedef struct __attribute__ ((aligned (4))) config_data_wx_sources_t {
 
 	config_data_wx_sources_enum_t temperature;
 	config_data_wx_sources_enum_t pressure;
@@ -297,10 +297,9 @@ typedef struct __attribute__((aligned (4))) config_data_wx_sources_t {
 
 	config_data_wx_sources_enum_t temperature_telemetry;
 
-
 } config_data_wx_sources_t;
 
-typedef struct __attribute__((aligned (4))) config_data_umb_t {
+typedef struct __attribute__ ((aligned (4))) config_data_umb_t {
 
 	uint16_t slave_class;
 
@@ -317,16 +316,16 @@ typedef struct __attribute__((aligned (4))) config_data_umb_t {
 	uint16_t channel_qnh;
 
 	uint16_t serial_speed;
-/**
- * #define _UMB_CHANNEL_WINDSPEED			460
-#define _UMB_CHANNEL_WINDGUSTS			440
-#define _UMB_CHANNEL_WINDDIRECTION		580
-#define _UMB_CHANNEL_TEMPERATURE		100
-#define _UMB_CHANNEL_QFE
- */
+	/**
+	 * #define _UMB_CHANNEL_WINDSPEED			460
+	#define _UMB_CHANNEL_WINDGUSTS			440
+	#define _UMB_CHANNEL_WINDDIRECTION		580
+	#define _UMB_CHANNEL_TEMPERATURE		100
+	#define _UMB_CHANNEL_QFE
+	 */
 } config_data_umb_t;
 
-typedef struct __attribute__((aligned (4))) config_data_rtu_t {
+typedef struct __attribute__ ((aligned (4))) config_data_rtu_t {
 	uint16_t slave_speed;
 
 	uint8_t slave_parity;
@@ -462,10 +461,9 @@ typedef struct __attribute__((aligned (4))) config_data_rtu_t {
 
 	uint8_t slave_6_unsigned_signed;
 
-
 } config_data_rtu_t;
 
-typedef struct __attribute__((aligned (4))) config_data_gsm_t {
+typedef struct __attribute__ ((aligned (4))) config_data_gsm_t {
 
 	char pin[5];
 
@@ -520,25 +518,24 @@ typedef struct __attribute__((aligned (4))) config_data_gsm_t {
  *
  *
  */
-typedef struct __attribute__((aligned (4))) config_data_compatibility_version_t {
+typedef struct __attribute__ ((aligned (4))) config_data_compatibility_version_t {
 
-	uint64_t mode_block_compatiblity_number;		// 8 bytes
+	uint64_t mode_block_compatiblity_number; // 8 bytes
 
-	uint64_t basic_block_compatiblity_number;		// 8 bytes
+	uint64_t basic_block_compatiblity_number; // 8 bytes
 
-	uint64_t sources_block_compatiblity_number;		// 8 bytes
+	uint64_t sources_block_compatiblity_number; // 8 bytes
 
-	uint64_t umb_block_compatiblity_number;			// 8 bytes
+	uint64_t umb_block_compatiblity_number; // 8 bytes
 
-	uint64_t rtu_block_compatiblity_number;			// 8 bytes
+	uint64_t rtu_block_compatiblity_number; // 8 bytes
 
-	uint64_t gsm_block_compatiblity_number;			// 8 bytes
+	uint64_t gsm_block_compatiblity_number; // 8 bytes
 
 	uint64_t seventh_block_compatibility_number;
 
 	uint64_t eight_block_compatibility_number;
 
-
-}config_data_compatibility_version_t;
+} config_data_compatibility_version_t;
 
 #endif /* CONFIG_DATA_H_ */

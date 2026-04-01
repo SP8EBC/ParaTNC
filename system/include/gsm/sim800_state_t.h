@@ -23,6 +23,6 @@ typedef enum gsm_sim800_state_t {
 	SIM800_TCP_CONNECTED,
 	SIM800_INHIBITED,
 	SIM800_INHIBITED_RESET_COUNTER,
-}gsm_sim800_state_t;
+} gsm_sim800_state_t;
 
 #endif /* INCLUDE_GSM_SIM800_STATE_T_H_ */

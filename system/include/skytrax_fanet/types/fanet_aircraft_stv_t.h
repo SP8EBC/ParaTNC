@@ -10,7 +10,6 @@
 #ifndef SKYTRAX_FANET_TYPES_FANET_AIRCRAFT_STV_T_H_
 #define SKYTRAX_FANET_TYPES_FANET_AIRCRAFT_STV_T_H_
 
-
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================
@@ -20,7 +19,7 @@
 /// ==================================================================================================
 
 /**
- * 
+ *
  */
 typedef enum fanet_aircraft_state_t {
 	FANET_AIRCRAFT_STATUS_OTHER = 0,
@@ -33,8 +32,8 @@ typedef enum fanet_aircraft_state_t {
 	FANET_AIRCRAFT_STATUS_NEED_TECHNICAL_ASSISTANCE = 12,
 	FANET_AIRCRAFT_STATUS_NEED_MEFICAL_HELP = 13,
 	FANET_AIRCRAFT_STATUS_DISTRESS_CALL = 14,
-	FANET_AIRCRAFT_STATUS_DISTRESS_CALL_AUTO = 15,				//max number
-}fanet_aircraft_state_t;
+	FANET_AIRCRAFT_STATUS_DISTRESS_CALL_AUTO = 15, // max number
+} fanet_aircraft_state_t;
 
 /**
  * State vector of an aircraft to generate FANET frame for
@@ -50,7 +49,7 @@ typedef struct fanet_aircraft_stv_t {
 	float turnrate;
 	float qne_offset;
 	int has_turnrate;
-}fanet_aircraft_stv_t;
+} fanet_aircraft_stv_t;
 
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -63,6 +62,5 @@ typedef struct fanet_aircraft_stv_t {
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
-
 
 #endif /* SKYTRAX_FANET_TYPES_FANET_AIRCRAFT_STV_T_H_ */
