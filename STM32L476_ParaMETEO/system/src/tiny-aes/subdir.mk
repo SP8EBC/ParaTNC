@@ -6,11 +6,11 @@
 C_SRCS += \
 ../system/src/tiny-aes/aes.c 
 
-OBJS += \
-./system/src/tiny-aes/aes.o 
-
 C_DEPS += \
 ./system/src/tiny-aes/aes.d 
+
+OBJS += \
+./system/src/tiny-aes/aes.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

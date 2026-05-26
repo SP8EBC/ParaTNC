@@ -2,6 +2,8 @@
 #include "dac.h"
 #include <adc.h>
 
+#include "main.h"
+
 #include "station_config.h"
 #include "station_config_target_hw.h"
 
@@ -145,7 +147,7 @@ void DA_Stop() {
 	TIM5->CR1 &= ~TIM_CR1_CEN;
 
 #endif
-
+	main_callback_on_tx_complete();
 #ifdef STM32F10X_MD_VL
 #if (!defined(_METEO))
 	GPIO_ResetBits(GPIOC, GPIO_Pin_9);

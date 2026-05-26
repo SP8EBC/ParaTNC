@@ -6,11 +6,11 @@
 C_SRCS += \
 ../system/src/ve_direct_protocol/parser.c 
 
-OBJS += \
-./system/src/ve_direct_protocol/parser.o 
-
 C_DEPS += \
 ./system/src/ve_direct_protocol/parser.d 
+
+OBJS += \
+./system/src/ve_direct_protocol/parser.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

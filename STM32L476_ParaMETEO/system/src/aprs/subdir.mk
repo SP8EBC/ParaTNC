@@ -17,20 +17,6 @@ C_SRCS += \
 ../system/src/aprs/telemetry.c \
 ../system/src/aprs/wx.c 
 
-OBJS += \
-./system/src/aprs/adc.o \
-./system/src/aprs/afsk.o \
-./system/src/aprs/afsk_pr.o \
-./system/src/aprs/ax25.o \
-./system/src/aprs/beacon.o \
-./system/src/aprs/crc.o \
-./system/src/aprs/dac.o \
-./system/src/aprs/digi.o \
-./system/src/aprs/message.o \
-./system/src/aprs/status.o \
-./system/src/aprs/telemetry.o \
-./system/src/aprs/wx.o 
-
 C_DEPS += \
 ./system/src/aprs/adc.d \
 ./system/src/aprs/afsk.d \
@@ -44,6 +30,20 @@ C_DEPS += \
 ./system/src/aprs/status.d \
 ./system/src/aprs/telemetry.d \
 ./system/src/aprs/wx.d 
+
+OBJS += \
+./system/src/aprs/adc.o \
+./system/src/aprs/afsk.o \
+./system/src/aprs/afsk_pr.o \
+./system/src/aprs/ax25.o \
+./system/src/aprs/beacon.o \
+./system/src/aprs/crc.o \
+./system/src/aprs/dac.o \
+./system/src/aprs/digi.o \
+./system/src/aprs/message.o \
+./system/src/aprs/status.o \
+./system/src/aprs/telemetry.o \
+./system/src/aprs/wx.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

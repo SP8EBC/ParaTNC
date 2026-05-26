@@ -26,6 +26,7 @@ const char * idiot = "You idiot!! You have INHIBIT_CUTOFF define uncomented!\0\0
 
 void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 	main_wait_for_tx_complete();
+	main_callback_pre_tx();
 	if (main_rtos_is_runing) {
 		taskENTER_CRITICAL();
 	}
@@ -59,6 +60,7 @@ void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
 #else
 void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
 	main_wait_for_tx_complete();
+	main_callback_pre_tx();
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, content_ptr, content_ln);
 	after_tx_lock = 1;
  	afsk_txStart(&main_afsk);

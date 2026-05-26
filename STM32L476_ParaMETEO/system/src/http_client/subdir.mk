@@ -8,15 +8,15 @@ C_SRCS += \
 ../system/src/http_client/http_client_headers.c \
 ../system/src/http_client/http_client_rx_callback.c 
 
-OBJS += \
-./system/src/http_client/http_client.o \
-./system/src/http_client/http_client_headers.o \
-./system/src/http_client/http_client_rx_callback.o 
-
 C_DEPS += \
 ./system/src/http_client/http_client.d \
 ./system/src/http_client/http_client_headers.d \
 ./system/src/http_client/http_client_rx_callback.d 
+
+OBJS += \
+./system/src/http_client/http_client.o \
+./system/src/http_client/http_client_headers.o \
+./system/src/http_client/http_client_rx_callback.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

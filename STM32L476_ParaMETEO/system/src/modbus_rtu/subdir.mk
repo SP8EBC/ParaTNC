@@ -9,17 +9,17 @@ C_SRCS += \
 ../system/src/modbus_rtu/rtu_request.c \
 ../system/src/modbus_rtu/rtu_serial_io.c 
 
-OBJS += \
-./system/src/modbus_rtu/rtu_getters.o \
-./system/src/modbus_rtu/rtu_parser.o \
-./system/src/modbus_rtu/rtu_request.o \
-./system/src/modbus_rtu/rtu_serial_io.o 
-
 C_DEPS += \
 ./system/src/modbus_rtu/rtu_getters.d \
 ./system/src/modbus_rtu/rtu_parser.d \
 ./system/src/modbus_rtu/rtu_request.d \
 ./system/src/modbus_rtu/rtu_serial_io.d 
+
+OBJS += \
+./system/src/modbus_rtu/rtu_getters.o \
+./system/src/modbus_rtu/rtu_parser.o \
+./system/src/modbus_rtu/rtu_request.o \
+./system/src/modbus_rtu/rtu_serial_io.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

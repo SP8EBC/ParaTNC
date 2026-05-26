@@ -492,6 +492,9 @@ typedef enum main_tasks_enum_t {
 
 uint8_t main_rtos_is_runing = 0;
 
+//! Mutex to lock access to AX25 buffers by sendvia
+SemaphoreHandle_t main_mutex_ax25sendvia;
+
 //!
 static SemaphoreHandle_t main_mutex_gsm_tcpip;
 
@@ -1635,6 +1638,7 @@ int main (int argc, char *argv[])
 	main_eventgroup_handle_fanet = xEventGroupCreateStatic (&main_eventgroup_fanet);
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex ();
+	main_mutex_ax25sendvia = xSemaphoreCreateMutex ();
 
 	main_timer_aprsis_telemetry_descr = xTimerCreate ("APRSIS_TRIG",
 													  pdMS_TO_TICKS (61234U),
@@ -1667,8 +1671,33 @@ int main (int argc, char *argv[])
 }
 
 /// ==================================================================================================
-///	GLOBAL VARIABLES
+///	GLOBAL FUNCTIONS
 /// ==================================================================================================
+
+/**
+ *
+ */
+void main_wait_for_tx_complete (void)
+{
+	while (main_afsk.sending == 1)
+		;
+}
+
+/**
+ * @brief Called before anything is push into AX25 contextto be transmitted on air
+ */
+void main_callback_pre_tx (void)
+{
+	xSemaphoreTake (main_mutex_ax25sendvia, portMAX_DELAY);
+}
+
+/**
+ * @brief called after
+ */
+void main_callback_on_tx_complete (void)
+{
+	xSemaphoreGive (main_mutex_ax25sendvia);
+}
 
 void main_set_ax25_my_callsign (AX25Call *call)
 {

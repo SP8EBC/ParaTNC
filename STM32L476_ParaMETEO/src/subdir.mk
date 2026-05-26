@@ -40,43 +40,6 @@ C_SRCS += \
 ../src/wx_handler_temperature.c \
 ../src/wx_pwr_switch.c 
 
-OBJS += \
-./src/LedConfig.o \
-./src/PathConfig.o \
-./src/TimerConfig.o \
-./src/_write.o \
-./src/api.o \
-./src/aprsis.o \
-./src/backup_registers.o \
-./src/button_parameteo.o \
-./src/debug_hardfault.o \
-./src/delay.o \
-./src/dummy.o \
-./src/event_log.o \
-./src/event_log_postmortem.o \
-./src/fanet_app.o \
-./src/gsm_comm_state_handler.o \
-./src/io.o \
-./src/it_handlers.o \
-./src/main.o \
-./src/ntp.o \
-./src/packet_tx_handler.o \
-./src/pwr_save.o \
-./src/rte_main.o \
-./src/rte_pv.o \
-./src/rte_pwr.o \
-./src/rte_rtu.o \
-./src/rte_wx.o \
-./src/software_version.o \
-./src/supervisor.o \
-./src/trace.o \
-./src/variant_parameteo.o \
-./src/wx_handler.o \
-./src/wx_handler_humidity.o \
-./src/wx_handler_pressure.o \
-./src/wx_handler_temperature.o \
-./src/wx_pwr_switch.o 
-
 C_DEPS += \
 ./src/LedConfig.d \
 ./src/PathConfig.d \
@@ -113,6 +76,43 @@ C_DEPS += \
 ./src/wx_handler_pressure.d \
 ./src/wx_handler_temperature.d \
 ./src/wx_pwr_switch.d 
+
+OBJS += \
+./src/LedConfig.o \
+./src/PathConfig.o \
+./src/TimerConfig.o \
+./src/_write.o \
+./src/api.o \
+./src/aprsis.o \
+./src/backup_registers.o \
+./src/button_parameteo.o \
+./src/debug_hardfault.o \
+./src/delay.o \
+./src/dummy.o \
+./src/event_log.o \
+./src/event_log_postmortem.o \
+./src/fanet_app.o \
+./src/gsm_comm_state_handler.o \
+./src/io.o \
+./src/it_handlers.o \
+./src/main.o \
+./src/ntp.o \
+./src/packet_tx_handler.o \
+./src/pwr_save.o \
+./src/rte_main.o \
+./src/rte_pv.o \
+./src/rte_pwr.o \
+./src/rte_rtu.o \
+./src/rte_wx.o \
+./src/software_version.o \
+./src/supervisor.o \
+./src/trace.o \
+./src/variant_parameteo.o \
+./src/wx_handler.o \
+./src/wx_handler_humidity.o \
+./src/wx_handler_pressure.o \
+./src/wx_handler_temperature.o \
+./src/wx_pwr_switch.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -7,14 +7,14 @@ typedef enum nvm_state_after_last_oper_t {
 	NVM_UNINITIALIZED, ///!< Default state before @link{nvm_event_log_init} is called
 	NVM_OK, ///!< Nvm event logger is initialized and last event has been stored successfully
 	NVM_OK_AND_EMPTY, ///!< Nvm event logger has been initialized correctly and it was detected that
-					  ///no event is stored
+					  /// no event is stored
 	NVM_NO_SPACE_LEFT,
 	NVM_INIT_ERROR, ///!< Used only by @link{nvm_measurement_init} where there size of available
-					///flash memory can't be obrained
+					/// flash memory can't be obrained
 	NVM_PGM_ERROR, ///!< Error during erasing flash memory page or programming flash memory with new
-				   ///event
+				   /// event
 	NVM_GENERAL_ERROR ///!< Event logger target area (FLASH or RAM) contains complete garbage, so it
-					  ///must be reinitialized
+					  /// must be reinitialized
 } nvm_state_after_last_oper_t;
 
 typedef enum nvm_event_result_t {
@@ -23,7 +23,7 @@ typedef enum nvm_event_result_t {
 	NVM_EVENT_SINGLE,
 	NVM_EVENT_EMPTY,	  ///!< NVM event logger memory is in erased state
 	NVM_EVENT_AREA_ERROR, ///!< NVM event area is screwed very badly and cannot be recovered at all
-						  ///it must be formatted and reinitialized from scratch
+						  /// it must be formatted and reinitialized from scratch
 	NVM_EVENT_FIX_IDS,	  ///!< Call to @link{nvm_fix_broken_event_ids} is required
 	NVM_EVENT_ERROR
 } nvm_event_result_t;

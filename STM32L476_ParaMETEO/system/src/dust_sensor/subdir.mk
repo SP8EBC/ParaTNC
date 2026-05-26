@@ -6,11 +6,11 @@
 C_SRCS += \
 ../system/src/dust_sensor/sds011.c 
 
-OBJS += \
-./system/src/dust_sensor/sds011.o 
-
 C_DEPS += \
 ./system/src/dust_sensor/sds011.d 
+
+OBJS += \
+./system/src/dust_sensor/sds011.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -146,11 +146,11 @@ extern uint32_t rte_main_tx_total;
 /**
  * Block I/O function which waits for all transmission to end
  */
-inline void main_wait_for_tx_complete (void)
-{
-	while (main_afsk.sending == 1)
-		;
-}
+void main_wait_for_tx_complete (void);
+
+void main_callback_on_tx_complete (void);
+
+void main_callback_pre_tx (void);
 
 /**
  * Reset pooling timers values after waking up from deep sleep, to be sure

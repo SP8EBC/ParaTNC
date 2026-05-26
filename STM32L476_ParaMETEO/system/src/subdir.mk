@@ -9,17 +9,17 @@ C_SRCS += \
 ../system/src/float_to_string.c \
 ../system/src/int_average.c 
 
-OBJS += \
-./system/src/crc_.o \
-./system/src/float_average.o \
-./system/src/float_to_string.o \
-./system/src/int_average.o 
-
 C_DEPS += \
 ./system/src/crc_.d \
 ./system/src/float_average.d \
 ./system/src/float_to_string.d \
 ./system/src/int_average.d 
+
+OBJS += \
+./system/src/crc_.o \
+./system/src/float_average.o \
+./system/src/float_to_string.o \
+./system/src/int_average.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

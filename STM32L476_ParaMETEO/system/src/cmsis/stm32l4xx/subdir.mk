@@ -3,12 +3,16 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+S_UPPER_SRCS += \
+../system/src/cmsis/stm32l4xx/startup_stm32l471xx.S 
+
 C_SRCS += \
 ../system/src/cmsis/stm32l4xx/stm32l4xx_it.c \
 ../system/src/cmsis/stm32l4xx/system_stm32l4xx.c 
 
-S_UPPER_SRCS += \
-../system/src/cmsis/stm32l4xx/startup_stm32l471xx.S 
+C_DEPS += \
+./system/src/cmsis/stm32l4xx/stm32l4xx_it.d \
+./system/src/cmsis/stm32l4xx/system_stm32l4xx.d 
 
 OBJS += \
 ./system/src/cmsis/stm32l4xx/startup_stm32l471xx.o \
@@ -17,10 +21,6 @@ OBJS += \
 
 S_UPPER_DEPS += \
 ./system/src/cmsis/stm32l4xx/startup_stm32l471xx.d 
-
-C_DEPS += \
-./system/src/cmsis/stm32l4xx/stm32l4xx_it.d \
-./system/src/cmsis/stm32l4xx/system_stm32l4xx.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

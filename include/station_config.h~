@@ -5,54 +5,69 @@
  *      Author: mateusz
  */
 
-/**
- * Important warning for ParaMETEO target!! Starting from EA15 software the configuration is kept in
- * separate NvMem area, outside application software area. It isn't erased or reprogrammed during
- * loading HEX file generated with this build. After NvMem is initialized, changing only this
- * configuration won't affect ParaMETEO. To force update flash mass erase shall be performed.
- */
-
 #ifndef STATION_CONFIG_H_
 #define STATION_CONFIG_H_
 
 // #define _POWERSAVE_NORMAL
 // #define _POWERSAVE_AGGRESIVE
-/*  ------------------ */
-/* 	MODES OF OPERATION */
+
+#define _AGGRESIVE_SCHEDULE_START		 (22)
+#define _AGGRESIVE_SCHEDULE_STOP		 (05)
+#define _AGGRESIVE_POWERSAVE_WX_INTERVAL (10)
+
+#define _BATTERY_SCALLING_A (1020)
+#define _BATTERY_SCALLING_B (110)
+
+//!< ---------------------------
+//!< 	MODES OF OPERATION
 
 #define _METEO // Enable meteo station
-// #define _DIGI				// Enable WIDE1-1 digipeater
+#define _METEO_DISABLE_DALLAS
+// #define _METEO_VALIDATE_PARAMETERS
+
+#define _DIGI // Enable WIDE1-1 digipeater
 #define _DIGI_VISCOUS
-// #define _DIGI_ONLY_789	// Limit digipeater to handle only -7, -8 and -9 SSIDs
+#define _DIGI_ONLY_789 // Limit digipeater to handle only -7, -8 and -9 SSIDs
 
-// #define _VICTRON			// Enable support for Victron VE.Direct protocol
 #define _GSM // only for ParaMETEO
+// #define _GSM_KEEP_MODEM_ALWAYS_ON
 
-#define _WX_DOUBLE_TRANSMIT
+// #define _WX_DOUBLE_TRANSMIT
 
-/* 	MODES OF OPERATION */
-/*  ------------------ */
+//!< 	MODES OF OPERATION
+//!< ---------------------------
 
-/* ---------------------------- */
-/* 	WEATHER/METEO CONFIGURATION */
+/**
+ * Enable support for Victron VE.Direct protocol. This is independent from wx sensor configuration
+ */
+// #define _VICTRON
 
-// If none of those three sources are chosen (uncommented) the software will use internal sensors
+//!< ---------------------------
+//!< WEATHER/METEO CONFIGURATION
+
+/**
+ * Three defines below enables or disabled listed communication drivers. Enabling any of then
+ * doesn't means that these are used as a data source automatically. That shall be set in 'DATA
+ * SOURCES CONFIG' section.
+ */
 
 // #define _UMB_MASTER
 // #define _DAVIS_SERIAL
-// #define _MODBUS_RTU		// use Modbus RTU slave devices as a external meteo data source. For
-// more configuration
-//  (slave ids, registers...) please look into MODBUS RTU CONFIGURATION section of this file
+#define _MODBUS_RTU // use Modbus RTU slave devices as a external meteo data source. For more
+					// configuration (slave ids, registers...) please look into MODBUS RTU
+					// CONFIGURATION section of this file
 
-#define _INTERNAL_AS_BACKUP // if defined ParaTNC will switch to internal sensors in case of
-							// the communication with UMB/Dallas Serial/Modbus external sensors will
-							// hang up
+// #define _INTERNAL_AS_BACKUP		// if defined ParaTNC will switch to internal sensors in case of
+//  the communication with UMB/Dallas Serial/Modbus external sensors will hang up
 
 // #define _DALLAS_AS_TELEM	// Use Dallas one-wire thermometer as a 5th telemetry channel
 //  May be used even if _METEO is not enabled
-#define _DALLAS_SPLIT_PIN // Must be enabled for all ParaTNC hardware revisions
+// #define _DALLAS_SPLIT_PIN		// Must be enabled for all ParaTNC hardware revisions
 
 /******** 	INTERNAL SENSORS CONFIGURATION *****************/
+
+#define _PT_SENSOR_TYPE			 CONFIG_DATA_PTSENSOR_4_OR_2WIRE
+#define _PT_SENSOR_REFERENCE_RES CONFIG_DATA_PTSENSOR_RREF_4300
 
 // #define _ANEMOMETER_TX20	// Use TX20 as an internal anemometer
 #define _ANEMOMETER_ANALOGUE								// Use analogue/mechanical (like Davis 6410) as an internal anemometr
@@ -60,7 +75,9 @@
 
 #define _SENSOR_MS5611
 // #define _SENSOR_BME280
+/******** 	INTERNAL SENSORS CONFIGURATION *****************/
 
+/******** 	UMB MASTER CONFIGURATION *****************/
 #define _UMB_SLAVE_ID			   1
 #define _UMB_SLAVE_CLASS		   8
 #define _UMB_CHANNEL_WINDSPEED	   460
@@ -68,11 +85,10 @@
 #define _UMB_CHANNEL_WINDDIRECTION 580
 #define _UMB_CHANNEL_TEMPERATURE   100
 #define _UMB_CHANNEL_QFE		   300
-
-/******** 	INTERNAL SENSORS CONFIGURATION *****************/
+/******** 	UMB MASTER CONFIGURATION *****************/
 
 /*************** DATA SOURCES CONFIG ***********************/
-#define _TEMPERATURE_INTERNAL
+#define _TEMPERATURE_INTERNAL_PT100
 // #define _TEMPERATURE_UMB
 // #define _TEMPERATURE_RTU
 // #define _TEMPERATURE_DAVIS
@@ -82,9 +98,9 @@
 // #define _PRESSURE_RTU
 // #define _PRESSURE_DAVIS
 //
-#define _HUMIDITY_INTERNAL
+// #define _HUMIDITY_INTERNAL
 // #define _HUMIDITY_UMB
-// #define _HUMIDITY_RTU
+#define _HUMIDITY_RTU
 // #define _HUMIDITY_DAVIS
 //
 //
@@ -95,8 +111,11 @@
 // #define _WIND_DAVIS
 /*************** DATA SOURCES CONFIG ***********************/
 
-/* 	WEATHER/METEO CONFIGURATION */
-/* ---------------------------- */
+//!< WEATHER/METEO CONFIGURATION
+//!< ---------------------------
+
+//!< -------------------------------------
+//!< BASIC CONFIG - CALLSIGN, LOCATION etc
 
 // #define _MUTE_RF	// TODO: Not yet implemented - This will make station RXonly and disable all
 // data transmission #define _MUTE_OWN	// TODO: Not yet implemented - This will disable all
@@ -104,22 +123,20 @@
 //  and switch device to "pure" kiss TNC operation. Packets from PC will be transmitted normally.
 
 // Coordines should be in APRS decimal format DDDMM.SS for Longitude and DDMM.SS for latitude
-#define _CALL  "N0CALL"
-#define _SSID  0
-#define _LAT   4949.49
-#define _LATNS 'N'
-#define _LON   01919.19
-#define _LONWE 'E'
-#define _COMMENT \
-	"WARNING! Put Your configuration in this file and then rename it to 'station_config.h'"
+#define _CALL	 "SP8EBC"
+#define _SSID	 12
+#define _LAT	 5325.15
+#define _LATNS	 'N'
+#define _LON	 01831.41
+#define _LONWE	 'E'
+#define _COMMENT "Set Your configuration in this file and rename to station_config.h"
 
 // You can use only one of these below defines to choose symbol. Meteo data are are always
 // transmitted with blue WX symbol
 // #define _SYMBOL_DIGI			// uncomment if you want digi symbol(green star with D inside)
-#define _SYMBOL_WIDE1_DIGI // uncomment if you want 'little' digi symbol (green star with digit 1
-						   // overlaid)
-// #define _SYMBOL_HOUSE			// uncomment if you want house symbol
-// #define _SYMBOL_RXIGATE		// uncomment if you want rxigate symbol (black diamond with R)
+// #define _SYMBOL_WIDE1_DIGI	// uncomment if you want 'little' digi symbol (green star with digit
+// 1 overlaid) #define _SYMBOL_HOUSE			// uncomment if you want house symbol
+#define _SYMOL_RXIGATE // uncomment if you want rxigate symbol (black diamond with R)
 // #define _SYMBOL_IGATE			// uncomment if you want igate symol (black diamond with I)
 // #define _SYMBOL_SAILBOAT
 
@@ -130,24 +147,24 @@
 
 // Uncomment one of these two defines to choose what path You want. If you uncommend both of them or
 // if you keep both commended path will be completely disabled. CALL-S>AKLPRZ:data
-#define _WIDE1_PATH // CALL-S>AKLPRZ,WIDE1-1:data
+// #define _WIDE1_PATH		// CALL-S>AKLPRZ,WIDE1-1:data
 // #define _WIDE21_PATH	// CALL-S>AKLPRZ,WIDE2-1:data
 
 // Comment this to disable beacon auto sending during startup (this can be risky if RF feedback
 // occur)
 #define _BCN_ON_STARTUP
 
-#define _WX_INTERVAL  3	  // WX packet interval in minutes
-#define _BCN_INTERVAL 125 // Own beacon interval in minutes
+#define _WX_INTERVAL  5	 // WX packet interval in minutes
+#define _BCN_INTERVAL 60 // Own beacon interval in minutes
 
 #define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open
 					  // Drain
 #define _SERIAL_BAUDRATE 9600
 
-#define _DIGI_VISCOUS_DEALY 2
+#define _DIGI_VISCOUS_DEALY 3
 
 // Transmitting delay
-#define _DELAY_BASE 20 // * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
+#define _DELAY_BASE 15 // * 50ms. For example setting 10 gives 500msec delay. Maximum value is 20
 // #define _RANDOM_DELAY	// adds random delay TO fixed time set by _DELAY_BASE. This additional
 // time can be
 //  from 100ms up to 1 sec in 100ms steps. Values are drawn from samples going from ADC
@@ -155,6 +172,9 @@
 // After waiting time declared above ParaTNC will check DCD (Data Carrier Detect) flag, which works
 // as some kind of semaphore. If radio channel is not occupied by any other transmission TX will be
 // keyed up immediately, otherwise software will wait for clear conditions.
+
+//!< BASIC CONFIG - CALLSIGN, LOCATION etc
+//!< -------------------------------------
 
 // Few IMPORTANT hints about setting transmit delay properly.
 //
@@ -171,8 +191,17 @@
 // signal which might be impossible to decode by ParaTNC, so DCD is only one part of effective
 // multiaccess to medium.
 
-/* ---------------------------- */
-/* 	MODBUS RTU CONFIGURATION    */
+//!< -------
+//!< BUTTONS
+
+#define _BUTTON_ONE_LEFT  BUTTON_FUNCTION_SEND_BEACON
+#define _BUTTON_TWO_RIGHT BUTTON_FUNCTION_SEND_BEACON
+
+//!< BUTTONS
+//!< -------
+
+//!< ------------------------
+//!< MODBUS RTU CONFIGURATION
 
 // scaling coefficients are used as follows
 //
@@ -181,6 +210,9 @@
 //							D
 //
 // because of that D cannot be set to zero
+//
+// scaling for temperature shall be set to get *10 temperature
+// as an output of getter / 123 -> 12.3 oC
 #define _RTU_SLAVE_SPEED	 9600u
 #define _RTU_SLAVE_PARITY	 0
 #define _RTU_SLAVE_STOP_BITS 2
@@ -192,7 +224,7 @@
 #define _RTU_SLAVE_SCALING_A_1 0
 #define _RTU_SLAVE_SCALING_B_1 1
 #define _RTU_SLAVE_SCALING_C_1 0
-#define _RTU_SLAVE_SCALING_D_1 10
+#define _RTU_SLAVE_SCALING_D_1 1
 
 #define _RTU_SLAVE_ID_2	  0x01
 #define _RTU_SLAVE_FUNC_2 0x03
@@ -239,33 +271,36 @@
 #define _RTU_SLAVE_SCALING_C_6 0
 #define _RTU_SLAVE_SCALING_D_6 1
 
-// #define _RTU_SLAVE_TEMPERATURE_SOURCE 		1
-#define _RTU_SLAVE_HUMIDITY_SOURCE 2
+#define _RTU_SLAVE_TEMPERATURE_SOURCE 1
+#define _RTU_SLAVE_HUMIDITY_SOURCE	  2
 // #define _RTU_SLAVE_PRESSURE_SOURCE			3
 // #define _RTU_SLAVE_WIND_DIRECTION_SORUCE	4
 // #define _RTU_SLAVE_WIND_SPEED_SOURCE		4
 
-/* 	MODBUS RTU CONFIGURATION    */
-/* ---------------------------- */
+//!< MODBUS RTU CONFIGURATION
+//!< ------------------------
 
-/* ---------------------------- */
-/* 	GSM and APRS-IS and API     */
+//!< -----------------------
+//!< GSM and APRS-IS and API
 
-#define _GSM_APN_NAME "internet\0"
+#define _GSM_APN_NAME "|||||||\0"
 #define _GSM_APN_USER "internet\0"
 #define _GSM_APN_PASS "internet\0"
 
-#define _GSM_API_ENABLE
-#define _GSM_API_BASE_URL	  "http://78.88.56.14:8080/meteo_backend"
-#define _GSM_API_STATION_NAME "pilsko"
+// #define _GSM_API_ENABLE
+#define _GSM_API_BASE_URL	  "http://pogoda.cc:8080/meteo_backend"
+#define _GSM_API_STATION_NAME "kujpom_wiag"
 
-// #define _GSM_APRSIS_ENABLE
-#define _GSM_APRSIS_PASSCODE 16823
+#define _GSM_APRSIS_ENABLE
+#define _GSM_APRSIS_PASSCODE 23220
 #define _GSM_APRSIS_PORT	 14580
 #define _GSM_APRSIS_ADDRES	 "euro.aprs2.net\0"
 
-/* 	GSM and APRS-IS and API     */
-/* ---------------------------- */
+//!< GSM and APRS-IS and API
+//!< -----------------------
+
+#define ENG1 ENGINEERING1_INH_WX_PWR_HNDL
+// #define ENG2	ENGINEERING2_REBOOT_AFTER_24
 
 // Do not touch this
 #if defined(_SYMBOL_DIGI) && !defined(_SYMBOL_WIDE1_DIGI) && !defined(_SYMBOL_HOUSE) && \
@@ -301,16 +336,6 @@
 // #if defined (_METEO) && !defined (_DIGI)
 // #define _DIGI
 // #endif
-
-#if defined(PARATNC_HWREV_A) && (defined(_METEO) || defined(_DALLAS_AS_TELEM)) && \
-	!defined(_DALLAS_SPLIT_PIN)
-#define _DALLAS_SPLIT_PIN
-#endif
-
-#if defined(PARATNC_HWREV_B) && (defined(_METEO) || defined(_DALLAS_AS_TELEM)) && \
-	!defined(_DALLAS_SPLIT_PIN)
-#define _DALLAS_SPLIT_PIN
-#endif
 
 #if defined(_ANEMOMETER_TX20) && defined(_ANEMOMETER_ANALOGUE)
 #error "You cannot use two anemometers at once!!!"

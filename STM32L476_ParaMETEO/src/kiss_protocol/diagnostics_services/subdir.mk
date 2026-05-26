@@ -10,19 +10,19 @@ C_SRCS += \
 ../src/kiss_protocol/diagnostics_services/kiss_routine_control.c \
 ../src/kiss_protocol/diagnostics_services/kiss_security_access.c 
 
-OBJS += \
-./src/kiss_protocol/diagnostics_services/kiss_did.o \
-./src/kiss_protocol/diagnostics_services/kiss_program_startup.o \
-./src/kiss_protocol/diagnostics_services/kiss_read_memory.o \
-./src/kiss_protocol/diagnostics_services/kiss_routine_control.o \
-./src/kiss_protocol/diagnostics_services/kiss_security_access.o 
-
 C_DEPS += \
 ./src/kiss_protocol/diagnostics_services/kiss_did.d \
 ./src/kiss_protocol/diagnostics_services/kiss_program_startup.d \
 ./src/kiss_protocol/diagnostics_services/kiss_read_memory.d \
 ./src/kiss_protocol/diagnostics_services/kiss_routine_control.d \
 ./src/kiss_protocol/diagnostics_services/kiss_security_access.d 
+
+OBJS += \
+./src/kiss_protocol/diagnostics_services/kiss_did.o \
+./src/kiss_protocol/diagnostics_services/kiss_program_startup.o \
+./src/kiss_protocol/diagnostics_services/kiss_read_memory.o \
+./src/kiss_protocol/diagnostics_services/kiss_routine_control.o \
+./src/kiss_protocol/diagnostics_services/kiss_security_access.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

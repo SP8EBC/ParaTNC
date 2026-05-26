@@ -6,11 +6,11 @@
 C_SRCS += \
 ../system/src/tm/tm_stm32_rtc.c 
 
-OBJS += \
-./system/src/tm/tm_stm32_rtc.o 
-
 C_DEPS += \
 ./system/src/tm/tm_stm32_rtc.d 
+
+OBJS += \
+./system/src/tm/tm_stm32_rtc.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

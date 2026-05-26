@@ -9,17 +9,17 @@ C_SRCS += \
 ../src/stored_configuration_nvm/config_data_second.c \
 ../src/stored_configuration_nvm/configuration_handler.c 
 
-OBJS += \
-./src/stored_configuration_nvm/config_data_default.o \
-./src/stored_configuration_nvm/config_data_first.o \
-./src/stored_configuration_nvm/config_data_second.o \
-./src/stored_configuration_nvm/configuration_handler.o 
-
 C_DEPS += \
 ./src/stored_configuration_nvm/config_data_default.d \
 ./src/stored_configuration_nvm/config_data_first.d \
 ./src/stored_configuration_nvm/config_data_second.d \
 ./src/stored_configuration_nvm/configuration_handler.d 
+
+OBJS += \
+./src/stored_configuration_nvm/config_data_default.o \
+./src/stored_configuration_nvm/config_data_first.o \
+./src/stored_configuration_nvm/config_data_second.o \
+./src/stored_configuration_nvm/configuration_handler.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

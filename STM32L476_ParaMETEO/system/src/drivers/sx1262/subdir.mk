@@ -12,15 +12,6 @@ C_SRCS += \
 ../system/src/drivers/sx1262/sx1262_rf.c \
 ../system/src/drivers/sx1262/sx1262_status.c 
 
-OBJS += \
-./system/src/drivers/sx1262/sx1262.o \
-./system/src/drivers/sx1262/sx1262_data_io.o \
-./system/src/drivers/sx1262/sx1262_internals.o \
-./system/src/drivers/sx1262/sx1262_irq_dio.o \
-./system/src/drivers/sx1262/sx1262_modes.o \
-./system/src/drivers/sx1262/sx1262_rf.o \
-./system/src/drivers/sx1262/sx1262_status.o 
-
 C_DEPS += \
 ./system/src/drivers/sx1262/sx1262.d \
 ./system/src/drivers/sx1262/sx1262_data_io.d \
@@ -29,6 +20,15 @@ C_DEPS += \
 ./system/src/drivers/sx1262/sx1262_modes.d \
 ./system/src/drivers/sx1262/sx1262_rf.d \
 ./system/src/drivers/sx1262/sx1262_status.d 
+
+OBJS += \
+./system/src/drivers/sx1262/sx1262.o \
+./system/src/drivers/sx1262/sx1262_data_io.o \
+./system/src/drivers/sx1262/sx1262_internals.o \
+./system/src/drivers/sx1262/sx1262_irq_dio.o \
+./system/src/drivers/sx1262/sx1262_modes.o \
+./system/src/drivers/sx1262/sx1262_rf.o \
+./system/src/drivers/sx1262/sx1262_status.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -11,14 +11,6 @@ C_SRCS += \
 ../system/src/drivers/max31865.c \
 ../system/src/drivers/ms5611.c 
 
-OBJS += \
-./system/src/drivers/analog_anemometer.o \
-./system/src/drivers/bme280.o \
-./system/src/drivers/dallas.o \
-./system/src/drivers/dma_helper_functions.o \
-./system/src/drivers/max31865.o \
-./system/src/drivers/ms5611.o 
-
 C_DEPS += \
 ./system/src/drivers/analog_anemometer.d \
 ./system/src/drivers/bme280.d \
@@ -26,6 +18,14 @@ C_DEPS += \
 ./system/src/drivers/dma_helper_functions.d \
 ./system/src/drivers/max31865.d \
 ./system/src/drivers/ms5611.d 
+
+OBJS += \
+./system/src/drivers/analog_anemometer.o \
+./system/src/drivers/bme280.o \
+./system/src/drivers/dallas.o \
+./system/src/drivers/dma_helper_functions.o \
+./system/src/drivers/max31865.o \
+./system/src/drivers/ms5611.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

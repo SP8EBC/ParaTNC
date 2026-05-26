@@ -9,17 +9,17 @@ C_SRCS += \
 ../system/src/umb_master/umb_channel_pool.c \
 ../system/src/umb_master/umb_master.c 
 
-OBJS += \
-./system/src/umb_master/umb_0x23_offline_data.o \
-./system/src/umb_master/umb_0x26_status.o \
-./system/src/umb_master/umb_channel_pool.o \
-./system/src/umb_master/umb_master.o 
-
 C_DEPS += \
 ./system/src/umb_master/umb_0x23_offline_data.d \
 ./system/src/umb_master/umb_0x26_status.d \
 ./system/src/umb_master/umb_channel_pool.d \
 ./system/src/umb_master/umb_master.d 
+
+OBJS += \
+./system/src/umb_master/umb_0x23_offline_data.o \
+./system/src/umb_master/umb_0x26_status.o \
+./system/src/umb_master/umb_channel_pool.o \
+./system/src/umb_master/umb_master.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

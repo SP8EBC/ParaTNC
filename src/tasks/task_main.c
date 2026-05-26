@@ -69,6 +69,9 @@
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 
+//!< Set to one after stratup beacon was send (if it is enabled)
+static uint8_t main_startup_beacon_done = 0;
+
 //!< Used to store an information which telemetry descritpion frame should be sent next
 // static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 

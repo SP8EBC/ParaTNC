@@ -7,13 +7,13 @@ C_SRCS += \
 ../src/nvm/nvm.c \
 ../src/nvm/nvm_event.c 
 
-OBJS += \
-./src/nvm/nvm.o \
-./src/nvm/nvm_event.o 
-
 C_DEPS += \
 ./src/nvm/nvm.d \
 ./src/nvm/nvm_event.d 
+
+OBJS += \
+./src/nvm/nvm.o \
+./src/nvm/nvm_event.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

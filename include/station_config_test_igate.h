@@ -145,8 +145,8 @@
 #define _WX_INTERVAL  5	  // WX packet interval in minutes
 #define _BCN_INTERVAL 124 // Own beacon interval in minutes
 
-#define _PTT_PUSHPULL	 // Uncomment this if you want PTT line to work as Push-pull instead of Open
-						 // Drain
+#define _PTT_PUSHPULL // Uncomment this if you want PTT line to work as Push-pull instead of Open
+					  // Drain
 #define _SERIAL_BAUDRATE 9600
 
 #define _DIGI_VISCOUS_DEALY 2
