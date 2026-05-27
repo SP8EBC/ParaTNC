@@ -1593,19 +1593,6 @@ int main (int argc, char *argv[])
 		backup_assert (BACKUP_REG_ASSERT_CONCURENT_ACCES_APRSIS_OTHER);
 	}
 
-	if (main_config_data_basic->beacon_at_bootup == 1) {
-		beacon_send_own (rte_main_battery_voltage, system_is_rtc_ok ());
-		main_wait_for_tx_complete ();
-
-		// this delay is put in case if beacon is configured to use
-		// any path like WIDE1-1 or WIDE2-1 or another. The delay
-		// will wait for some time to have this beacon digipeated
-		// by the APRS radio network
-		delay_fixed (1500);
-
-		status_send_powersave_registers ();
-	}
-
 	(void)event_log_sync (EVENT_BOOTUP,
 						  EVENT_SRC_MAIN,
 						  EVENTS_MAIN_BOOTUP_COMPLETE,
@@ -1638,7 +1625,7 @@ int main (int argc, char *argv[])
 	main_eventgroup_handle_fanet = xEventGroupCreateStatic (&main_eventgroup_fanet);
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex ();
-	main_mutex_ax25sendvia = xSemaphoreCreateMutex ();
+	main_mutex_ax25sendvia = xSemaphoreCreateBinary();
 
 	main_timer_aprsis_telemetry_descr = xTimerCreate ("APRSIS_TRIG",
 													  pdMS_TO_TICKS (61234U),
@@ -1693,10 +1680,22 @@ void main_callback_pre_tx (void)
 
 /**
  * @brief called after
+ * @note This is called from interrupt context!!
  */
 void main_callback_on_tx_complete (void)
 {
-	xSemaphoreGive (main_mutex_ax25sendvia);
+	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+	BaseType_t xResult = xSemaphoreGiveFromISR (main_mutex_ax25sendvia, &xHigherPriorityTaskWoken);
+	if (xResult != pdFAIL)
+
+	{
+		/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+		   switch should be requested. The macro used is port specific and will
+		   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+		   the documentation page for the port being used. */
+		portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+	}
 }
 
 void main_set_ax25_my_callsign (AX25Call *call)

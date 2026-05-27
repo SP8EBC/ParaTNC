@@ -28,6 +28,7 @@
 #include "api/api.h"
 #include "aprs/afsk_pr.h"
 #include "aprs/ax25.h"
+#include "aprs/beacon.h"
 #include "aprs/status.h"
 #include "davis_vantage/davis.h"
 #include "davis_vantage/davis_parsers.h"
@@ -44,6 +45,7 @@
 #include "adc.h"
 #include "aprsis.h"
 #include "button.h"
+#include "delay.h"
 #include "digi.h"
 #include "io.h"
 #include "ntp.h"
@@ -69,9 +71,6 @@
 //!< Triggers additional check if ADC has properly reinitialized and conversion is working
 uint8_t main_check_adc = 0;
 
-//!< Set to one after stratup beacon was send (if it is enabled)
-static uint8_t main_startup_beacon_done = 0;
-
 //!< Used to store an information which telemetry descritpion frame should be sent next
 // static telemetry_description_t main_telemetry_description = TELEMETRY_NOTHING;
 
@@ -93,6 +92,19 @@ void task_main (void *parameters)
 
 	/* Block for 200ms. */
 	const TickType_t xDelay = 200 / portTICK_PERIOD_MS;
+
+	if (main_config_data_basic->beacon_at_bootup == 1) {
+		beacon_send_own (rte_main_battery_voltage, system_is_rtc_ok ());
+		main_wait_for_tx_complete ();
+
+		// this delay is put in case if beacon is configured to use
+		// any path like WIDE1-1 or WIDE2-1 or another. The delay
+		// will wait for some time to have this beacon digipeated
+		// by the APRS radio network
+		delay_fixed (1500);
+
+		status_send_powersave_registers ();
+	}
 
 	while (1) {
 		if (supervisor_is_started () == 0) {
