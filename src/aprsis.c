@@ -41,109 +41,119 @@
 srl_context_t *aprsis_serial_port;
 
 /**
- * Pointer to used gsm_modem_state
+ * @brief Pointer to used gsm_modem_state
  */
 gsm_sim800_state_t *aprsis_gsm_modem_state;
 
 /**
- * Size of transmit buffer
+ * @brief Size of transmit buffer
  */
 #define APRSIS_TX_BUFFER_LN 512
 
 /**
- * Size of weather transmit buffer
+ * @brief Size of weather transmit buffer
  */
 #define APRSIS_WX_TX_BUFFER_LN 96
 
 /**
- * Buffer for sending packet to aprs-is
+ * @brief Buffer for sending packet to aprs-is
  */
 static char aprsis_packet_tx_buffer[APRSIS_TX_BUFFER_LN];
 
+/**
+ * @brief Buffer specific for sending weather data to APRS-IS
+ */
 static char aprsis_weather_packet_tx_buffer[APRSIS_WX_TX_BUFFER_LN];
 
 /**
- * Lenght of buffer
+ * @brief Lenght of the telemetry buffer
  */
 #define APRSIS_TELEMETRY_BUFFER_LN 96
 
 /**
- * Buffer used to sent telemetry frames to APRS-IS. It is also
+ * @brief Buffer used to sent telemetry frames to APRS-IS. It is also
  * used to construct frame with GPS connection status, which is sent
  * only once after APRS-IS connection is established
  */
 char aprsis_packet_telemetry_buffer[APRSIS_TELEMETRY_BUFFER_LN];
 
 /**
- *
+ * @brief Size of generated message for APRS-IS 
  */
 uint16_t aprsis_packet_tx_message_size = 0;
 
 /**
- *
+ * @brief Size of generated weather packet to be sent to APRS-IS server
  */
 uint16_t aprsis_weather_packet_tx_message_size = 0;
 
 /**
- * Passocde to APRS-IS server
+ * @brief Passocde to APRS-IS server
  */
 int32_t aprsis_passcode;
 
 /**
- * Buffer for generate and then permanently store login string
+ * @brief Buffer to which login string will be generated
  */
 char aprsis_login_string[64];
 
 /**
- * Default APRS-IS address to be used by 'aprsis_connect_and_login_default' function
+ * @brief Default APRS-IS address to be used by 'aprsis_connect_and_login_default' function
  */
 const char *aprsis_default_server_address;
 
 /**
- * String with a callsign and a ssid in aprsis format. Used sent auto beacon
- * when connection to APRS-IS server is established
+ * @brief String with a callsign and a ssid in aprsis format. Used to sent auto beacon
+ * after a connection to the APRS-IS server is established
  */
 const char *aprsis_callsign_with_ssid;
 
 /**
- * Pointer to callsign from configuration
+ * @brief Pointer to the callsign from the configuration
  */
 const char *aprsis_callsign;
 
 /**
- * ssid from configuration
+ * @brief ssid from configuration
  */
 uint8_t aprsis_ssid;
 
 /**
- * Lenght of APRS-IS server address string
+ * @brief Lenght of the APRS-IS server address string
  */
 uint16_t aprsis_default_server_address_ln = 0;
 
 /**
- * TCP port used to connect to default APRS-IS server.
+ * @brief TCP port used to connect to default APRS-IS server.
  */
 uint16_t aprsis_default_server_port;
 
 /**
- * Set to one if connections is established AND user is logged
+ * @brief Set to one if connection is established AND user is logged
  */
 uint8_t aprsis_logged = 0;
 
 /**
- * Set to one if connection to server is established (but maybe not logged)
+ * @brief Set to one if connection to server is established (but maybe not logged)
  */
 uint8_t aprsis_connected = 0;
 
+
 volatile sim800_return_t aprsis_last_tcpip_write_res;
 
+/**
+ * @brief begining of a reponse, the APRS-IS server should sent after successful login
+ */
 const char *aprsis_sucessfull_login = "# logresp\0";
 
+/**
+ * @brief counts how many times the connection to the APRS-IS server has been established and authenticated  
+ */
 static uint8_t aprsis_successfull_conn_counter = 0;
 
 /**
- * Counter of unsuccessful connects to APRS-IS, to trigger GSM modem reset.
- * Please note that it works differently that 'aprsis_reset_on_timeout' and
+ * @brief Counter of unsuccessful connects to APRS-IS, to trigger GSM modem reset.
+ * @note Please note that it works differently that 'aprsis_reset_on_timeout' and
  * has nothing to do with a timeout of already established connection. This
  * counter will trigger GSM modem reset even if no APRS-IS connection has
  * been established at all. It protects against a situation when GSM modem
@@ -154,43 +164,43 @@ static uint8_t aprsis_successfull_conn_counter = 0;
 uint8_t aprsis_unsucessfull_conn_counter = 0;
 
 /**
- * Set to one if the GSM modem shall be immediately reset when APRS-IS communication
+ * @brief Set to one if the GSM modem shall be immediately reset when APRS-IS communication
  * time out. Please note that this is different that 'aprsis_unsucessfull_conn_counter'
  * and reseting GSM mode after many unsuccessfull connection attempts! This
- * comes in when the connection has been established at least one time. It won't
+ * comes in, when the connection has been established at least one time. It won't
  * help if there is some problem with establishing connection at all.
  */
 static uint32_t aprsis_reset_on_timeout = 0;
 
 /**
- * Number of RF packets igated to APRS-IS system
+ * @brief Number of RF packets igated to APRS-IS system
  */
 static uint16_t aprsis_igated_counter = 0;
 
 /**
- * Counter of all packets originated from the station transmitted to APRS-IS server.
+ * @brief Counter of all packets originated from the station transmitted to the APRS-IS server.
  * This doesn't include igated packets!
  */
 static uint16_t aprsis_tx_counter = 0;
 
 /**
- * Amount of keepalive packet received from the server. It is reset to zero
+ * @brief Amount of keepalive packet received from the server. It is reset to zero
  * every connect event
  */
 static uint16_t aprsis_keepalive_received_counter = 0;
 
 /**
- * Amount of packets which are not keepalive
+ * @brief Amount of packets which are not keepalive
  */
 static uint16_t aprsis_another_received_counter = 0;
 
 /**
- * A timestamp when server has send anything
+ * @brief A timestamp when server has send something
  */
 static uint32_t aprsis_last_keepalive_ts = 0;
 
 /**
- * This is the second timestamp of last keepalive message
+ * @brief This is the second timestamp of last keepalive message
  * from APRS-IS server. It is used by 'aprsis_check_connection_attempt_alive'
  * and not incremented anywhere except receive callback. Where a timeout
  * calculated using this value is too long the controller is restarted.
@@ -198,7 +208,7 @@ static uint32_t aprsis_last_keepalive_ts = 0;
 static uint32_t aprsis_last_keepalive_long_ts = 0;
 
 /**
- * A timestamp when any packet has been sent to
+ * @brief A timestamp when any packet has been sent to
  */
 static uint32_t aprsis_last_packet_transmit_ts = 0;
 
@@ -208,26 +218,30 @@ static uint32_t aprsis_last_packet_transmit_ts = 0;
 static uint32_t aprsis_last_packet_transmit_long_ts = 0;
 
 /**
- * Only for debugging purposes
+ * @brief Only for debugging purposes
  */
 static uint8_t aprsis_debug_simulate_timeout = 0;
 
 #define APRSIS_LOGIN_STRING_RECEIVED_LN 64
 
+/**
+ * @brief copy of a response to the loginstring, received from APRS-IS server.
+ * @note usually this string contains a name of the server
+ */
 char aprsis_login_string_reveived[APRSIS_LOGIN_STRING_RECEIVED_LN];
 
 #define APRSIS_TIMEOUT_MS 123000 // 123000
 
 /**
- * Lenght of 6 letter callsign + two digit SSID + end character like '>' or ","
+ * @brief Lenght of 6 letter callsign + two digit SSID + end character like '>' or ","
  */
 #define MAXIMUM_CALL_SSID_DASH_LN 10
 
 // clang-format off
 /**
  * Checks if data in a buffer contains APRS message
- * @param message
- * @param message_ln
+ * @param message to check
+ * @param message_ln size of a message which will be checked
  * @return position at which content of message starts
  */
 STATIC uint16_t aprsis_check_is_message(const uint8_t * const message, const uint16_t message_ln) {
@@ -257,8 +271,11 @@ STATIC uint16_t aprsis_check_is_message(const uint8_t * const message, const uin
 }
 
 /**
- *
- * @param srl_context
+ * @brief Callback function, passed to SIM800C TCPIP library to be called after new data is received from APRS-IS server.
+ * @note This callback checks if received data contains heartbeat message (starting with '#'). If not it checks if 
+ * this is valid APRS message addressed to this station. It does nothing with the rest of traffic comming from APRS-IS.
+ * Currently TX-igate is not implemented and supported. 
+ * @param srl_context used for communication with SIM800C GPRS module
  */
 STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 
@@ -324,15 +341,15 @@ STATIC void aprsis_receive_callback(srl_context_t* srl_context) {
 }
 
 /**
- *
- * @param context
- * @param gsm_modem_state
- * @param callsign
- * @param ssid
- * @param passcode
- * @param default_server
- * @param default_port
- * @param reset_on_timeout
+ * @brief Initialize APRS-IS context
+ * @param context pointer to serial port context used for communication with the GSM/GPRS modem
+ * @param gsm_modem_state pointer to a global GSM/GPRS modem state (like idle, tcp connected itp)
+ * @param callsign pointer to a buffer with this station callsign
+ * @param ssid this station SSID
+ * @param passcode APRS-IS passcode
+ * @param default_server pointer to a default APRS-IS server address (may be IP address or DNS hostname)
+ * @param default_port default APRS-IS tcp port
+ * @param reset_on_timeout if GSM/GPRS modem must be power-cycled after timeout instead of only reconnecting 
  * @param callsign_with_ssid
  */
 void aprsis_init(
@@ -378,8 +395,8 @@ void aprsis_init(
  * @param address	ip or dns address to aprs-is server
  * @param address_ln	lenht of a buffer with an address
  * @param port	TCP port to use (typically 14580)
- * @param auto_send_beacon
- * @return
+ * @param auto_send_beacon send station beacon immediately after connectin is established (and passcode is OK)
+ * @return connecting result
  */
 aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_ln, uint16_t port, uint8_t auto_send_beacon) {
 	// this function has blocking io
@@ -623,9 +640,9 @@ aprsis_return_t aprsis_connect_and_login(const char * address, uint8_t address_l
 }
 // clang-format on
 /**
- * Connect and login to APRS-IS using default credentials using during initialization
- * @param auto_send_beacon
- * @return
+ * Connect and login to APRS-IS using default credentials (passed to initialization function)
+ * @param auto_send_beacon send a station becon immediately after connection is established
+ * @return connecting result
  */
 aprsis_return_t aprsis_connect_and_login_default (uint8_t auto_send_beacon)
 {
@@ -654,7 +671,7 @@ sim800_return_t aprsis_disconnect (void)
 }
 
 /**
- * Pooler function which check periodically if APRS-IS connection is alive.
+ * @brief Pooler function which check periodically if APRS-IS connection is alive.
  */
 void aprsis_check_alive (void)
 {
@@ -732,11 +749,11 @@ void aprsis_check_alive (void)
 }
 
 /**
- * This is another alive check which is fully independent from
+ * @brief This is another alive check which is fully independent from
  * if the connection has been even already established and how many times
  * it waas. The intention here is to reset the whole controller if
- * for some reason APRS-++IS connection cannot be established for very long time
- * @return
+ * for some reason the APRS-IS connection cannot be established for very long time
+ * @return 1 if the controller shall be restarted
  */
 int aprsis_check_connection_attempt_alive (void)
 {
@@ -778,17 +795,18 @@ int aprsis_check_connection_attempt_alive (void)
 }
 
 /**
- *
- * @param windspeed
- * @param windgusts
- * @param winddirection
- * @param temperatura
- * @param cisnienie
- * @param humidity
- * @param callsign_with_ssid
- * @param string_latitude
- * @param string_longitude
- * @param config_data_basic
+ * @brief sends weather frame to APRS-IS server
+ * @note this function assembles weather frame into aprsis_weather_packet_tx_buffer
+ * @param windspeed rescaled to .1 meters per seconds resolution
+ * @param windgusts as above 
+ * @param winddirection in degrees
+ * @param temperatura temperature in degrees celsius, rescaled to .1 C
+ * @param cisnienie QNH pressure rescaled to .1 hPa
+ * @param humidity in percents
+ * @param callsign_with_ssid pointer to a char array with assembled CALLSIGN-SSIS
+ * @param string_latitude pointer to a char array with latitude string
+ * @param string_longitude pointer to a char array with longitude string
+ * @param config_data_basic pointer to a configuration structure
  */
 void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t winddirection,
 						   float temperatura, float cisnienie, uint8_t humidity,
@@ -873,9 +891,9 @@ void aprsis_send_wx_frame (uint16_t windspeed, uint16_t windgusts, uint16_t wind
 }
 
 /**
- * Sends beacon packet to APRS-IS
+ * @brief Sends beacon packet to APRS-IS
  * @param async zero for blocking io, which lock this function during transmission.
- * 				non zero for non blocking io, function will return immediately and sending will be
+ * non zero for non blocking io, function will return immediately and sending will be
  * done in background
  */
 void aprsis_send_beacon (uint8_t async, const char *callsign_with_ssid, const char *string_latitude,
@@ -926,23 +944,24 @@ void aprsis_send_beacon (uint8_t async, const char *callsign_with_ssid, const ch
 }
 
 /**
- * Prepare telemetry packets to be sent later to the APRS-IS. Just store a string
+ * @brief Prepare telemetry packets to be sent later to the APRS-IS. Just store a string
  * with all values, which will be then embedded into packet to be sent to APRS-IS
- * @param _telemetry_counter
- * @param _rx_pkts
- * @param _tx_pkts
- * @param _digi_pkts
- * @param _scaled_vbatt_voltage
- * @param _viscous_drop_pkts
- * @param _scaled_temperature
- * @param _telemetry_qf
+ * @note telemetry frame is assembled into aprsis_packet_telemetry_buffer,
+ * @param _telemetry_counter telemetry messages counter
+ * @param _rx_pkts amount of packets received in last 10 minutes
+ * @param _tx_pkts amount of all transmitted packets in last 10 minutes
+ * @param _digi_pkts amount of digipeated packets in last 10 minutes
+ * @param _scaled_vbatt_voltage saled to .1 V
+ * @param _viscous_drop_pkts number of packet dropped from digipeated by Viscous Digi code (in last 10 mins)
+ * @param _scaled_temperature to .1 V, usually this is PCB temperature measured by internal sensor
+ * @param _telemetry_qf 
  * @param _telemetry_degr
  * @param _telemetry_nav
  * @param _telemetry_pressure_qf_navaliable
  * @param _telemetry_humidity_qf_navaliable
  * @param _telemetry_anemometer_degradated
  * @param _telemetry_anemometer_navble
- * @param _telemetry_vbatt_low
+ * @param _telemetry_vbatt_low character '1' or '0' 
  * @param _config_mode
  */
 void aprsis_prepare_telemetry (uint16_t _telemetry_counter, uint8_t _rx_pkts, uint8_t _tx_pkts,
