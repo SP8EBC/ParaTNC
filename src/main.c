@@ -263,6 +263,7 @@
 #include "tasks/task_event_kiss_rx_done.h"
 #include "tasks/task_event_kiss_tx_done.h"
 #include "tasks/task_event_radio_message.h"
+#include "tasks/task_event_radio_message_tx.h"
 #include "tasks/task_event_serial_sensor.h"
 #include "tasks/task_fanet.h"
 #include "tasks/task_main.h"
@@ -516,6 +517,9 @@ static StaticEventGroup_t main_eventgroup_aprs_trigger;
 static StaticEventGroup_t main_eventgroup_new_radio_message_rx;
 
 //! data associated with the event group for new message received from radio network
+static StaticEventGroup_t main_eventgroup_new_radio_message_tx;
+
+//! data associated with the event group for new message received from radio network
 static StaticEventGroup_t main_eventgroup_ntp_and_api_client;
 
 //! data associated with the event group used by driver code for sx1262 modem
@@ -554,7 +558,11 @@ EventGroupHandle_t main_eventgroup_handle_serial_sensor;
 
 EventGroupHandle_t main_eventgroup_handle_aprs_trigger;
 
+//! Used to propagate an event that new message has been received from radio network
 EventGroupHandle_t main_eventgroup_handle_radio_message;
+
+//! Used to propagate an event that new message has been received from radio network
+EventGroupHandle_t main_eventgroup_handle_radio_message_transmit;
 
 EventGroupHandle_t main_eventgroup_handle_ntp_and_api_client;
 
@@ -1619,13 +1627,16 @@ int main (int argc, char *argv[])
 	main_eventgroup_handle_aprs_trigger = xEventGroupCreateStatic (&main_eventgroup_aprs_trigger);
 	main_eventgroup_handle_radio_message =
 		xEventGroupCreateStatic (&main_eventgroup_new_radio_message_rx);
+	main_eventgroup_handle_radio_message_transmit =
+		xEventGroupCreateStatic (&main_eventgroup_new_radio_message_tx);
 	main_eventgroup_handle_ntp_and_api_client =
 		xEventGroupCreateStatic (&main_eventgroup_ntp_and_api_client);
 	main_eventgroup_handle_sx1262 = xEventGroupCreateStatic (&main_eventgroup_sx1262);
 	main_eventgroup_handle_fanet = xEventGroupCreateStatic (&main_eventgroup_fanet);
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex ();
-	main_mutex_ax25sendvia = xSemaphoreCreateBinary();
+	main_mutex_ax25sendvia = xSemaphoreCreateBinary ();
+	xSemaphoreGive (main_mutex_ax25sendvia);
 
 	main_timer_aprsis_telemetry_descr = xTimerCreate ("APRSIS_TRIG",
 													  pdMS_TO_TICKS (61234U),
@@ -1679,23 +1690,23 @@ void main_callback_pre_tx (void)
 }
 
 /**
- * @brief called after
+ * @brief called after transmission is done
  * @note This is called from interrupt context!!
  */
 void main_callback_on_tx_complete (void)
 {
-	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	it_handlers_freertos_proxy |= IT_HANDLERS_PROXY_RADIO_MESSAGE_TX_EV;
+	NVIC_SetPendingIRQ (EXTI0_IRQn);
+}
 
-	BaseType_t xResult = xSemaphoreGiveFromISR (main_mutex_ax25sendvia, &xHigherPriorityTaskWoken);
-	if (xResult != pdFAIL)
+/**
+ * @brief called after transmission is done, but it is *NOT* called from an ISR context
+ * but from an proxy-event
+ */
+void main_callback_post_tx (void)
+{
 
-	{
-		/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
-		   switch should be requested. The macro used is port specific and will
-		   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
-		   the documentation page for the port being used. */
-		portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
-	}
+	xSemaphoreGive (main_mutex_ax25sendvia);
 }
 
 void main_set_ax25_my_callsign (AX25Call *call)

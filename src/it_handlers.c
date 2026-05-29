@@ -360,6 +360,28 @@ void EXTI0_IRQHandler (void)
 			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
 		}
 	}
+
+	// RF transmission has just finished
+	if ((IT_HANDLERS_PROXY_RADIO_MESSAGE_TX_EV & it_handlers_freertos_proxy) != 0) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		BaseType_t xResult = pdFAIL;
+		xResult = xEventGroupSetBitsFromISR (main_eventgroup_handle_radio_message_transmit,
+											 MAIN_EVENTGROUP_RADIO_MESSAGE_TXED,
+											 &xHigherPriorityTaskWoken);
+
+		it_handlers_freertos_proxy &= (0xFFFFFFFFu ^ IT_HANDLERS_PROXY_RADIO_MESSAGE_TX_EV);
+
+		if (xResult != pdFAIL)
+
+		{
+			/* If xHigherPriorityTaskWoken is now set to pdTRUE then a context
+			   switch should be requested. The macro used is port specific and will
+			   be either portYIELD_FROM_ISR() or portEND_SWITCHING_ISR() - refer to
+			   the documentation page for the port being used. */
+			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
+		}
+
+	}
 }
 
 void EXTI9_5_IRQHandler (void)

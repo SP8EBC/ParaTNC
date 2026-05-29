@@ -32,6 +32,7 @@
 #define IT_HANDLERS_PROXY_WX_RX_UART_EV		   (1 << 7)
 #define IT_HANDLERS_PROXY_WX_RX_ERROR_UART_EV  (1 << 8)
 #define IT_HANDLERS_PROXY_WX_TX_UART_EV		   (1 << 9)
+#define IT_HANDLERS_PROXY_RADIO_MESSAGE_TX_EV  (1 << 10)
 
 /// ==================================================================================================
 ///	GLOBAL TYPES

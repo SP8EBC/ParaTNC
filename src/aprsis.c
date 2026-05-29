@@ -78,7 +78,7 @@ static char aprsis_weather_packet_tx_buffer[APRSIS_WX_TX_BUFFER_LN];
 char aprsis_packet_telemetry_buffer[APRSIS_TELEMETRY_BUFFER_LN];
 
 /**
- * @brief Size of generated message for APRS-IS 
+ * @brief Size of generated message for APRS-IS
  */
 uint16_t aprsis_packet_tx_message_size = 0;
 
@@ -138,7 +138,6 @@ uint8_t aprsis_logged = 0;
  */
 uint8_t aprsis_connected = 0;
 
-
 volatile sim800_return_t aprsis_last_tcpip_write_res;
 
 /**
@@ -147,7 +146,8 @@ volatile sim800_return_t aprsis_last_tcpip_write_res;
 const char *aprsis_sucessfull_login = "# logresp\0";
 
 /**
- * @brief counts how many times the connection to the APRS-IS server has been established and authenticated  
+ * @brief counts how many times the connection to the APRS-IS server has been established and
+ * authenticated
  */
 static uint8_t aprsis_successfull_conn_counter = 0;
 
@@ -798,7 +798,7 @@ int aprsis_check_connection_attempt_alive (void)
  * @brief sends weather frame to APRS-IS server
  * @note this function assembles weather frame into aprsis_weather_packet_tx_buffer
  * @param windspeed rescaled to .1 meters per seconds resolution
- * @param windgusts as above 
+ * @param windgusts as above
  * @param winddirection in degrees
  * @param temperatura temperature in degrees celsius, rescaled to .1 C
  * @param cisnienie QNH pressure rescaled to .1 hPa
@@ -952,16 +952,17 @@ void aprsis_send_beacon (uint8_t async, const char *callsign_with_ssid, const ch
  * @param _tx_pkts amount of all transmitted packets in last 10 minutes
  * @param _digi_pkts amount of digipeated packets in last 10 minutes
  * @param _scaled_vbatt_voltage saled to .1 V
- * @param _viscous_drop_pkts number of packet dropped from digipeated by Viscous Digi code (in last 10 mins)
+ * @param _viscous_drop_pkts number of packet dropped from digipeated by Viscous Digi code (in last
+ * 10 mins)
  * @param _scaled_temperature to .1 V, usually this is PCB temperature measured by internal sensor
- * @param _telemetry_qf 
+ * @param _telemetry_qf
  * @param _telemetry_degr
  * @param _telemetry_nav
  * @param _telemetry_pressure_qf_navaliable
  * @param _telemetry_humidity_qf_navaliable
  * @param _telemetry_anemometer_degradated
  * @param _telemetry_anemometer_navble
- * @param _telemetry_vbatt_low character '1' or '0' 
+ * @param _telemetry_vbatt_low character '1' or '0'
  * @param _config_mode
  */
 void aprsis_prepare_telemetry (uint16_t _telemetry_counter, uint8_t _rx_pkts, uint8_t _tx_pkts,
