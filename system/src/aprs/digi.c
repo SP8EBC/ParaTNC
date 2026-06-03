@@ -224,7 +224,7 @@ uint8_t digi_process(struct AX25Msg *msg, const config_data_basic_t* const confi
 					delay_fixed(config_mode->digi_delay_100msec * 100);
 
 					WAIT_FOR_CHANNEL_FREE();
-					main_callback_pre_tx();
+					main_callback_pre_tx(3u);
 					ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);
 					after_tx_lock = 1;
 					afsk_txStart(&main_afsk);
@@ -294,7 +294,7 @@ uint8_t digi_pool_viscous(void) {
 				// wait when radio channel will became avaliable
 				WAIT_FOR_CHANNEL_FREE();
 
-				main_callback_pre_tx();
+				main_callback_pre_tx(4u);
 
 				// put message vaiting in viscous dealy into AX25 buffer in correct, encoded form
 				ax25_sendVia(&main_ax25, digi_path, digi_call_len, digi_msg, digi_msg_len-1);

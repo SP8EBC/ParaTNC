@@ -1,5 +1,6 @@
 
 #include "afsk.h"
+#include "main_freertos_externs.h"
 
 #include <string.h> /* memset */
 #include <math.h>
@@ -323,7 +324,7 @@ void afsk_txStart(Afsk *af) {
 	}
 //	ATOMIC(af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000));
 	af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000);
-
+	main_callback_post_tx();
 }
 
 /*********************************************************************************************************************/

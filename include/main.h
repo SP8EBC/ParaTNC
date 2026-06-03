@@ -150,7 +150,7 @@ void main_wait_for_tx_complete (void);
 
 void main_callback_on_tx_complete (void);
 
-void main_callback_pre_tx (void);
+void main_callback_pre_tx (uint8_t called_from);
 
 /**
  * Reset pooling timers values after waking up from deep sleep, to be sure

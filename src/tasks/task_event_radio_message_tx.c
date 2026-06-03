@@ -14,18 +14,13 @@
 #include "main.h"
 #include "main_freertos_externs.h"
 
-#include "aprsis.h"
-#include "digi.h"
 #include "supervisor.h"
 
-#include "drivers/serial.h"
-#include "kiss_communication/kiss_communication.h"
 
 void task_event_radio_message_tx (void *param)
 {
 	(void)param;
 	while (1) {
-		SUPERVISOR_MONITOR_CLEAR (EVENT_NEW_RF);
 
 		// wait infinite amount of time for event from a serial port indicating that
 		(void)xEventGroupWaitBits (main_eventgroup_handle_radio_message_transmit,
@@ -33,6 +28,8 @@ void task_event_radio_message_tx (void *param)
 								   pdTRUE,
 								   pdTRUE,
 								   0xFFFFFFFFu);
-		main_callback_post_tx ();
+
+
+		//main_callback_post_tx ();
 	}
 }

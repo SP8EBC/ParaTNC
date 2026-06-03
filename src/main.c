@@ -137,6 +137,7 @@
 // clang-format on
 
 #include "main.h"
+#include "build_datetime.h"
 #include "main_freertos_externs.h"
 #include "main_gsm_pool_handler.h"
 
@@ -841,6 +842,8 @@ int main (int argc, char *argv[])
 
 	// restore config to default if requested
 	if (main_reset_config_to_default == 1) {
+		system_set_rtc_date (BUILD_YEAR, BUILD_MONTH, BUILD_DAY);
+		system_set_rtc_time (BUILD_HOUR, BUILD_MINUTE, BUILD_SECOND);
 		main_crc_result = 0;
 
 		backup_reg_reset_counters ();
@@ -1683,9 +1686,20 @@ void main_wait_for_tx_complete (void)
 
 /**
  * @brief Called before anything is push into AX25 contextto be transmitted on air
+ * @param called_from from where this function is called
  */
-void main_callback_pre_tx (void)
+void main_callback_pre_tx (uint8_t called_from)
 {
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_MAIN,
+					EVENTS_MAIN_CALLBACK_PRETX,
+					called_from,
+					0,
+					0,
+					0,
+					0,
+					0);
+
 	xSemaphoreTake (main_mutex_ax25sendvia, portMAX_DELAY);
 }
 
@@ -1706,6 +1720,7 @@ void main_callback_on_tx_complete (void)
 void main_callback_post_tx (void)
 {
 
+	event_log_sync (EVENT_INFO, EVENT_SRC_MAIN, EVENTS_MAIN_CALLBACK_POSTTX, 0, 0, 0, 0, 0, 0);
 	xSemaphoreGive (main_mutex_ax25sendvia);
 }
 

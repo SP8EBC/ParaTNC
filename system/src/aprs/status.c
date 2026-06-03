@@ -32,7 +32,7 @@ const char * status_vbatt_unknown		= "VBATT_UNKNOWN";
 #include <task.h>
 
 void status_send(void) {
-	main_callback_pre_tx();
+	main_callback_pre_tx(5u);
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	taskENTER_CRITICAL();
 #ifdef STM32L471xx
@@ -96,7 +96,7 @@ void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cuto
 
 	main_wait_for_tx_complete();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(6u);
 	taskENTER_CRITICAL();
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
 	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, OWN_APRS_MSG_LN, ">[powersave cutoff change][Vbatt: %dV][previous: %d - %s][currently: %d - %s]", battery_voltage, previous_cutoff, p, current_cutoff, c);
@@ -118,7 +118,7 @@ void status_send_powersave_registers(void) {
 
 	main_wait_for_tx_complete();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(7u);
 
 	taskENTER_CRITICAL();
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
@@ -141,7 +141,7 @@ void status_send_powersave_registers(void) {
 void status_send_gsm(void){
 	main_wait_for_tx_complete();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(8u);
 
 	// clear buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
@@ -169,7 +169,7 @@ void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
 
 	taskENTER_CRITICAL();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(9u);
 
 	// clear buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
@@ -187,7 +187,7 @@ void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
 void status_send_from_exposed_eveny_log(const event_log_exposed_t * const event) {
 	main_wait_for_tx_complete();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(10u);
 
 	// clear buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));

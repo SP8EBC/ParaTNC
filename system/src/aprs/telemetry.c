@@ -197,7 +197,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 
 	while (main_afsk.sending == 1);
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(12u);
 	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_PARM, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -207,7 +207,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	delay_fixed(1200);
 
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(13u);
 	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -217,7 +217,7 @@ void telemetry_send_chns_description_pv(const config_data_basic_t * const config
 	delay_fixed(1200);
 
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(14u);
 	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_PV_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -310,7 +310,7 @@ void telemetry_send_values_pv (	uint8_t rx_pkts,
 				telemetry_anemometer_degradated,
 				telemetry_anemometer_navble);
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(15u);
 	taskEXIT_CRITICAL();
 
 	if (telemetry_counter > 999)
@@ -330,7 +330,7 @@ void telemetry_send_status_pv(ve_direct_average_struct* avg, ve_direct_error_rea
 	ve_direct_state_to_string(state, string_buff_state, 23);
 	ve_direct_error_to_string(*last_error, string_buff_err, 24);
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(16u);
 	main_own_aprs_msg_len = snprintf(main_own_aprs_msg, sizeof(main_own_aprs_msg), ">MT %lX, MC %lX, CMC %lX, IMIN %d, IMAX %d, %s, %s", master_time, (uint32_t)messages_count, (uint32_t)corrupted_messages_count, avg->min_battery_current, avg->max_battery_current, string_buff_state, string_buff_err);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	afsk_txStart(&main_afsk);
@@ -376,7 +376,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	// wait for any RF transmission to finish
 	main_wait_for_tx_complete();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(17u);
 
 	// clear the output frame buffer
 	memset(main_own_aprs_msg, 0x00, sizeof(main_own_aprs_msg));
@@ -398,7 +398,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	delay_fixed(1500);
 	WAIT_FOR_CHANNEL_FREE();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(18u);
 	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_NORMAL_EQNS, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -408,7 +408,7 @@ void telemetry_send_chns_description(const config_data_basic_t * const config_ba
 	delay_fixed(1500);
 	WAIT_FOR_CHANNEL_FREE();
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(19u);
 	main_own_aprs_msg_len = telemetry_create_description_string(config_basic, TELEMETRY_NORMAL_UNIT, main_own_aprs_msg, OWN_APRS_MSG_LN);
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
@@ -535,7 +535,7 @@ void telemetry_send_values(	uint8_t rx_pkts,
 	}
 #endif
 
-	main_callback_pre_tx();
+	main_callback_pre_tx(11u);
 
 	taskENTER_CRITICAL();
 

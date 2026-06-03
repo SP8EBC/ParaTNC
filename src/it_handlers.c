@@ -380,7 +380,6 @@ void EXTI0_IRQHandler (void)
 			   the documentation page for the port being used. */
 			portYIELD_FROM_ISR (xHigherPriorityTaskWoken);
 		}
-
 	}
 }
 

@@ -127,5 +127,6 @@ extern TimerHandle_t main_timer_aprsis_telemetry_descr;
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
+void main_callback_post_tx (void);
 
 #endif /* MAIN_FREERTOS_EXTERNS_H_ */
