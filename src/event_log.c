@@ -285,6 +285,12 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 		else if (event_id == EVENTS_MAIN_CONFIG_SECOND_RESTORE) {
 			out = event_log_str_main_warn_second_restore;
 		}
+		else if (event_id == EVENTS_MAIN_CALLBACK_PRETX) {
+			out = event_log_str_main_callback_pretx;
+		}
+		else if (event_id == EVENTS_MAIN_CALLBACK_POSTTX) {
+			out = event_log_str_main_callback_posttx;
+		}
 		break;
 	}
 	case EVENT_SRC_WX_HANDLER: {
