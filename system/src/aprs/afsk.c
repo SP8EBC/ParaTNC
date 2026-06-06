@@ -158,8 +158,8 @@ static bool hdlc_parse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
 		{
 			/* modification by sp8ebc */
 			if(hdlc->s == false && hdlc->raw_dcd == true)
-			hdlc->raw_dcd = false; 
-			/***************************/ 
+			hdlc->raw_dcd = false;
+			/***************************/
 			fifo_push(fifo, HDLC_FLAG);
 			hdlc->rxstart = true;
 		}
@@ -256,9 +256,9 @@ static int afsk_demod(int16_t curr_sample) {
 		out_space_i += d*corr_space_i[i];
 		out_space_q += d*corr_space_q[i];
 	}
-	
-	
-	 
+
+
+
 	return  (out_space_i>>12)*(out_space_i>>12)+
 			(out_space_q>>12)*(out_space_q>>12)-
 			(out_mark_i>>12)*(out_mark_i>>12)-
@@ -305,26 +305,32 @@ void AFSK_ADC_ISR(Afsk *afsk, int16_t curr_sample) {
 }
 
 /*********************************************************************************************************************/
-void afsk_txStart(Afsk *af) {
+uint8_t afsk_txStart(Afsk *af) {
 /*********************************************************************************************************************/
 
 	if (!af->sending)
-	{
+{
 		tx10m++;
 		#ifdef STM32L471xx
 		rte_main_tx_total++;
 		#endif
-		
+
 		af->phase_inc = MARK_INC;
 		af->phase_acc = 0;
 		af->stuff_cnt = 0;
 		af->sending = true;
 		af->preamble_len = DIV_ROUND(CONFIG_AFSK_PREAMBLE_LEN * BITRATE, 8000);
+		af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000);
+
 		DA_Start();
+		return TRANSMISSION_STARTED;
+	}
+	else
+	{
+		af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000);
+		return TRANSMISSION_FAILED_ALREADY_PENDING;
 	}
 //	ATOMIC(af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000));
-	af->trailer_len  = DIV_ROUND(CONFIG_AFSK_TRAILER_LEN  * BITRATE, 8000);
-	main_callback_post_tx();
 }
 
 /*********************************************************************************************************************/
@@ -449,4 +455,4 @@ void AFSK_Init(Afsk *afsk) {
 
 }
 
-	
+

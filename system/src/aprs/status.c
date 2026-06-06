@@ -43,8 +43,10 @@ void status_send(void) {
 	taskEXIT_CRITICAL();
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	WAIT_FOR_CHANNEL_FREE();
-	afsk_txStart(&main_afsk);
-
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 
 
@@ -103,7 +105,10 @@ void status_send_powersave_cutoff(uint16_t battery_voltage, int8_t previous_cuto
 	taskEXIT_CRITICAL();
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
-	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 	main_wait_for_tx_complete();
 #endif
 }
@@ -134,7 +139,10 @@ void status_send_powersave_registers(void) {
 	taskEXIT_CRITICAL();
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	//while (main_ax25.dcd == 1);
-	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 	main_wait_for_tx_complete();
 }
 
@@ -160,8 +168,10 @@ void status_send_gsm(void){
 
 	// send message on radio
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	afsk_txStart(&main_afsk);
-
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 
 void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
@@ -181,7 +191,10 @@ void status_send_aprsis_timeout(uint8_t unsuccessfull_conn_cntr) {
 
 	// send message on radio
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 
 void status_send_from_exposed_eveny_log(const event_log_exposed_t * const event) {
@@ -203,6 +216,9 @@ void status_send_from_exposed_eveny_log(const event_log_exposed_t * const event)
 
 	// send message on radio
 	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
-	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 

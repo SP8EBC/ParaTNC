@@ -363,8 +363,13 @@ uint16_t ax25_sendVia_toBuffer(const AX25Call *path, uint16_t path_len, const vo
 }
 
 /*********************************************************************************************************************/
-void ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len) {
+uint8_t ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len) {
 /*********************************************************************************************************************/
+
+	if (ctx->afsk->sending == true)
+	{
+		return TRANSMISSION_FAILED_ALREADY_PENDING;
+	}
 
 	const uint8_t *buf = (const uint8_t *)_buf;
 	uint8_t crcl,crch;
@@ -380,6 +385,7 @@ void ax25_sendRaw(AX25Ctx *ctx, const void *_buf, uint16_t len) {
 
 	fifo_putc(HDLC_FLAG, &ctx->afsk->tx_fifo);
 
+	return TRANSMISSION_STARTED;
 }
 
 /*********************************************************************************************************************/

@@ -47,7 +47,10 @@ void beacon_send_own(uint16_t voltage, uint8_t rtc_ok) {
 	main_own_aprs_msg[main_own_aprs_msg_len] = 0;
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, main_own_aprs_msg, main_own_aprs_msg_len);
 	after_tx_lock = 1;
- 	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 
 #ifdef INHIBIT_CUTOFF
@@ -63,6 +66,9 @@ void beacon_send_from_user_content(uint16_t content_ln, char* content_ptr) {
 	main_callback_pre_tx(2u);
  	ax25_sendVia(&main_ax25, main_own_path, main_own_path_ln, content_ptr, content_ln);
 	after_tx_lock = 1;
- 	afsk_txStart(&main_afsk);
+ 	if (afsk_txStart(&main_afsk) == TRANSMISSION_FAILED_ALREADY_PENDING)
+ 	{
+ 		main_callback_post_tx();
+ 	}
 }
 #endif

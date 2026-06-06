@@ -206,11 +206,15 @@ int32_t kiss_parse_received (uint8_t *input_frame_from_host, uint16_t input_len,
 				// keep this commented until reseting the DCD variable will be moved outside main
 				// for (;;) loop
 				//	while(ax25->dcd == true);
-				while (a->sending == true)
+				while (a->sending == true) {
 					;
+				}
 
-				ax25_sendRaw (ax25, FrameBuff, j);
-				afsk_txStart (a);
+				const uint8_t result = ax25_sendRaw (ax25, FrameBuff, j);
+				if (result == TRANSMISSION_STARTED)
+				{
+					afsk_txStart (a);
+				}
 			}
 		} break;
 			// clang-format off

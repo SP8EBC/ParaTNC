@@ -33,6 +33,9 @@
 #define MARK_INC  (uint16_t) (DIV_ROUND (SIN_LEN * (uint32_t)FREQ_MARK, SAMPLERATE))
 #define SPACE_INC (uint16_t) (DIV_ROUND (SIN_LEN * (uint32_t)FREQ_SPACE, SAMPLERATE))
 
+#define TRANSMISSION_STARTED (1u)
+#define TRANSMISSION_FAILED_ALREADY_PENDING	 (0u)
+
 /**
  * RX FIFO buffer full error.
  */
@@ -146,7 +149,7 @@ extern "C" {
 void AFSK_ADC_ISR (Afsk *afsk, int16_t curr_sample);
 /*********************************************************************************************************************/
 
-void afsk_txStart (Afsk *af);
+uint8_t afsk_txStart (Afsk *af);
 
 /*********************************************************************************************************************/
 uint8_t AFSK_DAC_ISR (Afsk *afsk);

@@ -564,7 +564,6 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 	return out;
 }
 
-
 /**
  * Generates string representation of given event log in exposed form
  * @param exposed pointer to an event to be converted

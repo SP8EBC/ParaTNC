@@ -16,7 +16,6 @@
 
 #include "supervisor.h"
 
-
 void task_event_radio_message_tx (void *param)
 {
 	(void)param;
@@ -29,7 +28,6 @@ void task_event_radio_message_tx (void *param)
 								   pdTRUE,
 								   0xFFFFFFFFu);
 
-
-		//main_callback_post_tx ();
+		main_callback_post_tx ();
 	}
 }

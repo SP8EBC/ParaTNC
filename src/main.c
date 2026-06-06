@@ -1714,8 +1714,9 @@ void main_callback_on_tx_complete (void)
 }
 
 /**
- * @brief called after transmission is done, but it is *NOT* called from an ISR context
- * but from an proxy-event
+ * @brief called after transmission is done, or if @link{afsk_txStart} is called when previous
+ * transmission is still in progress. It can *NOT* be called from an ISR context
+ * but from an proxy-event, or from a thread code if @link{afsk_txStart} returns TRANSMISSION_FAILED_ALREADY_PENDING
  */
 void main_callback_post_tx (void)
 {
