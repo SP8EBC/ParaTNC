@@ -746,6 +746,8 @@ int main (int argc, char *argv[])
 	main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 	main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 
+	RCC->CSR |= RCC_CSR_RMVF;
+
 	system_clock_update_l4 ();
 
 	if (system_clock_configure_l4 () != 0) {
@@ -1044,12 +1046,6 @@ int main (int argc, char *argv[])
 
 	// initializing GPIO used for swithing on and off voltages on pcb
 	io_pwr_init ();
-
-	// initialize sensor power control and switch off supply voltage
-	wx_pwr_switch_init ();
-
-	// call periodic handle to wait for 1 second and then switch on voltage
-	wx_pwr_switch_periodic_handle ();
 
 	// clear all previous powersave indication bits
 	backup_reg_reset_all_powersave_states ();

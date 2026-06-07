@@ -53,15 +53,11 @@
  */
 #define WAKEUP_PERIOD_BEFORE_WX_FRAME_IN_MINUTES 3
 
-#define MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE (100u)
+#define MSEC_WAIT_FOR_VOLTAGE_TO_STABILIZE (800u)
 
 #if defined(STM32L471xx)
 
 #ifdef PWR_SAVE_PRESLEEP_CALLBACK
-/**
- * Currently only for testing pursposes
- */
-extern char main_callsign_with_ssid[10];
 #endif
 
 int8_t pwr_save_seconds_to_wx = 0;
@@ -461,7 +457,7 @@ int pwr_save_switch_mode_to_c0 (void)
 int pwr_save_switch_mode_to_c1 (void)
 {
 
-	if (backup_reg_is_in_powersave_state (IN_C0_STATE) != 0) {
+	if (backup_reg_is_in_powersave_state (IN_C1_STATE) != 0) {
 		return 0;
 	}
 
@@ -521,7 +517,7 @@ int pwr_save_switch_mode_to_c1 (void)
 void pwr_save_switch_mode_to_c2 (void)
 {
 
-	if (backup_reg_is_in_powersave_state (IN_C0_STATE) != 0) {
+	if (backup_reg_is_in_powersave_state (IN_C2_STATE) != 0) {
 		return;
 	}
 
