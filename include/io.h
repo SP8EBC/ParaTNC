@@ -158,6 +158,7 @@ inline uint8_t io_get_12v_sw___cntrl_vbat_g (void)
 }
 
 #ifdef PARAMETEO
+#ifdef IO_CNTRL_INLINE
 inline void io___cntrl_vbat_g_enable (void)
 {
 	GPIOA->BSRR |= GPIO_BSRR_BS6;
@@ -224,7 +225,24 @@ inline void io___cntrl_gprs_dtr_high ()
 {
 	GPIOB->BSRR |= GPIO_BSRR_BS8;
 }
+#else
 
+void io___cntrl_vbat_g_enable (void);
+void io___cntrl_vbat_g_disable (void);
+void io___cntrl_vbat_s_enable (void);
+void io___cntrl_vbat_s_disable (void);
+void io___cntrl_vbat_c_enable (void);
+void io___cntrl_vbat_c_disable (void);
+void io___cntrl_vbat_r_enable (void);
+void io___cntrl_vbat_r_disable (void);
+void io___cntrl_vbat_m_enable (void);
+void io___cntrl_vbat_m_disable (void);
+void io___cntrl_gprs_pwrkey_press ();
+void io___cntrl_gprs_dtr_low ();
+void io___cntrl_gprs_dtr_high ();
+
+
+#endif
 inline uint8_t io_get_cntrl_vbat_g (void)
 {
 	uint8_t out = 0;

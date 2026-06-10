@@ -169,6 +169,7 @@
 
 #include "gsm_comm_state_handler.h"
 #include "ntp.h"
+#include "text.h"
 
 #include "./etc/pwr_save_configuration.h"
 
@@ -746,6 +747,8 @@ int main (int argc, char *argv[])
 	main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 	main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 
+	const uint32_t csr_register_at_bootup = RCC->CSR;
+
 	RCC->CSR |= RCC_CSR_RMVF;
 
 	system_clock_update_l4 ();
@@ -825,12 +828,12 @@ int main (int argc, char *argv[])
 	event_log_sync (EVENT_TIMESYNC,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_TIMESYNC_BOOTUP,
-					main_get_rtc_datetime (MAIN_GET_RTC_DAY),
-					main_get_rtc_datetime (MAIN_GET_RTC_MONTH),
-					main_get_rtc_datetime (MAIN_GET_RTC_YEAR),
-					main_get_rtc_datetime (MAIN_GET_RTC_HOUR),
-					main_get_rtc_datetime (MAIN_GET_RTC_MIN),
-					main_get_rtc_datetime (MAIN_GET_RTC_SEC));
+					0,
+					BUILD_YEAR,
+					BUILD_MONTH,
+					BUILD_DAY,
+					text_get_uint32_from_string(SW_VER, 0),
+					csr_register_at_bootup);
 
 	// initializing variables & arrays in rte_wx
 	rte_wx_init ();

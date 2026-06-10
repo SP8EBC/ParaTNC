@@ -35,6 +35,7 @@ void wx_pwr_switch_case_under_reset_parameteo ()
 		return;
 
 	io___cntrl_vbat_s_enable ();
+	io___cntrl_vbat_m_enable ();
 
 	wx_force_i2c_sensor_reset = 1;
 
@@ -65,6 +66,9 @@ void wx_pwr_switch_case_off_parameteo ()
 	// Turn on the +5V_ISOL (VDD_SW) voltage
 	io___cntrl_vbat_s_enable ();
 
+	io___cntrl_vbat_m_enable ();
+
+
 	wx_force_i2c_sensor_reset = 1;
 
 	wx_pwr_state = WX_PWR_ON;
@@ -86,6 +90,9 @@ void wx_pwr_switch_init (void)
 
 void wx_pwr_switch_periodic_handle (void)
 {
+
+	if (pwr_save_get_inhibit_pwr_switch_periodic () == 1)
+		return;
 
 	// do a last valid measuremenets timestamps only if power is currently applied
 	if (wx_pwr_state == WX_PWR_ON) {

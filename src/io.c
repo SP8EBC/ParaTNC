@@ -689,3 +689,73 @@ uint8_t io_reset_vbat_r (void)
 
 	return out;
 }
+
+#ifndef IO_CNTRL_INLINE
+void io___cntrl_vbat_g_enable (void)
+{
+	GPIOA->BSRR |= GPIO_BSRR_BS6;
+}
+
+void io___cntrl_vbat_g_disable (void)
+{
+	GPIOA->BSRR |= GPIO_BSRR_BR6;
+}
+
+void io___cntrl_vbat_s_enable (void)
+{
+	GPIOC->BSRR |= GPIO_BSRR_BS13;
+}
+
+void io___cntrl_vbat_s_disable (void)
+{
+	GPIOC->BSRR |= GPIO_BSRR_BR13;
+}
+
+void io___cntrl_vbat_c_enable (void)
+{
+	GPIOA->BSRR |= GPIO_BSRR_BS1;
+}
+
+void io___cntrl_vbat_c_disable (void)
+{
+	GPIOA->BSRR |= GPIO_BSRR_BR1;
+}
+
+void io___cntrl_vbat_r_enable (void)
+{
+	GPIOB->BSRR |= GPIO_BSRR_BS1;
+}
+void io___cntrl_vbat_r_disable (void)
+{
+	GPIOB->BSRR |= GPIO_BSRR_BR1;
+}
+
+void io___cntrl_vbat_m_enable (void)
+{
+	GPIOB->BSRR |= GPIO_BSRR_BS0;
+}
+void io___cntrl_vbat_m_disable (void)
+{
+	GPIOB->BSRR |= GPIO_BSRR_BR0;
+}
+
+void io___cntrl_gprs_pwrkey_press ()
+{
+	GPIOA->BSRR |= GPIO_BSRR_BS7;
+}
+void io___cntrl_gprs_pwrkey_release ()
+{
+	GPIOA->BSRR |= GPIO_BSRR_BR7;
+}
+
+inline void io___cntrl_gprs_dtr_low ()
+{
+	GPIOB->BSRR |= GPIO_BSRR_BR8;
+}
+
+inline void io___cntrl_gprs_dtr_high ()
+{
+	GPIOB->BSRR |= GPIO_BSRR_BS8;
+}
+
+#endif

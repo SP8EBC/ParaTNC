@@ -175,6 +175,7 @@ int32_t wx_get_temperature_measurement (const config_data_wx_sources_t *const co
 		if (config_sources->temperature == WX_SOURCE_INTERNAL_PT100 &&
 			max31865_get_qf () == MAX_QF_FULL) {
 			temperature = (float)rte_wx_temperature_average_pt / 10.0f;
+			wx_last_good_temperature_time = master_time;
 
 			parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
 		}
@@ -245,6 +246,7 @@ int32_t wx_get_temperature_measurement (const config_data_wx_sources_t *const co
 
 			// get the average temperature directly, there is no need for any further processing
 			temperature = umb_get_temperature (config_umb);
+			wx_last_good_temperature_time = master_time;
 
 			// set the flag that external temperature is available
 			parameter_result = parameter_result | WX_HANDLER_PARAMETER_RESULT_TEMPERATURE;
@@ -263,6 +265,7 @@ int32_t wx_get_temperature_measurement (const config_data_wx_sources_t *const co
 		measurement_result = rtu_get_temperature (&temp, config_rtu);
 
 		temperature = (float)temp / 10.0f;
+		wx_last_good_temperature_time = master_time;
 
 		// check
 		if (measurement_result == MODBUS_RET_OK || measurement_result == MODBUS_RET_DEGRADED) {
