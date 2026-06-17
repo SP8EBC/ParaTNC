@@ -107,6 +107,7 @@ extern char after_tx_lock;
 extern unsigned short rx10m, tx10m, digi10m, digidrop10m, kiss10m;
 
 extern gsm_sim800_state_t main_gsm_state;
+extern uint8_t main_continue_loop;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

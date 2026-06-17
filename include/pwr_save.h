@@ -10,7 +10,7 @@
 
 #include "station_config_target_hw.h"
 #include <stored_configuration_nvm/config_data.h>
-
+// clang-format off
 /**
  * This header file defines all functions related to powersaving, switching between different power
  *states, stopping cpu core etc. Generally they are few power states as below
@@ -82,33 +82,33 @@
  *  If 'powersave_keep_gsm_always_enabled' is set to one, the controller will switch to modem M4a
  *instead of M4
  *
+ *
  *  ====================================================================================================================================|
- *  |   Mode                |   Powersave Mode  | |
+ *  |   Mode                |   Powersave Mode  |                                                                                       |
  *  |=======================|===================|=======================================================================================|
- *  |   DIGI                |   don't care      |   Always stays in C2 no matter of how
- *config_data_powersave_mode_t is set             | |   DIGI + WX           |   PWSAVE_NONE     | C1
- *| |   DIGI + WX           |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C1 ->
- *M4                                  | |   DIGI + WX           |   PWSAVE_AGGRESV  |       L7 ---
- *(3 minute before WX frame)---> C1 -> L7                                  | |   DIGI + WX + GSM |
- *PWSAVE_NONE     |       C0 | |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       M4 --- (3 minute
- *before WX frame)---> C0 -> M4									| |   DIGI + WX + GSM     |
- *PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C0 -> L7 | |   WX + GSM            |
- *PWSAVE_NONE     |       C0 | |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute
- *before WX frame)---> C0 -> M4                                  | |   WX + GSM (only)     |
- *PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7
- *| |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 ->
- *M4                                  | |   WX                  |   PWSAVE_NORMAL   |       L7 ---
- *(2 minute before WX frame)---> C1 -> L7                                  | |   WX | PWSAVE_AGGRESV
- *|       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |
+ *  |   DIGI                |   don't care      |   Always stays in C2 no matter of how config_data_powersave_mode_t is set             |
+ *  |   DIGI + WX           |   PWSAVE_NONE     |       C1                                                                              |
+ *  |   DIGI + WX           |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C1 -> M4                                  |
+ *  |   DIGI + WX           |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C1 -> L7                                  |
+ *  |   DIGI + WX + GSM     |   PWSAVE_NONE     |       C0                                                                              |
+ *  |   DIGI + WX + GSM     |   PWSAVE_NORMAL   |       M4 --- (3 minute before WX frame)---> C0 -> M4									|
+ *  |   DIGI + WX + GSM     |   PWSAVE_AGGRESV  |       L7 --- (3 minute before WX frame)---> C0 -> L7 									|
+ *  |   WX + GSM            |   PWSAVE_NONE     |       C0                                                                              |
+ *  |   WX + GSM            |   PWSAVE_NORMAL   |       M4 --- (2 minute before WX frame)---> C0 -> M4                                  |
+ *  |   WX + GSM (only)     |   PWSAVE_AGGRESV  |       L7 --- (2 minute before WX frame)---> C0 -> L7									|
+ *  |   WX                  |   PWSAVE_NONE     |       M4 --- (2 minute before WX frame)---> C1 -> M4                                  |
+ *  |   WX                  |   PWSAVE_NORMAL   |       L7 --- (2 minute before WX frame)---> C1 -> L7                                  |
+ *  |   WX                  |   PWSAVE_AGGRESV  |       L7 --- (1 minute before WX frame)---> M4 --- (30 sec before)---> C1 -> L7       |
  *  ====================================================================================================================================|
  *
- * Note from October 31st. State machine has been changed sligtly for
+ * Note from October 31st. State machine has been changed slightly for
  * PWSAVE_NORMAL and PWSAVE_AGGRESIVE for WX + GSM configuration. It was
  * simplified by turning GSM module off completely when it is not needed.
  * It has more sense and it is less risky, as it eliminate a possible situation
  * when GSM module will change it internal state while controller is sleeping
  * (like GPRS will die for some reason, or a SIM card will stop working)
  */
+// clang-format on
 
 #define CURRENTLY_CUTOFF	0x1
 #define CURRENTLY_VBATT_LOW 0x8

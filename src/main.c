@@ -456,6 +456,8 @@ char main_string_latitude[9];
 char main_string_longitude[9];
 char main_callsign_with_ssid[10];
 
+uint8_t main_continue_loop = 0;
+
 /// ==================================================================================================
 ///	LOCAL VARIABLES
 /// ==================================================================================================
@@ -543,6 +545,7 @@ static TaskHandle_t task_ev_serial_gsm_rx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_gsm_tx_done_handle = NULL;
 static TaskHandle_t task_ev_serial_sensor_handle = NULL;
 static TaskHandle_t task_ev_radio_message_handle = NULL;
+static TaskHandle_t task_ev_radio_message_tx_handle = NULL;
 static TaskHandle_t task_ev_ntp_and_api_client = NULL;
 static TaskHandle_t task_ev_aprsis_trigger = NULL;
 
@@ -832,7 +835,7 @@ int main (int argc, char *argv[])
 					BUILD_YEAR,
 					BUILD_MONTH,
 					BUILD_DAY,
-					text_get_uint32_from_string(SW_VER, 0),
+					text_get_uint32_from_string (SW_VER, 0),
 					csr_register_at_bootup);
 
 	// initializing variables & arrays in rte_wx
@@ -1689,7 +1692,7 @@ void main_wait_for_tx_complete (void)
  */
 void main_callback_pre_tx (uint8_t called_from)
 {
-	event_log_sync (EVENT_INFO,
+	event_log_sync (EVENT_DEBUG,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_CALLBACK_PRETX,
 					called_from,
@@ -1715,12 +1718,13 @@ void main_callback_on_tx_complete (void)
 /**
  * @brief called after transmission is done, or if @link{afsk_txStart} is called when previous
  * transmission is still in progress. It can *NOT* be called from an ISR context
- * but from an proxy-event, or from a thread code if @link{afsk_txStart} returns TRANSMISSION_FAILED_ALREADY_PENDING
+ * but from an proxy-event, or from a thread code if @link{afsk_txStart} returns
+ * TRANSMISSION_FAILED_ALREADY_PENDING
  */
 void main_callback_post_tx (void)
 {
 
-	event_log_sync (EVENT_INFO, EVENT_SRC_MAIN, EVENTS_MAIN_CALLBACK_POSTTX, 0, 0, 0, 0, 0, 0);
+	event_log_sync (EVENT_DEBUG, EVENT_SRC_MAIN, EVENTS_MAIN_CALLBACK_POSTTX, 0, 0, 0, 0, 0, 0);
 	xSemaphoreGive (main_mutex_ax25sendvia);
 }
 
@@ -1926,6 +1930,16 @@ configuration_button_function_t main_get_button_two_right ()
 
 void main_suspend_task_for_psaving (void)
 {
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_MAIN,
+					EVENTS_MAIN_PSAVING_SUSPEND_TASKS,
+					main_continue_loop,
+					pwr_save_currently_cutoff,
+					0,
+					0,
+					supervisor_execution_checkpoints.monitor_TASK_POWERSAV,
+					supervisor_execution_checkpoints.monitor_MAIN_LOOP);
+
 	supervisor_suspend ();
 
 	vTaskSuspend (task_one_sec_handle);
@@ -1951,11 +1965,22 @@ void main_suspend_task_for_psaving (void)
 	// vTaskSuspend (task_ev_serial_gsm_tx_done_handle);
 	vTaskSuspend (task_ev_serial_sensor_handle);
 	vTaskSuspend (task_ev_radio_message_handle);
+	// vTaskSuspend (task_ev_radio_message_tx_handle);
 	vTaskSuspend (task_ev_aprsis_trigger);
 }
 
 void main_resume_task_for_psaving (void)
 {
+	event_log_sync (EVENT_INFO,
+					EVENT_SRC_MAIN,
+					EVENTS_MAIN_PSAVING_RESTORE_TASKS,
+					main_continue_loop,
+					pwr_save_currently_cutoff,
+					0,
+					0,
+					supervisor_execution_checkpoints.monitor_TASK_POWERSAV,
+					supervisor_execution_checkpoints.monitor_MAIN_LOOP);
+
 	supervisor_resume ();
 
 	vTaskResume (task_one_sec_handle);
@@ -1970,6 +1995,7 @@ void main_resume_task_for_psaving (void)
 	// vTaskResume (task_ev_serial_gsm_tx_done_handle);
 	vTaskResume (task_ev_serial_sensor_handle);
 	vTaskResume (task_ev_radio_message_handle);
+	// vTaskResume (task_ev_radio_message_tx_handle);
 	vTaskResume (task_ev_aprsis_trigger);
 }
 

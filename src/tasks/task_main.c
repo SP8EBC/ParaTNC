@@ -242,7 +242,7 @@ void task_main (void *parameters)
 
 			main_check_adc = 1;
 
-			uint8_t main_continue_loop = 0;
+			main_continue_loop = 0;
 
 			//			rte_main_curret_powersave_mode =
 			//				pwr_save_pooling_handler (main_config_data_mode,
