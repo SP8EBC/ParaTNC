@@ -1930,7 +1930,7 @@ configuration_button_function_t main_get_button_two_right ()
 
 void main_suspend_task_for_psaving (void)
 {
-	event_log_sync (EVENT_INFO,
+	event_log_sync (EVENT_DEBUG,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_PSAVING_SUSPEND_TASKS,
 					main_continue_loop,
@@ -1971,7 +1971,7 @@ void main_suspend_task_for_psaving (void)
 
 void main_resume_task_for_psaving (void)
 {
-	event_log_sync (EVENT_INFO,
+	event_log_sync (EVENT_DEBUG,
 					EVENT_SRC_MAIN,
 					EVENTS_MAIN_PSAVING_RESTORE_TASKS,
 					main_continue_loop,
