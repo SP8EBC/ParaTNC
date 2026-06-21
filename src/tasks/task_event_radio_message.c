@@ -34,11 +34,18 @@ void task_event_radio_message (void *param)
 		SUPERVISOR_MONITOR_CLEAR (EVENT_NEW_RF);
 
 		// wait infinite amount of time for event from a serial port indicating that
-		(void)xEventGroupWaitBits (main_eventgroup_handle_radio_message,
+		const EventBits_t wait_result = xEventGroupWaitBits (main_eventgroup_handle_radio_message,
 								   MAIN_EVENTGROUP_RADIO_MESSAGE_RXED,
 								   pdTRUE,
 								   pdTRUE,
 								   0xFFFFFFFFu);
+
+		// task could switch from Blocked -> Ready -> Running not only when MAIN_EVENTGROUP_RADIO_MESSAGE_RXED
+		// bits have been set. It also happened, when task is Resumed from suspensions made for powersaving
+		if (wait_result != MAIN_EVENTGROUP_RADIO_MESSAGE_RXED) {
+			SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_NEW_RF, 11);
+			continue;
+		}
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (EVENT_NEW_RF, 1);
 
@@ -49,7 +56,7 @@ void task_event_radio_message (void *param)
 			if (main_kiss_enabled == 1) {
 				// convert message to kiss format and send it to host
 				srl_start_tx (main_kiss_srl_ctx_ptr,
-							  kiss_send_ax25_to_host (ax25_rxed_frame.raw_data,
+							  kiss_send_ax25_to_host (ax25_rxed_frame.raw_data,		// blocks on this call
 													  (ax25_rxed_frame.raw_msg_len - 2),
 													  main_kiss_srl_ctx_ptr->srl_tx_buf_pointer,
 													  main_kiss_srl_ctx_ptr->srl_tx_buf_ln));
