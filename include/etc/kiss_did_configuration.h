@@ -56,6 +56,7 @@ extern char did_dummy_data;
 		ENTRY(0x2222U, main_test_float, DID_EMPTY, DID_EMPTY)	\
 
 	#define DIDS_NUMERIC(ENTRY)		\
+		ENTRY(0x0010U, RTC->TR, RTC->DR, DID_EMPTY)	\
 		ENTRY(0x1000U, master_time, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x1001U, rx10m, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x1002U, tx10m, DID_EMPTY, DID_EMPTY)	\
