@@ -39,7 +39,7 @@
 #define UPSCALED_MAX_ANGLE_2 	(360 * 10)
 
 #ifdef STM32L471xx
-	LL_DMA_InitTypeDef DMA_InitStruct;
+	static LL_DMA_InitTypeDef DMA_InitStruct;
 #endif
 
 // an array where DMA will store values of the timer latched by compare-capture input

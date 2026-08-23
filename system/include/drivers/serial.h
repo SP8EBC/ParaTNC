@@ -138,6 +138,8 @@ typedef struct srl_context_t {
 	srl_rx_state_t srl_rx_state;
 	srl_tx_state_t srl_tx_state;
 
+	uint8_t srl_tx_with_dma;
+
 	srl_error_reason_t srl_rx_error_reason;
 	uint8_t total_idle_counter;
 	uint8_t total_overrun_counter;
@@ -202,6 +204,9 @@ extern "C" {
 
 void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint16_t rx_buffer_size,
 			   uint8_t *tx_buffer, uint16_t tx_buffer_size, uint32_t baudrate, uint8_t stop_bits);
+void srl_init_dma (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer,
+				   uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size,
+				   uint32_t baudrate, uint8_t stop_bits);
 void srl_reset (srl_context_t *ctx);
 void srl_close (srl_context_t *ctx);
 uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, uint16_t leng,
@@ -209,7 +214,6 @@ uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, ui
 uint8_t srl_start_tx (srl_context_t *ctx, short leng);
 void srl_wait_for_tx_completion (srl_context_t *ctx);
 uint8_t srl_wait_for_rx_completion_or_timeout (srl_context_t *ctx, uint8_t *output);
-void srl_irq_handler (srl_context_t *ctx);
 uint8_t srl_receive_data (srl_context_t *ctx, int num, char start, char stop, char echo,
 						  char len_addr, char len_modifier);
 uint8_t srl_receive_data_kiss_protocol (srl_context_t *ctx, int num);
@@ -225,6 +229,9 @@ void srl_switch_timeout (srl_context_t *ctx, uint8_t disable_enable, uint32_t va
 void srl_switch_timeout_for_waiting (srl_context_t *ctx, uint8_t disable_enable);
 void srl_set_done_error_callback (srl_context_t *ctx, srl_done_or_error_callback_t rx_callback,
 								  srl_done_or_error_callback_t tx_done);
+
+void srl_irq_handler (srl_context_t *ctx);
+void srl_irq_dma_handler (srl_context_t *ctx);
 
 #ifdef __cplusplus
 }

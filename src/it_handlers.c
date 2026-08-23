@@ -537,6 +537,31 @@ void DMA1_Channel5_IRQHandler ()
 	}
 }
 
+/**
+ * Handler for DMA performing transmission over UART1
+ */
+void DMA1_Channel4_IRQHandler ()
+{
+	NVIC_ClearPendingIRQ (DMA1_Channel4_IRQn);
+	LL_DMA_ClearFlag_TC4 (DMA1);
+}
+
+/**
+ * Handler for DMA performing transmission over UART2
+ */
+void DMA1_Channel7_IRQHandler ()
+{
+	LL_DMA_ClearFlag_TC7 (DMA1);
+}
+
+/**
+ * Handler for DMA performing transmission over UART3
+ */
+void DMA1_Channel2_IRQHandler ()
+{
+	LL_DMA_ClearFlag_TC2 (DMA1);
+}
+
 void TIM5_IRQHandler (void)
 {
 	// obsluga przerwania cyfra-analog

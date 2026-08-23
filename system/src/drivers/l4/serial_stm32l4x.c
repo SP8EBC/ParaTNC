@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include <stm32l4xx.h>
+#include <stm32l4xx_ll_dma.h>
 #include <stm32l4xx_ll_gpio.h>
 #include <stm32l4xx_ll_usart.h>
 
@@ -97,6 +98,7 @@ void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint
 
 	ctx->srl_rx_state = SRL_RX_IDLE;
 	ctx->srl_tx_state = SRL_TX_IDLE;
+	ctx->srl_tx_with_dma = 0;
 
 	ctx->srl_rx_error_reason = SRL_ERR_NONE;
 
@@ -113,8 +115,68 @@ void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint
 	ctx->srl_rx_kiss_mode = 0;
 	ctx->srl_rx_kiss_escaping_now = 0;
 
-	//ctx->srl_rx_done_or_error = 0;
+	// ctx->srl_rx_done_or_error = 0;
 	ctx->srl_rx_term = 0;
+}
+
+static void srl_init_dma_helper (LL_DMA_InitTypeDef *DMA_InitStruct, uint8_t *tx_buffer,
+								 uint32_t tx_buffer_size, USART_TypeDef *port)
+{
+	DMA_InitStruct->Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+	DMA_InitStruct->Mode = LL_DMA_MODE_NORMAL;
+	DMA_InitStruct->NbData = tx_buffer_size;
+	DMA_InitStruct->MemoryOrM2MDstAddress = (uint32_t)tx_buffer;
+	DMA_InitStruct->MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
+	DMA_InitStruct->MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
+	// DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)tx_buffer;
+	DMA_InitStruct->PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
+	DMA_InitStruct->PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
+
+	if (port == USART1) {
+		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART1->TDR;
+		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_4);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_4, DMA_InitStruct);
+		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_4);
+		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_4);
+		LL_USART_EnableDMAReq_TX (USART1);
+		NVIC_EnableIRQ (DMA1_Channel4_IRQn);
+	}
+	else if (port == USART2) {
+		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART2->TDR;
+		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_7);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_7, DMA_InitStruct);
+		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_7);
+		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_7);
+		NVIC_EnableIRQ (DMA1_Channel7_IRQn);
+	}
+	else if (port == USART3) {
+		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART3->TDR;
+		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_2);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_2, DMA_InitStruct);
+		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_2);
+		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_2);
+		NVIC_EnableIRQ (DMA1_Channel2_IRQn);
+	}
+}
+
+void srl_init_dma (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer,
+				   uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size,
+				   uint32_t baudrate, uint8_t stop_bits)
+{
+	LL_DMA_InitTypeDef DMA_InitStruct;
+
+	// firstly do regular initialization
+	srl_init (ctx, port, rx_buffer, rx_buffer_size, tx_buffer, tx_buffer_size, baudrate, stop_bits);
+
+	srl_init_dma_helper (&DMA_InitStruct, tx_buffer, tx_buffer_size, port);
+
+	ctx->srl_tx_with_dma = 1;
+
+	port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+	port->ISR &= (0xFFFFFFFF ^ USART_ISR_TXE);
 }
 
 void srl_reset (srl_context_t *ctx)
@@ -264,6 +326,27 @@ uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, ui
 	if (ctx->te_port != 0 && ctx->early_tx_assert != 0) { // added in commit 8d0dd57
 		LL_GPIO_SetOutputPin (ctx->te_port, ctx->te_pin);
 	}
+	if (ctx->srl_tx_with_dma == 1) {
+		LL_DMA_InitTypeDef DMA_InitStruct;
+
+		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TXE);
+
+		srl_init_dma_helper (&DMA_InitStruct,
+							 ctx->srl_tx_buf_pointer,
+							 ctx->srl_tx_bytes_counter,
+							 ctx->port);
+
+		// enabling transmitter
+		ctx->port->CR1 |= USART_CR1_TE;
+		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+		ctx->port->TDR = ctx->srl_tx_buf_pointer[0];
+		ctx->srl_tx_state = SRL_TXING;
+		ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
+		ctx->port->CR1 |= USART_CR1_TCIE;
+
+		return SRL_OK;
+	}
 
 	// enabling transmitter
 	ctx->port->CR1 |= USART_CR1_TE;
@@ -273,6 +356,7 @@ uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, ui
 	ctx->port->CR1 |= USART_CR1_TXEIE; // przerwanie zg�aszane kiedy rejsetr DR jest pusty
 	ctx->port->CR1 |= USART_CR1_TCIE;  // przerwanie zg�aszane po transmisji bajtu
 									   // je�eli rejestr DR jest nadal pusty
+
 	return SRL_OK;
 }
 
@@ -302,18 +386,40 @@ uint8_t srl_start_tx (srl_context_t *ctx, short leng)
 
 	// check if delay should be applied to transmission
 	if (ctx->srl_tx_start_time == 0xFFFFFFFFu) {
-		// 0xFFFFFFFF is a magic number which disables the pre-tx delay
-		ctx->port->CR1 |= USART_CR1_TE;
-		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
-		ctx->port->TDR = ctx->srl_tx_buf_pointer[0];
+		if (ctx->srl_tx_with_dma == 1) {
+			LL_DMA_InitTypeDef DMA_InitStruct;
 
-		// the bytes counter needs to be set to 1 as the first byte is sent in this function
-		ctx->srl_tx_bytes_counter = 1;
+			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TXE);
 
-		ctx->srl_tx_state = SRL_TXING;
+			srl_init_dma_helper (&DMA_InitStruct,
+								 ctx->srl_tx_buf_pointer,
+								 ctx->srl_tx_bytes_req,
+								 ctx->port);
 
-		ctx->port->CR1 |= USART_CR1_TXEIE;
-		ctx->port->CR1 |= USART_CR1_TCIE;
+			// enabling transmitter
+			ctx->port->CR1 |= USART_CR1_TE;
+			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+			ctx->port->TDR = ctx->srl_tx_buf_pointer[0];
+			ctx->srl_tx_state = SRL_TXING;
+			ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
+			ctx->port->CR1 |= USART_CR1_TCIE;
+		}
+		else {
+
+			// 0xFFFFFFFF is a magic number which disables the pre-tx delay
+			ctx->port->CR1 |= USART_CR1_TE;
+			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
+			ctx->port->TDR = ctx->srl_tx_buf_pointer[0];
+
+			// the bytes counter needs to be set to 1 as the first byte is sent in this function
+			ctx->srl_tx_bytes_counter = 1;
+
+			ctx->srl_tx_state = SRL_TXING;
+
+			ctx->port->CR1 |= USART_CR1_TXEIE;
+			ctx->port->CR1 |= USART_CR1_TCIE;
+		}
 	}
 	else {
 		ctx->srl_tx_state = SRL_TX_WAITING;
@@ -652,7 +758,8 @@ void srl_irq_handler (srl_context_t *ctx)
 						// if yes call it
 						stop_rxing =
 							ctx->srl_rx_term (ctx->srl_rx_buf_pointer[ctx->srl_rx_bytes_counter],
-											  ctx->srl_rx_buf_pointer, ctx->srl_rx_bytes_counter);
+											  ctx->srl_rx_buf_pointer,
+											  ctx->srl_rx_bytes_counter);
 
 						// and check the return value
 						if (stop_rxing == 1) {
@@ -792,6 +899,30 @@ void srl_irq_handler (srl_context_t *ctx)
 		}
 	}
 
+	if ((ctx->port->ISR & USART_ISR_TC) == USART_ISR_TC) {
+		if (ctx->srl_tx_with_dma == 1) {
+			switch (ctx->srl_tx_state) {
+			case SRL_TXING: {
+				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TE);
+				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TXEIE);
+				ctx->port->CR1 &= (0xFFFFFFFF ^ USART_CR1_TCIE);
+				ctx->port->ICR |= USART_ICR_TCCF;
+				ctx->srl_tx_state = SRL_TX_IDLE;
+
+				// reset tx buffer pointer to internal one
+				ctx->srl_tx_buf_pointer = ctx->srl_tx_internal_buf_pointer;
+				ctx->srl_tx_buf_ln = ctx->srl_tx_internal_buf_ln;
+
+				if (ctx->te_port != 0) {
+					LL_GPIO_ResetOutputPin (ctx->te_port, ctx->te_pin);
+				}
+				break;
+			}
+			default: break;
+			}
+		}
+	}
+
 	// if one byte was successfully transferred from DR to shift register for transmission over
 	// USART
 	if ((ctx->port->ISR & USART_ISR_TXE) == USART_ISR_TXE) {
@@ -857,6 +988,12 @@ void srl_irq_handler (srl_context_t *ctx)
 			break;
 		default: break;
 		}
+	}
+}
+
+void srl_irq_dma_handler (srl_context_t *ctx)
+{
+	switch (ctx->srl_tx_state) {
 	}
 }
 

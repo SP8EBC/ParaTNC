@@ -1189,7 +1189,7 @@ int main (int argc, char *argv[])
 		break;
 	}
 	case USART_MODE_KISS: {
-		srl_init (main_kiss_srl_ctx_ptr,
+		srl_init_dma (main_kiss_srl_ctx_ptr,
 				  USART1,
 				  srl_usart1_rx_buffer,
 				  RX_BUFFER_1_LN,
