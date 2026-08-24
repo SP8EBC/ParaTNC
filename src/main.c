@@ -1430,8 +1430,8 @@ int main (int argc, char *argv[])
 
 				retval = srl_receive_data (main_kiss_srl_ctx_ptr, 100, '\r', '\r', 0, 0, 0);
 #endif
-				retval = srl_start_tx (main_kiss_srl_ctx_ptr, ln);
-
+				//retval = srl_start_tx (main_kiss_srl_ctx_ptr, ln);
+				retval = srl_send_data (main_kiss_srl_ctx_ptr, main_kiss_srl_ctx_ptr->srl_tx_buf_pointer, SRL_MODE_DEFLN, ln, SRL_EXTERNAL);
 #ifdef SERIAL_TX_TEST_MODE
 				while (main_kiss_srl_ctx_ptr->srl_tx_state != SRL_TX_IDLE)
 					;

@@ -119,43 +119,46 @@ void srl_init (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer, uint
 	ctx->srl_rx_term = 0;
 }
 
-static void srl_init_dma_helper (LL_DMA_InitTypeDef *DMA_InitStruct, uint8_t *tx_buffer,
+static void srl_init_dma_helper (uint8_t *tx_buffer,
 								 uint32_t tx_buffer_size, USART_TypeDef *port)
 {
-	DMA_InitStruct->Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
-	DMA_InitStruct->Mode = LL_DMA_MODE_NORMAL;
-	DMA_InitStruct->NbData = tx_buffer_size;
-	DMA_InitStruct->MemoryOrM2MDstAddress = (uint32_t)tx_buffer;
-	DMA_InitStruct->MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
-	DMA_InitStruct->MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
+	LL_DMA_InitTypeDef DMA_InitStruct;
+	LL_DMA_StructInit(&DMA_InitStruct);
+
+	DMA_InitStruct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+	DMA_InitStruct.Mode = LL_DMA_MODE_NORMAL;
+	DMA_InitStruct.NbData = tx_buffer_size;
+	DMA_InitStruct.MemoryOrM2MDstAddress = (uint32_t)tx_buffer;
+	DMA_InitStruct.MemoryOrM2MDstDataSize = LL_DMA_MDATAALIGN_BYTE;
+	DMA_InitStruct.MemoryOrM2MDstIncMode = LL_DMA_MEMORY_INCREMENT;
 	// DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)tx_buffer;
-	DMA_InitStruct->PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
-	DMA_InitStruct->PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
+	DMA_InitStruct.PeriphOrM2MSrcDataSize = LL_DMA_PDATAALIGN_BYTE;
+	DMA_InitStruct.PeriphOrM2MSrcIncMode = LL_DMA_PERIPH_NOINCREMENT;
 
 	if (port == USART1) {
-		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART1->TDR;
-		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&USART1->TDR;
+		DMA_InitStruct.PeriphRequest = LL_DMA_REQUEST_2;
 		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_4);
-		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_4, DMA_InitStruct);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_4, &DMA_InitStruct);
 		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_4);
 		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_4);
 		LL_USART_EnableDMAReq_TX (USART1);
 		NVIC_EnableIRQ (DMA1_Channel4_IRQn);
 	}
 	else if (port == USART2) {
-		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART2->TDR;
-		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&USART2->TDR;
+		DMA_InitStruct.PeriphRequest = LL_DMA_REQUEST_2;
 		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_7);
-		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_7, DMA_InitStruct);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_7, &DMA_InitStruct);
 		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_7);
 		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_7);
 		NVIC_EnableIRQ (DMA1_Channel7_IRQn);
 	}
 	else if (port == USART3) {
-		DMA_InitStruct->PeriphOrM2MSrcAddress = (uint32_t)&USART3->TDR;
-		DMA_InitStruct->PeriphRequest = LL_DMA_REQUEST_2;
+		DMA_InitStruct.PeriphOrM2MSrcAddress = (uint32_t)&USART3->TDR;
+		DMA_InitStruct.PeriphRequest = LL_DMA_REQUEST_2;
 		LL_DMA_DeInit (DMA1, LL_DMA_CHANNEL_2);
-		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_2, DMA_InitStruct);
+		LL_DMA_Init (DMA1, LL_DMA_CHANNEL_2, &DMA_InitStruct);
 		LL_DMA_EnableIT_TC (DMA1, LL_DMA_CHANNEL_2);
 		LL_DMA_EnableChannel (DMA1, LL_DMA_CHANNEL_2);
 		NVIC_EnableIRQ (DMA1_Channel2_IRQn);
@@ -166,12 +169,11 @@ void srl_init_dma (srl_context_t *ctx, USART_TypeDef *port, uint8_t *rx_buffer,
 				   uint16_t rx_buffer_size, uint8_t *tx_buffer, uint16_t tx_buffer_size,
 				   uint32_t baudrate, uint8_t stop_bits)
 {
-	LL_DMA_InitTypeDef DMA_InitStruct;
 
 	// firstly do regular initialization
 	srl_init (ctx, port, rx_buffer, rx_buffer_size, tx_buffer, tx_buffer_size, baudrate, stop_bits);
 
-	srl_init_dma_helper (&DMA_InitStruct, tx_buffer, tx_buffer_size, port);
+	srl_init_dma_helper (tx_buffer, tx_buffer_size, port);
 
 	ctx->srl_tx_with_dma = 1;
 
@@ -327,14 +329,12 @@ uint8_t srl_send_data (srl_context_t *ctx, const uint8_t *data, uint8_t mode, ui
 		LL_GPIO_SetOutputPin (ctx->te_port, ctx->te_pin);
 	}
 	if (ctx->srl_tx_with_dma == 1) {
-		LL_DMA_InitTypeDef DMA_InitStruct;
 
 		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
 		ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TXE);
 
-		srl_init_dma_helper (&DMA_InitStruct,
-							 ctx->srl_tx_buf_pointer,
-							 ctx->srl_tx_bytes_counter,
+		srl_init_dma_helper (ctx->srl_tx_buf_pointer,
+							 ctx->srl_tx_bytes_req,
 							 ctx->port);
 
 		// enabling transmitter
@@ -387,13 +387,11 @@ uint8_t srl_start_tx (srl_context_t *ctx, short leng)
 	// check if delay should be applied to transmission
 	if (ctx->srl_tx_start_time == 0xFFFFFFFFu) {
 		if (ctx->srl_tx_with_dma == 1) {
-			LL_DMA_InitTypeDef DMA_InitStruct;
 
 			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TC);
 			ctx->port->ISR &= (0xFFFFFFFF ^ USART_ISR_TXE);
 
-			srl_init_dma_helper (&DMA_InitStruct,
-								 ctx->srl_tx_buf_pointer,
+			srl_init_dma_helper (ctx->srl_tx_buf_pointer,
 								 ctx->srl_tx_bytes_req,
 								 ctx->port);
 
@@ -916,6 +914,10 @@ void srl_irq_handler (srl_context_t *ctx)
 				if (ctx->te_port != 0) {
 					LL_GPIO_ResetOutputPin (ctx->te_port, ctx->te_pin);
 				}
+
+				if (ctx->srl_tx_done != 0) {
+					ctx->srl_tx_done (ctx);
+				}
 				break;
 			}
 			default: break;
@@ -993,8 +995,6 @@ void srl_irq_handler (srl_context_t *ctx)
 
 void srl_irq_dma_handler (srl_context_t *ctx)
 {
-	switch (ctx->srl_tx_state) {
-	}
 }
 
 uint16_t srl_get_num_bytes_rxed (srl_context_t *ctx)
