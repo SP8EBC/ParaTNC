@@ -1040,7 +1040,7 @@ pwr_save_pooling_handler (const config_data_mode_t *config, uint8_t minutes_betw
 		}
 	}
 
-//	// check if cutoff status has changed
+	//	// check if cutoff status has changed
 	if (pwr_save_currently_cutoff != pwr_save_previously_cutoff) {
 		status_send_powersave_cutoff (vbatt_average,
 									  pwr_save_previously_cutoff,

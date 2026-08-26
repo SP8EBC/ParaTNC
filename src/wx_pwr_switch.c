@@ -68,7 +68,6 @@ void wx_pwr_switch_case_off_parameteo ()
 
 	io___cntrl_vbat_m_enable ();
 
-
 	wx_force_i2c_sensor_reset = 1;
 
 	wx_pwr_state = WX_PWR_ON;

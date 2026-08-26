@@ -211,8 +211,7 @@ int32_t kiss_parse_received (uint8_t *input_frame_from_host, uint16_t input_len,
 				}
 
 				const uint8_t result = ax25_sendRaw (ax25, FrameBuff, j);
-				if (result == TRANSMISSION_STARTED)
-				{
+				if (result == TRANSMISSION_STARTED) {
 					afsk_txStart (a);
 				}
 			}

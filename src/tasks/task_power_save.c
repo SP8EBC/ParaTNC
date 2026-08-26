@@ -31,7 +31,6 @@ void task_power_save (void *parameters)
 	const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
 	const TickType_t xTimeout = 22000 / portTICK_PERIOD_MS;
 
-
 	while (1) {
 		SUPERVISOR_MONITOR_CLEAR (TASK_POWERSAV);
 

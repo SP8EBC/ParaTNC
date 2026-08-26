@@ -241,7 +241,6 @@ void io___cntrl_gprs_pwrkey_press ();
 void io___cntrl_gprs_dtr_low ();
 void io___cntrl_gprs_dtr_high ();
 
-
 #endif
 inline uint8_t io_get_cntrl_vbat_g (void)
 {
