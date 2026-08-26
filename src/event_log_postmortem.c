@@ -119,8 +119,8 @@ void event_log_postmortem_checknstore_supervisor (void)
 
 #define _PUT_UNDERSCORE_INTO_WORD(target, nibble) (target |= ('_' << (nibble * 8)))
 
-	const uint8_t timestamp_idx = MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
-	const uint8_t checksum_idx = MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
+	const uint8_t timestamp_idx = MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
+	const uint8_t checksum_idx = MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
 
 	// check if there is anything stored, by calculating checksum
 	const int have = supervisor_check_have_postmortem ();
@@ -132,10 +132,10 @@ void event_log_postmortem_checknstore_supervisor (void)
 
 	if (have != 0) {
 		// pointer to the begining of supervisor log SRAM1 area
-		volatile uint32_t *ptr = (volatile uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+		volatile uint32_t *ptr = (volatile uint32_t *)MEMORY_MAP_SRAM2_SUPERVISOR_LOG_START;
 
 		// log in this area is stored in the same order than an enum @link{supervisor_watchlist_t}
-		for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i += 2) {
+		for (int i = 0; i < MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE; i += 2) {
 			// last two 32-bit words contain a master time at the moment of sup fail and the
 			// checksum
 			if (i == timestamp_idx) {

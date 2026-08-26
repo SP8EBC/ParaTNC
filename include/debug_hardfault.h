@@ -86,25 +86,25 @@ that the program counter (PC) should be restored to after resuming from the exce
  *
  */
 #define DEBUG_STACKFRAME_STORE                                                           \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0) =     \
 		debug_hardfault_r0;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1) =     \
 		debug_hardfault_r1;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2) =     \
 		debug_hardfault_r2;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3) =     \
 		debug_hardfault_r3;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12) =    \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12) =    \
 		debug_hardfault_r12;                                                             \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR) =     \
 		debug_hardfault_lr;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC) =     \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC) =     \
 		debug_hardfault_pc;                                                              \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR) =   \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR) =   \
 		debug_hardfault_xpsr;                                                            \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE) = \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE) = \
 		debug_hardfault_source;                                                          \
-	*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR) =   \
+	*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR) =   \
 		debug_hardfault_cfsr;
 
 /**
@@ -114,9 +114,9 @@ that the program counter (PC) should be restored to after resuming from the exce
                                                                                      \
 	uint32_t sum = 0;                                                                \
 	for (unsigned int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {             \
-		sum += (*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + i) & 0x7FFFFFFFu); \
+		sum += (*((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START + i) & 0x7FFFFFFFu); \
 	}                                                                                \
-	*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM) = sum + 9u;
+	*((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM) = sum + 9u;
 
 /// ==================================================================================================
 ///	GLOBAL MACROS

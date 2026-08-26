@@ -54,8 +54,8 @@ static uint32_t supervisor_last_im_alive[SUPERVISOR_THREAD_COUNT] = {0u};
 static const uint16_t supervisor_timeouts_conf[SUPERVISOR_THREAD_COUNT] = {
 	SUPERVISOR_CONFIG (SUPERVISOR_MAKE_TIMEOUT_ARR)};
 
-static const uint8_t timestamp_idx = MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
-static const uint8_t checksum_idx = MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
+static const uint8_t timestamp_idx = MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE - 2;
+static const uint8_t checksum_idx = MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE - 1;
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
@@ -86,13 +86,13 @@ static void supervisor_store (supervisor_watchlist_t what_failed)
 
 	uint32_t *monitor_checkpoints = (uint32_t *)&supervisor_execution_checkpoints;
 	volatile uint32_t *supervisor_store_area =
-		(volatile uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
-	uint8_t ptr_it = 0; // used to go through MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START
+		(volatile uint32_t *)MEMORY_MAP_SRAM2_SUPERVISOR_LOG_START;
+	uint8_t ptr_it = 0; // used to go through MEMORY_MAP_SRAM2_SUPERVISOR_LOG_START
 
 	uint32_t checksum = 0;
 
 	// clear storage
-	for (int i = 0; i < MEMORY_MAP_SRAM1_SUPERVISOR_LOG_32BWORDS_SIZE; i++) // currently 30 words
+	for (int i = 0; i < MEMORY_MAP_SRAM2_SUPERVISOR_LOG_32BWORDS_SIZE; i++) // currently 30 words
 	{
 		supervisor_store_area[i] = 0;
 	}
@@ -200,7 +200,7 @@ int supervisor_check_have_postmortem (void)
 	int have = 0;
 
 	volatile uint32_t *supervisor_store_area =
-		(volatile uint32_t *)MEMORY_MAP_SRAM1_SUPERVISOR_LOG_START;
+		(volatile uint32_t *)MEMORY_MAP_SRAM2_SUPERVISOR_LOG_START;
 
 	uint32_t checksum = 0;
 	const uint32_t stored_checksum = supervisor_store_area[checksum_idx];

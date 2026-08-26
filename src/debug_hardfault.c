@@ -60,12 +60,12 @@ uint8_t debug_hardfault_check_have_postmortem (void)
 	uint32_t sum = 0;
 
 	void *ptr_to_checksum =
-		MEMORY_MAP_SRAM1_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM * sizeof (uint32_t);
+		MEMORY_MAP_SRAM2_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM * sizeof (uint32_t);
 
 	const uint32_t sum_from_postmortem = *((uint32_t *)ptr_to_checksum);
 
 	for (int i = 0; i < DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {
-		sum += (*(((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START) + i) & 0x7FFFFFFFu);
+		sum += (*(((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START) + i) & 0x7FFFFFFFu);
 	}
 
 	sum += 9u;
@@ -84,7 +84,7 @@ uint8_t debug_hardfault_check_have_postmortem (void)
 void debug_hardfault_delete_postmortem (void)
 {
 	for (int i = 0; i <= DEBUG_HARDFAULT_OFFSET_CHECKSUM; i++) {
-		*((uint32_t *)MEMORY_MAP_SRAM1_HFAULT_LOG_START + i) = 0;
+		*((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START + i) = 0;
 	}
 }
 
@@ -98,25 +98,25 @@ uint8_t debug_hardfault_get_postmortem (debug_hardfault_postmortem_stackframe_t 
 	if (variant_validate_is_within_ram (out) != 0) {
 		if (debug_hardfault_check_have_postmortem () != 0) {
 			out->r0 =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R0);
 			out->r1 =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R1);
 			out->r2 =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R2);
 			out->r3 =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R3);
 			out->r12 =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_R12);
 			out->lr =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_LR);
 			out->pc =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_PC);
 			out->xpsr =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_XPSR);
 			out->source =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_SOURCE);
 			out->cfsr =
-				*((uint32_t *)(MEMORY_MAP_SRAM1_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR);
+				*((uint32_t *)(MEMORY_MAP_SRAM2_HFAULT_LOG_START) + DEBUG_HARDFAULT_OFFSET_CFSR);
 
 			return 1;
 		}

@@ -67,8 +67,8 @@ int variant_validate_is_within_sram_logger_events (const void *address)
 {
 	uint32_t addr_value = (uint32_t)address;
 
-	if (addr_value > MEMORY_MAP_SRAM1_LOG_AREA_START &&
-		addr_value < MEMORY_MAP_SRAM1_LOG_AREA_END) {
+	if (addr_value > MEMORY_MAP_SRAM2_LOG_AREA_START &&
+		addr_value < MEMORY_MAP_SRAM2_LOG_AREA_END) {
 		return 1;
 	}
 	else {
