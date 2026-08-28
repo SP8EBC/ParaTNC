@@ -34,4 +34,11 @@ typedef enum {
 FLASH_Status FLASH_GetBank1Status (void);
 FLASH_Status FLASH_ErasePage (uint32_t Page_Address);
 
+/**
+ * Dumnmy function implemented only for SRAM target, which doesn't require explicit erase
+ * @param Page_Address not used
+ * @return always FLASH_COMPLETE
+ */
+FLASH_Status FLASH_dummy (uint32_t Page_Address);
+
 #endif /* INCLUDE_DRIVERS_L4_FLASH_STM32L4X_H_ */

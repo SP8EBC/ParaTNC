@@ -20,8 +20,9 @@
  * @param PointerBasedAccess			set to true if this event logger target is memory mapped i/o
  */
 #define NVM_EVENT_LOGGING_TARGETS(ENTRY)														\
-/*     	 TargetName,		NonPtrBasedWriteFunction,	AreaStartAddress,			AreaEndAddress,				EraseFunction,		PgmingEnableFunction,	WaitPgmCompleteFunction,	PgmingDisableFunction,	MinimumSeverityLevel,	PageSize,			PointerBasedAccess */	\
-	ENTRY(	Flash,			NULL,						MEMORY_MAP_EVENT_LOG_START,	MEMORY_MAP_EVENT_LOG_END,	FLASH_ErasePage,	NVM_CONFIG_ENABLE_PGM,	WAIT_FOR_PGM_COMPLETION,	NVM_CONFIG_DISABLE_PGM,	EVENT_INFO,				NVM_PAGE_SIZE,		true)					\
+/*     	 TargetName,		NonPtrBasedWriteFunction,	AreaStartAddress,				AreaEndAddress,					EraseFunction,		PgmingEnableFunction,	WaitPgmCompleteFunction,	PgmingDisableFunction,	MinimumSeverityLevel,	PageSize,			PointerBasedAccess */	\
+	ENTRY(	Flash,			NULL,						MEMORY_MAP_EVENT_LOG_START,		MEMORY_MAP_EVENT_LOG_END,		FLASH_ErasePage,	NVM_CONFIG_ENABLE_PGM,	WAIT_FOR_PGM_COMPLETION,	NVM_CONFIG_DISABLE_PGM,	EVENT_INFO_CYCLIC,		NVM_PAGE_SIZE,		true)					\
+	ENTRY(	Ram,			NULL,						MEMORY_MAP_SRAM2_LOG_AREA_START,MEMORY_MAP_SRAM2_LOG_AREA_END,	FLASH_dummy,		;,						;,							;,						EVENT_DEBUG,			NVM_PAGE_SIZE,		true)					\
 
 
 /**

@@ -7,10 +7,7 @@
 /// ==================================================================================================
 
 #define NVM_EVENT_CREATE_ENUM_FOR_TARGETS(_name, _non_ptr_based_write_function, _area_start_addr, _area_end_addr, _erase_fn, _enable_pgm_fn, _wait_for_pgm_fn, _disable_pgm_fn, _severity, _page_size, pointer_based_access)					\
-	typedef enum nvm_event_target_ereas_t {							\
 		NVM_EVENT_TARGET_AREA_##_name,								\
-		NVM_EVENT_TARGET_AREA_COUNT									\
-	}nvm_event_target_ereas_t;																\
 
 
 /**
@@ -116,11 +113,11 @@ if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
  */
 #define NVM_EVENT_PUSH_POINTERS_ARITM_SEC(_name, _area_start_addr, _area_end_addr, _page_size)														\
 	/* rescan for oldest and newest event one more time */																		\
-	const nvm_event_result_t res = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size, &nvm_event_fill_rate_##_name);						\
-	if (res == NVM_EVENT_AREA_ERROR)	{																						\
+	const nvm_event_result_t res_##_name = nvm_event_log_find_first_oldest_newest(&nvm_event_oldest##_name, &nvm_event_newest##_name, (void*)_area_start_addr, (void*)_area_end_addr, _page_size, &nvm_event_fill_rate_##_name);						\
+	if (res_##_name == NVM_EVENT_AREA_ERROR)	{																						\
 		nvm_general_state = NVM_GENERAL_ERROR;																					\
 	}																															\
-	else if (res == NVM_EVENT_EMPTY)	{																						\
+	else if (res_##_name == NVM_EVENT_EMPTY)	{																						\
 		nvm_general_state = NVM_OK_AND_EMPTY;																					\
 	}																															\
 /**

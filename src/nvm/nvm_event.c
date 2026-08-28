@@ -4,6 +4,7 @@
 #include "crc_.h"
 #include "memory_map.h"
 #include "nvm_configuration.h"
+#include "variant.h"
 
 #include <string.h> // for memset
 
@@ -42,7 +43,10 @@ static nvm_state_after_last_oper_t nvm_general_state = NVM_UNINITIALIZED;
  */
 static uint16_t nvm_event_crc_errors = 0;
 
-NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_ENUM_FOR_TARGETS);
+typedef enum nvm_event_target_ereas_t {
+	NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_ENUM_FOR_TARGETS)
+	NVM_EVENT_TARGET_AREA_COUNT
+} nvm_event_target_ereas_t;
 
 /**
  * Definition of all pointers, two of them per event logging target area, used
@@ -61,6 +65,14 @@ STATIC void nvm_event_erase_all (void *area_start, void *area_end, int16_t page_
 	const uint32_t area_size = (uint32_t)area_end - (uint32_t)area_start;
 
 	const int16_t pages = area_size / page_size;
+
+	if (variant_validate_is_within_flash (area_start) != 1U) {
+		return;
+	}
+
+	if (variant_validate_is_within_flash (area_end) != 1U) {
+		return;
+	}
 
 	FLASH_Unlock ();
 

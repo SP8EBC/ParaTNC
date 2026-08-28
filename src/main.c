@@ -734,6 +734,11 @@ int main (int argc, char *argv[])
 	(void)argc;
 	(void)argv;
 
+	if (MEMORY_MAP_SRAM2_LOG_AREA_START > MEMORY_MAP_SRAM2_HFAULT_LOG_START)
+	{
+		return -1;
+	}
+
 	int32_t ln = 0;
 
 	it_handlers_inhibit_radiomodem_dcd_led = 1;
@@ -857,6 +862,9 @@ int main (int argc, char *argv[])
 		backup_reg_reset_counters ();
 
 		backup_reg_set_configuration (0);
+
+
+		memset((void*)MEMORY_MAP_SRAM2_LOG_AREA_START, 0x00, MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
 
 		//	  nvm_test_prefill();
 	}

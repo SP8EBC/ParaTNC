@@ -10,6 +10,7 @@
 #include <stm32l4xx.h>
 
 #include "memory_map.h"
+#include "nvm/nvm_event.h"
 
 int variant_validate_is_within_ram (const void *address)
 {
