@@ -734,8 +734,7 @@ int main (int argc, char *argv[])
 	(void)argc;
 	(void)argv;
 
-	if (MEMORY_MAP_SRAM2_LOG_AREA_START > MEMORY_MAP_SRAM2_HFAULT_LOG_START)
-	{
+	if (MEMORY_MAP_SRAM2_LOG_AREA_START > MEMORY_MAP_SRAM2_HFAULT_LOG_START) {
 		return -1;
 	}
 
@@ -755,8 +754,35 @@ int main (int argc, char *argv[])
 	main_wx_srl_ctx_ptr = &main_wx_srl_ctx;
 	main_gsm_srl_ctx_ptr = &main_gsm_srl_ctx;
 
+	// clang-format off
+	//
+	//The RCC->CSR (Reset and Clock Control - Control/Status Register) in STM32L4xx microcontrollers
+	//serves two primary purposes: identifying the hardware cause of the most recent system reset
+	// and managing the Low-Speed Internal (LSI) oscillator.
+	//
+	//Reset Diagnostic Flags (Bits 24–31)
+	//When the MCU boots, firmware reads these "sticky" hardware flags to determine why the system
+	// restarted. They remain set across reboots until explicitly cleared by software.
+	//
+	//Bit	Name		Trigger Condition
+	//31	LPWRRSTF	Low-power reset: Illegal entry into Stop, Standby, or Shutdown mode.
+	//30	WWDGRSTF	Window Watchdog reset: WWDG counter underflowed or was refreshed outside the valid timing window.
+	//29	IWDGRSTF	Independent Watchdog reset: IWDG timed out (often indicates a hard fault or stalled loop).
+	//28	SFTRSTF		Software reset: Triggered intentionally by firmware via the NVIC_SystemReset() function.
+	//27	BORRSTF		Brown-out reset: VDD supply voltage dropped below the configured hardware threshold.
+	//26	PINRSTF		Pin reset: External NRST pin was pulled low (e.g., by a manual reset button or external programmer).
+	//25	OBLRSTF		Option byte loader reset: Triggered when Option Bytes are applied/reloaded.
+	//24	FWRSTF		Firewall reset: (STM32L4 specific) Code execution breached hardware firewall security rules.
+	// clang-format on
 	const uint32_t csr_register_at_bootup = RCC->CSR;
 
+	if (csr_register_at_bootup & (RCC_CSR_LPWRRSTF | RCC_CSR_BORRSTF)) {
+		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
+				0x00,
+				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
+	}
+
+	// Clear all flags so the next reset cause is captured accurately
 	RCC->CSR |= RCC_CSR_RMVF;
 
 	system_clock_update_l4 ();
@@ -825,7 +851,7 @@ int main (int argc, char *argv[])
 	main_powersave_state_at_bootup = main_powersave_state_at_bootup >> 2;
 
 	// initialize nvm logger
-	nvm_event_log_init ();
+	nvm_event_log_init (rte_main_evt_fifo_arr, RTE_MAIN_EVT_FIFO_ARRAY_SIZ);
 	event_log_init ();
 
 	if (main_year != 0 && main_month != 0 && main_day_of_month != 0) {
@@ -863,8 +889,9 @@ int main (int argc, char *argv[])
 
 		backup_reg_set_configuration (0);
 
-
-		memset((void*)MEMORY_MAP_SRAM2_LOG_AREA_START, 0x00, MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
+		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
+				0x00,
+				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
 
 		//	  nvm_test_prefill();
 	}
@@ -1110,6 +1137,9 @@ int main (int argc, char *argv[])
 		main_usart2_wx_mode = USART_MODE_UNINIT;
 	}
 
+	// TODO: fixme
+	main_usart1_kiss_mode = USART_MODE_LOGOUTPUT;
+
 	switch (main_usart1_kiss_mode) {
 	case USART_MODE_DAVIS: {
 		// reinitialize the KISS serial port temporary to davis baudrate
@@ -1216,7 +1246,18 @@ int main (int argc, char *argv[])
 	}
 	case USART_MODE_MODBUS:
 	case USART_MODE_UMB_MASTER:
-	case USART_MODE_UNINIT:
+	case USART_MODE_UNINIT: main_kiss_enabled = 0; break;
+	case USART_MODE_LOGOUTPUT:
+		srl_init_dma (main_kiss_srl_ctx_ptr,
+					  USART1,
+					  srl_usart1_rx_buffer,
+					  RX_BUFFER_1_LN,
+					  srl_usart1_tx_buffer,
+					  TX_BUFFER_1_LN,
+					  115200,
+					  1);
+		main_kiss_enabled = 0;
+		break;
 	case USART_MODE_UNDEF: main_kiss_enabled = 0; break;
 	}
 
@@ -1935,6 +1976,11 @@ configuration_button_function_t main_get_button_one_left ()
 configuration_button_function_t main_get_button_two_right ()
 {
 	return main_button_two_right;
+}
+
+main_usart_mode_t main_get_usart1_kiss_mode (void)
+{
+	return main_usart1_kiss_mode;
 }
 
 /********************************************************************/

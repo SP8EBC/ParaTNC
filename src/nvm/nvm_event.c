@@ -43,6 +43,10 @@ static nvm_state_after_last_oper_t nvm_general_state = NVM_UNINITIALIZED;
  */
 static uint16_t nvm_event_crc_errors = 0;
 
+// clang-format off
+/**
+ *
+ */
 typedef enum nvm_event_target_ereas_t {
 	NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_ENUM_FOR_TARGETS)
 	NVM_EVENT_TARGET_AREA_COUNT
@@ -53,6 +57,7 @@ typedef enum nvm_event_target_ereas_t {
  * to find oldest and newest event
  */
 NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_CREATE_POINTERS_FOR_TARGET);
+// clang-format on
 
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS
@@ -221,9 +226,17 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest, eve
 /**
  *
  */
-void nvm_event_log_init (void)
+void nvm_event_log_init (nvm_event_log_fifo_t *fifo_arr, uint8_t fifo_arr_capacity)
 {
 	nvm_general_state = NVM_OK;
+
+	int i = 0;
+
+	if (variant_validate_is_within_ram (fifo_arr) == 0) {
+		nvm_general_state = NVM_INIT_ERROR;
+
+		return;
+	}
 
 	NVM_EVENT_LOGGING_TARGETS (NVM_EVENT_PERFORM_INIT);
 
@@ -535,4 +548,59 @@ nvm_event_get_last_events_in_exposed (event_log_exposed_t *output_arr, uint16_t 
 	}
 
 	return out;
+}
+
+/**
+ * Pushes a packet of event logs entries via USART port to host PC basing
+ * on FIFO queue set on a storage.
+ * @param fifo of events
+ */
+void nvm_event_log_send_via_usart (nvm_event_log_fifo_t *fifo, srl_context_t *serial_port)
+{
+	// do nothing if serial port is busy
+	if (serial_port->srl_tx_state == SRL_TXING) {
+		return;
+	}
+
+	// If there is a difference it means that
+	// at least one new entry has been logged
+	// in between consecutive call to the worker.
+	if (*(fifo->newest) != fifo->tail) {
+
+		// check if there is wrap around the end of a FIFO
+		if (*(fifo->newest) > *(fifo->oldest)) {
+			// there is no wrap around, the newest element is at most
+			// the last one in the log buffer
+			void *start_addr;
+			void *end_addr;
+
+			// check if anything has been sent so far
+			if (fifo->tail == 0x00) {
+				start_addr = (void *)(*(fifo->oldest));
+			}
+			else {
+				start_addr = (void *)fifo->tail;
+
+				// move start address after the element
+				// which was sent before
+				start_addr += sizeof (event_log_t);
+			}
+
+			end_addr = (void *)(*(fifo->newest));
+
+			// end address must be moved forward to include
+			// last element itself
+			end_addr += sizeof (event_log_t);
+
+			// number of bytes to transmit
+			const size_t size = end_addr - start_addr;
+
+			// trigger transmission
+			srl_send_data (serial_port, start_addr, SRL_MODE_DEFLN, size, SRL_EXTERNAL);
+
+			// update pointers in the fifo
+			fifo->head = fifo->tail + 1;
+			fifo->tail = *(fifo->newest);
+		}
+	}
 }

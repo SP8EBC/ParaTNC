@@ -45,6 +45,7 @@ typedef enum main_usart_mode_t {
 	USART_MODE_DAVIS,
 	USART_MODE_MODBUS,
 	USART_MODE_UMB_MASTER,
+	USART_MODE_LOGOUTPUT,
 	USART_MODE_UNINIT
 } main_usart_mode_t;
 
@@ -130,6 +131,9 @@ uint32_t main_get_nvm_timestamp (void);
 uint8_t main_get_main_davis_serial_enabled (void);
 
 uint8_t main_get_modbus_rtu_master_enabled (void);
+
+//! Return current configuration of USART1 serial port
+main_usart_mode_t main_get_usart1_kiss_mode (void);
 
 //! function configuration for left button on ParaMETEO
 configuration_button_function_t main_get_button_one_left ();

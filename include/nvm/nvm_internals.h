@@ -158,6 +158,13 @@ if (EVENT_LOG_GET_SEVERITY(event->severity) >= _severity )	{																		\
 		else if (res##_name == NVM_EVENT_EMPTY)	{															\
 			nvm_general_state = NVM_OK_AND_EMPTY;															\
 		}																									\
+		if (i < fifo_arr_capacity) 			{														\
+			fifo_arr[i].start = ((event_log_t *)_area_start_addr);									\
+			fifo_arr[i].end = (((event_log_t *)_area_end_addr) - 1);								\
+			fifo_arr[i].oldest = &nvm_event_oldest##_name;											\
+			fifo_arr[i].newest = &nvm_event_newest##_name;											\
+			i++;																					\
+		}																							\
 
 /**
  * X-macro expands to an initialization of event target areas. 

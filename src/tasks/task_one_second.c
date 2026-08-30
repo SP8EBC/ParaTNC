@@ -62,6 +62,10 @@ void task_one_second (void *parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_SEC, 3);
 
+		if (main_get_usart1_kiss_mode () == USART_MODE_LOGOUTPUT) {
+			nvm_event_log_send_via_usart (&rte_main_evt_fifo_arr[1], main_kiss_srl_ctx_ptr);
+		}
+
 		if (rte_main_reboot_scheduled_diag == RTE_MAIN_REBOOT_SCHEDULED_APRSMSG) {
 			if (gsm_sim800_tcpip_tx_busy () == 0) {
 				rte_main_reboot_scheduled_diag = 0;

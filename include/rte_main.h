@@ -5,6 +5,7 @@
 #include "etc/misc_config.h"
 #include "event_log_t.h"
 #include "message.h"
+#include "nvm/nvm_event.h"
 #include "nvm/nvm_t.h"
 #include "stored_configuration_nvm/config_data.h"
 #include <stdint.h>
@@ -148,5 +149,8 @@ extern uint8_t rte_main_kiss_response_message[32];
 extern rte_main_tasks_cpuload_t rte_main_load;
 
 extern rte_main_tasks_state_t rte_main_state;
+
+#define RTE_MAIN_EVT_FIFO_ARRAY_SIZ (2u)
+extern nvm_event_log_fifo_t rte_main_evt_fifo_arr[RTE_MAIN_EVT_FIFO_ARRAY_SIZ];
 
 #endif

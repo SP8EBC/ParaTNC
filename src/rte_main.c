@@ -101,3 +101,5 @@ rte_main_tasks_cpuload_t rte_main_load;
 
 // task state
 rte_main_tasks_state_t rte_main_state;
+
+nvm_event_log_fifo_t rte_main_evt_fifo_arr[RTE_MAIN_EVT_FIFO_ARRAY_SIZ];

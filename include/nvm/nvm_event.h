@@ -4,6 +4,8 @@
 #include "event_log.h"
 #include "nvm_t.h"
 
+#include "drivers/serial.h"
+
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================
@@ -18,14 +20,35 @@
 ///	GLOBAL TYPES
 /// ==================================================================================================
 
+/**
+ * FIFO queue of log entries to be transmitted over UART to host PC. Worker function periodically
+ * check if *tail, last element sent in previous transaction is different than  **newest
+ * pointer, the last element added into the log.  If there is a difference it means that
+ * at least one new entry has been logged in between consecutive call to the worker.
+ * Then *head is set to element next to *tail and *tail is set to **newest.
+ * Everything what is in-between head and tail is transmitted via UART
+ */
+typedef struct nvm_event_log_fifo_t {
+	event_log_t *start;	  //!< First (lower address) log entry in the area
+	event_log_t *end;	  //!< Last (highest address) log entry in the area
+	event_log_t *head;	  //!< First element send via UART in previous transaction
+	event_log_t *tail;	  //!< Last element send via UART in previous transaction
+	event_log_t **oldest; //!< Pointer to pointer to Oldest log entry in the area
+	event_log_t **newest; //!< Pointer to pointer to Newest log entry in the area. If this is
+						  //!< different than tail
+} nvm_event_log_fifo_t;
+
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
 /**
- *
+ * Initializes everything logging related. Fill array of FIFOs with start (lowest addr) and
+ * end of (highest addr) of every configured log storage area
+ * @param fifo_arr pointer to an array of FIFOs
+ * @param fifo_arr_capacity how many fifos is pointed by
  */
-void nvm_event_log_init (void);
+void nvm_event_log_init (nvm_event_log_fifo_t *fifo_arr, uint8_t fifo_arr_capacity);
 
 /**
  * Gets current value of @link{nvm_event_crc_errors}
@@ -65,5 +88,13 @@ nvm_event_result_t nvm_event_log_push_new_event (event_log_t *event);
 nvm_event_result_stats_t
 nvm_event_get_last_events_in_exposed (event_log_exposed_t *output_arr, uint16_t max_num_events,
 									  event_log_severity_t min_severity_lvl);
+
+/**
+ * Pushes a packet of event logs entries via USART port to host PC basing
+ * on FIFO queue set on a storage.
+ * @param fifo of events
+ * @param serial_port to be used for transmission
+ */
+void nvm_event_log_send_via_usart (nvm_event_log_fifo_t *fifo, srl_context_t *serial_port);
 
 #endif /* B9059D46_61C3_45A2_A688_7297F71FC356 */

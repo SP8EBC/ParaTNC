@@ -2,10 +2,10 @@
 #define BUILD_FULLYEAR 	2026
 #define BUILD_YEAR 	26
 #define BUILD_MONTH 	8
-#define BUILD_DAY 	28
-#define BUILD_HOUR 	17
-#define BUILD_MINUTE 	56
-#define BUILD_SECOND 	6
-#define BUILD_SWVERSTR 	"28082026"
+#define BUILD_DAY 	30
+#define BUILD_HOUR 	21
+#define BUILD_MINUTE 	10
+#define BUILD_SECOND 	49
+#define BUILD_SWVERSTR 	"30082026"
 
 #endif
