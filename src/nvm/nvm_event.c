@@ -550,6 +550,26 @@ nvm_event_get_last_events_in_exposed (event_log_exposed_t *output_arr, uint16_t 
 	return out;
 }
 
+static void *nvm_event_log_send_via_set_start_addr (nvm_event_log_fifo_t *fifo)
+{
+	void *start_addr;
+	// check if anything has been sent so far
+	if (fifo->tail == 0x00) {
+		start_addr = (void *)(*(fifo->oldest));
+	}
+	if (fifo->tail == fifo->end) {
+		start_addr = (void *)fifo->start;
+	}
+	else {
+		start_addr = (void *)fifo->tail;
+
+		// move start address after the element
+		// which was sent before
+		start_addr += sizeof (event_log_t);
+	}
+	return start_addr;
+}
+
 /**
  * Pushes a packet of event logs entries via USART port to host PC basing
  * on FIFO queue set on a storage.
@@ -566,41 +586,68 @@ void nvm_event_log_send_via_usart (nvm_event_log_fifo_t *fifo, srl_context_t *se
 	// at least one new entry has been logged
 	// in between consecutive call to the worker.
 	if (*(fifo->newest) != fifo->tail) {
+		void *start_addr;
+		void *end_addr;
 
 		// check if there is wrap around the end of a FIFO
 		if (*(fifo->newest) > *(fifo->oldest)) {
 			// there is no wrap around, the newest element is at most
 			// the last one in the log buffer
-			void *start_addr;
-			void *end_addr;
 
-			// check if anything has been sent so far
-			if (fifo->tail == 0x00) {
-				start_addr = (void *)(*(fifo->oldest));
-			}
-			else {
-				start_addr = (void *)fifo->tail;
+			//			// check if anything has been sent so far
+			//			if (fifo->tail == 0x00) {
+			//				start_addr = (void *)(*(fifo->oldest));
+			//			}
+			//			else {
+			//				start_addr = (void *)fifo->tail;
+			//
+			//				// move start address after the element
+			//				// which was sent before
+			//				start_addr += sizeof (event_log_t);
+			//			}
 
-				// move start address after the element
-				// which was sent before
-				start_addr += sizeof (event_log_t);
-			}
+			// set a start address
+			start_addr = nvm_event_log_send_via_set_start_addr (fifo);
 
 			end_addr = (void *)(*(fifo->newest));
 
 			// end address must be moved forward to include
 			// last element itself
-			end_addr += sizeof (event_log_t);
-
-			// number of bytes to transmit
-			const size_t size = end_addr - start_addr;
-
-			// trigger transmission
-			srl_send_data (serial_port, start_addr, SRL_MODE_DEFLN, size, SRL_EXTERNAL);
-
-			// update pointers in the fifo
-			fifo->head = fifo->tail + 1;
-			fifo->tail = *(fifo->newest);
+			end_addr += sizeof (event_log_t); // number of bytes to transmit
 		}
+		else {
+			// there is a wrap
+			// check if anything has been sent so far
+			//			if (fifo->tail == 0x00) {
+			//				start_addr = (void *)(*(fifo->oldest));
+			//			}
+			//			else {
+			//				start_addr = (void *)fifo->tail;
+			//
+			//				// move start address after the element
+			//				// which was sent before
+			//				start_addr += sizeof (event_log_t);
+			//			}
+
+			// start address is the same in both cases
+			start_addr = nvm_event_log_send_via_set_start_addr (fifo);
+
+			// set an address to the last element in the fifo
+			// transfer will be split into two parts.
+			end_addr = (void *)fifo->end;
+
+			// end address must be moved forward to include
+			// last element itself
+			end_addr += sizeof (event_log_t);
+		}
+
+		const size_t size = end_addr - start_addr;
+
+		// trigger transmission
+		srl_send_data (serial_port, start_addr, SRL_MODE_DEFLN, size, SRL_EXTERNAL);
+
+		// update pointers in the fifo
+		fifo->head = fifo->tail + 1;
+		fifo->tail = end_addr - sizeof (event_log_t);
 	}
 }
