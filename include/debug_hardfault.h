@@ -117,7 +117,7 @@ that the program counter (PC) should be restored to after resuming from the exce
 		sum += (*((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START + i) & 0x7FFFFFFFu); \
 	}                                                                                \
 	*((uint32_t *)MEMORY_MAP_SRAM2_HFAULT_LOG_START + DEBUG_HARDFAULT_OFFSET_CHECKSUM) = sum + 9u;
-
+#endif
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================
@@ -166,6 +166,7 @@ typedef struct debug_hardfault_postmortem_stackframe_t {
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
+#ifdef STM32L471xx
 
 extern volatile uint32_t debug_hardfault_stack_pointer_value;
 

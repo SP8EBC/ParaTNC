@@ -9,6 +9,7 @@
 #define EVENT_LOG_H_
 
 #include "event_log_t.h"
+#include "event_log_to_string.h"
 #include "stdint.h"
 
 /// ==================================================================================================
@@ -100,31 +101,6 @@ int8_t event_log_sync_triple (event_log_severity_t severity, event_log_source_t 
 							  uint16_t wparam2, uint16_t wparam3, uint32_t lparam,
 							  uint32_t lparam2);
 
-const char *event_log_severity_to_str (event_log_severity_t severity);
 
-/**
- * Returns a pointer to a string representing event source
- * @param src
- * @return
- */
-const char *event_log_source_to_str (event_log_source_t src);
-
-/**
- *
- * @param source
- * @param event_id
- * @return
- */
-const char *event_id_to_str (event_log_source_t source, uint8_t event_id);
-
-/**
- * Generates string representation of given event log in exposed form
- * @param exposed pointer to an event to be converted
- * @param output char buffer to place a string into
- * @param output_ln maximum length of output string
- * @return length of assembled string
- */
-uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *output,
-								  uint16_t output_ln);
 
 #endif /* EVENT_LOG_H_ */

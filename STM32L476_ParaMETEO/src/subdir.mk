@@ -17,6 +17,7 @@ C_SRCS += \
 ../src/dummy.c \
 ../src/event_log.c \
 ../src/event_log_postmortem.c \
+../src/event_log_to_string.c \
 ../src/fanet_app.c \
 ../src/gsm_comm_state_handler.c \
 ../src/io.c \
@@ -54,6 +55,7 @@ C_DEPS += \
 ./src/dummy.d \
 ./src/event_log.d \
 ./src/event_log_postmortem.d \
+./src/event_log_to_string.d \
 ./src/fanet_app.d \
 ./src/gsm_comm_state_handler.d \
 ./src/io.d \
@@ -91,6 +93,7 @@ OBJS += \
 ./src/dummy.o \
 ./src/event_log.o \
 ./src/event_log_postmortem.o \
+./src/event_log_to_string.o \
 ./src/fanet_app.o \
 ./src/gsm_comm_state_handler.o \
 ./src/io.o \
