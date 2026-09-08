@@ -186,5 +186,3 @@ int8_t event_log_sync_triple (event_log_severity_t severity, event_log_source_t 
 		return -1;
 	}
 }
-
-

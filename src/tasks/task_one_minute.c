@@ -58,9 +58,7 @@ void task_one_minute (void *unused)
 
 		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
 
-#ifdef SX1262_IMPLEMENTATION
-		xEventGroupSetBits (main_eventgroup_handle_fanet, MAIN_EVENTGROUP_FANET_SEND_METEO);
-#endif
+
 
 		packet_tx_handler (main_config_data_basic, main_config_data_mode);
 

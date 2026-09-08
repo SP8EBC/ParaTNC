@@ -440,6 +440,7 @@ uint32_t main_target_wx_baudrate;
 uint8_t main_kiss_enabled = 1;
 
 uint8_t main_reset_config_to_default = 0;
+uint8_t main_clear_sram2 = 0;
 
 //! global variables represending the AX25/APRS stack
 AX25Ctx main_ax25;
@@ -776,7 +777,7 @@ int main (int argc, char *argv[])
 	// clang-format on
 	const uint32_t csr_register_at_bootup = RCC->CSR;
 
-	if (csr_register_at_bootup & (RCC_CSR_LPWRRSTF | RCC_CSR_BORRSTF)) {
+	if ((csr_register_at_bootup & RCC_CSR_BORRSTF) || (main_clear_sram2 == 1) ) {
 		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
 				0x00,
 				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);

@@ -101,6 +101,4 @@ int8_t event_log_sync_triple (event_log_severity_t severity, event_log_source_t 
 							  uint16_t wparam2, uint16_t wparam3, uint32_t lparam,
 							  uint32_t lparam2);
 
-
-
 #endif /* EVENT_LOG_H_ */

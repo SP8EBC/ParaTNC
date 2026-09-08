@@ -37,6 +37,4 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id);
 uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *output,
 								  uint16_t output_ln);
 
-
-
 #endif /* EVENT_LOG_TO_STRING_H_ */

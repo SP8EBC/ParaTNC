@@ -48,6 +48,10 @@ void task_ten_second (void *parameters)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 1);
 
+#ifdef SX1262_IMPLEMENTATION
+		xEventGroupSetBits (main_eventgroup_handle_fanet, MAIN_EVENTGROUP_FANET_SEND_METEO);
+#endif
+
 		// check if consecutive weather frame has been triggered from 'packet_tx_handler'
 		if (rte_main_trigger_wx_packet == 1 && io_get_cntrl_vbat_r () == 1) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_TEN_SEC, 2);

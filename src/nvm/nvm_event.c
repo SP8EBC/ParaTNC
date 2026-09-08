@@ -244,6 +244,16 @@ void nvm_event_log_init (nvm_event_log_fifo_t *fifo_arr, uint8_t fifo_arr_capaci
 		nvm_event_erase_all ((void *)MEMORY_MAP_EVENT_LOG_START,
 							 (void *)MEMORY_MAP_EVENT_LOG_END,
 							 NVM_PAGE_SIZE);
+
+		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
+				0x00,
+				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
+	}
+
+	if (nvm_general_state == NVM_OK_AND_EMPTY) {
+			memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
+				0x00,
+				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
 	}
 }
 

@@ -6,8 +6,9 @@
  */
 
 #include "event_log_to_string.h"
-#include "event_log_strings.h"
 #include "debug_hardfault.h"
+#include "event_log_strings.h"
+#include <stdio.h>
 
 const char *event_log_severity_to_str (event_log_severity_t severity)
 {
@@ -27,6 +28,7 @@ const char *event_log_severity_to_str (event_log_severity_t severity)
 	case EVENT_TIMESYNC:
 		return event_log_str_severity_timesync; /**< EVENT_TIMESYNC event generated once at startup
 		   and then every 6 hours to keep master_time and RTC date and time sync */
+	case EVENT_MARKER_BAD: return "";
 	}
 
 	return 0;
@@ -408,6 +410,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 	case EVENT_ASSERT: severity = 'A'; break;
 	case EVENT_BOOTUP: severity = 'B'; break;
 	case EVENT_TIMESYNC: severity = 'T'; break;
+	case EVENT_MARKER_BAD: severity = ' '; break;
 	}
 
 	if (exposed->severity == EVENT_TIMESYNC) {
@@ -476,7 +479,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 			out = snprintf (output,
 							output_ln,
 							"[ERR-HF][CNT:%lu][%s: %s][%s: 0x%lX]",
-							exposed->event_counter_id,
+							(unsigned long)exposed->event_counter_id,
 							first,
 							source,
 							second,
@@ -487,7 +490,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 			out = snprintf (output,
 							output_ln,
 							"[ERR-HF][CNT:%lu][%s: 0x%lX][%s: 0x%lX]",
-							exposed->event_counter_id,
+							(unsigned long)exposed->event_counter_id,
 							first,
 							exposed->lparam,
 							second,
@@ -502,7 +505,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 			out = snprintf (output,
 							output_ln,
 							"[ERR-SUP][CNT:%lu][0][MT-FLT: %lu][%d: %lu]",
-							exposed->event_counter_id,
+							(unsigned long)exposed->event_counter_id,
 							exposed->lparam,
 							exposed->param + 1,
 							exposed->lparam2);
@@ -513,7 +516,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 				out = snprintf (output,
 								output_ln,
 								"[ERR-SUP][CNT:%lu][0][%d: %lu][%d: %lu]",
-								exposed->event_counter_id,
+								(unsigned long)exposed->event_counter_id,
 								exposed->param,
 								exposed->lparam,
 								exposed->param + 1,
@@ -528,7 +531,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 							output_ln,
 							"[%c][CNT:%lu][MT:%lu][%s][%s][P: %X %X %X %X %lX %lX]",
 							severity,
-							exposed->event_counter_id,
+							(unsigned long)exposed->event_counter_id,
 							exposed->event_master_time,
 							exposed->source_str_name,
 							exposed->event_str_name,
@@ -544,7 +547,7 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 							output_ln,
 							"[%c][CNT:%lu][MT:%lu][%s][EV:%d][P: %X %X %X %X %lX %lX]",
 							severity,
-							exposed->event_counter_id,
+							(unsigned long)exposed->event_counter_id,
 							exposed->event_master_time,
 							exposed->source_str_name,
 							exposed->event_id,
@@ -559,5 +562,3 @@ uint16_t event_exposed_to_string (const event_log_exposed_t *exposed, char *outp
 
 	return out;
 }
-
-
