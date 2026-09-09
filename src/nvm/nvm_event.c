@@ -251,7 +251,7 @@ void nvm_event_log_init (nvm_event_log_fifo_t *fifo_arr, uint8_t fifo_arr_capaci
 	}
 
 	if (nvm_general_state == NVM_OK_AND_EMPTY) {
-			memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
+		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
 				0x00,
 				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
 	}

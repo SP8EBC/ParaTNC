@@ -58,8 +58,6 @@ void task_one_minute (void *unused)
 
 		xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
 
-
-
 		packet_tx_handler (main_config_data_basic, main_config_data_mode);
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 2);

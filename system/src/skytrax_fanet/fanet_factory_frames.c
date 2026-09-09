@@ -175,7 +175,7 @@ void fanet_factory_frames_ground (float latitude, float longitude, uint8_t onlin
  * @param weather_data
  * @param out
  */
-uint8_t fanet_factory_frames_weather (float latitude, float longitude, fanet_wx_input_t *weather_data, fanet_frame_t *out)
+uint8_t fanet_factory_frames_weather (const float latitude, const float longitude, fanet_wx_input_t const * const weather_data, fanet_frame_t *out)
 {
 
 	uint8_t *buffer = out->payload;

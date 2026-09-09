@@ -230,6 +230,7 @@
 #include "../system/include/davis_vantage/davis_parsers.h"
 
 #include "drivers/ms5611.h"
+#include "drivers/sx1262/sx1262.h"
 #include <drivers/bme280.h>
 
 #include "umb_master/umb_0x26_status.h"
@@ -777,7 +778,7 @@ int main (int argc, char *argv[])
 	// clang-format on
 	const uint32_t csr_register_at_bootup = RCC->CSR;
 
-	if ((csr_register_at_bootup & RCC_CSR_BORRSTF) || (main_clear_sram2 == 1) ) {
+	if ((csr_register_at_bootup & RCC_CSR_BORRSTF) || (main_clear_sram2 == 1)) {
 		memset ((void *)MEMORY_MAP_SRAM2_LOG_AREA_START,
 				0x00,
 				MEMORY_MAP_SRAM2_LOG_AREA_END - MEMORY_MAP_SRAM2_LOG_AREA_START);
@@ -1139,7 +1140,7 @@ int main (int argc, char *argv[])
 	}
 
 	// TODO: fixme
-	main_usart1_kiss_mode = USART_MODE_LOGOUTPUT;
+	// main_usart1_kiss_mode = USART_MODE_LOGOUTPUT;
 
 	switch (main_usart1_kiss_mode) {
 	case USART_MODE_DAVIS: {
@@ -1564,7 +1565,7 @@ int main (int argc, char *argv[])
 
 	sx1262_init ();
 
-	fanet_test_init ();
+	fanet_test_init (main_config_data_gsm, main_config_data_basic);
 
 	// rte_main_battery_voltage = io_vbat_meas_get_synchro();
 

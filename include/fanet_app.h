@@ -8,6 +8,8 @@
 #ifndef FANET_APP_H_
 #define FANET_APP_H_
 
+#include "stored_configuration_nvm/config_data.h"
+
 /// ==================================================================================================
 ///	GLOBAL MACROS
 /// ==================================================================================================
@@ -32,7 +34,8 @@ extern int fanet_tx_success_cnt;
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-void fanet_test_init (void);
+void fanet_test_init (config_data_gsm_t const *const config,
+					  config_data_basic_t const *const coordinates);
 
 /**
  * Only a test

@@ -28,6 +28,8 @@
 
 #include <string.h>
 
+#include "rte_wx.h"
+
 /// ==================================================================================================
 ///	LOCAL DEFINITIONS
 /// ==================================================================================================
@@ -69,9 +71,7 @@
 #ifdef SX1262_IMPLEMENTATION
 static uint8_t fanet_test_array[64];
 
-static const uint8_t fanet_test_2[7] = {0x42u, 0x12u, 0x34u, 0x56u, 0x31u, 0x32u, 0x33u, 0x00};
-
-volatile static uint16_t last_interrupt_mask = 0;
+static volatile uint16_t last_interrupt_mask = 0;
 
 volatile FANET_SX_WAIT_RES_TYPE fanet_wait_ret_history[FANET_SX_RESULT_HISTORY_LN]
 													  [FANET_SX_WAIT_NUMBER];
@@ -81,7 +81,7 @@ int fanet_success_cnt = 0;
 int fanet_fail_cnt = 0;
 int fanet_tx_success_cnt = 0;
 
-const fanet_mac_adress_t fanet_src = {.manufacturer = 0xDD, .id = 0x2233};
+fanet_mac_adress_t fanet_src = {0u};
 const fanet_mac_adress_t fanet_dest = {0u}; //!< zero for broadcast
 
 uint32_t fanet_serialized_frame_out_ln = 0;
@@ -102,6 +102,9 @@ volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 
 extern volatile uint32_t sx1262_busy_counter;
 volatile uint32_t fanet_last_busy_counter = 0xFFFFFFFFu;
+
+static float fanet_latitude = 49.7828f;
+static float fanet_longitude = 19.0567f;
 
 #endif
 
@@ -172,34 +175,27 @@ static void fanet_reset (void)
 ///	GLOBAL FUNCTIONS
 /// ==================================================================================================
 
-void fanet_test_init (void)
+void fanet_test_init (config_data_gsm_t const *const config,
+					  config_data_basic_t const *const coordinates)
 {
-#ifdef SX1262_IMPLEMENTATION
-
-	memset (fanet_wait_ret_history,
+	memset ((void *)fanet_wait_ret_history,
 			0x00,
 			sizeof (FANET_SX_WAIT_RES_TYPE) * FANET_SX_WAIT_NUMBER * FANET_SX_RESULT_HISTORY_LN);
 
-	const fanet_wx_input_t fanet_wx = {
-		.temperature = 22,
-		.wind_direction = 90,
-		.wind_average_speed = 12,
-		.wind_gusts = 34,
-		.humidity = 70,
-		.qnh = 10130,
-	};
-	const uint32_t frame_out_ln =
-		fanet_factory_frames_weather (49.7828f, 19.0567f, &fanet_wx, &fanet_frame_out);
-	// const uint32_t frame_out_ln =  fanet_factory_frames_tracking (fanet_type, &fanet_stv,
-	// &fanet_frame_out);
-	fanet_frame_out.payload_length = frame_out_ln;
-	fanet_frame_out.type = FANET_FRAME_SERVICE;
-	fanet_frame_out.source = fanet_src;
-	fanet_frame_out.destination = fanet_dest;
+	// first four characters from api_station_name is used to generate FANET id
+	const char a = config->api_station_name[0];
+	const char b = config->api_station_name[1];
+	const char c = config->api_station_name[2];
+	const char d = config->api_station_name[3];
 
-	FANET_SX_WAHT_TO_TRANSMIT_LN =
-		fanet_serialize (&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
-#endif
+	fanet_src.manufacturer = 0xEBu; // that is always constant
+	fanet_src.id = (uint16_t)((a - 32 + b - 32) | ((c - 32 + d - 32) << 8));
+
+	// latitude is stored in format: DDMM.SSS
+	fanet_latitude = coordinates->latitude / 10.0f;
+
+	// longitude is stored in format DDDMM.SSS
+	fanet_longitude = coordinates->longitude / 10.0f;
 }
 
 /**
@@ -212,15 +208,37 @@ int fanet_test (void)
 	uint16_t interrupt_mask = 0;
 #ifdef SX1262_IMPLEMENTATION
 	sx1262_status_chip_mode_t mode = SX1262_CHIP_MODE_UNINIT;
-	volatile sx1262_status_chip_mode_t initial_mode = SX1262_CHIP_MODE_UNINIT;
 	sx1262_status_last_command_t command_status = SX1262_LAST_COMMAND_UNINIT;
-	volatile sx1262_status_last_command_t initial_status = SX1262_LAST_COMMAND_UNINIT;
 	uint8_t errors;
-	volatile uint8_t initial_errors = 0xFF;
 
 	sx1262_rf_packet_type_t type = SX1262_RF_PACKET_TYPE_UNINIT;
 
 	volatile sx1262_api_return_t sx_result = SX1262_API_UNINIT;
+
+	/////////////////////////////////////////////////
+	/// PREPARE FANET WX FRAME
+	/////////////////////////////////////////////////
+	const fanet_wx_input_t fanet_wx = {
+		.temperature = (int16_t)(rte_wx_temperature_average_external_valid * 10.0f),
+		.wind_direction = rte_wx_temperature_average_external_valid,
+		.wind_average_speed = rte_wx_average_windspeed,
+		.wind_gusts = rte_wx_max_windspeed,
+		.humidity = rte_wx_humidity_valid,
+		.qnh = (uint16_t)(rte_wx_pressure_valid * 10.0f),
+	};
+	const uint32_t frame_out_ln =
+		fanet_factory_frames_weather (fanet_latitude, fanet_longitude, &fanet_wx, &fanet_frame_out);
+	fanet_frame_out.payload_length = frame_out_ln;
+	fanet_frame_out.type = FANET_FRAME_SERVICE;
+	fanet_frame_out.source = fanet_src;
+	fanet_frame_out.destination = fanet_dest;
+
+	FANET_SX_WAHT_TO_TRANSMIT_LN =
+		fanet_serialize (&fanet_frame_out, FANET_SX_WHAT_TO_TRANSMIT, 64);
+
+	/////////////////////////////////////////////////////
+	/// TRANSMIT THIS FRAME
+	/////////////////////////////////////////////////////
 
 	fanet_reset ();
 
