@@ -1070,10 +1070,8 @@ int main (int argc, char *argv[])
 
 #endif
 
-	if (main_button_one_left != BUTTON_DISABLED || main_button_two_right != BUTTON_DISABLED) {
-		// initializing GPIO used for buttons
-		io_buttons_init ();
-	}
+	// initializing GPIO used for buttons
+	io_buttons_init ();
 
 	// get initial powersave mode
 	rte_main_curret_powersave_mode = main_config_data_mode->powersave;
@@ -1139,8 +1137,9 @@ int main (int argc, char *argv[])
 		main_usart2_wx_mode = USART_MODE_UNINIT;
 	}
 
-	// TODO: fixme
-	// main_usart1_kiss_mode = USART_MODE_LOGOUTPUT;
+	if ((button_is_left_pressed () == 1) && (button_is_right_pressed () == 0)) {
+		main_usart1_kiss_mode = USART_MODE_LOGOUTPUT;
+	}
 
 	switch (main_usart1_kiss_mode) {
 	case USART_MODE_DAVIS: {

@@ -62,6 +62,10 @@ void task_one_minute (void *unused)
 
 		SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 2);
 
+#ifdef SX1262_IMPLEMENTATION
+		xEventGroupSetBits (main_eventgroup_handle_fanet, MAIN_EVENTGROUP_FANET_SEND_METEO);
+#endif
+
 #ifdef STM32L471xx
 		if (main_config_data_mode->gsm == 1 && (io_get_cntrl_vbat_g () == 1)) {
 			SUPERVISOR_MONITOR_SET_CHECKPOINT (TASK_ONE_MIN, 3);

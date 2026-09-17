@@ -97,3 +97,35 @@ void button_debounce (void)
 
 	button_right_previous_state = 1;
 }
+
+/**
+ * Left Button - BTN0 on schematic - connected to PA0
+ * @return zero if it is not pressed. non-zero otherwise
+ */
+uint8_t button_is_left_pressed (void)
+{
+	const uint32_t state_left = LL_GPIO_IsInputPinSet (GPIOA, LL_GPIO_PIN_0);
+
+	if (state_left == 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
+/**
+ * Right Button - BTN1 on schematic - connected to PC3
+ * @return zero if it is not pressed. non-zero otherwise
+ */
+uint8_t button_is_right_pressed (void)
+{
+	const uint32_t state_right = LL_GPIO_IsInputPinSet (GPIOC, LL_GPIO_PIN_3);
+
+	if (state_right == 0) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}

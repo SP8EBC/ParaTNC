@@ -26,4 +26,16 @@ void button_check_all (configuration_button_function_t left, configuration_butto
  */
 void button_debounce (void);
 
+/**
+ * Left Button - BTN0 on schematic - connected to PA0
+ * @return zero if it is not pressed. non-zero otherwise
+ */
+uint8_t button_is_left_pressed (void);
+
+/**
+ * Right Button - BTN1 on schematic - connected to PC3
+ * @return zero if it is not pressed. non-zero otherwise
+ */
+uint8_t button_is_right_pressed (void);
+
 #endif /* BUTTON_H_ */
