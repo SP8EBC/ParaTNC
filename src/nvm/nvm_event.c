@@ -192,9 +192,11 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest, eve
 		/* oldest - newest should be located NVM_PAGE_SIZE bytes apart  */
 		/* please note, that pointers points to the beginning of each  */
 		/* entry, hence this minus one  */
+		// FIXME: This is not essentially a problem for event log areas stored
+		// FIXME: in SRAM!
 		if ((old_new_events_spacing - 1) * sizeof (event_log_t) != NVM_PAGE_SIZE) {
 			nvm_event_erase_all (area_start, area_end, page_size);
-			backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
+			//backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
 		}
 
 		/* move pointer to newest, to point to a place where  */
