@@ -22,6 +22,9 @@
 
 #define MAX31865_INTERVAL	9		//!< Interval between measurements. To convert to second add one and multiply times two
 
+#define MAX_PT1000	0U
+#define MAX_PT100	1U
+
 int32_t test;
 
 typedef enum max31865_pool_state_t {
@@ -109,8 +112,16 @@ uint8_t max31865_conversion_mode = 0;
 uint8_t max31865_start_singleshot = 0;
 
 /**
+ * D4 in configuration resister:
  * 1 - 3wire
  * 0 - 2 wire or 4 wire
+ * It is also reused in a logic recalculating raw -> physical,
+ * to select characteristic resistance of a PT sensor; to select
+ * PT100 or PT1000.
+ * TODO: There is a bug in that logic. PT100 is expected to be always
+ * 3-wire and PT1000 to be always 2 wire or 4 wire. In the same way
+ * 4-wire sensor will be implicitly recalculated with assumption
+ * that it is PT1000
  */
 uint8_t max31865_rdt_sensor_type = 0;
 
@@ -232,11 +243,11 @@ void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index) {
 
 	uint8_t * rx_data;
 
-	if (rdt_type == MAX_3WIRE) {
-		max31865_rdt_sensor_type = 1;
+	if (rdt_type == MAX_CONFIG_PT100) {
+		max31865_rdt_sensor_type = MAX_PT100;
 	}
-	else if (rdt_type == MAX_4WIRE) {
-		max31865_rdt_sensor_type = 0;
+	else if (rdt_type == MAX_CONFIG_PT1000) {
+		max31865_rdt_sensor_type = MAX_PT1000;
 	}
 	else {
 		max31865_current_state = MAX_UNINITIALIZED;
@@ -298,10 +309,10 @@ void max31865_pool(void) {
 		case MAX_IDLE:
 			// MAX31865 is powered up but not initialized
 			if (max31865_rdt_sensor_type == 1) {
-				max31865_init(MAX_3WIRE, max31865_rref_index);
+				max31865_init(MAX_CONFIG_PT100, max31865_rref_index);
 			}
 			else {
-				max31865_init(MAX_4WIRE, max31865_rref_index);
+				max31865_init(MAX_CONFIG_PT1000, max31865_rref_index);
 			}
 
 			if (max31865_ok == 1) {
@@ -368,7 +379,7 @@ void max31865_pool(void) {
 
 					if (max31865_raw_result < 0x7FFF) {
 						rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
-						if (max31865_rdt_sensor_type == 0) {
+						if (max31865_rdt_sensor_type == MAX_PT1000 ) {
 							max31865_physical_result = max31865_get_result(1000);
 						}
 						else {

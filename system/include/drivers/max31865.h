@@ -13,8 +13,10 @@
 #include <stdint.h>
 #include <stored_configuration_nvm/config_data.h>
 
-#define MAX_3WIRE 3
-#define MAX_4WIRE 1
+#define MAX_CONFIG_PT100 3	  //!< enable bit0 -> 1, pt100 bit1 ->  1
+#define MAX_CONFIG_PT1000 1   //!< enable bit0 -> 1, pt1000 bit1 -> 0
+
+
 
 typedef enum max31865_qf_t { MAX_QF_UNKNOWN, MAX_QF_FULL, MAX_QF_NOT_AVALIABLE } max31865_qf_t;
 
