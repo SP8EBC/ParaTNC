@@ -192,10 +192,10 @@ void fanet_test_init (config_data_gsm_t const *const config,
 	fanet_src.id = (uint16_t)((a - 32 + b - 32) | ((c - 32 + d - 32) << 8));
 
 	// latitude is stored in format: DDMM.SSS
-	fanet_latitude = coordinates->latitude / 10.0f;
+	fanet_latitude = coordinates->latitude / 100.0f;
 
 	// longitude is stored in format DDDMM.SSS
-	fanet_longitude = coordinates->longitude / 10.0f;
+	fanet_longitude = coordinates->longitude / 100.0f;
 }
 
 /**

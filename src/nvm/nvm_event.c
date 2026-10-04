@@ -196,7 +196,7 @@ static void nvm_event_log_perform_pointer_arithmetics (event_log_t **oldest, eve
 		// FIXME: in SRAM!
 		if ((old_new_events_spacing - 1) * sizeof (event_log_t) != NVM_PAGE_SIZE) {
 			nvm_event_erase_all (area_start, area_end, page_size);
-			//backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
+			// backup_assert (BACKUP_REG_ASSERT_ERASE_FAIL_WHILE_STORING_EVENT);
 		}
 
 		/* move pointer to newest, to point to a place where  */
