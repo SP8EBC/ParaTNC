@@ -40,7 +40,7 @@ void task_power_save (void *parameters)
 
 		last_waiting_state = xEventGroupWaitBits (main_eventgroup_handle_powersave,
 												  MAIN_EVENTGROUP_WAIT_FOR,
-												  pdTRUE,
+												  pdFALSE,
 												  pdTRUE,
 												  xTimeout);
 

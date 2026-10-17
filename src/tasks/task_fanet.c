@@ -23,6 +23,7 @@ static uint8_t fanet_success_counter = 0;
 void task_fanet (void *parameters)
 {
 	(void)parameters;
+	xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
 	while (1) {
 		// wait infinite amount of time for event from a serial port indicating that
 		const EventBits_t bits_on_event = xEventGroupWaitBits (main_eventgroup_handle_fanet,

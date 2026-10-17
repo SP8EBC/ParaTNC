@@ -534,6 +534,8 @@ static StaticEventGroup_t main_eventgroup_sx1262;
 //! data associated with the event group triggering transmission of various FANET frames
 static StaticEventGroup_t main_eventgroup_fanet;
 
+static StaticEventGroup_t main_eventgroup_one_minute;
+
 static TaskHandle_t task_powersave_handle = NULL;
 static TaskHandle_t task_main_handle = NULL;
 static TaskHandle_t task_one_sec_handle = NULL;
@@ -578,6 +580,9 @@ EventGroupHandle_t main_eventgroup_handle_fanet;
 
 //! a variable to hold the handle of the event group for sx1262 driver.
 EventGroupHandle_t main_eventgroup_handle_sx1262;
+
+//!< Now this is responsible for triggering one minute task, after removing vTaskDelay
+EventGroupHandle_t main_eventgtoup_handle_one_minute;
 
 TimerHandle_t main_timer_aprsis_telemetry_descr;
 
@@ -1692,6 +1697,7 @@ int main (int argc, char *argv[])
 		xEventGroupCreateStatic (&main_eventgroup_ntp_and_api_client);
 	main_eventgroup_handle_sx1262 = xEventGroupCreateStatic (&main_eventgroup_sx1262);
 	main_eventgroup_handle_fanet = xEventGroupCreateStatic (&main_eventgroup_fanet);
+	main_eventgtoup_handle_one_minute = xEventGroupCreateStatic (&main_eventgroup_one_minute);
 
 	main_mutex_gsm_tcpip = xSemaphoreCreateMutex ();
 	main_mutex_ax25sendvia = xSemaphoreCreateBinary ();

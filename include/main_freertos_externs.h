@@ -88,6 +88,8 @@
 
 #define MAIN_EVENTGROUP_FANET_SEND_METEO		(1 << 0)
 
+#define MAIN_EVENTGROUP_ONE_MINUTE		(1 << 10)
+
 // clang-format on
 /// ==================================================================================================
 ///	GLOBAL TYPEDEFS
@@ -121,6 +123,8 @@ extern EventGroupHandle_t main_eventgroup_handle_fanet;
 
 //! a variable to hold the handle of the event group for sx1262 driver.
 extern EventGroupHandle_t main_eventgroup_handle_sx1262;
+
+extern EventGroupHandle_t main_eventgtoup_handle_one_minute;
 
 extern TimerHandle_t main_timer_aprsis_telemetry_descr;
 

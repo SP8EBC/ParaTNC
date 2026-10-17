@@ -36,6 +36,8 @@
 #include "event_log.h"
 #include "events_definitions/events_main.h"
 
+static uint8_t task_one_second_60_counter = 0;
+
 void task_one_second (void *parameters)
 {
 	(void)(parameters);
@@ -149,6 +151,16 @@ void task_one_second (void *parameters)
 		}
 
 		supervisor_iam_alive (SUPERVISOR_THREAD_TASK_ONE_SEC);
+
+		task_one_second_60_counter++;
+
+		if (task_one_second_60_counter > 59)
+		{
+			// trigger one minute task
+			task_one_second_60_counter = 0;
+			xEventGroupSetBits (main_eventgtoup_handle_one_minute, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
+
+		}
 
 		xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_ONE_SEC);
 	} // while(1)
