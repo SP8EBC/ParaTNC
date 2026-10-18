@@ -158,7 +158,7 @@ void task_one_second (void *parameters)
 		{
 			// trigger one minute task
 			task_one_second_60_counter = 0;
-			xEventGroupSetBits (main_eventgtoup_handle_one_minute, MAIN_EVENTGROUP_PWRSAVE_ONE_MIN);
+			xEventGroupSetBits (main_eventgtoup_handle_one_minute, MAIN_EVENTGROUP_ONE_MINUTE);
 
 		}
 
