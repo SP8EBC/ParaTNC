@@ -33,6 +33,7 @@
 #include "rte_wx.h"
 #include "software_version.h"
 #include <stored_configuration_nvm/config_data_externs.h>
+#include "tasks/task_fanet.h"
 
 // clang-format off
 
@@ -87,6 +88,7 @@ extern char did_dummy_data;
 		ENTRY(0x2201U, packet_tx_beacon_interval, packet_tx_meteo_interval, packet_tx_telemetry_interval)	\
 		ENTRY(0x3000U, max31865_raw_result, max31865_merasurements_error_counter, max31865_current_fault_status)	\
 		ENTRY(0x3001U, max31865_measurements_counter, max31865_merasurements_error_counter, DID_EMPTY)	\
+		ENTRY(0x4000U, fanet_fail_counter, fanet_success_counter, DID_EMPTY)			\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF000U, config_running_pgm_counter, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xFF00U, main_flash_log_start, main_flash_log_end, DID_EMPTY)	\

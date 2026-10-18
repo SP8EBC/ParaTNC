@@ -17,8 +17,8 @@
 #include "event_log.h"
 #include "events_definitions/events_fanet.h"
 
-static uint8_t fanet_fail_counter = 0;
-static uint8_t fanet_success_counter = 0;
+uint8_t fanet_fail_counter = 0;
+uint8_t fanet_success_counter = 0;
 
 void task_fanet (void *parameters)
 {

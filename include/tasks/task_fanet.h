@@ -8,6 +8,9 @@
 #ifndef TASKS_TASK_FANET_H_
 #define TASKS_TASK_FANET_H_
 
+extern uint8_t fanet_fail_counter;
+extern uint8_t fanet_success_counter;
+
 void task_fanet (void *parameters);
 
 #endif /* TASKS_TASK_FANET_H_ */
