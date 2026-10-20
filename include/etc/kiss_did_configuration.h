@@ -34,7 +34,7 @@
 #include "software_version.h"
 #include <stored_configuration_nvm/config_data_externs.h>
 #include "tasks/task_fanet.h"
-
+#include "fanet_app.h"
 // clang-format off
 
 //!< Dummy variable used only as end of definition marker in tables
@@ -55,6 +55,7 @@ extern char did_dummy_data;
 		ENTRY(0x2002U, rte_wx_pressure_history[0], rte_wx_pressure_history[1], rte_wx_pressure_history[2])	\
 		ENTRY(0x1505U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0x2222U, main_test_float, DID_EMPTY, DID_EMPTY)	\
+		ENTRY(0x4002U, fanet_latitude, fanet_longitude, DID_EMPTY)				\
 
 	#define DIDS_NUMERIC(ENTRY)		\
 		ENTRY(0x0010U, RTC->TR, RTC->DR, DID_EMPTY)	\
@@ -89,6 +90,7 @@ extern char did_dummy_data;
 		ENTRY(0x3000U, max31865_raw_result, max31865_merasurements_error_counter, max31865_current_fault_status)	\
 		ENTRY(0x3001U, max31865_measurements_counter, max31865_merasurements_error_counter, DID_EMPTY)	\
 		ENTRY(0x4000U, fanet_fail_counter, fanet_success_counter, DID_EMPTY)			\
+		ENTRY(0x4001U, fanet_src.manufacturer, fanet_src.id, DID_EMPTY)				\
 		ENTRY(0x1504U, gsm_sim800_signal_level_dbm, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xF000U, config_running_pgm_counter, DID_EMPTY, DID_EMPTY)	\
 		ENTRY(0xFF00U, main_flash_log_start, main_flash_log_end, DID_EMPTY)	\

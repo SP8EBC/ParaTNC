@@ -9,6 +9,7 @@
 #define FANET_APP_H_
 
 #include "stored_configuration_nvm/config_data.h"
+#include "skytrax_fanet/types/fanet_mac_address_t.h"
 
 /// ==================================================================================================
 ///	GLOBAL MACROS
@@ -29,6 +30,21 @@
 extern int fanet_success_cnt;
 extern int fanet_fail_cnt;
 extern int fanet_tx_success_cnt;
+
+/**
+ * Source address used to transmit own FANET packets
+ */
+extern fanet_mac_adress_t fanet_src;
+
+/**
+ * Station latitude put in transmitted FANET packets
+ */
+extern float fanet_latitude;
+
+/**
+ * Station longitude put in transmitted FANET packets
+ */
+extern float fanet_longitude;
 
 /// ==================================================================================================
 ///	GLOBAL FUNCTIONS

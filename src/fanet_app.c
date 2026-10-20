@@ -81,7 +81,6 @@ int fanet_success_cnt = 0;
 int fanet_fail_cnt = 0;
 int fanet_tx_success_cnt = 0;
 
-fanet_mac_adress_t fanet_src = {0u};
 const fanet_mac_adress_t fanet_dest = {0u}; //!< zero for broadcast
 
 uint32_t fanet_serialized_frame_out_ln = 0;
@@ -103,14 +102,28 @@ volatile int fanet_i_value[FANET_SX_RESULT_HISTORY_LN] = {0xEEu};
 extern volatile uint32_t sx1262_busy_counter;
 volatile uint32_t fanet_last_busy_counter = 0xFFFFFFFFu;
 
-static float fanet_latitude = 49.7828f;
-static float fanet_longitude = 19.0567f;
+
 
 #endif
 
 /// ==================================================================================================
 ///	GLOBAL VARIABLES
 /// ==================================================================================================
+
+/**
+ * Source address used to transmit own FANET packets
+ */
+fanet_mac_adress_t fanet_src = {0u};
+
+/**
+ * Station latitude put in transmitted FANET packets
+ */
+float fanet_latitude = 49.7828f;
+
+/**
+ * Station longitude put in transmitted FANET packets
+ */
+float fanet_longitude = 19.0567f;
 
 /// ==================================================================================================
 ///	LOCAL FUNCTIONS

@@ -27,7 +27,7 @@ int32_t rtu_get_temperature(int16_t* out, const config_data_rtu_t * const config
 
 	int16_t signed_raw_reguster_value = 0;
 
-	int16_t physical_register_value = 0.0f;
+	int16_t physical_register_value = 0;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -98,11 +98,11 @@ int32_t rtu_get_temperature(int16_t* out, const config_data_rtu_t * const config
 
 		// rescale the raw value to target value in degrees C
 		physical_register_value = 	(
-				scaling_a * signed_raw_reguster_value * signed_raw_reguster_value +
-				scaling_b * signed_raw_reguster_value +
-				scaling_c
-				) /
-				scaling_d;
+							scaling_a * signed_raw_reguster_value * signed_raw_reguster_value +
+							scaling_b * signed_raw_reguster_value +
+							scaling_c);
+
+		physical_register_value /= scaling_d;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -205,11 +205,11 @@ int32_t rtu_get_pressure(float* out, const config_data_rtu_t * const config) {
 
 		// rescale the raw value to target value in degrees C
 		physical_register_value = 	(
-				scaling_a * (float)raw_register_value * (float)raw_register_value +
-				scaling_b * (float)raw_register_value +
-				scaling_c
-				) /
-				scaling_d;
+							(float)scaling_a * (float)raw_register_value * (float)raw_register_value +
+							(float)scaling_b * (float)raw_register_value +
+							(float)scaling_c);
+
+		physical_register_value /= (float)scaling_d;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -308,12 +308,12 @@ int32_t rtu_get_wind_direction(uint16_t* out, const config_data_rtu_t * const co
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value
-		physical_register_value = 	(uint16_t)(
+		physical_register_value = 	(
 							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
 							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							) /
-							scaling_d;
+							scaling_c);
+
+		physical_register_value /= scaling_d;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -341,7 +341,8 @@ int32_t rtu_get_wind_speed(uint16_t* out, const config_data_rtu_t * const config
 
 	rtu_register_data_t* source = 0;
 
-	uint16_t raw_register_value = 0, physical_register_value = 0;
+	uint16_t raw_register_value = 0;
+	float physical_register_value = 0.0f;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -411,12 +412,14 @@ int32_t rtu_get_wind_speed(uint16_t* out, const config_data_rtu_t * const config
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in .1m/s incremenets
-		physical_register_value = 	(uint16_t) (10 * (
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							) /
-							scaling_d);
+		physical_register_value = 	(
+							(float)scaling_a * (float)raw_register_value * (float)raw_register_value +
+							(float)scaling_b * (float)raw_register_value +
+							(float)scaling_c);
+
+		physical_register_value /= (float)scaling_d;
+
+		physical_register_value *= 10.0f;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -431,7 +434,7 @@ int32_t rtu_get_wind_speed(uint16_t* out, const config_data_rtu_t * const config
 				retval = MODBUS_RET_OK;
 			}
 
-			*out = physical_register_value;
+			*out = (uint16_t)physical_register_value;
 		}
 	}
 
@@ -443,7 +446,8 @@ int32_t rtu_get_wind_gusts(uint16_t* out, const config_data_rtu_t * const config
 
 	rtu_register_data_t* source = 0;
 
-	uint16_t raw_register_value = 0, physical_register_value = 0;
+	uint16_t raw_register_value = 0;
+	float physical_register_value = 0.0f;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -513,12 +517,14 @@ int32_t rtu_get_wind_gusts(uint16_t* out, const config_data_rtu_t * const config
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in .1m/s incremenets
-		physical_register_value = 	(uint16_t) (10 * (
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							) /
-							scaling_d);
+		physical_register_value = 	(
+							(float)scaling_a * (float)raw_register_value * (float)raw_register_value +
+							(float)scaling_b * (float)raw_register_value +
+							(float)scaling_c);
+
+		physical_register_value /= (float)scaling_d;
+
+		physical_register_value *= 10.0f;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -533,7 +539,7 @@ int32_t rtu_get_wind_gusts(uint16_t* out, const config_data_rtu_t * const config
 				retval = MODBUS_RET_OK;
 			}
 
-			*out = physical_register_value;
+			*out = (uint16_t)physical_register_value;
 
 		}
 	}
@@ -548,7 +554,7 @@ int32_t rtu_get_humidity(int8_t* out, const config_data_rtu_t * const config) {
 	rtu_register_data_t* source = 0;
 
 	volatile uint16_t raw_register_value = 0;
-	int8_t physical_register_value = 0;
+	int32_t physical_register_value = 0;
 
 	uint16_t scaling_a, scaling_b, scaling_c, scaling_d;
 
@@ -618,12 +624,12 @@ int32_t rtu_get_humidity(int8_t* out, const config_data_rtu_t * const config) {
 		raw_register_value = source->registers_values[0];
 
 		// rescale the raw value to target value in percents
-		physical_register_value = 	(int8_t) (
-							scaling_a * (uint16_t)raw_register_value * (uint16_t)raw_register_value +
-							scaling_b * (uint16_t)raw_register_value +
-							scaling_c
-							/
-							scaling_d);
+		physical_register_value = 	(
+							(int32_t)scaling_a * (int32_t)raw_register_value * (int32_t)raw_register_value +
+							(int32_t)scaling_b * (int32_t)raw_register_value +
+							(int32_t)scaling_c);
+
+		physical_register_value /= (int32_t)scaling_d;
 
 		// check when the value has been updated
 		if (main_get_master_time() - last_update_timestam > RTU_MAXIMUM_VALUE_AGE ||
@@ -638,7 +644,7 @@ int32_t rtu_get_humidity(int8_t* out, const config_data_rtu_t * const config) {
 				retval = MODBUS_RET_OK;
 			}
 
-			*out = physical_register_value;
+			*out = (int8_t)(physical_register_value & 0xFF);
 
 
 		}
