@@ -13,6 +13,8 @@ turned into a single entry of "events" array:
                       taken from include/event_log_strings.h
   param ... lparam2 - source text of each argument, as written in a call.
                       wparam3 is empty for event_log_sync (non triple)
+  asHexParam ...    - bool, if a parameter should be displayed in hexadecimal.
+  asHexLparam2        Always generated as true, to be adjusted manually
 
 Usage:
   tools/generate_event_log_description.py [-o output.json] [--with-location] [repo_root]
@@ -307,6 +309,9 @@ def generate(root, with_location):
                     params = dict(zip(names, args[3:]))
                     for p in PARAMS_OUTPUT_ORDER:
                         entry[p] = params.get(p, "")
+                    # if parameter value should be displayed in hexadecimal
+                    for p in PARAMS_OUTPUT_ORDER:
+                        entry["asHex" + p[0].upper() + p[1:]] = True
                     if with_location:
                         entry["file"] = rel
                         entry["line"] = line
