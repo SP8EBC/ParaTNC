@@ -1,0 +1,35 @@
+I generated the JSON with a Python script and kept the script in the repo so you can rerun it.
+
+Tool: tools/generate_event_log_description.py
+Output: doc/event_log_description.json, with 107 events, one per call site.
+Rerun with:
+
+
+tools/generate_event_log_description.py -o doc/event_log_description.json
+Add --with-location to put the file and line of each call into every entry, which helps when reviewing. Without it, the format is exactly like your example. Anything it can't work out is printed as a warning.
+
+How it fills each field:
+
+severity / source: the number of the enum value, read from event_log_t.h.
+eventId: the number under the EVENTS_* define, read from include/events_definitions/.
+eventString: follows your 4 steps. It takes the define name, finds event_id == DEFINE inside the matching case EVENT_SRC_* in event_id_to_str in event_log_to_string.c, reads the out = event_log_str_* variable, and takes that variable's text from event_log_strings.h. Commented-out code is ignored, so with your current edit you get the long strings ("Bootup complete", not "BOOTUP_COMPLETE").
+param…lparam2: the argument text exactly as written in the call, with whitespace collapsed and comments removed. wparam3 is "" for plain event_log_sync.
+Checks:
+
+The Bootup entry from src/main.c:1668 comes out identical to your example. One difference: your example has a trailing comma, but my output is valid JSON.
+I compared the results against grep. The only call skipped is the commented-out one at analog_anemometer.c:499.
+Things in the firmware you may want to fix:
+
+8 events have an empty eventString because event_id_to_str doesn't handle their IDs:
+EVENTS_APRSIS_WARN_GPRS_NOT_READY
+EVENTS_APRSIS_TELEMETRY_NOT_PREPARED
+EVENTS_MAIN_ASSERT_FAIL
+EVENTS_MAIN_PSAVING_SUSPEND_TASKS
+EVENTS_MAIN_PSAVING_RESTORE_TASKS
+EVENTS_PWR_SAVE_GO_TO_SLEEP
+EVENTS_MODBUS_RTU_ERROR_RECEIVING
+EVENTS_UMB_WARN_RECEIVED_FRAME_TOO_LONG
+Likely wrong event ID: sim800c.c:1120 logs the SIM card status but uses EVENTS_GSM_GPRS_INITIALIZING_GET_NETWORK_REGISTR_DONE. It probably should be ..._GET_PIN_STATUS_DONE. The JSON follows the code as it is, so that event says "Got network registration info OK".
+Compile error in your uncommitted edit: in event_log_strings.h you commented out #ifdef PARAMETEO / #else, but the matching #endif after the FANET string is still active. It closes the include guard early, so the last #endif has no #if and the build will fail. Commenting out or removing that #endif fixes it.
+Two IDs share a value: EVENTS_MAIN_CONFIG_FIRST_RESTORE and EVENTS_MAIN_CONFIG_SECOND_RESTORE are both 0xF4u. Mapping by define name still works, but on the device you can't tell the two events apart.
+The new tools/ folder and the JSON aren't committed yet.
