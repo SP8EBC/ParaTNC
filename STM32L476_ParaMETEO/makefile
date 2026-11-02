@@ -104,7 +104,7 @@ ParaTNC.siz \
 
 # All Target
 all:
-	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build
+	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build && $(MAKE) --no-print-directory post-build
 
 # Main-build Target
 main-build: ParaTNC.elf secondary-outputs
@@ -144,8 +144,13 @@ pre-build:
 	-/bin/bash rc.timestamp
 	-@echo ' '
 
+post-build:
+	-@echo 'Generating event log description JSON'
+	-python3 ../tools/generate_event_log_description.py -o event_log_description.json
+	-@echo ' '
+
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
-.PHONY: all clean dependents main-build pre-build
+.PHONY: all clean dependents main-build post-build pre-build
 
 -include ../makefile.targets

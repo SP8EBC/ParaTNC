@@ -335,7 +335,20 @@ def main():
                     help="add 'file' and 'line' of each call to entries")
     a = ap.parse_args()
 
-    result = json.dumps(generate(a.root, a.with_location), indent=2, ensure_ascii=False)
+    description = generate(a.root, a.with_location)
+
+    # keep previous timestamp if nothing has changed, not to modify the file on each build
+    if a.output and os.path.exists(a.output):
+        try:
+            with open(a.output, encoding="utf-8") as f:
+                previous = json.load(f)
+            if previous.get("events") == description["events"]:
+                description["lastEditUtcISO8601"] = previous.get(
+                    "lastEditUtcISO8601", description["lastEditUtcISO8601"])
+        except (OSError, ValueError):
+            pass
+
+    result = json.dumps(description, indent=2, ensure_ascii=False)
     if a.output:
         with open(a.output, "w", encoding="utf-8") as f:
             f.write(result + "\n")

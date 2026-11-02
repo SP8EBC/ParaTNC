@@ -52,5 +52,6 @@
         "fanet_internals.h": "c",
         "supervisor.h": "c",
         "supervisor_config.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "/home/mateusz/Documents/___STM32/ParaTNC/system/freertos"
 }
