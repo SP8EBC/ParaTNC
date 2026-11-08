@@ -151,6 +151,6 @@ post-build:
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_LIST) $(SECONDARY_SIZE)
 
-.PHONY: all clean dependents main-build post-build pre-build
+.PHONY: all clean dependents main-build pre-build post-build
 
 -include ../makefile.targets

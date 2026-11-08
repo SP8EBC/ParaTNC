@@ -35,23 +35,23 @@ void task_fanet (void *parameters)
 		if (bits_on_event == MAIN_EVENTGROUP_FANET_SEND_METEO) {
 			xEventGroupClearBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
 
-			const int retval = fanet_test ();
-
-			if (retval != 0) {
-				fanet_fail_counter++;
-				event_log_sync (EVENT_ERROR,
-								EVENT_SRC_FANET,
-								EVENTS_FANET_FAIL_TO_SEND_METEO,
-								fanet_fail_counter,
-								fanet_success_counter,
-								0,
-								0,
-								0xDDCCBBAA,
-								retval);
-			}
-			else {
-				fanet_success_counter++;
-			}
+//			const int retval = fanet_test ();
+//
+//			if (retval != 0) {
+//				fanet_fail_counter++;
+//				event_log_sync (EVENT_ERROR,
+//								EVENT_SRC_FANET,
+//								EVENTS_FANET_FAIL_TO_SEND_METEO,
+//								fanet_fail_counter,
+//								fanet_success_counter,
+//								0,
+//								0,
+//								0xDDCCBBAA,
+//								retval);
+//			}
+//			else {
+//				fanet_success_counter++;
+//			}
 			xEventGroupSetBits (main_eventgroup_handle_powersave, MAIN_EVENTGROUP_PWRSAVE_FANET);
 		}
 	}
