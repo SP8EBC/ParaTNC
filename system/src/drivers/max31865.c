@@ -444,12 +444,15 @@ void max31865_pool(void) {
 
 					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 
+					const uint8_t faulty_config_reg_received_from_max = *result_ptr;
+					const uint8_t fault_status_received_from_max = *(result_ptr + 7);
+
 					event_log_sync (EVENT_ERROR,
 									EVENT_SRC_DRV_SPI,
 									EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR,
 									max31865_merasurements_error_counter, max31865_measurements_counter,
-									0, max31865_current_config_register,
-									0,0);
+									faulty_config_reg_received_from_max, max31865_current_config_register,
+									fault_status_received_from_max,0);
 				}
 
 				// disable VBIAS to reduce power consumption
