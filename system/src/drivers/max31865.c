@@ -9,6 +9,9 @@
 #include "int_average.h"
 #include "drivers/max31865.h"
 
+#include "event_log.h"
+#include "events_definitions/events_drv_spi.h"
+
 #include "delay.h"
 
 #include <math.h>
@@ -209,6 +212,13 @@ static void max31865_request_registers(void) {
 	}
 	else {
 		max31865_current_state = MAX_ERROR;
+
+		event_log_sync (EVENT_ERROR,
+				EVENT_SRC_DRV_SPI,
+				EVENTS_DRV_SPI_MAX31865_REGISTER_REQUEST_ERR,
+				result, 0,
+				0, 0,
+				0, 0);
 	}
 
 	if (result != SPI_OK) {
@@ -359,6 +369,13 @@ void max31865_pool(void) {
 			if (spi_get_rx_state() != SPI_RX_DONE) {
 				// if SPI is not done
 				max31865_current_state = MAX_ERROR;
+
+				event_log_sync (EVENT_ERROR,
+								EVENT_SRC_DRV_SPI,
+								EVENTS_DRV_SPI_MAX31865_RX_STATE_ERROR,
+								0, 0,
+								0, 0,
+								spi_get_rx_state(), 0);
 			}
 			else {
 				// get a pointer to results
@@ -395,6 +412,15 @@ void max31865_pool(void) {
 						max31865_measurements_counter++;
 
 						max31865_quality_factor = MAX_QF_FULL;
+
+						if ((max31865_current_fault_status & 0xFCu) != 0) {
+							event_log_sync (EVENT_WARNING,
+											EVENT_SRC_DRV_SPI,
+											EVENTS_DRV_SPI_MAX31865_REPORT_NONZERO_FAULT_WARN,
+											max31865_current_fault_status, 0,
+											max31865_raw_result, max31865_current_config_register,
+											0,0);
+						}
 					}
 					else {
 						max31865_merasurements_error_counter++;
@@ -402,6 +428,13 @@ void max31865_pool(void) {
 						max31865_current_state = MAX_ERROR;
 
 						max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
+
+						event_log_sync (EVENT_ERROR,
+										EVENT_SRC_DRV_SPI,
+										EVENTS_DRV_SPI_MAX31865_RAW_RESULT_VALIDATION_ERR,
+										max31865_merasurements_error_counter, max31865_measurements_counter,
+										max31865_raw_result, max31865_current_config_register,
+										0,0);
 					}
 				}
 				else {
@@ -410,6 +443,13 @@ void max31865_pool(void) {
 					max31865_current_state = MAX_ERROR;
 
 					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
+
+					event_log_sync (EVENT_ERROR,
+									EVENT_SRC_DRV_SPI,
+									EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR,
+									max31865_merasurements_error_counter, max31865_measurements_counter,
+									0, max31865_current_config_register,
+									0,0);
 				}
 
 				// disable VBIAS to reduce power consumption

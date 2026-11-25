@@ -375,7 +375,25 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 	}
 	case EVENT_SRC_DRV_I2C: break;
 	case EVENT_SRC_DRV_UART: break;
-	case EVENT_SRC_DRV_SPI: break;
+	case EVENT_SRC_DRV_SPI:
+
+		if (event_id == EVENTS_DRV_SPI_MAX31865_REPORT_NONZERO_FAULT_WARN) {
+			out = event_log_str_drv_spi_max31865_reports_nonzero_fault;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_RX_STATE_ERROR) {
+			out = event_log_str_drv_spi_max31865_rx_state_error;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR) {
+			out = event_log_str_drv_spi_max31865_config_register_comp_error;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_RAW_RESULT_VALIDATION_ERR) {
+			out = event_log_str_drv_spi_max31865_raw_result_validation_error;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_REGISTER_REQUEST_ERR) {
+			out = event_log_str_drv_spi_max31865_register_request_error;
+		}
+
+		break;
 	case EVENT_SRC_FANET:
 		if (event_id == EVENTS_FANET_FAIL_TO_SEND_METEO) {
 			out = event_log_str_fanet_fail_to_send_weather;
