@@ -136,6 +136,9 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 		else if (event_id == EVENTS_WX_HANDLER_WARN_HUMIDITY_FAILED) {
 			out = event_log_str_wx_handler_temperature_humidity_fail;
 		}
+		else if (event_id == EVENTS_WX_HANDLER_WARN_PWR_PERIODIC_HANDLER_SWITCH) {
+			out = event_log_str_wx_handler_periodic_power_handler_switch;
+		}
 		///////
 		///
 		else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_ANEM_TIMER_HAS_BEEN_FIRED) {
@@ -152,6 +155,9 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 		}
 		else if (event_id == EVENTS_WX_HANDLER_ERROR_RTE_CHECK_WINDSPEED_BUFFERS) {
 			out = event_log_str_wx_handler_error_rte_check_windspeed_buffers;
+		}
+		else if (event_id == EVENTS_WX_HANDLER_ERROR_PWR_SWITCH_MISCALLED) {
+			out = event_log_str_wx_handler_power_switch_miscalled;
 		}
 
 		break;
@@ -391,6 +397,12 @@ const char *event_id_to_str (event_log_source_t source, uint8_t event_id)
 		}
 		else if (event_id == EVENTS_DRV_SPI_MAX31865_REGISTER_REQUEST_ERR) {
 			out = event_log_str_drv_spi_max31865_register_request_error;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_MEASUREMENT_STILL_PENDING) {
+			out = event_log_str_drv_spi_max31865_measurement_still_pending;
+		}
+		else if (event_id == EVENTS_DRV_SPI_MAX31865_WRONG_STATE_AFTER_SYNCHRO_IO) {
+			out = event_log_str_drv_spi_max31865_wrong_state_after_synchro_io;
 		}
 
 		break;

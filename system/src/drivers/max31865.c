@@ -162,7 +162,7 @@ uint16_t max31865_physical_result = 0;
  * Value of configuration register which should be currently stored in
  * amplifier
  */
-uint8_t max31865_current_config_register = 0;
+uint8_t max31865_requested_config_register = 0;
 
 /**
  *
@@ -231,11 +231,11 @@ static void max31865_send_config_register(void) {
 
 	// check if SPI is busy now
 	if (spi_get_current_slave() == 0) {
-		max31865_current_config_register = max31865_get_config_register();
+		max31865_requested_config_register = max31865_get_config_register();
 
 		// read adres of configuation register
 		max31865_buffer[0] = 0x80;
-		max31865_buffer[1] = max31865_current_config_register;
+		max31865_buffer[1] = max31865_requested_config_register;
 
 		spi_tx_data(1, SPI_TX_FROM_EXTERNAL, max31865_buffer, 2);
 
@@ -382,13 +382,15 @@ void max31865_pool(void) {
 				result_ptr = spi_get_rx_data();
 
 #ifdef DATA_RACE_WORKAROUND
-				if ((max31865_current_config_register & 0xDF) == *(result_ptr + 1)) {
+				if ((max31865_requested_config_register & 0xDF) == *(result_ptr + 1)) {
 					result_ptr++;
 				}
 #endif
 
+				const uint8_t config_reg_from_max31865 = *result_ptr;
+
 				// check communication results by comparing a value of config register
-				if ((max31865_current_config_register & 0xDF) == *result_ptr) {	// fifth bit read always zero
+				if ((max31865_requested_config_register & 0xDF) == config_reg_from_max31865) {	// fifth bit read always zero
 					// save raw results
 					max31865_raw_result = *(result_ptr + 2) | (*(result_ptr + 1) << 8);
 
@@ -418,7 +420,7 @@ void max31865_pool(void) {
 											EVENT_SRC_DRV_SPI,
 											EVENTS_DRV_SPI_MAX31865_REPORT_NONZERO_FAULT_WARN,
 											max31865_current_fault_status, 0,
-											max31865_raw_result, max31865_current_config_register,
+											max31865_raw_result, max31865_requested_config_register,
 											0,0);
 						}
 					}
@@ -433,7 +435,7 @@ void max31865_pool(void) {
 										EVENT_SRC_DRV_SPI,
 										EVENTS_DRV_SPI_MAX31865_RAW_RESULT_VALIDATION_ERR,
 										max31865_merasurements_error_counter, max31865_measurements_counter,
-										max31865_raw_result, max31865_current_config_register,
+										max31865_raw_result, max31865_requested_config_register,
 										0,0);
 					}
 				}
@@ -444,15 +446,26 @@ void max31865_pool(void) {
 
 					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 
-					const uint8_t faulty_config_reg_received_from_max = *result_ptr;
+					const uint8_t faulty_config_reg_received_from_max = config_reg_from_max31865;
 					const uint8_t fault_status_received_from_max = *(result_ptr + 7);
 
-					event_log_sync (EVENT_ERROR,
-									EVENT_SRC_DRV_SPI,
-									EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR,
-									max31865_merasurements_error_counter, max31865_measurements_counter,
-									faulty_config_reg_received_from_max, max31865_current_config_register,
-									fault_status_received_from_max,0);
+					if ((config_reg_from_max31865 & 0x20) != 0)
+					{
+						event_log_sync (EVENT_ERROR,
+										EVENT_SRC_DRV_SPI,
+										EVENTS_DRV_SPI_MAX31865_MEASUREMENT_STILL_PENDING,
+										max31865_merasurements_error_counter, max31865_measurements_counter,
+										config_reg_from_max31865, max31865_requested_config_register,
+										fault_status_received_from_max,0);
+					}
+					else {
+						event_log_sync (EVENT_ERROR,
+										EVENT_SRC_DRV_SPI,
+										EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR,
+										max31865_merasurements_error_counter, max31865_measurements_counter,
+										config_reg_from_max31865, max31865_requested_config_register,
+										fault_status_received_from_max,0);
+					}
 				}
 
 				// disable VBIAS to reduce power consumption
@@ -496,6 +509,15 @@ max31865_qf_t max31865_pool_synchro(void) {
 		for (int i = 0; i < 4; i++) {
 		  max31865_pool();
 		  delay_fixed(200);
+		}
+
+		if (max31865_current_state != MAX_SHUTDOWN) {
+			event_log_sync (EVENT_ERROR,
+							EVENT_SRC_DRV_SPI,
+							EVENTS_DRV_SPI_MAX31865_WRONG_STATE_AFTER_SYNCHRO_IO,
+							0, 0,
+							0, 0,
+							max31865_current_state, 0);
 		}
 
 	}

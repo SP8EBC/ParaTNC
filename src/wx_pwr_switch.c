@@ -14,6 +14,9 @@
 #include "wx_handler.h"
 #include <wx_pwr_switch.h>
 
+#include <event_log.h>
+#include <events_definitions/events_wx_handler.h>
+
 #include <stm32l4xx.h>
 #include <stm32l4xx_ll_gpio.h>
 
@@ -31,8 +34,15 @@ wx_pwr_state_t wx_pwr_state;
 void wx_pwr_switch_case_under_reset_parameteo ()
 {
 
-	if (pwr_save_get_inhibit_pwr_switch_periodic () == 1)
+	if (pwr_save_get_inhibit_pwr_switch_periodic () == 1) {
+		event_log_sync (EVENT_WARNING,
+				EVENT_SRC_WX_HANDLER,
+				EVENTS_WX_HANDLER_ERROR_PWR_SWITCH_MISCALLED,
+				1, 0,
+				0, 0,
+				0, 0);
 		return;
+	}
 
 	io___cntrl_vbat_s_enable ();
 	io___cntrl_vbat_m_enable ();
@@ -60,8 +70,15 @@ void wx_pwr_switch_case_under_reset_paratnc ()
 void wx_pwr_switch_case_off_parameteo ()
 {
 
-	if (pwr_save_get_inhibit_pwr_switch_periodic () == 1)
+	if (pwr_save_get_inhibit_pwr_switch_periodic () == 1) {
+		event_log_sync (EVENT_WARNING,
+						EVENT_SRC_WX_HANDLER,
+						EVENTS_WX_HANDLER_ERROR_PWR_SWITCH_MISCALLED,
+						2, 0,
+						0, 0,
+						0, 0);
 		return;
+	}
 
 	// Turn on the +5V_ISOL (VDD_SW) voltage
 	io___cntrl_vbat_s_enable ();
@@ -100,6 +117,13 @@ void wx_pwr_switch_periodic_handle (void)
 		if (wx_last_good_temperature_time != 0xFFFFFFFF &&
 			master_time - wx_last_good_temperature_time >= WX_WATCHDOG_PERIOD) {
 			wx_pwr_state = WX_PWR_UNDER_RESET;
+
+			event_log_sync (EVENT_WARNING,
+							EVENT_SRC_WX_HANDLER,
+							EVENTS_WX_HANDLER_WARN_PWR_PERIODIC_HANDLER_SWITCH,
+							wx_pwr_state, 0,
+							0, 0,
+							wx_last_good_temperature_time, 0);
 		}
 
 		// as the weather station could be configured not to perform wind measurements at all
@@ -124,6 +148,13 @@ void wx_pwr_switch_periodic_handle (void)
 			// setting the last_good timers to current value to prevent reset loop
 			wx_last_good_temperature_time = master_time;
 			wx_last_good_wind_time = master_time;
+
+			event_log_sync (EVENT_WARNING,
+							EVENT_SRC_WX_HANDLER,
+							EVENTS_WX_HANDLER_WARN_PWR_PERIODIC_HANDLER_SWITCH,
+							wx_pwr_state, 0,
+							0, 0,
+							0, 0);
 
 			return;
 		}
