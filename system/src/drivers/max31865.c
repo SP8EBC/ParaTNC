@@ -29,6 +29,9 @@
 #define MAX_PT100	1U
 
 int32_t test;
+/// ==================================================================================================
+///	LOCAL DATA TYPES
+/// ==================================================================================================
 
 typedef enum max31865_pool_state_t {
 	MAX_UNINITIALIZED,
@@ -40,6 +43,10 @@ typedef enum max31865_pool_state_t {
 	MAX_SHUTDOWN,
 	MAX_POWER_OFF
 }max31865_pool_state_t;
+
+/// ==================================================================================================
+///	LOCAL CONSTS
+/// ==================================================================================================
 
 static const float max31865_rref_lookup_table[32] =
 {
@@ -77,6 +84,16 @@ static const float max31865_rref_lookup_table[32] =
 		5600.0f		// index 31
 
 };
+
+static const uint8_t max31865_still_pending_limit = 4;
+
+/// ==================================================================================================
+///	LOCAL VARIABLES
+/// ==================================================================================================
+
+/// ==================================================================================================
+///	GLOBAL VARIABLES
+/// ==================================================================================================
 
 max31865_pool_state_t max31865_current_state = MAX_UNINITIALIZED;
 
@@ -159,8 +176,7 @@ uint16_t max31865_raw_result = 0;
 uint16_t max31865_physical_result = 0;
 
 /**
- * Value of configuration register which should be currently stored in
- * amplifier
+ * Value of configuration register which should be currently stored in MAX31865
  */
 uint8_t max31865_requested_config_register = 0;
 
@@ -175,9 +191,20 @@ max31865_qf_t max31865_quality_factor = MAX_QF_UNKNOWN;
 uint8_t max31865_measurements_counter = 0;
 uint8_t max31865_merasurements_error_counter = 0;
 
+/**
+ * This counter is incremented if for some reason MAX31865 still converts
+ * PT resistance, when it generally should be done with that
+ */
+uint8_t max31865_still_pending_counter = 0;
+
 int_average_t max31865_average;
 
 uint8_t max31865_current_fault_status = 0;
+
+
+/// ==================================================================================================
+///	LOCAL FUNCTIONS
+/// ==================================================================================================
 
 /**
  * Function generates a content of configuration register basing on
@@ -248,6 +275,10 @@ static void max31865_send_config_register(void) {
 		max31865_current_state = MAX_ERROR;
 	}
 }
+
+/// ==================================================================================================
+///	GLOBAL FUNCTIONS
+/// ==================================================================================================
 
 void max31865_init(uint8_t rdt_type, uint8_t reference_resistor_index) {
 
@@ -353,12 +384,15 @@ void max31865_pool(void) {
 
 			max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 
+			max31865_still_pending_counter = 0;
+
 			break;
 		case MAX_MEASUREMENT_STARTED:
 			// measurement has been started before, so now it's time to request for results
 			max31865_request_registers();
 
 			max31865_current_state = MAX_REGISTER_REQUESTED;
+
 
 			break;
 		case MAX_REGISTER_REQUESTED:
@@ -396,6 +430,8 @@ void max31865_pool(void) {
 
 					max31865_raw_result = max31865_raw_result >> 1;
 
+					// check if a measurement result is sane. simple validation against
+					// problems on analog side
 					if (max31865_raw_result < 0x7FFF) {
 						rte_wx_temperature_average_pt = max31865_get_pt100_result(0);
 						if (max31865_rdt_sensor_type == MAX_PT1000 ) {
@@ -440,15 +476,11 @@ void max31865_pool(void) {
 					}
 				}
 				else {
-					max31865_merasurements_error_counter++;
-
-					max31865_current_state = MAX_ERROR;
-
-					max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
-
-					const uint8_t faulty_config_reg_received_from_max = config_reg_from_max31865;
+					// a value of a configuration register read back from MAX31865 is different
+					// from how it was configured for measurement
 					const uint8_t fault_status_received_from_max = *(result_ptr + 7);
 
+					// check if single-shot flag is still set, what marks measurement still ongoing
 					if ((config_reg_from_max31865 & 0x20) != 0)
 					{
 						event_log_sync (EVENT_ERROR,
@@ -456,15 +488,37 @@ void max31865_pool(void) {
 										EVENTS_DRV_SPI_MAX31865_MEASUREMENT_STILL_PENDING,
 										max31865_merasurements_error_counter, max31865_measurements_counter,
 										config_reg_from_max31865, max31865_requested_config_register,
-										fault_status_received_from_max,0);
+										fault_status_received_from_max, max31865_still_pending_counter );
+
+						max31865_still_pending_counter++;
+
+						if (max31865_still_pending_counter > max31865_still_pending_limit) {
+							max31865_merasurements_error_counter++;
+
+							max31865_current_state = MAX_ERROR;
+
+							max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
+						}
+						else {
+							// go back to previous state, to request measurement results once again
+							max31865_current_state = MAX_MEASUREMENT_STARTED;
+						}
 					}
 					else {
+						// this is not a case of pending measurement. maybe a SPI communication error
+						// or there is something wrong with MAX31865
 						event_log_sync (EVENT_ERROR,
 										EVENT_SRC_DRV_SPI,
 										EVENTS_DRV_SPI_MAX31865_CONFIG_REGISTER_COMP_ERROR,
 										max31865_merasurements_error_counter, max31865_measurements_counter,
 										config_reg_from_max31865, max31865_requested_config_register,
 										fault_status_received_from_max,0);
+
+						max31865_merasurements_error_counter++;
+
+						max31865_current_state = MAX_ERROR;
+
+						max31865_quality_factor = MAX_QF_NOT_AVALIABLE;
 					}
 				}
 
@@ -487,6 +541,8 @@ void max31865_pool(void) {
 
 				max31865_shutdown_ticks = 0;
 			}
+
+			max31865_still_pending_counter = 0;
 
 			break;
 		case MAX_UNINITIALIZED:
